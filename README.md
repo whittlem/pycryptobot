@@ -25,3 +25,7 @@ python3 -m pip install -r requirements.txt
 ## Additional Information
 
 The "requirements.txt" was created with "python3 -m pip freeze"
+
+## Run it
+
+% python3 pycryptobot.py 
