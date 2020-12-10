@@ -35,8 +35,7 @@ class CoinbasePro():
         if resp.status_code != 200:
             raise Exception('GET ' + self.api + ' {}'.format(resp.status_code))
 
-        self.df = pd.DataFrame(resp.json(), columns=[
-                               'iso8601', 'low', 'high', 'open', 'close', 'volume'])
+        self.df = pd.DataFrame(resp.json(), columns=['iso8601', 'low', 'high', 'open', 'close', 'volume'])
         self.df = self.df.iloc[::-1].reset_index()
 
         for index, row in self.df.iterrows():
@@ -44,11 +43,14 @@ class CoinbasePro():
             self.df.at[index, 'datetime'] = datetime.strftime(
                 iso8601, "%d/%m/%Y %H:%M:%S")
 
-        self.df = self.df.reindex(
-            columns=['iso8601', 'datetime', 'low', 'high', 'open', 'close', 'volume'])
+        self.df = self.df.reindex(columns=['iso8601', 'datetime', 'low', 'high', 'open', 'close', 'volume'])
 
         # change dtype from object to datatime
         self.df['datetime'] = pd.to_datetime(self.df['datetime'])
+
+        # close change percentage
+        self.df['close_pc'] = self.df['close'].pct_change() * 100
+        self.df['close_pc'] = np.round(self.df['close_pc'].fillna(0), 2)
 
         self.levels = [] 
         self.__calculateSupportResistenceLevels()
@@ -108,15 +110,15 @@ class CoinbasePro():
         if not 'close' in self.df.columns:
             raise AttributeError("Pandas DataFrame 'close' column required.")
 
-        if not 'ema12' in self.df.columns:
-            raise AttributeError("Pandas DataFrame 'ema12' column required.")
-
-        if not 'ema26' in self.df.columns:
-            raise AttributeError("Pandas DataFrame 'ema12' column required.")
-
         if not self.df['close'].dtype == 'float64' and not self.df['close'].dtype == 'int64':
             raise AttributeError(
                 "Pandas DataFrame 'close' column not int64 or float64.")
+
+        if not 'ema12' in self.df.columns:
+            self.df['ema12'] = self.df.close.ewm(span=12, adjust=False).mean()
+
+        if not 'ema26' in self.df.columns:
+            self.df['ema26'] = self.df.close.ewm(span=26, adjust=False).mean()
 
         if not self.df['ema12'].dtype == 'float64' and not self.df['ema12'].dtype == 'int64':
             raise AttributeError(
@@ -136,20 +138,13 @@ class CoinbasePro():
         self.df['macd'] = self.df['ema12'] - self.df['ema26']
         self.df['signal'] = self.df['macd'].ewm(span=9, adjust=False).mean()
 
-    def calculateOnBalanceVolume(self, interval=10):
-        self.df['obv'] = 0
+        # calculate on-balance volume (obv)
+        self.df['obv'] = np.where(self.df['close'] > self.df['close'].shift(1), self.df['volume'], 
+        np.where(self.df['close'] < self.df['close'].shift(1), -self.df['volume'], self.df.iloc[0]['volume'])).cumsum()
 
-        index = 1
-        while index <= len(self.df) - 1:
-            if(self.df.iloc[index]['close'] > self.df.iloc[index-1]['close']):
-                self.df.at[index, 'obv'] += self.df.at[index -
-                                                       1, 'obv'] + self.df.at[index, 'volume']
-
-            if(self.df.iloc[index]['close'] < self.df.iloc[index-1]['close']):
-                self.df.at[index, 'obv'] += self.df.at[index -
-                                                       1, 'obv'] - self.df.at[index, 'volume']
-
-            index = index + 1
+        # obv change percentage
+        self.df['obv_pc'] = self.df['obv'].pct_change() * 100
+        self.df['obv_pc'] = np.round(self.df['obv_pc'].fillna(0), 2)
 
     def calculateRelativeStrengthIndex(self, series, interval=14):
         '''Calculates the RSI on a Pandas series of closing prices.'''
