@@ -1,9 +1,9 @@
 import json
+import numpy as np
 import pandas as pd
 import re
 import requests
 from datetime import datetime
-
 
 class CoinbasePro():
     def __init__(self, market='BTC-GBP', granularity=86400, iso8601start='', iso8601end=''):
@@ -50,6 +50,9 @@ class CoinbasePro():
         # change dtype from object to datatime
         self.df['datetime'] = pd.to_datetime(self.df['datetime'])
 
+        self.levels = [] 
+        self.__calculateSupportResistenceLevels()
+
     def getAPI(self):
         return self.api
 
@@ -67,6 +70,9 @@ class CoinbasePro():
 
     def getISO8601End(self):
         return self.iso8601end
+
+    def getSupportResistanceLevels(self):
+        return self.levels
 
     def addMovingAverages(self):
         '''Appends CMA, EMA12, EMA26, SMA20, SMA50, and SMA200 moving averages to a dataframe.'''
@@ -130,6 +136,21 @@ class CoinbasePro():
         self.df['macd'] = self.df['ema12'] - self.df['ema26']
         self.df['signal'] = self.df['macd'].ewm(span=9, adjust=False).mean()
 
+    def calculateOnBalanceVolume(self, interval=10):
+        self.df['obv'] = 0
+
+        index = 1
+        while index <= len(self.df) - 1:
+            if(self.df.iloc[index]['close'] > self.df.iloc[index-1]['close']):
+                self.df.at[index, 'obv'] += self.df.at[index -
+                                                       1, 'obv'] + self.df.at[index, 'volume']
+
+            if(self.df.iloc[index]['close'] < self.df.iloc[index-1]['close']):
+                self.df.at[index, 'obv'] += self.df.at[index -
+                                                       1, 'obv'] - self.df.at[index, 'volume']
+
+            index = index + 1
+
     def calculateRelativeStrengthIndex(self, series, interval=14):
         '''Calculates the RSI on a Pandas series of closing prices.'''
 
@@ -172,3 +193,43 @@ class CoinbasePro():
             self.df.to_csv(filename)
         except OSError:
             print('Unable to save: ', filename)
+
+    def __calculateSupportResistenceLevels(self):
+        '''Support and Resistance levels.'''
+
+        for i in range(2, self.df.shape[0] - 2):
+            if self.__isSupport(self.df, i):
+                l = self.df['low'][i]
+                if self.__isFarFromLevel(l):
+                    self.levels.append((i, l))
+            elif self.__isResistance(self.df, i):
+                l = self.df['high'][i]
+                if self.__isFarFromLevel(l):
+                    self.levels.append((i, l))
+        return self.levels
+
+    def __isSupport(self, df, i):
+        '''Private function'''
+
+        c1 = df['low'][i] < df['low'][i - 1]
+        c2 = df['low'][i] < df['low'][i + 1]
+        c3 = df['low'][i + 1] < df['low'][i + 2]
+        c4 = df['low'][i - 1] < df['low'][i - 2]
+        support = c1 and c2 and c3 and c4
+        return support
+
+    def __isResistance(self, df, i):
+        '''Private function'''
+
+        c1 = df['high'][i] > df['high'][i - 1]
+        c2 = df['high'][i] > df['high'][i + 1]
+        c3 = df['high'][i + 1] > df['high'][i + 2]
+        c4 = df['high'][i - 1] > df['high'][i - 2]
+        resistance = c1 and c2 and c3 and c4
+        return resistance
+
+    def __isFarFromLevel(self, l):
+        '''Private function'''
+
+        s = np.mean(self.df['high'] - self.df['low'])
+        return np.sum([abs(l-x) < s for x in self.levels]) == 0
