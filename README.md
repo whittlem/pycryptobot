@@ -18,9 +18,9 @@ I'm a writer on Medium (https://whittle.medium.com). This project is a work in p
 
 ## Installation
 
-git clone https://github.com/whittlem/pycryptobot
-cd pycryptobot
-python3 -m pip install -r requirements.txt
+    git clone https://github.com/whittlem/pycryptobot
+    cd pycryptobot
+    python3 -m pip install -r requirements.txt
 
 ## Additional Information
 
