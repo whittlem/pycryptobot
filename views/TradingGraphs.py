@@ -1,7 +1,9 @@
+import datetime
 import sys
 sys.path.append('.')
 from models.CoinbasePro import CoinbasePro
 import matplotlib.pyplot as plt
+import pandas as pd
 
 class TradingGraphs():
     def __init__(self, coinbasepro):
@@ -52,6 +54,40 @@ class TradingGraphs():
         plt.legend()
         plt.ylabel('Price')
         plt.xlabel('Days')
+        plt.show()
+
+    def renderSeasonalARIMAModel(self):
+        ''' Render Seasonal ARIMA Model '''
+
+        ts = self.df['close']
+        results_ARIMA = self.coinbasepro.getSeasonalARIMAModel(ts)
+
+        plt.plot(ts, label='original')
+        plt.plot(results_ARIMA.fittedvalues, color='red', label='fitted')
+        plt.title('RSS: %.4f'% sum((results_ARIMA.fittedvalues-ts)**2))
+        plt.legend()
+        plt.ylabel('Price')
+        plt.xlabel('Days')
+        plt.xticks(rotation=90)
+        plt.tight_layout()
+        plt.show()
+
+    def renderSeasonalARIMAModelPredictionDays(self, days=30):
+        ''' Render Seasonal ARIMA Model Prediction '''
+
+        ts = self.df['close']
+        results_ARIMA = self.coinbasepro.getSeasonalARIMAModel(ts)
+
+        df = pd.DataFrame(ts)
+        start_date = df.last_valid_index()
+        end_date = start_date + datetime.timedelta(days=days)
+        pred = results_ARIMA.predict(start=str(start_date), end=str(end_date), dynamic=True)
+
+        plt.plot(pred, label='prediction')
+        plt.ylabel('Price')
+        plt.xlabel('Days')
+        plt.xticks(rotation=90)
+        plt.tight_layout()
         plt.show()
 
     def renderSMAandMACD(self):

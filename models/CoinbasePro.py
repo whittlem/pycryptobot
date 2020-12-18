@@ -4,6 +4,7 @@ import pandas as pd
 import re
 import requests
 from datetime import datetime
+from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 class CoinbasePro():
     def __init__(self, market='BTC-GBP', granularity=86400, iso8601start='', iso8601end=''):
@@ -35,18 +36,13 @@ class CoinbasePro():
         if resp.status_code != 200:
             raise Exception('GET ' + self.api + ' {}'.format(resp.status_code))
 
-        self.df = pd.DataFrame(resp.json(), columns=['iso8601', 'low', 'high', 'open', 'close', 'volume'])
+        self.df = pd.DataFrame(resp.json(), columns=['epoch', 'low', 'high', 'open', 'close', 'volume'])
         self.df = self.df.iloc[::-1].reset_index()
 
-        for index, row in self.df.iterrows():
-            iso8601 = datetime.fromtimestamp(row['iso8601'])
-            self.df.at[index, 'datetime'] = datetime.strftime(
-                iso8601, "%d/%m/%Y %H:%M:%S")
-
-        self.df = self.df.reindex(columns=['iso8601', 'datetime', 'low', 'high', 'open', 'close', 'volume'])
-
-        # change dtype from object to datatime
-        self.df['datetime'] = pd.to_datetime(self.df['datetime'])
+        datetimeidx = pd.DatetimeIndex(pd.to_datetime(self.df['epoch'], unit='s'), dtype='datetime64[ns]', freq='D')
+        self.df.set_index(datetimeidx, inplace=True)
+        self.df = self.df.drop(columns=['epoch','index'])
+        self.df.index.names = ['datetime']
 
         # close change percentage
         self.df['close_pc'] = self.df['close'].pct_change() * 100
@@ -72,6 +68,19 @@ class CoinbasePro():
 
     def getISO8601End(self):
         return self.iso8601end
+
+    def getSeasonalARIMAModel(self, ts):
+        if not isinstance(ts, pd.Series):
+            raise TypeError('Pandas Time Series required.')
+
+        if not isinstance(self.df, pd.DataFrame):
+            raise TypeError('Pandas DataFrame required.')
+
+        if not 'close' in self.df.columns:
+            raise AttributeError("Pandas DataFrame 'close' column required.")
+
+        model = SARIMAX(ts, trend='n', order=(0,1,0), seasonal_order=(1,1,1,12))
+        return model.fit(disp=-1)
 
     def getSupportResistanceLevels(self):
         return self.levels
