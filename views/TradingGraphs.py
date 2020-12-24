@@ -23,6 +23,8 @@ class TradingGraphs():
         plt.plot(self.df.ema26, label="ema26")
         plt.legend()
         plt.ylabel('Price')
+        plt.xticks(rotation=90)
+        plt.tight_layout()
         plt.show()
 
     def renderPriceSupportResistance(self):
@@ -33,6 +35,8 @@ class TradingGraphs():
         plt.legend()
         plt.ylabel('Price')
         plt.xlabel('Days')
+
+        print (self.levels)
 
         for level in self.levels:
             plt.hlines(level[1], xmin=level[0], xmax=len(self.df), colors='blue')
@@ -46,14 +50,16 @@ class TradingGraphs():
         plt.plot(self.df.close, label="price")
         plt.plot(self.df.ema12, label="ema12")
         plt.plot(self.df.ema26, label="ema26")
+        plt.xticks(self.df.close, rotation='vertical')
         plt.legend()
         plt.ylabel('Price')
         plt.subplot(212, sharex=ax1)
         plt.plot(self.df.macd, label="macd")
         plt.plot(self.df.signal, label="signal")
         plt.legend()
-        plt.ylabel('Price')
-        plt.xlabel('Days')
+        plt.ylabel('Divergence')
+        plt.xticks(rotation=90)
+        plt.tight_layout()
         plt.show()
 
     def renderSeasonalARIMAModel(self):
@@ -67,7 +73,6 @@ class TradingGraphs():
         plt.title('RSS: %.4f'% sum((results_ARIMA.fittedvalues-ts)**2))
         plt.legend()
         plt.ylabel('Price')
-        plt.xlabel('Days')
         plt.xticks(rotation=90)
         plt.tight_layout()
         plt.show()
@@ -100,10 +105,13 @@ class TradingGraphs():
         plt.plot(self.df.sma200, label="sma200")
         plt.legend()
         plt.ylabel('Price')
+        plt.xticks(rotation=90)
         plt.subplot(212, sharex=ax1)
         plt.plot(self.df.macd, label="macd")
         plt.plot(self.df.signal, label="signal")
         plt.legend()
         plt.ylabel('Price')
         plt.xlabel('Days')
+        plt.xticks(rotation=90)
+        plt.tight_layout()
         plt.show()

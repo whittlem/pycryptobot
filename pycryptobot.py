@@ -1,18 +1,22 @@
+import pandas as pd
+
 from models.CoinbasePro import CoinbasePro
 from views.TradingGraphs import TradingGraphs
 
-coinbasepro = CoinbasePro()
-print (coinbasepro.getDataFrame())
-coinbasepro.addMovingAverages()
-print (coinbasepro.getDataFrame())
-coinbasepro.addMomentumIndicators()
-print (coinbasepro.getDataFrame())
-print (coinbasepro.getSupportResistanceLevels())
-coinbasepro.saveCSV()
+coinbasepro = CoinbasePro('BTC-USD', 3600)
+coinbasepro.addEMABuySignals()
+#coinbasepro.addMACDBuySignals()
 
-tradinggraphs = TradingGraphs(coinbasepro)
+print (coinbasepro.getDataFrame())
+#coinbasepro.addMomentumIndicators()
+#print (coinbasepro.getDataFrame())
+#print (coinbasepro.getSupportResistanceLevels())
+#coinbasepro.saveCSV()
+
+#tradinggraphs = TradingGraphs(coinbasepro)
+#tradinggraphs.renderPriceEMA12EMA26()
+#tradinggraphs.renderPriceSupportResistance()
 #tradinggraphs.renderEMAandMACD()
 #tradinggraphs.renderSMAandMACD()
-#tradinggraphs.renderPriceSupportResistance()
 #tradinggraphs.renderSeasonalARIMAModel()
-tradinggraphs.renderSeasonalARIMAModelPredictionDays(30)
+#tradinggraphs.renderSeasonalARIMAModelPredictionDays(30)
