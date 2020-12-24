@@ -8,6 +8,9 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 class CoinbasePro():
     def __init__(self, market='BTC-GBP', granularity=86400, iso8601start='', iso8601end=''):
+        # only 300 entries, remove row limit
+        #pd.set_option('display.max_rows', None)
+
         p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
         if not p.match(market):
             raise TypeError('Coinbase Pro market required.')
@@ -39,10 +42,23 @@ class CoinbasePro():
         self.df = pd.DataFrame(resp.json(), columns=['epoch', 'low', 'high', 'open', 'close', 'volume'])
         self.df = self.df.iloc[::-1].reset_index()
 
-        datetimeidx = pd.DatetimeIndex(pd.to_datetime(self.df['epoch'], unit='s'), dtype='datetime64[ns]', freq='D')
-        self.df.set_index(datetimeidx, inplace=True)
+        if(granularity == 60):
+            freq = 'T'
+        elif(granularity == 300):
+            freq = 'ST'
+        elif(granularity == 900):
+            freq = '15T'
+        elif(granularity == 3600):
+            freq = 'H'
+        elif(granularity == 21600):
+            freq = '6H'
+        else:
+            freq = 'D'
+
+        tsidx = pd.DatetimeIndex(pd.to_datetime(self.df['epoch'], unit='s'), dtype='datetime64[ns]', freq=freq)
+        self.df.set_index(tsidx, inplace=True)
         self.df = self.df.drop(columns=['epoch','index'])
-        self.df.index.names = ['datetime']
+        self.df.index.names = ['ts']
 
         # close change percentage
         self.df['close_pc'] = self.df['close'].pct_change() * 100
@@ -84,6 +100,50 @@ class CoinbasePro():
 
     def getSupportResistanceLevels(self):
         return self.levels
+
+    def addEMABuySignals(self):
+        if not isinstance(self.df, pd.DataFrame):
+            raise TypeError('Pandas DataFrame required.')
+
+        if not 'close' in self.df.columns:
+            raise AttributeError("Pandas DataFrame 'close' column required.")
+
+        if not self.df['close'].dtype == 'float64' and not self.df['close'].dtype == 'int64':
+            raise AttributeError(
+                "Pandas DataFrame 'close' column not int64 or float64.")
+
+        if not 'ema12' or not 'ema26' in self.df.columns:
+            self.addMovingAverages()
+
+        self.df['ema12gtema26'] = self.df.ema12 > self.df.ema26
+        self.df['ema12gtema26co'] = self.df.ema12gtema26.ne(self.df.ema12gtema26.shift())
+        self.df['ema12gtema26co'][self.df['ema12gtema26'] == False] = False
+
+        self.df['ema12ltema26'] = self.df.ema12 < self.df.ema26
+        self.df['ema12ltema26co'] = self.df.ema12ltema26.ne(self.df.ema12ltema26.shift())
+        self.df['ema12ltema26co'][self.df['ema12ltema26'] == False] = False
+
+    def addMACDBuySignals(self):
+        if not isinstance(self.df, pd.DataFrame):
+            raise TypeError('Pandas DataFrame required.')
+
+        if not 'close' in self.df.columns:
+            raise AttributeError("Pandas DataFrame 'close' column required.")
+
+        if not self.df['close'].dtype == 'float64' and not self.df['close'].dtype == 'int64':
+            raise AttributeError(
+                "Pandas DataFrame 'close' column not int64 or float64.")
+
+        if not 'macd' or not 'signal' in self.df.columns:
+            self.addMomentumIndicators()
+
+        self.df['macdgtsignal'] = self.df.macd > self.df.signal
+        self.df['macdgtsignalco'] = self.df.macdgtsignal.ne(self.df.macdgtsignal.shift())
+        self.df['macdgtsignalco'][self.df['macdgtsignal'] == False] = False
+
+        self.df['macdltsignal'] = self.df.macd < self.df.signal
+        self.df['macdltsignalco'] = self.df.macdltsignal.ne(self.df.macdltsignal.shift())
+        self.df['macdltsignalco'][self.df['macdltsignal'] == False] = False
 
     def addMovingAverages(self):
         '''Appends CMA, EMA12, EMA26, SMA20, SMA50, and SMA200 moving averages to a dataframe.'''
