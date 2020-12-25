@@ -66,6 +66,10 @@ class CoinbasePro():
 
         self.levels = [] 
         self.__calculateSupportResistenceLevels()
+        levels_ts = {}
+        for level in self.levels:
+            levels_ts[self.df.index[level[0]]] = level[1]
+        self.levels_ts = pd.Series(levels_ts)
 
     def getAPI(self):
         return self.api
@@ -101,6 +105,9 @@ class CoinbasePro():
     def getSupportResistanceLevels(self):
         return self.levels
 
+    def getSupportResistanceLevelsTimeSeries(self):
+        return self.levels_ts
+
     def addEMABuySignals(self):
         if not isinstance(self.df, pd.DataFrame):
             raise TypeError('Pandas DataFrame required.')
@@ -117,11 +124,11 @@ class CoinbasePro():
 
         self.df['ema12gtema26'] = self.df.ema12 > self.df.ema26
         self.df['ema12gtema26co'] = self.df.ema12gtema26.ne(self.df.ema12gtema26.shift())
-        self.df['ema12gtema26co'][self.df['ema12gtema26'] == False] = False
+        self.df.loc[self.df['ema12gtema26'] == False, 'ema12gtema26co'] = False
 
         self.df['ema12ltema26'] = self.df.ema12 < self.df.ema26
         self.df['ema12ltema26co'] = self.df.ema12ltema26.ne(self.df.ema12ltema26.shift())
-        self.df['ema12ltema26co'][self.df['ema12ltema26'] == False] = False
+        self.df.loc[self.df['ema12ltema26'] == False, 'ema12ltema26co'] = False
 
     def addMACDBuySignals(self):
         if not isinstance(self.df, pd.DataFrame):
@@ -139,11 +146,11 @@ class CoinbasePro():
 
         self.df['macdgtsignal'] = self.df.macd > self.df.signal
         self.df['macdgtsignalco'] = self.df.macdgtsignal.ne(self.df.macdgtsignal.shift())
-        self.df['macdgtsignalco'][self.df['macdgtsignal'] == False] = False
+        self.df.loc[self.df['macdgtsignal'] == False, 'macdgtsignalco'] = False
 
         self.df['macdltsignal'] = self.df.macd < self.df.signal
         self.df['macdltsignalco'] = self.df.macdltsignal.ne(self.df.macdltsignal.shift())
-        self.df['macdltsignalco'][self.df['macdltsignal'] == False] = False
+        self.df.loc[self.df['macdltsignal'] == False, 'macdltsignalco'] = False
 
     def addMovingAverages(self):
         '''Appends CMA, EMA12, EMA26, SMA20, SMA50, and SMA200 moving averages to a dataframe.'''
