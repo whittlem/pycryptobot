@@ -12,7 +12,7 @@ class TradingGraphs():
 
         self.coinbasepro = coinbasepro
         self.df = coinbasepro.getDataFrame()
-        self.levels = coinbasepro.getSupportResistanceLevels()
+        self.levels = coinbasepro.getSupportResistanceLevelsTimeSeries()
 
     def renderPriceEMA12EMA26(self):
         ''' Render Price, EMA12 and EMA26 '''
@@ -32,15 +32,13 @@ class TradingGraphs():
 
         plt.subplot(111)
         plt.plot(self.df.close)
-        plt.legend()
         plt.ylabel('Price')
-        plt.xlabel('Days')
-
-        print (self.levels)
 
         for level in self.levels:
-            plt.hlines(level[1], xmin=level[0], xmax=len(self.df), colors='blue')
+            plt.axhline(y=level, color='grey')
        
+        plt.xticks(rotation=90)
+        plt.tight_layout()
         plt.show()
 
     def renderEMAandMACD(self):
