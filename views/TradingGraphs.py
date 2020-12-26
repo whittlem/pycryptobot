@@ -14,6 +14,56 @@ class TradingGraphs():
         self.df = coinbasepro.getDataFrame()
         self.levels = coinbasepro.getSupportResistanceLevelsTimeSeries()
 
+    def renderBuySellSignalEMA1226(self):
+        buysignals = self.df[self.df.ema12gtema26co == True]
+        sellsignals = self.df[self.df.ema12ltema26co == True]
+        
+        plt.subplot(111)
+        plt.plot(self.df.close, label="price", color="royalblue")
+        plt.plot(self.df.ema12, label="ema12", color="orange")
+        plt.plot(self.df.ema26, label="ema26", color="purple")
+        plt.ylabel('Price')
+
+        print ("bull\n", buysignals[['close','ema12','ema26','ema12gtema26co']])
+        print ("sell\n", sellsignals[['close','ema12','ema26','ema12ltema26co']])
+
+        for idx in buysignals.index.tolist():
+            plt.axvline(x=idx, color='green')
+
+        for idx in sellsignals.index.tolist():
+            plt.axvline(x=idx, color='red')
+       
+        plt.xticks(rotation=90)
+        plt.tight_layout()
+        plt.legend()
+        plt.savefig('graphs/BuySellSignalEMA1226.png')
+        plt.show()
+
+    def renderBuySellSignalEMA1226MACD(self):
+        buysignals = self.df[(self.df.ema12gtema26co == True) & (self.df.macdgtsignal == True)]
+        sellsignals = self.df[(self.df.ema12ltema26co == True) & (self.df.macdltsignal == True)]
+
+        plt.subplot(111)
+        plt.plot(self.df.close, label="price", color="royalblue")
+        plt.plot(self.df.ema12, label="ema12", color="orange")
+        plt.plot(self.df.ema26, label="ema26", color="purple")
+        plt.ylabel('Price')
+
+        print ("bull\n", buysignals[['close','ema12','ema26','macd','signal','ema12gtema26co','macdgtsignal']])
+        print ("sell\n", sellsignals[['close','ema12','ema26','macd','signal','ema12ltema26co','macdltsignal']])
+
+        for idx in buysignals.index.tolist():
+            plt.axvline(x=idx, color='green')
+
+        for idx in sellsignals.index.tolist():
+            plt.axvline(x=idx, color='red')
+       
+        plt.xticks(rotation=90)
+        plt.tight_layout()
+        plt.legend()
+        plt.savefig('graphs/BuySellSignalEMA1226MACD.png')
+        plt.show()
+
     def renderPriceEMA12EMA26(self):
         ''' Render Price, EMA12 and EMA26 '''
 
