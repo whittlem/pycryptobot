@@ -1,5 +1,3 @@
-import pandas as pd
-
 from models.CoinbasePro import CoinbasePro
 from views.TradingGraphs import TradingGraphs
 
@@ -14,9 +12,8 @@ coinbasepro.addMACDBuySignals()
 #coinbasepro.saveCSV()
 
 tradinggraphs = TradingGraphs(coinbasepro)
-tradinggraphs.renderBuySellSignalEMA1226()
-#tradinggraphs.renderBuySellSignalEMA1226MACD()
-
+#tradinggraphs.renderBuySellSignalEMA1226()
+tradinggraphs.renderBuySellSignalEMA1226MACD()
 #tradinggraphs.renderPriceEMA12EMA26()
 #tradinggraphs.renderPriceSupportResistance()
 #tradinggraphs.renderEMAandMACD()
