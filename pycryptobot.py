@@ -5,15 +5,18 @@ from views.TradingGraphs import TradingGraphs
 
 coinbasepro = CoinbasePro('BTC-USD', 3600)
 coinbasepro.addEMABuySignals()
-#coinbasepro.addMACDBuySignals()
+coinbasepro.addMACDBuySignals()
 
-print (coinbasepro.getDataFrame())
+#print (coinbasepro.getDataFrame())
 #coinbasepro.addMomentumIndicators()
 #print (coinbasepro.getDataFrame())
 #print (coinbasepro.getSupportResistanceLevels())
 #coinbasepro.saveCSV()
 
-#tradinggraphs = TradingGraphs(coinbasepro)
+tradinggraphs = TradingGraphs(coinbasepro)
+tradinggraphs.renderBuySellSignalEMA1226()
+#tradinggraphs.renderBuySellSignalEMA1226MACD()
+
 #tradinggraphs.renderPriceEMA12EMA26()
 #tradinggraphs.renderPriceSupportResistance()
 #tradinggraphs.renderEMAandMACD()
