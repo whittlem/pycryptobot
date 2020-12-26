@@ -24,8 +24,8 @@ class TradingGraphs():
         plt.plot(self.df.ema26, label="ema26", color="purple")
         plt.ylabel('Price')
 
-        print ("bull\n", buysignals[['close','ema12','ema26','ema12gtema26co']])
-        print ("sell\n", sellsignals[['close','ema12','ema26','ema12ltema26co']])
+        print ("buy\n", buysignals[['close','ema12','ema26','ema12gtema26co','obv_pc']])
+        print ("sell\n", sellsignals[['close','ema12','ema26','ema12ltema26co','obv_pc']])
 
         for idx in buysignals.index.tolist():
             plt.axvline(x=idx, color='green')
@@ -49,8 +49,8 @@ class TradingGraphs():
         plt.plot(self.df.ema26, label="ema26", color="purple")
         plt.ylabel('Price')
 
-        print ("bull\n", buysignals[['close','ema12','ema26','macd','signal','ema12gtema26co','macdgtsignal']])
-        print ("sell\n", sellsignals[['close','ema12','ema26','macd','signal','ema12ltema26co','macdltsignal']])
+        print ("buy\n", buysignals[['close','ema12','ema26','macd','signal','ema12gtema26co','macdgtsignal','obv_pc']])
+        print ("sell\n", sellsignals[['close','ema12','ema26','macd','signal','ema12ltema26co','macdltsignal','obv_pc']])
 
         for idx in buysignals.index.tolist():
             plt.axvline(x=idx, color='green')
