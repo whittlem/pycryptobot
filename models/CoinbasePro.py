@@ -8,6 +8,8 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 class CoinbasePro():
     def __init__(self, market='BTC-GBP', granularity=86400, iso8601start='', iso8601end=''):
+        self.debug = False
+
         # only 300 entries, remove row limit
         #pd.set_option('display.max_rows', None)
 
@@ -33,11 +35,32 @@ class CoinbasePro():
         self.iso8601start = iso8601start
         self.iso8601end = iso8601end
 
-        self.api = 'https://api.pro.coinbase.com/products/' + market + '/candles?granularity=' + \
+        self.api_url = 'https://api.pro.coinbase.com/products/' + market + '/candles?granularity=' + \
             str(granularity) + '&start=' + iso8601start + '&end=' + iso8601end
-        resp = requests.get(self.api)
-        if resp.status_code != 200:
-            raise Exception('GET ' + self.api + ' {}'.format(resp.status_code))
+
+        try:
+            resp = requests.get(self.api_url)
+
+            if resp.status_code != 200:
+                raise Exception('GET ' + self.api_url + ' {}'.format(resp.status_code))
+
+            resp.raise_for_status()
+
+        except requests.ConnectionError as err:
+            if self.debug:
+                raise SystemExit(err)
+            else:
+                raise SystemExit('ConnectionError: ' + self.api_url)
+        except requests.exceptions.HTTPError as err:
+            if self.debug:
+                raise SystemExit(err)
+            else:
+                raise SystemExit('HTTPError: ' + self.api_url)
+        except requests.Timeout as err:
+            if self.debug:
+                raise SystemExit(err)
+            else:
+                raise SystemExit('Timeout: ' + self.api_url) 
 
         self.df = pd.DataFrame(resp.json(), columns=['epoch', 'low', 'high', 'open', 'close', 'volume'])
         self.df = self.df.iloc[::-1].reset_index()
@@ -72,7 +95,7 @@ class CoinbasePro():
         self.levels_ts = pd.Series(levels_ts)
 
     def getAPI(self):
-        return self.api
+        return self.api_url
 
     def getDataFrame(self):
         return self.df
