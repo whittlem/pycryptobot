@@ -24,15 +24,12 @@ class TradingGraphs():
         plt.plot(self.df.ema26, label="ema26", color="purple")
         plt.ylabel('Price')
 
-        print ("buy\n", buysignals[['close','ema12','ema26','ema12gtema26co','obv_pc']])
-        print ("sell\n", sellsignals[['close','ema12','ema26','ema12ltema26co','obv_pc']])
-
         for idx in buysignals.index.tolist():
             plt.axvline(x=idx, color='green')
 
         for idx in sellsignals.index.tolist():
             plt.axvline(x=idx, color='red')
-       
+     
         plt.xticks(rotation=90)
         plt.tight_layout()
         plt.legend()
@@ -43,14 +40,11 @@ class TradingGraphs():
         buysignals = self.df[(self.df.ema12gtema26co == True) & (self.df.macdgtsignal == True)]
         sellsignals = self.df[(self.df.ema12ltema26co == True) & (self.df.macdltsignal == True)]
 
-        plt.subplot(111)
+        ax1 = plt.subplot(211)
         plt.plot(self.df.close, label="price", color="royalblue")
         plt.plot(self.df.ema12, label="ema12", color="orange")
         plt.plot(self.df.ema26, label="ema26", color="purple")
         plt.ylabel('Price')
-
-        print ("buy\n", buysignals[['close','ema12','ema26','macd','signal','ema12gtema26co','macdgtsignal','obv_pc']])
-        print ("sell\n", sellsignals[['close','ema12','ema26','macd','signal','ema12ltema26co','macdltsignal','obv_pc']])
 
         for idx in buysignals.index.tolist():
             plt.axvline(x=idx, color='green')
@@ -59,6 +53,14 @@ class TradingGraphs():
             plt.axvline(x=idx, color='red')
        
         plt.xticks(rotation=90)
+
+        plt.subplot(212, sharex=ax1)
+        plt.plot(self.df.macd, label="macd")
+        plt.plot(self.df.signal, label="signal")
+        plt.legend()
+        plt.ylabel('Divergence')
+        plt.xticks(rotation=90)
+
         plt.tight_layout()
         plt.legend()
         plt.savefig('graphs/BuySellSignalEMA1226MACD.png')
