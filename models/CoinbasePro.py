@@ -65,10 +65,14 @@ class CoinbasePro():
         self.df = pd.DataFrame(resp.json(), columns=['epoch', 'low', 'high', 'open', 'close', 'volume'])
         self.df = self.df.iloc[::-1].reset_index()
 
+        if len(self.df) != 300:
+            self.df = pd.DataFrame()
+            raise Exception('Insufficient data between ' + iso8601start + ' and ' + iso8601end + ' (DataFrame length: ' + str(len(self.df)) + ')')
+
         if(granularity == 60):
             freq = 'T'
         elif(granularity == 300):
-            freq = 'ST'
+            freq = '5T'
         elif(granularity == 900):
             freq = '15T'
         elif(granularity == 3600):

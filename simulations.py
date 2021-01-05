@@ -1,7 +1,19 @@
+import random
+import pandas as pd
+from datetime import datetime, timedelta
 from models.CoinbasePro import CoinbasePro
+from models.TradingAccount import TradingAccount
 from views.TradingGraphs import TradingGraphs
 
-coinbasepro = CoinbasePro('BTC-USD', 3600)
+endDate = datetime.now() - timedelta(hours=random.randint(0,8760 * 3)) # 3 years in hours
+startDate = endDate - timedelta(hours=300)
+
+openingBalance = 1000
+
+account = TradingAccount('experiment1')
+account.depositFIAT(openingBalance)
+
+coinbasepro = CoinbasePro('BTC-GBP', 3600, str(startDate.isoformat()), str(endDate.isoformat()))
 coinbasepro.addEMABuySignals()
 coinbasepro.addMACDBuySignals()
 df = coinbasepro.getDataFrame()
@@ -25,13 +37,31 @@ for index, row in df_signals.iterrows():
         if last_action != '':
             diff = row['close'] - last_close
 
+        if action == 'buy':
+            account.buy('BTC', 'GBP', 100, row['close'])
+        elif action == 'sell':
+            lastBuy = account.getActivity()[-1][3]
+            account.sell('BTC', 'GBP', lastBuy, row['close'])
+
         print(action, index, row['close'], row['ema12'], row['ema26'], row['macd'], row['signal'],
-              row['ema12gtema26co'], row['macdgtsignal'], row['ema12ltema26co'], row['macdltsignal'], diff)
+            row['ema12gtema26co'], row['macdgtsignal'], row['ema12ltema26co'], row['macdltsignal'], diff)
+
         last_action = action
         last_close = row['close']
         total_diff = total_diff + diff
 
-print ("\ntotal: ", total_diff)
+addBalance = 0
+if account.getActivity()[-1][2] == 'buy':
+    # last trade is still open, add to closing balance
+    addBalance = account.getActivity()[-1][3] * account.getActivity()[-1][4]
+
+print ('')
+df = pd.DataFrame(account.getActivity(), columns=['date','balance','action','amount','value'])
+print (df)
+
+print ('')
+print ("Opening balance:", '{:.2f}'.format(openingBalance))
+print ("Closing balance:", '{:.2f}'.format(round(account.getBalanceFIAT() + addBalance, 2)))
 
 tradinggraphs = TradingGraphs(coinbasepro)
 tradinggraphs.renderBuySellSignalEMA1226MACD()

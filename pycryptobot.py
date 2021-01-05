@@ -1,3 +1,5 @@
+import random
+from datetime import datetime, timedelta
 from models.CoinbasePro import CoinbasePro
 from views.TradingGraphs import TradingGraphs
 
