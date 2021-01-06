@@ -65,7 +65,7 @@ class CoinbasePro():
         self.df = pd.DataFrame(resp.json(), columns=['epoch', 'low', 'high', 'open', 'close', 'volume'])
         self.df = self.df.iloc[::-1].reset_index()
 
-        if len(self.df) != 300:
+        if len(self.df) < 200:
             self.df = pd.DataFrame()
             raise Exception('Insufficient data between ' + iso8601start + ' and ' + iso8601end + ' (DataFrame length: ' + str(len(self.df)) + ')')
 
@@ -82,10 +82,16 @@ class CoinbasePro():
         else:
             freq = 'D'
 
-        tsidx = pd.DatetimeIndex(pd.to_datetime(self.df['epoch'], unit='s'), dtype='datetime64[ns]', freq=freq)
-        self.df.set_index(tsidx, inplace=True)
-        self.df = self.df.drop(columns=['epoch','index'])
-        self.df.index.names = ['ts']
+        if len(self.df) == 300:
+            tsidx = pd.DatetimeIndex(pd.to_datetime(self.df['epoch'], unit='s'), dtype='datetime64[ns]', freq=freq)
+            self.df.set_index(tsidx, inplace=True)
+            self.df = self.df.drop(columns=['epoch','index'])
+            self.df.index.names = ['ts']
+        else:
+            tsidx = pd.DatetimeIndex(pd.to_datetime(self.df['epoch'], unit='s'), dtype='datetime64[ns]')
+            self.df.set_index(tsidx, inplace=True)
+            self.df = self.df.drop(columns=['epoch','index'])
+            self.df.index.names = ['ts']           
 
         # close change percentage
         self.df['close_pc'] = self.df['close'].pct_change() * 100
