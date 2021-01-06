@@ -5,7 +5,7 @@ from models.CoinbasePro import CoinbasePro
 from models.TradingAccount import TradingAccount
 from views.TradingGraphs import TradingGraphs
 
-EXPERIMENTS = 1
+EXPERIMENTS = 30
 
 def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, amountPerTrade=100, mostRecent=True):
     if not isinstance(id, int):
@@ -87,7 +87,7 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
                 diff = row['close'] - last_close
 
             if action == 'buy':
-                account.buy('BTC', 'GBP', 100, row['close'])
+                account.buy('BTC', 'GBP', amountPerTrade, row['close'])
             elif action == 'sell':
                 lastBuy = account.getActivity()[-1][3]
                 account.sell('BTC', 'GBP', lastBuy, row['close'])
