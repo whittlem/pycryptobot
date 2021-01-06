@@ -8,7 +8,7 @@ print (coinbasepro.getDataFrame())
 coinbasepro.addMomentumIndicators()
 print (coinbasepro.getDataFrame())
 print (coinbasepro.getSupportResistanceLevels())
-coinbasepro.saveCSV()
+#coinbasepro.saveCSV()
 
 tradinggraphs = TradingGraphs(coinbasepro)
 #tradinggraphs.renderBuySellSignalEMA1226()
