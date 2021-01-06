@@ -28,4 +28,6 @@ The "requirements.txt" was created with "python3 -m pip freeze"
 
 ## Run it
 
-% python3 pycryptobot.py 
+% python3 examples.py       --    general examples of models and views
+% python3 pycryptobot.py    --    this is in process not and will be the trading bot when ready
+% python3 simulations.py    --    trading simulations using live data to test technical indicators

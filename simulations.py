@@ -5,6 +5,8 @@ from models.CoinbasePro import CoinbasePro
 from models.TradingAccount import TradingAccount
 from views.TradingGraphs import TradingGraphs
 
+EXPERIMENTS = 1
+
 def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, amountPerTrade=100, mostRecent=True):
     if not isinstance(id, int):
         raise TypeError('ID not numeric.')
@@ -165,7 +167,7 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
     return result_dict
 
 results = []
-for num in range(100):
+for num in range(EXPERIMENTS):
     if num == 0:
         results.append(runExperiment(num, 'BTC-GBP', 3600, 1000, 100, True))
     else:
