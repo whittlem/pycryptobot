@@ -5,7 +5,7 @@ from models.CoinbasePro import CoinbasePro
 from models.TradingAccount import TradingAccount
 from views.TradingGraphs import TradingGraphs
 
-EXPERIMENTS = 30
+EXPERIMENTS = 1000
 
 def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, amountPerTrade=100, mostRecent=True):
     if not isinstance(id, int):
@@ -77,10 +77,12 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
     total_diff = 0
     events = []
     for index, row in df_signals.iterrows():
-        if row['ema12gtema26co'] == True and row['macdgtsignal'] == True:
+        if row['ema12gtema26co'] == True and row['macdgtsignal'] == True and row['obv_pc'] >= 5: # buy only if there is significant momentum
             action = 'buy'
         elif row['ema12ltema26co'] == True and row['macdltsignal'] == True:
-            action = 'sell'
+            # ignore sell if close is lower than previous buy
+            if len(account.getActivity()) > 0 and account.getActivity()[-1][2] == 'buy' and row['close'] > account.getActivity()[-1][4]:
+                action = 'sell'
 
         if action != '' and action != last_action and not (last_action == '' and action == 'sell'):
             if last_action != '':
@@ -112,6 +114,7 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
                 'macdgtsignal': row['macdgtsignal'],
                 'ema12ltema26co': row['ema12ltema26co'],
                 'macdltsignal': row['macdltsignal'],
+                'obv_pc': row['obv_pc'],
                 'diff': diff
             }
 
@@ -130,7 +133,7 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
         raise SystemExit('Unable to save: experiments/experiment' +  str(id) + '_events.csv')    
 
     addBalance = 0
-    if account.getActivity()[-1][2] == 'buy':
+    if len(account.getActivity()) > 0 and account.getActivity()[-1][2] == 'buy':
         # last trade is still open, add to closing balance
         addBalance = account.getActivity()[-1][3] * account.getActivity()[-1][4]
 

@@ -46,10 +46,9 @@ class TradingGraphs():
             plt.show()
 
     def renderBuySellSignalEMA1226MACD(self, saveFile='', saveOnly=False):
-        buysignals = self.df[(self.df.ema12gtema26co == True)
-                             & (self.df.macdgtsignal == True)]
-        sellsignals = self.df[(self.df.ema12ltema26co == True) & (
-            self.df.macdltsignal == True)]
+        buysignals = (self.df.ema12gtema26co == True) & (self.df.macdgtsignal == True) & (self.df.obv_pc > 5) # buy only if there is significant momentum
+        sellsignals = (self.df.ema12ltema26co == True) & (self.df.macdltsignal == True)
+        df_signals = self.df[(buysignals) | (sellsignals)]
 
         ax1 = plt.subplot(211)
         plt.plot(self.df.close, label="price", color="royalblue")
@@ -57,11 +56,16 @@ class TradingGraphs():
         plt.plot(self.df.ema26, label="ema26", color="purple")
         plt.ylabel('Price')
 
-        for idx in buysignals.index.tolist():
-            plt.axvline(x=idx, color='green')
-
-        for idx in sellsignals.index.tolist():
-            plt.axvline(x=idx, color='red')
+        action = ''
+        last_buy = 0
+        for idx, row in df_signals.iterrows():
+            if row['ema12gtema26co'] == True and row['macdgtsignal'] == True:
+                action = 'buy'
+                last_buy = row['close']
+                plt.axvline(x=idx, color='green')
+            elif action == 'buy' and row['ema12ltema26co'] == True and row['macdltsignal'] == True and row['close'] > last_buy:
+                action = 'sell'
+                plt.axvline(x=idx, color='red')
 
         plt.xticks(rotation=90)
 
