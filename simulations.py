@@ -5,7 +5,7 @@ from models.CoinbasePro import CoinbasePro
 from models.TradingAccount import TradingAccount
 from views.TradingGraphs import TradingGraphs
 
-EXPERIMENTS = 1000
+EXPERIMENTS = 5
 
 def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, amountPerTrade=100, mostRecent=True):
     if not isinstance(id, int):
@@ -66,7 +66,7 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
     coinbasepro.addMACDBuySignals()
     df = coinbasepro.getDataFrame()
 
-    buysignals = (df.ema12gtema26co == True) & (df.macdgtsignal == True)
+    buysignals = (df.close > df.sma200) & (df.ema12gtema26co == True) & (df.macdgtsignal == True) & (df.obv_pc >= 5)  # buy only if there is significant momentum
     sellsignals = (df.ema12ltema26co == True) & (df.macdltsignal == True)
     df_signals = df[(buysignals) | (sellsignals)]
 
@@ -77,7 +77,7 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
     total_diff = 0
     events = []
     for index, row in df_signals.iterrows():
-        if row['ema12gtema26co'] == True and row['macdgtsignal'] == True and row['obv_pc'] >= 5: # buy only if there is significant momentum
+        if row['ema12gtema26co'] == True and row['macdgtsignal'] == True:
             action = 'buy'
         elif row['ema12ltema26co'] == True and row['macdltsignal'] == True:
             # ignore sell if close is lower than previous buy

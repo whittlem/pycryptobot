@@ -15,13 +15,15 @@ def executeJob(sc, market, granularity):
     df = coinbasepro.getDataFrame()
 
     df_last = df.tail(1)
+    close = float(df_last['close'].values[0])
+    sma200 = float(df_last['sma200'].values[0])
     ema12gtema26co = bool(df_last['ema12gtema26co'].values[0])
     macdgtsignal = bool(df_last['macdgtsignal'].values[0])
     ema12ltema26co = bool(df_last['ema12ltema26co'].values[0])
     macdltsignal = bool(df_last['macdltsignal'].values[0])
     obv_pc = float(df_last['obv_pc'].values[0])
 
-    if ema12gtema26co == True and macdgtsignal == True and obv_pc >= 5 and last_action != 'buy':
+    if (close > sma200) & ema12gtema26co == True and macdgtsignal == True and obv_pc >= 5 and last_action != 'buy':
         action = 'buy'
     elif ema12ltema26co == True and macdltsignal == True and last_action != 'sell':
         action = 'sell'

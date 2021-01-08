@@ -5,8 +5,8 @@ from views.TradingGraphs import TradingGraphs
 
 market = 'BTC-GBP'
 granularity = 3600
-startDate = '2019-05-13T13:19:56.639996'
-endDate = '2019-05-26T01:19:56.639996'
+startDate = '2019-08-21T05:51:26.598542'
+endDate = '2019-09-02T17:51:26.598542'
 openingBalance = 1000
 amountPerTrade = 100
 
@@ -18,7 +18,7 @@ coinbasepro.addEMABuySignals()
 coinbasepro.addMACDBuySignals()
 df = coinbasepro.getDataFrame()
 
-buysignals = (df.ema12gtema26co == True) & (df.macdgtsignal == True) & (df.obv_pc >= 5)  # buy only if there is significant momentum
+buysignals = (df.close > df.sma200) & (df.ema12gtema26co == True) & (df.macdgtsignal == True) & (df.obv_pc >= 5)  # buy only if there is significant momentum
 sellsignals = (df.ema12ltema26co == True) & (df.macdltsignal == True)
 df_signals = df[(buysignals) | (sellsignals)]
 
@@ -57,6 +57,7 @@ for index, row in df_signals.iterrows():
             'action': action,
             'index': str(index),
             'close': row['close'],
+            'sma200': row['sma200'],
             'ema12': row['ema12'],
             'ema26': row['ema26'],
             'macd': row['macd'],

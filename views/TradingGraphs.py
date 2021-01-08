@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 from models.CoinbasePro import CoinbasePro
 import datetime
@@ -57,15 +58,18 @@ class TradingGraphs():
         plt.ylabel('Price')
 
         action = ''
+        last_action = ''
         last_buy = 0
         for idx, row in df_signals.iterrows():
-            if row['ema12gtema26co'] == True and row['macdgtsignal'] == True:
+            if row['close'] > row['sma200'] and row['ema12gtema26co'] == True and row['macdgtsignal'] == True and row['obv_pc'] >= 5 and last_action != 'buy':
                 action = 'buy'
                 last_buy = row['close']
                 plt.axvline(x=idx, color='green')
             elif action == 'buy' and row['ema12ltema26co'] == True and row['macdltsignal'] == True and row['close'] > last_buy:
                 action = 'sell'
                 plt.axvline(x=idx, color='red')
+
+            last_action = action
 
         plt.xticks(rotation=90)
 
