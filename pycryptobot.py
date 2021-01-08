@@ -19,7 +19,7 @@ def executeJob(sc, market, granularity):
     macdgtsignal = bool(df_last['macdgtsignal'].values[0])
     ema12ltema26co = bool(df_last['ema12ltema26co'].values[0])
     macdltsignal = bool(df_last['macdltsignal'].values[0])
-    obv_pc = bool(df_last['obv_pc'].values[0])
+    obv_pc = float(df_last['obv_pc'].values[0])
 
     if ema12gtema26co == True and macdgtsignal == True and obv_pc >= 5 and last_action != 'buy':
         action = 'buy'
@@ -28,7 +28,7 @@ def executeJob(sc, market, granularity):
     else:
         action = 'wait'
 
-    print(df_last.index, ema12gtema26co, macdgtsignal, ema12ltema26co, macdltsignal, obv_pc, action)
+    print(df_last.index.format(), 'ema12:' + str(df_last['ema12'].values[0]), 'ema26:' + str(df_last['ema26'].values[0]), ema12gtema26co, ema12ltema26co, 'macd:' + str(df_last['macd'].values[0]), 'signal:' + str(df_last['signal'].values[0]), macdgtsignal, macdltsignal, obv_pc, action)
     print(datetime.now(), 'current action for', market, 'is to', action)
 
     if action == 'buy':
