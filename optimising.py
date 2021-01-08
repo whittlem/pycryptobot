@@ -29,7 +29,7 @@ last_close = 0
 total_diff = 0
 events = []
 for index, row in df_signals.iterrows():
-    if row['ema12gtema26co'] == True and row['macdgtsignal'] == True:
+    if df.iloc[-1]['sma50'] > df.iloc[-1]['sma200'] and row['ema12gtema26co'] == True and row['macdgtsignal'] == True:
         action = 'buy'
     elif row['ema12ltema26co'] == True and row['macdltsignal'] == True:
         # ignore sell if close is lower than previous buy
@@ -80,7 +80,7 @@ events_df = pd.DataFrame(events)
 print(events_df)
 
 addBalance = 0
-if account.getActivity()[-1][2] == 'buy':
+if len(account.getActivity()) > 0 and account.getActivity()[-1][2] == 'buy':
     # last trade is still open, add to closing balance
     addBalance = account.getActivity()[-1][3] * account.getActivity()[-1][4]
 
