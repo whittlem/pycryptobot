@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import re
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 class CoinbasePro():
@@ -35,8 +35,25 @@ class CoinbasePro():
         self.iso8601start = iso8601start
         self.iso8601end = iso8601end
 
+        if self.iso8601start != '' and self.iso8601end == '':
+            multiplier = 1
+            if(self.granularity == 60):
+                multiplier = 1
+            elif(self.granularity == 300):
+                multiplier = 5
+            elif(self.granularity == 900):
+                multiplier = 10
+            elif(self.granularity == 3600):
+                multiplier = 60
+            elif(self.granularity == 21600):
+                multiplier = 360
+            elif(self.granularity == 86400):
+                multiplier = 1440
+
+            self.iso8601end = str((datetime.strptime(self.iso8601start, '%Y-%m-%dT%H:%M:%S.%f') + timedelta(minutes=granularity * multiplier)).isoformat()) 
+
         self.api_url = 'https://api.pro.coinbase.com/products/' + market + '/candles?granularity=' + \
-            str(granularity) + '&start=' + iso8601start + '&end=' + iso8601end
+            str(granularity) + '&start=' + self.iso8601start + '&end=' + self.iso8601end
 
         try:
             resp = requests.get(self.api_url)
@@ -67,7 +84,7 @@ class CoinbasePro():
 
         if len(self.df) < 200:
             self.df = pd.DataFrame()
-            raise Exception('Insufficient data between ' + iso8601start + ' and ' + iso8601end + ' (DataFrame length: ' + str(len(self.df)) + ')')
+            raise Exception('Insufficient data between ' + self.iso8601start + ' and ' + self.iso8601end + ' (DataFrame length: ' + str(len(self.df)) + ')')
 
         if(granularity == 60):
             freq = 'T'
@@ -82,12 +99,12 @@ class CoinbasePro():
         else:
             freq = 'D'
 
-        if len(self.df) == 300:
+        try:
             tsidx = pd.DatetimeIndex(pd.to_datetime(self.df['epoch'], unit='s'), dtype='datetime64[ns]', freq=freq)
             self.df.set_index(tsidx, inplace=True)
             self.df = self.df.drop(columns=['epoch','index'])
             self.df.index.names = ['ts']
-        else:
+        except ValueError:
             tsidx = pd.DatetimeIndex(pd.to_datetime(self.df['epoch'], unit='s'), dtype='datetime64[ns]')
             self.df.set_index(tsidx, inplace=True)
             self.df = self.df.drop(columns=['epoch','index'])
