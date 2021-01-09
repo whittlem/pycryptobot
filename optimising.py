@@ -1,12 +1,13 @@
 import pandas as pd
+from datetime import datetime, timedelta
 from models.CoinbasePro import CoinbasePro
 from models.TradingAccount import TradingAccount
 from views.TradingGraphs import TradingGraphs
 
 market = 'BTC-GBP'
-granularity = 3600
-startDate = '2019-08-21T05:51:26.598542'
-endDate = '2019-09-02T17:51:26.598542'
+granularity = 300
+startDate = '2021-01-08T20:15:00.598542'
+endDate = ''
 openingBalance = 1000
 amountPerTrade = 100
 
@@ -17,10 +18,30 @@ coinbasepro = CoinbasePro(market, granularity, startDate, endDate)
 coinbasepro.addEMABuySignals()
 coinbasepro.addMACDBuySignals()
 df = coinbasepro.getDataFrame()
+#print (df[['close','sma50','sma200','ema12','ema26','ema12gtema26co','ema12gtema26co','macd','signal','macdgtsignal','macdltsignal','obv_pc']])
 
-buysignals = (df.close > df.sma200) & (df.ema12gtema26co == True) & (df.macdgtsignal == True) & (df.obv_pc >= 5)  # buy only if there is significant momentum
+# removed golden cross and decreased obv_pc from 5 to 2 as it was missing buys
+buysignals = (df.ema12gtema26co == True) & (df.macdgtsignal == True) & (df.obv_pc >= 2)  # buy only if there is significant momentum
 sellsignals = (df.ema12ltema26co == True) & (df.macdltsignal == True)
 df_signals = df[(buysignals) | (sellsignals)]
+#print (df_signals[['close','sma50','sma200','ema12','ema26','ema12gtema26co','ema12gtema26co','macd','signal','macdgtsignal','macdltsignal','obv_pc']])
+
+multiplier = 1
+if(granularity == 60):
+    multiplier = 1
+elif(granularity == 300):
+    multiplier = 5
+elif(granularity == 900):
+    multiplier = 10
+elif(granularity == 3600):
+    multiplier = 60
+elif(granularity == 21600):
+    multiplier = 360
+elif(granularity == 86400):
+    multiplier = 1440
+
+if startDate != '' and endDate == '':
+    endDate  = str((datetime.strptime(startDate, '%Y-%m-%dT%H:%M:%S.%f') + timedelta(minutes=granularity * multiplier)).isoformat()) 
 
 diff = 0
 action = ''
@@ -85,8 +106,7 @@ if len(account.getActivity()) > 0 and account.getActivity()[-1][2] == 'buy':
     addBalance = account.getActivity()[-1][3] * account.getActivity()[-1][4]
 
 print('')
-trans_df = pd.DataFrame(account.getActivity(), columns=[
-                        'date', 'balance', 'action', 'amount', 'value'])
+trans_df = pd.DataFrame(account.getActivity(), columns=['date','balance','action','amount','value'])
 print(trans_df)
 
 result = '{:.2f}'.format(

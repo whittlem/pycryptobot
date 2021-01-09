@@ -53,7 +53,7 @@ class CoinbaseProAPI():
         return request
 
     def getAccounts(self):
-        df = self.authAPIRequest('accounts')
+        df = self.authAPIGET('accounts')
         return df[df.balance != '0.0000000000000000'] # non-zero
     
     def getAccount(self, account):
@@ -65,9 +65,9 @@ class CoinbaseProAPI():
             else:
                 raise SystemExit(err)
     
-        return self.authAPIRequest('accounts/' + account)
+        return self.authAPIGET('accounts/' + account)
 
-    def authAPIRequest(self, uri):
+    def authAPIGET(self, uri):
         try:
             resp = requests.get(self.api_url + uri, auth=self)
 
@@ -83,6 +83,32 @@ class CoinbaseProAPI():
             else: 
                 df = pd.DataFrame(json, index=[0])
                 return df
+
+        except requests.ConnectionError as err:
+            if self.debug:
+                raise SystemExit(err)
+            else:
+                raise SystemExit('ConnectionError: ' + self.api_url)
+        except requests.exceptions.HTTPError as err:
+            if self.debug:
+                raise SystemExit(err)
+            else:
+                raise SystemExit('HTTPError: ' + self.api_url)
+        except requests.Timeout as err:
+            if self.debug:
+                raise SystemExit(err)
+            else:
+                raise SystemExit('Timeout: ' + self.api_url) 
+
+    def authAPIPOST(self, uri, payload):
+        try:
+            resp = requests.post(self.api_url + uri, json=payload, auth=self)
+
+            if resp.status_code != 200:
+                raise Exception('GET ' + self.api_url + ' {}'.format(resp.status_code))
+
+            resp.raise_for_status()
+            return resp.json()
 
         except requests.ConnectionError as err:
             if self.debug:

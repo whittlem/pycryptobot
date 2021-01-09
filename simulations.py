@@ -66,7 +66,7 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
     coinbasepro.addMACDBuySignals()
     df = coinbasepro.getDataFrame()
 
-    buysignals = (df.ema12gtema26co == True) & (df.macdgtsignal == True) & (df.obv_pc >= 5)  # buy only if there is significant momentum
+    buysignals = (df.ema12gtema26co == True) & (df.macdgtsignal == True) & (df.obv_pc >= 2)  # buy only if there is significant momentum
     sellsignals = (df.ema12ltema26co == True) & (df.macdltsignal == True)
     df_signals = df[(buysignals) | (sellsignals)]
 
