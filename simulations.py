@@ -5,7 +5,11 @@ from models.CoinbasePro import CoinbasePro
 from models.TradingAccount import TradingAccount
 from views.TradingGraphs import TradingGraphs
 
-EXPERIMENTS = 10
+MARKET = 'BTC-GBP'
+GRANULARITY = 3600
+OPENING_BALANCE = 1000
+AMOUNT_PER_TRADE = 100
+EXPERIMENTS = 1
 
 def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, amountPerTrade=100, mostRecent=True):
     if not isinstance(id, int):
@@ -17,6 +21,10 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
     p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
     if not p.match(market):
         raise TypeError('Coinbase Pro market required.')
+
+    market_matches = re.match(r"^([A-Z]{3,4})\-([A-Z]{3,4})$", market)
+    crypto_market = market_matches[1]
+    fiat_market = market_matches[2]
 
     if not isinstance(granularity, int):
         raise TypeError('Granularity integer required.')
@@ -89,10 +97,10 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
                 diff = row['close'] - last_close
 
             if action == 'buy':
-                account.buy('BTC', 'GBP', amountPerTrade, row['close'])
+                account.buy(crypto_market, fiat_market, amountPerTrade, row['close'])
             elif action == 'sell':
                 lastBuy = account.getActivity()[-1][3]
-                account.sell('BTC', 'GBP', lastBuy, row['close'])
+                account.sell(crypto_market, fiat_market, lastBuy, row['close'])
 
             if mostRecent == True:
                 startDate = (datetime.now() - timedelta(hours=300)).isoformat()
@@ -174,9 +182,9 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
 results = []
 for num in range(EXPERIMENTS):
     if num == 0:
-        results.append(runExperiment(num, 'BTC-GBP', 3600, 1000, 100, True))
+        results.append(runExperiment(num, MARKET, GRANULARITY, OPENING_BALANCE, AMOUNT_PER_TRADE, True))
     else:
-        results.append(runExperiment(num, 'BTC-GBP', 3600, 1000, 100, False))
+        results.append(runExperiment(num, MARKET, GRANULARITY, OPENING_BALANCE, AMOUNT_PER_TRADE, False))
 
 try:
     results_df = pd.DataFrame(results)
