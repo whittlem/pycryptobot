@@ -3,8 +3,19 @@ import re, json, hmac, hashlib, time, requests, base64
 from requests.auth import AuthBase
 
 class CoinbaseProAPI():
-    def __init__(self, api_key='', api_secret='', api_pass='', api_url='https://api.pro.coinbase.com/'):
+    def __init__(self, api_key='', api_secret='', api_pass='', api_url='https://api.pro.coinbase.com'):
         self.debug = False
+
+        valid_urls = [
+            'https://api.pro.coinbase.com',
+            'https://api.pro.coinbase.com/'
+        ]
+
+        if api_url not in valid_urls:
+            raise ValueError('Coinbase Pro API URL is invalid')
+
+        if api_url[-1] != '/':
+            api_url = api_url + '/' 
 
         p = re.compile(r"^[a-f0-9]{32,32}$")
         if not p.match(api_key):
@@ -54,7 +65,9 @@ class CoinbaseProAPI():
 
     def getAccounts(self):
         df = self.authAPIGET('accounts')
-        return df[df.balance != '0.0000000000000000'] # non-zero
+        df = df[df.balance != '0.0000000000000000'] # non-zero
+        df = df.reset_index()
+        return df
     
     def getAccount(self, account):
         p = re.compile(r"^[a-f0-9\-]{36,36}$")
