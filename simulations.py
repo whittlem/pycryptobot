@@ -9,7 +9,7 @@ MARKET = 'BTC-GBP'
 GRANULARITY = 3600
 OPENING_BALANCE = 1000
 AMOUNT_PER_TRADE = 100
-EXPERIMENTS = 1
+EXPERIMENTS = 10
 
 def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, amountPerTrade=100, mostRecent=True):
     if not isinstance(id, int):
@@ -66,7 +66,7 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
         print ('  End date:', endDate)
         print ('')
 
-    account = TradingAccount('experiment' + str(id))
+    account = TradingAccount()
     account.depositFIAT(openingBalance)
 
     coinbasepro = CoinbasePro(market, granularity, startDate, endDate)
@@ -156,11 +156,11 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
     except OSError:
         raise SystemExit('Unable to save: experiments/experiment' +  str(id) + '_trans.csv')  
 
-    result = '{:.2f}'.format(round((account.getBalanceFIAT() + addBalance) - openingBalance, 2))
+    result = '{:.2f}'.format(round((account.getBalance() + addBalance) - openingBalance, 2))
 
     print ('')
     print ("Opening balance:", '{:.2f}'.format(openingBalance))
-    print ("Closing balance:", '{:.2f}'.format(round(account.getBalanceFIAT() + addBalance, 2)))
+    print ("Closing balance:", '{:.2f}'.format(round(account.getBalance() + addBalance, 2)))
     print ("         Result:", result)
     print ('')
 
@@ -173,7 +173,7 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
         'start': startDate,
         'end': endDate,
         'open': '{:.2f}'.format(openingBalance),
-        'close': '{:.2f}'.format(round(account.getBalanceFIAT() + addBalance, 2)),
+        'close': '{:.2f}'.format(round(account.getBalance() + addBalance, 2)),
         'result': result
     }
 
