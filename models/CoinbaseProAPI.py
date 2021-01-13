@@ -1,5 +1,6 @@
 import pandas as pd
 import re, json, hmac, hashlib, time, requests, base64
+from datetime import datetime, timedelta
 from requests.auth import AuthBase
 
 class CoinbaseProAPI():
@@ -79,6 +80,40 @@ class CoinbaseProAPI():
                 raise SystemExit(err)
     
         return self.authAPIGET('accounts/' + account)
+
+    def getOrders(self, market='', action='', status='all'):
+        if market != '':
+            p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
+            if not p.match(market):
+                raise TypeError('Coinbase Pro market is invalid.')
+
+        if action != '':
+            if not action in ['buy', 'sell']:
+                raise ValueError('Invalid order action.')
+
+        if not status in ['open', 'pending', 'done', 'active', 'all']:
+            raise ValueError('Invalid order status.')
+
+        df = self.authAPIGET('orders?status=' + status)[['created_at','product_id','side','type','filled_size','executed_value','status']]
+
+        df['price'] = df.apply(lambda row: (float(row.executed_value) * 100) / (float(row.filled_size) * 100), axis=1)
+        df.columns = ['created_at', 'market', 'action', 'type', 'size', 'value', 'status','price']
+        tsidx = pd.DatetimeIndex(pd.to_datetime(df['created_at']).dt.strftime('%Y-%m-%dT%H:%M%:%SZ'))
+        df.set_index(tsidx, inplace=True)
+        df = df.drop(columns=['created_at'])
+
+        if market != '':
+            df = df[df['market'] == market]
+
+        if action != '':
+            df = df[df['action'] == action]
+
+        if status != 'all':
+            df = df[df['status'] == status]
+
+        df = df.iloc[::-1].reset_index()
+        df[['size', 'value']] = df[['size', 'value']].apply(pd.to_numeric)
+        return df
 
     def authAPIGET(self, uri):
         try:
