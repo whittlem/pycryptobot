@@ -33,7 +33,7 @@ class TradingAccount():
             if not p.match(config['api_pass']):
                 raise TypeError('Coinbase Pro API passphase is invalid')      
 
-            print ('Trading account mode: live (using live data - use at own risk!)')
+            print ('Trading account mode: live (using YOUR account data - use at own risk!)')
             self.mode = 'live'
 
             self.api_url = config['api_url']
@@ -44,11 +44,28 @@ class TradingAccount():
             print ('Trading account mode: test (using dummy data)')
             self.mode = 'test'
 
-        self.balance = 0
-        self.activity = []
+        self.balance = 1000
+        self.orders = pd.DataFrame()
 
-    def getActivity(self):
-        return self.activity
+    def getOrders(self, market='', action='', status='all'):
+        if market != '':
+            p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
+            if not p.match(market):
+                raise TypeError('Coinbase Pro market is invalid.')
+
+        if action != '':
+            if not action in ['buy', 'sell']:
+                raise ValueError('Invalid order action.')
+
+        if not status in ['open', 'pending', 'done', 'active', 'all']:
+            raise ValueError('Invalid order status.')
+
+        if self.mode == 'live':
+            model = CoinbaseProAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+            self.orders = model.getOrders(market, action, status)
+            return self.orders
+        else:
+            return self.orders
 
     def getBalance(self, currency=''):
         if self.mode == 'live':
@@ -64,9 +81,6 @@ class TradingAccount():
                     return df[df['currency'] == currency]['available'].values[0]
         else:
             return self.balance
-
-    def getBalanceFIAT(self):
-        return self.balance
 
     def buy(self, cryptoMarket, fiatMarket, fiatAmount, manualPrice=0.00000000):
         if not isinstance(fiatAmount, float) and not isinstance(fiatAmount, int):
@@ -102,22 +116,11 @@ class TradingAccount():
         fiatAmountMinusFee = fiatAmount - fee
         total = float(fiatAmountMinusFee / price)
 
+        ts = pd.Timestamp.now()
+        price = (fiatAmountMinusFee * 100) / (total * 100)
+        order = pd.DataFrame([[market,'buy','market',float('{:.8f}'.format(total)),fiatAmountMinusFee,'done',price]], columns=['market','action','type','size','value','status','price'], index=[ts])
+        self.orders = pd.concat([self.orders, pd.DataFrame(order)], ignore_index=False)
         self.balance = self.balance - fiatAmount
-        self.activity.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self.balance, 'buy', float('{:.8f}'.format(total)), price])
-
-        #print ('Fee =', '{:.2f}'.format(fee), fiatMarket)
-        #print ('Total =', '{:.8f}'.format(total), cryptoMarket)       
-
-    def depositFIAT(self, amount):
-        if not isinstance(amount, float) and not isinstance(amount, int):
-            raise TypeError('Deposit amount not numeric.')
-
-        if amount <= 0:
-            raise Exception('Insufficient deposit.')
-
-        self.balance = self.balance + amount
-        #self.activity.append([datetime.now().strftime(
-        #    "%Y-%m-%d %H:%M:%S"), amount, 'deposit'])
 
     def sell(self, cryptoMarket, fiatMarket, cryptoAmount, manualPrice=0.00000000):
         if cryptoMarket not in ['BCH','BTC','ETH','LTC']:
@@ -151,22 +154,8 @@ class TradingAccount():
 
         total = price * cryptoAmountMinusFee
         
+        ts = pd.Timestamp.now()
+        price = ((price * cryptoAmount) * 100) / (cryptoAmount * 100)
+        order = pd.DataFrame([[market, 'sell', 'market', cryptoAmountMinusFee, float('{:.8f}'.format(total)), 'done',price]], columns=['market', 'action', 'type', 'size', 'value', 'status','price'], index=[ts])
+        self.orders = pd.concat([self.orders, pd.DataFrame(order)], ignore_index=False)        
         self.balance = self.balance + total
-        self.activity.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self.balance, 'sell', float('{:.8f}'.format(total)), price])
-
-        #print ('Fee =', '{:.2f}'.format(fee * float(json['price'])), fiatMarket)
-        #print ('Total =', '{:.8f}'.format(total), fiatMarket) 
-
-    def withdraw(self, amount):
-        if not isinstance(amount, float) and not isinstance(amount, int):
-            raise TypeError('Withdraw amount not numeric.')
-
-        if amount <= 0:
-            raise Exception('Insufficient withdraw.')
-
-        if amount > self.balance:
-            raise Exception('Insufficient funds.')
-
-        self.balance = self.balance - amount
-        self.activity.append([datetime.now().strftime(
-            "%Y-%m-%d %H:%M:%S"), -amount, 'withdraw'])

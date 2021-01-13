@@ -9,7 +9,7 @@ MARKET = 'BTC-GBP'
 GRANULARITY = 3600
 OPENING_BALANCE = 1000
 AMOUNT_PER_TRADE = 100
-EXPERIMENTS = 10
+EXPERIMENTS = 3
 
 def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, amountPerTrade=100, mostRecent=True):
     if not isinstance(id, int):
@@ -23,8 +23,6 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
         raise TypeError('Coinbase Pro market required.')
 
     market_matches = re.match(r"^([A-Z]{3,4})\-([A-Z]{3,4})$", market)
-    crypto_market = market_matches[1]
-    fiat_market = market_matches[2]
 
     if not isinstance(granularity, int):
         raise TypeError('Granularity integer required.')
@@ -67,7 +65,6 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
         print ('')
 
     account = TradingAccount()
-    account.depositFIAT(openingBalance)
 
     coinbasepro = CoinbasePro(market, granularity, startDate, endDate)
     coinbasepro.addEMABuySignals()
@@ -85,26 +82,26 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
     total_diff = 0
     events = []
     for index, row in df_signals.iterrows():
+        df_orders = account.getOrders()
+
         if df.iloc[-1]['sma50'] > df.iloc[-1]['sma200'] and row['ema12gtema26co'] == True and row['macdgtsignal'] == True:
             action = 'buy'
         elif row['ema12ltema26co'] == True and row['macdltsignal'] == True:
             # ignore sell if close is lower than previous buy
-            if len(account.getActivity()) > 0 and account.getActivity()[-1][2] == 'buy' and row['close'] > account.getActivity()[-1][4]:
+            if len(df_orders) > 0 and df_orders.iloc[[-1]]['action'].values[0] == 'buy' and row['close'] > df_orders.iloc[[-1]]['price'].values[0]:
                 action = 'sell'
 
         if action != '' and action != last_action and not (last_action == '' and action == 'sell'):
             if last_action != '':
-                diff = row['close'] - last_close
+                if action == 'sell':
+                    diff = row['close'] - last_close
+                else:
+                    diff = 0.00
 
             if action == 'buy':
-                account.buy(crypto_market, fiat_market, amountPerTrade, row['close'])
+                account.buy('BTC', 'GBP', amountPerTrade, row['close'])
             elif action == 'sell':
-                lastBuy = account.getActivity()[-1][3]
-                account.sell(crypto_market, fiat_market, lastBuy, row['close'])
-
-            if mostRecent == True:
-                startDate = (datetime.now() - timedelta(hours=300)).isoformat()
-                endDate = datetime.now().isoformat()
+                account.sell('BTC', 'GBP', df_orders.iloc[[-1]]['size'].values[0], row['close'])
 
             data_dict = {
                 'market': market,
@@ -114,7 +111,6 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
                 'action': action,
                 'index': str(index),
                 'close': row['close'],
-                'sma50': row['sma50'],
                 'sma200': row['sma200'],
                 'ema12': row['ema12'],
                 'ema26': row['ema26'],
@@ -135,34 +131,24 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
             total_diff = total_diff + diff
 
     events_df = pd.DataFrame(events)
-    print (events_df)
-
-    try:
-        events_df.to_csv('experiments/experiment' +  str(id) + '_events.csv', index=False)
-    except OSError:
-        raise SystemExit('Unable to save: experiments/experiment' +  str(id) + '_events.csv')    
+    print(events_df)
 
     addBalance = 0
-    if len(account.getActivity()) > 0 and account.getActivity()[-1][2] == 'buy':
+    df_orders = account.getOrders()
+    if len(df_orders) > 0 and df_orders.iloc[[-1]]['action'].values[0] == 'buy':
         # last trade is still open, add to closing balance
-        addBalance = account.getActivity()[-1][3] * account.getActivity()[-1][4]
-
-    print ('')
-    trans_df = pd.DataFrame(account.getActivity(), columns=['date','balance','action','amount','value'])
-    print (trans_df)
-
-    try:
-        trans_df.to_csv('experiments/experiment' +  str(id) + '_trans.csv', index=False)
-    except OSError:
-        raise SystemExit('Unable to save: experiments/experiment' +  str(id) + '_trans.csv')  
+        addBalance = df_orders.iloc[[-1]]['value'].values[0]
+    
+    print('')
+    print(df_orders)
 
     result = '{:.2f}'.format(round((account.getBalance() + addBalance) - openingBalance, 2))
 
-    print ('')
-    print ("Opening balance:", '{:.2f}'.format(openingBalance))
-    print ("Closing balance:", '{:.2f}'.format(round(account.getBalance() + addBalance, 2)))
-    print ("         Result:", result)
-    print ('')
+    print('')
+    print("Opening balance:", '{:.2f}'.format(openingBalance))
+    print("Closing balance:", '{:.2f}'.format(round(account.getBalance() + addBalance, 2)))
+    print("         Result:", result)
+    print('')
 
     tradinggraphs = TradingGraphs(coinbasepro)
     tradinggraphs.renderBuySellSignalEMA1226MACD('experiments/experiment' + str(id) + '_' + str(result) + '.png', True)
