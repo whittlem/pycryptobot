@@ -136,9 +136,7 @@ class CoinbaseProAPI():
         print (order)
 
         model = CoinbaseProAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
-        print (model)
-        #result = model.authAPIPOST('orders', order)
-        #print (result)
+        return model.authAPIPOST('orders', order)
 
     def marketSell(self, market='', cryptoAmount=0):
         p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
@@ -148,9 +146,6 @@ class CoinbaseProAPI():
         if not isinstance(cryptoAmount, int) and not isinstance(cryptoAmount, float):
             raise TypeError('The crypto amount is not numeric.')
 
-        #if fiatAmount < 5:
-        #    raise ValueError('Trade amount is too small (>= 10).')
-
         order = {
             'product_id': market,
             'type': 'market',
@@ -158,11 +153,8 @@ class CoinbaseProAPI():
             'size': cryptoAmount
         }
 
-        print (order)
-
         model = CoinbaseProAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
-        result = model.authAPIPOST('orders', order)
-        print (result)
+        return model.authAPIPOST('orders', order)
 
     def authAPIGET(self, uri):
         try:
