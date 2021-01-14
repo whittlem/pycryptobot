@@ -1,22 +1,21 @@
+import pandas as pd
 import os, sched, sys, time
 from datetime import datetime
 from models.CoinbasePro import CoinbasePro
 
 action = 'wait'
 last_action = ''
+last_df_index = ''
 
 def executeJob(sc, market, granularity): 
-    global action, last_action
+    global action, last_action, last_df_index
 
-    #print(datetime.now(), 'retrieving market data for', market, 'for analysis')
     coinbasepro = CoinbasePro(market, granularity)
     coinbasepro.addEMABuySignals()
     coinbasepro.addMACDBuySignals()
     df = coinbasepro.getDataFrame()
 
     df_last = df.tail(1)
-    #sma50 = float(df_last['sma50'].values[0])
-    #sma200 = float(df_last['sma200'].values[0])
     ema12gtema26co = bool(df_last['ema12gtema26co'].values[0])
     macdgtsignal = bool(df_last['macdgtsignal'].values[0])
     ema12ltema26co = bool(df_last['ema12ltema26co'].values[0])
@@ -30,18 +29,20 @@ def executeJob(sc, market, granularity):
     else:
         action = 'wait'
 
-    print(df_last.index.format(), 'ema12:' + str(df_last['ema12'].values[0]), 'ema26:' + str(df_last['ema26'].values[0]), ema12gtema26co, ema12ltema26co, 'macd:' + str(df_last['macd'].values[0]), 'signal:' + str(df_last['signal'].values[0]), macdgtsignal, macdltsignal, obv_pc, action)
-    #print(datetime.now(), 'current action for', market, 'is to', action)
+    if (last_df_index != df_last.index.format()): # process once per interval
+        print(df_last.index.format(), 'ema12:' + str(df_last['ema12'].values[0]), 'ema26:' + str(df_last['ema26'].values[0]), ema12gtema26co, ema12ltema26co, 'macd:' + str(df_last['macd'].values[0]), 'signal:' + str(df_last['signal'].values[0]), macdgtsignal, macdltsignal, obv_pc, action)
 
-    if action == 'buy':
-        print ('>>> BUY <<<')
-        print (df_last)
-    elif action == 'buy':
-        print ('>>> SELL <<<')
-        print (df_last)
+        if action == 'buy':
+            print ('>>> BUY <<<')
+            print (df_last)
+        elif action == 'buy':
+            print ('>>> SELL <<<')
+            print (df_last)
 
-    last_action = action
-    s.enter(granularity - 1, 1, executeJob, (sc, market, granularity))
+        last_action = action
+        last_df_index = df_last.index.format()
+
+    s.enter(300, 1, executeJob, (sc, market, granularity)) # poll every 5 minutes
 
 try:
     market = 'BTC-GBP'

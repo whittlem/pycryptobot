@@ -85,7 +85,7 @@ class CoinbaseProAPI():
         if market != '':
             p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
             if not p.match(market):
-                raise TypeError('Coinbase Pro market is invalid.')
+                raise ValueError('Coinbase Pro market is invalid.')
 
         if action != '':
             if not action in ['buy', 'sell']:
@@ -115,12 +115,61 @@ class CoinbaseProAPI():
         df[['size', 'value']] = df[['size', 'value']].apply(pd.to_numeric)
         return df
 
+    def marketBuy(self, market='', fiatAmount=0):
+        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
+        if not p.match(market):
+            raise ValueError('Coinbase Pro market is invalid.')
+
+        if not isinstance(fiatAmount, int) and not isinstance(fiatAmount, float):
+            raise TypeError('The funding amount is not numeric.')
+
+        if fiatAmount < 5:
+            raise ValueError('Trade amount is too small (>= 10).')
+
+        order = {
+            'product_id': market,
+            'type': 'market',
+            'side': 'buy',
+            'funds': fiatAmount
+        }
+
+        print (order)
+
+        model = CoinbaseProAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+        print (model)
+        #result = model.authAPIPOST('orders', order)
+        #print (result)
+
+    def marketSell(self, market='', cryptoAmount=0):
+        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
+        if not p.match(market):
+            raise ValueError('Coinbase Pro market is invalid.')
+
+        if not isinstance(cryptoAmount, int) and not isinstance(cryptoAmount, float):
+            raise TypeError('The crypto amount is not numeric.')
+
+        #if fiatAmount < 5:
+        #    raise ValueError('Trade amount is too small (>= 10).')
+
+        order = {
+            'product_id': market,
+            'type': 'market',
+            'side': 'sell',
+            'size': cryptoAmount
+        }
+
+        print (order)
+
+        model = CoinbaseProAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+        result = model.authAPIPOST('orders', order)
+        print (result)
+
     def authAPIGET(self, uri):
         try:
             resp = requests.get(self.api_url + uri, auth=self)
 
             if resp.status_code != 200:
-                raise Exception('GET ' + self.api_url + ' {}'.format(resp.status_code))
+                raise Exception('GET (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
 
             resp.raise_for_status()
             json = resp.json()
@@ -153,9 +202,10 @@ class CoinbaseProAPI():
             resp = requests.post(self.api_url + uri, json=payload, auth=self)
 
             if resp.status_code != 200:
-                raise Exception('GET ' + self.api_url + ' {}'.format(resp.status_code))
+                raise Exception('POST (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
 
             resp.raise_for_status()
+            print (resp)
             return resp.json()
 
         except requests.ConnectionError as err:
