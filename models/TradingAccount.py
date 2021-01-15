@@ -145,7 +145,7 @@ class TradingAccount():
 
         price = manualPrice
         if manualPrice <= 0:
-            resp = requests.get('https://api-public.sandbox.pro.coinbase.com/products/BTC-GBP/ticker')
+            resp = requests.get('https://api-public.sandbox.pro.coinbase.com/products/' + market + '/ticker')
             if resp.status_code != 200:
                 raise Exception('GET /products/' + market + '/ticker {}'.format(resp.status_code))
             resp.raise_for_status()
