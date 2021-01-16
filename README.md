@@ -14,6 +14,7 @@ I'm a writer on Medium (https://whittle.medium.com). This project is a work in p
 * Python 3 PIP installed
 
     % python3 -m pip --version
+    
     pip 20.2.4 from /Library/Python/3.8/site-packages/pip (python 3.8)
 
 ## Installation
