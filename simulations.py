@@ -22,8 +22,6 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
     if not p.match(market):
         raise TypeError('Coinbase Pro market required.')
 
-    market_matches = re.match(r"^([A-Z]{3,4})\-([A-Z]{3,4})$", market)
-
     if not isinstance(granularity, int):
         raise TypeError('Granularity integer required.')
 
