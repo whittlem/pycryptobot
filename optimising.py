@@ -1,8 +1,12 @@
+"""Troubleshoots a particular 300 interval result from simulations.py"""
+
 import pandas as pd
 from datetime import datetime, timedelta
 from models.CoinbasePro import CoinbasePro
 from models.TradingAccount import TradingAccount
 from views.TradingGraphs import TradingGraphs
+
+"""Parameters for the test, get from experiments/experimnets.csv"""
 
 market = 'BTC-GBP'
 granularity = 3600
@@ -11,14 +15,21 @@ endDate = '2020-12-03T11:12:07.720258'
 openingBalance = 1000
 amountPerTrade = 100
 
+# instantiate a non-live trade account
 account = TradingAccount()
 
+# instantiate a CoinbassePro object with desired criteria
 coinbasepro = CoinbasePro(market, granularity, startDate, endDate)
+
+# adds buy and sell signals to Pandas DataFrame
 coinbasepro.addEMABuySignals()
 coinbasepro.addMACDBuySignals()
+
+# stores the Pandas Dataframe in df
 df = coinbasepro.getDataFrame()
 
-buysignals = (df.ema12gtema26co == True) & (df.macdgtsignal == True) & (df.obv_pc >= 2)  # buy only if there is significant momentum
+# defines the buy and sell signals and consolidates into df_signals
+buysignals = ((df.ema12gtema26co == True) & (df.macdgtsignal == True) & (df.obv_pc >= 2)) | ((df.ema12gtema26 == True) & (df.macdgtsignal == True) & (df.obv_pc >= 5))
 sellsignals = (df.ema12ltema26co == True) & (df.macdltsignal == True)
 df_signals = df[(buysignals) | (sellsignals)]
 
@@ -37,6 +48,7 @@ elif(granularity == 86400):
     multiplier = 1440
 
 if startDate != '' and endDate == '':
+    # if only the start date is provided calculate the end date using the granulatory and multiplier
     endDate  = str((datetime.strptime(startDate, '%Y-%m-%dT%H:%M:%S.%f') + timedelta(minutes=granularity * multiplier)).isoformat()) 
 
 diff = 0
@@ -45,10 +57,13 @@ last_action = ''
 last_close = 0
 total_diff = 0
 events = []
+# iterate through the DataFrame buy and sell signals
 for index, row in df_signals.iterrows():
+    # retrieve the orders on the test/demo trading account
     df_orders = account.getOrders()
 
-    if df.iloc[-1]['sma50'] > df.iloc[-1]['sma200'] and row['ema12gtema26co'] == True and row['macdgtsignal'] == True:
+    # determine if the df_signal is a buy or sell, just a high level check
+    if row['ema12gtema26'] == True and row['macdgtsignal'] == True:
         action = 'buy'
     elif row['ema12ltema26co'] == True and row['macdltsignal'] == True:
         # ignore sell if close is lower than previous buy
@@ -94,18 +109,22 @@ for index, row in df_signals.iterrows():
         last_close = row['close']
         total_diff = total_diff + diff
 
+# displays the events from the simulation
 events_df = pd.DataFrame(events)
 print(events_df)
 
+# if the last transation was a buy retrieve open amount
 addBalance = 0
 df_orders = account.getOrders()
 if len(df_orders) > 0 and df_orders.iloc[[-1]]['action'].values[0] == 'buy':
     # last trade is still open, add to closing balance
     addBalance = df_orders.iloc[[-1]]['value'].values[0]
  
+ # displays the transactions from the simulation
 print('')
 print(df_orders)
 
+# if the last transaction was a buy add the open amount to the closing balance
 result = '{:.2f}'.format(round((account.getBalance() + addBalance) - openingBalance, 2))
 
 print('')
@@ -114,5 +133,6 @@ print("Closing balance:", '{:.2f}'.format(round(account.getBalance() + addBalanc
 print("         Result:", result)
 print('')
 
+# renders the DataFrame for analysis
 tradinggraphs = TradingGraphs(coinbasepro)
 tradinggraphs.renderBuySellSignalEMA1226MACD()
