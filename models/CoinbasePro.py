@@ -1,3 +1,17 @@
+"""Retrieves data via the Coinbase Pro public API for analysis
+
+Parameters
+----------
+market : str
+    A valid market/product from the Coinbase Pro exchange. (Default: 'BTC-GBP')
+granularity : int
+    A valid market interval {60, 300, 900, 3600, 21600, 86400} (Default: 86400 - 1 day)
+iso8601start : str, optional
+    The start date of the data in ISO 8601 format. If excluded starts from the last 300 intervals
+iso8601end : str, optional
+    The end date of the data in ISO 8601 format. If excluded ends at the current time
+"""
+
 import json
 import numpy as np
 import pandas as pd
@@ -8,25 +22,44 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 class CoinbasePro():
     def __init__(self, market='BTC-GBP', granularity=86400, iso8601start='', iso8601end=''):
+        """Coinase Pro object model
+    
+        Parameters
+        ----------
+        market : str
+            A valid market/product from the Coinbase Pro exchange. (Default: 'BTC-GBP')
+        granularity : int
+            A valid market interval {60, 300, 900, 3600, 21600, 86400} (Default: 86400 - 1 day)
+        iso8601start : str, optional
+            The start date of the data in ISO 8601 format. If excluded starts from the last 300 intervals
+        iso8601end : str, optional
+            The end date of the data in ISO 8601 format. If excluded ends at the current time"""
+
+        # set to True for verbose output
         self.debug = False
 
-        # only 300 entries, remove row limit
+        # the DataFrame will only ever be 300 rows, uncomment the line below to output all 300 rows
         #pd.set_option('display.max_rows', None)
 
+        # validates the market is syntactically correct
         p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
         if not p.match(market):
             raise TypeError('Coinbase Pro market required.')
 
+        # validates granularity is an integer
         if not isinstance(granularity, int):
             raise TypeError('Granularity integer required.')
 
+        # validates the granularity is supported by Coinbase Pro
         if not granularity in [60, 300, 900, 3600, 21600, 86400]:
             raise TypeError(
                 'Granularity options: 60, 300, 900, 3600, 21600, 86400.')
 
+        # validates the ISO 8601 start date is a string (if provided)
         if not isinstance(iso8601start, str):
             raise TypeError('ISO8601 start integer as string required.')
 
+        # validates the ISO 8601 end date is a string (if provided)
         if not isinstance(iso8601end, str):
             raise TypeError('ISO8601 end integer as string required.')
 
@@ -35,6 +68,7 @@ class CoinbasePro():
         self.iso8601start = iso8601start
         self.iso8601end = iso8601end
 
+        # if only a start date is provided
         if self.iso8601start != '' and self.iso8601end == '':
             multiplier = 1
             if(self.granularity == 60):
@@ -50,8 +84,10 @@ class CoinbasePro():
             elif(self.granularity == 86400):
                 multiplier = 1440
 
+            # calculate the end date using the granularity
             self.iso8601end = str((datetime.strptime(self.iso8601start, '%Y-%m-%dT%H:%M:%S.%f') + timedelta(minutes=granularity * multiplier)).isoformat()) 
 
+        # constructs the API url
         self.api_url = 'https://api.pro.coinbase.com/products/' + market + '/candles?granularity=' + \
             str(granularity) + '&start=' + self.iso8601start + '&end=' + self.iso8601end
 
@@ -79,7 +115,9 @@ class CoinbasePro():
             else:
                 raise SystemExit('Timeout: ' + self.api_url) 
 
+        # convert the API response into a Pandas DataFrame
         self.df = pd.DataFrame(resp.json(), columns=['epoch', 'low', 'high', 'open', 'close', 'volume'])
+        # reverse the order of the response with earliest last
         self.df = self.df.iloc[::-1].reset_index()
 
         if len(self.df) < 200:
@@ -99,6 +137,7 @@ class CoinbasePro():
         else:
             freq = 'D'
 
+        # convert the DataFrame into a time series with the date as the index/key
         try:
             tsidx = pd.DatetimeIndex(pd.to_datetime(self.df['epoch'], unit='s'), dtype='datetime64[ns]', freq=freq)
             self.df.set_index(tsidx, inplace=True)
@@ -119,27 +158,37 @@ class CoinbasePro():
         levels_ts = {}
         for level in self.levels:
             levels_ts[self.df.index[level[0]]] = level[1]
+        # add the support levels to the DataFrame
         self.levels_ts = pd.Series(levels_ts)
 
+    """Getters"""
+
     def getAPI(self):
+        """Returns the Coinbase Pro API URL"""
         return self.api_url
 
     def getDataFrame(self):
+        """Returns the Pandas DataFrame"""
         return self.df
 
     def getMarket(self):
+        """Returns the configured market"""
         return self.market
 
     def getGranularity(self):
+        """Returns the configured granulatory"""
         return self.granularity
 
     def getISO8601Start(self):
+        """Returns the configured ISO 8601 start date"""
         return self.iso8601start
 
     def getISO8601End(self):
+        """Returns the configured ISO 8601 end date"""
         return self.iso8601end
 
     def getSeasonalARIMAModel(self, ts):
+        """Returns the Seasonal ARIMA Model for price predictions"""
         if not isinstance(ts, pd.Series):
             raise TypeError('Pandas Time Series required.')
 
@@ -149,16 +198,22 @@ class CoinbasePro():
         if not 'close' in self.df.columns:
             raise AttributeError("Pandas DataFrame 'close' column required.")
 
+        """Parameters for SARIMAX"""
         model = SARIMAX(ts, trend='n', order=(0,1,0), seasonal_order=(1,1,1,12))
         return model.fit(disp=-1)
 
     def getSupportResistanceLevels(self):
+        """Returns the calculated support levels in the DataFrame"""
         return self.levels
 
     def getSupportResistanceLevelsTimeSeries(self):
+        """Returns the calculated support levels as time series"""
         return self.levels_ts
 
+    """Setters"""
+
     def addEMABuySignals(self):
+        """Adds the EMA12/EMA26 buy and sell signals to the DataFrame"""
         if not isinstance(self.df, pd.DataFrame):
             raise TypeError('Pandas DataFrame required.')
 
@@ -172,15 +227,20 @@ class CoinbasePro():
         if not 'ema12' or not 'ema26' in self.df.columns:
             self.addMovingAverages()
 
+        # True if EMA12 is above the EMA26
         self.df['ema12gtema26'] = self.df.ema12 > self.df.ema26
+        # True if the current frame is where EMA12 crosses over above
         self.df['ema12gtema26co'] = self.df.ema12gtema26.ne(self.df.ema12gtema26.shift())
         self.df.loc[self.df['ema12gtema26'] == False, 'ema12gtema26co'] = False
 
+        # True if the EMA12 is below the EMA26
         self.df['ema12ltema26'] = self.df.ema12 < self.df.ema26
+        # True if the current frame is where EMA12 crosses over below
         self.df['ema12ltema26co'] = self.df.ema12ltema26.ne(self.df.ema12ltema26.shift())
         self.df.loc[self.df['ema12ltema26'] == False, 'ema12ltema26co'] = False
 
     def addMACDBuySignals(self):
+        """Adds the MACD/Signal buy and sell signals to the DataFrame"""
         if not isinstance(self.df, pd.DataFrame):
             raise TypeError('Pandas DataFrame required.')
 
@@ -194,16 +254,23 @@ class CoinbasePro():
         if not 'macd' or not 'signal' in self.df.columns:
             self.addMomentumIndicators()
 
+        # True if MACD is above the Signal
         self.df['macdgtsignal'] = self.df.macd > self.df.signal
+        # True if the current frame is where MACD crosses over above
         self.df['macdgtsignalco'] = self.df.macdgtsignal.ne(self.df.macdgtsignal.shift())
         self.df.loc[self.df['macdgtsignal'] == False, 'macdgtsignalco'] = False
 
+        # True if the MACD is below the Signal
         self.df['macdltsignal'] = self.df.macd < self.df.signal
+        # True if the current frame is where MACD crosses over below
         self.df['macdltsignalco'] = self.df.macdltsignal.ne(self.df.macdltsignal.shift())
         self.df.loc[self.df['macdltsignal'] == False, 'macdltsignalco'] = False
 
+        # True if OBV is greater than 2%
+        self.df['obvsignal'] = self.df.obv_pc > 2
+
     def addMovingAverages(self):
-        '''Appends CMA, EMA12, EMA26, SMA20, SMA50, and SMA200 moving averages to a dataframe.'''
+        """Appends CMA, EMA12, EMA26, SMA20, SMA50, and SMA200 moving averages to a dataframe."""
 
         if not isinstance(self.df, pd.DataFrame):
             raise TypeError('Pandas DataFrame required.')
@@ -228,7 +295,7 @@ class CoinbasePro():
         self.df['sma200'] = self.df.close.rolling(200, min_periods=1).mean()
 
     def addMomentumIndicators(self):
-        '''Appends RSI14 and MACD momentum indicators to a dataframe.'''
+        """Appends RSI14 and MACD momentum indicators to a dataframe."""
 
         if not isinstance(self.df, pd.DataFrame):
             raise TypeError('Pandas DataFrame required.')
@@ -273,7 +340,7 @@ class CoinbasePro():
         self.df['obv_pc'] = np.round(self.df['obv_pc'].fillna(0), 2)
 
     def calculateRelativeStrengthIndex(self, series, interval=14):
-        '''Calculates the RSI on a Pandas series of closing prices.'''
+        """Calculates the RSI on a Pandas series of closing prices."""
 
         if not isinstance(series, pd.Series):
             raise TypeError('Pandas Series required.')
@@ -301,7 +368,7 @@ class CoinbasePro():
         return rsi
 
     def saveCSV(self, filename='cbpGetHistoricRates.csv'):
-        '''Saves the DataFrame to an uncompressed CSV.'''
+        """Saves the DataFrame to an uncompressed CSV."""
 
         p = re.compile(r"^[\w\-. ]+$")
         if not p.match(filename):
@@ -316,7 +383,7 @@ class CoinbasePro():
             print('Unable to save: ', filename)
 
     def __calculateSupportResistenceLevels(self):
-        '''Support and Resistance levels.'''
+        """Support and Resistance levels. (private function)"""
 
         for i in range(2, self.df.shape[0] - 2):
             if self.__isSupport(self.df, i):
@@ -330,7 +397,7 @@ class CoinbasePro():
         return self.levels
 
     def __isSupport(self, df, i):
-        '''Private function'''
+        """Is support level? (privte function)"""
 
         c1 = df['low'][i] < df['low'][i - 1]
         c2 = df['low'][i] < df['low'][i + 1]
@@ -340,7 +407,7 @@ class CoinbasePro():
         return support
 
     def __isResistance(self, df, i):
-        '''Private function'''
+        """Is resistance level? (private function)"""
 
         c1 = df['high'][i] > df['high'][i - 1]
         c2 = df['high'][i] > df['high'][i + 1]
@@ -350,7 +417,7 @@ class CoinbasePro():
         return resistance
 
     def __isFarFromLevel(self, l):
-        '''Private function'''
+        """Is far from support level? (private function)"""
 
         s = np.mean(self.df['high'] - self.df['low'])
         return np.sum([abs(l-x) < s for x in self.levels]) == 0
