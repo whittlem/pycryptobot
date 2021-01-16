@@ -9,6 +9,7 @@ I'm a writer on Medium (https://whittle.medium.com). This project is a work in p
 * Python 3 installed
 
     % python3 --version
+    
     Python 3.8.2
     
 * Python 3 PIP installed
