@@ -40,7 +40,7 @@ from models.CoinbaseProAPI import CoinbaseProAPI
 """Settings"""
 
 # 0 is test/demo, 1 is live
-is_live = 0
+is_live = 1
 
 # the crypto market you wish you trade
 cryptoMarket = 'BTC'
@@ -105,7 +105,7 @@ def executeJob(sc, market, granularity):
     if (ema12gtema26co == True and macdgtsignal == True and obv_pc >= 2) or (ema12gtema26 == True and macdgtsignal == True and obv_pc >= 5) and last_action != 'buy':
         action = 'buy'
     # Criteria for a sell signal
-    elif ema12ltema26co == True and macdltsignal == True and last_action != 'sell':
+    elif ema12ltema26co == True and macdltsignal == True and last_action not in ['','sell']:
         action = 'sell'
     # Anything other than a buy or sell, just wait
     else:
@@ -117,6 +117,8 @@ def executeJob(sc, market, granularity):
         print(df_last.index.format(), 'ema12:' + str(df_last['ema12'].values[0]), 'ema26:' + str(df_last['ema26'].values[0]), 'above:(', ema12gtema26, ema12gtema26co, ')', 'below:(', ema12ltema26,
               ema12ltema26co, ')', 'macd:' + str(df_last['macd'].values[0]), 'signal:' + str(df_last['signal'].values[0]), 'above:(', macdgtsignal, ')', 'below:(', macdltsignal, ')', obv_pc, 'above:(', obvsignal, ')', action)
 
+        print (last_action, action)
+
         # If a buy signal
         if action == 'buy':
             # If live
@@ -125,7 +127,7 @@ def executeJob(sc, market, granularity):
                 # Connect to Coinbase Pro API live
                 model = CoinbaseProAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
                 # Execute a live market buy
-                resp = model.marketBuy(market, account.getBalance(fiatMarket))
+                resp = model.marketBuy(market, float(account.getBalance(fiatMarket)))
                 print(resp)
             # If not live
             else:
@@ -140,7 +142,7 @@ def executeJob(sc, market, granularity):
                 # Connect to Coinbase Pro API live
                 model = CoinbaseProAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
                 # Execute a live market sell
-                resp = model.marketSell(market, account.getBalance(cryptoMarket))
+                resp = model.marketSell(market, float(account.getBalance(cryptoMarket)))
                 print(resp)
             # If not live
             else:
