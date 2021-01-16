@@ -1,3 +1,5 @@
+"""Runs x number of simulations using random time frames"""
+
 import random, re
 import pandas as pd
 from datetime import datetime, timedelta
@@ -5,13 +7,23 @@ from models.CoinbasePro import CoinbasePro
 from models.TradingAccount import TradingAccount
 from views.TradingGraphs import TradingGraphs
 
-MARKET = 'BTC-GBP'
-GRANULARITY = 3600
-OPENING_BALANCE = 1000
-AMOUNT_PER_TRADE = 100
-EXPERIMENTS = 100
+"Paramters of the experiments"
 
-def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, amountPerTrade=100, mostRecent=True):
+market = 'BTC-GBP'
+granularity = 3600
+experiments = 10 # 1 or more
+
+def runExperiment(id, market='BTC-GBP', granularity=3600, mostRecent=True):
+    """Run an experiment
+
+    Parameters
+    ----------
+    market : str
+        A valid market/product from the Coinbase Pro exchange. (Default: 'BTC-GBP')
+    granularity : int
+        A valid market interval {60, 300, 900, 3600, 21600, 86400} (Default: 86400 - 1 day)
+    """
+
     if not isinstance(id, int):
         raise TypeError('ID not numeric.')
 
@@ -28,18 +40,6 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
     if not granularity in [60, 300, 900, 3600, 21600, 86400]:
         raise TypeError(
             'Granularity options: 60, 300, 900, 3600, 21600, 86400.')
-
-    if not isinstance(openingBalance, int) and not isinstance(openingBalance, float):
-        raise TypeError('Opening balance not numeric.')
-
-    if openingBalance <= 0 or openingBalance < amountPerTrade:
-        raise TypeError('Insufficient opening balance.')
-
-    if amountPerTrade <= 0 or openingBalance < amountPerTrade:
-        raise TypeError('Insufficient amount per trade.')
-
-    if not isinstance(openingBalance, int) and not isinstance(openingBalance, float):
-        raise TypeError('Amount per trade not numeric.')
 
     if not isinstance(mostRecent, bool):
         raise TypeError('Most recent is a boolean.')
@@ -62,14 +62,21 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
         print ('  End date:', endDate)
         print ('')
 
+    # instantiate a non-live trade account
     account = TradingAccount()
 
+    # instantiate a CoinbassePro object with desired criteria
     coinbasepro = CoinbasePro(market, granularity, startDate, endDate)
+
+    # adds buy and sell signals to Pandas DataFrame
     coinbasepro.addEMABuySignals()
     coinbasepro.addMACDBuySignals()
+
+    # stores the Pandas Dataframe in df
     df = coinbasepro.getDataFrame()
 
-    buysignals = ((df.ema12gtema26co == True) & (df.macdgtsignal == True) & (df.obv_pc >= 2)) | ((df.ema12gtema26 == True) & (df.macdgtsignal == True) & (df.obv_pc >= 5))  # buy only if there is significant momentum
+    # defines the buy and sell signals and consolidates into df_signals
+    buysignals = ((df.ema12gtema26co == True) & (df.macdgtsignal == True) & (df.obv_pc >= 2)) | ((df.ema12gtema26 == True) & (df.macdgtsignal == True) & (df.obv_pc >= 5))
     sellsignals = (df.ema12ltema26co == True) & (df.macdltsignal == True)
     df_signals = df[(buysignals) | (sellsignals)]
 
@@ -79,10 +86,12 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
     last_close = 0
     total_diff = 0
     events = []
+    # iterate through the DataFrame buy and sell signals
     for index, row in df_signals.iterrows():
         df_orders = account.getOrders()
 
-        if df.iloc[-1]['sma50'] > df.iloc[-1]['sma200'] and row['ema12gtema26co'] == True and row['macdgtsignal'] == True:
+        # determine if the df_signal is a buy or sell, just a high level check
+        if row['ema12gtema26'] == True and row['macdgtsignal'] == True:
             action = 'buy'
         elif row['ema12ltema26co'] == True and row['macdltsignal'] == True:
             # ignore sell if close is lower than previous buy
@@ -97,7 +106,7 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
                     diff = 0.00
 
             if action == 'buy':
-                account.buy('BTC', 'GBP', amountPerTrade, row['close'])
+                account.buy('BTC', 'GBP', 100, row['close'])
             elif action == 'sell':
                 account.sell('BTC', 'GBP', df_orders.iloc[[-1]]['size'].values[0], row['close'])
 
@@ -128,26 +137,30 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
             last_close = row['close']
             total_diff = total_diff + diff
 
+    # displays the events from the simulation
     events_df = pd.DataFrame(events)
     print(events_df)
 
+    # if the last transation was a buy retrieve open amount
     addBalance = 0
     df_orders = account.getOrders()
     if len(df_orders) > 0 and df_orders.iloc[[-1]]['action'].values[0] == 'buy':
         # last trade is still open, add to closing balance
         addBalance = df_orders.iloc[[-1]]['value'].values[0]
     
+    # displays the orders from the simulation
     print('')
     print(df_orders)
 
-    result = '{:.2f}'.format(round((account.getBalance() + addBalance) - openingBalance, 2))
+    result = '{:.2f}'.format(round((account.getBalance() + addBalance) - 1000, 2))
 
     print('')
-    print("Opening balance:", '{:.2f}'.format(openingBalance))
+    print("Opening balance:", 1000)
     print("Closing balance:", '{:.2f}'.format(round(account.getBalance() + addBalance, 2)))
     print("         Result:", result)
     print('')
 
+    # saves the rendered diagram for the DataFrame (without displaying)
     tradinggraphs = TradingGraphs(coinbasepro)
     tradinggraphs.renderBuySellSignalEMA1226MACD('experiments/experiment' + str(id) + '_' + str(result) + '.png', True)
 
@@ -156,7 +169,7 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
         'granularity': granularity,
         'start': startDate,
         'end': endDate,
-        'open': '{:.2f}'.format(openingBalance),
+        'open': 1000,
         'close': '{:.2f}'.format(round(account.getBalance() + addBalance, 2)),
         'result': result
     }
@@ -164,14 +177,19 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
     return result_dict
 
 results = []
-for num in range(EXPERIMENTS):
+# iterate through experiments
+for num in range(experiments):
+    # append experiment results
     if num == 0:
-        results.append(runExperiment(num, MARKET, GRANULARITY, OPENING_BALANCE, AMOUNT_PER_TRADE, True))
+        # first experiment is always the most recent data
+        results.append(runExperiment(num, market, granularity, True))
     else:
-        results.append(runExperiment(num, MARKET, GRANULARITY, OPENING_BALANCE, AMOUNT_PER_TRADE, False))
+        # all other experiments use random time intervals going back years
+        results.append(runExperiment(num, market, granularity, False))
 
 try:
     results_df = pd.DataFrame(results)
+    # store the DataFrame to experiments/experiments.csv
     results_df.to_csv('experiments/experiments.csv', index=False)
 except OSError:
     raise SystemExit('Unable to save: experiments/experiments.csv')  
