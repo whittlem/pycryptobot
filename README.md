@@ -31,7 +31,11 @@ The "requirements.txt" was created with "python3 -m pip freeze"
 ## Run it
 
 % python3 pycryptobot.py               --    this is the trading bot, no live trades yet, just notificating on buy/sell signals
+
 % python3 simulations.py               --    trading simulations using live data to test technical indicators
+
 % python3 optimising.py                --    troubleshoot a single experiment from the simulations
+
 % python3 sandbox-livevsdemoacct.py    --    examples on how to switch between live and demo trading accounts
+
 % python3 sandbox-modelsandviews.py    --    examples on how to use the models and views
