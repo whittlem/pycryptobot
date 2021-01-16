@@ -9,7 +9,7 @@ MARKET = 'BTC-GBP'
 GRANULARITY = 3600
 OPENING_BALANCE = 1000
 AMOUNT_PER_TRADE = 100
-EXPERIMENTS = 3
+EXPERIMENTS = 100
 
 def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, amountPerTrade=100, mostRecent=True):
     if not isinstance(id, int):
@@ -69,7 +69,7 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, openingBalance=1000, a
     coinbasepro.addMACDBuySignals()
     df = coinbasepro.getDataFrame()
 
-    buysignals = (df.ema12gtema26co == True) & (df.macdgtsignal == True) & (df.obv_pc >= 2)  # buy only if there is significant momentum
+    buysignals = ((df.ema12gtema26co == True) & (df.macdgtsignal == True) & (df.obv_pc >= 2)) | ((df.ema12gtema26 == True) & (df.macdgtsignal == True) & (df.obv_pc >= 5))  # buy only if there is significant momentum
     sellsignals = (df.ema12ltema26co == True) & (df.macdltsignal == True)
     df_signals = df[(buysignals) | (sellsignals)]
 
