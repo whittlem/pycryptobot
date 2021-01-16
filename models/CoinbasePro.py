@@ -33,7 +33,8 @@ class CoinbasePro():
         iso8601start : str, optional
             The start date of the data in ISO 8601 format. If excluded starts from the last 300 intervals
         iso8601end : str, optional
-            The end date of the data in ISO 8601 format. If excluded ends at the current time"""
+            The end date of the data in ISO 8601 format. If excluded ends at the current time
+        """
 
         # set to True for verbose output
         self.debug = False
