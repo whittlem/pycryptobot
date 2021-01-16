@@ -40,7 +40,7 @@ from models.CoinbaseProAPI import CoinbaseProAPI
 """Settings"""
 
 # 0 is test/demo, 1 is live
-is_live = 1
+is_live = 0
 
 # the crypto market you wish you trade
 cryptoMarket = 'BTC'
