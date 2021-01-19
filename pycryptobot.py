@@ -53,6 +53,8 @@ granularity = 3600  # 1 hour
 
 """Highly advisable not to change any code below this point!"""
 
+version = 0.49
+
 # validation of crypto market inputs
 if cryptoMarket not in ['BCH', 'BTC', 'ETH', 'LTC']:
     raise Exception('Invalid crypto market: BCH, BTC, ETH, LTC or ETH')
@@ -101,50 +103,50 @@ def executeJob(sc, market, granularity):
     obv_pc = float(df_last['obv_pc'].values[0])
     obvsignal = bool(df_last['obvsignal'].values[0])
 
-    # Criteria for a buy signal
-    if (ema12gtema26co == True and macdgtsignal == True and obv_pc >= 2) or (ema12gtema26 == True and macdgtsignal == True and obv_pc >= 5) and last_action != 'buy':
+    # criteria for a buy signal
+    if ((ema12gtema26co == True and macdgtsignal == True and obv_pc >= 2) or (ema12gtema26 == True and macdgtsignal == True and obv_pc >= 5)) and last_action != 'buy':
         action = 'buy'
-    # Criteria for a sell signal
-    elif ema12ltema26co == True and macdltsignal == True and last_action not in ['','sell']:
+    # criteria for a sell signal
+    elif ((ema12ltema26co == True and macdltsignal == True) or (ema12ltema26 == True and macdltsignal == True and obv_pc < 0)) and last_action not in ['','sell']:
         action = 'sell'
-    # Anything other than a buy or sell, just wait
+    # anything other than a buy or sell, just wait
     else:
         action = 'wait'
 
-    # Polling is every 5 minutes (even for hourly intervals), but only process once per interval
+    # polling is every 5 minutes (even for hourly intervals), but only process once per interval
     if (last_df_index != df_last.index.format()):
-        # Informational output on the most recent entry  
+        # informational output on the most recent entry  
         print(df_last.index.format(), 'ema12:' + str(df_last['ema12'].values[0]), 'ema26:' + str(df_last['ema26'].values[0]), 'above:(', ema12gtema26, ema12gtema26co, ')', 'below:(', ema12ltema26,
               ema12ltema26co, ')', 'macd:' + str(df_last['macd'].values[0]), 'signal:' + str(df_last['signal'].values[0]), 'above:(', macdgtsignal, ')', 'below:(', macdltsignal, ')', obv_pc, 'above:(', obvsignal, ')', action)
 
         print (last_action, action)
 
-        # If a buy signal
+        # if a buy signal
         if action == 'buy':
-            # If live
+            # if live
             if is_live == 1:
                 print('>>> EXECUTING LIVE BUY! <<<')
-                # Connect to Coinbase Pro API live
+                # connect to coinbase pro api (authenticated)
                 model = CoinbaseProAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
-                # Execute a live market buy
+                # execute a live market buy
                 resp = model.marketBuy(market, float(account.getBalance(fiatMarket)))
                 print(resp)
-            # If not live
+            # if not live
             else:
                 print('>>> NON-LIVE SIMULATION BUY <<<')
             print(df_last)
 
-        # If a sell signal
+        # if a sell signal
         elif action == 'sell':
-            # If live
+            # if live
             if is_live == 1:
                 print('>>> EXECUTING LIVE SELL! <<<')
-                # Connect to Coinbase Pro API live
+                # connect to Coinbase Pro API live
                 model = CoinbaseProAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
-                # Execute a live market sell
+                # execute a live market sell
                 resp = model.marketSell(market, float(account.getBalance(cryptoMarket)))
                 print(resp)
-            # If not live
+            # if not live
             else:
                 print('>>> NON-LIVE SIMULATION SELL <<<')
             print(df_last)
@@ -156,7 +158,7 @@ def executeJob(sc, market, granularity):
     s.enter(300, 1, executeJob, (sc, market, granularity))
 
 try:
-    print("Python Crypto Bot using Coinbase Pro API\n")
+    print("Python Crypto Bot using Coinbase Pro API v" + str(version) + "\n")
     print(datetime.now(), 'started for market',
           market, 'using interval', granularity)
 

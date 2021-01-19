@@ -11,7 +11,7 @@ from views.TradingGraphs import TradingGraphs
 
 market = 'BTC-GBP'
 granularity = 3600
-experiments = 10 # 1 or more
+experiments = 100 # 1 or more
 
 def runExperiment(id, market='BTC-GBP', granularity=3600, mostRecent=True):
     """Run an experiment
@@ -76,8 +76,8 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, mostRecent=True):
     df = coinbasepro.getDataFrame()
 
     # defines the buy and sell signals and consolidates into df_signals
-    buysignals = ((df.ema12gtema26co == True) & (df.macdgtsignal == True) & (df.obv_pc >= 2)) | ((df.ema12gtema26 == True) & (df.macdgtsignal == True) & (df.obv_pc >= 5))
-    sellsignals = (df.ema12ltema26co == True) & (df.macdltsignal == True)
+    buysignals = ((df.ema12gtema26co == True) & (df.macdgtsignal == True) & (df.obv_pc >= 2)) | ((df.ema12gtema26 == True) & (df.ema12gtema26 == True) & (df.macdgtsignal == True) & (df.obv_pc >= 5))
+    sellsignals = (((df.ema12ltema26co == True) & (df.macdltsignal == True)) | ((df.ema12gtema26 == True) & ((df.macdltsignal == True) & (df.obv_pc < 0))))
     df_signals = df[(buysignals) | (sellsignals)]
 
     diff = 0

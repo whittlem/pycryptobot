@@ -1,10 +1,12 @@
+"""Trading Account object model examples"""
+
 import json
 from models.TradingAccount import TradingAccount
 
 with open('config.json') as config_file:
     config = json.load(config_file)
 
-# LIVE TRADING ACCOUNT - YOUR ACCOUNT DATA!
+# live trading account - your account data!
 
 '''
 account = TradingAccount(config)
@@ -12,7 +14,7 @@ print (account.getBalance('GBP'))
 print (account.getOrders('BTC-GBP'))
 '''
 
-# TEST TRADING ACCOUNT - DUMMY DATA
+# test trading account - dummy data
 
 account = TradingAccount()
 print (account.getBalance('GBP'))
