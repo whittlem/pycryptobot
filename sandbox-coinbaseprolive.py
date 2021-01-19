@@ -1,3 +1,5 @@
+"""Coinbase Pro API object model examples"""
+
 import json
 from models.CoinbaseProAPI import CoinbaseProAPI
 
@@ -23,3 +25,9 @@ print (orders3)
 
 orders4 = model.getOrders('BTC-GBP', 'buy', 'done')
 print (orders4)
+
+#order = model.marketBuy('BTC-GBP', 100)
+#print (order)
+
+#order = model.marketSell('BTC-GBP', 0.001)
+#print (order)
