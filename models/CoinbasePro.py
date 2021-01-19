@@ -1,16 +1,4 @@
-"""Retrieves data via the Coinbase Pro public API for analysis
-
-Parameters
-----------
-market : str
-    A valid market/product from the Coinbase Pro exchange. (Default: 'BTC-GBP')
-granularity : int
-    A valid market interval {60, 300, 900, 3600, 21600, 86400} (Default: 86400 - 1 day)
-iso8601start : str, optional
-    The start date of the data in ISO 8601 format. If excluded starts from the last 300 intervals
-iso8601end : str, optional
-    The end date of the data in ISO 8601 format. If excluded ends at the current time
-"""
+"""Retrieves data via the Coinbase Pro public API for analysis"""
 
 import json
 import numpy as np
@@ -22,7 +10,7 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 class CoinbasePro():
     def __init__(self, market='BTC-GBP', granularity=86400, iso8601start='', iso8601end=''):
-        """Coinase Pro object model
+        """Coinbase Pro object model
     
         Parameters
         ----------
@@ -228,15 +216,15 @@ class CoinbasePro():
         if not 'ema12' or not 'ema26' in self.df.columns:
             self.addMovingAverages()
 
-        # True if EMA12 is above the EMA26
+        # true if EMA12 is above the EMA26
         self.df['ema12gtema26'] = self.df.ema12 > self.df.ema26
-        # True if the current frame is where EMA12 crosses over above
+        # true if the current frame is where EMA12 crosses over above
         self.df['ema12gtema26co'] = self.df.ema12gtema26.ne(self.df.ema12gtema26.shift())
         self.df.loc[self.df['ema12gtema26'] == False, 'ema12gtema26co'] = False
 
-        # True if the EMA12 is below the EMA26
+        # true if the EMA12 is below the EMA26
         self.df['ema12ltema26'] = self.df.ema12 < self.df.ema26
-        # True if the current frame is where EMA12 crosses over below
+        # true if the current frame is where EMA12 crosses over below
         self.df['ema12ltema26co'] = self.df.ema12ltema26.ne(self.df.ema12ltema26.shift())
         self.df.loc[self.df['ema12ltema26'] == False, 'ema12ltema26co'] = False
 
@@ -255,19 +243,19 @@ class CoinbasePro():
         if not 'macd' or not 'signal' in self.df.columns:
             self.addMomentumIndicators()
 
-        # True if MACD is above the Signal
+        # true if MACD is above the Signal
         self.df['macdgtsignal'] = self.df.macd > self.df.signal
-        # True if the current frame is where MACD crosses over above
+        # true if the current frame is where MACD crosses over above
         self.df['macdgtsignalco'] = self.df.macdgtsignal.ne(self.df.macdgtsignal.shift())
         self.df.loc[self.df['macdgtsignal'] == False, 'macdgtsignalco'] = False
 
-        # True if the MACD is below the Signal
+        # true if the MACD is below the Signal
         self.df['macdltsignal'] = self.df.macd < self.df.signal
-        # True if the current frame is where MACD crosses over below
+        # true if the current frame is where MACD crosses over below
         self.df['macdltsignalco'] = self.df.macdltsignal.ne(self.df.macdltsignal.shift())
         self.df.loc[self.df['macdltsignal'] == False, 'macdltsignalco'] = False
 
-        # True if OBV is greater than 2%
+        # true if OBV is greater than 2%
         self.df['obvsignal'] = self.df.obv_pc > 2
 
     def addMovingAverages(self):
