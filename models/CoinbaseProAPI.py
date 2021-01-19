@@ -1,3 +1,5 @@
+"""Remotely control your Coinbase Pro account via their API"""
+
 import pandas as pd
 import re, json, hmac, hashlib, time, requests, base64
 from datetime import datetime, timedelta
@@ -5,6 +7,21 @@ from requests.auth import AuthBase
 
 class CoinbaseProAPI():
     def __init__(self, api_key='', api_secret='', api_pass='', api_url='https://api.pro.coinbase.com'):
+        """Coinbase Pro API object model
+    
+        Parameters
+        ----------
+        api_key : str
+            Your Coinbase Pro account portfolio API key
+        api_secret : str
+            Your Coinbase Pro account portfolio API secret
+        api_pass : str
+            Your Coinbase Pro account portfolio API passphrase
+        api_url
+            Coinbase Pro API URL
+        """
+
+        # enable for verbose messaging
         self.debug = False
 
         valid_urls = [
@@ -12,12 +29,14 @@ class CoinbaseProAPI():
             'https://api.pro.coinbase.com/'
         ]
 
+        # validate Coinbase Pro API
         if api_url not in valid_urls:
             raise ValueError('Coinbase Pro API URL is invalid')
 
         if api_url[-1] != '/':
             api_url = api_url + '/' 
 
+        # validates the api key is syntactically correct
         p = re.compile(r"^[a-f0-9]{32,32}$")
         if not p.match(api_key):
             err = 'Coinbase Pro API key is invalid'
@@ -26,6 +45,7 @@ class CoinbaseProAPI():
             else:
                 raise SystemExit(err)
  
+        # validates the api secret is syntactically correct
         p = re.compile(r"^[A-z0-9+\/]+==$")
         if not p.match(api_secret):
             err = 'Coinbase Pro API secret is invalid'
@@ -34,6 +54,7 @@ class CoinbaseProAPI():
             else:
                 raise SystemExit(err)
 
+        # validates the api passphase is syntactically correct
         p = re.compile(r"^[a-z0-9]{11,11}$")
         if not p.match(api_pass):
             err = 'Coinbase Pro API passphase is invalid'
@@ -48,6 +69,8 @@ class CoinbaseProAPI():
         self.api_url = api_url
 
     def __call__(self, request):
+        """Signs the request"""
+
         timestamp = str(time.time())
         message = timestamp + request.method + request.path_url + (request.body or b'').decode()
         hmac_key = base64.b64decode(self.api_secret)
@@ -65,12 +88,22 @@ class CoinbaseProAPI():
         return request
 
     def getAccounts(self):
+        """Retrieves your list of accounts"""
+
+        # GET /accounts
         df = self.authAPIGET('accounts')
-        df = df[df.balance != '0.0000000000000000'] # non-zero
+        
+        # exclude accounts with a nil balance
+        df = df[df.balance != '0.0000000000000000']
+
+        # reset the dataframe index to start from 0
         df = df.reset_index()
         return df
     
     def getAccount(self, account):
+        """Retrieves a specific account"""
+
+        # validates the account is syntactically correct
         p = re.compile(r"^[a-f0-9\-]{36,36}$")
         if not p.match(account):
             err = 'Coinbase Pro account is invalid'
@@ -82,48 +115,75 @@ class CoinbaseProAPI():
         return self.authAPIGET('accounts/' + account)
 
     def getOrders(self, market='', action='', status='all'):
+        """Retrieves your list of orders with optional filtering"""
+
+        # if market provided
         if market != '':
+            # validates the market is syntactically correct
             p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
             if not p.match(market):
                 raise ValueError('Coinbase Pro market is invalid.')
 
+        # if action provided
         if action != '':
+            # validates action is either a buy or sell
             if not action in ['buy', 'sell']:
                 raise ValueError('Invalid order action.')
 
+        # validates status is either open, pending, done, active, or all
         if not status in ['open', 'pending', 'done', 'active', 'all']:
             raise ValueError('Invalid order status.')
 
+        # GET /orders?status
         df = self.authAPIGET('orders?status=' + status)[['created_at','product_id','side','type','filled_size','executed_value','status']]
 
+        # calculates the price at the time of purchase
         df['price'] = df.apply(lambda row: (float(row.executed_value) * 100) / (float(row.filled_size) * 100), axis=1)
+
+        # rename the columns
         df.columns = ['created_at', 'market', 'action', 'type', 'size', 'value', 'status','price']
+        
+        # convert dataframe to a time series
         tsidx = pd.DatetimeIndex(pd.to_datetime(df['created_at']).dt.strftime('%Y-%m-%dT%H:%M%:%SZ'))
         df.set_index(tsidx, inplace=True)
         df = df.drop(columns=['created_at'])
 
+        # if marker provided
         if market != '':
+            # filter by market
             df = df[df['market'] == market]
 
+        # if action provided
         if action != '':
+            # filter by action
             df = df[df['action'] == action]
 
+        # if status provided
         if status != 'all':
+            # filter by status
             df = df[df['status'] == status]
 
+        # reverse orders and reset index
         df = df.iloc[::-1].reset_index()
+
+        # converts size and value to numeric type
         df[['size', 'value']] = df[['size', 'value']].apply(pd.to_numeric)
         return df
 
     def marketBuy(self, market='', fiatAmount=0):
+        """Executes a market buy providing a funding amount"""
+
+        # validates the market is syntactically correct
         p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
         if not p.match(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
+        # validates fiatAmount is either an integer or float
         if not isinstance(fiatAmount, int) and not isinstance(fiatAmount, float):
             raise TypeError('The funding amount is not numeric.')
 
-        if fiatAmount < 5:
+        # funding amount needs to be greater than 10
+        if fiatAmount < 10:
             raise ValueError('Trade amount is too small (>= 10).')
 
         order = {
@@ -133,9 +193,13 @@ class CoinbaseProAPI():
             'funds': fiatAmount
         }
 
-        print (order)
+        if self.debug == True:
+            print (order)
 
+        # connect to authenticated coinbase pro api
         model = CoinbaseProAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+
+        # place order and return result
         return model.authAPIPOST('orders', order)
 
     def marketSell(self, market='', cryptoAmount=0):

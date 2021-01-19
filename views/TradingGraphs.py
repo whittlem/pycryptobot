@@ -1,3 +1,5 @@
+"""Plots (and/or saves) the graphical trading data using Matplotlib"""
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,16 +10,40 @@ sys.path.append('.')
 
 class TradingGraphs():
     def __init__(self, coinbasepro):
+        """Trading Graphs object model
+    
+        Parameters
+        ----------
+        coinbasepro : object
+            CoinbasePro object to provide the trading data to visualise
+        """
+
+        # validates the coinbasepro object
         if not isinstance(coinbasepro, CoinbasePro):
             raise TypeError('Coinbase Pro model required.')
 
+        # only one figure can be open at a time, close all open figures
         plt.close('all')
 
         self.coinbasepro = coinbasepro
+
+        # stores the pandas dataframe from coinbasepro object
         self.df = coinbasepro.getDataFrame()
+
+        # stores the support and resistance levels from coinbasepro object
         self.levels = coinbasepro.getSupportResistanceLevelsTimeSeries()
 
     def renderBuySellSignalEMA1226(self, saveFile='', saveOnly=False):
+        """Render the EMA12 and EMA26 buy and sell signals
+        
+        Parameters
+        ----------
+        saveFile : str, optional
+            Save the figure
+        saveOnly : bool
+            Save the figure without displaying it 
+        """
+
         buysignals = self.df[self.df.ema12gtema26co == True]
         sellsignals = self.df[self.df.ema12ltema26co == True]
 
@@ -47,8 +73,18 @@ class TradingGraphs():
             plt.show()
 
     def renderBuySellSignalEMA1226MACD(self, saveFile='', saveOnly=False):
-        buysignals = (self.df.ema12gtema26co == True) & (self.df.macdgtsignal == True) & (self.df.obv_pc > 5) # buy only if there is significant momentum
-        sellsignals = (self.df.ema12ltema26co == True) & (self.df.macdltsignal == True)
+        """Render the EMA12, EMA26 and MACD buy and sell signals
+        
+        Parameters
+        ----------
+        saveFile : str, optional
+            Save the figure
+        saveOnly : bool
+            Save the figure without displaying it         
+        """
+
+        buysignals = ((self.df.ema12gtema26co == True) & (self.df.macdgtsignal == True) & (self.df.obv_pc >= 2)) | ((self.df.ema12gtema26 == True) & (self.df.macdgtsignal == True) & (self.df.obv_pc >= 5)) 
+        sellsignals = ((self.df.ema12ltema26co == True) & (self.df.macdltsignal == True)) | ((self.df.ema12gtema26 == True) & (self.df.macdltsignal == True) & (self.df.obv_pc < 0))
         df_signals = self.df[(buysignals) | (sellsignals)]
 
         ax1 = plt.subplot(211)
@@ -59,13 +95,12 @@ class TradingGraphs():
 
         action = ''
         last_action = ''
-        last_buy = 0
         for idx, row in df_signals.iterrows():
-            if row['close'] > row['sma200'] and row['ema12gtema26co'] == True and row['macdgtsignal'] == True and row['obv_pc'] >= 5 and last_action != 'buy':
+            if row['ema12gtema26co'] == True and row['macdgtsignal'] == True and last_action != 'buy':
                 action = 'buy'
                 last_buy = row['close']
                 plt.axvline(x=idx, color='green')
-            elif action == 'buy' and row['ema12ltema26co'] == True and row['macdltsignal'] == True and row['close'] > last_buy:
+            elif row['ema12ltema26'] == True and row['macdltsignal'] == True and action == 'buy':
                 action = 'sell'
                 plt.axvline(x=idx, color='red')
 
@@ -93,7 +128,15 @@ class TradingGraphs():
             plt.show()
 
     def renderPriceEMA12EMA26(self, saveFile='', saveOnly=False):
-        ''' Render Price, EMA12 and EMA26 '''
+        """Render the price, EMA12 and EMA26
+        
+        Parameters
+        ----------
+        saveFile : str, optional
+            Save the figure
+        saveOnly : bool
+            Save the figure without displaying it         
+        """
 
         plt.subplot(111)
         plt.plot(self.df.close, label="price")
@@ -114,7 +157,15 @@ class TradingGraphs():
             plt.show()
 
     def renderPriceSupportResistance(self, saveFile='', saveOnly=False):
-        ''' Render Price, Support and Resistance Levels '''
+        """Render the price, support and resistance levels
+        
+        Parameters
+        ----------
+        saveFile : str, optional
+            Save the figure
+        saveOnly : bool
+            Save the figure without displaying it
+        """
 
         plt.subplot(111)
         plt.plot(self.df.close)
@@ -136,7 +187,15 @@ class TradingGraphs():
             plt.show()
 
     def renderEMAandMACD(self, saveFile='', saveOnly=False):
-        ''' Render Price, EMA12, EMA26 and MACD '''
+        """Render the price, EMA12, EMA26 and MACD
+        
+        Parameters
+        ----------
+        saveFile : str, optional
+            Save the figure
+        saveOnly : bool
+            Save the figure without displaying it         
+        """
 
         ax1 = plt.subplot(211)
         plt.plot(self.df.close, label="price")
@@ -163,7 +222,15 @@ class TradingGraphs():
             plt.show()
 
     def renderSeasonalARIMAModel(self, saveFile='', saveOnly=False):
-        ''' Render Seasonal ARIMA Model '''
+        """Render the seasonal ARIMA model
+        
+        Parameters
+        ----------
+        saveFile : str, optional
+            Save the figure
+        saveOnly : bool
+            Save the figure without displaying it         
+        """
 
         ts = self.df['close']
         results_ARIMA = self.coinbasepro.getSeasonalARIMAModel(ts)
@@ -186,7 +253,17 @@ class TradingGraphs():
             plt.show()
 
     def renderSeasonalARIMAModelPredictionDays(self, days=30, saveFile='', saveOnly=False):
-        ''' Render Seasonal ARIMA Model Prediction '''
+        """Render the seasonal ARIMA model prediction
+        
+        Parameters
+        ----------
+        days     : int
+            Number of days to predict
+        saveFile : str, optional
+            Save the figure
+        saveOnly : bool
+            Save the figure without displaying it         
+        """
 
         ts = self.df['close']
         results_ARIMA = self.coinbasepro.getSeasonalARIMAModel(ts)
@@ -213,7 +290,15 @@ class TradingGraphs():
             plt.show()
 
     def renderSMAandMACD(self, saveFile='', saveOnly=False):
-        ''' Render Price, SMA20, SMA50, and SMA200 '''
+        """Render the price, SMA20, SMA50, and SMA200
+        
+        Parameters
+        ----------
+        saveFile : str, optional
+            Save the figure
+        saveOnly : bool
+            Save the figure without displaying it        
+        """
 
         ax1 = plt.subplot(211)
         plt.plot(self.df.close, label="price")
