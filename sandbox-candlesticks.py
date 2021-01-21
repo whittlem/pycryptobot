@@ -41,11 +41,17 @@ df['three_black_crows'] = ((df['open'] < df['open'].shift(1)) & (df['open'] > df
     & ((df['open'].shift(1) < df['open'].shift(2)) & (df['open'].shift(1) > df['close'].shift(2))) \
     & (df['close'].shift(1) < df['low'].shift(2)) \
     & (df['low'].shift(1) - np.maximum(df['open'].shift(1), df['close'].shift(1)) < (abs(df['open'].shift(1) - df['close'].shift(1)))) \
- 
+
+# The Doji is a transitional candlestick formation, signifying equality and/or indecision between bulls and bears.
+df['dojo'] = ((abs(df['close'] - df['open']) / (df['high'] - df['low'])) < 0.1) \
+    & ((df['high'] - np.maximum(df['close'], df['open'])) > (3 * abs(df['close'] - df['open']))) \
+    & ((np.minimum(df['close'], df['open']) - df['low']) > (3 * abs(df['close'] - df['open'])))
+
 #print (df[df['hammer'] == True])
 #print (df[df['inverted_hammer'] == True])
 #print (df[df['shooting_star'] == True])
 #print (df[df['hanging_man'] == True])
 #print (df[df['three_white_solidiers'] == True])
-print (df[df['three_black_crows'] == True])
+#print (df[df['three_black_crows'] == True])
+print (df[df['dojo'] == True])
 #print (df)
