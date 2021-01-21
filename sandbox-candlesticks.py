@@ -65,6 +65,24 @@ df['dojo'] = ((abs(df['close'] - df['open']) / (df['high'] - df['low'])) < 0.1) 
     & ((df['high'] - np.maximum(df['close'], df['open'])) > (3 * abs(df['close'] - df['open']))) \
     & ((np.minimum(df['close'], df['open']) - df['low']) > (3 * abs(df['close'] - df['open'])))
 
+# The bullish three line strike reversal pattern carves out three black candles within a downtrend. Each bar posts a lower low and closes 
+# near the intrabar low. The fourth bar opens even lower but reverses in a wide-range outside bar that closes above the high of the first 
+# candle in the series.
+df['three_line_strike'] = ((df['open'].shift(1) < df['open'].shift(2)) & (df['open'].shift(1) > df['close'].shift(2))) \
+    & (df['close'].shift(1) < df['low'].shift(2)) \
+    & (df['low'].shift(1) - np.maximum(df['open'].shift(1), df['close'].shift(1)) < (abs(df['open'].shift(1) - df['close'].shift(1)))) \
+    & ((df['open'].shift(2) < df['open'].shift(3)) & (df['open'].shift(2) > df['close'].shift(3))) \
+    & (df['close'].shift(2) < df['low'].shift(3)) \
+    & (df['low'].shift(2) - np.maximum(df['open'].shift(2), df['close'].shift(2)) < (abs(df['open'].shift(2) - df['close'].shift(2)))) \
+    & ((df['open'] < df['low'].shift(1)) & (df['close'] > df['high'].shift(3)))
+
+# The bearish two black gapping continuation pattern appears after a notable top in an uptrend, with a gap down that yields two black bars 
+# posting lower lows. This pattern predicts that the decline will continue to even lower lows, perhaps triggering a broader-scale downtrend. 
+df['two_black_gapping'] = ((df['open'] < df['open'].shift(1)) & (df['open'] > df['close'].shift(1))) \
+    & (df['close'] < df['low'].shift(1)) \
+    & (df['low'] - np.maximum(df['open'], df['close']) < (abs(df['open'] - df['close']))) \
+    & (df['high'].shift(1) < df['low'].shift(2))
+
 #print (df[df['hammer'] == True])
 #print (df[df['inverted_hammer'] == True])
 #print (df[df['shooting_star'] == True])
@@ -72,4 +90,6 @@ df['dojo'] = ((abs(df['close'] - df['open']) / (df['high'] - df['low'])) < 0.1) 
 #print (df[df['three_white_solidiers'] == True])
 #print (df[df['three_black_crows'] == True])
 #print (df[df['dojo'] == True])
-print (df)
+#print (df[df['three_line_strike'] == True])
+#print (df[df['two_black_gapping'] == True])
+#print (df)
