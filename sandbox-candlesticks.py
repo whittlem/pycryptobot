@@ -1,8 +1,11 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from models.CoinbasePro import CoinbasePro
 
 coinbasepro = CoinbasePro('BTC-GBP', 3600)
 df = coinbasepro.getDataFrame()
+coinbasepro.addMovingAverages()
+coinbasepro.addMomentumIndicators()
 
 """References
 https://commodity.com/technical-analysis
@@ -83,6 +86,21 @@ df['two_black_gapping'] = ((df['open'] < df['open'].shift(1)) & (df['open'] > df
     & (df['low'] - np.maximum(df['open'], df['close']) < (abs(df['open'] - df['close']))) \
     & (df['high'].shift(1) < df['low'].shift(2))
 
+# The bearish evening star reversal pattern starts with a tall white bar that carries an uptrend to a new high. The market gaps higher on
+# the next bar, but fresh buyers fail to appear, yielding a narrow range candlestick. A gap down on the third bar completes the pattern,
+# which predicts that the decline will continue to even lower lows, perhaps triggering a broader-scale downtrend. 
+df['evening_star'] = ((np.minimum(df['open'].shift(1), df['close'].shift(1)) > df['close'].shift(2)) & (df['close'].shift(2) > df['open'].shift(2))) \
+    & ((df['close'] < df['open']) & (df['open'] < np.minimum(df['open'].shift(1), df['close'].shift(1))))
+
+# The bullish abandoned baby reversal pattern appears at the low of a downtrend, after a series of black candles print lower lows. The
+# market gaps lower on the next bar, but fresh sellers fail to appear, yielding a narrow range doji candlestick with opening and closing 
+# prints at the same price. A bullish gap on the third bar completes the pattern, which predicts that the recovery will continue to even 
+# higher highs, perhaps triggering a broader-scale uptrend.
+df['abandoned_baby'] = (df['open'] < df['close']) \
+    & (df['high'].shift(1) < df['low']) \
+    & (df['open'].shift(2) > df['close'].shift(2)) \
+    & (df['high'].shift(1) < df['low'].shift(2))
+
 #print (df[df['hammer'] == True])
 #print (df[df['inverted_hammer'] == True])
 #print (df[df['shooting_star'] == True])
@@ -92,4 +110,43 @@ df['two_black_gapping'] = ((df['open'] < df['open'].shift(1)) & (df['open'] > df
 #print (df[df['dojo'] == True])
 #print (df[df['three_line_strike'] == True])
 #print (df[df['two_black_gapping'] == True])
+#print (df[df['evening_star'] == True])
+#print (df[df['abandoned_baby'] == True])
 #print (df)
+
+lastDays = 50
+df_subset = df.iloc[-lastDays::]
+
+print (df_subset.index.tolist())
+
+ax1 = plt.subplot(111)
+plt.plot(df_subset['close'], label='price', color='royalblue')
+plt.plot(df_subset['ema12'], label='ema12', color='orange')
+plt.plot(df_subset['ema26'], label='ema26', color='purple')
+
+df_candlestick = df[df['inverted_hammer'] == True]
+df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+for idx in df_candlestick_in_range.index.tolist():
+    plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'g^') 
+
+df_candlestick = df[df['hammer'] == True]
+df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+for idx in df_candlestick_in_range.index.tolist():
+    plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'rv')
+
+df_candlestick = df[df['hanging_man'] == True]
+df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+for idx in df_candlestick_in_range.index.tolist():
+    plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'go') 
+
+df_candlestick = df[df['shooting_star'] == True]
+df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+for idx in df_candlestick_in_range.index.tolist():
+    plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'rs')  
+
+plt.ylabel('Price')
+plt.xticks(rotation=90)
+
+plt.tight_layout()
+plt.legend()
+plt.show()
