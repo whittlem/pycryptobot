@@ -53,7 +53,7 @@ granularity = 3600  # 1 hour
 
 """Highly advisable not to change any code below this point!"""
 
-version = 0.49
+version = 0.48
 
 # validation of crypto market inputs
 if cryptoMarket not in ['BCH', 'BTC', 'ETH', 'LTC']:
@@ -119,8 +119,6 @@ def executeJob(sc, market, granularity):
         print(df_last.index.format(), 'ema12:' + str(df_last['ema12'].values[0]), 'ema26:' + str(df_last['ema26'].values[0]), 'above:(', ema12gtema26, ema12gtema26co, ')', 'below:(', ema12ltema26,
               ema12ltema26co, ')', 'macd:' + str(df_last['macd'].values[0]), 'signal:' + str(df_last['signal'].values[0]), 'above:(', macdgtsignal, ')', 'below:(', macdltsignal, ')', obv_pc, 'above:(', obvsignal, ')', action)
 
-        print (last_action, action)
-
         # if a buy signal
         if action == 'buy':
             # if live
@@ -151,7 +149,10 @@ def executeJob(sc, market, granularity):
                 print('>>> NON-LIVE SIMULATION SELL <<<')
             print(df_last)
 
-        last_action = action
+        # last significant action
+        if action in ['buy','sell']:
+            last_action = action
+        
         last_df_index = df_last.index.format()
 
     # poll every 5 minutes
