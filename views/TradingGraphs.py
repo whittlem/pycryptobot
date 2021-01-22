@@ -98,7 +98,6 @@ class TradingGraphs():
         for idx, row in df_signals.iterrows():
             if row['ema12gtema26co'] == True and row['macdgtsignal'] == True and last_action != 'buy':
                 action = 'buy'
-                last_buy = row['close']
                 plt.axvline(x=idx, color='green')
             elif row['ema12ltema26'] == True and row['macdltsignal'] == True and action == 'buy':
                 action = 'sell'

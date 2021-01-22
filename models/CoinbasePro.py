@@ -30,6 +30,14 @@ class CoinbasePro():
         # the DataFrame will only ever be 300 rows, uncomment the line below to output all 300 rows
         #pd.set_option('display.max_rows', None)
 
+        # conditional formatting for floats
+        if market.endswith('EUR') or market.endswith('GBP') or market.endswith('USD'):
+            # 2 decimal places for fiat
+            pd.set_option('display.float_format','{:.2f}'.format)
+        else:
+            # 5 decimal places for crypto
+            pd.set_option('display.float_format','{:.5f}'.format)
+
         # validates the market is syntactically correct
         p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
         if not p.match(market):
