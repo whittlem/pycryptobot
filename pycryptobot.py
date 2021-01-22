@@ -53,7 +53,7 @@ granularity = 3600  # 1 hour
 
 """Highly advisable not to change any code below this point!"""
 
-version = 0.49
+version = 0.48
 
 # validation of crypto market inputs
 if cryptoMarket not in ['BCH', 'BTC', 'ETH', 'LTC']:

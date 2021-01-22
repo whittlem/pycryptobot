@@ -133,10 +133,10 @@ class TradingAccount():
                     return 0.0
                 else:
                     # return balance of specified currency (if positive)
-                    return df[df['currency'] == currency]['available'].values[0]
+                    return "{:.2f}".format(float(df[df['currency'] == currency]['available'].values[0]))
         else:
             # return dummy balance
-            return self.balance
+            return "{:.2f}".format(float(self.balance))
 
     def buy(self, cryptoMarket, fiatMarket, fiatAmount, manualPrice=0.00000000):
         """Places a buy order either live or simulation
