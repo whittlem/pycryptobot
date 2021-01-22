@@ -166,6 +166,31 @@ df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subse
 for idx in df_candlestick_in_range.index.tolist():
     plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'r*')  
 
+df_candlestick = df[df['dojo'] == True]
+df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+for idx in df_candlestick_in_range.index.tolist():
+    plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'yd')  
+
+df_candlestick = df[df['three_line_strike'] == True]
+df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+for idx in df_candlestick_in_range.index.tolist():
+    plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'y^')  
+
+df_candlestick = df[df['two_black_gapping'] == True]
+df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+for idx in df_candlestick_in_range.index.tolist():
+    plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'yv')  
+
+df_candlestick = df[df['evening_star'] == True]
+df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+for idx in df_candlestick_in_range.index.tolist():
+    plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'mv')  
+
+df_candlestick = df[df['abandoned_baby'] == True]
+df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+for idx in df_candlestick_in_range.index.tolist():
+    plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'm^')  
+
 plt.ylabel('Price')
 plt.xticks(rotation=90)
 plt.tight_layout()
