@@ -1,8 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 from models.CoinbasePro import CoinbasePro
 
-coinbasepro = CoinbasePro('BTC-GBP', 3600)
+market = 'BTC-GBP'
+granularity = 3600
+
+coinbasepro = CoinbasePro(market, granularity)
 df = coinbasepro.getDataFrame()
 coinbasepro.addMovingAverages()
 coinbasepro.addMomentumIndicators()
@@ -59,7 +63,7 @@ df['three_black_crows'] = ((df['open'] < df['open'].shift(1)) & (df['open'] > df
     & (df['low'] - np.maximum(df['open'], df['close']) < (abs(df['open'] - df['close']))) \
     & ((df['open'].shift(1) < df['open'].shift(2)) & (df['open'].shift(1) > df['close'].shift(2))) \
     & (df['close'].shift(1) < df['low'].shift(2)) \
-    & (df['low'].shift(1) - np.maximum(df['open'].shift(1), df['close'].shift(1)) < (abs(df['open'].shift(1) - df['close'].shift(1)))) \
+    & (df['low'].shift(1) - np.maximum(df['open'].shift(1), df['close'].shift(1)) < (abs(df['open'].shift(1) - df['close'].shift(1))))
 
 # The Doji is a transitional candlestick formation, signifying equality and/or indecision between bulls and bears.
 # A Doji is quite often found at the bottom and top of trends and thus is considered as a sign of possible reversal of price direction, 
@@ -114,15 +118,33 @@ df['abandoned_baby'] = (df['open'] < df['close']) \
 #print (df[df['abandoned_baby'] == True])
 #print (df)
 
-lastDays = 50
+lastDays = 24
 df_subset = df.iloc[-lastDays::]
 
-print (df_subset.index.tolist())
+date = df_subset.index.date.astype('O')
 
+def format_date(x, pos=None):
+    thisind = np.clip(int(x + 0.5), 0, len(df_subset) - 1)
+    return date[thisind].strftime('%Y-%m-%d %H:%M:%S')
+
+fig, axes = plt.subplots(ncols=1, figsize=(12, 6))
+fig.autofmt_xdate()
 ax1 = plt.subplot(111)
+ax1.set_title(f"{market} - {granularity} granularity")
+ax1.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
 plt.plot(df_subset['close'], label='price', color='royalblue')
 plt.plot(df_subset['ema12'], label='ema12', color='orange')
 plt.plot(df_subset['ema26'], label='ema26', color='purple')
+
+df_candlestick = df[df['three_white_solidiers'] == True]
+df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+for idx in df_candlestick_in_range.index.tolist():
+    plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'gx')
+
+df_candlestick = df[df['three_black_crows'] == True]
+df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+for idx in df_candlestick_in_range.index.tolist():
+    plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'rx')  
 
 df_candlestick = df[df['inverted_hammer'] == True]
 df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
@@ -142,11 +164,11 @@ for idx in df_candlestick_in_range.index.tolist():
 df_candlestick = df[df['shooting_star'] == True]
 df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
 for idx in df_candlestick_in_range.index.tolist():
-    plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'rs')  
+    plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'r*')  
 
 plt.ylabel('Price')
 plt.xticks(rotation=90)
-
 plt.tight_layout()
 plt.legend()
+#plt.savefig('candlesticks.png')
 plt.show()
