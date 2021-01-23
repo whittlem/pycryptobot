@@ -133,7 +133,11 @@ class TradingAccount():
                     return 0.0
                 else:
                     # return balance of specified currency (if positive)
-                    return float("{:.2f}".format(float(df[df['currency'] == currency]['available'].values[0])))
+                    if currency in ['EUR','GBP','USD']:
+                        return float("{:.2f}".format(float(df[df['currency'] == currency]['available'].values[0])))
+                    else:
+                        return float("{:.4f}".format(float(df[df['currency'] == currency]['available'].values[0])))
+                        
         else:
             # return dummy balance
             return float("{:.2f}".format(float(self.balance)))
