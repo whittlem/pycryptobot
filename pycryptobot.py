@@ -26,13 +26,8 @@ That way if anything goes wrong only what is within this portfolio is at risk!
 """
 
 import pandas as pd
-import json
-import os
-import re
-import sched
-import sys
-import time
 from datetime import datetime
+import json, logging, os, re, sched, sys, time
 from models.CoinbasePro import CoinbasePro
 from models.TradingAccount import TradingAccount
 from models.CoinbaseProAPI import CoinbaseProAPI
@@ -52,8 +47,6 @@ fiatMarket = 'GBP'
 granularity = 3600  # 1 hour
 
 """Highly advisable not to change any code below this point!"""
-
-version = 0.48
 
 # validation of crypto market inputs
 if cryptoMarket not in ['BCH', 'BTC', 'ETH', 'LTC']:
@@ -105,52 +98,128 @@ def executeJob(sc, market, granularity):
 
     # criteria for a buy signal
     if ((ema12gtema26co == True and macdgtsignal == True and obv_pc >= 2) or (ema12gtema26 == True and macdgtsignal == True and obv_pc >= 5)) and last_action != 'buy':
-        action = 'buy'
+        action = 'BUY'
     # criteria for a sell signal
     elif ((ema12ltema26co == True and macdltsignal == True) or (ema12ltema26 == True and macdltsignal == True and obv_pc < 0)) and last_action not in ['','sell']:
-        action = 'sell'
+        action = 'SELL'
     # anything other than a buy or sell, just wait
     else:
-        action = 'wait'
+        action = 'WAIT'
 
     # polling is every 5 minutes (even for hourly intervals), but only process once per interval
     if (last_df_index != df_last.index.format()):
+        logging.debug('---')
+        logging.debug('price: ' + str("{:.2f}".format(float(df_last['close'].values[0]))))
+        logging.debug('ema12: ' + str("{:.2f}".format(float(df_last['ema12'].values[0]))))
+        logging.debug('ema26: ' + str("{:.2f}".format(float(df_last['ema26'].values[0]))))
+        logging.debug('ema12gtema26co: ' + str(ema12gtema26co))
+        logging.debug('ema12gtema26: ' + str(ema12gtema26))
+        logging.debug('ema12ltema26co: ' + str(ema12ltema26co))
+        logging.debug('ema12ltema26: ' + str(ema12ltema26))
+        logging.debug('macd: ' + str("{:.2f}".format(float(df_last['macd'].values[0]))))
+        logging.debug('signal: ' + str("{:.2f}".format(float(df_last['signal'].values[0]))))
+        logging.debug('macdgtsignal: ' + str(macdgtsignal))
+        logging.debug('macdltsignal: ' + str(macdltsignal))
+        logging.debug('obv_pc' + str(obv_pc) + '%')
+        logging.debug('obvsignal: ' + str(obvsignal))
+        logging.debug('action: ' + action)
+
         # informational output on the most recent entry  
-        print(df_last.index.format(), 'ema12:' + str(df_last['ema12'].values[0]), 'ema26:' + str(df_last['ema26'].values[0]), 'above:(', ema12gtema26, ema12gtema26co, ')', 'below:(', ema12ltema26,
-              ema12ltema26co, ')', 'macd:' + str(df_last['macd'].values[0]), 'signal:' + str(df_last['signal'].values[0]), 'above:(', macdgtsignal, ')', 'below:(', macdltsignal, ')', obv_pc, 'above:(', obvsignal, ')', action)
+        txt = '        Timestamp : ' + str(df_last.index.format()[0])
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+        print('--------------------------------------------------------------------------------')
+        txt = '            EMA12 : ' + str("{:.2f}".format(float(df_last['ema12'].values[0])))
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+        txt = '            EMA26 : ' + str("{:.2f}".format(float(df_last['ema26'].values[0])))
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+        txt = '   Crossing Above : ' + str(ema12gtema26co)
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+        txt = '  Currently Above : ' + str(ema12gtema26co)
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+        txt = '   Crossing Below : ' + str(ema12ltema26co)
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+        txt = '  Currently Below : ' + str(ema12ltema26co)
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+
+        if ema12gtema26 == True:
+            txt = '        Condition : POSITIVE'
+        else:
+            txt = '        Condition : NEGATIVE'
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+
+        print('--------------------------------------------------------------------------------')
+        txt = '             MACD : ' + str("{:.2f}".format(float(df_last['macd'].values[0])))
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+        txt = '           Signal : ' + str("{:.2f}".format(float(df_last['signal'].values[0])))
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+        txt = '  Currently Above : ' + str(macdgtsignal)
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+        txt = '  Currently Below : ' + str(macdltsignal)
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+
+        if macdgtsignal == True:
+            txt = '        Condition : POSITIVE'
+        else:
+            txt = '        Condition : NEGATIVE'
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+
+        print('--------------------------------------------------------------------------------')
+        txt = '      OBV Percent : ' + str(obv_pc) + '%'
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+
+        if obvsignal == True:
+            txt = '        Condition : POSITIVE'
+        else:
+            txt = '        Condition : NEGATIVE'
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+
+        print('--------------------------------------------------------------------------------')
+        txt = '           Action : ' + action
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+        print('--------------------------------------------------------------------------------')
 
         # if a buy signal
-        if action == 'buy':
+        if action == 'BUY':
             # if live
             if is_live == 1:
-                print('>>> EXECUTING LIVE BUY! <<<')
+                print('--------------------------------------------------------------------------------')
+                print('|                      *** Executing LIVE Buy Order ***                        |')
+                print('--------------------------------------------------------------------------------')
                 # connect to coinbase pro api (authenticated)
                 model = CoinbaseProAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
                 # execute a live market buy
                 resp = model.marketBuy(market, float(account.getBalance(fiatMarket)))
-                print(resp)
+                logging.debug(type(resp))
+                logging.debug(resp)
             # if not live
             else:
-                print('>>> NON-LIVE SIMULATION BUY <<<')
+                print('--------------------------------------------------------------------------------')
+                print('|                      *** Executing TEST Buy Order ***                        |')
+                print('--------------------------------------------------------------------------------')
             print(df_last)
 
         # if a sell signal
-        elif action == 'sell':
+        elif action == 'SELL':
             # if live
             if is_live == 1:
-                print('>>> EXECUTING LIVE SELL! <<<')
+                print('--------------------------------------------------------------------------------')
+                print('|                      *** Executing LIVE Sell Order ***                        |')
+                print('--------------------------------------------------------------------------------')
                 # connect to Coinbase Pro API live
                 model = CoinbaseProAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
                 # execute a live market sell
                 resp = model.marketSell(market, float(account.getBalance(cryptoMarket)))
-                print(resp)
+                logging.debug(type(resp))
+                logging.debug(resp)
             # if not live
             else:
-                print('>>> NON-LIVE SIMULATION SELL <<<')
+                print('--------------------------------------------------------------------------------')
+                print('|                      *** Executing TEST Sell Order ***                        |')
+                print('--------------------------------------------------------------------------------')
             print(df_last)
 
         # last significant action
-        if action in ['buy','sell']:
+        if action in ['BUY','SELL']:
             last_action = action
         
         last_df_index = df_last.index.format()
@@ -159,9 +228,27 @@ def executeJob(sc, market, granularity):
     s.enter(300, 1, executeJob, (sc, market, granularity))
 
 try:
-    print("Python Crypto Bot using Coinbase Pro API v" + str(version) + "\n")
-    print(datetime.now(), 'started for market',
-          market, 'using interval', granularity)
+    logging.basicConfig(filename='pycryptobot.log', format='%(asctime)s %(message)s', filemode='w', level=logging.DEBUG)
+
+    print('--------------------------------------------------------------------------------')
+    print('|              Python Crypto Bot using the Coinbase Pro API v0.48              |')
+    print('--------------------------------------------------------------------------------')   
+    txt = '           Market : ' + market
+    print('|', txt, (' ' * (75 - len(txt))), '|')
+    txt = '      Granularity : ' + str(granularity) + ' minutes'
+    print('|', txt, (' ' * (75 - len(txt))), '|')
+    print('--------------------------------------------------------------------------------')
+
+    if is_live == 1:
+        txt = '         Bot Mode : LIVE - live trades using your funds!'
+    else:
+        txt = '         Bot Mode : TEST - test trades using dummy funds :)'
+
+    print('|', txt, (' ' * (75 - len(txt))), '|')
+
+    txt = '      Bot Started : ' + str(datetime.now())
+    print('|', txt, (' ' * (75 - len(txt))), '|')
+    print('================================================================================')
 
     s = sched.scheduler(time.time, time.sleep)
     # run the first job immediately after starting
