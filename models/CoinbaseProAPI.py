@@ -135,7 +135,11 @@ class CoinbaseProAPI():
             raise ValueError('Invalid order status.')
 
         # GET /orders?status
-        df = self.authAPIGET('orders?status=' + status)[['created_at','product_id','side','type','filled_size','executed_value','status']]
+        resp = self.authAPIGET('orders?status=' + status)
+        if len(resp) > 0:
+            df = resp.copy()[['created_at','product_id','side','type','filled_size','executed_value','status']]
+        else:
+            return pd.DataFrame()
 
         # calculates the price at the time of purchase
         df['price'] = df.apply(lambda row: (float(row.executed_value) * 100) / (float(row.filled_size) * 100), axis=1)
