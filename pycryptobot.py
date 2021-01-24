@@ -125,6 +125,8 @@ def executeJob(sc, market, granularity):
         logging.debug('action: ' + action)
 
         # informational output on the most recent entry  
+        print('')
+        print('================================================================================')
         txt = '        Timestamp : ' + str(df_last.index.format()[0])
         print('|', txt, (' ' * (75 - len(txt))), '|')
         print('--------------------------------------------------------------------------------')
@@ -176,7 +178,7 @@ def executeJob(sc, market, granularity):
         print('--------------------------------------------------------------------------------')
         txt = '           Action : ' + action
         print('|', txt, (' ' * (75 - len(txt))), '|')
-        print('--------------------------------------------------------------------------------')
+        print('================================================================================')
 
         # if a buy signal
         if action == 'BUY':
