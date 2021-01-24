@@ -120,7 +120,7 @@ def executeJob(sc, market, granularity):
         logging.debug('signal: ' + str("{:.2f}".format(float(df_last['signal'].values[0]))))
         logging.debug('macdgtsignal: ' + str(macdgtsignal))
         logging.debug('macdltsignal: ' + str(macdltsignal))
-        logging.debug('obv_pc' + str(obv_pc) + '%')
+        logging.debug('obv_pc: ' + str(obv_pc) + '%')
         logging.debug('obvsignal: ' + str(obvsignal))
         logging.debug('action: ' + action)
 
@@ -134,11 +134,11 @@ def executeJob(sc, market, granularity):
         print('|', txt, (' ' * (75 - len(txt))), '|')
         txt = '   Crossing Above : ' + str(ema12gtema26co)
         print('|', txt, (' ' * (75 - len(txt))), '|')
-        txt = '  Currently Above : ' + str(ema12gtema26co)
+        txt = '  Currently Above : ' + str(ema12gtema26)
         print('|', txt, (' ' * (75 - len(txt))), '|')
         txt = '   Crossing Below : ' + str(ema12ltema26co)
         print('|', txt, (' ' * (75 - len(txt))), '|')
-        txt = '  Currently Below : ' + str(ema12ltema26co)
+        txt = '  Currently Below : ' + str(ema12ltema26)
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
         if ema12gtema26 == True:
