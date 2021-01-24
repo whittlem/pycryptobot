@@ -71,7 +71,7 @@ if is_live == 1:
     account = TradingAccount(config)
 
 # initial state is to wait
-action = 'wait'
+action = 'WAIT'
 last_action = ''
 last_df_index = ''
 
@@ -97,10 +97,10 @@ def executeJob(sc, market, granularity):
     obvsignal = bool(df_last['obvsignal'].values[0])
 
     # criteria for a buy signal
-    if ((ema12gtema26co == True and macdgtsignal == True and obv_pc >= 2) or (ema12gtema26 == True and macdgtsignal == True and obv_pc >= 5)) and last_action != 'buy':
+    if ((ema12gtema26co == True and macdgtsignal == True and obv_pc >= 2) or (ema12gtema26 == True and macdgtsignal == True and obv_pc >= 5)) and last_action != 'BUY':
         action = 'BUY'
     # criteria for a sell signal
-    elif ((ema12ltema26co == True and macdltsignal == True) or (ema12ltema26 == True and macdltsignal == True and obv_pc < 0)) and last_action not in ['','sell']:
+    elif ((ema12ltema26co == True and macdltsignal == True) or (ema12ltema26 == True and macdltsignal == True and obv_pc < 0)) and last_action not in ['','SELL']:
         action = 'SELL'
     # anything other than a buy or sell, just wait
     else:
@@ -233,7 +233,7 @@ try:
     logging.basicConfig(filename='pycryptobot.log', format='%(asctime)s %(message)s', filemode='w', level=logging.DEBUG)
 
     print('--------------------------------------------------------------------------------')
-    print('|              Python Crypto Bot using the Coinbase Pro API v0.48              |')
+    print('|              Python Crypto Bot using the Coinbase Pro API v0.66              |')
     print('--------------------------------------------------------------------------------')   
     txt = '           Market : ' + market
     print('|', txt, (' ' * (75 - len(txt))), '|')

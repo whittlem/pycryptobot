@@ -33,6 +33,9 @@ class TradingGraphs():
         # stores the support and resistance levels from coinbasepro object
         self.levels = coinbasepro.getSupportResistanceLevelsTimeSeries()
 
+        # seaborn style plots
+        plt.style.use('seaborn')
+
     def renderBuySellSignalEMA1226(self, saveFile='', saveOnly=False):
         """Render the EMA12 and EMA26 buy and sell signals
         
