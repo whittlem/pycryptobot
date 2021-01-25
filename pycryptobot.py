@@ -90,9 +90,11 @@ def executeJob(sc, market, granularity):
     ema12gtema26 = bool(df_last['ema12gtema26'].values[0])
     ema12gtema26co = bool(df_last['ema12gtema26co'].values[0])
     macdgtsignal = bool(df_last['macdgtsignal'].values[0])
+    macdgtsignalco = bool(df_last['macdgtsignalco'].values[0])
     ema12ltema26 = bool(df_last['ema12ltema26'].values[0])
     ema12ltema26co = bool(df_last['ema12ltema26co'].values[0])
     macdltsignal = bool(df_last['macdltsignal'].values[0])
+    macdltsignalco = bool(df_last['macdltsignalco'].values[0])
     obv_pc = float(df_last['obv_pc'].values[0])
     obvsignal = bool(df_last['obvsignal'].values[0])
 
@@ -143,10 +145,16 @@ def executeJob(sc, market, granularity):
         txt = '  Currently Below : ' + str(ema12ltema26)
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
-        if ema12gtema26 == True:
-            txt = '        Condition : POSITIVE'
+        if (ema12gtema26 == True and ema12gtema26co == True):
+            txt = '        Condition : EMA12 is currently crossing above EMA26'
+        elif (ema12gtema26 == True and ema12gtema26co == False):
+            txt = '        Condition : EMA12 is currently above EMA26 and has crossed over'
+        elif (ema12ltema26 == True and ema12ltema26co == True):
+            txt = '        Condition : EMA12 is currently crossing below EMA26'
+        elif (ema12ltema26 == True and ema12ltema26co == False):
+            txt = '        Condition : EMA12 is currently below EMA26 and has crossed over'
         else:
-            txt = '        Condition : NEGATIVE'
+            txt = '        Condition : -'
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
         print('--------------------------------------------------------------------------------')
@@ -159,20 +167,28 @@ def executeJob(sc, market, granularity):
         txt = '  Currently Below : ' + str(macdltsignal)
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
-        if macdgtsignal == True:
-            txt = '        Condition : POSITIVE'
+        if (macdgtsignal == True and macdgtsignalco == True):
+            txt = '        Condition : MACD is currently crossing above Signal'
+        elif (macdgtsignal == True and macdgtsignalco == False):
+            txt = '        Condition : MACD is currently above Signal and has crossed over'
+        elif (macdltsignal == True and macdltsignalco == True):
+            txt = '        Condition : MACD is currently crossing below Signal'
+        elif (macdltsignal == True and macdltsignalco == False):
+            txt = '        Condition : MACD is currently below Signal and has crossed over'
         else:
-            txt = '        Condition : NEGATIVE'
+            txt = '        Condition : -'
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
         print('--------------------------------------------------------------------------------')
         txt = '      OBV Percent : ' + str(obv_pc) + '%'
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
-        if obvsignal == True:
-            txt = '        Condition : POSITIVE'
+        if (obv_pc >= 2):
+            txt = '        Condition : Significant volume buying than selling'
+        elif (obv_pc < 2 and obv_pc >= 0):
+            txt = '        Condition : Slightly more volume buying than selling'
         else:
-            txt = '        Condition : NEGATIVE'
+            txt = '        Condition : More volume selling than buying'
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
         print('--------------------------------------------------------------------------------')
