@@ -74,12 +74,16 @@ if is_live == 1:
 action = 'WAIT'
 last_action = ''
 last_df_index = ''
+iterations = 0
 
 def executeJob(sc, market, granularity):
     """Trading bot job which runs at a scheduled interval"""
-    global action, last_action, last_df_index
+    global action, iterations, last_action, last_df_index
 
-    # Retrieves the latest analysed market data
+    # increment iterations
+    iterations = iterations + 1
+
+    # retrieves the latest analysed market data
     coinbasepro = CoinbasePro(market, granularity)
     coinbasepro.addEMABuySignals()
     coinbasepro.addMACDBuySignals()
@@ -99,7 +103,7 @@ def executeJob(sc, market, granularity):
     obvsignal = bool(df_last['obvsignal'].values[0])
 
     # criteria for a buy signal
-    if ((ema12gtema26co == True and macdgtsignal == True and obv_pc >= 2) or (ema12gtema26 == True and macdgtsignal == True and obv_pc >= 5)) and last_action != 'BUY':
+    if ((ema12gtema26co == True and macdgtsignal == True and obv_pc >= 2) or (ema12gtema26 == True and macdgtsignal == True and obv_pc >= 5 and iterations >= 2)) and last_action != 'BUY':
         action = 'BUY'
     # criteria for a sell signal
     elif ((ema12ltema26co == True and macdltsignal == True) or (ema12ltema26 == True and macdltsignal == True and obv_pc < 0)) and last_action not in ['','SELL']:
@@ -110,7 +114,7 @@ def executeJob(sc, market, granularity):
 
     # polling is every 5 minutes (even for hourly intervals), but only process once per interval
     if (last_df_index != df_last.index.format()):
-        logging.debug('---')
+        logging.debug('-- ' + str(iterations) + ' --')
         logging.debug('price: ' + str("{:.2f}".format(float(df_last['close'].values[0]))))
         logging.debug('ema12: ' + str("{:.2f}".format(float(df_last['ema12'].values[0]))))
         logging.debug('ema26: ' + str("{:.2f}".format(float(df_last['ema26'].values[0]))))
@@ -129,6 +133,8 @@ def executeJob(sc, market, granularity):
         # informational output on the most recent entry  
         print('')
         print('================================================================================')
+        txt = '        Iteration : ' + str(iterations)
+        print('|', txt, (' ' * (75 - len(txt))), '|')
         txt = '        Timestamp : ' + str(df_last.index.format()[0])
         print('|', txt, (' ' * (75 - len(txt))), '|')
         print('--------------------------------------------------------------------------------')
@@ -184,11 +190,11 @@ def executeJob(sc, market, granularity):
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
         if (obv_pc >= 2):
-            txt = '        Condition : Significant volume buying than selling'
+            txt = '        Condition : Large positive volume changes'
         elif (obv_pc < 2 and obv_pc >= 0):
-            txt = '        Condition : Slightly more volume buying than selling'
+            txt = '        Condition : Positive volume changes'
         else:
-            txt = '        Condition : More volume selling than buying'
+            txt = '        Condition : Negative volume changes'
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
         print('--------------------------------------------------------------------------------')
@@ -249,7 +255,7 @@ try:
     logging.basicConfig(filename='pycryptobot.log', format='%(asctime)s %(message)s', filemode='w', level=logging.DEBUG)
 
     print('--------------------------------------------------------------------------------')
-    print('|              Python Crypto Bot using the Coinbase Pro API v0.66              |')
+    print('|              Python Crypto Bot using the Coinbase Pro API v0.72              |')
     print('--------------------------------------------------------------------------------')   
     txt = '           Market : ' + market
     print('|', txt, (' ' * (75 - len(txt))), '|')

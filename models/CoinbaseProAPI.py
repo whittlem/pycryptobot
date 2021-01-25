@@ -55,7 +55,7 @@ class CoinbaseProAPI():
                 raise SystemExit(err)
 
         # validates the api passphase is syntactically correct
-        p = re.compile(r"^[a-z0-9]{11,11}$")
+        p = re.compile(r"^[a-z0-9]{10,11}$")
         if not p.match(api_pass):
             err = 'Coinbase Pro API passphase is invalid'
             if self.debug:
