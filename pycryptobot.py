@@ -27,24 +27,73 @@ That way if anything goes wrong only what is within this portfolio is at risk!
 
 import pandas as pd
 from datetime import datetime
-import json, logging, os, re, sched, sys, time
+import argparse, json, logging, os, re, sched, sys, time
 from models.CoinbasePro import CoinbasePro
 from models.TradingAccount import TradingAccount
 from models.CoinbaseProAPI import CoinbaseProAPI
 
+# instantiate the arguments parser
+parser = argparse.ArgumentParser(description='Python Crypto Bot using the Coinbase Pro API')
+
+# optional arguments
+parser.add_argument('--granularity', type=int, help='Optionally provide granularity via arguments')
+parser.add_argument('--live', type=int, help='Optionally provide live status via arguments')
+parser.add_argument('--market', type=str, help='Optionally provide market via arguments')
+
+# parse arguments
+args = parser.parse_args()
+
 """Settings"""
 
-# 0 is test/demo, 1 is live
-is_live = 0
+if args.live == None:
+    # default live status
 
-# the crypto market you wish you trade
-cryptoMarket = 'BTC'
+    # 0 is test/demo, 1 is live
+    is_live = 0
+else:
+    # live status set via --live argument
 
-# the source of funds for your trading
-fiatMarket = 'GBP'
+    if args.live == 1:
+        is_live = 1
+    else:
+        is_live = 0
 
-# supported granularity (recommended 3600 for 1 hour interval for day trading)
-granularity = 3600  # 1 hour
+if args.market == None:
+    # default market
+
+    # the crypto market you wish you trade
+    cryptoMarket = 'BTC'
+
+    # the source of funds for your trading
+    fiatMarket = 'GBP'
+else:
+    # market set via --market argument
+
+    # validates the market is syntactically correct
+    p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
+    if not p.match(args.market):
+        raise TypeError('Coinbase Pro market required.')
+
+    cryptoMarket, fiatMarket = args.market.split('-',2)
+
+if args.granularity == None:
+    # default granularity
+
+    # supported granularity (recommended 3600 for 1 hour interval for day trading)
+    granularity = 3600  # 1 hour
+else:
+    # granularity set via --granularity argument
+
+    # validates granularity is an integer
+    if not isinstance(args.granularity, int):
+        raise TypeError('Granularity integer required.')
+
+    # validates the granularity is supported by Coinbase Pro
+    if not args.granularity in [60, 300, 900, 3600, 21600, 86400]:
+        raise TypeError(
+            'Granularity options: 60, 300, 900, 3600, 21600, 86400.')
+        
+    granularity = args.granularity
 
 """Highly advisable not to change any code below this point!"""
 
@@ -270,7 +319,7 @@ try:
     logging.basicConfig(filename='pycryptobot.log', format='%(asctime)s %(message)s', filemode='w', level=logging.DEBUG)
 
     print('--------------------------------------------------------------------------------')
-    print('|              Python Crypto Bot using the Coinbase Pro API v0.72              |')
+    print('|                Python Crypto Bot using the Coinbase Pro API                  |')
     print('--------------------------------------------------------------------------------')   
     txt = '           Market : ' + market
     print('|', txt, (' ' * (75 - len(txt))), '|')
