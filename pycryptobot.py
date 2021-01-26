@@ -157,15 +157,6 @@ def executeJob(sc, market, granularity):
     obv_pc = float(df_last['obv_pc'].values[0])
     obvsignal = bool(df_last['obvsignal'].values[0])
 
-    datetime_last = datetime.strptime(df_last.index.format()[0], '%Y-%m-%d %H:%M:%S')
-    datetime_diff_sec = (datetime.now() - datetime_last).total_seconds()
-
-    if datetime_diff_sec > granularity:
-        # last row timestamp needs to be current
-        print('error: out of date data, retry in 5 minutes')
-        logging.error('error: out of date date, retry in 5 minutes')
-        s.enter(300, 1, executeJob, (sc, market, granularity))
-    
     # criteria for a buy signal
     if ((ema12gtema26co == True and macdgtsignal == True and obv_pc >= 2) or (ema12gtema26 == True and macdgtsignal == True and obv_pc >= 5 and iterations >= 2)) and last_action != 'BUY':
         action = 'BUY'
