@@ -269,7 +269,6 @@ def executeJob(sc, market, granularity):
                 model = CoinbaseProAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
                 # execute a live market buy
                 resp = model.marketBuy(market, float(account.getBalance(fiatMarket)))
-                logging.debug(type(resp))
                 logging.debug(resp)
             # if not live
             else:
@@ -289,7 +288,6 @@ def executeJob(sc, market, granularity):
                 model = CoinbaseProAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
                 # execute a live market sell
                 resp = model.marketSell(market, float(account.getBalance(cryptoMarket)))
-                logging.debug(type(resp))
                 logging.debug(resp)
             # if not live
             else:
@@ -308,7 +306,8 @@ def executeJob(sc, market, granularity):
     s.enter(300, 1, executeJob, (sc, market, granularity))
 
 try:
-    logging.basicConfig(filename='pycryptobot.log', format='%(asctime)s %(message)s', filemode='w', level=logging.DEBUG)
+    #logging.basicConfig(filename='pycryptobot.log', format='%(asctime)s %(message)s', filemode='w', level=logging.DEBUG)
+    logging.basicConfig(filename='pycryptobot.log', format='%(asctime)s - %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filemode='a', level=logging.DEBUG)
 
     print('--------------------------------------------------------------------------------')
     print('|                Python Crypto Bot using the Coinbase Pro API                  |')
