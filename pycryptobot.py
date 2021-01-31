@@ -124,9 +124,13 @@ if is_live == 1:
     # connect your Coinbase Pro live account
     account = TradingAccount(config)
 
+    '''
+    TODO: raise bug with Coinbase, balances on portfolios via API is incorrect
+
     # if the bot is restarted between a buy and sell it will sell first
     if (account.getBalance(fiatMarket) == 0 and account.getBalance(cryptoMarket) > 0):
         last_action = 'BUY'
+    '''
 
 def executeJob(sc, market, granularity):
     """Trading bot job which runs at a scheduled interval"""
@@ -336,7 +340,10 @@ try:
     print('|', txt, (' ' * (75 - len(txt))), '|')
     print('================================================================================')
 
-     # if live
+    '''
+    TODO: raise bug with Coinbase, balances on portfolios via API is incorrect
+
+    # if live
     if is_live == 1:
         # if live, ensure sufficient funds to place next buy order
         if last_action == '' and account.getBalance('fiatMarket') == 0:
@@ -344,6 +351,7 @@ try:
         # if live, ensure sufficient crypto to place next sell order
         elif last_action == 'BUY' and account.getBalance('cryptoMarket') == 0:
             raise Exception('Insufficient ' + cryptoMarket + ' funds to place next sell order!')
+    '''
 
     s = sched.scheduler(time.time, time.sleep)
     # run the first job immediately after starting
