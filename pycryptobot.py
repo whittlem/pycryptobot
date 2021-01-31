@@ -90,8 +90,7 @@ else:
 
     # validates the granularity is supported by Coinbase Pro
     if not args.granularity in [60, 300, 900, 3600, 21600, 86400]:
-        raise TypeError(
-            'Granularity options: 60, 300, 900, 3600, 21600, 86400.')
+        raise TypeError('Granularity options: 60, 300, 900, 3600, 21600, 86400.')
         
     granularity = args.granularity
 
@@ -108,6 +107,12 @@ if fiatMarket not in ['EUR', 'GBP', 'USD']:
 # reconstruct the market based on the crypto and fiat inputs
 market = cryptoMarket + '-' + fiatMarket
 
+# initial state is to wait
+action = 'WAIT'
+last_action = ''
+last_df_index = ''
+iterations = 0
+
 config = {}
 account = None
 # if live trading is enabled
@@ -119,11 +124,9 @@ if is_live == 1:
     # connect your Coinbase Pro live account
     account = TradingAccount(config)
 
-# initial state is to wait
-action = 'WAIT'
-last_action = ''
-last_df_index = ''
-iterations = 0
+    # if the bot is restarted between a buy and sell it will sell first
+    if (account.getBalance(fiatMarket) == 0 and account.getBalance(cryptoMarket) > 0):
+        last_action = 'BUY'
 
 def executeJob(sc, market, granularity):
     """Trading bot job which runs at a scheduled interval"""
@@ -158,8 +161,7 @@ def executeJob(sc, market, granularity):
     obvsignal = bool(df_last['obvsignal'].values[0])
 
     # criteria for a buy signal
-    #if ((ema12gtema26co == True and macdgtsignal == True and obv_pc >= 2) or (ema12gtema26 == True and macdgtsignal == True and obv_pc >= 5 and iterations >= 2)) and last_action != 'BUY':
-    if (ema12gtema26co == True and macdgtsignal == True and obv_pc > 0) and last_action != 'BUY':
+    if (ema12gtema26co == True and macdgtsignal == True and obv_pc > 0.1) and last_action != 'BUY':
         action = 'BUY'
     # criteria for a sell signal
     elif ((ema12ltema26co == True and macdltsignal == True) or (ema12ltema26 == True and macdltsignal == True and obv_pc < 0)) and last_action not in ['','SELL']:
@@ -269,7 +271,7 @@ def executeJob(sc, market, granularity):
                 model = CoinbaseProAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
                 # execute a live market buy
                 resp = model.marketBuy(market, float(account.getBalance(fiatMarket)))
-                logging.debug(resp)
+                logging.info('attempt to buy ' + resp['specified_funds'] + ' (' + resp['funds'] + ' after fees) of ' + resp['product_id'])
             # if not live
             else:
                 print('--------------------------------------------------------------------------------')
@@ -288,7 +290,7 @@ def executeJob(sc, market, granularity):
                 model = CoinbaseProAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
                 # execute a live market sell
                 resp = model.marketSell(market, float(account.getBalance(cryptoMarket)))
-                logging.debug(resp)
+                logging.info('attempt to sell ' + resp['size'] + ' of ' + resp['product_id'])
             # if not live
             else:
                 print('--------------------------------------------------------------------------------')
@@ -302,11 +304,16 @@ def executeJob(sc, market, granularity):
         
         last_df_index = df_last.index.format()
 
+    # if live
+    if is_live == 1:
+        # save csv with orders for market
+        orders = account.getOrders(market)
+        orders.to_csv('orders.csv', index=False)
+
     # poll every 5 minutes
     s.enter(300, 1, executeJob, (sc, market, granularity))
 
 try:
-    #logging.basicConfig(filename='pycryptobot.log', format='%(asctime)s %(message)s', filemode='w', level=logging.DEBUG)
     logging.basicConfig(filename='pycryptobot.log', format='%(asctime)s - %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filemode='a', level=logging.DEBUG)
 
     print('--------------------------------------------------------------------------------')
@@ -328,6 +335,15 @@ try:
     txt = '      Bot Started : ' + str(datetime.now())
     print('|', txt, (' ' * (75 - len(txt))), '|')
     print('================================================================================')
+
+     # if live
+    if is_live == 1:
+        # if live, ensure sufficient funds to place next buy order
+        if last_action == '' and account.getBalance('fiatMarket') == 0:
+            raise Exception('Insufficient ' + fiatMarket + ' funds to place next buy order!')
+        # if live, ensure sufficient crypto to place next sell order
+        elif last_action == 'BUY' and account.getBalance('cryptoMarket') == 0:
+            raise Exception('Insufficient ' + cryptoMarket + ' funds to place next sell order!')
 
     s = sched.scheduler(time.time, time.sleep)
     # run the first job immediately after starting
