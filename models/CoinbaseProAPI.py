@@ -231,7 +231,9 @@ class CoinbaseProAPI():
             resp = requests.get(self.api_url + uri, auth=self)
 
             if resp.status_code != 200:
-                raise Exception('GET (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
+                #raise Exception('GET (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
+                print ('error:', 'GET (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
+                return pd.DataFrame()
 
             resp.raise_for_status()
             json = resp.json()
@@ -264,7 +266,9 @@ class CoinbaseProAPI():
             resp = requests.post(self.api_url + uri, json=payload, auth=self)
 
             if resp.status_code != 200:
-                raise Exception('POST (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
+                #raise Exception('POST (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
+                print ('error:', 'POST (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
+                return pd.DataFrame()
 
             resp.raise_for_status()
             print (resp)
