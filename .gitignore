@@ -131,3 +131,5 @@ dmypy.json
 .vscode
 config.json
 experiments/experiment*
+
+*.csv
