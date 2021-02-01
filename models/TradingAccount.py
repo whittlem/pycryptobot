@@ -101,14 +101,16 @@ class TradingAccount():
 
         if self.mode == 'live':
             # if config is provided and live connect to Coinbase Pro account portfolio
-            model = CoinbaseProAPI(
-                self.api_key, self.api_secret, self.api_pass, self.api_url)
+            model = CoinbaseProAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
             # retrieve orders from live Coinbase Pro account portfolio
             self.orders = model.getOrders(market, action, status)
             return self.orders
         else:
             # return dummy orders
-            return self.orders
+            if market == '':
+                return self.orders
+            else:
+                return self.orders[self.orders['market'] == market]
 
     def getBalance(self, currency=''):
         """Retrieves balance either live or simulation
@@ -149,8 +151,11 @@ class TradingAccount():
                 # replace FIAT and CRYPTO placeholders
                 if currency in ['EUR','GBP','USD']:
                     self.balance = self.balance.replace('FIAT', currency)
-                else:
+                elif currency in ['BCH','BTC','ETH','LTC']:
                     self.balance = self.balance.replace('CRYPTO', currency)
+
+                if self.balance.currency[self.balance.currency.isin([currency])].empty == True:
+                    self.balance.loc[len(self.balance)] = [currency,0,0,0]
 
                 # retrieve balance of specified currency
                 df = self.balance
