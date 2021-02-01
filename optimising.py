@@ -10,6 +10,7 @@ from views.TradingGraphs import TradingGraphs
 """Parameters for the test, get from experiments/experimnets.csv"""
 
 market = 'BTC-GBP'
+cryptoMarket, fiatMarket = market.split('-',2)
 granularity = 3600
 #startDate = ''
 startDate = '2020-11-20T23:12:07.720258'
@@ -81,9 +82,9 @@ for index, row in df_signals.iterrows():
                 diff = 0.00
 
         if action == 'buy':
-            account.buy('BTC', 'GBP', amountPerTrade, row['close'])
+            account.buy(cryptoMarket, fiatMarket, amountPerTrade, row['close'])
         elif action == 'sell':
-            account.sell('BTC', 'GBP', df_orders.iloc[[-1]]['size'].values[0], row['close'])
+            account.sell(cryptoMarket, fiatMarket, df_orders.iloc[[-1]]['size'].values[0], row['close'])
 
         data_dict = {
             'market': market,
@@ -131,11 +132,11 @@ def truncate(f, n):
     return math.floor(f * 10 ** n) / 10 ** n
 
 # if the last transaction was a buy add the open amount to the closing balance
-result = truncate(round((account.getBalance() + addBalance) - openingBalance, 2), 2)
+result = truncate(round((account.getBalance(cryptoMarket) + addBalance) - openingBalance, 2), 2)
 
 print('')
 print("Opening balance:", truncate(openingBalance, 2))
-print("Closing balance:", truncate(round(account.getBalance() + addBalance, 2), 2))
+print("Closing balance:", truncate(round(account.getBalance(cryptoMarket) + addBalance, 2), 2))
 print("         Result:", result)
 print('')
 

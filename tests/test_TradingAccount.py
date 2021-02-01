@@ -29,5 +29,5 @@ def test_sell_insufficient_funds():
 def test_successful_buy_and_sell():
     account = TradingAccount()
     account.buy('BTC', 'GBP', 1000, 30000)
-    account.sell('BTC', 'GBP', 0.033167, 35000)
-    assert account.getBalance() == 1155.04
+    account.sell('BTC', 'GBP', 0.0331, 35000)
+    assert account.getBalance('GBP') == 1152.7
