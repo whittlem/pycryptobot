@@ -1,5 +1,6 @@
 """Troubleshoots a particular 300 interval result from simulations.py"""
 
+import math
 import pandas as pd
 from datetime import datetime, timedelta
 from models.CoinbasePro import CoinbasePro
@@ -126,12 +127,15 @@ if len(df_orders) > 0 and df_orders.iloc[[-1]]['action'].values[0] == 'buy':
 print('')
 print(df_orders)
 
+def truncate(f, n):
+    return math.floor(f * 10 ** n) / 10 ** n
+
 # if the last transaction was a buy add the open amount to the closing balance
-result = '{:.2f}'.format(round((account.getBalance() + addBalance) - openingBalance, 2))
+result = truncate(round((account.getBalance() + addBalance) - openingBalance, 2), 2)
 
 print('')
-print("Opening balance:", '{:.2f}'.format(openingBalance))
-print("Closing balance:", '{:.2f}'.format(round(account.getBalance() + addBalance, 2)))
+print("Opening balance:", truncate(openingBalance, 2))
+print("Closing balance:", truncate(round(account.getBalance() + addBalance, 2), 2))
 print("         Result:", result)
 print('')
 

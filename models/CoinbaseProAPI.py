@@ -148,7 +148,7 @@ class CoinbaseProAPI():
         df.columns = ['created_at', 'market', 'action', 'type', 'size', 'value', 'status','price']
         
         # convert dataframe to a time series
-        tsidx = pd.DatetimeIndex(pd.to_datetime(df['created_at']).dt.strftime('%Y-%m-%dT%H:%M%:%SZ'))
+        tsidx = pd.DatetimeIndex(pd.to_datetime(df['created_at']).dt.strftime('%Y-%m-%dT%H:%M:%S.%Z'))
         df.set_index(tsidx, inplace=True)
         df = df.drop(columns=['created_at'])
 

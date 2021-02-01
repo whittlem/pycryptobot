@@ -27,7 +27,7 @@ That way if anything goes wrong only what is within this portfolio is at risk!
 
 import pandas as pd
 from datetime import datetime
-import argparse, json, logging, os, re, sched, sys, time
+import argparse, json, logging, math, os, re, sched, sys, time
 from models.CoinbasePro import CoinbasePro
 from models.TradingAccount import TradingAccount
 from models.CoinbaseProAPI import CoinbaseProAPI
@@ -128,6 +128,9 @@ if is_live == 1:
     if (account.getBalance(fiatMarket) == 0 and account.getBalance(cryptoMarket) > 0):
         last_action = 'BUY'
 
+def truncate(f, n):
+    return math.floor(f * 10 ** n) / 10 ** n
+
 def executeJob(sc, market, granularity):
     """Trading bot job which runs at a scheduled interval"""
     global action, iterations, last_action, last_df_index
@@ -173,15 +176,16 @@ def executeJob(sc, market, granularity):
     # polling is every 5 minutes (even for hourly intervals), but only process once per interval
     if (last_df_index != df_last.index.format()):
         logging.debug('-- ' + str(iterations) + ' --')
-        logging.debug('price: ' + str("{:.2f}".format(float(df_last['close'].values[0]))))
-        logging.debug('ema12: ' + str("{:.2f}".format(float(df_last['ema12'].values[0]))))
-        logging.debug('ema26: ' + str("{:.2f}".format(float(df_last['ema26'].values[0]))))
+        
+        logging.debug('price: ' + str(truncate(float(df_last['close'].values[0]), 2)))
+        logging.debug('ema12: ' + str(truncate(float(df_last['ema12'].values[0]), 2)))
+        logging.debug('ema26: ' + str(truncate(float(df_last['ema26'].values[0]), 2)))
         logging.debug('ema12gtema26co: ' + str(ema12gtema26co))
         logging.debug('ema12gtema26: ' + str(ema12gtema26))
         logging.debug('ema12ltema26co: ' + str(ema12ltema26co))
         logging.debug('ema12ltema26: ' + str(ema12ltema26))
-        logging.debug('macd: ' + str("{:.2f}".format(float(df_last['macd'].values[0]))))
-        logging.debug('signal: ' + str("{:.2f}".format(float(df_last['signal'].values[0]))))
+        logging.debug('macd: ' + str(truncate(float(df_last['macd'].values[0]), 2)))
+        logging.debug('signal: ' + str(truncate(float(df_last['signal'].values[0]), 2)))
         logging.debug('macdgtsignal: ' + str(macdgtsignal))
         logging.debug('macdltsignal: ' + str(macdltsignal))
         logging.debug('obv_pc: ' + str(obv_pc) + '%')
@@ -196,9 +200,9 @@ def executeJob(sc, market, granularity):
         txt = '        Timestamp : ' + str(df_last.index.format()[0])
         print('|', txt, (' ' * (75 - len(txt))), '|')
         print('--------------------------------------------------------------------------------')
-        txt = '            EMA12 : ' + str("{:.2f}".format(float(df_last['ema12'].values[0])))
+        txt = '            EMA12 : ' + str(truncate(float(df_last['ema12'].values[0]), 2))
         print('|', txt, (' ' * (75 - len(txt))), '|')
-        txt = '            EMA26 : ' + str("{:.2f}".format(float(df_last['ema26'].values[0])))
+        txt = '            EMA26 : ' + str(truncate(float(df_last['ema26'].values[0]), 2))
         print('|', txt, (' ' * (75 - len(txt))), '|')
         txt = '   Crossing Above : ' + str(ema12gtema26co)
         print('|', txt, (' ' * (75 - len(txt))), '|')
@@ -222,9 +226,9 @@ def executeJob(sc, market, granularity):
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
         print('--------------------------------------------------------------------------------')
-        txt = '             MACD : ' + str("{:.2f}".format(float(df_last['macd'].values[0])))
+        txt = '             MACD : ' + str(truncate(float(df_last['macd'].values[0]), 2))
         print('|', txt, (' ' * (75 - len(txt))), '|')
-        txt = '           Signal : ' + str("{:.2f}".format(float(df_last['signal'].values[0])))
+        txt = '           Signal : ' + str(truncate(float(df_last['signal'].values[0]), 2))
         print('|', txt, (' ' * (75 - len(txt))), '|')
         txt = '  Currently Above : ' + str(macdgtsignal)
         print('|', txt, (' ' * (75 - len(txt))), '|')
@@ -271,7 +275,8 @@ def executeJob(sc, market, granularity):
                 model = CoinbaseProAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
                 # execute a live market buy
                 resp = model.marketBuy(market, float(account.getBalance(fiatMarket)))
-                logging.info('attempt to buy ' + resp['specified_funds'] + ' (' + resp['funds'] + ' after fees) of ' + resp['product_id'])
+                logging.info(resp)
+                #logging.info('attempt to buy ' + resp['specified_funds'] + ' (' + resp['funds'] + ' after fees) of ' + resp['product_id'])
             # if not live
             else:
                 print('--------------------------------------------------------------------------------')
@@ -290,7 +295,8 @@ def executeJob(sc, market, granularity):
                 model = CoinbaseProAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
                 # execute a live market sell
                 resp = model.marketSell(market, float(account.getBalance(cryptoMarket)))
-                logging.info('attempt to sell ' + resp['size'] + ' of ' + resp['product_id'])
+                logging.info(resp)
+                #logging.info('attempt to sell ' + resp['size'] + ' of ' + resp['product_id'])
             # if not live
             else:
                 print('--------------------------------------------------------------------------------')
