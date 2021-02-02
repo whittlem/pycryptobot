@@ -313,11 +313,9 @@ class TradingAccount():
             price = manualPrice
             if manualPrice <= 0:
                 # if manualPrice is non-positive retrieve the current live price
-                resp = requests.get(
-                    'https://api-public.sandbox.pro.coinbase.com/products/' + market + '/ticker')
+                resp = requests.get('https://api-public.sandbox.pro.coinbase.com/products/' + market + '/ticker')
                 if resp.status_code != 200:
-                    raise Exception('GET /products/' + market +
-                                    '/ticker {}'.format(resp.status_code))
+                    raise Exception('GET /products/' + market + '/ticker {}'.format(resp.status_code))
                 resp.raise_for_status()
                 json = resp.json()
                 price = float(json['price'])
