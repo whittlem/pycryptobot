@@ -5,6 +5,8 @@ import re, json, hmac, hashlib, time, requests, base64
 from datetime import datetime, timedelta
 from requests.auth import AuthBase
 
+die_on_api_error = False
+
 class CoinbaseProAPI():
     def __init__(self, api_key='', api_secret='', api_pass='', api_url='https://api.pro.coinbase.com'):
         """Coinbase Pro API object model
@@ -91,7 +93,7 @@ class CoinbaseProAPI():
         """Retrieves your list of accounts"""
 
         # GET /accounts
-        df = self.authAPIGET('accounts')
+        df = self.authAPI('GET', 'accounts')
         
         # exclude accounts with a nil balance
         df = df[df.balance != '0.0000000000000000']
@@ -112,7 +114,7 @@ class CoinbaseProAPI():
             else:
                 raise SystemExit(err)
     
-        return self.authAPIGET('accounts/' + account)
+        return self.authAPI('GET', 'accounts/' + account)
 
     def getOrders(self, market='', action='', status='all'):
         """Retrieves your list of orders with optional filtering"""
@@ -135,7 +137,7 @@ class CoinbaseProAPI():
             raise ValueError('Invalid order status.')
 
         # GET /orders?status
-        resp = self.authAPIGET('orders?status=' + status)
+        resp = self.authAPI('GET', 'orders?status=' + status)
         if len(resp) > 0:
             df = resp.copy()[['created_at','product_id','side','type','filled_size','executed_value','status']]
         else:
@@ -204,7 +206,7 @@ class CoinbaseProAPI():
         model = CoinbaseProAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
 
         # place order and return result
-        return model.authAPIPOST('orders', order)
+        return model.authAPI('POST', 'orders', order)
 
     def marketSell(self, market='', cryptoAmount=0):
         p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
@@ -224,16 +226,30 @@ class CoinbaseProAPI():
         print (order)
 
         model = CoinbaseProAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
-        return model.authAPIPOST('orders', order)
+        return model.authAPI('POST', 'orders', order)
 
-    def authAPIGET(self, uri):
+    def authAPI(self, method, uri, payload=''):
+        if not isinstance(method, str):
+            raise TypeError('Method is not a string.')
+
+        if not method in ['GET','POST']:
+             raise TypeError('Method not GET or POST.') 
+
+        if not isinstance(uri, str):
+            raise TypeError('Method is not a string.')
+
         try:
-            resp = requests.get(self.api_url + uri, auth=self)
+            if method == 'GET':
+                resp = requests.get(self.api_url + uri, auth=self)
+            elif method == 'POST':
+                resp = requests.post(self.api_url + uri, json=payload, auth=self)
 
             if resp.status_code != 200:
-                #raise Exception('GET (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
-                print ('error:', 'GET (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
-                return pd.DataFrame()
+                if die_on_api_error:
+                    raise Exception(method.upper() + 'GET (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
+                else:
+                    print ('error:', method.upper() + ' (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
+                    return pd.DataFrame()
 
             resp.raise_for_status()
             json = resp.json()
@@ -247,45 +263,42 @@ class CoinbaseProAPI():
 
         except requests.ConnectionError as err:
             if self.debug:
-                raise SystemExit(err)
+                if die_on_api_error:
+                    raise SystemExit(err)
+                else:
+                    print (err)
+                    return pd.DataFrame()
             else:
-                raise SystemExit('ConnectionError: ' + self.api_url)
+                if die_on_api_error:
+                    raise SystemExit('ConnectionError: ' + self.api_url)
+                else:
+                    print ('ConnectionError: ' + self.api_url)
+                    return pd.DataFrame()
+
         except requests.exceptions.HTTPError as err:
             if self.debug:
-                raise SystemExit(err)
+                if die_on_api_error:
+                    raise SystemExit(err)
+                else:
+                    print (err)
+                    return pd.DataFrame()
             else:
-                raise SystemExit('HTTPError: ' + self.api_url)
+                if die_on_api_error:
+                    raise SystemExit('HTTPError: ' + self.api_url)
+                else:
+                    print ('HTTPError: ' + self.api_url)
+                    return pd.DataFrame()
+
         except requests.Timeout as err:
             if self.debug:
-                raise SystemExit(err)
+                if die_on_api_error:
+                    raise SystemExit(err)
+                else:
+                    print (err)
+                    return pd.DataFrame()
             else:
-                raise SystemExit('Timeout: ' + self.api_url) 
-
-    def authAPIPOST(self, uri, payload):
-        try:
-            resp = requests.post(self.api_url + uri, json=payload, auth=self)
-
-            if resp.status_code != 200:
-                #raise Exception('POST (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
-                print ('error:', 'POST (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
-                return pd.DataFrame()
-
-            resp.raise_for_status()
-            print (resp)
-            return resp.json()
-
-        except requests.ConnectionError as err:
-            if self.debug:
-                raise SystemExit(err)
-            else:
-                raise SystemExit('ConnectionError: ' + self.api_url)
-        except requests.exceptions.HTTPError as err:
-            if self.debug:
-                raise SystemExit(err)
-            else:
-                raise SystemExit('HTTPError: ' + self.api_url)
-        except requests.Timeout as err:
-            if self.debug:
-                raise SystemExit(err)
-            else:
-                raise SystemExit('Timeout: ' + self.api_url) 
+                if die_on_api_error:
+                    raise SystemExit('Timeout: ' + self.api_url)
+                else:
+                    print ('Timeout: ' + self.api_url)
+                    return pd.DataFrame()
