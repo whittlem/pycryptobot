@@ -84,7 +84,7 @@ for index, row in df_signals.iterrows():
         if action == 'buy':
             account.buy(cryptoMarket, fiatMarket, amountPerTrade, row['close'])
         elif action == 'sell':
-            account.sell(cryptoMarket, fiatMarket, df_orders.iloc[[-1]]['size'].values[0], row['close'])
+            account.sell(cryptoMarket, fiatMarket, account.getBalance(cryptoMarket), row['close'])
 
         data_dict = {
             'market': market,

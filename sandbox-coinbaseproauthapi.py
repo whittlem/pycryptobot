@@ -1,12 +1,12 @@
-"""Coinbase Pro API object model examples"""
-
 import json
-from models.CoinbaseProAPI import CoinbaseProAPI
+from models.CoinbaseProAPI import AuthAPI
 
 with open('config.json') as config_file:
     config = json.load(config_file)
 
-model = CoinbaseProAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
+model = AuthAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
+resp = model.authAPI('GET','orders?status=all')
+print (resp)
 
 accounts = model.getAccounts()
 print (accounts)

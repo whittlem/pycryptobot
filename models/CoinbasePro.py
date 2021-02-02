@@ -7,7 +7,7 @@ import re
 import requests
 from datetime import datetime, timedelta
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-from models.CoinbaseProAPI import CoinbaseProAPI
+from models.CoinbaseProAPI import AuthAPI
 
 class CoinbasePro():
     def __init__(self, market='BTC-GBP', granularity=86400, iso8601start='', iso8601end=''):
