@@ -7,6 +7,7 @@ import re
 import requests
 from datetime import datetime, timedelta
 from statsmodels.tsa.statespace.sarimax import SARIMAX
+from models.CoinbaseProAPI import CoinbaseProAPI
 
 class CoinbasePro():
     def __init__(self, market='BTC-GBP', granularity=86400, iso8601start='', iso8601end=''):
@@ -53,8 +54,7 @@ class CoinbasePro():
 
         # validates the granularity is supported by Coinbase Pro
         if not granularity in [60, 300, 900, 3600, 21600, 86400]:
-            raise TypeError(
-                'Granularity options: 60, 300, 900, 3600, 21600, 86400.')
+            raise TypeError('Granularity options: 60, 300, 900, 3600, 21600, 86400.')
 
         # validates the ISO 8601 start date is a string (if provided)
         if not isinstance(iso8601start, str):
