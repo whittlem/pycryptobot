@@ -111,7 +111,7 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, mostRecent=True):
             if action == 'buy':
                 account.buy(cryptoMarket, fiatMarket, 100, row['close'])
             elif action == 'sell':
-                account.sell(cryptoMarket, fiatMarket, df_orders.iloc[[-1]]['size'].values[0], row['close'])
+                account.sell(cryptoMarket, fiatMarket, account.getBalance(cryptoMarket), row['close'])
 
             data_dict = {
                 'market': market,
