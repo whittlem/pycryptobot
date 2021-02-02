@@ -322,8 +322,8 @@ def executeJob(sc, market, granularity):
 
     # if live
     if is_live == 1:
-        # save csv with orders for market
-        orders = account.getOrders(market)
+        # save csv with orders for market that are 'done'
+        orders = account.getOrders(market, '', 'done')
         orders.to_csv('orders.csv', index=False)
 
     # poll every 5 minutes
