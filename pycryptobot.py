@@ -112,6 +112,7 @@ action = 'WAIT'
 last_action = ''
 last_df_index = ''
 iterations = 0
+x_since_buy = 0
 
 config = {}
 account = None
@@ -133,7 +134,7 @@ def truncate(f, n):
 
 def executeJob(sc, market, granularity):
     """Trading bot job which runs at a scheduled interval"""
-    global action, iterations, last_action, last_df_index
+    global action, iterations, x_since_buy, last_action, last_df_index
 
     # increment iterations
     iterations = iterations + 1
@@ -164,7 +165,7 @@ def executeJob(sc, market, granularity):
     obvsignal = bool(df_last['obvsignal'].values[0])
 
     # criteria for a buy signal
-    if (ema12gtema26co == True and macdgtsignal == True and obv_pc > 0.1) and last_action != 'BUY':
+    if ((ema12gtema26co == True and macdgtsignal == True and obv_pc > 0.1) or (ema12gtema26 == True and macdgtsignal == True and obv_pc > 0.1 and x_since_buy <= 2)) and last_action != 'BUY':
         action = 'BUY'
     # criteria for a sell signal
     elif ((ema12ltema26co == True and macdltsignal == True) or (ema12ltema26 == True and macdltsignal == True and obv_pc < 0)) and last_action not in ['','SELL']:
@@ -175,7 +176,8 @@ def executeJob(sc, market, granularity):
 
     # polling is every 5 minutes (even for hourly intervals), but only process once per interval
     if (last_df_index != df_last.index.format()):
-        logging.debug('-- ' + str(iterations) + ' --')
+        logging.debug('-- Iteration: ' + str(iterations) + ' --')
+        logging.debug('-- Since Last Buy: ' + str(x_since_buy) + ' --')
         
         logging.debug('price: ' + str(truncate(float(df_last['close'].values[0]), 2)))
         logging.debug('ema12: ' + str(truncate(float(df_last['ema12'].values[0]), 2)))
@@ -196,6 +198,8 @@ def executeJob(sc, market, granularity):
         print('')
         print('================================================================================')
         txt = '        Iteration : ' + str(iterations)
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+        txt = '   Since Last Buy : ' + str(x_since_buy)
         print('|', txt, (' ' * (75 - len(txt))), '|')
         txt = '        Timestamp : ' + str(df_last.index.format()[0])
         print('|', txt, (' ' * (75 - len(txt))), '|')
@@ -266,6 +270,9 @@ def executeJob(sc, market, granularity):
 
         # if a buy signal
         if action == 'BUY':
+            # increment x since buy
+            x_since_buy = x_since_buy + 1
+
             # if live
             if is_live == 1:
                 print('--------------------------------------------------------------------------------')
@@ -286,6 +293,9 @@ def executeJob(sc, market, granularity):
 
         # if a sell signal
         elif action == 'SELL':
+            # reset x since buy
+            x_since_buy = 0
+
             # if live
             if is_live == 1:
                 print('--------------------------------------------------------------------------------')
