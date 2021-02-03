@@ -28,9 +28,9 @@ That way if anything goes wrong only what is within this portfolio is at risk!
 import pandas as pd
 from datetime import datetime
 import argparse, json, logging, math, os, re, sched, sys, time
-from models.CoinbasePro import CoinbasePro
+from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
-from models.CoinbaseProAPI import AuthAPI
+from models.CoinbaseProAPI import AuthAPI, PublicAPI
 
 # instantiate the arguments parser
 parser = argparse.ArgumentParser(description='Python Crypto Bot using the Coinbase Pro API')
@@ -139,11 +139,14 @@ def executeJob(sc, market, granularity):
     # increment iterations
     iterations = iterations + 1
 
-    # retrieves the latest analysed market data
-    coinbasepro = CoinbasePro(market, granularity)
-    coinbasepro.addEMABuySignals()
-    coinbasepro.addMACDBuySignals()
-    df = coinbasepro.getDataFrame()
+    # retrieve the market data
+    api = PublicAPI()
+    tradingData = api.getHistoricalData(market, granularity)
+
+    # analyse the market data
+    technicalAnalysis = TechnicalAnalysis(tradingData)
+    technicalAnalysis.addAll()
+    df = technicalAnalysis.getDataFrame()
 
     if len(df) != 300:
         # data frame should have 300 rows, if not retry
