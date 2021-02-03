@@ -1,15 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-from models.CoinbasePro import CoinbasePro
+from models.Trading import TechnicalAnalysis
+from models.CoinbaseProAPI import PublicAPI
 
 market = 'BTC-GBP'
 granularity = 3600
 
-coinbasepro = CoinbasePro(market, granularity)
-df = coinbasepro.getDataFrame()
-coinbasepro.addMovingAverages()
-coinbasepro.addMomentumIndicators()
+api = PublicAPI()
+tradingData = api.getHistoricalData(market, granularity)
+technicalAnalysis = TechnicalAnalysis(tradingData)
+technicalAnalysis.addAll()
+df = technicalAnalysis.getDataFrame()
 
 """References
 https://commodity.com/technical-analysis
