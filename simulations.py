@@ -13,7 +13,7 @@ from views.TradingGraphs import TradingGraphs
 
 market = 'BTC-GBP'
 granularity = 3600
-experiments = 3 # 1 or more
+experiments = 50 # 1 or more
 
 def runExperiment(id, market='BTC-GBP', granularity=3600, mostRecent=True):
     """Run an experiment
