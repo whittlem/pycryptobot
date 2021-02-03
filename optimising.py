@@ -3,7 +3,9 @@
 import math
 import pandas as pd
 from datetime import datetime, timedelta
-from models.CoinbasePro import CoinbasePro
+#from models.CoinbasePro import CoinbasePro
+from models.CoinbaseProAPI import PublicAPI
+from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
 from views.TradingGraphs import TradingGraphs
 
@@ -22,15 +24,16 @@ amountPerTrade = 100
 # instantiate a non-live trade account
 account = TradingAccount()
 
-# instantiate a CoinbassePro object with desired criteria
-coinbasepro = CoinbasePro(market, granularity, startDate, endDate)
+# retrieve the market data
+api = PublicAPI()
+tradingData = api.getHistoricalData(market, granularity, startDate, endDate)
 
-# adds buy and sell signals to Pandas DataFrame
-coinbasepro.addEMABuySignals()
-coinbasepro.addMACDBuySignals()
+# analyse the market data
+technicalAnalysis = TechnicalAnalysis(tradingData)
+technicalAnalysis.addAll()
 
 # stores the Pandas Dataframe in df
-df = coinbasepro.getDataFrame()
+df = technicalAnalysis.getDataFrame()
 
 # defines the buy and sell signals and consolidates into df_signals
 buysignals = ((df.ema12gtema26co == True) & (df.macdgtsignal == True) & (df.obv_pc > 0.1)) | ((df.ema12gtema26 == True) & (df.macdgtsignal == True) & (df.obv_pc >= 2))
@@ -141,5 +144,5 @@ print("         Result:", result)
 print('')
 
 # renders the DataFrame for analysis
-tradinggraphs = TradingGraphs(coinbasepro)
+tradinggraphs = TradingGraphs(technicalAnalysis)
 tradinggraphs.renderBuySellSignalEMA1226MACD()

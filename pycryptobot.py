@@ -30,7 +30,7 @@ from datetime import datetime
 import argparse, json, logging, math, os, re, sched, sys, time
 from models.CoinbasePro import CoinbasePro
 from models.TradingAccount import TradingAccount
-from models.CoinbaseProAPI import CoinbaseProAPI
+from models.CoinbaseProAPI import AuthAPI
 
 # instantiate the arguments parser
 parser = argparse.ArgumentParser(description='Python Crypto Bot using the Coinbase Pro API')
@@ -279,7 +279,7 @@ def executeJob(sc, market, granularity):
                 print('|                      *** Executing LIVE Buy Order ***                        |')
                 print('--------------------------------------------------------------------------------')
                 # connect to coinbase pro api (authenticated)
-                model = CoinbaseProAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
+                model = AuthAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
                 # execute a live market buy
                 resp = model.marketBuy(market, float(account.getBalance(fiatMarket)))
                 logging.info(resp)
@@ -302,7 +302,7 @@ def executeJob(sc, market, granularity):
                 print('|                      *** Executing LIVE Sell Order ***                        |')
                 print('--------------------------------------------------------------------------------')
                 # connect to Coinbase Pro API live
-                model = CoinbaseProAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
+                model = AuthAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
                 # execute a live market sell
                 resp = model.marketSell(market, float(account.getBalance(cryptoMarket)))
                 logging.info(resp)

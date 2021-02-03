@@ -3,35 +3,35 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from models.CoinbasePro import CoinbasePro
+from models.Trading import TechnicalAnalysis
 import datetime
 import sys
 sys.path.append('.')
 
 class TradingGraphs():
-    def __init__(self, coinbasepro):
+    def __init__(self, technicalAnalysis):
         """Trading Graphs object model
     
         Parameters
         ----------
-        coinbasepro : object
-            CoinbasePro object to provide the trading data to visualise
+        technicalAnalysis : object
+            TechnicalAnalysis object to provide the trading data to visualise
         """
 
-        # validates the coinbasepro object
-        if not isinstance(coinbasepro, CoinbasePro):
+        # validates the technicalAnalysis object
+        if not isinstance(technicalAnalysis, TechnicalAnalysis):
             raise TypeError('Coinbase Pro model required.')
 
         # only one figure can be open at a time, close all open figures
         plt.close('all')
 
-        self.coinbasepro = coinbasepro
+        self.technicalAnalysis = technicalAnalysis
 
-        # stores the pandas dataframe from coinbasepro object
-        self.df = coinbasepro.getDataFrame()
+        # stores the pandas dataframe from technicalAnalysis object
+        self.df = technicalAnalysis.getDataFrame()
 
-        # stores the support and resistance levels from coinbasepro object
-        self.levels = coinbasepro.getSupportResistanceLevelsTimeSeries()
+        # stores the support and resistance levels from technicalAnalysis object
+        self.levels = technicalAnalysis.supportResistanceLevels()
 
         # seaborn style plots
         plt.style.use('seaborn')
@@ -234,12 +234,11 @@ class TradingGraphs():
             Save the figure without displaying it         
         """
 
-        ts = self.df['close']
-        results_ARIMA = self.coinbasepro.getSeasonalARIMAModel(ts)
+        fittedValues = self.technicalAnalysis.seasonalARIMAModelFittedValues()
 
-        plt.plot(ts, label='original')
-        plt.plot(results_ARIMA.fittedvalues, color='red', label='fitted')
-        plt.title('RSS: %.4f' % sum((results_ARIMA.fittedvalues-ts)**2))
+        plt.plot(self.df['close'], label='original')
+        plt.plot(fittedValues, color='red', label='fitted')
+        plt.title('RSS: %.4f' % sum((fittedValues-self.df['close'])**2))
         plt.legend()
         plt.ylabel('Price')
         plt.xticks(rotation=90)
@@ -267,14 +266,12 @@ class TradingGraphs():
             Save the figure without displaying it         
         """
 
-        ts = self.df['close']
-        results_ARIMA = self.coinbasepro.getSeasonalARIMAModel(ts)
+        results_ARIMA = self.technicalAnalysis.seasonalARIMAModel()
 
-        df = pd.DataFrame(ts)
+        df = pd.DataFrame(self.df['close'])
         start_date = df.last_valid_index()
         end_date = start_date + datetime.timedelta(days=days)
-        pred = results_ARIMA.predict(
-            start=str(start_date), end=str(end_date), dynamic=True)
+        pred = results_ARIMA.predict(start=str(start_date), end=str(end_date), dynamic=True)
 
         plt.plot(pred, label='prediction')
         plt.ylabel('Price')
