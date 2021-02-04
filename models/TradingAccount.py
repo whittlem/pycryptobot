@@ -3,7 +3,7 @@
 import pandas as pd
 import json, math, re, requests
 from datetime import datetime
-from models.CoinbaseProAPI import CoinbaseProAPI
+from models.CoinbasePro import AuthAPI
 
 class TradingAccount():
     def __init__(self, config={}):
@@ -101,7 +101,7 @@ class TradingAccount():
 
         if self.mode == 'live':
             # if config is provided and live connect to Coinbase Pro account portfolio
-            model = CoinbaseProAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+            model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
             # retrieve orders from live Coinbase Pro account portfolio
             self.orders = model.getOrders(market, action, status)
             return self.orders
@@ -123,7 +123,7 @@ class TradingAccount():
 
         if self.mode == 'live':
             # if config is provided and live connect to Coinbase Pro account portfolio
-            model = CoinbaseProAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+            model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
             if currency == '':
                 # retrieve all balances
                 return model.getAccounts()[['currency', 'balance', 'hold', 'available']]
@@ -207,7 +207,7 @@ class TradingAccount():
 
         if self.mode == 'live':
             # connect to coinbase pro api (authenticated)
-            model = CoinbaseProAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+            model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
 
             # execute a live market buy
             resp = model.marketBuy(market, float(self.getBalance(fiatMarket)))
@@ -290,7 +290,7 @@ class TradingAccount():
 
         if self.mode == 'live':
             # connect to Coinbase Pro API live
-            model = CoinbaseProAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+            model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
 
             # execute a live market sell
             resp = model.marketSell(market, float(self.getBalance(cryptoMarket)))

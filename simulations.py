@@ -4,7 +4,8 @@ import math
 import random, re
 import pandas as pd
 from datetime import datetime, timedelta
-from models.CoinbasePro import CoinbasePro
+from models.CoinbasePro import PublicAPI
+from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
 from views.TradingGraphs import TradingGraphs
 
@@ -12,7 +13,7 @@ from views.TradingGraphs import TradingGraphs
 
 market = 'BTC-GBP'
 granularity = 3600
-experiments = 100 # 1 or more
+experiments = 50 # 1 or more
 
 def runExperiment(id, market='BTC-GBP', granularity=3600, mostRecent=True):
     """Run an experiment
@@ -68,15 +69,16 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, mostRecent=True):
     # instantiate a non-live trade account
     account = TradingAccount()
 
-    # instantiate a CoinbassePro object with desired criteria
-    coinbasepro = CoinbasePro(market, granularity, startDate, endDate)
+    # retrieve the market data
+    api = PublicAPI()
+    tradingData = api.getHistoricalData(market, granularity, startDate, endDate)
 
-    # adds buy and sell signals to Pandas DataFrame
-    coinbasepro.addEMABuySignals()
-    coinbasepro.addMACDBuySignals()
+    # analyse the market data
+    technicalAnalysis = TechnicalAnalysis(tradingData)
+    technicalAnalysis.addAll()
 
     # stores the Pandas Dataframe in df
-    df = coinbasepro.getDataFrame()
+    df = technicalAnalysis.getDataFrame()
 
     # defines the buy and sell signals and consolidates into df_signals
     buysignals = ((df.ema12gtema26co == True) & (df.macdgtsignal == True) & (df.obv_pc > 0)) | ((df.ema12gtema26 == True) & (df.ema12gtema26 == True) & (df.macdgtsignal == True) & (df.obv_pc >= 2))
@@ -111,7 +113,7 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, mostRecent=True):
             if action == 'buy':
                 account.buy(cryptoMarket, fiatMarket, 100, row['close'])
             elif action == 'sell':
-                account.sell(cryptoMarket, fiatMarket, df_orders.iloc[[-1]]['size'].values[0], row['close'])
+                account.sell(cryptoMarket, fiatMarket, account.getBalance(cryptoMarket), row['close'])
 
             data_dict = {
                 'market': market,
@@ -168,7 +170,7 @@ def runExperiment(id, market='BTC-GBP', granularity=3600, mostRecent=True):
     print('')
 
     # saves the rendered diagram for the DataFrame (without displaying)
-    tradinggraphs = TradingGraphs(coinbasepro)
+    tradinggraphs = TradingGraphs(technicalAnalysis)
     tradinggraphs.renderBuySellSignalEMA1226MACD('experiments/experiment' + str(id) + '_' + str(result) + '.png', True)
 
     result_dict = {
