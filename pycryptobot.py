@@ -39,6 +39,7 @@ parser = argparse.ArgumentParser(description='Python Crypto Bot using the Coinba
 parser.add_argument('--granularity', type=int, help='Optionally provide granularity via arguments')
 parser.add_argument('--live', type=int, help='Optionally provide live status via arguments')
 parser.add_argument('--market', type=str, help='Optionally provide market via arguments')
+parser.add_argument('--sim', type=str, help='Optionally provide simulation status via arguments ("fast", "slow")')
 
 # parse arguments
 args = parser.parse_args()
@@ -57,6 +58,27 @@ else:
         is_live = 1
     else:
         is_live = 0
+
+if args.sim == None:
+    # default simulation status
+
+    # 0 is normal, 1 is simulation
+    is_sim = 0
+    sim_speed = ''
+else:
+    # sim status set via --sim argument
+
+    if args.sim == 'fast':
+        is_sim = 1
+        sim_speed = 'fast'
+        is_live = 0
+    elif args.sim == 'slow':
+        is_sim = 1
+        sim_speed = 'slow'
+        is_live = 0
+    else:
+        is_sim = 0
+        sim_speed = ''
 
 if args.market == None:
     # default market
@@ -113,6 +135,7 @@ last_action = ''
 last_df_index = ''
 iterations = 0
 x_since_buy = 0
+x_since_sell = 0
 
 config = {}
 account = None
@@ -132,19 +155,21 @@ if is_live == 1:
 def truncate(f, n):
     return math.floor(f * 10 ** n) / 10 ** n
 
-def executeJob(sc, market, granularity):
+def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     """Trading bot job which runs at a scheduled interval"""
-    global action, iterations, x_since_buy, last_action, last_df_index
+    global action, iterations, x_since_buy, x_since_sell, last_action, last_df_index
 
     # increment iterations
     iterations = iterations + 1
 
-    # retrieve the market data
-    api = PublicAPI()
-    tradingData = api.getHistoricalData(market, granularity)
+    if is_sim == 0:
+        # retrieve the market data
+        api = PublicAPI()
+        tradingData = api.getHistoricalData(market, granularity)
 
     # analyse the market data
-    technicalAnalysis = TechnicalAnalysis(tradingData)
+    tradingDataCopy = tradingData.copy()
+    technicalAnalysis = TechnicalAnalysis(tradingDataCopy)
     technicalAnalysis.addAll()
     df = technicalAnalysis.getDataFrame()
 
@@ -154,8 +179,13 @@ def executeJob(sc, market, granularity):
         logging.error('error: data frame length is < 300 (' + str(len(df)) + ')')
         s.enter(300, 1, executeJob, (sc, market, granularity))
 
-    # df_last contains the most recent entry
-    df_last = df.tail(1)
+    if is_sim == 1:
+        # with a simulation df_last will iterate through data
+        df_last = df.iloc[iterations-1:iterations]
+    else:
+        # df_last contains the most recent entry
+        df_last = df.tail(1)
+ 
     ema12gtema26 = bool(df_last['ema12gtema26'].values[0])
     ema12gtema26co = bool(df_last['ema12gtema26co'].values[0])
     macdgtsignal = bool(df_last['macdgtsignal'].values[0])
@@ -164,8 +194,8 @@ def executeJob(sc, market, granularity):
     ema12ltema26co = bool(df_last['ema12ltema26co'].values[0])
     macdltsignal = bool(df_last['macdltsignal'].values[0])
     macdltsignalco = bool(df_last['macdltsignalco'].values[0])
+    obv = float(df_last['obv'].values[0])
     obv_pc = float(df_last['obv_pc'].values[0])
-    obvsignal = bool(df_last['obvsignal'].values[0])
 
     # criteria for a buy signal
     if ((ema12gtema26co == True and macdgtsignal == True and obv_pc > 0.1) or (ema12gtema26 == True and macdgtsignal == True and obv_pc > 0.1 and x_since_buy > 0 and x_since_buy <= 2)) and last_action != 'BUY':
@@ -181,6 +211,7 @@ def executeJob(sc, market, granularity):
     if (last_df_index != df_last.index.format()):
         logging.debug('-- Iteration: ' + str(iterations) + ' --')
         logging.debug('-- Since Last Buy: ' + str(x_since_buy) + ' --')
+        logging.debug('-- Since Last Sell: ' + str(x_since_sell) + ' --')
         
         logging.debug('price: ' + str(truncate(float(df_last['close'].values[0]), 2)))
         logging.debug('ema12: ' + str(truncate(float(df_last['ema12'].values[0]), 2)))
@@ -193,8 +224,8 @@ def executeJob(sc, market, granularity):
         logging.debug('signal: ' + str(truncate(float(df_last['signal'].values[0]), 2)))
         logging.debug('macdgtsignal: ' + str(macdgtsignal))
         logging.debug('macdltsignal: ' + str(macdltsignal))
+        logging.debug('obv: ' + str(obv))
         logging.debug('obv_pc: ' + str(obv_pc) + '%')
-        logging.debug('obvsignal: ' + str(obvsignal))
         logging.debug('action: ' + action)
 
         # informational output on the most recent entry  
@@ -203,6 +234,8 @@ def executeJob(sc, market, granularity):
         txt = '        Iteration : ' + str(iterations)
         print('|', txt, (' ' * (75 - len(txt))), '|')
         txt = '   Since Last Buy : ' + str(x_since_buy)
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+        txt = '  Since Last Sell : ' + str(x_since_sell)
         print('|', txt, (' ' * (75 - len(txt))), '|')
         txt = '        Timestamp : ' + str(df_last.index.format()[0])
         print('|', txt, (' ' * (75 - len(txt))), '|')
@@ -255,7 +288,9 @@ def executeJob(sc, market, granularity):
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
         print('--------------------------------------------------------------------------------')
-        txt = '      OBV Percent : ' + str(obv_pc) + '%'
+        txt = '              OBV : ' + str(obv)
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+        txt = '       OBV Change : ' + str(obv_pc) + '%'
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
         if (obv_pc >= 2):
@@ -271,10 +306,18 @@ def executeJob(sc, market, granularity):
         print('|', txt, (' ' * (75 - len(txt))), '|')
         print('================================================================================')
 
+        if last_action == 'BUY':
+            x_since_buy = x_since_buy + 1
+        elif last_action == 'SELL':
+            x_since_sell = x_since_sell + 1
+
         # if a buy signal
         if action == 'BUY':
             # increment x since buy
             x_since_buy = x_since_buy + 1
+
+            # reset x since sell
+            x_since_sell = 0
 
             # if live
             if is_live == 1:
@@ -292,10 +335,13 @@ def executeJob(sc, market, granularity):
                 print('--------------------------------------------------------------------------------')
                 print('|                      *** Executing TEST Buy Order ***                        |')
                 print('--------------------------------------------------------------------------------')
-            print(df_last)
+            print(df_last[['close','ema12','ema26','ema12gtema26','ema12gtema26co','macd','signal','macdgtsignal','obv','obv_pc']])
 
         # if a sell signal
         elif action == 'SELL':
+            # increment x since buy
+            x_since_sell = x_since_sell + 1
+
             # reset x since buy
             x_since_buy = 0
 
@@ -315,7 +361,7 @@ def executeJob(sc, market, granularity):
                 print('--------------------------------------------------------------------------------')
                 print('|                      *** Executing TEST Sell Order ***                        |')
                 print('--------------------------------------------------------------------------------')
-            print(df_last)
+            print(df_last[['close','ema12','ema26','ema12ltema26','ema12ltema26co','macd','signal','macdltsignal','obv','obv_pc']])
 
         # last significant action
         if action in ['BUY','SELL']:
@@ -329,8 +375,17 @@ def executeJob(sc, market, granularity):
         orders = account.getOrders(market, '', 'done')
         orders.to_csv('orders.csv', index=False)
 
-    # poll every 5 minutes
-    s.enter(300, 1, executeJob, (sc, market, granularity))
+    if is_sim == 1:
+        if iterations < 300:
+            if sim_speed == 'fast':
+                # fast processing
+                executeJob(sc, market, granularity, tradingData)
+            else:
+                # slow processing
+                s.enter(1, 1, executeJob, (sc, market, granularity, tradingData))
+    else:
+        # poll every 5 minutes
+        s.enter(300, 1, executeJob, (sc, market, granularity))
 
 try:
     logging.basicConfig(filename='pycryptobot.log', format='%(asctime)s - %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filemode='a', level=logging.DEBUG)
@@ -366,7 +421,13 @@ try:
 
     s = sched.scheduler(time.time, time.sleep)
     # run the first job immediately after starting
-    s.enter(1, 1, executeJob, (s, market, granularity))
+    if is_sim == 1:
+        api = PublicAPI()
+        tradingData = api.getHistoricalData(market, granularity)
+        executeJob(s, market, granularity, tradingData)
+    else: 
+        executeJob(s, market, granularity)
+    
     s.run()
 
 # catches a keyboard break of app, exits gracefully
