@@ -3,7 +3,7 @@
 import pandas as pd
 import json, math, re, requests
 from datetime import datetime
-from models.CoinbaseProAPI import AuthAPI
+from models.CoinbasePro import AuthAPI
 
 class TradingAccount():
     def __init__(self, config={}):
