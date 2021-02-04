@@ -4,7 +4,7 @@ import math
 import pandas as pd
 from datetime import datetime, timedelta
 #from models.CoinbasePro import CoinbasePro
-from models.CoinbaseProAPI import PublicAPI
+from models.CoinbasePro import PublicAPI
 from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
 from views.TradingGraphs import TradingGraphs

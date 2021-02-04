@@ -30,7 +30,7 @@ from datetime import datetime
 import argparse, json, logging, math, os, re, sched, sys, time
 from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
-from models.CoinbaseProAPI import AuthAPI, PublicAPI
+from models.CoinbasePro import AuthAPI, PublicAPI
 
 # instantiate the arguments parser
 parser = argparse.ArgumentParser(description='Python Crypto Bot using the Coinbase Pro API')

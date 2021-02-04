@@ -1,5 +1,5 @@
 import json
-from models.CoinbaseProAPI import AuthAPI
+from models.CoinbasePro import AuthAPI
 
 with open('config.json') as config_file:
     config = json.load(config_file)

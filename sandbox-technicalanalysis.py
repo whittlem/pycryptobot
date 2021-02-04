@@ -1,6 +1,6 @@
 import pandas as pd
 from models.Trading import TechnicalAnalysis
-from models.CoinbaseProAPI import PublicAPI
+from models.CoinbasePro import PublicAPI
 
 api = PublicAPI()
 data = api.getHistoricalData('BTC-GBP', 3600)
@@ -19,8 +19,19 @@ ta.addAll()
 #ta.addOBV()
 #ta.addEMABuySignals()
 #ta.addMACDBuySignals()
+#ta.addCandleHammer()
+#ta.addCandleInvertedHammer()
+#ta.addCandleShootingStar()
+#ta.addCandleHangingMan()
+#ta.addCandleThreeWhiteSoldiers()
+#ta.addCandleThreeBlackCrows()
+#ta.addCandleDojo()
+#ta.addCandleThreeLineStrike()
+#ta.addCandleTwoBlackGapping()
+#ta.addCandleEveningStar()
+#ta.addCandleAbandonedBaby()
 
 print (ta.getDataFrame())
-print (ta.getDataFrame().dtypes)
-print (ta.supportResistanceLevels())
-print (ta.seasonalARIMAModelFittedValues())
+#print (ta.getDataFrame().dtypes)
+#print (ta.supportResistanceLevels())
+#print (ta.seasonalARIMAModelFittedValues())

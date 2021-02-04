@@ -2,7 +2,7 @@
 
 import pandas as pd
 from models.Trading import TechnicalAnalysis
-from models.CoinbaseProAPI import PublicAPI
+from models.CoinbasePro import PublicAPI
 from views.TradingGraphs import TradingGraphs
 
 api = PublicAPI()
