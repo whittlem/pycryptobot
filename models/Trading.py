@@ -321,8 +321,8 @@ class TechnicalAnalysis():
     def onBalanceVolume(self):
         """Calculate On-Balance Volume (OBV)"""
 
-        return np.where(self.df['close'] > self.df['close'].shift(1), self.df['volume'], 
-        np.where(self.df['close'] < self.df['close'].shift(1), -self.df['volume'], self.df.iloc[0]['volume'])).cumsum()
+        return np.where(self.df['close'] == self.df['close'].shift(1), 0, np.where(self.df['close'] > self.df['close'].shift(1), self.df['volume'], 
+        np.where(self.df['close'] < self.df['close'].shift(1), -self.df['volume'], self.df.iloc[0]['volume']))).cumsum()
 
     def addOBV(self):
         """Add the On-Balance Volume (OBV) to the DataFrame"""
@@ -465,9 +465,6 @@ class TechnicalAnalysis():
         # true if the current frame is where MACD crosses over below
         self.df['macdltsignalco'] = self.df.macdltsignal.ne(self.df.macdltsignal.shift())
         self.df.loc[self.df['macdltsignal'] == False, 'macdltsignalco'] = False
-
-        # true if OBV is greater than 2%
-        self.df['obvsignal'] = self.df.obv_pc > 2
 
     def saveCSV(self, filename='tradingdata.csv'):
         """Saves the DataFrame to an uncompressed CSV."""
