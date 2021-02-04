@@ -3,35 +3,35 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from models.CoinbasePro import CoinbasePro
-import datetime
-import sys
+import matplotlib.ticker as ticker
+from models.Trading import TechnicalAnalysis
+import datetime, re, sys
 sys.path.append('.')
 
 class TradingGraphs():
-    def __init__(self, coinbasepro):
+    def __init__(self, technicalAnalysis):
         """Trading Graphs object model
     
         Parameters
         ----------
-        coinbasepro : object
-            CoinbasePro object to provide the trading data to visualise
+        technicalAnalysis : object
+            TechnicalAnalysis object to provide the trading data to visualise
         """
 
-        # validates the coinbasepro object
-        if not isinstance(coinbasepro, CoinbasePro):
+        # validates the technicalAnalysis object
+        if not isinstance(technicalAnalysis, TechnicalAnalysis):
             raise TypeError('Coinbase Pro model required.')
 
         # only one figure can be open at a time, close all open figures
         plt.close('all')
 
-        self.coinbasepro = coinbasepro
+        self.technicalAnalysis = technicalAnalysis
 
-        # stores the pandas dataframe from coinbasepro object
-        self.df = coinbasepro.getDataFrame()
+        # stores the pandas dataframe from technicalAnalysis object
+        self.df = technicalAnalysis.getDataFrame()
 
-        # stores the support and resistance levels from coinbasepro object
-        self.levels = coinbasepro.getSupportResistanceLevelsTimeSeries()
+        # stores the support and resistance levels from technicalAnalysis object
+        self.levels = technicalAnalysis.supportResistanceLevels()
 
         # seaborn style plots
         plt.style.use('seaborn')
@@ -234,12 +234,11 @@ class TradingGraphs():
             Save the figure without displaying it         
         """
 
-        ts = self.df['close']
-        results_ARIMA = self.coinbasepro.getSeasonalARIMAModel(ts)
+        fittedValues = self.technicalAnalysis.seasonalARIMAModelFittedValues()
 
-        plt.plot(ts, label='original')
-        plt.plot(results_ARIMA.fittedvalues, color='red', label='fitted')
-        plt.title('RSS: %.4f' % sum((results_ARIMA.fittedvalues-ts)**2))
+        plt.plot(self.df['close'], label='original')
+        plt.plot(fittedValues, color='red', label='fitted')
+        plt.title('RSS: %.4f' % sum((fittedValues-self.df['close'])**2))
         plt.legend()
         plt.ylabel('Price')
         plt.xticks(rotation=90)
@@ -267,14 +266,12 @@ class TradingGraphs():
             Save the figure without displaying it         
         """
 
-        ts = self.df['close']
-        results_ARIMA = self.coinbasepro.getSeasonalARIMAModel(ts)
+        results_ARIMA = self.technicalAnalysis.seasonalARIMAModel()
 
-        df = pd.DataFrame(ts)
+        df = pd.DataFrame(self.df['close'])
         start_date = df.last_valid_index()
         end_date = start_date + datetime.timedelta(days=days)
-        pred = results_ARIMA.predict(
-            start=str(start_date), end=str(end_date), dynamic=True)
+        pred = results_ARIMA.predict(start=str(start_date), end=str(end_date), dynamic=True)
 
         plt.plot(pred, label='prediction')
         plt.ylabel('Price')
@@ -327,3 +324,101 @@ class TradingGraphs():
 
         if saveOnly == False:
             plt.show()
+
+    def renderEMA12EMA26CloseCandles(self, market, granularity, period=30, outputpng=''):
+        if market != '':
+            # validate market is syntactically correct
+            p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
+            if not p.match(market):
+                raise TypeError('Coinbase Pro market is invalid.')
+
+        # validates granularity is an integer
+        if not isinstance(granularity, int):
+            raise TypeError('Granularity integer required.')
+
+        # validates the granularity is supported by Coinbase Pro
+        if not granularity in [60, 300, 900, 3600, 21600, 86400]:
+            raise TypeError('Granularity options: 60, 300, 900, 3600, 21600, 86400.')
+
+        def format_date(x, pos=None):
+            idx = np.clip(int(x + 0.5), 0, len(df_subset) - 1)
+            return date[idx].strftime('%Y-%m-%d %H:%M:%S')
+
+        df_subset = self.df.iloc[-period::]
+
+        date = df_subset.index.date.astype('O')
+
+        fig, axes = plt.subplots(ncols=1, figsize=(12, 6))
+        fig.autofmt_xdate()
+        ax1 = plt.subplot(111)
+        ax1.set_title(f"{market} - {granularity} granularity")
+        ax1.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
+        plt.style.use('seaborn')
+        plt.plot(df_subset['close'], label='price', color='royalblue')
+        plt.plot(df_subset['ema12'], label='ema12', color='orange')
+        plt.plot(df_subset['ema26'], label='ema26', color='purple')
+
+        df_candlestick = self.df[self.df['three_white_solidiers'] == True]
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+        for idx in df_candlestick_in_range.index.tolist():
+            plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'gx')
+
+        df_candlestick = self.df[self.df['three_black_crows'] == True]
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+        for idx in df_candlestick_in_range.index.tolist():
+            plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'rx')  
+
+        df_candlestick = self.df[self.df['inverted_hammer'] == True]
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+        for idx in df_candlestick_in_range.index.tolist():
+            plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'g^') 
+
+        df_candlestick = self.df[self.df['hammer'] == True]
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+        for idx in df_candlestick_in_range.index.tolist():
+            plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'rv')
+
+        df_candlestick = self.df[self.df['hanging_man'] == True]
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+        for idx in df_candlestick_in_range.index.tolist():
+            plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'go') 
+
+        df_candlestick = self.df[self.df['shooting_star'] == True]
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+        for idx in df_candlestick_in_range.index.tolist():
+            plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'r*')  
+
+        df_candlestick = self.df[self.df['dojo'] == True]
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+        for idx in df_candlestick_in_range.index.tolist():
+            plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'yd')  
+
+        df_candlestick = self.df[self.df['three_line_strike'] == True]
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+        for idx in df_candlestick_in_range.index.tolist():
+            plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'y^')  
+
+        df_candlestick = self.df[self.df['two_black_gapping'] == True]
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+        for idx in df_candlestick_in_range.index.tolist():
+            plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'yv')  
+
+        df_candlestick = self.df[self.df['evening_star'] == True]
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+        for idx in df_candlestick_in_range.index.tolist():
+            plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'mv')  
+
+        df_candlestick = self.df[self.df['abandoned_baby'] == True]
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+        for idx in df_candlestick_in_range.index.tolist():
+            plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'm^')  
+
+        plt.ylabel('Price')
+        plt.xticks(rotation=90)
+        plt.tight_layout()
+        plt.legend()
+
+        if outputpng != '':
+            plt.savefig(outputpng)
+        
+        plt.show()
