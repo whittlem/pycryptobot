@@ -64,8 +64,8 @@ if args.sim == None:
     # default simulation status
 
     # 0 is normal, 1 is simulation
-    is_sim = 1
-    sim_speed = 'fast'
+    is_sim = 0
+    sim_speed = ''
 else:
     # sim status set via --sim argument
 
@@ -121,7 +121,7 @@ if args.verbose == None:
     # default verbose status
 
     # 0 is minimal, 1 is verbose
-    is_verbose = 0
+    is_verbose = 1
 else:
     # verbose status set via --verbose argument
 
