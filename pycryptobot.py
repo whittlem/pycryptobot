@@ -40,6 +40,7 @@ parser.add_argument('--granularity', type=int, help='Optionally provide granular
 parser.add_argument('--live', type=int, help='Optionally provide live status via arguments')
 parser.add_argument('--market', type=str, help='Optionally provide market via arguments')
 parser.add_argument('--sim', type=str, help='Optionally provide simulation status via arguments ("fast", "slow")')
+parser.add_argument('--verbose', type=int, help='Optionally provide verbose status via arguments')
 
 # parse arguments
 args = parser.parse_args()
@@ -63,8 +64,8 @@ if args.sim == None:
     # default simulation status
 
     # 0 is normal, 1 is simulation
-    is_sim = 0
-    sim_speed = ''
+    is_sim = 1
+    sim_speed = 'fast'
 else:
     # sim status set via --sim argument
 
@@ -116,6 +117,19 @@ else:
         
     granularity = args.granularity
 
+if args.verbose == None:
+    # default verbose status
+
+    # 0 is minimal, 1 is verbose
+    is_verbose = 0
+else:
+    # verbose status set via --verbose argument
+
+    if args.verbose == 1:
+        is_verbose = 1
+    else:
+        is_verbose = 0
+
 """Highly advisable not to change any code below this point!"""
 
 # validation of crypto market inputs
@@ -154,6 +168,23 @@ if is_live == 1:
 
 def truncate(f, n):
     return math.floor(f * 10 ** n) / 10 ** n
+
+def compare(val1, val2, label=''):
+    if val1 > val2:
+        if label == '':
+            return str(truncate(val1, 2)) + ' > ' + str(truncate(val2, 2))
+        else:
+            return label + ': ' + str(truncate(val1, 2)) + ' > ' + str(truncate(val2, 2))
+    if val1 < val2:
+        if label == '':
+            return str(truncate(val1, 2)) + ' < ' + str(truncate(val2, 2))
+        else:
+            return label + ': ' + str(truncate(val1, 2)) + ' < ' + str(truncate(val2, 2))
+    else:
+        if label == '':
+            return str(truncate(val1, 2)) + ' = ' + str(truncate(val2, 2))
+        else:
+            return label + ': ' + str(truncate(val1, 2)) + ' = ' + str(truncate(val2, 2))      
 
 def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     """Trading bot job which runs at a scheduled interval"""
@@ -209,102 +240,113 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
     # polling is every 5 minutes (even for hourly intervals), but only process once per interval
     if (last_df_index != df_last.index.format()):
-        logging.debug('-- Iteration: ' + str(iterations) + ' --')
-        logging.debug('-- Since Last Buy: ' + str(x_since_buy) + ' --')
-        logging.debug('-- Since Last Sell: ' + str(x_since_sell) + ' --')
-        
-        logging.debug('price: ' + str(truncate(float(df_last['close'].values[0]), 2)))
-        logging.debug('ema12: ' + str(truncate(float(df_last['ema12'].values[0]), 2)))
-        logging.debug('ema26: ' + str(truncate(float(df_last['ema26'].values[0]), 2)))
-        logging.debug('ema12gtema26co: ' + str(ema12gtema26co))
-        logging.debug('ema12gtema26: ' + str(ema12gtema26))
-        logging.debug('ema12ltema26co: ' + str(ema12ltema26co))
-        logging.debug('ema12ltema26: ' + str(ema12ltema26))
-        logging.debug('macd: ' + str(truncate(float(df_last['macd'].values[0]), 2)))
-        logging.debug('signal: ' + str(truncate(float(df_last['signal'].values[0]), 2)))
-        logging.debug('macdgtsignal: ' + str(macdgtsignal))
-        logging.debug('macdltsignal: ' + str(macdltsignal))
-        logging.debug('obv: ' + str(obv))
-        logging.debug('obv_pc: ' + str(obv_pc) + '%')
-        logging.debug('action: ' + action)
-
-        # informational output on the most recent entry  
-        print('')
-        print('================================================================================')
-        txt = '        Iteration : ' + str(iterations)
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-        txt = '   Since Last Buy : ' + str(x_since_buy)
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-        txt = '  Since Last Sell : ' + str(x_since_sell)
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-        txt = '        Timestamp : ' + str(df_last.index.format()[0])
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-        print('--------------------------------------------------------------------------------')
-        txt = '            EMA12 : ' + str(truncate(float(df_last['ema12'].values[0]), 2))
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-        txt = '            EMA26 : ' + str(truncate(float(df_last['ema26'].values[0]), 2))
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-        txt = '   Crossing Above : ' + str(ema12gtema26co)
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-        txt = '  Currently Above : ' + str(ema12gtema26)
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-        txt = '   Crossing Below : ' + str(ema12ltema26co)
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-        txt = '  Currently Below : ' + str(ema12ltema26)
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-
-        if (ema12gtema26 == True and ema12gtema26co == True):
-            txt = '        Condition : EMA12 is currently crossing above EMA26'
-        elif (ema12gtema26 == True and ema12gtema26co == False):
-            txt = '        Condition : EMA12 is currently above EMA26 and has crossed over'
-        elif (ema12ltema26 == True and ema12ltema26co == True):
-            txt = '        Condition : EMA12 is currently crossing below EMA26'
-        elif (ema12ltema26 == True and ema12ltema26co == False):
-            txt = '        Condition : EMA12 is currently below EMA26 and has crossed over'
+        ts_text = str(df_last.index.format()[0])
+        price_text = 'Price: ' + str(truncate(float(df_last['close'].values[0]), 2))
+        ema_text = compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26')
+        macd_text = compare(df_last['macd'].values[0], df_last['signal'].values[0], 'MACD')
+        obv_text = compare(df_last['obv_pc'].values[0], 0, 'OBV %')
+        counter_text = '[' + str(iterations) + ',' + str(x_since_buy) + ',' + str(x_since_sell) + ']'
+ 
+        if is_verbose == 0:
+            logging.debug(ts_text + ' | ' + price_text + ' | ' + ema_text + ' | ' + macd_text + ' | ' + obv_text + ' | ' + action + ' ' + counter_text)
+            print (ts_text, '|', market, granularity, '|', price_text, '|', ema_text, '|', macd_text, '|', obv_text, '|', action, counter_text)
         else:
-            txt = '        Condition : -'
-        print('|', txt, (' ' * (75 - len(txt))), '|')
+            logging.debug('-- Iteration: ' + str(iterations) + ' --')
+            logging.debug('-- Since Last Buy: ' + str(x_since_buy) + ' --')
+            logging.debug('-- Since Last Sell: ' + str(x_since_sell) + ' --')
+            
+            logging.debug('price: ' + str(truncate(float(df_last['close'].values[0]), 2)))
+            logging.debug('ema12: ' + str(truncate(float(df_last['ema12'].values[0]), 2)))
+            logging.debug('ema26: ' + str(truncate(float(df_last['ema26'].values[0]), 2)))
+            logging.debug('ema12gtema26co: ' + str(ema12gtema26co))
+            logging.debug('ema12gtema26: ' + str(ema12gtema26))
+            logging.debug('ema12ltema26co: ' + str(ema12ltema26co))
+            logging.debug('ema12ltema26: ' + str(ema12ltema26))
+            logging.debug('macd: ' + str(truncate(float(df_last['macd'].values[0]), 2)))
+            logging.debug('signal: ' + str(truncate(float(df_last['signal'].values[0]), 2)))
+            logging.debug('macdgtsignal: ' + str(macdgtsignal))
+            logging.debug('macdltsignal: ' + str(macdltsignal))
+            logging.debug('obv: ' + str(obv))
+            logging.debug('obv_pc: ' + str(obv_pc) + '%')
+            logging.debug('action: ' + action)
 
-        print('--------------------------------------------------------------------------------')
-        txt = '             MACD : ' + str(truncate(float(df_last['macd'].values[0]), 2))
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-        txt = '           Signal : ' + str(truncate(float(df_last['signal'].values[0]), 2))
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-        txt = '  Currently Above : ' + str(macdgtsignal)
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-        txt = '  Currently Below : ' + str(macdltsignal)
-        print('|', txt, (' ' * (75 - len(txt))), '|')
+            # informational output on the most recent entry  
+            print('')
+            print('================================================================================')
+            txt = '        Iteration : ' + str(iterations)
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+            txt = '   Since Last Buy : ' + str(x_since_buy)
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+            txt = '  Since Last Sell : ' + str(x_since_sell)
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+            txt = '        Timestamp : ' + str(df_last.index.format()[0])
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+            print('--------------------------------------------------------------------------------')
+            txt = '            EMA12 : ' + str(truncate(float(df_last['ema12'].values[0]), 2))
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+            txt = '            EMA26 : ' + str(truncate(float(df_last['ema26'].values[0]), 2))
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+            txt = '   Crossing Above : ' + str(ema12gtema26co)
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+            txt = '  Currently Above : ' + str(ema12gtema26)
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+            txt = '   Crossing Below : ' + str(ema12ltema26co)
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+            txt = '  Currently Below : ' + str(ema12ltema26)
+            print('|', txt, (' ' * (75 - len(txt))), '|')
 
-        if (macdgtsignal == True and macdgtsignalco == True):
-            txt = '        Condition : MACD is currently crossing above Signal'
-        elif (macdgtsignal == True and macdgtsignalco == False):
-            txt = '        Condition : MACD is currently above Signal and has crossed over'
-        elif (macdltsignal == True and macdltsignalco == True):
-            txt = '        Condition : MACD is currently crossing below Signal'
-        elif (macdltsignal == True and macdltsignalco == False):
-            txt = '        Condition : MACD is currently below Signal and has crossed over'
-        else:
-            txt = '        Condition : -'
-        print('|', txt, (' ' * (75 - len(txt))), '|')
+            if (ema12gtema26 == True and ema12gtema26co == True):
+                txt = '        Condition : EMA12 is currently crossing above EMA26'
+            elif (ema12gtema26 == True and ema12gtema26co == False):
+                txt = '        Condition : EMA12 is currently above EMA26 and has crossed over'
+            elif (ema12ltema26 == True and ema12ltema26co == True):
+                txt = '        Condition : EMA12 is currently crossing below EMA26'
+            elif (ema12ltema26 == True and ema12ltema26co == False):
+                txt = '        Condition : EMA12 is currently below EMA26 and has crossed over'
+            else:
+                txt = '        Condition : -'
+            print('|', txt, (' ' * (75 - len(txt))), '|')
 
-        print('--------------------------------------------------------------------------------')
-        txt = '              OBV : ' + str(obv)
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-        txt = '       OBV Change : ' + str(obv_pc) + '%'
-        print('|', txt, (' ' * (75 - len(txt))), '|')
+            print('--------------------------------------------------------------------------------')
+            txt = '             MACD : ' + str(truncate(float(df_last['macd'].values[0]), 2))
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+            txt = '           Signal : ' + str(truncate(float(df_last['signal'].values[0]), 2))
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+            txt = '  Currently Above : ' + str(macdgtsignal)
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+            txt = '  Currently Below : ' + str(macdltsignal)
+            print('|', txt, (' ' * (75 - len(txt))), '|')
 
-        if (obv_pc >= 2):
-            txt = '        Condition : Large positive volume changes'
-        elif (obv_pc < 2 and obv_pc >= 0):
-            txt = '        Condition : Positive volume changes'
-        else:
-            txt = '        Condition : Negative volume changes'
-        print('|', txt, (' ' * (75 - len(txt))), '|')
+            if (macdgtsignal == True and macdgtsignalco == True):
+                txt = '        Condition : MACD is currently crossing above Signal'
+            elif (macdgtsignal == True and macdgtsignalco == False):
+                txt = '        Condition : MACD is currently above Signal and has crossed over'
+            elif (macdltsignal == True and macdltsignalco == True):
+                txt = '        Condition : MACD is currently crossing below Signal'
+            elif (macdltsignal == True and macdltsignalco == False):
+                txt = '        Condition : MACD is currently below Signal and has crossed over'
+            else:
+                txt = '        Condition : -'
+            print('|', txt, (' ' * (75 - len(txt))), '|')
 
-        print('--------------------------------------------------------------------------------')
-        txt = '           Action : ' + action
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-        print('================================================================================')
+            print('--------------------------------------------------------------------------------')
+            txt = '              OBV : ' + str(truncate(obv, 4))
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+            txt = '       OBV Change : ' + str(obv_pc) + '%'
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+
+            if (obv_pc >= 2):
+                txt = '        Condition : Large positive volume changes'
+            elif (obv_pc < 2 and obv_pc >= 0):
+                txt = '        Condition : Positive volume changes'
+            else:
+                txt = '        Condition : Negative volume changes'
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+
+            print('--------------------------------------------------------------------------------')
+            txt = '           Action : ' + action
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+            print('================================================================================')
 
         if last_action == 'BUY':
             x_since_buy = x_since_buy + 1
@@ -321,9 +363,13 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
             # if live
             if is_live == 1:
-                print('--------------------------------------------------------------------------------')
-                print('|                      *** Executing LIVE Buy Order ***                        |')
-                print('--------------------------------------------------------------------------------')
+                if is_verbose == 0:
+                    logging.info(ts_text + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | BUY')
+                    print (ts_text, '|', market, granularity, '|', price_text, '| BUY')                    
+                else:
+                    print('--------------------------------------------------------------------------------')
+                    print('|                      *** Executing LIVE Buy Order ***                        |')
+                    print('--------------------------------------------------------------------------------')
                 # connect to coinbase pro api (authenticated)
                 model = AuthAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
                 # execute a live market buy
@@ -332,10 +378,14 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 #logging.info('attempt to buy ' + resp['specified_funds'] + ' (' + resp['funds'] + ' after fees) of ' + resp['product_id'])
             # if not live
             else:
-                print('--------------------------------------------------------------------------------')
-                print('|                      *** Executing TEST Buy Order ***                        |')
-                print('--------------------------------------------------------------------------------')
-            print(df_last[['close','ema12','ema26','ema12gtema26','ema12gtema26co','macd','signal','macdgtsignal','obv','obv_pc']])
+                if is_verbose == 0:
+                    logging.info(ts_text + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | BUY')
+                    print (ts_text, '|', market, granularity, '|', price_text, '| BUY')                    
+                else:
+                    print('--------------------------------------------------------------------------------')
+                    print('|                      *** Executing TEST Buy Order ***                        |')
+                    print('--------------------------------------------------------------------------------')
+            #print(df_last[['close','ema12','ema26','ema12gtema26','ema12gtema26co','macd','signal','macdgtsignal','obv','obv_pc']])
 
         # if a sell signal
         elif action == 'SELL':
@@ -347,9 +397,13 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
             # if live
             if is_live == 1:
-                print('--------------------------------------------------------------------------------')
-                print('|                      *** Executing LIVE Sell Order ***                        |')
-                print('--------------------------------------------------------------------------------')
+                if is_verbose == 0:
+                    logging.info(ts_text + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | SELL')
+                    print (ts_text, '|', market, granularity, '|', price_text, '| SELL')                    
+                else:
+                    print('--------------------------------------------------------------------------------')
+                    print('|                      *** Executing LIVE Sell Order ***                        |')
+                    print('--------------------------------------------------------------------------------')
                 # connect to Coinbase Pro API live
                 model = AuthAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
                 # execute a live market sell
@@ -358,10 +412,14 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 #logging.info('attempt to sell ' + resp['size'] + ' of ' + resp['product_id'])
             # if not live
             else:
-                print('--------------------------------------------------------------------------------')
-                print('|                      *** Executing TEST Sell Order ***                        |')
-                print('--------------------------------------------------------------------------------')
-            print(df_last[['close','ema12','ema26','ema12ltema26','ema12ltema26co','macd','signal','macdltsignal','obv','obv_pc']])
+                if is_verbose == 0:
+                    logging.info(ts_text + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | SELL')
+                    print (ts_text, '|', market, granularity, '|', price_text, '| SELL')                    
+                else:
+                    print('--------------------------------------------------------------------------------')
+                    print('|                      *** Executing TEST Sell Order ***                        |')
+                    print('--------------------------------------------------------------------------------')
+            #print(df_last[['close','ema12','ema26','ema12ltema26','ema12ltema26co','macd','signal','macdltsignal','obv','obv_pc']])
 
         # last significant action
         if action in ['BUY','SELL']:
