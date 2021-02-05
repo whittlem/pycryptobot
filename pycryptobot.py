@@ -245,11 +245,24 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
         ema_text = compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26')
         macd_text = compare(df_last['macd'].values[0], df_last['signal'].values[0], 'MACD')
         obv_text = compare(df_last['obv_pc'].values[0], 0, 'OBV %')
-        counter_text = '[' + str(iterations) + ',' + str(x_since_buy) + ',' + str(x_since_sell) + ']'
+        counter_text = '[I:' + str(iterations) + ',B:' + str(x_since_buy) + ',S:' + str(x_since_sell) + ']'
  
+        ema_co_prefix = ''
+        ema_co_suffix = ''
+        if ema12gtema26co == True or ema12ltema26co == True:
+            ema_co_prefix = '* '
+            ema_co_suffix = ' *'
+
+        macd_co_prefix = ''
+        macd_co_suffix = ''
+        if macdgtsignalco == True or macdltsignalco == True:
+            macd_co_prefix = '* '
+            macd_co_suffix = ' *'
+
         if is_verbose == 0:
-            logging.debug(ts_text + ' | ' + price_text + ' | ' + ema_text + ' | ' + macd_text + ' | ' + obv_text + ' | ' + action + ' ' + counter_text)
-            print (ts_text, '|', market, granularity, '|', price_text, '|', ema_text, '|', macd_text, '|', obv_text, '|', action, counter_text)
+            output_text = ts_text + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_text + ' | ' + action + ' ' + counter_text
+            logging.debug(output_text)
+            print (output_text)
         else:
             logging.debug('-- Iteration: ' + str(iterations) + ' --')
             logging.debug('-- Since Last Buy: ' + str(x_since_buy) + ' --')
