@@ -31,6 +31,7 @@ import argparse, json, logging, math, os, re, sched, sys, time
 from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
 from models.CoinbasePro import AuthAPI, PublicAPI
+from views.TradingGraphs import TradingGraphs
 
 # instantiate the arguments parser
 parser = argparse.ArgumentParser(description='Python Crypto Bot using the Coinbase Pro API')
@@ -39,6 +40,7 @@ parser = argparse.ArgumentParser(description='Python Crypto Bot using the Coinba
 parser.add_argument('--granularity', type=int, help='Optionally provide granularity via arguments')
 parser.add_argument('--live', type=int, help='Optionally provide live status via arguments')
 parser.add_argument('--market', type=str, help='Optionally provide market via arguments')
+parser.add_argument('--graphs', type=int, help='Optionally save graphs to graphs directory')
 parser.add_argument('--sim', type=str, help='Optionally provide simulation status via arguments ("fast", "slow")')
 parser.add_argument('--verbose', type=int, help='Optionally provide verbose status via arguments')
 
@@ -59,6 +61,19 @@ else:
         is_live = 1
     else:
         is_live = 0
+
+if args.graphs == None:
+    # default save graph option
+
+    # 0 do not save, 1 save
+    save_graphs = 0
+else:
+    # graphs status set via --graphs argument
+
+    if args.graphs == 1:
+        save_graphs = 1
+    else:
+        save_graphs = 0
 
 if args.sim == None:
     # default simulation status
@@ -400,6 +415,12 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                     print('--------------------------------------------------------------------------------')
             #print(df_last[['close','ema12','ema26','ema12gtema26','ema12gtema26co','macd','signal','macdgtsignal','obv','obv_pc']])
 
+            if save_graphs == 1:
+                tradinggraphs = TradingGraphs(technicalAnalysis)
+                ts = datetime.now().timestamp()
+                filename = 'BTC-GBP_3600_buy_' + str(ts) + '.png'
+                tradinggraphs.renderEMAandMACD(24, 'graphs/' + filename, True)
+
         # if a sell signal
         elif action == 'SELL':
             # increment x since buy
@@ -434,11 +455,20 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                     print('--------------------------------------------------------------------------------')
             #print(df_last[['close','ema12','ema26','ema12ltema26','ema12ltema26co','macd','signal','macdltsignal','obv','obv_pc']])
 
+            if save_graphs == 1:
+                tradinggraphs = TradingGraphs(technicalAnalysis)
+                ts = datetime.now().timestamp()
+                filename = 'BTC-GBP_3600_buy_' + str(ts) + '.png'
+                tradinggraphs.renderEMAandMACD(24, 'graphs/' + filename, True)
+
         # last significant action
         if action in ['BUY','SELL']:
             last_action = action
         
         last_df_index = df_last.index.format()
+    else:
+        # decrement igored iteration
+        iterations = iterations - 1
 
     # if live
     if is_live == 1:

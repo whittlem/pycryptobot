@@ -1,6 +1,7 @@
 """Trading Graphs object model examples"""
 
 import pandas as pd
+from datetime import datetime
 from models.Trading import TechnicalAnalysis
 from models.CoinbasePro import PublicAPI
 from views.TradingGraphs import TradingGraphs
@@ -15,7 +16,13 @@ tradinggraphs = TradingGraphs(technicalAnalysis)
 
 """Uncomment the diagram to display"""
 
-tradinggraphs.renderPriceEMA12EMA26()
+#tradinggraphs.renderEMAandMACD()
+#tradinggraphs.renderEMAandMACD(24)
+ts = datetime.now().timestamp()
+filename = 'BTC-GBP_3600_' + str(ts) + '.png'
+tradinggraphs.renderEMAandMACD(24, 'graphs/' + filename, True)
+
+#tradinggraphs.renderPriceEMA12EMA26()
 
 #tradinggraphs.renderEMAandMACD()
 #tradinggraphs.renderSMAandMACD()

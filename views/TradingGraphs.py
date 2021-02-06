@@ -188,7 +188,7 @@ class TradingGraphs():
         if saveOnly == False:
             plt.show()
 
-    def renderEMAandMACD(self, saveFile='', saveOnly=False):
+    def renderEMAandMACD(self,  period=30, saveFile='', saveOnly=False):
         """Render the price, EMA12, EMA26 and MACD
         
         Parameters
@@ -199,20 +199,47 @@ class TradingGraphs():
             Save the figure without displaying it         
         """
 
-        ax1 = plt.subplot(211)
-        plt.plot(self.df.close, label="price")
-        plt.plot(self.df.ema12, label="ema12")
-        plt.plot(self.df.ema26, label="ema26")
-        plt.xticks(self.df.close, rotation='vertical')
-        plt.legend()
-        plt.ylabel('Price')
-        plt.subplot(212, sharex=ax1)
-        plt.plot(self.df.macd, label="macd")
-        plt.plot(self.df.signal, label="signal")
-        plt.legend()
-        plt.ylabel('Divergence')
+        if not isinstance(period, int):
+            raise TypeError('Period parameter is not perioderic.')
+
+        if period < 1 or period > len(self.df):
+            raise ValueError('Period is out of range')
+
+        df_subset = self.df.iloc[-period::]
+
+        date = pd.to_datetime(df_subset.index).to_pydatetime()
+
+        df_subset_length = len(df_subset)
+        indices = np.arange(df_subset_length) # the evenly spaced plot indices
+
+        def format_date(x, pos=None): #pylint: disable=unused-argument
+            thisind = np.clip(int(x + 0.5), 0, df_subset_length - 1)
+            return date[thisind].strftime('%Y-%m-%d %H:%M:%S') 
+
+        fig, (ax1, ax2) = plt.subplots(nrows=2, figsize=(12, 6))
+        fig.suptitle(df_subset.iloc[0]['market'] + ' | ' + str(df_subset.iloc[0]['granularity']), fontsize=16)
+        plt.style.use('seaborn')
         plt.xticks(rotation=90)
-        plt.tight_layout()
+        #plt.tight_layout()
+
+        indices = np.arange(len(df_subset)) 
+
+        ax1.plot(indices, df_subset['close'], label='price', color='royalblue')
+        ax1.plot(indices, df_subset['ema12'], label='ema12', color='orange')
+        ax1.plot(indices, df_subset['ema26'], label='ema26', color='purple')
+        ax1.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
+        ax1.set_title('Price, EMA12 and EMA26')
+        ax1.set_ylabel('Price')
+        ax1.legend()
+        fig.autofmt_xdate()
+
+        ax2.plot(indices, df_subset.macd, label='macd')
+        ax2.plot(indices, df_subset.signal, label='signal')
+        ax2.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
+        ax2.set_title('MACD')
+        ax2.set_ylabel('Divergence')
+        ax2.legend()
+        fig.autofmt_xdate()
 
         try:
             if saveFile != '':
@@ -325,38 +352,30 @@ class TradingGraphs():
         if saveOnly == False:
             plt.show()
 
-    def renderEMA12EMA26CloseCandles(self, market, granularity, period=30, outputpng=''):
-        if market != '':
-            # validate market is syntactically correct
-            p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-            if not p.match(market):
-                raise TypeError('Coinbase Pro market is invalid.')
+    def renderEMA12EMA26CloseCandles(self, period=30, outputpng=''):
+        if not isinstance(period, int):
+            raise TypeError('Period parameter is not perioderic.')
 
-        # validates granularity is an integer
-        if not isinstance(granularity, int):
-            raise TypeError('Granularity integer required.')
-
-        # validates the granularity is supported by Coinbase Pro
-        if not granularity in [60, 300, 900, 3600, 21600, 86400]:
-            raise TypeError('Granularity options: 60, 300, 900, 3600, 21600, 86400.')
-
-        def format_date(x, pos=None):
-            idx = np.clip(int(x + 0.5), 0, len(df_subset) - 1)
-            return date[idx].strftime('%Y-%m-%d %H:%M:%S')
+        if period < 1 or period > len(self.df):
+            raise ValueError('Period is out of range')
 
         df_subset = self.df.iloc[-period::]
 
-        date = df_subset.index.date.astype('O')
-
-        fig, axes = plt.subplots(ncols=1, figsize=(12, 6))
+        fig, axes = plt.subplots(ncols=1, figsize=(12, 6)) #pylint: disable=unused-variable
         fig.autofmt_xdate()
         ax1 = plt.subplot(111)
-        ax1.set_title(f"{market} - {granularity} granularity")
-        ax1.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
+        ax1.set_title(df_subset.iloc[0]['market'] + ' | ' + str(df_subset.iloc[0]['granularity']))
         plt.style.use('seaborn')
         plt.plot(df_subset['close'], label='price', color='royalblue')
         plt.plot(df_subset['ema12'], label='ema12', color='orange')
         plt.plot(df_subset['ema26'], label='ema26', color='purple')
+
+        plt.tick_params(
+            axis='x',          # changes apply to the x-axis
+            which='both',      # both major and minor ticks are affected
+            bottom=False,      # ticks along the bottom edge are off
+            top=False,         # ticks along the top edge are off
+            labelbottom=False) # labels along the bottom edge are off
 
         df_candlestick = self.df[self.df['three_white_solidiers'] == True]
         df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
