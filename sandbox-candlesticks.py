@@ -27,5 +27,5 @@ technicalAnalysis.addCandleAbandonedBaby()
 df = technicalAnalysis.getDataFrame()
 
 tradinggraphs = TradingGraphs(technicalAnalysis)
-tradinggraphs.renderEMA12EMA26CloseCandles(market, granularity)
-#tradinggraphs.renderEMA12EMA26CloseCandles(market, granularity, 30, 'candles.png')
+tradinggraphs.renderEMA12EMA26CloseCandles()
+#tradinggraphs.renderEMA12EMA26CloseCandles(30, 'candles.png')

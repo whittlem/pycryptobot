@@ -383,6 +383,9 @@ class PublicAPI():
             df = df.drop(columns=['epoch','index'])
             df.index.names = ['ts']           
 
+        df['market'] = market
+        df['granularity'] = granularity
+
         return df
 
     def authAPI(self, method, uri, payload=''):

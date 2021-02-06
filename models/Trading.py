@@ -20,8 +20,8 @@ class TechnicalAnalysis():
         if not isinstance(data, pd.DataFrame):
             raise TypeError('Data is not a Pandas dataframe.')
 
-        if list(data.keys()) != ['low', 'high', 'open', 'close', 'volume']:
-            raise ValueError('Data not not contain low, high, open, close, volume')
+        if list(data.keys()) != ['low', 'high', 'open', 'close', 'volume', 'market', 'granularity']:
+            raise ValueError('Data not not contain low, high, open, close, volume, market, granularity')
 
         if not 'close' in data.columns:
             raise AttributeError("Pandas DataFrame 'close' column required.")
