@@ -68,15 +68,18 @@ class TechnicalAnalysis():
         self.addCandleMorningStar()
         self.addCandleEveningStar()
         self.addCandleAbandonedBaby()
+        self.addCandleMorningStarDoji()
+        self.addCandleEveningStarDoji()
 
     """Candlestick References
     https://commodity.com/technical-analysis
     https://www.investopedia.com
     https://github.com/SpiralDevelopment/candlestick-patterns
+    https://www.incrediblecharts.com/candlestick_patterns/candlestick-patterns-strongest.php
     """
 
     def candleHammer(self):
-        """Hammer is a bullish reversal that occurs at the bottom of downtrends. (green/clear hammer facing up)"""
+        """Weak - Reversal - Up"""
 
         return ((self.df['high'] - self.df['low']) > 3 * (self.df['open'] - self.df['close'])) \
             & (((self.df['close'] - self.df['low']) / (.001 + self.df['high'] - self.df['low'])) > 0.6) \
@@ -85,18 +88,8 @@ class TechnicalAnalysis():
     def addCandleHammer(self):
         self.df['hammer'] = self.candleHammer()
 
-    def candleInvertedHammer(self):
-        """Inverted Hammer occurs mainly at the bottom of downtrends and can act as a warning of a potential reversal upward. (green/clear hammer facing down)"""
-
-        return (((self.df['high'] - self.df['low']) > 3 * (self.df['open'] - self.df['close'])) \
-            & ((self.df['high'] - self.df['close']) / (.001 + self.df['high'] - self.df['low']) > 0.6) \
-            & ((self.df['high'] - self.df['open']) / (.001 + self.df['high'] - self.df['low']) > 0.6))
-
-    def addCandleInvertedHammer(self):
-        self.df['inverted_hammer'] = self.candleInvertedHammer()
-
     def candleShootingStar(self):
-        """Shooting Star is a bearish reversal created when the open, low, and close are roughly the same price. (red/solid hammer facing down)"""
+        """Weak - Reversal - Down"""
 
         return ((self.df['open'].shift(1) < self.df['close'].shift(1)) & (self.df['close'].shift(1) < self.df['open'])) \
             & (self.df['high'] - np.maximum(self.df['open'], self.df['close']) >= (abs(self.df['open'] - self.df['close']) * 3)) \
@@ -106,8 +99,7 @@ class TechnicalAnalysis():
         self.df['shooting_star'] = self.candleShootingStar()
 
     def candleHangingMan(self):
-        """The Hanging Man candlestick pattern, as one could predict from the name, is viewed as a bearish reversal pattern.
-           This pattern occurs mainly at the top of uptrends and can act as a warning of a potential reversal downward. (red/solid hammer facing up)"""
+        """Weak - Continuation - Down"""
 
         return ((self.df['high'] - self.df['low']) > (4 * (self.df['open'] - self.df['close']))) \
             & (((self.df['close'] - self.df['low']) / (.001 + self.df['high'] - self.df['low'])) >= 0.75) \
@@ -118,10 +110,18 @@ class TechnicalAnalysis():
     def addCandleHangingMan(self):
         self.df['hanging_man'] = self.candleHangingMan()
 
+    def candleInvertedHammer(self):
+        """Weak - Continuation - Up"""
+
+        return (((self.df['high'] - self.df['low']) > 3 * (self.df['open'] - self.df['close'])) \
+            & ((self.df['high'] - self.df['close']) / (.001 + self.df['high'] - self.df['low']) > 0.6) \
+            & ((self.df['high'] - self.df['open']) / (.001 + self.df['high'] - self.df['low']) > 0.6))
+
+    def addCandleInvertedHammer(self):
+        self.df['inverted_hammer'] = self.candleInvertedHammer()
+
     def candleThreeWhiteSoldiers(self):
-        """Three white soldiers is a bullish candlestick pattern that is used to predict the reversal of the current downtrend in a pricing chart.
-           The pattern consists of three consecutive long-bodied candlesticks that open within the previous candle's real body and a close that exceeds 
-           the previous candle's high."""
+        """Strong - Reversal - Up"""
 
         return ((self.df['open'] > self.df['open'].shift(1)) & (self.df['open'] < self.df['close'].shift(1))) \
             & (self.df['close'] > self.df['high'].shift(1)) \
@@ -134,9 +134,7 @@ class TechnicalAnalysis():
         self.df['three_white_soldiers'] = self.candleThreeWhiteSoldiers()
 
     def candleThreeBlackCrows(self):
-        """Three black crows indicate a bearish candlestick pattern that predicts the reversal of an uptrend.
-           Candlestick charts show the opening, high, low, and the closing price on a particular security. 
-           For stocks moving higher the candlestick is white or green. When moving lower, they are black or red."""
+        """Strong - Reversal - Down"""
 
         return ((self.df['open'] < self.df['open'].shift(1)) & (self.df['open'] > self.df['close'].shift(1))) \
             & (self.df['close'] < self.df['low'].shift(1)) \
@@ -149,9 +147,7 @@ class TechnicalAnalysis():
         self.df['three_black_crows'] = self.candleThreeBlackCrows()
 
     def candleDojo(self):
-        """The Doji is a transitional candlestick formation, signifying equality and/or indecision between bulls and bears.
-           A Doji is quite often found at the bottom and top of trends and thus is considered as a sign of possible reversal of price direction, 
-           but the Doji can be viewed as a continuation pattern as well."""
+        """Weak - Continuation"""
 
         return ((abs(self.df['close'] - self.df['open']) / (self.df['high'] - self.df['low'])) < 0.1) \
             & ((self.df['high'] - np.maximum(self.df['close'], self.df['open'])) > (3 * abs(self.df['close'] - self.df['open']))) \
@@ -161,9 +157,7 @@ class TechnicalAnalysis():
         self.df['dojo'] = self.candleDojo()
 
     def candleThreeLineStrike(self):
-        """The bullish three line strike reversal pattern carves out three black candles within a downtrend. Each bar posts a lower low and closes 
-            near the intrabar low. The fourth bar opens even lower but reverses in a wide-range outside bar that closes above the high of the first 
-            candle in the series."""
+        """Reliable - Reversal"""
 
         return ((self.df['open'].shift(1) < self.df['open'].shift(2)) & (self.df['open'].shift(1) > self.df['close'].shift(2))) \
             & (self.df['close'].shift(1) < self.df['low'].shift(2)) \
@@ -177,8 +171,7 @@ class TechnicalAnalysis():
         self.df['three_line_strike'] = self.candleThreeLineStrike()
 
     def candleTwoBlackGapping(self):
-        """The bearish two black gapping continuation pattern appears after a notable top in an uptrend, with a gap down that yields two black bars 
-           posting lower lows. This pattern predicts that the decline will continue to even lower lows, perhaps triggering a broader-scale downtrend."""
+        """Reliable - Reversal - Down"""
 
         return ((self.df['open'] < self.df['open'].shift(1)) & (self.df['open'] > self.df['close'].shift(1))) \
             & (self.df['close'] < self.df['low'].shift(1)) \
@@ -207,10 +200,7 @@ class TechnicalAnalysis():
         self.df['evening_star'] = self.candleEveningStar()
 
     def candleAbandonedBaby(self):
-        """The bullish abandoned baby reversal pattern appears at the low of a downtrend, after a series of black candles print lower lows. The
-           market gaps lower on the next bar, but fresh sellers fail to appear, yielding a narrow range doji candlestick with opening and closing
-           prints at the same price. A bullish gap on the third bar completes the pattern, which predicts that the recovery will continue to even 
-           higher highs, perhaps triggering a broader-scale uptrend."""
+        """Reliable - Reversal"""
 
         return (self.df['open'] < self.df['close']) \
             & (self.df['high'].shift(1) < self.df['low']) \
@@ -219,6 +209,44 @@ class TechnicalAnalysis():
 
     def addCandleAbandonedBaby(self):
         self.df['abandoned_baby'] = self.candleAbandonedBaby()
+
+    def candleMorningStarDoji(self):
+        """Reliable - Reversal - Up"""
+
+        return (self.df['close'].shift(2) < self.df['open'].shift(2)) \
+            & (abs(self.df['close'].shift(2) - self.df['open'].shift(2)) / (self.df['high'].shift(2) - self.df['low'].shift(2)) >= 0.7) \
+            & (abs(self.df['close'].shift(1) - self.df['open'].shift(1)) / (self.df['high'].shift(1) - self.df['low'].shift(1)) < 0.1) \
+            & (self.df['close'] > self.df['open']) \
+            & (abs(self.df['close'] - self.df['open']) / (self.df['high'] - self.df['low']) >= 0.7) \
+            & (self.df['close'].shift(2) > self.df['close'].shift(1)) \
+            & (self.df['close'].shift(2) > self.df['open'].shift(1)) \
+            & (self.df['close'].shift(1) < self.df['open']) \
+            & (self.df['open'].shift(1) < self.df['open']) \
+            & (self.df['close'] > self.df['close'].shift(2)) \
+            & ((self.df['high'].shift(1) - np.maximum(self.df['close'].shift(1), self.df['open'].shift(1))) > (3 * abs(self.df['close'].shift(1) - self.df['open'].shift(1)))) \
+            & (np.minimum(self.df['close'].shift(1), self.df['open'].shift(1)) - self.df['low'].shift(1)) > (3 * abs(self.df['close'].shift(1) - self.df['open'].shift(1)))
+
+    def addCandleMorningStarDoji(self):
+        self.df['morning_star_doji'] = self.candleMorningStarDoji()
+
+    def candleEveningStarDoji(self):
+        """Reliable - Reversal - Down"""
+
+        return (self.df['close'].shift(2) > self.df['open'].shift(2)) \
+            & (abs(self.df['close'].shift(2) - self.df['open'].shift(2)) / (self.df['high'].shift(2) - self.df['low'].shift(2)) >= 0.7) \
+            & (abs(self.df['close'].shift(1) - self.df['open'].shift(1)) / (self.df['high'].shift(1) - self.df['low'].shift(1)) < 0.1) \
+            & (self.df['close'] < self.df['open']) \
+            & (abs(self.df['close'] - self.df['open']) / (self.df['high'] - self.df['low']) >= 0.7) \
+            & (self.df['close'].shift(2) < self.df['close'].shift(1)) \
+            & (self.df['close'].shift(2) < self.df['open'].shift(1)) \
+            & (self.df['close'].shift(1) > self.df['open']) \
+            & (self.df['open'].shift(1) > self.df['open']) \
+            & (self.df['close'] < self.df['close'].shift(2)) \
+            & ((self.df['high'].shift(1) - np.maximum(self.df['close'].shift(1), self.df['open'].shift(1))) > (3 * abs(self.df['close'].shift(1) - self.df['open'].shift(1)))) \
+            & (np.minimum(self.df['close'].shift(1), self.df['open'].shift(1)) - self.df['low'].shift(1)) > (3 * abs(self.df['close'].shift(1) - self.df['open'].shift(1)))
+
+    def addCandleEveningStarDoji(self):
+        self.df['evening_star_doji'] = self.candleEveningStarDoji()
 
     def changePct(self):
         """Close change percentage"""

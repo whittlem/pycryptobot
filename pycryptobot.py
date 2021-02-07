@@ -33,6 +33,10 @@ from models.TradingAccount import TradingAccount
 from models.CoinbasePro import AuthAPI, PublicAPI
 from views.TradingGraphs import TradingGraphs
 
+# reduce informational logging
+logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+
 # instantiate the arguments parser
 parser = argparse.ArgumentParser(description='Python Crypto Bot using the Coinbase Pro API')
 
@@ -148,7 +152,7 @@ else:
     else:
         is_verbose = 0
 
-if dev_mode:
+if dev_mode == 1:
     market = 'BTC-GBP'
     granularity = 3600
     is_live = 0
@@ -269,10 +273,13 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     shooting_star = bool(df_last['shooting_star'].values[0])
     three_white_soldiers = bool(df_last['three_white_soldiers'].values[0])
     three_black_crows = bool(df_last['three_black_crows'].values[0])
-    #morning_star = bool(df_last['morning_star'].values[0])
+    morning_star = bool(df_last['morning_star'].values[0])
     evening_star = bool(df_last['evening_star'].values[0])
     three_line_strike = bool(df_last['three_line_strike'].values[0])
     abandoned_baby = bool(df_last['abandoned_baby'].values[0])
+    morning_star_doji = bool(df_last['morning_star_doji'].values[0])
+    evening_star_doji = bool(df_last['evening_star_doji'].values[0])
+    two_black_gapping = bool(df_last['two_black_gapping'].values[0])
 
     # criteria for a buy signal
     if ((ema12gtema26co == True and macdgtsignal == True and obv_pc > 0.1) or (ema12gtema26 == True and macdgtsignal == True and x_since_buy > 0 and x_since_buy <= 2)) and last_action != 'BUY':
@@ -323,12 +330,10 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             print (log_text, "\n")
             logging.debug(log_text)
 
-        '''
         if morning_star == True:
-            log_text = '*** Candlestick Detected: Morning ("Strong - Reversal - Up")'
+            log_text = '*** Candlestick Detected: Morning Star ("Strong - Reversal - Up")'
             print (log_text, "\n")
             logging.debug(log_text)
-        '''
 
         if evening_star == True:
             log_text = '*** Candlestick Detected: Evening Star ("Strong - Reversal - Down")'
@@ -336,14 +341,27 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             logging.debug(log_text)
 
         if three_line_strike == True:
-            # TODO: Is this a reversal up or down?
             log_text = '** Candlestick Detected: Three Line Strike ("Reliable - Reversal")'
             print (log_text, "\n")
             logging.debug(log_text)
 
         if abandoned_baby == True:
-            # TODO: Is this a reversal up or down?
             log_text = '** Candlestick Detected: Abandoned Baby ("Reliable - Reversal")'
+            print (log_text, "\n")
+            logging.debug(log_text)
+
+        if morning_star_doji == True:
+            log_text = '** Candlestick Detected: Morning Star Doji ("Reliable - Reversal - Up")'
+            print (log_text, "\n")
+            logging.debug(log_text)
+
+        if evening_star_doji == True:
+            log_text = '** Candlestick Detected: Evening Star Doji ("Reliable - Reversal - Down")'
+            print (log_text, "\n")
+            logging.debug(log_text)
+
+        if two_black_gapping == True:
+            log_text = '*** Candlestick Detected: Two Black Gapping ("Reliable - Reversal - Down")'
             print (log_text, "\n")
             logging.debug(log_text)
 

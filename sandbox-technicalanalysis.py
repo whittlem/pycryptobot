@@ -31,6 +31,8 @@ ta.addAll()
 #ta.addCandleMorningStar()
 #ta.addCandleEveningStar()
 #ta.addCandleAbandonedBaby()
+#ta.addCandleMorningStarDoji()
+#ta.addCandleEveningStarDoji()
 
 print (ta.getDataFrame())
 #print (ta.getDataFrame().dtypes)
