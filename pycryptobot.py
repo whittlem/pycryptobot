@@ -49,6 +49,9 @@ args = parser.parse_args()
 
 """Settings"""
 
+# do not change
+dev_mode = 0
+
 if args.live == None:
     # default live status
 
@@ -145,6 +148,14 @@ else:
     else:
         is_verbose = 0
 
+if dev_mode:
+    market = 'BTC-GBP'
+    granularity = 3600
+    is_live = 0
+    is_sim = 1
+    sim_speed = 'fast'
+    is_verbose = 0
+
 """Highly advisable not to change any code below this point!"""
 
 # validation of crypto market inputs
@@ -178,8 +189,16 @@ if is_live == 1:
     account = TradingAccount(config)
 
     # if the bot is restarted between a buy and sell it will sell first
-    if (account.getBalance(fiatMarket) == 0 and account.getBalance(cryptoMarket) > 0):
+    if (market.startswith('BTC-') and account.getBalance(cryptoMarket) > 0.001):
         last_action = 'BUY'
+    elif (market.startswith('BCH-') and account.getBalance(cryptoMarket) > 0.01):
+        last_action = 'BUY'
+    elif (market.startswith('ETH-') and account.getBalance(cryptoMarket) > 0.01):
+        last_action = 'BUY'
+    elif (market.startswith('LTC-') and account.getBalance(cryptoMarket) > 0.1):
+        last_action = 'BUY'
+    elif (account.getBalance(fiatMarket) > 30):
+        last_action = 'SELL'
 
 def truncate(f, n):
     return math.floor(f * 10 ** n) / 10 ** n
@@ -243,6 +262,18 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     obv = float(df_last['obv'].values[0])
     obv_pc = float(df_last['obv_pc'].values[0])
 
+    # candlestick detection
+    hammer = bool(df_last['hammer'].values[0])
+    inverted_hammer = bool(df_last['inverted_hammer'].values[0])
+    hanging_man = bool(df_last['hanging_man'].values[0])
+    shooting_star = bool(df_last['shooting_star'].values[0])
+    three_white_soldiers = bool(df_last['three_white_soldiers'].values[0])
+    three_black_crows = bool(df_last['three_black_crows'].values[0])
+    #morning_star = bool(df_last['morning_star'].values[0])
+    evening_star = bool(df_last['evening_star'].values[0])
+    three_line_strike = bool(df_last['three_line_strike'].values[0])
+    abandoned_baby = bool(df_last['abandoned_baby'].values[0])
+
     # criteria for a buy signal
     if ((ema12gtema26co == True and macdgtsignal == True and obv_pc > 0.1) or (ema12gtema26 == True and macdgtsignal == True and x_since_buy > 0 and x_since_buy <= 2)) and last_action != 'BUY':
         action = 'BUY'
@@ -261,7 +292,61 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
         macd_text = compare(df_last['macd'].values[0], df_last['signal'].values[0], 'MACD')
         obv_text = compare(df_last['obv_pc'].values[0], 0, 'OBV %')
         counter_text = '[I:' + str(iterations) + ',B:' + str(x_since_buy) + ',S:' + str(x_since_sell) + ']'
+
+        if hammer == True:
+            log_text = '* Candlestick Detected: Hammer ("Weak - Reversal - Up")'
+            print (log_text, "\n")
+            logging.debug(log_text)
+
+        if shooting_star == True:
+            log_text = '* Candlestick Detected: Shooting Star ("Weak - Reversal - Down")'
+            print (log_text, "\n")
+            logging.debug(log_text)
+
+        if hanging_man == True:
+            log_text = '* Candlestick Detected: Hanging Man ("Weak - Continuation - Up")'
+            print (log_text, "\n")
+            logging.debug(log_text)
+
+        if inverted_hammer == True:
+            log_text = '* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Down")'
+            print (log_text, "\n")
+            logging.debug(log_text)
  
+        if three_white_soldiers == True:
+            log_text = '*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Up")'
+            print (log_text, "\n")
+            logging.debug(log_text)
+
+        if three_black_crows == True:
+            log_text = '*** Candlestick Detected: Three Black Crows ("Strong - Reversal - Down")'
+            print (log_text, "\n")
+            logging.debug(log_text)
+
+        '''
+        if morning_star == True:
+            log_text = '*** Candlestick Detected: Morning ("Strong - Reversal - Up")'
+            print (log_text, "\n")
+            logging.debug(log_text)
+        '''
+
+        if evening_star == True:
+            log_text = '*** Candlestick Detected: Evening Star ("Strong - Reversal - Down")'
+            print (log_text, "\n")
+            logging.debug(log_text)
+
+        if three_line_strike == True:
+            # TODO: Is this a reversal up or down?
+            log_text = '** Candlestick Detected: Three Line Strike ("Reliable - Reversal")'
+            print (log_text, "\n")
+            logging.debug(log_text)
+
+        if abandoned_baby == True:
+            # TODO: Is this a reversal up or down?
+            log_text = '** Candlestick Detected: Abandoned Baby ("Reliable - Reversal")'
+            print (log_text, "\n")
+            logging.debug(log_text)
+
         ema_co_prefix = ''
         ema_co_suffix = ''   
         if ema12gtema26 == True:

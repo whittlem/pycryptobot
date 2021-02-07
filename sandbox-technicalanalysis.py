@@ -28,6 +28,7 @@ ta.addAll()
 #ta.addCandleDojo()
 #ta.addCandleThreeLineStrike()
 #ta.addCandleTwoBlackGapping()
+#ta.addCandleMorningStar()
 #ta.addCandleEveningStar()
 #ta.addCandleAbandonedBaby()
 
