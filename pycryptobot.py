@@ -244,10 +244,10 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     obv_pc = float(df_last['obv_pc'].values[0])
 
     # criteria for a buy signal
-    if ((ema12gtema26co == True and macdgtsignal == True and obv_pc > 0.1) or (ema12gtema26 == True and macdgtsignal == True and obv_pc > 0.1 and x_since_buy > 0 and x_since_buy <= 2)) and last_action != 'BUY':
+    if ((ema12gtema26co == True and macdgtsignal == True and obv_pc > 0.1) or (ema12gtema26 == True and macdgtsignal == True and x_since_buy > 0 and x_since_buy <= 2)) and last_action != 'BUY':
         action = 'BUY'
     # criteria for a sell signal
-    elif (ema12ltema26co == True and macdltsignal == True) and last_action not in ['','SELL']:
+    elif ((ema12ltema26co == True and macdltsignal == True) or (ema12ltema26 == True and macdltsignal == True and x_since_sell > 0 and x_since_sell <= 2)) and last_action not in ['','SELL']:
         action = 'SELL'
     # anything other than a buy or sell, just wait
     else:
@@ -263,19 +263,46 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
         counter_text = '[I:' + str(iterations) + ',B:' + str(x_since_buy) + ',S:' + str(x_since_sell) + ']'
  
         ema_co_prefix = ''
-        ema_co_suffix = ''
-        if ema12gtema26co == True or ema12ltema26co == True:
-            ema_co_prefix = '* '
-            ema_co_suffix = ' *'
+        ema_co_suffix = ''   
+        if ema12gtema26 == True:
+            ema_co_prefix = '^ '
+            ema_co_suffix = ' ^'
+        elif ema12ltema26 == True:
+            ema_co_prefix = 'v '
+            ema_co_suffix = ' v'
+        elif ema12gtema26co == True:
+            ema_co_prefix = '*^ '
+            ema_co_suffix = ' ^*'
+        elif ema12ltema26co == True:
+            ema_co_prefix = '*v '
+            ema_co_suffix = ' v*'
 
         macd_co_prefix = ''
         macd_co_suffix = ''
-        if macdgtsignalco == True or macdltsignalco == True:
-            macd_co_prefix = '* '
-            macd_co_suffix = ' *'
+        if macdgtsignal == True:
+            macd_co_prefix = '^ '
+            macd_co_suffix = ' ^'
+        elif macdltsignal == True:
+            macd_co_prefix = 'v '
+            macd_co_suffix = ' v'
+        elif macdgtsignalco == True:
+            macd_co_prefix = '*^ '
+            macd_co_suffix = ' ^*'
+        elif macdltsignalco == True:
+            macd_co_prefix = '*v '
+            macd_co_suffix = ' v*'
+
+        obv_prefix = ''
+        obv_suffix = ''
+        if (obv_pc > 0.1):
+            obv_prefix = '^ '
+            obv_suffix = ' ^'
+        else:
+            obv_prefix = 'v '
+            obv_suffix = ' v'           
 
         if is_verbose == 0:
-            output_text = ts_text + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_text + ' | ' + action + ' ' + counter_text
+            output_text = ts_text + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' ' + counter_text + ' | Last Action: ' + last_action
             logging.debug(output_text)
             print (output_text)
         else:
@@ -393,7 +420,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             if is_live == 1:
                 if is_verbose == 0:
                     logging.info(ts_text + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | BUY')
-                    print (ts_text, '|', market, granularity, '|', price_text, '| BUY')                    
+                    print ("\n", ts_text, '|', market, granularity, '|', price_text, '| BUY', "\n")                    
                 else:
                     print('--------------------------------------------------------------------------------')
                     print('|                      *** Executing LIVE Buy Order ***                        |')
@@ -408,7 +435,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             else:
                 if is_verbose == 0:
                     logging.info(ts_text + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | BUY')
-                    print (ts_text, '|', market, granularity, '|', price_text, '| BUY')                    
+                    print ("\n", ts_text, '|', market, granularity, '|', price_text, '| BUY', "\n")                    
                 else:
                     print('--------------------------------------------------------------------------------')
                     print('|                      *** Executing TEST Buy Order ***                        |')
@@ -433,7 +460,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             if is_live == 1:
                 if is_verbose == 0:
                     logging.info(ts_text + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | SELL')
-                    print (ts_text, '|', market, granularity, '|', price_text, '| SELL')                    
+                    print ("\n", ts_text, '|', market, granularity, '|', price_text, '| SELL', "\n")                    
                 else:
                     print('--------------------------------------------------------------------------------')
                     print('|                      *** Executing LIVE Sell Order ***                        |')
@@ -448,7 +475,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             else:
                 if is_verbose == 0:
                     logging.info(ts_text + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | SELL')
-                    print (ts_text, '|', market, granularity, '|', price_text, '| SELL')                    
+                    print ("\n", ts_text, '|', market, granularity, '|', price_text, '| SELL', "\n")                    
                 else:
                     print('--------------------------------------------------------------------------------')
                     print('|                      *** Executing TEST Sell Order ***                        |')
