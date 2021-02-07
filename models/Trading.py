@@ -65,6 +65,7 @@ class TechnicalAnalysis():
         self.addCandleDojo()
         self.addCandleThreeLineStrike()
         self.addCandleTwoBlackGapping()
+        self.addCandleMorningStar()
         self.addCandleEveningStar()
         self.addCandleAbandonedBaby()
 
@@ -75,9 +76,7 @@ class TechnicalAnalysis():
     """
 
     def candleHammer(self):
-        """A shooting star is a bearish candlestick with a long upper shadow, little or no lower shadow, and a small real body near the low of the day.
-           A shooting star is a type of candlestick that forms when a security opens, advances significantly, but then closes the day near the open again.
-           (green/clear hammer facing up)"""
+        """Hammer is a bullish reversal that occurs at the bottom of downtrends. (green/clear hammer facing up)"""
 
         return ((self.df['high'] - self.df['low']) > 3 * (self.df['open'] - self.df['close'])) \
             & (((self.df['close'] - self.df['low']) / (.001 + self.df['high'] - self.df['low'])) > 0.6) \
@@ -87,9 +86,7 @@ class TechnicalAnalysis():
         self.df['hammer'] = self.candleHammer()
 
     def candleInvertedHammer(self):
-        """The Inverted Hammer candlestick formation occurs mainly at the bottom of downtrends and can act as a warning of a potential bullish reversal 
-           pattern. What happens on the next day after the Inverted Hammer pattern is what gives traders an idea as to whether or not prices will go 
-           higher or lower. (green/clear hammer facing down)"""
+        """Inverted Hammer occurs mainly at the bottom of downtrends and can act as a warning of a potential reversal upward. (green/clear hammer facing down)"""
 
         return (((self.df['high'] - self.df['low']) > 3 * (self.df['open'] - self.df['close'])) \
             & ((self.df['high'] - self.df['close']) / (.001 + self.df['high'] - self.df['low']) > 0.6) \
@@ -99,8 +96,7 @@ class TechnicalAnalysis():
         self.df['inverted_hammer'] = self.candleInvertedHammer()
 
     def candleShootingStar(self):
-        """The Shooting Star candlestick formation is viewed as a bearish reversal candlestick pattern that typically occurs at the top of uptrends. 
-           (red/solid hammer facing down)"""
+        """Shooting Star is a bearish reversal created when the open, low, and close are roughly the same price. (red/solid hammer facing down)"""
 
         return ((self.df['open'].shift(1) < self.df['close'].shift(1)) & (self.df['close'].shift(1) < self.df['open'])) \
             & (self.df['high'] - np.maximum(self.df['open'], self.df['close']) >= (abs(self.df['open'] - self.df['close']) * 3)) \
@@ -135,7 +131,7 @@ class TechnicalAnalysis():
             & (self.df['high'].shift(1) - np.maximum(self.df['open'].shift(1), self.df['close'].shift(1)) < (abs(self.df['open'].shift(1) - self.df['close'].shift(1))))
 
     def addCandleThreeWhiteSoldiers(self):
-        self.df['three_white_solidiers'] = self.candleThreeWhiteSoldiers()
+        self.df['three_white_soldiers'] = self.candleThreeWhiteSoldiers()
 
     def candleThreeBlackCrows(self):
         """Three black crows indicate a bearish candlestick pattern that predicts the reversal of an uptrend.
@@ -192,10 +188,17 @@ class TechnicalAnalysis():
     def addCandleTwoBlackGapping(self):
         self.df['two_black_gapping'] = self.candleTwoBlackGapping()
 
+    def candleMorningStar(self):
+        """Morning Star is a bullish reversal pattern, usually occurring at the bottom of a downtrend."""
+
+        return ((np.maximum(self.df['open'].shift(1), self.df['close'].shift(1)) < self.df['close'].shift(2)) & (self.df['close'].shift(2) < self.df['open'].shift(2))) \
+            & ((self.df['close'] > self.df['open']) & (self.df['open'] > np.maximum(self.df['open'].shift(1), self.df['close'].shift(1))))
+
+    def addCandleMorningStar(self):
+        self.df['morning_star'] = self.candleMorningStar()
+
     def candleEveningStar(self):
-        """The bearish evening star reversal pattern starts with a tall white bar that carries an uptrend to a new high. The market gaps higher on
-           the next bar, but fresh buyers fail to appear, yielding a narrow range candlestick. A gap down on the third bar completes the pattern,
-           which predicts that the decline will continue to even lower lows, perhaps triggering a broader-scale downtrend."""
+        """Evening Star is a bearish reversal pattern that occurs at the top of an uptrend."""
 
         return ((np.minimum(self.df['open'].shift(1), self.df['close'].shift(1)) > self.df['close'].shift(2)) & (self.df['close'].shift(2) > self.df['open'].shift(2))) \
             & ((self.df['close'] < self.df['open']) & (self.df['open'] < np.minimum(self.df['open'].shift(1), self.df['close'].shift(1))))
