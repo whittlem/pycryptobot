@@ -58,7 +58,7 @@ class AuthAPI():
         # validates the api passphase is syntactically correct
         p = re.compile(r"^[a-z0-9]{10,11}$")
         if not p.match(api_pass):
-            err = 'Coinbase Pro API passphase is invalid'
+            err = 'Coinbase Pro API passphrase is invalid'
             if self.debug:
                 raise TypeError(err)
             else:
