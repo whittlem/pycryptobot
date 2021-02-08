@@ -35,7 +35,7 @@ The "requirements.txt" was created with "python3 -m pip freeze"
 
 % python3 pycryptobot.py
 
-* Arguments
+    * Arguments
     --market <market> (default: BTC-GBP)
         * Coinbase Pro market
     --granularity <granularity> (default: 3600)
