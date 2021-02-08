@@ -33,6 +33,26 @@ from models.TradingAccount import TradingAccount
 from models.CoinbasePro import AuthAPI, PublicAPI
 from views.TradingGraphs import TradingGraphs
 
+def truncate(f, n):
+    return math.floor(f * 10 ** n) / 10 ** n
+
+def compare(val1, val2, label=''):
+    if val1 > val2:
+        if label == '':
+            return str(truncate(val1, 2)) + ' > ' + str(truncate(val2, 2))
+        else:
+            return label + ': ' + str(truncate(val1, 2)) + ' > ' + str(truncate(val2, 2))
+    if val1 < val2:
+        if label == '':
+            return str(truncate(val1, 2)) + ' < ' + str(truncate(val2, 2))
+        else:
+            return label + ': ' + str(truncate(val1, 2)) + ' < ' + str(truncate(val2, 2))
+    else:
+        if label == '':
+            return str(truncate(val1, 2)) + ' = ' + str(truncate(val2, 2))
+        else:
+            return label + ': ' + str(truncate(val1, 2)) + ' = ' + str(truncate(val2, 2))      
+
 # reduce informational logging
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
@@ -205,25 +225,13 @@ if is_live == 1:
     elif (account.getBalance(fiatMarket) > 30):
         last_action = 'SELL'
 
-def truncate(f, n):
-    return math.floor(f * 10 ** n) / 10 ** n
-
-def compare(val1, val2, label=''):
-    if val1 > val2:
-        if label == '':
-            return str(truncate(val1, 2)) + ' > ' + str(truncate(val2, 2))
-        else:
-            return label + ': ' + str(truncate(val1, 2)) + ' > ' + str(truncate(val2, 2))
-    if val1 < val2:
-        if label == '':
-            return str(truncate(val1, 2)) + ' < ' + str(truncate(val2, 2))
-        else:
-            return label + ': ' + str(truncate(val1, 2)) + ' < ' + str(truncate(val2, 2))
-    else:
-        if label == '':
-            return str(truncate(val1, 2)) + ' = ' + str(truncate(val2, 2))
-        else:
-            return label + ': ' + str(truncate(val1, 2)) + ' = ' + str(truncate(val2, 2))      
+    authAPI = AuthAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])    
+    orders = authAPI.getOrders(market)
+    if len(orders) > 0:
+        df = orders[-1:]
+        price = df[df.action == 'buy']['price']
+        if len(price) > 0:
+            last_buy = float(truncate(price, 2))
 
 def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     """Trading bot job which runs at a scheduled interval"""
