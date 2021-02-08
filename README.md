@@ -2,21 +2,24 @@
 
 ## Introduction
 
-I'm a writer on Medium (https://whittle.medium.com). This project is a work in progress and is being documented in a series of articles. If you are interested in keeping up with the progress please do follow me on Medium. This project will cover a variety of concepts from object-oriented programming in Python, working with REST APIs, Pandas data science library for Python, experimental testing and similuations, trading strategies using technical indicators, and crypto currency trading using the Coinbase Pro API. I'm sharing this project with everyone so if you would like to help and contribute or have some good ideas on how to improve it please do get in touch.
+Follow me on Medium for updates!
+https://whittle.medium.com
 
 ## Prerequisites
 
-* Python 3 installed
+* Python 3.x installed -- https://installpython3.com
 
     % python3 --version
     
-    Python 3.8.2
+    Python 3.9.1
     
-* Python 3 PIP installed
+* Python 3 PIP installed -- https://pip.pypa.io/en/stable/installing
 
     % python3 -m pip --version
     
-    pip 20.2.4 from /Library/Python/3.8/site-packages/pip (python 3.8)
+    pip 21.0.1 from /usr/local/lib/python3.9/site-packages/pip (python 3.9)
+
+ * The app should work with Python 3.x, but to avoid issues try run Python 3.8 or higher
 
 ## Installation
 
@@ -30,12 +33,18 @@ The "requirements.txt" was created with "python3 -m pip freeze"
 
 ## Run it
 
-% python3 pycryptobot.py               --    this is the trading bot, no live trades yet, just notificating on buy/sell signals
+% python3 pycryptobot.py
 
-% python3 simulations.py               --    trading simulations using live data to test technical indicators
-
-% python3 optimising.py                --    troubleshoot a single experiment from the simulations
-
-% python3 sandbox-livevsdemoacct.py    --    examples on how to switch between live and demo trading accounts
-
-% python3 sandbox-modelsandviews.py    --    examples on how to use the models and views
+* Arguments
+    --market <market> (default: BTC-GBP)
+        * Coinbase Pro market
+    --granularity <granularity> (default: 3600)
+        * Supported granularity in seconds
+    --live <1 or 0> <default: 0>
+        * Is the bot live or in test/demo mode
+    --graphs <1 or 0> (default: 0)
+        * Save graphs on buy and sell events
+    --sim <fast or slow>
+        * Run a simulation on last 300 intervals of data
+    --verbose <1 or 0> (default: 1)
+        * Toggle verbose or minimal output
