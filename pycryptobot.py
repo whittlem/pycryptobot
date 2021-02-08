@@ -506,16 +506,15 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             print('|', txt, (' ' * (75 - len(txt))), '|')
             print('================================================================================')
 
-        if last_action == 'BUY':
+        # increment x since buy
+        if (ema12gtema26co == True and macdgtsignal == True):
             x_since_buy = x_since_buy + 1
-        elif last_action == 'SELL':
+        # increment x since sell
+        elif (ema12ltema26co == True and macdltsignal == True):
             x_since_sell = x_since_sell + 1
 
         # if a buy signal
         if action == 'BUY':
-            # increment x since buy
-            x_since_buy = x_since_buy + 1
-
             # reset x since sell
             x_since_sell = 0
 
@@ -553,9 +552,6 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
         # if a sell signal
         elif action == 'SELL':
-            # increment x since buy
-            x_since_sell = x_since_sell + 1
-
             # reset x since buy
             x_since_buy = 0
 
