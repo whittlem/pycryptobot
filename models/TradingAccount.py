@@ -45,9 +45,9 @@ class TradingAccount():
                 raise TypeError('Coinbase Pro API secret is invalid')
 
             # validate api_pass is syntactically correct
-            p = re.compile(r"^[a-z0-9]{11,11}$")
+            p = re.compile(r"^[a-z0-9]{10,11}$")
             if not p.match(config['api_pass']):
-                raise TypeError('Coinbase Pro API passphase is invalid')
+                raise TypeError('Coinbase Pro API passphrase is invalid')
 
             # if a config file is provided the trading account will be using live data!
             print(
