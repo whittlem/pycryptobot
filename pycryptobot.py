@@ -421,7 +421,11 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 output_text = ts_text + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' ' + counter_text
 
             if last_action == 'BUY':
-                margin = str(truncate((((price - last_buy) / price) * 100), 2)) + '%'
+                # calculate last buy minus fees
+                fee = last_buy * 0.005
+                last_buy_minus_fees = last_buy - fee
+
+                margin = str(truncate((((price - last_buy_minus_fees) / price) * 100), 2)) + '%'
                 output_text += ' | ' +  margin
 
             logging.debug(output_text)
