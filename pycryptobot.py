@@ -297,7 +297,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
         price_text = 'Price: ' + str(truncate(float(df_last['close'].values[0]), 2))
         ema_text = compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26')
         macd_text = compare(df_last['macd'].values[0], df_last['signal'].values[0], 'MACD')
-        obv_text = compare(df_last['obv_pc'].values[0], 0, 'OBV %')
+        obv_text = compare(df_last['obv_pc'].values[0], 0.1, 'OBV %')
         counter_text = '[I:' + str(iterations) + ',B:' + str(x_since_buy) + ',S:' + str(x_since_sell) + ']'
 
         if hammer == True:
