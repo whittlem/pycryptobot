@@ -176,6 +176,7 @@ market = cryptoMarket + '-' + fiatMarket
 # initial state is to wait
 action = 'WAIT'
 last_action = ''
+last_buy = 0
 last_df_index = ''
 iterations = 0
 x_since_buy = 0
@@ -226,7 +227,7 @@ def compare(val1, val2, label=''):
 
 def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     """Trading bot job which runs at a scheduled interval"""
-    global action, iterations, x_since_buy, x_since_sell, last_action, last_df_index
+    global action, iterations, last_action, last_buy, last_df_index, x_since_buy, x_since_sell
 
     # increment iterations
     iterations = iterations + 1
@@ -255,6 +256,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
         # df_last contains the most recent entry
         df_last = df.tail(1)
  
+    price = float(df_last['close'].values[0])
     ema12gtema26 = bool(df_last['ema12gtema26'].values[0])
     ema12gtema26co = bool(df_last['ema12gtema26co'].values[0])
     macdgtsignal = bool(df_last['macdgtsignal'].values[0])
@@ -405,13 +407,25 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             obv_suffix = ' v'           
 
         if is_verbose == 0:
-            output_text = ts_text + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' ' + counter_text + ' | Last Action: ' + last_action
+            if last_action == '':
+                output_text = ts_text + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' ' + counter_text + ' | Last Action: ' + last_action
+            else:
+                output_text = ts_text + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' ' + counter_text
+
+            if last_action == 'BUY':
+                margin = str(truncate((((price - last_buy) / price) * 100), 2)) + '%'
+                output_text += ' | ' +  margin
+
             logging.debug(output_text)
             print (output_text)
         else:
             logging.debug('-- Iteration: ' + str(iterations) + ' --')
             logging.debug('-- Since Last Buy: ' + str(x_since_buy) + ' --')
             logging.debug('-- Since Last Sell: ' + str(x_since_sell) + ' --')
+
+            if last_action == 'BUY':
+                margin = str(truncate((((price - last_buy) / price) * 100), 2)) + '%'
+                logging.debug('-- Margin: ' + margin + '% --')            
             
             logging.debug('price: ' + str(truncate(float(df_last['close'].values[0]), 2)))
             logging.debug('ema12: ' + str(truncate(float(df_last['ema12'].values[0]), 2)))
@@ -505,6 +519,10 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             txt = '           Action : ' + action
             print('|', txt, (' ' * (75 - len(txt))), '|')
             print('================================================================================')
+            if last_action == 'BUY':
+                txt = '           Margin : ' + margin + '%'
+                print('|', txt, (' ' * (75 - len(txt))), '|')
+                print('================================================================================')
 
         # increment x since buy
         if (ema12gtema26co == True and macdgtsignal == True):
@@ -517,6 +535,8 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
         if action == 'BUY':
             # reset x since sell
             x_since_sell = 0
+
+            last_buy = price
 
             # if live
             if is_live == 1:
