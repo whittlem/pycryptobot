@@ -622,7 +622,7 @@ try:
     print('--------------------------------------------------------------------------------')   
     txt = '           Market : ' + market
     print('|', txt, (' ' * (75 - len(txt))), '|')
-    txt = '      Granularity : ' + str(granularity) + ' minutes'
+    txt = '      Granularity : ' + str(granularity) + ' seconds'
     print('|', txt, (' ' * (75 - len(txt))), '|')
     print('--------------------------------------------------------------------------------')
 
