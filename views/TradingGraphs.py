@@ -377,7 +377,7 @@ class TradingGraphs():
             top=False,         # ticks along the top edge are off
             labelbottom=False) # labels along the bottom edge are off
 
-        df_candlestick = self.df[self.df['three_white_solidiers'] == True]
+        df_candlestick = self.df[self.df['three_white_soldiers'] == True]
         df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'gx')
@@ -407,7 +407,7 @@ class TradingGraphs():
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'r*')  
 
-        df_candlestick = self.df[self.df['dojo'] == True]
+        df_candlestick = self.df[self.df['doji'] == True]
         df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'yd')  
