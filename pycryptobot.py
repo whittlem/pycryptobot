@@ -173,7 +173,8 @@ else:
         is_verbose = 0
 
 if dev_mode == 1:
-    market = 'BTC-GBP'
+    cryptoMarket = 'BTC'
+    fiatMarket = 'GBP'
     granularity = 3600
     is_live = 0
     is_sim = 1
@@ -183,8 +184,8 @@ if dev_mode == 1:
 """Highly advisable not to change any code below this point!"""
 
 # validation of crypto market inputs
-if cryptoMarket not in ['BCH', 'BTC', 'ETH', 'LTC']:
-    raise Exception('Invalid crypto market: BCH, BTC, ETH, LTC or ETH')
+if cryptoMarket not in ['BCH', 'BTC', 'ETH', 'LTC', 'XLM']:
+    raise Exception('Invalid crypto market: BCH, BTC, ETH, LTC, ETH, XLM')
 
 # validation of fiat market inputs
 if fiatMarket not in ['EUR', 'GBP', 'USD']:

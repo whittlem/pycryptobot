@@ -151,7 +151,7 @@ class TradingAccount():
                 # replace FIAT and CRYPTO placeholders
                 if currency in ['EUR','GBP','USD']:
                     self.balance = self.balance.replace('FIAT', currency)
-                elif currency in ['BCH','BTC','ETH','LTC']:
+                elif currency in ['BCH','BTC','ETH','LTC','XLM']:
                     self.balance = self.balance.replace('CRYPTO', currency)
 
                 if self.balance.currency[self.balance.currency.isin([currency])].empty == True:
@@ -194,9 +194,9 @@ class TradingAccount():
         if fiatAmount <= 0:
             raise Exception('Invalid FIAT amount.')
 
-        # crypto market should be either BCH, BTC, ETH or LTC
-        if cryptoMarket not in ['BCH', 'BTC', 'ETH', 'LTC']:
-            raise Exception('Invalid crypto market: BCH, BTC, ETH, LTC or ETH')
+        # crypto market should be either BCH, BTC, ETH, LTC or XLM
+        if cryptoMarket not in ['BCH', 'BTC', 'ETH', 'LTC', 'XLM']:
+            raise Exception('Invalid crypto market: BCH, BTC, ETH, LTC, ETH, or XLM')
 
         # fiat market should be either EUR, GBP, or USD
         if fiatMarket not in ['EUR', 'GBP', 'USD']:
@@ -269,9 +269,9 @@ class TradingAccount():
         manualPrice, float
             Used for simulations specifying the live price to purchase
         """
-        # crypto market should be either BCH, BTC, ETH or LTC
-        if cryptoMarket not in ['BCH', 'BTC', 'ETH', 'LTC']:
-            raise Exception('Invalid crypto market: BCH, BTC, ETH, LTC or ETH')
+        # crypto market should be either BCH, BTC, ETH, LTC, XLM
+        if cryptoMarket not in ['BCH', 'BTC', 'ETH', 'LTC', 'XLM']:
+            raise Exception('Invalid crypto market: BCH, BTC, ETH, LTC, ETH, XLM')
 
         # fiat market should be either EUR, GBP, or USD
         if fiatMarket not in ['EUR', 'GBP', 'USD']:
