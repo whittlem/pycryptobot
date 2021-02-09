@@ -290,8 +290,8 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     evening_star = bool(df_last['evening_star'].values[0])
     three_line_strike = bool(df_last['three_line_strike'].values[0])
     abandoned_baby = bool(df_last['abandoned_baby'].values[0])
-    morning_star_doji = bool(df_last['morning_star_doji'].values[0])
-    evening_star_doji = bool(df_last['evening_star_doji'].values[0])
+    morning_doji_star = bool(df_last['morning_doji_star'].values[0])
+    evening_doji_star = bool(df_last['evening_doji_star'].values[0])
     two_black_gapping = bool(df_last['two_black_gapping'].values[0])
 
     # criteria for a buy signal
@@ -334,12 +334,12 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             logging.debug(log_text)
  
         if three_white_soldiers == True:
-            log_text = '* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Patern - Up")'
+            log_text = '*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Bullish Patern - Up")'
             print (log_text, "\n")
             logging.debug(log_text)
 
         if three_black_crows == True:
-            log_text = '* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Patern - Up")'
+            log_text = '* Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Patern - Down")'
             print (log_text, "\n")
             logging.debug(log_text)
 
@@ -349,7 +349,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             logging.debug(log_text)
 
         if evening_star == True:
-            log_text = '*** Candlestick Detected: Morning Star ("Strong - Reversal - Bullish Pattern - Up")'
+            log_text = '*** Candlestick Detected: Evening Star ("Strong - Reversal - Bearish Pattern - Down")'
             print (log_text, "\n")
             logging.debug(log_text)
 
@@ -363,13 +363,13 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             print (log_text, "\n")
             logging.debug(log_text)
 
-        if morning_star_doji == True:
-            log_text = '** Candlestick Detected: Morning Star Doji ("Reliable - Reversal - Bullish Pattern  - Up")'
+        if morning_doji_star == True:
+            log_text = '** Candlestick Detected: Morning Doji Star ("Reliable - Reversal - Bullish Pattern - Up")'
             print (log_text, "\n")
             logging.debug(log_text)
 
-        if evening_star_doji == True:
-            log_text = '** Candlestick Detected: Morning Star Doji ("Reliable - Reversal - Bullish Pattern  - Up")'
+        if evening_doji_star == True:
+            log_text = '** Candlestick Detected: Evening Doji Star ("Reliable - Reversal - Bearish Pattern - Down")'
             print (log_text, "\n")
             logging.debug(log_text)
 
