@@ -329,17 +329,17 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             logging.debug(log_text)
 
         if inverted_hammer == True:
-            log_text = '* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Patern - Up")'
+            log_text = '* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Pattern - Up")'
             print (log_text, "\n")
             logging.debug(log_text)
  
         if three_white_soldiers == True:
-            log_text = '*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Bullish Patern - Up")'
+            log_text = '*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Bullish Pattern - Up")'
             print (log_text, "\n")
             logging.debug(log_text)
 
         if three_black_crows == True:
-            log_text = '* Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Patern - Down")'
+            log_text = '* Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Pattern - Down")'
             print (log_text, "\n")
             logging.debug(log_text)
 
