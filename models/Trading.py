@@ -68,8 +68,8 @@ class TechnicalAnalysis():
         self.addCandleMorningStar()
         self.addCandleEveningStar()
         self.addCandleAbandonedBaby()
-        self.addCandleMorningStarDoji()
-        self.addCandleEveningStarDoji()
+        self.addCandleMorningDojiStar()
+        self.addCandleEveningDojiStar()
 
     """Candlestick References
     https://commodity.com/technical-analysis
@@ -121,7 +121,7 @@ class TechnicalAnalysis():
         self.df['inverted_hammer'] = self.candleInvertedHammer()
 
     def candleThreeWhiteSoldiers(self):
-        """* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Patern - Up")"""
+        """*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Bullish Patern - Up")"""
 
         return ((self.df['open'] > self.df['open'].shift(1)) & (self.df['open'] < self.df['close'].shift(1))) \
             & (self.df['close'] > self.df['high'].shift(1)) \
@@ -134,7 +134,7 @@ class TechnicalAnalysis():
         self.df['three_white_soldiers'] = self.candleThreeWhiteSoldiers()
 
     def candleThreeBlackCrows(self):
-        """* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Patern - Up")"""
+        """* Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Patern - Down")"""
 
         return ((self.df['open'] < self.df['open'].shift(1)) & (self.df['open'] > self.df['close'].shift(1))) \
             & (self.df['close'] < self.df['low'].shift(1)) \
@@ -191,7 +191,7 @@ class TechnicalAnalysis():
         self.df['morning_star'] = self.candleMorningStar()
 
     def candleEveningStar(self):
-        """*** Candlestick Detected: Morning Star ("Strong - Reversal - Bullish Pattern - Up")"""
+        """*** Candlestick Detected: Evening Star ("Strong - Reversal - Bearish Pattern - Down")"""
 
         return ((np.minimum(self.df['open'].shift(1), self.df['close'].shift(1)) > self.df['close'].shift(2)) & (self.df['close'].shift(2) > self.df['open'].shift(2))) \
             & ((self.df['close'] < self.df['open']) & (self.df['open'] < np.minimum(self.df['open'].shift(1), self.df['close'].shift(1))))
@@ -210,8 +210,8 @@ class TechnicalAnalysis():
     def addCandleAbandonedBaby(self):
         self.df['abandoned_baby'] = self.candleAbandonedBaby()
 
-    def candleMorningStarDoji(self):
-        """** Candlestick Detected: Morning Star Doji ("Reliable - Reversal - Bullish Pattern  - Up")"""
+    def candleMorningDojiStar(self):
+        """** Candlestick Detected: Morning Doji Star ("Reliable - Reversal - Bullish Pattern - Up")"""
 
         return (self.df['close'].shift(2) < self.df['open'].shift(2)) \
             & (abs(self.df['close'].shift(2) - self.df['open'].shift(2)) / (self.df['high'].shift(2) - self.df['low'].shift(2)) >= 0.7) \
@@ -226,11 +226,11 @@ class TechnicalAnalysis():
             & ((self.df['high'].shift(1) - np.maximum(self.df['close'].shift(1), self.df['open'].shift(1))) > (3 * abs(self.df['close'].shift(1) - self.df['open'].shift(1)))) \
             & (np.minimum(self.df['close'].shift(1), self.df['open'].shift(1)) - self.df['low'].shift(1)) > (3 * abs(self.df['close'].shift(1) - self.df['open'].shift(1)))
 
-    def addCandleMorningStarDoji(self):
-        self.df['morning_star_doji'] = self.candleMorningStarDoji()
+    def addCandleMorningDojiStar(self):
+        self.df['morning_doji_star'] = self.candleMorningDojiStar()
 
-    def candleEveningStarDoji(self):
-        """** Candlestick Detected: Morning Star Doji ("Reliable - Reversal - Bullish Pattern  - Up")"""
+    def candleEveningDojiStar(self):
+        """** Candlestick Detected: Evening Doji Star ("Reliable - Reversal - Bearish Pattern - Down")"""
 
         return (self.df['close'].shift(2) > self.df['open'].shift(2)) \
             & (abs(self.df['close'].shift(2) - self.df['open'].shift(2)) / (self.df['high'].shift(2) - self.df['low'].shift(2)) >= 0.7) \
@@ -245,8 +245,8 @@ class TechnicalAnalysis():
             & ((self.df['high'].shift(1) - np.maximum(self.df['close'].shift(1), self.df['open'].shift(1))) > (3 * abs(self.df['close'].shift(1) - self.df['open'].shift(1)))) \
             & (np.minimum(self.df['close'].shift(1), self.df['open'].shift(1)) - self.df['low'].shift(1)) > (3 * abs(self.df['close'].shift(1) - self.df['open'].shift(1)))
 
-    def addCandleEveningStarDoji(self):
-        self.df['evening_star_doji'] = self.candleEveningStarDoji()
+    def addCandleEveningDojiStar(self):
+        self.df['evening_doji_star'] = self.candleEveningDojiStar()
 
     def changePct(self):
         """Close change percentage"""
