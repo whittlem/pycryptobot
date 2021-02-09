@@ -331,12 +331,12 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             logging.debug(log_text)
  
         if three_white_soldiers == True:
-            log_text = '*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Bullish Pattern - Up")'
+            log_text = '* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Patern - Up")'
             print (log_text, "\n")
             logging.debug(log_text)
 
         if three_black_crows == True:
-            log_text = '*** Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Pattern - Down")'
+            log_text = '* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Patern - Up")'
             print (log_text, "\n")
             logging.debug(log_text)
 
@@ -346,7 +346,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             logging.debug(log_text)
 
         if evening_star == True:
-            log_text = '*** Candlestick Detected: Evening Star ("Strong - Reversal - Bearish Pattern - Down")'
+            log_text = '*** Candlestick Detected: Morning Star ("Strong - Reversal - Bullish Pattern - Up")'
             print (log_text, "\n")
             logging.debug(log_text)
 
@@ -366,7 +366,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             logging.debug(log_text)
 
         if evening_star_doji == True:
-            log_text = '** Candlestick Detected: Evening Star Doji ("Reliable - Reversal - Bearish Pattern - Down")'
+            log_text = '** Candlestick Detected: Morning Star Doji ("Reliable - Reversal - Bullish Pattern  - Up")'
             print (log_text, "\n")
             logging.debug(log_text)
 
