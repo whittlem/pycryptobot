@@ -223,6 +223,8 @@ if is_live == 1:
         last_action = 'BUY'
     elif (market.startswith('LTC-') and account.getBalance(cryptoMarket) > 0.1):
         last_action = 'BUY'
+    elif (market.startswith('XLM-') and account.getBalance(cryptoMarket) > 35):
+        last_action = 'BUY'
     elif (account.getBalance(fiatMarket) > 30):
         last_action = 'SELL'
 
@@ -416,7 +418,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             obv_suffix = ' v'           
 
         if is_verbose == 0:
-            if last_action == '':
+            if last_action != '':
                 output_text = ts_text + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' ' + counter_text + ' | Last Action: ' + last_action
             else:
                 output_text = ts_text + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' ' + counter_text
@@ -673,7 +675,7 @@ try:
     # if live
     if is_live == 1:
         # if live, ensure sufficient funds to place next buy order
-        if last_action == '' and account.getBalance(fiatMarket) == 0:
+        if (last_action == '' or last_action == 'SELL') and account.getBalance(fiatMarket) == 0:
             raise Exception('Insufficient ' + fiatMarket + ' funds to place next buy order!')
         # if live, ensure sufficient crypto to place next sell order
         elif last_action == 'BUY' and account.getBalance(cryptoMarket) == 0:
