@@ -311,67 +311,67 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
         counter_text = '[I:' + str(iterations) + ',B:' + str(x_since_buy) + ',S:' + str(x_since_sell) + ']'
 
         if hammer == True:
-            log_text = '* Candlestick Detected: Hammer ("Weak - Reversal - Up")'
+            log_text = '* Candlestick Detected: Hammer ("Weak - Reversal - Bullish Signal - Up")'
             print (log_text, "\n")
             logging.debug(log_text)
 
         if shooting_star == True:
-            log_text = '* Candlestick Detected: Shooting Star ("Weak - Reversal - Down")'
+            log_text = '* Candlestick Detected: Shooting Star ("Weak - Reversal - Bearish Pattern - Down")'
             print (log_text, "\n")
             logging.debug(log_text)
 
         if hanging_man == True:
-            log_text = '* Candlestick Detected: Hanging Man ("Weak - Continuation - Up")'
+            log_text = '* Candlestick Detected: Hanging Man ("Weak - Continuation - Bearish Pattern - Down")'
             print (log_text, "\n")
             logging.debug(log_text)
 
         if inverted_hammer == True:
-            log_text = '* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Down")'
+            log_text = '* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Patern - Up")'
             print (log_text, "\n")
             logging.debug(log_text)
  
         if three_white_soldiers == True:
-            log_text = '*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Up")'
+            log_text = '*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Bullish Pattern - Up")'
             print (log_text, "\n")
             logging.debug(log_text)
 
         if three_black_crows == True:
-            log_text = '*** Candlestick Detected: Three Black Crows ("Strong - Reversal - Down")'
+            log_text = '*** Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Pattern - Down")'
             print (log_text, "\n")
             logging.debug(log_text)
 
         if morning_star == True:
-            log_text = '*** Candlestick Detected: Morning Star ("Strong - Reversal - Up")'
+            log_text = '*** Candlestick Detected: Morning Star ("Strong - Reversal - Bullish Pattern - Up")'
             print (log_text, "\n")
             logging.debug(log_text)
 
         if evening_star == True:
-            log_text = '*** Candlestick Detected: Evening Star ("Strong - Reversal - Down")'
+            log_text = '*** Candlestick Detected: Evening Star ("Strong - Reversal - Bearish Pattern - Down")'
             print (log_text, "\n")
             logging.debug(log_text)
 
         if three_line_strike == True:
-            log_text = '** Candlestick Detected: Three Line Strike ("Reliable - Reversal")'
+            log_text = '** Candlestick Detected: Three Line Strike ("Reliable - Reversal - Bullish Pattern - Up")'
             print (log_text, "\n")
             logging.debug(log_text)
 
         if abandoned_baby == True:
-            log_text = '** Candlestick Detected: Abandoned Baby ("Reliable - Reversal")'
+            log_text = '** Candlestick Detected: Abandoned Baby ("Reliable - Reversal - Bullish Pattern - Up")'
             print (log_text, "\n")
             logging.debug(log_text)
 
         if morning_star_doji == True:
-            log_text = '** Candlestick Detected: Morning Star Doji ("Reliable - Reversal - Up")'
+            log_text = '** Candlestick Detected: Morning Star Doji ("Reliable - Reversal - Bullish Pattern  - Up")'
             print (log_text, "\n")
             logging.debug(log_text)
 
         if evening_star_doji == True:
-            log_text = '** Candlestick Detected: Evening Star Doji ("Reliable - Reversal - Down")'
+            log_text = '** Candlestick Detected: Evening Star Doji ("Reliable - Reversal - Bearish Pattern - Down")'
             print (log_text, "\n")
             logging.debug(log_text)
 
         if two_black_gapping == True:
-            log_text = '*** Candlestick Detected: Two Black Gapping ("Reliable - Reversal - Down")'
+            log_text = '*** Candlestick Detected: Two Black Gapping ("Reliable - Reversal - Bearish Pattern - Down")'
             print (log_text, "\n")
             logging.debug(log_text)
 
