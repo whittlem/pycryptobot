@@ -111,7 +111,7 @@ class TechnicalAnalysis():
         self.df['hanging_man'] = self.candleHangingMan()
 
     def candleInvertedHammer(self):
-        """* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Patern - Up")"""
+        """* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Pattern - Up")"""
 
         return (((self.df['high'] - self.df['low']) > 3 * (self.df['open'] - self.df['close'])) \
             & ((self.df['high'] - self.df['close']) / (.001 + self.df['high'] - self.df['low']) > 0.6) \
@@ -121,7 +121,7 @@ class TechnicalAnalysis():
         self.df['inverted_hammer'] = self.candleInvertedHammer()
 
     def candleThreeWhiteSoldiers(self):
-        """*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Bullish Patern - Up")"""
+        """*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Bullish Pattern - Up")"""
 
         return ((self.df['open'] > self.df['open'].shift(1)) & (self.df['open'] < self.df['close'].shift(1))) \
             & (self.df['close'] > self.df['high'].shift(1)) \
@@ -134,7 +134,7 @@ class TechnicalAnalysis():
         self.df['three_white_soldiers'] = self.candleThreeWhiteSoldiers()
 
     def candleThreeBlackCrows(self):
-        """* Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Patern - Down")"""
+        """* Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Pattern - Down")"""
 
         return ((self.df['open'] < self.df['open'].shift(1)) & (self.df['open'] > self.df['close'].shift(1))) \
             & (self.df['close'] < self.df['low'].shift(1)) \
