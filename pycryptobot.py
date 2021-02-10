@@ -26,6 +26,7 @@ That way if anything goes wrong only what is within this portfolio is at risk!
 """
 
 import pandas as pd
+import numpy as np
 from datetime import datetime
 import argparse, json, logging, math, os, re, sched, sys, time
 from models.Trading import TechnicalAnalysis
@@ -36,22 +37,22 @@ from views.TradingGraphs import TradingGraphs
 def truncate(f, n):
     return math.floor(f * 10 ** n) / 10 ** n
 
-def compare(val1, val2, label=''):
+def compare(val1, val2, label='', precision=2):
     if val1 > val2:
         if label == '':
-            return str(truncate(val1, 2)) + ' > ' + str(truncate(val2, 2))
+            return str(truncate(val1, precision)) + ' > ' + str(truncate(val2, precision))
         else:
-            return label + ': ' + str(truncate(val1, 2)) + ' > ' + str(truncate(val2, 2))
+            return label + ': ' + str(truncate(val1, precision)) + ' > ' + str(truncate(val2, precision))
     if val1 < val2:
         if label == '':
-            return str(truncate(val1, 2)) + ' < ' + str(truncate(val2, 2))
+            return str(truncate(val1, precision)) + ' < ' + str(truncate(val2, precision))
         else:
-            return label + ': ' + str(truncate(val1, 2)) + ' < ' + str(truncate(val2, 2))
+            return label + ': ' + str(truncate(val1, precision)) + ' < ' + str(truncate(val2, precision))
     else:
         if label == '':
-            return str(truncate(val1, 2)) + ' = ' + str(truncate(val2, 2))
+            return str(truncate(val1, precision)) + ' = ' + str(truncate(val2, precision))
         else:
-            return label + ': ' + str(truncate(val1, 2)) + ' = ' + str(truncate(val2, 2))      
+            return label + ': ' + str(truncate(val1, precision)) + ' = ' + str(truncate(val2, precision))      
 
 # reduce informational logging
 logging.getLogger("requests").setLevel(logging.WARNING)
@@ -202,6 +203,11 @@ last_df_index = ''
 iterations = 0
 x_since_buy = 0
 x_since_sell = 0
+buy_count = 0
+sell_count = 0
+buy_sum = 0
+sell_sum = 0
+failsafe = False
 
 config = {}
 account = None
@@ -238,7 +244,7 @@ if is_live == 1:
 
 def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     """Trading bot job which runs at a scheduled interval"""
-    global action, iterations, last_action, last_buy, last_df_index, x_since_buy, x_since_sell
+    global action, buy_count, buy_sum, failsafe, iterations, last_action, last_buy, last_df_index, sell_count, sell_sum, x_since_buy, x_since_sell
 
     # increment iterations
     iterations = iterations + 1
@@ -295,22 +301,39 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     two_black_gapping = bool(df_last['two_black_gapping'].values[0])
 
     # criteria for a buy signal
-    if ((ema12gtema26co == True and macdgtsignal == True and obv_pc > 0.1) or (ema12gtema26 == True and macdgtsignal == True and x_since_buy > 0 and x_since_buy <= 2)) and last_action != 'BUY':
+    if ((ema12gtema26co == True and macdgtsignal == True and macdgtsignal > 0.1) or (ema12gtema26 == True and macdgtsignal == True and x_since_buy > 0 and x_since_buy <= 2)) and last_action != 'BUY':
         action = 'BUY'
     # criteria for a sell signal
     elif ((ema12ltema26co == True and macdltsignal == True) or (ema12ltema26 == True and macdltsignal == True and x_since_sell > 0 and x_since_sell <= 2)) and last_action not in ['','SELL']:
         action = 'SELL'
+        failsafe = False
     # anything other than a buy or sell, just wait
     else:
         action = 'WAIT'
 
+    # loss failsafe sell < -5%
+    if last_buy > 0 and last_action == 'BUY':
+        change_pcnt = ((price / last_buy) - 1) * 100
+        if (change_pcnt < -5):
+            action = 'SELL'
+            x_since_buy = 0
+            failsafe = True
+            log_text = '! Loss Failsafe Triggered (< -5%)'
+            print (log_text, "\n")
+            logging.warning(log_text)
+
     # polling is every 5 minutes (even for hourly intervals), but only process once per interval
     if (last_df_index != df_last.index.format()):
         ts_text = str(df_last.index.format()[0])
-        price_text = 'Price: ' + str(truncate(float(df_last['close'].values[0]), 2))
-        ema_text = compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26')
-        macd_text = compare(df_last['macd'].values[0], df_last['signal'].values[0], 'MACD')
-        obv_text = compare(df_last['obv_pc'].values[0], 0.1, 'OBV %')
+
+        precision = 2
+        if cryptoMarket == 'XLM':
+            precision = 4
+
+        price_text = 'Price: ' + str(truncate(float(df_last['close'].values[0]), precision))
+        ema_text = compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26', precision)
+        macd_text = compare(df_last['macd'].values[0], df_last['signal'].values[0], 'MACD', precision)
+        obv_text = compare(df_last['obv_pc'].values[0], 0.1, 'OBV %', precision)
         counter_text = '[I:' + str(iterations) + ',B:' + str(x_since_buy) + ',S:' + str(x_since_sell) + ']'
 
         if hammer == True:
@@ -426,7 +449,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             if last_action == 'BUY':
                 # calculate last buy minus fees
                 fee = last_buy * 0.005
-                last_buy_minus_fees = last_buy - fee
+                last_buy_minus_fees = last_buy + fee
 
                 margin = str(truncate((((price - last_buy_minus_fees) / price) * 100), 2)) + '%'
                 output_text += ' | ' +  margin
@@ -540,7 +563,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 print('================================================================================')
 
         # increment x since buy
-        if (ema12gtema26 == True):
+        if (ema12gtema26 == True and failsafe == False):
             x_since_buy = x_since_buy + 1
         # increment x since sell
         elif (ema12ltema26 == True):
@@ -548,6 +571,8 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
         # if a buy signal
         if action == 'BUY':
+            buy_count = buy_count + 1
+
             # reset x since sell
             x_since_sell = 0
 
@@ -577,7 +602,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                     print('--------------------------------------------------------------------------------')
                     print('|                      *** Executing TEST Buy Order ***                        |')
                     print('--------------------------------------------------------------------------------')
-            #print(df_last[['close','ema12','ema26','ema12gtema26','ema12gtema26co','macd','signal','macdgtsignal','obv','obv_pc']])
+                #print(df_last[['close','ema12','ema26','ema12gtema26','ema12gtema26co','macd','signal','macdgtsignal','obv','obv_pc']])
 
             if save_graphs == 1:
                 tradinggraphs = TradingGraphs(technicalAnalysis)
@@ -587,6 +612,8 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
         # if a sell signal
         elif action == 'SELL':
+            sell_count = sell_count + 1
+
             # reset x since buy
             x_since_buy = 0
 
@@ -608,8 +635,22 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             # if not live
             else:
                 if is_verbose == 0:
-                    logging.info(ts_text + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | SELL')
-                    print ("\n", ts_text, '|', market, granularity, '|', price_text, '| SELL', "\n")                    
+                    sell_price = float(str(truncate(float(df_last['close'].values[0]), precision)))
+                    last_buy_price = float(str(truncate(float(last_buy), precision)))
+                    buy_sell_diff = round(np.subtract(sell_price, last_buy_price), precision)
+                    buy_sell_margin_no_fees = str(truncate((((sell_price - last_buy_price) / sell_price) * 100), 2)) + '%'
+
+                    # calculate last buy minus fees
+                    buy_fee = last_buy_price * 0.005
+                    last_buy_price_minus_fees = last_buy_price + buy_fee
+
+                    buy_sell_margin_fees = str(truncate((((sell_price - last_buy_price_minus_fees) / sell_price) * 100), 2)) + '%'
+
+                    logging.info(ts_text + ' | ' + market + ' ' + str(granularity) + ' | SELL | ' + str(sell_price) + ' | BUY | ' + str(last_buy_price) + ' | DIFF | ' + str(buy_sell_diff) + ' | MARGIN NO FEES | ' + str(buy_sell_margin_no_fees) + ' | MARGIN FEES | ' + str(buy_sell_margin_fees))
+                    print ("\n", ts_text, '|', market, granularity, '| SELL |', str(sell_price), '| BUY |', str(last_buy_price), '| DIFF |', str(buy_sell_diff) , '| MARGIN NO FEES |', str(buy_sell_margin_no_fees), '| MARGIN FEES |', str(buy_sell_margin_fees), "\n")                    
+                
+                    buy_sum = buy_sum + last_buy_price_minus_fees
+                    sell_sum = sell_sum + sell_price
                 else:
                     print('--------------------------------------------------------------------------------')
                     print('|                      *** Executing TEST Sell Order ***                        |')
@@ -627,8 +668,24 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             last_action = action
         
         last_df_index = df_last.index.format()
+
+        if iterations == 300:
+            print ("\nSimulation Summary\n")
+
+            if buy_count > sell_count:
+                # calculate last buy minus fees
+                fee = last_buy * 0.005
+                last_buy_minus_fees = last_buy + fee
+
+                buy_sum = buy_sum + (float(truncate(float(df_last['close'].values[0]), precision)) - last_buy_minus_fees)
+
+            print ('   Buy Count :', buy_count)
+            print ('  Sell Count :', sell_count, "\n")
+            print ('   Buy Total :', buy_sum)
+            print ('  Sell Total :', sell_sum)
+            print ('      Margin :', str(truncate((((sell_sum - buy_sum) / sell_sum) * 100), 2)) + '%', "\n")
     else:
-        # decrement igored iteration
+        # decrement ignored iteration
         iterations = iterations - 1
 
     # if live
@@ -645,6 +702,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             else:
                 # slow processing
                 s.enter(1, 1, executeJob, (sc, market, granularity, tradingData))
+
     else:
         # poll every 5 minutes
         s.enter(300, 1, executeJob, (sc, market, granularity))
