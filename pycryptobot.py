@@ -164,7 +164,7 @@ if args.verbose == None:
     # default verbose status
 
     # 0 is minimal, 1 is verbose
-    is_verbose = 1
+    is_verbose = 0
 else:
     # verbose status set via --verbose argument
 
@@ -273,6 +273,8 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
         # df_last contains the most recent entry
         df_last = df.tail(1)
  
+    current_df_index = str(df_last.index.format()[0])
+
     price = float(df_last['close'].values[0])
     ema12gtema26 = bool(df_last['ema12gtema26'].values[0])
     ema12gtema26co = bool(df_last['ema12gtema26co'].values[0])
@@ -323,9 +325,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             logging.warning(log_text)
 
     # polling is every 5 minutes (even for hourly intervals), but only process once per interval
-    if (last_df_index != df_last.index.format()):
-        ts_text = str(df_last.index.format()[0])
-
+    if (last_df_index != current_df_index):
         precision = 2
         if cryptoMarket == 'XLM':
             precision = 4
@@ -442,9 +442,9 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
         if is_verbose == 0:
             if last_action != '':
-                output_text = ts_text + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' ' + counter_text + ' | Last Action: ' + last_action
+                output_text = current_df_index + ' | ' + market + ' | ' + str(granularity) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' ' + counter_text + ' | Last Action: ' + last_action
             else:
-                output_text = ts_text + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' ' + counter_text
+                output_text = current_df_index + ' | ' + market + ' | ' + str(granularity) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' ' + counter_text
 
             if last_action == 'BUY':
                 # calculate last buy minus fees
@@ -492,6 +492,8 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             txt = '        Timestamp : ' + str(df_last.index.format()[0])
             print('|', txt, (' ' * (75 - len(txt))), '|')
             print('--------------------------------------------------------------------------------')
+            txt = '            Price : ' + str(truncate(float(df_last['close'].values[0]), 2))
+            print('|', txt, (' ' * (75 - len(txt))), '|')
             txt = '            EMA12 : ' + str(truncate(float(df_last['ema12'].values[0]), 2))
             print('|', txt, (' ' * (75 - len(txt))), '|')
             txt = '            EMA26 : ' + str(truncate(float(df_last['ema26'].values[0]), 2))
@@ -581,8 +583,8 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             # if live
             if is_live == 1:
                 if is_verbose == 0:
-                    logging.info(ts_text + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | BUY')
-                    print ("\n", ts_text, '|', market, granularity, '|', price_text, '| BUY', "\n")                    
+                    logging.info(current_df_index + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | BUY')
+                    print ("\n", current_df_index, '|', market, granularity, '|', price_text, '| BUY', "\n")                    
                 else:
                     print('--------------------------------------------------------------------------------')
                     print('|                      *** Executing LIVE Buy Order ***                        |')
@@ -596,8 +598,8 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             # if not live
             else:
                 if is_verbose == 0:
-                    logging.info(ts_text + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | BUY')
-                    print ("\n", ts_text, '|', market, granularity, '|', price_text, '| BUY', "\n")                    
+                    logging.info(current_df_index + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | BUY')
+                    print ("\n", current_df_index, '|', market, granularity, '|', price_text, '| BUY', "\n")                    
                 else:
                     print('--------------------------------------------------------------------------------')
                     print('|                      *** Executing TEST Buy Order ***                        |')
@@ -620,8 +622,8 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             # if live
             if is_live == 1:
                 if is_verbose == 0:
-                    logging.info(ts_text + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | SELL')
-                    print ("\n", ts_text, '|', market, granularity, '|', price_text, '| SELL', "\n")                    
+                    logging.info(current_df_index + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | SELL')
+                    print ("\n", current_df_index, '|', market, granularity, '|', price_text, '| SELL', "\n")                    
                 else:
                     print('--------------------------------------------------------------------------------')
                     print('|                      *** Executing LIVE Sell Order ***                        |')
@@ -646,8 +648,8 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
                     buy_sell_margin_fees = str(truncate((((sell_price - last_buy_price_minus_fees) / sell_price) * 100), 2)) + '%'
 
-                    logging.info(ts_text + ' | ' + market + ' ' + str(granularity) + ' | SELL | ' + str(sell_price) + ' | BUY | ' + str(last_buy_price) + ' | DIFF | ' + str(buy_sell_diff) + ' | MARGIN NO FEES | ' + str(buy_sell_margin_no_fees) + ' | MARGIN FEES | ' + str(buy_sell_margin_fees))
-                    print ("\n", ts_text, '|', market, granularity, '| SELL |', str(sell_price), '| BUY |', str(last_buy_price), '| DIFF |', str(buy_sell_diff) , '| MARGIN NO FEES |', str(buy_sell_margin_no_fees), '| MARGIN FEES |', str(buy_sell_margin_fees), "\n")                    
+                    logging.info(current_df_index + ' | ' + market + ' ' + str(granularity) + ' | SELL | ' + str(sell_price) + ' | BUY | ' + str(last_buy_price) + ' | DIFF | ' + str(buy_sell_diff) + ' | MARGIN NO FEES | ' + str(buy_sell_margin_no_fees) + ' | MARGIN FEES | ' + str(buy_sell_margin_fees))
+                    print ("\n", current_df_index, '|', market, granularity, '| SELL |', str(sell_price), '| BUY |', str(last_buy_price), '| DIFF |', str(buy_sell_diff) , '| MARGIN NO FEES |', str(buy_sell_margin_no_fees), '| MARGIN FEES |', str(buy_sell_margin_fees), "\n")                    
                 
                     buy_sum = buy_sum + last_buy_price_minus_fees
                     sell_sum = sell_sum + sell_price
@@ -667,7 +669,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
         if action in ['BUY','SELL']:
             last_action = action
         
-        last_df_index = df_last.index.format()
+        last_df_index = str(df_last.index.format()[0])
 
         if iterations == 300:
             print ("\nSimulation Summary\n")
@@ -704,20 +706,22 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 s.enter(1, 1, executeJob, (sc, market, granularity, tradingData))
 
     else:
-        # poll every 5 minutes
-        s.enter(300, 1, executeJob, (sc, market, granularity))
+        # poll every 1 minute
+        s.enter(60, 1, executeJob, (sc, market, granularity))
 
 try:
     logging.basicConfig(filename='pycryptobot.log', format='%(asctime)s - %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filemode='a', level=logging.DEBUG)
 
     print('--------------------------------------------------------------------------------')
     print('|                Python Crypto Bot using the Coinbase Pro API                  |')
-    print('--------------------------------------------------------------------------------')   
-    txt = '           Market : ' + market
-    print('|', txt, (' ' * (75 - len(txt))), '|')
-    txt = '      Granularity : ' + str(granularity) + ' seconds'
-    print('|', txt, (' ' * (75 - len(txt))), '|')
     print('--------------------------------------------------------------------------------')
+
+    if is_verbose == 1:   
+        txt = '           Market : ' + market
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+        txt = '      Granularity : ' + str(granularity) + ' seconds'
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+        print('--------------------------------------------------------------------------------')
 
     if is_live == 1:
         txt = '         Bot Mode : LIVE - live trades using your funds!'
