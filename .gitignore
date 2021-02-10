@@ -133,3 +133,4 @@ config.json
 experiments/experiment*
 
 *.csv
+graphs/

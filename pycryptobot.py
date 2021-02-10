@@ -379,34 +379,34 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             logging.debug(log_text)
 
         ema_co_prefix = ''
-        ema_co_suffix = ''   
-        if ema12gtema26 == True:
+        ema_co_suffix = ''
+        if ema12gtema26co == True:
+            ema_co_prefix = '*^ '
+            ema_co_suffix = ' ^*'
+        elif ema12ltema26co == True:
+            ema_co_prefix = '*v '
+            ema_co_suffix = ' v*'   
+        elif ema12gtema26 == True:
             ema_co_prefix = '^ '
             ema_co_suffix = ' ^'
         elif ema12ltema26 == True:
             ema_co_prefix = 'v '
             ema_co_suffix = ' v'
-        elif ema12gtema26co == True:
-            ema_co_prefix = '*^ '
-            ema_co_suffix = ' ^*'
-        elif ema12ltema26co == True:
-            ema_co_prefix = '*v '
-            ema_co_suffix = ' v*'
 
         macd_co_prefix = ''
         macd_co_suffix = ''
-        if macdgtsignal == True:
-            macd_co_prefix = '^ '
-            macd_co_suffix = ' ^'
-        elif macdltsignal == True:
-            macd_co_prefix = 'v '
-            macd_co_suffix = ' v'
-        elif macdgtsignalco == True:
+        if macdgtsignalco == True:
             macd_co_prefix = '*^ '
             macd_co_suffix = ' ^*'
         elif macdltsignalco == True:
             macd_co_prefix = '*v '
             macd_co_suffix = ' v*'
+        elif macdgtsignal == True:
+            macd_co_prefix = '^ '
+            macd_co_suffix = ' ^'
+        elif macdltsignal == True:
+            macd_co_prefix = 'v '
+            macd_co_suffix = ' v'
 
         obv_prefix = ''
         obv_suffix = ''
@@ -540,10 +540,10 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 print('================================================================================')
 
         # increment x since buy
-        if (ema12gtema26co == True and macdgtsignal == True):
+        if (ema12gtema26 == True):
             x_since_buy = x_since_buy + 1
         # increment x since sell
-        elif (ema12ltema26co == True and macdltsignal == True):
+        elif (ema12ltema26 == True):
             x_since_sell = x_since_sell + 1
 
         # if a buy signal
