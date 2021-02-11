@@ -54,6 +54,15 @@ def compare(val1, val2, label='', precision=2):
         else:
             return label + ': ' + str(truncate(val1, precision)) + ' = ' + str(truncate(val2, precision))      
 
+cryptoMarket = 'BTC'
+fiatMarket = 'GBP'
+granularity = 3600
+save_graphs = 0
+is_live = 0
+is_verbose = 1
+is_sim = 0
+sim_speed = ''
+
 # reduce informational logging
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
@@ -72,30 +81,83 @@ parser.add_argument('--verbose', type=int, help='Optionally provide verbose stat
 # parse arguments
 args = parser.parse_args()
 
-"""Settings"""
+# preload config from config.json if it exists
+try:
+    # open the config.json file
+    with open('config.json') as config_file:
+        # store the configuration in dictionary
+        config = json.load(config_file)
 
-# do not change
-dev_mode = 0
+        if 'config' in config:
+            if 'cryptoMarket' and 'fiatMarket' in config['config']:
+                cryptoMarket = config['config']['cryptoMarket']
+                fiatMarket = config['config']['fiatMarket']
 
-if args.live == None:
-    # default live status
+            if 'granularity' in config['config']:
+                if isinstance(config['config']['granularity'], int):
+                    if config['config']['granularity'] in [60, 300, 900, 3600, 21600, 86400]:
+                        granularity = config['config']['granularity']
 
-    # 0 is test/demo, 1 is live
-    is_live = 0
-else:
-    # live status set via --live argument
+            if 'graphs' in config['config']:
+                if isinstance(config['config']['graphs'], int):
+                    if config['config']['graphs'] in [0, 1]:
+                        save_graphs = config['config']['graphs']
 
-    if args.live == 1:
-        is_live = 1
-    else:
-        is_live = 0
+            if 'live' in config['config']:
+                if isinstance(config['config']['live'], int):
+                    if config['config']['live'] in [0, 1]:
+                        is_live = config['config']['live']
 
-if args.graphs == None:
-    # default save graph option
+            if 'verbose' in config['config']:
+                if isinstance(config['config']['verbose'], int):
+                    if config['config']['verbose'] in [0, 1]:
+                        is_verbose = config['config']['verbose']
 
-    # 0 do not save, 1 save
-    save_graphs = 0
-else:
+            if 'sim' in config['config']:
+                if isinstance(config['config']['sim'], str):
+                    if config['config']['sim'] in ['slow', 'fast']:
+                        is_live = 0
+                        is_sim = 1
+                        sim_speed = config['config']['sim']
+
+except IOError:
+    print("warning: 'config.json' not found.")
+
+if args.market != None:
+    # market set via --market argument
+
+    # validates the market is syntactically correct
+    p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
+    if not p.match(args.market):
+        raise TypeError('Coinbase Pro market required.')
+
+    cryptoMarket, fiatMarket = args.market.split('-',  2)
+
+# validation of crypto market inputs
+if cryptoMarket not in ['BCH', 'BTC', 'ETH', 'LTC', 'XLM']:
+    raise Exception('Invalid crypto market: BCH, BTC, ETH, LTC, ETH, XLM')
+
+# validation of fiat market inputs
+if fiatMarket not in ['EUR', 'GBP', 'USD']:
+    raise Exception('Invalid FIAT market: EUR, GBP, USD')
+
+# reconstruct the market based on the crypto and fiat inputs
+market = cryptoMarket + '-' + fiatMarket
+
+if args.granularity != None:
+    # granularity set via --granularity argument
+
+    # validates granularity is an integer
+    if not isinstance(args.granularity, int):
+        raise TypeError('Granularity integer required.')
+
+    # validates the granularity is supported by Coinbase Pro
+    if not args.granularity in [60, 300, 900, 3600, 21600, 86400]:
+        raise TypeError('Granularity options: 60, 300, 900, 3600, 21600, 86400.')
+        
+    granularity = args.granularity
+
+if args.graphs != None:
     # graphs status set via --graphs argument
 
     if args.graphs == 1:
@@ -103,13 +165,23 @@ else:
     else:
         save_graphs = 0
 
-if args.sim == None:
-    # default simulation status
+if args.live != None:
+    # live status set via --live argument
 
-    # 0 is normal, 1 is simulation
-    is_sim = 0
-    sim_speed = ''
-else:
+    if args.live == 1:
+        is_live = 1
+    else:
+        is_live = 0
+
+if args.verbose != None:
+    # verbose status set via --verbose argument
+
+    if args.verbose == 1:
+        is_verbose = 1
+    else:
+        is_verbose = 0
+
+if args.sim != None:
     # sim status set via --sim argument
 
     if args.sim == 'fast':
@@ -123,77 +195,6 @@ else:
     else:
         is_sim = 0
         sim_speed = ''
-
-if args.market == None:
-    # default market
-
-    # the crypto market you wish you trade
-    cryptoMarket = 'BTC'
-
-    # the source of funds for your trading
-    fiatMarket = 'GBP'
-else:
-    # market set via --market argument
-
-    # validates the market is syntactically correct
-    p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-    if not p.match(args.market):
-        raise TypeError('Coinbase Pro market required.')
-
-    cryptoMarket, fiatMarket = args.market.split('-',2)
-
-if args.granularity == None:
-    # default granularity
-
-    # supported granularity (recommended 3600 for 1 hour interval for day trading)
-    granularity = 3600  # 1 hour
-else:
-    # granularity set via --granularity argument
-
-    # validates granularity is an integer
-    if not isinstance(args.granularity, int):
-        raise TypeError('Granularity integer required.')
-
-    # validates the granularity is supported by Coinbase Pro
-    if not args.granularity in [60, 300, 900, 3600, 21600, 86400]:
-        raise TypeError('Granularity options: 60, 300, 900, 3600, 21600, 86400.')
-        
-    granularity = args.granularity
-
-if args.verbose == None:
-    # default verbose status
-
-    # 0 is minimal, 1 is verbose
-    is_verbose = 0
-else:
-    # verbose status set via --verbose argument
-
-    if args.verbose == 1:
-        is_verbose = 1
-    else:
-        is_verbose = 0
-
-if dev_mode == 1:
-    cryptoMarket = 'BTC'
-    fiatMarket = 'GBP'
-    granularity = 3600
-    is_live = 0
-    is_sim = 1
-    sim_speed = 'fast'
-    is_verbose = 0
-
-"""Highly advisable not to change any code below this point!"""
-
-# validation of crypto market inputs
-if cryptoMarket not in ['BCH', 'BTC', 'ETH', 'LTC', 'XLM']:
-    raise Exception('Invalid crypto market: BCH, BTC, ETH, LTC, ETH, XLM')
-
-# validation of fiat market inputs
-if fiatMarket not in ['EUR', 'GBP', 'USD']:
-    raise Exception('Invalid FIAT market: EUR, GBP, USD')
-
-# reconstruct the market based on the crypto and fiat inputs
-market = cryptoMarket + '-' + fiatMarket
 
 # initial state is to wait
 action = 'WAIT'
