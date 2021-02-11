@@ -304,7 +304,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     two_black_gapping = bool(df_last['two_black_gapping'].values[0])
 
     # criteria for a buy signal
-    if ((ema12gtema26co == True and macdgtsignal == True and macdgtsignal > 0.1) or (ema12gtema26 == True and macdgtsignal == True and x_since_buy > 0 and x_since_buy <= 2)) and last_action != 'BUY':
+    if ((ema12gtema26co == True and macdgtsignal == True and obv_pc > 0.1) or (ema12gtema26 == True and macdgtsignal == True and x_since_buy > 0 and x_since_buy <= 2)) and last_action != 'BUY':
         action = 'BUY'
     # criteria for a sell signal
     elif ((ema12ltema26co == True and macdltsignal == True) or (ema12ltema26 == True and macdltsignal == True and x_since_sell > 0 and x_since_sell <= 2)) and last_action not in ['','SELL']:
