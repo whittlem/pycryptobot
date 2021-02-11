@@ -63,7 +63,7 @@ is_verbose = 1
 is_sim = 0
 sim_speed = ''
 sell_upper_pcnt = 100
-sell_lower_pcnt = 100
+sell_lower_pcnt = -100
 
 # reduce informational logging
 logging.getLogger("requests").setLevel(logging.WARNING)
