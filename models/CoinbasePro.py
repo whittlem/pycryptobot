@@ -94,6 +94,9 @@ class AuthAPI():
         # GET /accounts
         df = self.authAPI('GET', 'accounts')
         
+        if len(df) == 0:
+            return pd.DataFrame()
+
         # exclude accounts with a nil balance
         df = df[df.balance != '0.0000000000000000']
 
