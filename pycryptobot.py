@@ -783,6 +783,12 @@ try:
     txt = '      Bot Started : ' + str(datetime.now())
     print('|', txt, (' ' * (75 - len(txt))), '|')
     print('================================================================================')
+    if sell_lower_pcnt != 100 and sell_upper_pcnt != 100:
+        txt = '       Sell Upper : ' + str(sell_upper_pcnt) + '%'
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+        txt = '       Sell Lower : ' + str(sell_lower_pcnt) + '%'
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+        print('================================================================================')
 
     # if live
     if is_live == 1:
