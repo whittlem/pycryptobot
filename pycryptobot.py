@@ -62,6 +62,8 @@ is_live = 0
 is_verbose = 1
 is_sim = 0
 sim_speed = ''
+sell_upper_pcnt = 100
+sell_lower_pcnt = 100
 
 # reduce informational logging
 logging.getLogger("requests").setLevel(logging.WARNING)
@@ -77,6 +79,8 @@ parser.add_argument('--market', type=str, help='Optionally provide market via ar
 parser.add_argument('--graphs', type=int, help='Optionally save graphs to graphs directory')
 parser.add_argument('--sim', type=str, help='Optionally provide simulation status via arguments ("fast", "slow")')
 parser.add_argument('--verbose', type=int, help='Optionally provide verbose status via arguments')
+parser.add_argument('--sellupperpcnt', type=int, help='Optionally provide upper sell percent')
+parser.add_argument('--selllowerpcnt', type=int, help='Optionally provide lower sell percent')
 
 # parse arguments
 args = parser.parse_args()
@@ -119,6 +123,16 @@ try:
                         is_live = 0
                         is_sim = 1
                         sim_speed = config['config']['sim']
+
+            if 'sellupperpcnt' in config['config']:
+                if isinstance(config['config']['sellupperpcnt'], int):
+                    if config['config']['sellupperpcnt'] > 0 and config['config']['sellupperpcnt'] <= 100:
+                        sell_upper_pcnt = int(config['config']['sellupperpcnt'])
+
+            if 'selllowerpcnt' in config['config']:
+                if isinstance(config['config']['selllowerpcnt'], int):
+                    if config['config']['selllowerpcnt'] >= -100 and config['config']['selllowerpcnt'] < 0:
+                        sell_lower_pcnt = int(config['config']['selllowerpcnt'])
 
 except IOError:
     print("warning: 'config.json' not found.")
@@ -196,11 +210,26 @@ if args.sim != None:
         is_sim = 0
         sim_speed = ''
 
+if args.sellupperpcnt != None:
+    # sell upper percent --sellupperlimit pcnt
+
+    if isinstance(args.sellupperpcnt, int):
+        if args.sellupperpcnt > 0 and args.sellupperpcnt <= 100:
+            sell_upper_pcnt = int(args.sellupperpcnt)
+
+if args.selllowerpcnt != None:
+    # sell lower percent --selllowerlimit pcnt
+
+    if isinstance(args.selllowerpcnt, int):
+        if args.selllowerpcnt >= -100 and args.selllowerpcnt < 0:
+            sell_lower_pcnt = int(args.selllowerpcnt)
+
 # initial state is to wait
 action = 'WAIT'
 last_action = ''
 last_buy = 0
 last_df_index = ''
+buy_state = ''
 iterations = 0
 x_since_buy = 0
 x_since_sell = 0
@@ -245,7 +274,7 @@ if is_live == 1:
 
 def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     """Trading bot job which runs at a scheduled interval"""
-    global action, buy_count, buy_sum, failsafe, iterations, last_action, last_buy, last_df_index, sell_count, sell_sum, x_since_buy, x_since_sell
+    global action, buy_count, buy_sum, failsafe, iterations, last_action, last_buy, last_df_index, sell_count, sell_sum, buy_state, x_since_buy, x_since_sell
 
     # increment iterations
     iterations = iterations + 1
@@ -313,15 +342,23 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     # anything other than a buy or sell, just wait
     else:
         action = 'WAIT'
-
-    # loss failsafe sell < -5%
+    
     if last_buy > 0 and last_action == 'BUY':
         change_pcnt = ((price / last_buy) - 1) * 100
-        if (change_pcnt < -5):
+
+        # loss failsafe sell at sell_lower_pcnt
+        if (change_pcnt < sell_lower_pcnt):
             action = 'SELL'
-            x_since_buy = 0
             failsafe = True
-            log_text = '! Loss Failsafe Triggered (< -5%)'
+            log_text = '! Loss Failsafe Triggered (< ' + str(sell_lower_pcnt) + '%)'
+            print (log_text, "\n")
+            logging.warning(log_text)
+
+        # profit bank at sell_upper_pcnt
+        if (change_pcnt > sell_upper_pcnt):
+            action = 'SELL'
+            failsafe = True
+            log_text = '! Profit Bank Triggered (> ' + str(sell_upper_pcnt) + '%)'
             print (log_text, "\n")
             logging.warning(log_text)
 
@@ -567,10 +604,22 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
         # increment x since buy
         if (ema12gtema26 == True and failsafe == False):
-            x_since_buy = x_since_buy + 1
+            if buy_state == '':
+                buy_state = 'NO_BUY'
+
+            if buy_state != 'NO_BUY' or buy_state == 'NORMAL':
+                x_since_buy = x_since_buy + 1
+
+            # TODO: remove when confirmed working as expected
+            logging.debug('buy_state (buy): ' + buy_state + ' ' + str(x_since_sell))
+
         # increment x since sell
         elif (ema12ltema26 == True):
             x_since_sell = x_since_sell + 1
+            buy_state = 'NORMAL'
+
+            # TODO: remove when confirmed working as expected
+            logging.debug('buy_state (sell): ' + buy_state + ' ' + str(x_since_buy))
 
         # if a buy signal
         if action == 'BUY':
