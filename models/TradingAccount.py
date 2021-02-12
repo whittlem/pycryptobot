@@ -1,5 +1,6 @@
 """Coinbase Pro trading account, simulated or live depending on if the config file is provided"""
 
+import numpy as np
 import pandas as pd
 import json, math, re, requests
 from datetime import datetime
@@ -50,8 +51,7 @@ class TradingAccount():
                 raise TypeError('Coinbase Pro API passphrase is invalid')
 
             # if a config file is provided the trading account will be using live data!
-            print(
-                'Trading account mode: live (using YOUR account data - use at own risk!)')
+            #print('Trading account mode: live (using YOUR account data - use at own risk!)')
             self.mode = 'live'
 
             self.api_url = config['api_url']
@@ -60,7 +60,7 @@ class TradingAccount():
             self.api_pass = config['api_pass']
         else:
             # if a config file is not provided the trading account will be using dummy data!
-            print('Trading account mode: test (using dummy data)')
+            #print('Trading account mode: test (using dummy data)')
             self.mode = 'test'
 
         # if trading account is for testing it will be instantiated with a balance of 1000
@@ -170,6 +170,89 @@ class TradingAccount():
                         return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2)
                     else:
                         return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4)
+
+    def saveTrackerCSV(self, market='', save_file='tracker.csv'):
+        """Saves order tracker to CSV
+
+        Parameters
+        ----------
+        market : str, optional
+            Filters orders by market
+        save_file : str
+            Output CSV file
+        """
+
+        if market != '':
+            # validate market is syntactically correct
+            p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
+            if not p.match(market):
+                raise TypeError('Coinbase Pro market is invalid.')
+
+        if self.mode == 'live':
+            # if config is provided and live connect to Coinbase Pro account portfolio
+            model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+            # retrieve orders from live Coinbase Pro account portfolio
+            df = model.getOrders(market, '', 'done')
+        else:
+            # return dummy orders
+            if market == '':
+                df = self.orders
+            else:
+                df = self.orders[self.orders['market'] == market]
+
+        df_tracker = pd.DataFrame()
+
+        last_action = ''
+        for market in df['market'].sort_values().unique():
+            df_market = df[df['market'] == market]
+
+            df_buy = pd.DataFrame()
+            df_sell = pd.DataFrame()
+
+            pair = 0
+            # pylint: disable=unused-variable
+            for index, row in df_market.iterrows():
+                if row['action'] == 'buy':
+                    pair = 1
+
+                if pair == 1 and (row['action'] != last_action):
+                    if row['action'] == 'buy':
+                        df_buy = row
+                    elif row['action'] == 'sell':
+                        df_sell = row
+                            
+                if row['action'] == 'sell' and len(df_buy) != 0:
+                    df_pair = pd.DataFrame([
+                        [
+                            df_sell['status'], 
+                            df_buy['market'], 
+                            df_buy['created_at'], 
+                            df_buy['type'], 
+                            df_buy['size'],
+                            df_buy['value'], 
+                            df_buy['price'],
+                            df_sell['created_at'],
+                            df_sell['type'], 
+                            df_sell['size'], 
+                            df_sell['value'], 
+                            df_sell['price']                    
+                        ]], columns=[ 'status', 'market', 
+                            'buy_at', 'buy_type', 'buy_size', 'buy_value', 'buy_price',
+                            'sell_at', 'sell_type', 'sell_size', 'sell_value', 'sell_price' 
+                        ])
+                    df_tracker = df_tracker.append(df_pair, ignore_index=True)
+                    pair = 0
+                
+                last_action = row['action']
+
+        df_tracker['profit'] = np.subtract(df_tracker['sell_value'], df_tracker['buy_value'])
+        df_tracker['margin'] = np.multiply(np.true_divide(df_tracker['profit'], df_tracker['sell_value']), 100)
+        df_sincebot = df_tracker[df_tracker['buy_at'] > '2021-02-1']
+
+        try:
+            df_sincebot.to_csv(save_file, index=False)
+        except OSError:
+            raise SystemExit('Unable to save: ', save_file) 
 
     def buy(self, cryptoMarket, fiatMarket, fiatAmount, manualPrice=0.00000000):
         """Places a buy order either live or simulation
