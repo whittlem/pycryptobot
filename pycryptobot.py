@@ -610,16 +610,11 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             if buy_state != 'NO_BUY' or buy_state == 'NORMAL':
                 x_since_buy = x_since_buy + 1
 
-            # TODO: remove when confirmed working as expected
-            logging.debug('buy_state (buy): ' + buy_state + ' ' + str(x_since_sell))
-
         # increment x since sell
         elif (ema12ltema26 == True):
             x_since_sell = x_since_sell + 1
             buy_state = 'NORMAL'
-
-            # TODO: remove when confirmed working as expected
-            logging.debug('buy_state (sell): ' + buy_state + ' ' + str(x_since_buy))
+            failsafe = False
 
         # if a buy signal
         if action == 'BUY':
