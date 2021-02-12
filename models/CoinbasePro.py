@@ -230,18 +230,52 @@ class AuthAPI():
         model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
         return model.authAPI('POST', 'orders', order)
 
+    def limitSell(self, market='', cryptoAmount=0, futurePrice=0):
+        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
+        if not p.match(market):
+            raise ValueError('Coinbase Pro market is invalid.')
+
+        if not isinstance(cryptoAmount, int) and not isinstance(cryptoAmount, float):
+            raise TypeError('The crypto amount is not numeric.')
+
+        if not isinstance(cryptoAmount, int) and not isinstance(cryptoAmount, float):
+            raise TypeError('The future crypto price is not numeric.')
+
+        order = {
+            'product_id': market,
+            'type': 'limit',
+            'side': 'sell',
+            'size': cryptoAmount,
+            'price': futurePrice
+        }
+
+        print (order)
+
+        model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+        return model.authAPI('POST', 'orders', order)
+
+    def cancelOrders(self, market=''):
+        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
+        if not p.match(market):
+            raise ValueError('Coinbase Pro market is invalid.')
+
+        model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+        return model.authAPI('DELETE', 'orders')
+
     def authAPI(self, method, uri, payload=''):
         if not isinstance(method, str):
             raise TypeError('Method is not a string.')
 
-        if not method in ['GET','POST']:
-             raise TypeError('Method not GET or POST.') 
+        if not method in ['DELETE','GET','POST']:
+             raise TypeError('Method not DELETE, GET or POST.') 
 
         if not isinstance(uri, str):
             raise TypeError('Method is not a string.')
 
         try:
-            if method == 'GET':
+            if method == 'DELETE':
+                resp = requests.delete(self.api_url + uri, auth=self)
+            elif method == 'GET':
                 resp = requests.get(self.api_url + uri, auth=self)
             elif method == 'POST':
                 resp = requests.post(self.api_url + uri, json=payload, auth=self)
