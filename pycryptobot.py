@@ -265,7 +265,7 @@ if is_live == 1:
         last_action = 'SELL'
 
     authAPI = AuthAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])    
-    orders = authAPI.getOrders(market)
+    orders = authAPI.getOrders(market, '', 'done')
     if len(orders) > 0:
         df = orders[-1:]
         price = df[df.action == 'buy']['price']
