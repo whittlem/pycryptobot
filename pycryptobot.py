@@ -737,9 +737,8 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
     # if live
     if is_live == 1:
-        # save csv with orders for market that are 'done'
-        orders = account.getOrders(market, '', 'done')
-        orders.to_csv('orders.csv', index=False)
+        # update order tracker csv
+        account.saveTrackerCSV()
 
     if is_sim == 1:
         if iterations < 300:
