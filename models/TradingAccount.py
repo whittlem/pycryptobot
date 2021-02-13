@@ -200,6 +200,10 @@ class TradingAccount():
             else:
                 df = self.orders[self.orders['market'] == market]
 
+        if list(df.keys()) != [ 'created_at', 'market', 'action', 'type', 'size', 'value', 'status', 'price' ]:
+            # no data, return early
+            return False
+
         df_tracker = pd.DataFrame()
 
         last_action = ''
