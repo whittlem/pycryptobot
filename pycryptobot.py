@@ -62,8 +62,8 @@ is_live = 0
 is_verbose = 1
 is_sim = 0
 sim_speed = ''
-sell_upper_pcnt = 100
-sell_lower_pcnt = -100
+sell_upper_pcnt = 101
+sell_lower_pcnt = -101
 
 # reduce informational logging
 logging.getLogger("requests").setLevel(logging.WARNING)
@@ -348,16 +348,18 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
         # loss failsafe sell at sell_lower_pcnt
         if (change_pcnt < sell_lower_pcnt):
-            action = 'SELL'
             failsafe = True
+            action = 'SELL'
+            last_action = 'BUY'
             log_text = '! Loss Failsafe Triggered (< ' + str(sell_lower_pcnt) + '%)'
             print (log_text, "\n")
             logging.warning(log_text)
 
         # profit bank at sell_upper_pcnt
         if (change_pcnt > sell_upper_pcnt):
-            action = 'SELL'
             failsafe = True
+            action = 'SELL'
+            last_action = 'BUY'
             log_text = '! Profit Bank Triggered (> ' + str(sell_upper_pcnt) + '%)'
             print (log_text, "\n")
             logging.warning(log_text)
@@ -777,11 +779,15 @@ try:
     txt = '      Bot Started : ' + str(datetime.now())
     print('|', txt, (' ' * (75 - len(txt))), '|')
     print('================================================================================')
-    if sell_lower_pcnt != 100 and sell_upper_pcnt != 100:
+    if sell_upper_pcnt != 101:
         txt = '       Sell Upper : ' + str(sell_upper_pcnt) + '%'
         print('|', txt, (' ' * (75 - len(txt))), '|')
+    
+    if sell_lower_pcnt != -101:
         txt = '       Sell Lower : ' + str(sell_lower_pcnt) + '%'
         print('|', txt, (' ' * (75 - len(txt))), '|')
+
+    if sell_upper_pcnt != 101 or sell_lower_pcnt != 101:
         print('================================================================================')
 
     # if live
