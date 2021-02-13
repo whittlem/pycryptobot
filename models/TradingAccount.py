@@ -249,6 +249,12 @@ class TradingAccount():
                 
                 last_action = row['action']
 
+        if list(df_tracker.keys()) != [ 'status', 'market', 
+                            'buy_at', 'buy_type', 'buy_size', 'buy_value', 'buy_price',
+                            'sell_at', 'sell_type', 'sell_size', 'sell_value', 'sell_price' ]:
+            # no data, return early
+            return False
+
         df_tracker['profit'] = np.subtract(df_tracker['sell_value'], df_tracker['buy_value'])
         df_tracker['margin'] = np.multiply(np.true_divide(df_tracker['profit'], df_tracker['sell_value']), 100)
         df_sincebot = df_tracker[df_tracker['buy_at'] > '2021-02-1']
