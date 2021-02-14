@@ -48,7 +48,9 @@ class TechnicalAnalysis():
         self.addSMA(200)
         self.addEMA(12)
         self.addEMA(26)
-        
+        self.addGoldenCross()
+        self.addDeathCross()
+
         self.addRSI(14)
         self.addMACD()
         self.addOBV()
@@ -427,7 +429,29 @@ class TechnicalAnalysis():
         if len(self.df) < period:
             raise Exception('Data range too small.')
 
-        self.df['sma' + str(period)] = self.simpleMovingAverage(period)   
+        self.df['sma' + str(period)] = self.simpleMovingAverage(period)
+
+    def addGoldenCross(self):
+        """Add Golden Cross SMA50 over SMA200"""
+
+        if 'sma50' not in self.df:
+            self.addSMA(50)
+
+        if 'sma200' not in self.df:
+            self.addSMA(200)
+
+        self.df['goldencross'] = self.df['sma50'] > self.df['sma200']
+
+    def addDeathCross(self):
+        """Add Death Cross SMA50 over SMA200"""
+
+        if 'sma50' not in self.df:
+            self.addSMA(50)
+
+        if 'sma200' not in self.df:
+            self.addSMA(200)
+
+        self.df['deathcross'] = self.df['sma50'] < self.df['sma200']
 
     def supportResistanceLevels(self):
         """Calculate the Support and Resistance Levels"""
