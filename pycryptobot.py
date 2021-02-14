@@ -198,14 +198,23 @@ if args.verbose != None:
 if args.sim != None:
     # sim status set via --sim argument
 
-    if args.sim == 'fast':
-        is_sim = 1
-        sim_speed = 'fast'
-        is_live = 0
-    elif args.sim == 'slow':
+    if args.sim == 'slow':
         is_sim = 1
         sim_speed = 'slow'
         is_live = 0
+    elif args.sim == 'slow-sample':
+        is_sim = 1
+        sim_speed = 'slow-sample'
+        is_live = 0
+    elif args.sim == 'fast':
+        is_sim = 1
+        sim_speed = 'fast'
+        is_live = 0
+    elif args.sim == 'fast-sample':
+        is_sim = 1
+        sim_speed = 'fast-sample'
+        is_live = 0
+
     else:
         is_sim = 0
         sim_speed = ''
