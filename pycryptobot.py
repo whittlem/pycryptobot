@@ -493,15 +493,15 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
         goldendeathtext = ''
         if goldencross == True:
-            goldendeathtext = '(BULL)'
+            goldendeathtext = ' (BULL)'
         elif deathcross == False:
-            goldendeathtext = '(BEAR)'
+            goldendeathtext = ' (BEAR)'
 
         if is_verbose == 0:
             if last_action != '':
-                output_text = current_df_index + ' | ' + market + ' | ' + str(granularity) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' ' + counter_text + ' | Last Action: ' + last_action + ' ' + goldendeathtext
+                output_text = current_df_index + ' | ' + market + goldendeathtext + ' | ' + str(granularity) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' ' + counter_text + ' | Last Action: ' + last_action
             else:
-                output_text = current_df_index + ' | ' + market + ' | ' + str(granularity) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' ' + counter_text + ' ' + goldendeathtext
+                output_text = current_df_index + ' | ' + market + goldendeathtext + ' | ' + str(granularity) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' ' + counter_text
 
             if last_action == 'BUY':
                 # calculate last buy minus fees
@@ -514,7 +514,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             logging.debug(output_text)
             print (output_text)
         else:
-            logging.debug('-- Iteration: ' + str(iterations) + ' -- ' + goldendeathtext)
+            logging.debug('-- Iteration: ' + str(iterations) + ' --' + goldendeathtext)
             logging.debug('-- Since Last Buy: ' + str(x_since_buy) + ' --')
             logging.debug('-- Since Last Sell: ' + str(x_since_sell) + ' --')
 
@@ -540,7 +540,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             # informational output on the most recent entry  
             print('')
             print('================================================================================')
-            txt = '        Iteration : ' + str(iterations) + ' ' + goldendeathtext
+            txt = '        Iteration : ' + str(iterations) + goldendeathtext
             print('|', txt, (' ' * (75 - len(txt))), '|')
             txt = '   Since Last Buy : ' + str(x_since_buy)
             print('|', txt, (' ' * (75 - len(txt))), '|')
