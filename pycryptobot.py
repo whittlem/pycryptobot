@@ -27,8 +27,8 @@ That way if anything goes wrong only what is within this portfolio is at risk!
 
 import pandas as pd
 import numpy as np
-from datetime import datetime
-import argparse, json, logging, math, os, re, sched, sys, time
+from datetime import datetime, timedelta
+import argparse, json, logging, math, os, random, re, sched, sys, time
 from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
 from models.CoinbasePro import AuthAPI, PublicAPI
@@ -119,7 +119,7 @@ try:
 
             if 'sim' in config['config']:
                 if isinstance(config['config']['sim'], str):
-                    if config['config']['sim'] in ['slow', 'fast']:
+                    if config['config']['sim'] in ['slow', 'fast', 'slow-sample', 'fast-sample']:
                         is_live = 0
                         is_sim = 1
                         sim_speed = config['config']['sim']
@@ -744,7 +744,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
     if is_sim == 1:
         if iterations < 300:
-            if sim_speed == 'fast':
+            if sim_speed in [ 'fast', 'fast-sample' ]:
                 # fast processing
                 executeJob(sc, market, granularity, tradingData)
             else:
@@ -803,7 +803,30 @@ try:
     # run the first job immediately after starting
     if is_sim == 1:
         api = PublicAPI()
-        tradingData = api.getHistoricalData(market, granularity)
+
+        if sim_speed in [ 'fast-sample', 'slow-sample' ]:
+            tradingData = pd.DataFrame()
+
+            attempts = 0
+            while len(tradingData) != 300 and attempts < 10:
+                endDate = datetime.now() - timedelta(hours=random.randint(0,8760 * 3)) # 3 years in hours
+                startDate = endDate - timedelta(hours=300)
+                tradingData = api.getHistoricalData(market, granularity, startDate.isoformat(), endDate.isoformat())
+                attempts += 1
+
+            if len(tradingData) != 300:
+                raise Exception('Unable to retrieve 300 random sets of data between ' + str(startDate) + ' and ' + str(endDate) + ' in ' + str(attempts) + ' attempts.')
+
+            startDate = str(startDate.isoformat())
+            endDate = str(endDate.isoformat())
+            txt = '   Sampling start : ' + str(startDate)
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+            txt = '     Sampling end : ' + str(endDate)
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+            print('================================================================================')
+        else:
+            tradingData = api.getHistoricalData(market, granularity)
+
         executeJob(s, market, granularity, tradingData)
     else: 
         executeJob(s, market, granularity)
