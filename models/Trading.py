@@ -14,14 +14,14 @@ class TechnicalAnalysis():
         Parameters
         ----------
         data : Pandas Time Series
-            data[ts] = ['low', 'high', 'open', 'close', 'volume']
+            data[ts] = [ 'date', 'market', 'granularity', 'low', 'high', 'open', 'close', 'volume' ]
         """
 
         if not isinstance(data, pd.DataFrame):
             raise TypeError('Data is not a Pandas dataframe.')
 
-        if list(data.keys()) != ['low', 'high', 'open', 'close', 'volume', 'market', 'granularity']:
-            raise ValueError('Data not not contain low, high, open, close, volume, market, granularity')
+        if list(data.keys()) != [ 'date', 'market', 'granularity', 'low', 'high', 'open', 'close', 'volume' ]:
+            raise ValueError('Data not not contain date, market, granularity, low, high, open, close, volume')
 
         if not 'close' in data.columns:
             raise AttributeError("Pandas DataFrame 'close' column required.")
