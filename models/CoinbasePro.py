@@ -141,7 +141,7 @@ class AuthAPI():
         # GET /orders?status
         resp = self.authAPI('GET', 'orders?status=' + status)
         if len(resp) > 0:
-            df = resp.copy()[['created_at','product_id','side','type','filled_size','executed_value','status']]
+            df = resp.copy()[[ 'created_at', 'product_id', 'side', 'type', 'filled_size', 'executed_value', 'status' ]]
         else:
             return pd.DataFrame()
 
@@ -149,7 +149,7 @@ class AuthAPI():
         df['price'] = df.apply(lambda row: (float(row.executed_value) * 100) / (float(row.filled_size) * 100), axis=1)
 
         # rename the columns
-        df.columns = ['created_at', 'market', 'action', 'type', 'size', 'value', 'status','price']
+        df.columns = [ 'created_at', 'market', 'action', 'type', 'size', 'value', 'status', 'price' ]
         
         # convert dataframe to a time series
         tsidx = pd.DatetimeIndex(pd.to_datetime(df['created_at']).dt.strftime('%Y-%m-%dT%H:%M:%S.%Z'))
@@ -391,7 +391,7 @@ class PublicAPI():
         resp = self.authAPI('GET','products/' + market + '/candles?granularity=' + str(granularity) + '&start=' + iso8601start + '&end=' + iso8601end)
         
         # convert the API response into a Pandas DataFrame
-        df = pd.DataFrame(resp, columns=['epoch', 'low', 'high', 'open', 'close', 'volume'])
+        df = pd.DataFrame(resp, columns=[ 'epoch', 'low', 'high', 'open', 'close', 'volume' ])
         # reverse the order of the response with earliest last
         df = df.iloc[::-1].reset_index()
 
@@ -414,14 +414,19 @@ class PublicAPI():
             df.set_index(tsidx, inplace=True)
             df = df.drop(columns=['epoch','index'])
             df.index.names = ['ts']
+            df['date'] = tsidx
         except ValueError:
             tsidx = pd.DatetimeIndex(pd.to_datetime(df['epoch'], unit='s'), dtype='datetime64[ns]')
             df.set_index(tsidx, inplace=True)
             df = df.drop(columns=['epoch','index'])
             df.index.names = ['ts']           
-
+            df['date'] = tsidx
+        
         df['market'] = market
         df['granularity'] = granularity
+
+        # re-order columns
+        df = df[[ 'date', 'market', 'granularity', 'low', 'high', 'open', 'close', 'volume' ]]
 
         return df
 
