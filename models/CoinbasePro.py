@@ -430,6 +430,18 @@ class PublicAPI():
 
         return df
 
+    def getTicker(self, market='BTC-GBP'):
+       # validates the market is syntactically correct
+        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
+        if not p.match(market):
+            raise TypeError('Coinbase Pro market required.')
+
+        resp = self.authAPI('GET','products/' + market + '/ticker')
+        if 'price' in resp:
+            return float(resp['price'])
+
+        return 0.0
+
     def authAPI(self, method, uri, payload=''):
         if not isinstance(method, str):
             raise TypeError('Method is not a string.')
