@@ -288,9 +288,11 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     # increment iterations
     iterations = iterations + 1
 
+    # coinbase pro public api
+    api = PublicAPI()
+
     if is_sim == 0:
         # retrieve the market data
-        api = PublicAPI()
         tradingData = api.getHistoricalData(market, granularity)
 
     # analyse the market data
@@ -314,7 +316,13 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
  
     current_df_index = str(df_last.index.format()[0])
 
-    price = float(df_last['close'].values[0])
+    if is_sim == 0:
+        price = api.getTicker(market)
+        if price < df_last['low'].values[0] or price == 0:
+            price = float(df_last['close'].values[0])
+    else:
+        price = float(df_last['close'].values[0])
+
     ema12gtema26 = bool(df_last['ema12gtema26'].values[0])
     ema12gtema26co = bool(df_last['ema12gtema26co'].values[0])
     goldencross = bool(df_last['goldencross'].values[0])
@@ -344,7 +352,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     two_black_gapping = bool(df_last['two_black_gapping'].values[0])
 
     # criteria for a buy signal
-    if ((ema12gtema26co == True and macdgtsignal == True and obv_pc > 0.1) or (ema12gtema26 == True and macdgtsignal == True and x_since_buy > 0 and x_since_buy <= 2)) and last_action != 'BUY':
+    if ((ema12gtema26co == True and macdgtsignal == True and obv_pc > 1) or (ema12gtema26 == True and macdgtsignal == True and obv_pc > 1 and x_since_buy > 0 and x_since_buy <= 2)) and last_action != 'BUY':
         action = 'BUY'
     # criteria for a sell signal
     elif ((ema12ltema26co == True and macdltsignal == True) or (ema12ltema26 == True and macdltsignal == True and x_since_sell > 0 and x_since_sell <= 2)) and last_action not in ['','SELL']:
@@ -375,13 +383,19 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             print (log_text, "\n")
             logging.warning(log_text)
 
-    # polling is every 5 minutes (even for hourly intervals), but only process once per interval
+    goldendeathtext = ''
+    if goldencross == True:
+        goldendeathtext = ' (BULL)'
+    elif deathcross == False:
+        goldendeathtext = ' (BEAR)'
+
+    # polling is every 1 minutes (even for hourly intervals), but only process once per interval
     if (last_df_index != current_df_index):
         precision = 2
         if cryptoMarket == 'XLM':
             precision = 4
 
-        price_text = 'Price: ' + str(truncate(float(df_last['close'].values[0]), precision))
+        price_text = 'Close: ' + str(truncate(price, precision))
         ema_text = compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26', precision)
         macd_text = compare(df_last['macd'].values[0], df_last['signal'].values[0], 'MACD', precision)
         obv_text = compare(df_last['obv_pc'].values[0], 0.1, 'OBV %', precision)
@@ -491,12 +505,6 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             obv_prefix = 'v '
             obv_suffix = ' v'
 
-        goldendeathtext = ''
-        if goldencross == True:
-            goldendeathtext = ' (BULL)'
-        elif deathcross == False:
-            goldendeathtext = ' (BEAR)'
-
         if is_verbose == 0:
             if last_action != '':
                 output_text = current_df_index + ' | ' + market + goldendeathtext + ' | ' + str(granularity) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' ' + counter_text + ' | Last Action: ' + last_action
@@ -522,7 +530,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 margin = str(truncate((((price - last_buy) / price) * 100), 2)) + '%'
                 logging.debug('-- Margin: ' + margin + '% --')            
             
-            logging.debug('price: ' + str(truncate(float(df_last['close'].values[0]), 2)))
+            logging.debug('price: ' + str(truncate(price, 2)))
             logging.debug('ema12: ' + str(truncate(float(df_last['ema12'].values[0]), 2)))
             logging.debug('ema26: ' + str(truncate(float(df_last['ema26'].values[0]), 2)))
             logging.debug('ema12gtema26co: ' + str(ema12gtema26co))
@@ -549,7 +557,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             txt = '        Timestamp : ' + str(df_last.index.format()[0])
             print('|', txt, (' ' * (75 - len(txt))), '|')
             print('--------------------------------------------------------------------------------')
-            txt = '            Price : ' + str(truncate(float(df_last['close'].values[0]), 2))
+            txt = '            Close : ' + str(truncate(price, 2))
             print('|', txt, (' ' * (75 - len(txt))), '|')
             txt = '            EMA12 : ' + str(truncate(float(df_last['ema12'].values[0]), 2))
             print('|', txt, (' ' * (75 - len(txt))), '|')
@@ -701,7 +709,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             # if not live
             else:
                 if is_verbose == 0:
-                    sell_price = float(str(truncate(float(df_last['close'].values[0]), precision)))
+                    sell_price = float(str(truncate(price, precision)))
                     last_buy_price = float(str(truncate(float(last_buy), precision)))
                     buy_sell_diff = round(np.subtract(sell_price, last_buy_price), precision)
                     buy_sell_margin_no_fees = str(truncate((((sell_price - last_buy_price) / sell_price) * 100), 2)) + '%'
@@ -743,7 +751,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 fee = last_buy * 0.005
                 last_buy_minus_fees = last_buy + fee
 
-                buy_sum = buy_sum + (float(truncate(float(df_last['close'].values[0]), precision)) - last_buy_minus_fees)
+                buy_sum = buy_sum + (float(truncate(price, precision)) - last_buy_minus_fees)
 
             print ('   Buy Count :', buy_count)
             print ('  Sell Count :', sell_count, "\n")
@@ -751,6 +759,9 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             print ('  Sell Total :', sell_sum)
             print ('      Margin :', str(truncate((((sell_sum - buy_sum) / sell_sum) * 100), 2)) + '%', "\n")
     else:
+        now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+        print (now, '|', market + goldendeathtext, '|', str(granularity), '| Current Price:', price)
+
         # decrement ignored iteration
         iterations = iterations - 1
 
