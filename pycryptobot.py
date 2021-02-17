@@ -389,7 +389,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     elif deathcross == False:
         goldendeathtext = ' (BEAR)'
 
-    # polling is every 1 minutes (even for hourly intervals), but only process once per interval
+    # polling is every 5 minutes (even for hourly intervals), but only process once per interval
     if (last_df_index != current_df_index):
         precision = 2
         if cryptoMarket == 'XLM':
@@ -780,8 +780,8 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 s.enter(1, 1, executeJob, (sc, market, granularity, tradingData))
 
     else:
-        # poll every 1 minute
-        s.enter(60, 1, executeJob, (sc, market, granularity))
+        # poll every 5 minute
+        s.enter(60, 5, executeJob, (sc, market, granularity))
 
 try:
     logging.basicConfig(filename='pycryptobot.log', format='%(asctime)s - %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filemode='a', level=logging.DEBUG)
