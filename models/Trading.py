@@ -1,6 +1,6 @@
 """Technical analysis on a trading Pandas DataFrame"""
 
-import json
+import json, math
 import numpy as np
 import pandas as pd
 import re
@@ -521,6 +521,66 @@ class TechnicalAnalysis():
         self.df['macdltsignalco'] = self.df.macdltsignal.ne(self.df.macdltsignal.shift())
         self.df.loc[self.df['macdltsignal'] == False, 'macdltsignalco'] = False
 
+    def getFibonacciRetracementLevels(self, price=0):
+        # validates price is numeric
+        if not isinstance(price, int) and not isinstance(price, float):
+            raise TypeError('Optional price is not numeric.')
+
+        price_min = self.df.close.min()
+        price_max = self.df.close.max()
+        
+        diff = price_max - price_min
+        
+        data = {}
+
+        if price != 0 and (price <= price_min):
+            data['ratio1'] = float(self.__truncate(price_min, 2))
+        elif price == 0:
+            data['ratio1'] = float(self.__truncate(price_min, 2))
+
+        if price != 0 and (price > price_min) and (price <= (price_max - 0.618 * diff)):
+            data['ratio1'] = float(self.__truncate(price_min, 2))
+            data['ratio0_618'] = float(self.__truncate(price_max - 0.618 * diff, 2))
+        elif price == 0:
+            data['ratio0_618'] = float(self.__truncate(price_max - 0.618 * diff, 2))
+
+        if price != 0 and (price > (price_max - 0.618 * diff)) and (price <= (price_max - 0.5 * diff)):
+            data['ratio0_618'] = float(self.__truncate(price_max - 0.618 * diff, 2))
+            data['ratio0_5'] = float(self.__truncate(price_max - 0.5 * diff, 2))
+        elif price == 0:
+            data['ratio0_5'] = float(self.__truncate(price_max - 0.5 * diff, 2))
+
+        if price != 0 and (price > (price_max - 0.5 * diff)) and (price <= (price_max - 0.382 * diff)):
+            data['ratio0_5'] = float(self.__truncate(price_max - 0.5 * diff, 2))
+            data['ratio0_382'] = float(self.__truncate(price_max - 0.382 * diff, 2))
+        elif price == 0:
+            data['ratio0_382'] = float(self.__truncate(price_max - 0.382 * diff, 2))
+
+        if price != 0 and (price > (price_max - 0.382 * diff)) and (price <= (price_max - 0.286 * diff)):
+            data['ratio0_382'] = float(self.__truncate(price_max - 0.382 * diff, 2))
+            data['ratio0_286'] = float(self.__truncate(price_max - 0.286 * diff, 2))
+        elif price == 0:
+            data['ratio0_286'] = float(self.__truncate(price_max - 0.286 * diff, 2))
+
+        if price != 0 and (price > (price_max - 0.286 * diff)) and (price <= price_max):
+            data['ratio0_286'] = float(self.__truncate(price_max - 0.286 * diff, 2))           
+            data['ratio0'] = float(self.__truncate(price_max, 2))
+        elif price == 0:
+            data['ratio0'] = float(self.__truncate(price_max, 2))
+
+        if price != 0 and (price > price_max) and (price <= (price_max + 0.618 * diff)):
+            data['ratio0'] = float(self.__truncate(price_max, 2))
+            data['ratio1_618'] = float(self.__truncate(price_max + 0.618 * diff, 2))
+        elif price == 0:
+            data['ratio0'] = float(self.__truncate(price_max, 2))
+
+        if price != 0 and (price > (price_max + 0.618 * diff)):
+            data['ratio1_618'] = float(self.__truncate(price_max + 0.618 * diff, 2))
+        elif price == 0:
+            data['ratio1_618'] = float(self.__truncate(price_max + 0.618 * diff, 2))
+
+        return data
+
     def saveCSV(self, filename='tradingdata.csv'):
         """Saves the DataFrame to an uncompressed CSV."""
 
@@ -575,3 +635,6 @@ class TechnicalAnalysis():
 
         s = np.mean(self.df['high'] - self.df['low'])
         return np.sum([abs(l-x) < s for x in self.levels]) == 0
+
+    def __truncate(self, f, n):
+        return math.floor(f * 10 ** n) / 10 ** n
