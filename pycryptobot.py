@@ -671,7 +671,8 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             else:
                 if is_verbose == 0:
                     logging.info(current_df_index + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | BUY')
-                    print ("\n", current_df_index, '|', market, granularity, '|', price_text, '| BUY', "\n")                    
+                    print ("\n", current_df_index, '|', market, granularity, '|', price_text, '| BUY')
+                    print (' Fibonacci Retracement Levels:', str(technicalAnalysis.getFibonacciRetracementLevels(float(price))), "\n")                    
                 else:
                     print('--------------------------------------------------------------------------------')
                     print('|                      *** Executing TEST Buy Order ***                        |')
@@ -695,7 +696,8 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             if is_live == 1:
                 if is_verbose == 0:
                     logging.info(current_df_index + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | SELL')
-                    print ("\n", current_df_index, '|', market, granularity, '|', price_text, '| SELL', "\n")                    
+                    print ("\n", current_df_index, '|', market, granularity, '|', price_text, '| SELL')
+                    print (' Fibonacci Retracement Levels:', str(technicalAnalysis.getFibonacciRetracementLevels(float(price))), "\n")                      
                 else:
                     print('--------------------------------------------------------------------------------')
                     print('|                      *** Executing LIVE Sell Order ***                        |')
