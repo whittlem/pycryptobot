@@ -1,9 +1,11 @@
 """Coinbase Pro trading account, simulated or live depending on if the config file is provided"""
 
+import sys
 import numpy as np
 import pandas as pd
 import json, math, re, requests
 from datetime import datetime
+from binance.client import Client
 from models.CoinbasePro import AuthAPI
 
 class TradingAccount():
@@ -20,48 +22,91 @@ class TradingAccount():
         if not isinstance(config, dict):
             raise TypeError('Config provided is not a dictionary.')
 
-        # if the config is provided then a valid api_url, api_key, api_secret and api_pass need to be provided
-        if len(config) >= 4 and 'api_url' in config and 'api_key' in config and 'api_secret' in config and 'api_pass' in config:
-            valid_urls = [
-                'https://api.pro.coinbase.com',
-                'https://public.sandbox.pro.coinbase.com',
-                'https://api-public.sandbox.pro.coinbase.com'
-            ]
+        # crypto exchange
+        self.exchange = 'coinbasepro'
+        if 'exchange' in config and config['exchange'] == 'binance':
+            self.exchange = 'binance'
 
-            # validate api_url is valid
-            if config['api_url'] not in valid_urls:
-                raise ValueError('Coinbase Pro API URL is invalid')
+        if self.exchange == 'binance':
+            if len(config) >= 3 and 'api_url' in config and 'api_key' in config and 'api_secret' in config:
+                valid_urls = [
+                    'https://api.binance.com',
+                    'https://testnet.binance.vision/api'
+                ]
 
-            if config['api_url'][-1] != '/':
-                config['api_url'] = config['api_url'] + '/'
+                # validate api_url is valid
+                if config['api_url'] not in valid_urls:
+                    raise ValueError('Binance API URL is invalid')
 
-            # validate api_key is syntactically correct
-            p = re.compile(r"^[a-f0-9]{32,32}$")
-            if not p.match(config['api_key']):
-                raise TypeError('Coinbase Pro API key is invalid')
+                if config['api_url'][-1] != '/':
+                    config['api_url'] = config['api_url'] + '/'
 
-            # validate api_secret is syntactically correct
-            p = re.compile(r"^[A-z0-9+\/]+==$")
-            if not p.match(config['api_secret']):
-                raise TypeError('Coinbase Pro API secret is invalid')
+                # validates the api key is syntactically correct
+                p = re.compile(r"^[A-z0-9]{64,64}$")
+                if not p.match(config['api_key']):
+                    raise TypeError('Binance API key is invalid')
+        
+                # validates the api secret is syntactically correct
+                p = re.compile(r"^[A-z0-9]{64,64}$")
+                if not p.match(config['api_secret']):
+                    err = 'Binance API secret is invalid'
+                    raise TypeError(err)
 
-            # validate api_pass is syntactically correct
-            p = re.compile(r"^[a-z0-9]{10,11}$")
-            if not p.match(config['api_pass']):
-                raise TypeError('Coinbase Pro API passphrase is invalid')
+                self.mode = 'live'
 
-            # if a config file is provided the trading account will be using live data!
-            #print('Trading account mode: live (using YOUR account data - use at own risk!)')
-            self.mode = 'live'
+                self.api_url = config['api_url']
+                self.api_key = config['api_key']
+                self.api_secret = config['api_secret']
 
-            self.api_url = config['api_url']
-            self.api_key = config['api_key']
-            self.api_secret = config['api_secret']
-            self.api_pass = config['api_pass']
+                self.client = Client(self.api_key, self.api_secret, { 'verify': False, 'timeout': 20 })
+            else:
+                # if a config file is not provided the trading account will be using dummy data!
+                #print('Trading account mode: test (using dummy data)')
+                self.mode = 'test'
+
         else:
-            # if a config file is not provided the trading account will be using dummy data!
-            #print('Trading account mode: test (using dummy data)')
-            self.mode = 'test'
+            # if the config is provided then a valid api_url, api_key, api_secret and api_pass need to be provided
+            if len(config) >= 4 and 'api_url' in config and 'api_key' in config and 'api_secret' in config and 'api_pass' in config:
+                valid_urls = [
+                    'https://api.pro.coinbase.com',
+                    'https://public.sandbox.pro.coinbase.com',
+                    'https://api-public.sandbox.pro.coinbase.com'
+                ]
+
+                # validate api_url is valid
+                if config['api_url'] not in valid_urls:
+                    raise ValueError('Coinbase Pro API URL is invalid')
+
+                if config['api_url'][-1] != '/':
+                    config['api_url'] = config['api_url'] + '/'
+
+                # validate api_key is syntactically correct
+                p = re.compile(r"^[a-f0-9]{32,32}$")
+                if not p.match(config['api_key']):
+                    raise TypeError('Coinbase Pro API key is invalid')
+
+                # validate api_secret is syntactically correct
+                p = re.compile(r"^[A-z0-9+\/]+==$")
+                if not p.match(config['api_secret']):
+                    raise TypeError('Coinbase Pro API secret is invalid')
+
+                # validate api_pass is syntactically correct
+                p = re.compile(r"^[a-z0-9]{10,11}$")
+                if not p.match(config['api_pass']):
+                    raise TypeError('Coinbase Pro API passphrase is invalid')
+
+                # if a config file is provided the trading account will be using live data!
+                #print('Trading account mode: live (using YOUR account data - use at own risk!)')
+                self.mode = 'live'
+
+                self.api_url = config['api_url']
+                self.api_key = config['api_key']
+                self.api_secret = config['api_secret']
+                self.api_pass = config['api_pass']
+            else:
+                # if a config file is not provided the trading account will be using dummy data!
+                #print('Trading account mode: test (using dummy data)')
+                self.mode = 'test'
 
         # if trading account is for testing it will be instantiated with a balance of 1000
         self.balance = pd.DataFrame([['FIAT',1000,0,1000],['CRYPTO',0,0,0]], columns=['currency','balance','hold','available'])
@@ -121,55 +166,116 @@ class TradingAccount():
             Filters orders by currency
         """
 
-        if self.mode == 'live':
-            # if config is provided and live connect to Coinbase Pro account portfolio
-            model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
-            if currency == '':
-                # retrieve all balances
-                return model.getAccounts()[['currency', 'balance', 'hold', 'available']]
-            else:
-                df = model.getAccounts()
-                # retrieve balance of specified currency
-                df_filtered = df[df['currency'] == currency]['available']
-                if len(df_filtered) == 0:
-                    # return nil balance if no positive balance was found
-                    return 0.0
-                else:
-                    # return balance of specified currency (if positive)
-                    if currency in ['EUR','GBP','USD']:
-                        return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2)
+        if self.exchange == 'binance':
+            if self.mode == 'live':
+                resp = self.client.get_account()
+                if 'balances' in resp:
+                    df = pd.DataFrame(resp['balances'])
+                    df = df[(df['free'] != '0.00000000') & (df['free'] != '0.00')]
+                    df['free'] = df['free'].astype(float)
+                    df['locked'] = df['locked'].astype(float)
+                    df['balance'] = df['free'] - df['locked']
+                    df.columns = [ 'currency', 'available', 'hold', 'balance' ]
+                    df = df[[ 'currency', 'balance', 'hold', 'available' ]]
+                    df = df.reset_index()
+
+                    if currency == '':
+                        # retrieve all balances
+                        return df
                     else:
-                        return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4)
-                        
+                        # retrieve balance of specified currency
+                        df_filtered = df[df['currency'] == currency]['available']
+                        if len(df_filtered) == 0:
+                            # return nil balance if no positive balance was found
+                            return 0.0
+                        else:
+                            # return balance of specified currency (if positive)
+                            if currency in ['EUR','GBP','USD']:
+                                return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2)
+                            else:
+                                return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4)
+                else:
+                    return 0.0
+            else:
+                # return dummy balances
+
+                if currency == '':
+                    # retrieve all balances
+                    return self.balance
+                else:
+                    # replace FIAT and CRYPTO placeholders
+                    if currency in ['EUR','GBP','USD']:
+                        self.balance = self.balance.replace('FIAT', currency)
+                    else:
+                        self.balance = self.balance.replace('CRYPTO', currency)
+
+                    if self.balance.currency[self.balance.currency.isin([currency])].empty == True:
+                        self.balance.loc[len(self.balance)] = [currency,0,0,0]
+
+                    # retrieve balance of specified currency
+                    df = self.balance
+                    df_filtered = df[df['currency'] == currency]['available']
+
+                    if len(df_filtered) == 0:
+                        # return nil balance if no positive balance was found
+                        return 0.0
+                    else:
+                        # return balance of specified currency (if positive)
+                        if currency in ['EUR','GBP','USD']:
+                            return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2)
+                        else:
+                            return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4)
+
         else:
-            # return dummy balances
-
-            if currency == '':
-                # retrieve all balances
-                return self.balance
-            else:
-                # replace FIAT and CRYPTO placeholders
-                if currency in ['EUR','GBP','USD']:
-                    self.balance = self.balance.replace('FIAT', currency)
-                elif currency in ['BCH','BTC','ETH','LTC','XLM']:
-                    self.balance = self.balance.replace('CRYPTO', currency)
-
-                if self.balance.currency[self.balance.currency.isin([currency])].empty == True:
-                    self.balance.loc[len(self.balance)] = [currency,0,0,0]
-
-                # retrieve balance of specified currency
-                df = self.balance
-                df_filtered = df[df['currency'] == currency]['available']
-
-                if len(df_filtered) == 0:
-                    # return nil balance if no positive balance was found
-                    return 0.0
+            if self.mode == 'live':
+                # if config is provided and live connect to Coinbase Pro account portfolio
+                model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+                if currency == '':
+                    # retrieve all balances
+                    return model.getAccounts()[['currency', 'balance', 'hold', 'available']]
                 else:
-                    # return balance of specified currency (if positive)
-                    if currency in ['EUR','GBP','USD']:
-                        return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2)
+                    df = model.getAccounts()
+                    # retrieve balance of specified currency
+                    df_filtered = df[df['currency'] == currency]['available']
+                    if len(df_filtered) == 0:
+                        # return nil balance if no positive balance was found
+                        return 0.0
                     else:
-                        return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4)
+                        # return balance of specified currency (if positive)
+                        if currency in ['EUR','GBP','USD']:
+                            return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2)
+                        else:
+                            return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4)
+                            
+            else:
+                # return dummy balances
+
+                if currency == '':
+                    # retrieve all balances
+                    return self.balance
+                else:
+                    # replace FIAT and CRYPTO placeholders
+                    if currency in ['EUR','GBP','USD']:
+                        self.balance = self.balance.replace('FIAT', currency)
+                    elif currency in ['BCH','BTC','ETH','LTC','XLM']:
+                        self.balance = self.balance.replace('CRYPTO', currency)
+
+                    if self.balance.currency[self.balance.currency.isin([currency])].empty == True:
+                        self.balance.loc[len(self.balance)] = [currency,0,0,0]
+
+                    # retrieve balance of specified currency
+                    df = self.balance
+                    df_filtered = df[df['currency'] == currency]['available']
+
+                    if len(df_filtered) == 0:
+                        # return nil balance if no positive balance was found
+                        return 0.0
+                    else:
+                        # return balance of specified currency (if positive)
+                        if currency in ['EUR','GBP','USD']:
+                            return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2)
+                        else:
+                            return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4)
 
     def saveTrackerCSV(self, market='', save_file='tracker.csv'):
         """Saves order tracker to CSV
