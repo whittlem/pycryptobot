@@ -29,17 +29,17 @@ class TradingAccount():
 
         if self.exchange == 'binance':
             if len(config) >= 3 and 'api_url' in config and 'api_key' in config and 'api_secret' in config:
+                if len(config['api_url']) > 1 and config['api_url'][-1] != '/':
+                    config['api_url'] = config['api_url'] + '/'
+
                 valid_urls = [
-                    'https://api.binance.com',
-                    'https://testnet.binance.vision/api'
+                    'https://api.binance.com/',
+                    'https://testnet.binance.vision/api/'
                 ]
 
                 # validate api_url is valid
                 if config['api_url'] not in valid_urls:
                     raise ValueError('Binance API URL is invalid')
-
-                if config['api_url'][-1] != '/':
-                    config['api_url'] = config['api_url'] + '/'
 
                 # validates the api key is syntactically correct
                 p = re.compile(r"^[A-z0-9]{64,64}$")
@@ -67,18 +67,18 @@ class TradingAccount():
         else:
             # if the config is provided then a valid api_url, api_key, api_secret and api_pass need to be provided
             if len(config) >= 4 and 'api_url' in config and 'api_key' in config and 'api_secret' in config and 'api_pass' in config:
+                if len(config['api_url']) > 1 and config['api_url'][-1] != '/':
+                    config['api_url'] = config['api_url'] + '/'
+ 
                 valid_urls = [
-                    'https://api.pro.coinbase.com',
-                    'https://public.sandbox.pro.coinbase.com',
-                    'https://api-public.sandbox.pro.coinbase.com'
+                    'https://api.pro.coinbase.com/',
+                    'https://public.sandbox.pro.coinbase.com/',
+                    'https://api-public.sandbox.pro.coinbase.com/'
                 ]
 
                 # validate api_url is valid
                 if config['api_url'] not in valid_urls:
                     raise ValueError('Coinbase Pro API URL is invalid')
-
-                if config['api_url'][-1] != '/':
-                    config['api_url'] = config['api_url'] + '/'
 
                 # validate api_key is syntactically correct
                 p = re.compile(r"^[a-f0-9]{32,32}$")
@@ -129,11 +129,16 @@ class TradingAccount():
             Filters orders by status, defaults to 'all'
         """
 
-        if market != '':
+        if self.exchange == 'coinbasepro' and market != '':
             # validate market is syntactically correct
             p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
             if not p.match(market):
                 raise TypeError('Coinbase Pro market is invalid.')
+        elif self.exchange == 'binance':
+             # validate market is syntactically correct
+            p = re.compile(r"^[A-Z]{6,8}$")
+            if not p.match(market):
+                raise TypeError('Binance market is invalid.')
 
         if action != '':
             # validate action is either a buy or sell
@@ -141,21 +146,55 @@ class TradingAccount():
                 raise ValueError('Invalid order action.')
 
         # validate status is open, pending, done, active or all
-        if not status in ['open', 'pending', 'done', 'active', 'all']:
+        if not status in ['open', 'pending', 'done', 'active', 'all', 'filled']:
             raise ValueError('Invalid order status.')
 
-        if self.mode == 'live':
-            # if config is provided and live connect to Coinbase Pro account portfolio
-            model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
-            # retrieve orders from live Coinbase Pro account portfolio
-            self.orders = model.getOrders(market, action, status)
-            return self.orders
+        if self.exchange == 'binance':
+            if self.mode == 'live':
+                resp = self.client.get_all_orders(symbol=market)
+                if len(resp) > 0:
+                    df = pd.DataFrame(resp)
+                else:
+                    df = pd.DataFrame()
+                df = df[[ 'time', 'symbol', 'side', 'type', 'executedQty', 'cummulativeQuoteQty', 'status' ]]
+                df.columns = [ 'created_at', 'market', 'action', 'type', 'size', 'value', 'status' ]
+                df['created_at'] = df['created_at'].apply(lambda x: int(str(x)[:10]))
+                df['created_at'] = df['created_at'].astype("datetime64[s]")
+                df['size'] = df['size'].astype(float)
+                df['value'] = df['value'].astype(float)
+                df['action'] = df['action'].str.lower()
+                df['type'] = df['type'].str.lower()
+                df['status'] = df['status'].str.lower()
+                df['price'] = df['size'] * df['value']
+
+                if action != '':
+                    df = df[df['action'] == action]
+                    df = df.reset_index(drop=True)
+
+                if status != 'all' and status != '':
+                    df = df[df['status'] == status]
+                    df = df.reset_index(drop=True)
+
+                return df
+            else:
+               # return dummy orders
+                if market == '':
+                    return self.orders
+                else:
+                    return self.orders[self.orders['market'] == market]                
         else:
-            # return dummy orders
-            if market == '':
+            if self.mode == 'live':
+                # if config is provided and live connect to Coinbase Pro account portfolio
+                model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+                # retrieve orders from live Coinbase Pro account portfolio
+                self.orders = model.getOrders(market, action, status)
                 return self.orders
             else:
-                return self.orders[self.orders['market'] == market]
+                # return dummy orders
+                if market == '':
+                    return self.orders
+                else:
+                    return self.orders[self.orders['market'] == market]
 
     def getBalance(self, currency=''):
         """Retrieves balance either live or simulation
@@ -177,7 +216,7 @@ class TradingAccount():
                     df['balance'] = df['free'] - df['locked']
                     df.columns = [ 'currency', 'available', 'hold', 'balance' ]
                     df = df[[ 'currency', 'balance', 'hold', 'available' ]]
-                    df = df.reset_index()
+                    df = df.reset_index(drop=True)
 
                     if currency == '':
                         # retrieve all balances
