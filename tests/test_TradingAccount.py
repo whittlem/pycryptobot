@@ -48,7 +48,7 @@ def test_orders_columns():
     account = TradingAccount()
     account.buy('BTC', 'GBP', 1000, 30000)
     actual = account.getOrders().columns.to_list()
-    expected = ['market', 'action', 'type', 'size', 'value', 'status', 'price']
+    expected = [ 'created_at', 'market', 'action', 'type', 'size', 'value', 'status', 'price' ]
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
