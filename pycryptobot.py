@@ -295,17 +295,18 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
         # retrieve the market data
         tradingData = api.getHistoricalData(market, granularity)
 
-    # analyse the market data
-    tradingDataCopy = tradingData.copy()
-    technicalAnalysis = TechnicalAnalysis(tradingDataCopy)
-    technicalAnalysis.addAll()
-    df = technicalAnalysis.getDataFrame()
-
-    if len(df) != 300:
+    df = pd.DataFrame()
+    if len(tradingData) != 300:
         # data frame should have 300 rows, if not retry
-        print('error: data frame length is < 300 (' + str(len(df)) + ')')
-        logging.error('error: data frame length is < 300 (' + str(len(df)) + ')')
-        s.enter(300, 1, executeJob, (sc, market, granularity))
+        print('error: data frame length is < 300 (' + str(len(tradingData)) + ')')
+        logging.error('error: data frame length is < 300 (' + str(len(tradingData)) + ')')
+        s.enter(1, 1, executeJob, (sc, market, granularity))
+    else:
+        # analyse the market data
+        tradingDataCopy = tradingData.copy()
+        technicalAnalysis = TechnicalAnalysis(tradingDataCopy)
+        technicalAnalysis.addAll()
+        df = technicalAnalysis.getDataFrame()
 
     if is_sim == 1:
         # with a simulation df_last will iterate through data
