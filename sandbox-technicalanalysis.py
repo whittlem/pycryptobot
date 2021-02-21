@@ -1,9 +1,13 @@
 import pandas as pd
 from models.Trading import TechnicalAnalysis
-from models.CoinbasePro import PublicAPI
+#from models.CoinbasePro import PublicAPI
+from models.Binance import PublicAPI
 
 api = PublicAPI()
-data = api.getHistoricalData('BTC-GBP', 3600)
+
+#data = api.getHistoricalData('BTC-GBP', 3600) # coinbase pro
+data = api.getHistoricalData('BTCGBP', 3600) # binance
+print (data.dtypes)
 
 ta = TechnicalAnalysis(data)
 ta.addAll()
