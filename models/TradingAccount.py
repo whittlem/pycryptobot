@@ -519,7 +519,7 @@ class TradingAccount():
                         api = PublicAPI()
                         price = api.getTicker(market)
                     else:
-                        resp = requests.get('https://api-public.sandbox.pro.coinbase.com/products/BTC-GBP/ticker')
+                        resp = requests.get('https://api-public.sandbox.pro.coinbase.com/products/' + market + '/ticker')
                         if resp.status_code != 200:
                             raise Exception('GET /products/' + market +
                                             '/ticker {}'.format(resp.status_code))
@@ -537,6 +537,7 @@ class TradingAccount():
                 price = (fiatAmountMinusFee * 100) / (total * 100)
                 order = pd.DataFrame([['', market, 'buy', 'market', float('{:.8f}'.format(total)), fiatAmountMinusFee, 'done', '{:.8f}'.format(float(price))]], columns=[
                                     'created_at', 'market', 'action', 'type', 'size', 'value', 'status', 'price'], index=[ts])
+                order['created_at'] = order.index
                 self.orders = pd.concat([self.orders, pd.DataFrame(order)], ignore_index=False)
 
                 # update the dummy fiat balance
@@ -572,7 +573,7 @@ class TradingAccount():
                 price = manualPrice
                 # if manualPrice is non-positive retrieve the current live price
                 if manualPrice <= 0:
-                    resp = requests.get('https://api-public.sandbox.pro.coinbase.com/products/BTC-GBP/ticker')
+                    resp = requests.get('https://api-public.sandbox.pro.coinbase.com/products/' + market + '/ticker')
                     if resp.status_code != 200:
                         raise Exception('GET /products/' + market +
                                         '/ticker {}'.format(resp.status_code))
@@ -590,6 +591,7 @@ class TradingAccount():
                 price = (fiatAmountMinusFee * 100) / (total * 100)
                 order = pd.DataFrame([['', market, 'buy', 'market', float('{:.8f}'.format(total)), fiatAmountMinusFee, 'done', price]], columns=[
                                     'created_at', 'market', 'action', 'type', 'size', 'value', 'status', 'price'], index=[ts])
+                order['created_at'] = order.index
                 self.orders = pd.concat([self.orders, pd.DataFrame(order)], ignore_index=False)
 
                 # update the dummy fiat balance
@@ -670,7 +672,7 @@ class TradingAccount():
                 price = manualPrice
                 # if manualPrice is non-positive retrieve the current live price
                 if manualPrice <= 0:
-                    resp = requests.get('https://api-public.sandbox.pro.coinbase.com/products/BTC-GBP/ticker')
+                    resp = requests.get('https://api-public.sandbox.pro.coinbase.com/products/' + market + '/ticker')
                     if resp.status_code != 200:
                         raise Exception('GET /products/' + market +
                                         '/ticker {}'.format(resp.status_code))
@@ -683,8 +685,9 @@ class TradingAccount():
                 # append dummy order into orders dataframe
                 ts = pd.Timestamp.now()
                 price = ((price * cryptoAmount) * 100) / (cryptoAmount * 100)
-                order = pd.DataFrame([[market, 'sell', 'market', cryptoAmountMinusFee, float('{:.8f}'.format(
-                    total)), 'done', '{:.8f}'.format(float(price))]], columns=['market', 'action', 'type', 'size', 'value', 'status', 'price'], index=[ts])
+                order = pd.DataFrame([['', market, 'sell', 'market', cryptoAmountMinusFee, float('{:.8f}'.format(
+                    total)), 'done', '{:.8f}'.format(float(price))]], columns=['created_at', 'market', 'action', 'type', 'size', 'value', 'status', 'price'], index=[ts])
+                order['created_at'] = order.index
                 self.orders = pd.concat([self.orders, pd.DataFrame(order)], ignore_index=False)
 
                 # update the dummy fiat balance
@@ -735,6 +738,7 @@ class TradingAccount():
                 price = ((price * cryptoAmount) * 100) / (cryptoAmount * 100)
                 order = pd.DataFrame([[market, 'sell', 'market', cryptoAmountMinusFee, float('{:.8f}'.format(
                     total)), 'done', price]], columns=['market', 'action', 'type', 'size', 'value', 'status', 'price'], index=[ts])
+                order['created_at'] = order.index
                 self.orders = pd.concat([self.orders, pd.DataFrame(order)], ignore_index=False)
 
                 # update the dummy fiat balance
