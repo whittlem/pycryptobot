@@ -125,6 +125,6 @@ class PublicAPI():
         resp = self.client.get_symbol_ticker(symbol=market)
 
         if 'price' in resp:
-            return float(resp['price'])
+            return '{:.8f}'.format(float(resp['price']))
 
         return 0.0

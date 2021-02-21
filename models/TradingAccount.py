@@ -1,4 +1,4 @@
-"""Coinbase Pro trading account, simulated or live depending on if the config file is provided"""
+"""Coinbase Pro or Binanace trading account, simulated or live depending on if the config file is provided"""
 
 import sys
 import numpy as np
@@ -6,6 +6,7 @@ import pandas as pd
 import json, math, re, requests
 from datetime import datetime
 from binance.client import Client
+from models.Binance import PublicAPI
 from models.CoinbasePro import AuthAPI
 
 class TradingAccount():
@@ -511,30 +512,30 @@ class TradingAccount():
                 if not isinstance(manualPrice, float) and not isinstance(manualPrice, int):
                     raise TypeError('Optional manual price not numeric.')
 
-                print ('TEST')
-                sys.exit()
-
                 price = manualPrice
                 # if manualPrice is non-positive retrieve the current live price
                 if manualPrice <= 0:
-                    resp = requests.get(
-                        'https://api-public.sandbox.pro.coinbase.com/products/BTC-GBP/ticker')
-                    if resp.status_code != 200:
-                        raise Exception('GET /products/' + market +
-                                        '/ticker {}'.format(resp.status_code))
-                    resp.raise_for_status()
-                    json = resp.json()
-                    price = float(json['price'])
+                    if self.exchange == 'binance':
+                        api = PublicAPI()
+                        price = api.getTicker(market)
+                    else:
+                        resp = requests.get('https://api-public.sandbox.pro.coinbase.com/products/BTC-GBP/ticker')
+                        if resp.status_code != 200:
+                            raise Exception('GET /products/' + market +
+                                            '/ticker {}'.format(resp.status_code))
+                        resp.raise_for_status()
+                        json = resp.json()
+                        price = float(json['price'])
 
                 # calculate purchase fees
                 fee = fiatAmount * 0.005
                 fiatAmountMinusFee = fiatAmount - fee
-                total = float(fiatAmountMinusFee / price)
+                total = float(fiatAmountMinusFee / float(price))
 
                 # append dummy order into orders dataframe
                 ts = pd.Timestamp.now()
                 price = (fiatAmountMinusFee * 100) / (total * 100)
-                order = pd.DataFrame([['', market, 'buy', 'market', float('{:.8f}'.format(total)), fiatAmountMinusFee, 'done', price]], columns=[
+                order = pd.DataFrame([['', market, 'buy', 'market', float('{:.8f}'.format(total)), fiatAmountMinusFee, 'done', '{:.8f}'.format(float(price))]], columns=[
                                     'created_at', 'market', 'action', 'type', 'size', 'value', 'status', 'price'], index=[ts])
                 self.orders = pd.concat([self.orders, pd.DataFrame(order)], ignore_index=False)
 
@@ -571,8 +572,7 @@ class TradingAccount():
                 price = manualPrice
                 # if manualPrice is non-positive retrieve the current live price
                 if manualPrice <= 0:
-                    resp = requests.get(
-                        'https://api-public.sandbox.pro.coinbase.com/products/BTC-GBP/ticker')
+                    resp = requests.get('https://api-public.sandbox.pro.coinbase.com/products/BTC-GBP/ticker')
                     if resp.status_code != 200:
                         raise Exception('GET /products/' + market +
                                         '/ticker {}'.format(resp.status_code))
@@ -614,16 +614,30 @@ class TradingAccount():
         manualPrice, float
             Used for simulations specifying the live price to purchase
         """
-        # crypto market should be either BCH, BTC, ETH, LTC, XLM
-        if cryptoMarket not in ['BCH', 'BTC', 'ETH', 'LTC', 'XLM']:
-            raise Exception('Invalid crypto market: BCH, BTC, ETH, LTC, ETH, XLM')
+        if self.exchange == 'binance':
+             # validate crypto market is syntactically correct
+            p = re.compile(r"^[A-Z]{3,8}$")
+            if not p.match(cryptoMarket):
+                raise TypeError('Binance crypto market is invalid.')
 
-        # fiat market should be either EUR, GBP, or USD
-        if fiatMarket not in ['EUR', 'GBP', 'USD']:
-            raise Exception('Invalid FIAT market: EUR, GBP, USD')
+             # validate fiat market is syntactically correct
+            p = re.compile(r"^[A-Z]{3,8}$")
+            if not p.match(fiatMarket):
+                raise TypeError('Binance fiat market is invalid.')
+        else:
+            # crypto market should be either BCH, BTC, ETH, LTC or XLM
+            if cryptoMarket not in ['BCH', 'BTC', 'ETH', 'LTC', 'XLM']:
+                raise Exception('Invalid crypto market: BCH, BTC, ETH, LTC, ETH, or XLM')
+
+            # fiat market should be either EUR, GBP, or USD
+            if fiatMarket not in ['EUR', 'GBP', 'USD']:
+                raise Exception('Invalid FIAT market: EUR, GBP, USD')
 
         # reconstruct the exchange market using crypto and fiat inputs
-        market = cryptoMarket + '-' + fiatMarket
+        if self.exchange == 'binance':
+            market = cryptoMarket + fiatMarket
+        else:
+            market = cryptoMarket + '-' + fiatMarket
 
         # crypto amount must be an integer or float
         if not isinstance(cryptoAmount, float) and not isinstance(cryptoAmount, int):
@@ -633,51 +647,100 @@ class TradingAccount():
         if cryptoAmount <= 0:
             raise Exception('Invalid crypto amount.')
 
-        if self.mode == 'live':
-            # connect to Coinbase Pro API live
-            model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+        if self.exchange == 'binance':
+            if self.mode == 'live':
+                # execute a live market buy
+                resp = self.client.order_market_sell(symbol=market, quantity=cryptoAmount)
 
-            # execute a live market sell
-            resp = model.marketSell(market, float(self.getBalance(cryptoMarket)))
-            
-            # TODO: not finished
-            print(resp)
-        else:
-            # crypto amount should exceed balance
-            if cryptoAmount > self.getBalance(cryptoMarket):
-                raise Exception('Insufficient funds.')
+                # TODO: not finished
+                print(resp)
+            else:
+                # crypto amount should exceed balance
+                if cryptoAmount > self.getBalance(cryptoMarket):
+                    raise Exception('Insufficient funds.')
 
-            # manual price must be an integer or float
-            if not isinstance(manualPrice, float) and not isinstance(manualPrice, int):
-                raise TypeError('Optional manual price not numeric.')
+                # manual price must be an integer or float
+                if not isinstance(manualPrice, float) and not isinstance(manualPrice, int):
+                    raise TypeError('Optional manual price not numeric.')
 
-            # calculate purchase fees
-            fee = cryptoAmount * 0.005
-            cryptoAmountMinusFee = cryptoAmount - fee
+                # calculate purchase fees
+                fee = cryptoAmount * 0.005
+                cryptoAmountMinusFee = cryptoAmount - fee
 
-            price = manualPrice
-            if manualPrice <= 0:
+                price = manualPrice
                 # if manualPrice is non-positive retrieve the current live price
-                resp = requests.get('https://api-public.sandbox.pro.coinbase.com/products/' + market + '/ticker')
-                if resp.status_code != 200:
-                    raise Exception('GET /products/' + market + '/ticker {}'.format(resp.status_code))
-                resp.raise_for_status()
-                json = resp.json()
-                price = float(json['price'])
+                if manualPrice <= 0:
+                    resp = requests.get('https://api-public.sandbox.pro.coinbase.com/products/BTC-GBP/ticker')
+                    if resp.status_code != 200:
+                        raise Exception('GET /products/' + market +
+                                        '/ticker {}'.format(resp.status_code))
+                    resp.raise_for_status()
+                    json = resp.json()
+                    price = float(json['price'])
 
-            total = price * cryptoAmountMinusFee
+                total = price * cryptoAmountMinusFee
 
-            # append dummy order into orders dataframe
-            ts = pd.Timestamp.now()
-            price = ((price * cryptoAmount) * 100) / (cryptoAmount * 100)
-            order = pd.DataFrame([[market, 'sell', 'market', cryptoAmountMinusFee, float('{:.8f}'.format(
-                total)), 'done', price]], columns=['market', 'action', 'type', 'size', 'value', 'status', 'price'], index=[ts])
-            self.orders = pd.concat([self.orders, pd.DataFrame(order)], ignore_index=False)
+                # append dummy order into orders dataframe
+                ts = pd.Timestamp.now()
+                price = ((price * cryptoAmount) * 100) / (cryptoAmount * 100)
+                order = pd.DataFrame([[market, 'sell', 'market', cryptoAmountMinusFee, float('{:.8f}'.format(
+                    total)), 'done', '{:.8f}'.format(float(price))]], columns=['market', 'action', 'type', 'size', 'value', 'status', 'price'], index=[ts])
+                self.orders = pd.concat([self.orders, pd.DataFrame(order)], ignore_index=False)
 
-            # update the dummy fiat balance
-            self.balance.loc[self.balance['currency'] == fiatMarket, 'balance'] = self.getBalance(fiatMarket) + total
-            self.balance.loc[self.balance['currency'] == fiatMarket, 'available'] = self.getBalance(fiatMarket) + total
+                # update the dummy fiat balance
+                self.balance.loc[self.balance['currency'] == fiatMarket, 'balance'] = self.getBalance(fiatMarket) + total
+                self.balance.loc[self.balance['currency'] == fiatMarket, 'available'] = self.getBalance(fiatMarket) + total
 
-            # update the dummy crypto balance
-            self.balance.loc[self.balance['currency'] == cryptoMarket, 'balance'] = self.getBalance(cryptoMarket) - cryptoAmount
-            self.balance.loc[self.balance['currency'] == cryptoMarket, 'available'] = self.getBalance(cryptoMarket) - cryptoAmount
+                # update the dummy crypto balance
+                self.balance.loc[self.balance['currency'] == cryptoMarket, 'balance'] = self.getBalance(cryptoMarket) - cryptoAmount
+                self.balance.loc[self.balance['currency'] == cryptoMarket, 'available'] = self.getBalance(cryptoMarket) - cryptoAmount
+        
+        else:
+            if self.mode == 'live':
+                # connect to Coinbase Pro API live
+                model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+
+                # execute a live market sell
+                resp = model.marketSell(market, float(self.getBalance(cryptoMarket)))
+                
+                # TODO: not finished
+                print(resp)
+            else:
+                # crypto amount should exceed balance
+                if cryptoAmount > self.getBalance(cryptoMarket):
+                    raise Exception('Insufficient funds.')
+
+                # manual price must be an integer or float
+                if not isinstance(manualPrice, float) and not isinstance(manualPrice, int):
+                    raise TypeError('Optional manual price not numeric.')
+
+                # calculate purchase fees
+                fee = cryptoAmount * 0.005
+                cryptoAmountMinusFee = cryptoAmount - fee
+
+                price = manualPrice
+                if manualPrice <= 0:
+                    # if manualPrice is non-positive retrieve the current live price
+                    resp = requests.get('https://api-public.sandbox.pro.coinbase.com/products/' + market + '/ticker')
+                    if resp.status_code != 200:
+                        raise Exception('GET /products/' + market + '/ticker {}'.format(resp.status_code))
+                    resp.raise_for_status()
+                    json = resp.json()
+                    price = float(json['price'])
+
+                total = price * cryptoAmountMinusFee
+
+                # append dummy order into orders dataframe
+                ts = pd.Timestamp.now()
+                price = ((price * cryptoAmount) * 100) / (cryptoAmount * 100)
+                order = pd.DataFrame([[market, 'sell', 'market', cryptoAmountMinusFee, float('{:.8f}'.format(
+                    total)), 'done', price]], columns=['market', 'action', 'type', 'size', 'value', 'status', 'price'], index=[ts])
+                self.orders = pd.concat([self.orders, pd.DataFrame(order)], ignore_index=False)
+
+                # update the dummy fiat balance
+                self.balance.loc[self.balance['currency'] == fiatMarket, 'balance'] = self.getBalance(fiatMarket) + total
+                self.balance.loc[self.balance['currency'] == fiatMarket, 'available'] = self.getBalance(fiatMarket) + total
+
+                # update the dummy crypto balance
+                self.balance.loc[self.balance['currency'] == cryptoMarket, 'balance'] = self.getBalance(cryptoMarket) - cryptoAmount
+                self.balance.loc[self.balance['currency'] == cryptoMarket, 'available'] = self.getBalance(cryptoMarket) - cryptoAmount
