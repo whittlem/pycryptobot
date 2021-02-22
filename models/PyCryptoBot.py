@@ -1,31 +1,58 @@
-import json, re
+import argparse, json, logging, math, re, sys
 from datetime import datetime, timedelta
 
-class Config():
-    def __init__(self, exchange='dummy', filename='config.json'):
+# reduce informational logging
+logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+
+# instantiate the arguments parser
+parser = argparse.ArgumentParser(description='Python Crypto Bot using the Coinbase Pro or Binanace API')
+
+# optional arguments
+parser.add_argument('--exchange', type=str, help="'coinbasepro', 'binance', 'dummy'")
+parser.add_argument('--granularity', type=str, help="coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6g,1d)")
+parser.add_argument('--live', type=int, help='live=1, test=0')
+parser.add_argument('--market', type=str, help='coinbasepro: BTC-GBP, binance: BTCGBP etc.')
+parser.add_argument('--graphs', type=int, help='save graphs=1, do not save graphs=0')
+parser.add_argument('--sim', type=str, help='simulation modes: fast, fast-sample, slow-sample')
+parser.add_argument('--verbose', type=int, help='verbose output=1, minimal output=0')
+parser.add_argument('--sellupperpcnt', type=int, help='optionally set sell upper percent limit')
+parser.add_argument('--selllowerpcnt', type=int, help='optionally set sell lower percent limit')
+
+# parse arguments
+args = parser.parse_args()
+
+class PyCryptoBot():
+    def __init__(self, exchange='coinbasepro', filename='config.json'):
+        self.api_key = ''
+        self.api_secret = ''
+        self.api_passphrase = ''
+        self.api_url = ''
+
+        if args.exchange != None:
+            if args.exchange not in [ 'coinbasepro', 'binance', 'dummy' ]:
+                raise TypeError('Invalid exchange: coinbasepro, binance')
+            else:
+                self.exchange = args.exchange
+        else:
+            self.exchange = 'coinbasepro'
+      
+        self.market = ''
+        self.base_currency = ''
+        self.quote_currency = ''
+        self.granularity = 3600
+        self.is_live = 0
+        self.is_verbose = 1
+        self.save_graphs = 0
+        self.is_sim = 0
+        self.sim_speed = 'fast'
+        self.sell_upper_pcnt = None
+        self.sell_lower_pcnt = None   
+
         try:
             with open(filename) as config_file:
                 config = json.load(config_file)
-
-                self.exchange = 'dummy'
-                self.api_key = ''
-                self.api_secret = ''
-                self.api_passphrase = ''
-                self.api_url = ''
-                self.base_currency = 'BTC'
-                self.quote_currency = 'GBP'
-                self.market = 'BTC-GBP'
-                self.granularity = 3600
-                self.is_live = 0
-                self.is_verbose = 1
-                self.save_graphs = 0
-                self.is_sim = 0
-                self.sim_speed = 'fast'
-                self.sell_upper_pcnt = None
-                self.sell_lower_pcnt = None
-
-                if exchange == 'coinbasepro' and 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
-                    self.exchange = 'coinbasepro'
+                if self.exchange == 'coinbasepro' and 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
                     self.api_key = config['api_key']
                     self.api_secret = config['api_secret']
                     self.api_passphrase = config['api_passphrase']
@@ -64,17 +91,17 @@ class Config():
 
                         if 'live' in config:
                             if isinstance(config['live'], int):
-                                if config['live'] in [0, 1]:
+                                if config['live'] in [ 0, 1 ]:
                                     self.is_live = config['live']
 
                         if 'verbose' in config:
                             if isinstance(config['verbose'], int):
-                                if config['verbose'] in [0, 1]:
-                                    self.is_live = config['verbose']
+                                if config['verbose'] in [ 0, 1 ]:
+                                    self.is_verbose = config['verbose']
 
                         if 'graphs' in config:
                             if isinstance(config['graphs'], int):
-                                if config['graphs'] in [0, 1]:
+                                if config['graphs'] in [ 0, 1 ]:
                                     self.save_graphs = config['graphs']
 
                         if 'sim' in config:
@@ -94,8 +121,7 @@ class Config():
                                 if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
                                     self.sell_lower_pcnt = int(config['selllowerpcnt'])
 
-                elif exchange == 'binance' and 'api_key' in config and 'api_secret' in config and 'api_url' in config:
-                    self.exchange = 'binance'
+                elif self.exchange == 'binance' and 'api_key' in config and 'api_secret' in config and 'api_url' in config:
                     self.api_key = config['api_key']
                     self.api_secret = config['api_secret']
                     self.api_url = config['api_url']
@@ -158,9 +184,8 @@ class Config():
                                 if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
                                     self.sell_lower_pcnt = int(config['selllowerpcnt'])      
 
-                elif exchange == 'coinbasepro' and 'coinbasepro' in config:
+                elif self.exchange == 'coinbasepro' and 'coinbasepro' in config:
                     if 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-                        self.exchange = 'coinbasepro'
                         self.api_key = config['coinbasepro']['api_key']
                         self.api_secret = config['coinbasepro']['api_secret']
                         self.api_passphrase = config['coinbasepro']['api_passphrase']
@@ -205,7 +230,7 @@ class Config():
                             if 'verbose' in config:
                                 if isinstance(config['verbose'], int):
                                     if config['verbose'] in [0, 1]:
-                                        self.is_live = config['verbose']
+                                        self.is_verbose = config['verbose']
 
                             if 'graphs' in config:
                                 if isinstance(config['graphs'], int):
@@ -229,9 +254,8 @@ class Config():
                                     if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
                                         self.sell_lower_pcnt = int(config['selllowerpcnt'])
 
-                elif exchange == 'binance' and 'binance' in config:
+                elif self.exchange == 'binance' and 'binance' in config:
                     if 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
-                        self.exchange = 'binance'
                         self.api_key = config['binance']['api_key']
                         self.api_secret = config['binance']['api_secret']
                         self.api_url = config['binance']['api_url']
@@ -300,6 +324,152 @@ class Config():
         except ValueError as err:
             now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
             print (now, err)
+
+        if args.market != None:
+            if self.exchange == 'coinbasepro':
+                p = re.compile(r"^[A-Z]{3,5}\-[A-Z]{3,5}$")
+                if not p.match(args.market):
+                    raise ValueError('Coinbase Pro market required.')
+
+                self.market = args.market
+                self.base_currency, self.quote_currency = args.market.split('-',  2)
+            elif self.exchange == 'binance':
+                p = re.compile(r"^[A-Z]{6,12}$")
+                if not p.match(args.market):
+                    raise ValueError('Binance market required.')
+
+                self.market = args.market
+                if self.market.endswith('BTC'):
+                    self.base_currency = self.market.replace('BTC', '')
+                    self.quote_currency = 'BTC'
+                elif self.market.endswith('BNB'):
+                    self.base_currency = self.market.replace('BNB', '')
+                    self.quote_currency = 'BNB'
+                elif self.market.endswith('ETH'):
+                    self.base_currency = self.market.replace('ETH', '')
+                    self.quote_currency = 'ETH'
+                elif self.market.endswith('USDT'):
+                    self.base_currency = self.market.replace('USDT', '')
+                    self.quote_currency = 'USDT'
+                elif self.market.endswith('TUSD'):
+                    self.base_currency = self.market.replace('TUSD', '')
+                    self.quote_currency = 'TUSD'
+                elif self.market.endswith('BUSD'):
+                    self.base_currency = self.market.replace('BUSD', '')
+                    self.quote_currency = 'BUSD'
+                elif self.market.endswith('DAX'):
+                    self.base_currency = self.market.replace('DAX', '')
+                    self.quote_currency = 'DAX'
+                elif self.market.endswith('NGN'):
+                    self.base_currency = self.market.replace('NGN', '')
+                    self.quote_currency = 'NGN'
+                elif self.market.endswith('RUB'):
+                    self.base_currency = self.market.replace('RUB', '')
+                    self.quote_currency = 'RUB'
+                elif self.market.endswith('TRY'):
+                    self.base_currency = self.market.replace('TRY', '')
+                    self.quote_currency = 'TRY'
+                elif self.market.endswith('EUR'):
+                    self.base_currency = self.market.replace('EUR', '')
+                    self.quote_currency = 'EUR'
+                elif self.market.endswith('GBP'):
+                    self.base_currency = self.market.replace('GBP', '')
+                    self.quote_currency = 'GBP'
+                elif self.market.endswith('ZAR'):
+                    self.base_currency = self.market.replace('ZAR', '')
+                    self.quote_currency = 'ZAR'
+                elif self.market.endswith('UAH'):
+                    self.base_currency = self.market.replace('UAH', '')
+                    self.quote_currency = 'UAH'
+                elif self.market.endswith('DAI'):
+                    self.base_currency = self.market.replace('DAI', '')
+                    self.quote_currency = 'DAI'
+                elif self.market.endswith('BIDR'):
+                    self.base_currency = self.market.replace('BIDR', '')
+                    self.quote_currency = 'BIDR'
+                elif self.market.endswith('AUD'):
+                    self.base_currency = self.market.replace('AUD', '')
+                    self.quote_currency = 'AUD'
+                elif self.market.endswith('US'):
+                    self.base_currency = self.market.replace('US', '')
+                    self.quote_currency = 'US'
+                elif self.market.endswith('NGN'):
+                    self.base_currency = self.market.replace('NGN', '')
+                    self.quote_currency = 'NGN'
+                elif self.market.endswith('BRL'):
+                    self.base_currency = self.market.replace('BRL', '')
+                    self.quote_currency = 'BRL'
+                elif self.market.endswith('BVND'):
+                    self.base_currency = self.market.replace('BVND', '')
+                    self.quote_currency = 'BVND'
+                elif self.market.endswith('VAI'):
+                    self.base_currency = self.market.replace('VAI', '')
+                    self.quote_currency = 'VAI'
+
+                if len(self.market) != len(self.base_currency) + len(self.quote_currency):
+                    raise ValueError('Binance market error.')
+
+            else:
+                if self.market == '' and self.base_currency == '' and self.quote_currency == '':
+                    self.market = 'BTC-GBP'
+                    self.base_currency = 'BTC'
+                    self.quote_currency = 'GBP'
+
+        if args.granularity != None:
+            if self.exchange == 'coinbasepro':
+                if not isinstance(int(args.granularity), int):
+                    raise TypeError('Invalid granularity.')
+
+                if not args.granularity in [ 60, 300, 900, 3600, 21600, 86400 ]:
+                    raise TypeError('Granularity options: 60, 300, 900, 3600, 21600, 86400')
+            elif self.exchange == 'binance':
+                if not isinstance(args.granularity, str):
+                    raise TypeError('Invalid granularity.')
+
+                if not args.granularity in [ '1m', '5m', '15m', '1h', '6h', '1d' ]:
+                    raise TypeError('Granularity options: 1m, 5m, 15m, 1h, 6h, 1d')
+
+            self.granularity = args.granularity
+
+        if args.graphs != None:
+            if not args.graphs in [ '0', '1' ]:
+                self.save_graphs = args.graphs
+
+        if args.verbose != None:
+            if not args.verbose in [ '0', '1' ]:
+                self.is_verbose = args.verbose
+
+        if args.live != None:
+            if not args.live in [ '0', '1' ]:
+                self.is_live = args.live
+
+        if args.sim != None:
+            if args.sim == 'slow':
+                self.is_sim = 1
+                self.sim_speed = 'slow'
+                self.is_live = 0
+            elif args.sim == 'slow-sample':
+                self.is_sim = 1
+                self.sim_speed = 'slow-sample'
+                self.is_live = 0
+            elif args.sim == 'fast':
+                self.is_sim = 1
+                self.sim_speed = 'fast'
+                self.is_live = 0
+            elif args.sim == 'fast-sample':
+                self.is_sim = 1
+                self.sim_speed = 'fast-sample'
+                self.is_live = 0
+
+        if args.sellupperpcnt != None:
+            if isinstance(args.sellupperpcnt, int):
+                if args.sellupperpcnt > 0 and args.sellupperpcnt <= 100:
+                    self.sell_upper_pcnt = float(args.sellupperpcnt)
+
+        if args.selllowerpcnt != None:
+            if isinstance(args.selllowerpcnt, int):
+                if args.selllowerpcnt >= -100 and args.selllowerpcnt < 0:
+                    self.sell_lower_pcnt = float(args.selllowerpcnt)
 
         if self.exchange == 'binance':
             if len(self.api_url) > 1 and self.api_url[-1] != '/':
@@ -398,3 +568,23 @@ class Config():
 
     def sellLowerPcnt(self):
         return self.sell_lower_pcnt
+
+    def truncate(self, f, n):
+        return math.floor(f * 10 ** n) / 10 ** n
+
+    def compare(self, val1, val2, label='', precision=2):
+        if val1 > val2:
+            if label == '':
+                return str(self.truncate(val1, precision)) + ' > ' + str(self.truncate(val2, precision))
+            else:
+                return label + ': ' + str(self.truncate(val1, precision)) + ' > ' + str(self.truncate(val2, precision))
+        if val1 < val2:
+            if label == '':
+                return str(self.truncate(val1, precision)) + ' < ' + str(self.truncate(val2, precision))
+            else:
+                return label + ': ' + str(self.truncate(val1, precision)) + ' < ' + str(self.truncate(val2, precision))
+        else:
+            if label == '':
+                return str(self.truncate(val1, precision)) + ' = ' + str(self.truncate(val2, precision))
+            else:
+                return label + ': ' + str(self.truncate(val1, precision)) + ' = ' + str(self.truncate(val2, precision))   

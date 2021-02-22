@@ -1,4 +1,4 @@
-"""Coinbase Pro or Binanace trading account, simulated or live depending on if the config file is provided"""
+"""Live or test trading account"""
 
 import sys
 import numpy as np
@@ -10,134 +10,36 @@ from models.Binance import PublicAPI
 from models.CoinbasePro import AuthAPI
 
 class TradingAccount():
-    def __init__(self, config={}):
+    def __init__(self, app={}):
         """Trading account object model
 
         Parameters
         ----------
-        config : str, optional
-            A JSON string containing the API keys from config.json
+        app : object
+            PyCryptoBot object
         """
 
         # config needs to be a dictionary, empty or otherwise
-        if not isinstance(config, dict):
-            raise TypeError('Config provided is not a dictionary.')
+        if not isinstance(app, object):
+            raise TypeError('App is not a PyCryptoBot object.')
 
-        # crypto exchange
-        self.exchange = 'coinbasepro'
-        if 'exchange' in config and config['exchange'] == 'binance':
-            self.exchange = 'binance'
-
-        if self.exchange == 'binance':
-            if len(config) >= 3 and 'api_url' in config and 'api_key' in config and 'api_secret' in config:
-                if len(config['api_url']) > 1 and config['api_url'][-1] != '/':
-                    config['api_url'] = config['api_url'] + '/'
-
-                valid_urls = [
-                    'https://api.binance.com/',
-                    'https://testnet.binance.vision/api/'
-                ]
-
-                # validate api_url is valid
-                if config['api_url'] not in valid_urls:
-                    raise ValueError('Binance API URL is invalid')
-
-                # validates the api key is syntactically correct
-                p = re.compile(r"^[A-z0-9]{64,64}$")
-                if not p.match(config['api_key']):
-                    raise TypeError('Binance API key is invalid')
-        
-                # validates the api secret is syntactically correct
-                p = re.compile(r"^[A-z0-9]{64,64}$")
-                if not p.match(config['api_secret']):
-                    err = 'Binance API secret is invalid'
-                    raise TypeError(err)
-
-                self.mode = 'live'
-
-                self.api_url = config['api_url']
-                self.api_key = config['api_key']
-                self.api_secret = config['api_secret']
-
-                self.client = Client(self.api_key, self.api_secret, { 'verify': False, 'timeout': 20 })
-
-                self.mode = 'live'
-                if 'config' in config:
-                    if 'live' in config['config']:
-                        if isinstance(config['config']['live'], int) and config['config']['live'] == 1:
-                            self.mode = 'live'
-                        elif isinstance(config['config']['live'], int) and config['config']['live'] == 0:
-                            self.mode = 'test'
-                        else:
-                            self.mode = 'test'
-            else:
-                # if a config file is not provided the trading account will be using dummy data!
-                #print('Trading account mode: test (using dummy data)')
-                self.mode = 'test'
-
-        else:
-            # if the config is provided then a valid api_url, api_key, api_secret and api_pass need to be provided
-            if len(config) >= 4 and 'api_url' in config and 'api_key' in config and 'api_secret' in config and 'api_pass' in config:
-                if len(config['api_url']) > 1 and config['api_url'][-1] != '/':
-                    config['api_url'] = config['api_url'] + '/'
- 
-                valid_urls = [
-                    'https://api.pro.coinbase.com/',
-                    'https://public.sandbox.pro.coinbase.com/',
-                    'https://api-public.sandbox.pro.coinbase.com/'
-                ]
-
-                # validate api_url is valid
-                if config['api_url'] not in valid_urls:
-                    raise ValueError('Coinbase Pro API URL is invalid')
-
-                # validate api_key is syntactically correct
-                p = re.compile(r"^[a-f0-9]{32,32}$")
-                if not p.match(config['api_key']):
-                    raise TypeError('Coinbase Pro API key is invalid')
-
-                # validate api_secret is syntactically correct
-                p = re.compile(r"^[A-z0-9+\/]+==$")
-                if not p.match(config['api_secret']):
-                    raise TypeError('Coinbase Pro API secret is invalid')
-
-                # validate api_pass is syntactically correct
-                p = re.compile(r"^[a-z0-9]{10,11}$")
-                if not p.match(config['api_pass']):
-                    raise TypeError('Coinbase Pro API passphrase is invalid')
-
-                self.api_url = config['api_url']
-                self.api_key = config['api_key']
-                self.api_secret = config['api_secret']
-                self.api_pass = config['api_pass']
-
-                self.mode = 'live'
-                if 'config' in config:
-                    if 'live' in config['config']:
-                        if isinstance(config['config']['live'], int) and config['config']['live'] == 1:
-                            self.mode = 'live'
-                        elif isinstance(config['config']['live'], int) and config['config']['live'] == 0:
-                            self.mode = 'test'
-                        else:
-                            self.mode = 'test'
-            else:
-                # if a config file is not provided the trading account will be using dummy data!
-                #print('Trading account mode: test (using dummy data)')
-                self.mode = 'test'
+        if app.getExchange() == 'binance':
+            self.client = Client(app.getAPIKey(), app.getAPISecret(), { 'verify': False, 'timeout': 20 })
 
         # if trading account is for testing it will be instantiated with a balance of 1000
-        self.balance = pd.DataFrame([['FIAT',1000,0,1000],['CRYPTO',0,0,0]], columns=['currency','balance','hold','available'])
+        self.balance = pd.DataFrame([
+            [ 'QUOTE', 1000, 0, 1000 ],
+            [ 'BASE', 0, 0, 0 ]], 
+            columns=['currency','balance','hold','available'])
         
+        self.app = app
+
+        if app.isLive() == 1:
+            self.mode = 'live'
+        else:
+            self.mode = 'test'
+
         self.orders = pd.DataFrame()
-
-    def truncate(self, f, n):
-        return math.floor(f * 10 ** n) / 10 ** n
-
-    def getExchange(self):
-        return self.exchange
-
-    def getMode(self):
-        return self.mode
 
     def __convertStatus(self, val):
         if val == 'filled':
@@ -158,12 +60,12 @@ class TradingAccount():
             Filters orders by status, defaults to 'all'
         """
 
-        if self.exchange == 'coinbasepro' and market != '':
+        if self.app.getExchange() == 'coinbasepro' and market != '':
             # validate market is syntactically correct
             p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
             if not p.match(market):
                 raise TypeError('Coinbase Pro market is invalid.')
-        elif self.exchange == 'binance':
+        elif self.app.getExchange() == 'binance':
              # validate market is syntactically correct
             p = re.compile(r"^[A-Z]{6,12}$")
             if not p.match(market):
@@ -178,7 +80,7 @@ class TradingAccount():
         if not status in ['open', 'pending', 'done', 'active', 'all', 'filled']:
             raise ValueError('Invalid order status.')
 
-        if self.exchange == 'binance':
+        if self.app.getExchange() == 'binance':
             if self.mode == 'live':
                 resp = self.client.get_all_orders(symbol=market)
                 if len(resp) > 0:
@@ -222,7 +124,7 @@ class TradingAccount():
         else:
             if self.mode == 'live':
                 # if config is provided and live connect to Coinbase Pro account portfolio
-                model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+                model = AuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
                 # retrieve orders from live Coinbase Pro account portfolio
                 self.orders = model.getOrders(market, action, status)
                 return self.orders
@@ -242,7 +144,7 @@ class TradingAccount():
             Filters orders by currency
         """
 
-        if self.exchange == 'binance':
+        if self.app.getExchange() == 'binance':
             if self.mode == 'live':
                 resp = self.client.get_account()
                 if 'balances' in resp:
@@ -267,9 +169,9 @@ class TradingAccount():
                         else:
                             # return balance of specified currency (if positive)
                             if currency in ['EUR','GBP','USD']:
-                                return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2)
+                                return self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2)
                             else:
-                                return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4)
+                                return self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4)
                 else:
                     return 0.0
             else:
@@ -278,14 +180,14 @@ class TradingAccount():
                     # retrieve all balances
                     return self.balance
                 else:
-                    if self.exchange == 'binance':
-                        self.balance = self.balance.replace('FIAT', currency)
+                    if self.app.getExchange() == 'binance':
+                        self.balance = self.balance.replace('QUOTE', currency)
                     else:    
-                        # replace FIAT and CRYPTO placeholders
+                        # replace QUOTE and BASE placeholders
                         if currency in ['EUR','GBP','USD']:
-                            self.balance = self.balance.replace('FIAT', currency)
+                            self.balance = self.balance.replace('QUOTE', currency)
                         else:
-                            self.balance = self.balance.replace('CRYPTO', currency)
+                            self.balance = self.balance.replace('BASE', currency)
 
                     if self.balance.currency[self.balance.currency.isin([currency])].empty == True:
                         self.balance.loc[len(self.balance)] = [currency,0,0,0]
@@ -300,14 +202,14 @@ class TradingAccount():
                     else:
                         # return balance of specified currency (if positive)
                         if currency in ['EUR','GBP','USD']:
-                            return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2)
+                            return self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2)
                         else:
-                            return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4)
+                            return self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4)
 
         else:
             if self.mode == 'live':
                 # if config is provided and live connect to Coinbase Pro account portfolio
-                model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+                model = AuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
                 if currency == '':
                     # retrieve all balances
                     return model.getAccounts()[['currency', 'balance', 'hold', 'available']]
@@ -321,9 +223,9 @@ class TradingAccount():
                     else:
                         # return balance of specified currency (if positive)
                         if currency in ['EUR','GBP','USD']:
-                            return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2)
+                            return self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2)
                         else:
-                            return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4)
+                            return self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4)
                             
             else:
                 # return dummy balances
@@ -332,11 +234,11 @@ class TradingAccount():
                     # retrieve all balances
                     return self.balance
                 else:
-                    # replace FIAT and CRYPTO placeholders
+                    # replace QUOTE and BASE placeholders
                     if currency in ['EUR','GBP','USD']:
-                        self.balance = self.balance.replace('FIAT', currency)
+                        self.balance = self.balance.replace('QUOTE', currency)
                     elif currency in ['BCH','BTC','ETH','LTC','XLM']:
-                        self.balance = self.balance.replace('CRYPTO', currency)
+                        self.balance = self.balance.replace('BASE', currency)
 
                     if self.balance.currency[self.balance.currency.isin([currency])].empty == True:
                         self.balance.loc[len(self.balance)] = [currency,0,0,0]
@@ -351,9 +253,9 @@ class TradingAccount():
                     else:
                         # return balance of specified currency (if positive)
                         if currency in ['EUR','GBP','USD']:
-                            return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2)
+                            return self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2)
                         else:
-                            return self.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4)
+                            return self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4)
 
     def saveTrackerCSV(self, market='', save_file='tracker.csv'):
         """Saves order tracker to CSV
@@ -374,7 +276,7 @@ class TradingAccount():
 
         if self.mode == 'live':
             # if config is provided and live connect to Coinbase Pro account portfolio
-            model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+            model = AuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
             # retrieve orders from live Coinbase Pro account portfolio
             df = model.getOrders(market, '', 'done')
         else:
@@ -456,22 +358,22 @@ class TradingAccount():
         cryptoMarket: str
             Crypto market you wish to purchase
         fiatMarket, str
-            FIAT market funding the purchase
+            QUOTE market funding the purchase
         fiatAmount, float
-            FIAT amount of crypto currency to purchase
+            QUOTE amount of crypto currency to purchase
         manualPrice, float
             Used for simulations specifying the live price to purchase
         """
 
         # fiat funding amount must be an integer or float
         if not isinstance(fiatAmount, float) and not isinstance(fiatAmount, int):
-            raise TypeError('FIAT amount not numeric.')
+            raise TypeError('QUOTE amount not numeric.')
 
         # fiat funding amount must be positive
         if fiatAmount <= 0:
-            raise Exception('Invalid FIAT amount.')
+            raise Exception('Invalid QUOTE amount.')
 
-        if self.exchange == 'binance':
+        if self.app.getExchange() == 'binance':
              # validate crypto market is syntactically correct
             p = re.compile(r"^[A-Z]{3,8}$")
             if not p.match(cryptoMarket):
@@ -488,15 +390,15 @@ class TradingAccount():
 
             # fiat market should be either EUR, GBP, or USD
             if fiatMarket not in ['EUR', 'GBP', 'USD']:
-                raise Exception('Invalid FIAT market: EUR, GBP, USD')
+                raise Exception('Invalid QUOTE market: EUR, GBP, USD')
 
         # reconstruct the exchange market using crypto and fiat inputs
-        if self.exchange == 'binance':
+        if self.app.getExchange() == 'binance':
             market = cryptoMarket + fiatMarket
         else:
             market = cryptoMarket + '-' + fiatMarket
 
-        if self.exchange == 'binance':
+        if self.app.getExchange() == 'binance':
             if self.mode == 'live':
                 # execute a live market buy
                 resp = self.client.order_market_buy(symbol=market, quantity=fiatAmount)
@@ -515,7 +417,7 @@ class TradingAccount():
                 price = manualPrice
                 # if manualPrice is non-positive retrieve the current live price
                 if manualPrice <= 0:
-                    if self.exchange == 'binance':
+                    if self.app.getExchange() == 'binance':
                         api = PublicAPI()
                         price = api.getTicker(market)
                     else:
@@ -551,7 +453,7 @@ class TradingAccount():
         else:
             if self.mode == 'live':
                 # connect to coinbase pro api (authenticated)
-                model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+                model = AuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
 
                 # execute a live market buy
                 if fiatAmount > 0:
@@ -610,13 +512,13 @@ class TradingAccount():
         cryptoMarket: str
             Crypto market you wish to purchase
         fiatMarket, str
-            FIAT market funding the purchase
+            QUOTE market funding the purchase
         fiatAmount, float
-            FIAT amount of crypto currency to purchase
+            QUOTE amount of crypto currency to purchase
         manualPrice, float
             Used for simulations specifying the live price to purchase
         """
-        if self.exchange == 'binance':
+        if self.app.getExchange() == 'binance':
              # validate crypto market is syntactically correct
             p = re.compile(r"^[A-Z]{3,8}$")
             if not p.match(cryptoMarket):
@@ -633,10 +535,10 @@ class TradingAccount():
 
             # fiat market should be either EUR, GBP, or USD
             if fiatMarket not in ['EUR', 'GBP', 'USD']:
-                raise Exception('Invalid FIAT market: EUR, GBP, USD')
+                raise Exception('Invalid QUOTE market: EUR, GBP, USD')
 
         # reconstruct the exchange market using crypto and fiat inputs
-        if self.exchange == 'binance':
+        if self.app.getExchange() == 'binance':
             market = cryptoMarket + fiatMarket
         else:
             market = cryptoMarket + '-' + fiatMarket
@@ -649,7 +551,7 @@ class TradingAccount():
         if cryptoAmount <= 0:
             raise Exception('Invalid crypto amount.')
 
-        if self.exchange == 'binance':
+        if self.app.getExchange() == 'binance':
             if self.mode == 'live':
                 # execute a live market buy
                 resp = self.client.order_market_sell(symbol=market, quantity=cryptoAmount)
@@ -701,7 +603,7 @@ class TradingAccount():
         else:
             if self.mode == 'live':
                 # connect to Coinbase Pro API live
-                model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+                model = AuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
 
                 # execute a live market sell
                 resp = model.marketSell(market, float(self.getBalance(cryptoMarket)))

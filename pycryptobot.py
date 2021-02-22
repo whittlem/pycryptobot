@@ -1,212 +1,17 @@
-"""Python Crypto Bot consuming Coinbase Pro API"""
+"""Python Crypto Bot consuming Coinbase Pro or Binance APIs"""
 
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import argparse, json, logging, math, os, random, re, sched, sys, time
+
+from models.PyCryptoBot import PyCryptoBot
 from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
 from models.CoinbasePro import AuthAPI, PublicAPI
 from views.TradingGraphs import TradingGraphs
 
-def truncate(f, n):
-    return math.floor(f * 10 ** n) / 10 ** n
-
-def compare(val1, val2, label='', precision=2):
-    if val1 > val2:
-        if label == '':
-            return str(truncate(val1, precision)) + ' > ' + str(truncate(val2, precision))
-        else:
-            return label + ': ' + str(truncate(val1, precision)) + ' > ' + str(truncate(val2, precision))
-    if val1 < val2:
-        if label == '':
-            return str(truncate(val1, precision)) + ' < ' + str(truncate(val2, precision))
-        else:
-            return label + ': ' + str(truncate(val1, precision)) + ' < ' + str(truncate(val2, precision))
-    else:
-        if label == '':
-            return str(truncate(val1, precision)) + ' = ' + str(truncate(val2, precision))
-        else:
-            return label + ': ' + str(truncate(val1, precision)) + ' = ' + str(truncate(val2, precision))      
-
-cryptoMarket = 'BTC'
-fiatMarket = 'GBP'
-granularity = 3600
-save_graphs = 0
-is_live = 0
-is_verbose = 1
-is_sim = 0
-sim_speed = ''
-sell_upper_pcnt = 101
-sell_lower_pcnt = -101
-
-# reduce informational logging
-logging.getLogger("requests").setLevel(logging.WARNING)
-logging.getLogger("urllib3").setLevel(logging.WARNING)
-
-# instantiate the arguments parser
-parser = argparse.ArgumentParser(description='Python Crypto Bot using the Coinbase Pro API')
-
-# optional arguments
-parser.add_argument('--granularity', type=int, help='Optionally provide granularity via arguments')
-parser.add_argument('--live', type=int, help='Optionally provide live status via arguments')
-parser.add_argument('--market', type=str, help='Optionally provide market via arguments')
-parser.add_argument('--graphs', type=int, help='Optionally save graphs to graphs directory')
-parser.add_argument('--sim', type=str, help='Optionally provide simulation status via arguments ("fast", "slow")')
-parser.add_argument('--verbose', type=int, help='Optionally provide verbose status via arguments')
-parser.add_argument('--sellupperpcnt', type=int, help='Optionally provide upper sell percent')
-parser.add_argument('--selllowerpcnt', type=int, help='Optionally provide lower sell percent')
-
-# parse arguments
-args = parser.parse_args()
-
-# preload config from config.json if it exists
-try:
-    # open the config.json file
-    with open('config.json') as config_file:
-        # store the configuration in dictionary
-        config = json.load(config_file)
-
-        if 'config' in config:
-            if 'cryptoMarket' and 'fiatMarket' in config['config']:
-                cryptoMarket = config['config']['cryptoMarket']
-                fiatMarket = config['config']['fiatMarket']
-
-            if 'granularity' in config['config']:
-                if isinstance(config['config']['granularity'], int):
-                    if config['config']['granularity'] in [60, 300, 900, 3600, 21600, 86400]:
-                        granularity = config['config']['granularity']
-
-            if 'graphs' in config['config']:
-                if isinstance(config['config']['graphs'], int):
-                    if config['config']['graphs'] in [0, 1]:
-                        save_graphs = config['config']['graphs']
-
-            if 'live' in config['config']:
-                if isinstance(config['config']['live'], int):
-                    if config['config']['live'] in [0, 1]:
-                        is_live = config['config']['live']
-
-            if 'verbose' in config['config']:
-                if isinstance(config['config']['verbose'], int):
-                    if config['config']['verbose'] in [0, 1]:
-                        is_verbose = config['config']['verbose']
-
-            if 'sim' in config['config']:
-                if isinstance(config['config']['sim'], str):
-                    if config['config']['sim'] in ['slow', 'fast', 'slow-sample', 'fast-sample']:
-                        is_live = 0
-                        is_sim = 1
-                        sim_speed = config['config']['sim']
-
-            if 'sellupperpcnt' in config['config']:
-                if isinstance(config['config']['sellupperpcnt'], int):
-                    if config['config']['sellupperpcnt'] > 0 and config['config']['sellupperpcnt'] <= 100:
-                        sell_upper_pcnt = int(config['config']['sellupperpcnt'])
-
-            if 'selllowerpcnt' in config['config']:
-                if isinstance(config['config']['selllowerpcnt'], int):
-                    if config['config']['selllowerpcnt'] >= -100 and config['config']['selllowerpcnt'] < 0:
-                        sell_lower_pcnt = int(config['config']['selllowerpcnt'])
-
-except IOError:
-    print("warning: 'config.json' not found.")
-
-if args.market != None:
-    # market set via --market argument
-
-    # validates the market is syntactically correct
-    p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-    if not p.match(args.market):
-        raise TypeError('Coinbase Pro market required.')
-
-    cryptoMarket, fiatMarket = args.market.split('-',  2)
-
-# validation of crypto market inputs
-if cryptoMarket not in ['BCH', 'BTC', 'ETH', 'LTC', 'XLM']:
-    raise Exception('Invalid crypto market: BCH, BTC, ETH, LTC, ETH, XLM')
-
-# validation of fiat market inputs
-if fiatMarket not in ['EUR', 'GBP', 'USD']:
-    raise Exception('Invalid FIAT market: EUR, GBP, USD')
-
-# reconstruct the market based on the crypto and fiat inputs
-market = cryptoMarket + '-' + fiatMarket
-
-if args.granularity != None:
-    # granularity set via --granularity argument
-
-    # validates granularity is an integer
-    if not isinstance(args.granularity, int):
-        raise TypeError('Granularity integer required.')
-
-    # validates the granularity is supported by Coinbase Pro
-    if not args.granularity in [60, 300, 900, 3600, 21600, 86400]:
-        raise TypeError('Granularity options: 60, 300, 900, 3600, 21600, 86400.')
-        
-    granularity = args.granularity
-
-if args.graphs != None:
-    # graphs status set via --graphs argument
-
-    if args.graphs == 1:
-        save_graphs = 1
-    else:
-        save_graphs = 0
-
-if args.live != None:
-    # live status set via --live argument
-
-    if args.live == 1:
-        is_live = 1
-    else:
-        is_live = 0
-
-if args.verbose != None:
-    # verbose status set via --verbose argument
-
-    if args.verbose == 1:
-        is_verbose = 1
-    else:
-        is_verbose = 0
-
-if args.sim != None:
-    # sim status set via --sim argument
-
-    if args.sim == 'slow':
-        is_sim = 1
-        sim_speed = 'slow'
-        is_live = 0
-    elif args.sim == 'slow-sample':
-        is_sim = 1
-        sim_speed = 'slow-sample'
-        is_live = 0
-    elif args.sim == 'fast':
-        is_sim = 1
-        sim_speed = 'fast'
-        is_live = 0
-    elif args.sim == 'fast-sample':
-        is_sim = 1
-        sim_speed = 'fast-sample'
-        is_live = 0
-
-    else:
-        is_sim = 0
-        sim_speed = ''
-
-if args.sellupperpcnt != None:
-    # sell upper percent --sellupperlimit pcnt
-
-    if isinstance(args.sellupperpcnt, int):
-        if args.sellupperpcnt > 0 and args.sellupperpcnt <= 100:
-            sell_upper_pcnt = int(args.sellupperpcnt)
-
-if args.selllowerpcnt != None:
-    # sell lower percent --selllowerlimit pcnt
-
-    if isinstance(args.selllowerpcnt, int):
-        if args.selllowerpcnt >= -100 and args.selllowerpcnt < 0:
-            sell_lower_pcnt = int(args.selllowerpcnt)
+app = PyCryptoBot('coinbasepro')
 
 # initial state is to wait
 action = 'WAIT'
@@ -215,49 +20,41 @@ last_buy = 0
 last_df_index = ''
 buy_state = ''
 iterations = 0
-x_since_buy = 0
-x_since_sell = 0
 buy_count = 0
 sell_count = 0
 buy_sum = 0
 sell_sum = 0
-failsafe = False
 
 config = {}
 account = None
 # if live trading is enabled
-if is_live == 1:
-    # open the config.json file
-    with open('config.json') as config_file:
-        # store the configuration in dictionary
-        config = json.load(config_file)
-    # connect your Coinbase Pro live account
-    account = TradingAccount(config)
+if app.isLive() == 1:
+    account = TradingAccount(app)
 
     # if the bot is restarted between a buy and sell it will sell first
-    if (market.startswith('BTC-') and account.getBalance(cryptoMarket) > 0.001):
+    if (app.getMarket().startswith('BTC-') and account.getBalance(app.getBaseCurrency()) > 0.001):
         last_action = 'BUY'
-    elif (market.startswith('BCH-') and account.getBalance(cryptoMarket) > 0.01):
+    elif (app.getMarket().startswith('BCH-') and account.getBalance(app.getBaseCurrency()) > 0.01):
         last_action = 'BUY'
-    elif (market.startswith('ETH-') and account.getBalance(cryptoMarket) > 0.01):
+    elif (app.getMarket().startswith('ETH-') and account.getBalance(app.getBaseCurrency()) > 0.01):
         last_action = 'BUY'
-    elif (market.startswith('LTC-') and account.getBalance(cryptoMarket) > 0.1):
+    elif (app.getMarket().startswith('LTC-') and account.getBalance(app.getBaseCurrency()) > 0.1):
         last_action = 'BUY'
-    elif (market.startswith('XLM-') and account.getBalance(cryptoMarket) > 35):
+    elif (app.getMarket().startswith('XLM-') and account.getBalance(app.getBaseCurrency()) > 35):
         last_action = 'BUY'
-    elif (account.getBalance(fiatMarket) > 30):
+    elif (account.getBalance(app.getQuoteCurrency()) > 30):
         last_action = 'SELL'
 
-    orders = account.getOrders(market, '', 'done')
+    orders = account.getOrders(app.getMarket(), '', 'done')
     if len(orders) > 0:
         df = orders[-1:]
         price = df[df.action == 'buy']['price']
         if len(price) > 0:
-            last_buy = float(truncate(price, 2))
+            last_buy = float(app.truncate(price, 2))
 
 def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     """Trading bot job which runs at a scheduled interval"""
-    global action, buy_count, buy_sum, failsafe, iterations, last_action, last_buy, last_df_index, sell_count, sell_sum, buy_state, x_since_buy, x_since_sell
+    global action, buy_count, buy_sum, iterations, last_action, last_buy, last_df_index, sell_count, sell_sum, buy_state
 
     # increment iterations
     iterations = iterations + 1
@@ -265,9 +62,9 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     # coinbase pro public api
     api = PublicAPI()
 
-    if is_sim == 0:
-        # retrieve the market data
-        tradingData = api.getHistoricalData(market, granularity)
+    if app.isSimulation() == 0:
+        # retrieve the app.getMarket() data
+        tradingData = api.getHistoricalData(app.getMarket(), granularity)
 
     # analyse the market data
     tradingDataCopy = tradingData.copy()
@@ -281,7 +78,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
         logging.error('error: data frame length is < 300 (' + str(len(df)) + ')')
         s.enter(300, 1, executeJob, (sc, market, granularity))
 
-    if is_sim == 1:
+    if app.isSimulation() == 1:
         # with a simulation df_last will iterate through data
         df_last = df.iloc[iterations-1:iterations]
     else:
@@ -290,13 +87,14 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
  
     current_df_index = str(df_last.index.format()[0])
 
-    if is_sim == 0:
+    if app.isSimulation() == 0:
         price = api.getTicker(market)
         if price < df_last['low'].values[0] or price == 0:
             price = float(df_last['close'].values[0])
     else:
         price = float(df_last['close'].values[0])
 
+    # technical indicators
     ema12gtema26 = bool(df_last['ema12gtema26'].values[0])
     ema12gtema26co = bool(df_last['ema12gtema26co'].values[0])
     goldencross = bool(df_last['goldencross'].values[0])
@@ -307,8 +105,6 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     ema12ltema26co = bool(df_last['ema12ltema26co'].values[0])
     macdltsignal = bool(df_last['macdltsignal'].values[0])
     macdltsignalco = bool(df_last['macdltsignalco'].values[0])
-    obv = float(df_last['obv'].values[0])
-    obv_pc = float(df_last['obv_pc'].values[0])
 
     # candlestick detection
     hammer = bool(df_last['hammer'].values[0])
@@ -326,12 +122,11 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     two_black_gapping = bool(df_last['two_black_gapping'].values[0])
 
     # criteria for a buy signal
-    if ((ema12gtema26co == True and macdgtsignal == True and obv_pc > 1) or (ema12gtema26 == True and macdgtsignal == True and obv_pc > 1 and x_since_buy > 0 and x_since_buy <= 2)) and last_action != 'BUY':
+    if ema12gtema26co == True and macdgtsignal == True and goldencross == True and last_action != 'BUY':
         action = 'BUY'
     # criteria for a sell signal
-    elif ((ema12ltema26co == True and macdltsignal == True) or (ema12ltema26 == True and macdltsignal == True and x_since_sell > 0 and x_since_sell <= 2)) and last_action not in ['','SELL']:
+    elif ema12ltema26co == True and macdltsignal == True and last_action not in ['','SELL']:
         action = 'SELL'
-        failsafe = False
     # anything other than a buy or sell, just wait
     else:
         action = 'WAIT'
@@ -340,20 +135,18 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
         change_pcnt = ((price / last_buy) - 1) * 100
 
         # loss failsafe sell at sell_lower_pcnt
-        if (change_pcnt < sell_lower_pcnt):
-            failsafe = True
+        if app.sellLowerPcnt() != None and change_pcnt < app.sellLowerPcnt():
             action = 'SELL'
             last_action = 'BUY'
-            log_text = '! Loss Failsafe Triggered (< ' + str(sell_lower_pcnt) + '%)'
+            log_text = '! Loss Failsafe Triggered (< ' + str(app.sellLowerPcnt()) + '%)'
             print (log_text, "\n")
             logging.warning(log_text)
 
         # profit bank at sell_upper_pcnt
-        if (change_pcnt > sell_upper_pcnt):
-            failsafe = True
+        if app.sellUpperPcnt() != None and change_pcnt > app.sellUpperPcnt():
             action = 'SELL'
             last_action = 'BUY'
-            log_text = '! Profit Bank Triggered (> ' + str(sell_upper_pcnt) + '%)'
+            log_text = '! Profit Bank Triggered (> ' + str(app.sellUpperPcnt()) + '%)'
             print (log_text, "\n")
             logging.warning(log_text)
 
@@ -366,14 +159,12 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     # polling is every 5 minutes (even for hourly intervals), but only process once per interval
     if (last_df_index != current_df_index):
         precision = 2
-        if cryptoMarket == 'XLM':
+        if app.getBaseCurrency() == 'XLM':
             precision = 4
 
-        price_text = 'Close: ' + str(truncate(price, precision))
-        ema_text = compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26', precision)
-        macd_text = compare(df_last['macd'].values[0], df_last['signal'].values[0], 'MACD', precision)
-        obv_text = compare(df_last['obv_pc'].values[0], 0.1, 'OBV %', precision)
-        counter_text = '[I:' + str(iterations) + ',B:' + str(x_since_buy) + ',S:' + str(x_since_sell) + ']'
+        price_text = 'Close: ' + str(app.truncate(price, precision))
+        ema_text = app.compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26', precision)
+        macd_text = app.compare(df_last['macd'].values[0], df_last['signal'].values[0], 'MACD', precision)
 
         if hammer == True:
             log_text = '* Candlestick Detected: Hammer ("Weak - Reversal - Bullish Signal - Up")'
@@ -470,53 +261,40 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             macd_co_prefix = 'v '
             macd_co_suffix = ' v'
 
-        obv_prefix = ''
-        obv_suffix = ''
-        if (obv_pc > 0.1):
-            obv_prefix = '^ '
-            obv_suffix = ' ^'
-        else:
-            obv_prefix = 'v '
-            obv_suffix = ' v'
-
-        if is_verbose == 0:
+        if app.isVerbose() == 0:
             if last_action != '':
-                output_text = current_df_index + ' | ' + market + goldendeathtext + ' | ' + str(granularity) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' ' + counter_text + ' | Last Action: ' + last_action
+                output_text = current_df_index + ' | ' + market + goldendeathtext + ' | ' + str(granularity) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + action + ' ' + ' | Last Action: ' + last_action
             else:
-                output_text = current_df_index + ' | ' + market + goldendeathtext + ' | ' + str(granularity) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' ' + counter_text
+                output_text = current_df_index + ' | ' + market + goldendeathtext + ' | ' + str(granularity) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + action + ' '
 
             if last_action == 'BUY':
                 # calculate last buy minus fees
                 fee = last_buy * 0.005
                 last_buy_minus_fees = last_buy + fee
 
-                margin = str(truncate((((price - last_buy_minus_fees) / price) * 100), 2)) + '%'
+                margin = str(app.truncate((((price - last_buy_minus_fees) / price) * 100), 2)) + '%'
                 output_text += ' | ' +  margin
 
             logging.debug(output_text)
             print (output_text)
         else:
             logging.debug('-- Iteration: ' + str(iterations) + ' --' + goldendeathtext)
-            logging.debug('-- Since Last Buy: ' + str(x_since_buy) + ' --')
-            logging.debug('-- Since Last Sell: ' + str(x_since_sell) + ' --')
 
             if last_action == 'BUY':
-                margin = str(truncate((((price - last_buy) / price) * 100), 2)) + '%'
+                margin = str(app.truncate((((price - last_buy) / price) * 100), 2)) + '%'
                 logging.debug('-- Margin: ' + margin + '% --')            
             
-            logging.debug('price: ' + str(truncate(price, 2)))
-            logging.debug('ema12: ' + str(truncate(float(df_last['ema12'].values[0]), 2)))
-            logging.debug('ema26: ' + str(truncate(float(df_last['ema26'].values[0]), 2)))
+            logging.debug('price: ' + str(app.truncate(price, 2)))
+            logging.debug('ema12: ' + str(app.truncate(float(df_last['ema12'].values[0]), 2)))
+            logging.debug('ema26: ' + str(app.truncate(float(df_last['ema26'].values[0]), 2)))
             logging.debug('ema12gtema26co: ' + str(ema12gtema26co))
             logging.debug('ema12gtema26: ' + str(ema12gtema26))
             logging.debug('ema12ltema26co: ' + str(ema12ltema26co))
             logging.debug('ema12ltema26: ' + str(ema12ltema26))
-            logging.debug('macd: ' + str(truncate(float(df_last['macd'].values[0]), 2)))
-            logging.debug('signal: ' + str(truncate(float(df_last['signal'].values[0]), 2)))
+            logging.debug('macd: ' + str(app.truncate(float(df_last['macd'].values[0]), 2)))
+            logging.debug('signal: ' + str(app.truncate(float(df_last['signal'].values[0]), 2)))
             logging.debug('macdgtsignal: ' + str(macdgtsignal))
             logging.debug('macdltsignal: ' + str(macdltsignal))
-            logging.debug('obv: ' + str(obv))
-            logging.debug('obv_pc: ' + str(obv_pc) + '%')
             logging.debug('action: ' + action)
 
             # informational output on the most recent entry  
@@ -524,18 +302,14 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             print('================================================================================')
             txt = '        Iteration : ' + str(iterations) + goldendeathtext
             print('|', txt, (' ' * (75 - len(txt))), '|')
-            txt = '   Since Last Buy : ' + str(x_since_buy)
-            print('|', txt, (' ' * (75 - len(txt))), '|')
-            txt = '  Since Last Sell : ' + str(x_since_sell)
-            print('|', txt, (' ' * (75 - len(txt))), '|')
             txt = '        Timestamp : ' + str(df_last.index.format()[0])
             print('|', txt, (' ' * (75 - len(txt))), '|')
             print('--------------------------------------------------------------------------------')
-            txt = '            Close : ' + str(truncate(price, 2))
+            txt = '            Close : ' + str(app.truncate(price, 2))
             print('|', txt, (' ' * (75 - len(txt))), '|')
-            txt = '            EMA12 : ' + str(truncate(float(df_last['ema12'].values[0]), 2))
+            txt = '            EMA12 : ' + str(app.truncate(float(df_last['ema12'].values[0]), 2))
             print('|', txt, (' ' * (75 - len(txt))), '|')
-            txt = '            EMA26 : ' + str(truncate(float(df_last['ema26'].values[0]), 2))
+            txt = '            EMA26 : ' + str(app.truncate(float(df_last['ema26'].values[0]), 2))
             print('|', txt, (' ' * (75 - len(txt))), '|')
             txt = '   Crossing Above : ' + str(ema12gtema26co)
             print('|', txt, (' ' * (75 - len(txt))), '|')
@@ -559,9 +333,9 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
             print('--------------------------------------------------------------------------------')
-            txt = '             MACD : ' + str(truncate(float(df_last['macd'].values[0]), 2))
+            txt = '             MACD : ' + str(app.truncate(float(df_last['macd'].values[0]), 2))
             print('|', txt, (' ' * (75 - len(txt))), '|')
-            txt = '           Signal : ' + str(truncate(float(df_last['signal'].values[0]), 2))
+            txt = '           Signal : ' + str(app.truncate(float(df_last['signal'].values[0]), 2))
             print('|', txt, (' ' * (75 - len(txt))), '|')
             txt = '  Currently Above : ' + str(macdgtsignal)
             print('|', txt, (' ' * (75 - len(txt))), '|')
@@ -581,20 +355,6 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
             print('--------------------------------------------------------------------------------')
-            txt = '              OBV : ' + str(truncate(obv, 4))
-            print('|', txt, (' ' * (75 - len(txt))), '|')
-            txt = '       OBV Change : ' + str(obv_pc) + '%'
-            print('|', txt, (' ' * (75 - len(txt))), '|')
-
-            if (obv_pc >= 2):
-                txt = '        Condition : Large positive volume changes'
-            elif (obv_pc < 2 and obv_pc >= 0):
-                txt = '        Condition : Positive volume changes'
-            else:
-                txt = '        Condition : Negative volume changes'
-            print('|', txt, (' ' * (75 - len(txt))), '|')
-
-            print('--------------------------------------------------------------------------------')
             txt = '           Action : ' + action
             print('|', txt, (' ' * (75 - len(txt))), '|')
             print('================================================================================')
@@ -603,32 +363,17 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 print('================================================================================')
 
-        # increment x since buy
-        if (ema12gtema26 == True and failsafe == False):
-            if buy_state == '':
-                buy_state = 'NO_BUY'
-
-            if buy_state != 'NO_BUY' or buy_state == 'NORMAL':
-                x_since_buy = x_since_buy + 1
-
-        # increment x since sell
-        elif (ema12ltema26 == True):
-            x_since_sell = x_since_sell + 1
-            buy_state = 'NORMAL'
-            failsafe = False
-
         # if a buy signal
         if action == 'BUY':
-            buy_count = buy_count + 1
-
-            # reset x since sell
-            x_since_sell = 0
-
             last_buy = price
+            buy_count = buy_count + 1
+            fee = float(price) * 0.005
+            price_incl_fees = float(price) + fee
+            buy_sum = buy_sum + price_incl_fees
 
             # if live
-            if is_live == 1:
-                if is_verbose == 0:
+            if app.isLive() == 1:
+                if app.isVerbose() == 0:
                     logging.info(current_df_index + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | BUY')
                     print ("\n", current_df_index, '|', market, granularity, '|', price_text, '| BUY', "\n")                    
                 else:
@@ -638,12 +383,12 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 # connect to coinbase pro api (authenticated)
                 model = AuthAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
                 # execute a live market buy
-                resp = model.marketBuy(market, float(account.getBalance(fiatMarket)))
+                resp = model.marketBuy(market, float(account.getBalance(app.getQuoteCurrency())))
                 logging.info(resp)
                 #logging.info('attempt to buy ' + resp['specified_funds'] + ' (' + resp['funds'] + ' after fees) of ' + resp['product_id'])
             # if not live
             else:
-                if is_verbose == 0:
+                if app.isVerbose() == 0:
                     logging.info(current_df_index + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | BUY')
                     print ("\n", current_df_index, '|', market, granularity, '|', price_text, '| BUY')
                     print (' Fibonacci Retracement Levels:', str(technicalAnalysis.getFibonacciRetracementLevels(float(price))), "\n")                    
@@ -653,22 +398,22 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                     print('--------------------------------------------------------------------------------')
                 #print(df_last[['close','ema12','ema26','ema12gtema26','ema12gtema26co','macd','signal','macdgtsignal','obv','obv_pc']])
 
-            if save_graphs == 1:
+            if app.shouldSaveGraphs() == 1:
                 tradinggraphs = TradingGraphs(technicalAnalysis)
                 ts = datetime.now().timestamp()
-                filename = 'BTC-GBP_3600_buy_' + str(ts) + '.png'
+                filename = app.getMarket() + '_' + str(app.getGranularity()) + '_buy_' + str(ts) + '.png'
                 tradinggraphs.renderEMAandMACD(24, 'graphs/' + filename, True)
 
         # if a sell signal
         elif action == 'SELL':
             sell_count = sell_count + 1
-
-            # reset x since buy
-            x_since_buy = 0
+            fee = float(price) * 0.005
+            price_incl_fees = float(price) - fee
+            sell_sum = sell_sum + price_incl_fees
 
             # if live
-            if is_live == 1:
-                if is_verbose == 0:
+            if app.isLive() == 1:
+                if app.isVerbose() == 0:
                     logging.info(current_df_index + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | SELL')
                     print ("\n", current_df_index, '|', market, granularity, '|', price_text, '| SELL')
                     print (' Fibonacci Retracement Levels:', str(technicalAnalysis.getFibonacciRetracementLevels(float(price))), "\n")                      
@@ -679,38 +424,34 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 # connect to Coinbase Pro API live
                 model = AuthAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
                 # execute a live market sell
-                resp = model.marketSell(market, float(account.getBalance(cryptoMarket)))
+                resp = model.marketSell(market, float(account.getBalance(app.getBaseCurrency())))
                 logging.info(resp)
                 #logging.info('attempt to sell ' + resp['size'] + ' of ' + resp['product_id'])
             # if not live
             else:
-                if is_verbose == 0:
-                    sell_price = float(str(truncate(price, precision)))
-                    last_buy_price = float(str(truncate(float(last_buy), precision)))
+                if app.isVerbose() == 0:
+                    sell_price = float(str(app.truncate(price, precision)))
+                    last_buy_price = float(str(app.truncate(float(last_buy), precision)))
                     buy_sell_diff = round(np.subtract(sell_price, last_buy_price), precision)
-                    buy_sell_margin_no_fees = str(truncate((((sell_price - last_buy_price) / sell_price) * 100), 2)) + '%'
+                    buy_sell_margin_no_fees = str(app.truncate((((sell_price - last_buy_price) / sell_price) * 100), 2)) + '%'
 
                     # calculate last buy minus fees
                     buy_fee = last_buy_price * 0.005
                     last_buy_price_minus_fees = last_buy_price + buy_fee
 
-                    buy_sell_margin_fees = str(truncate((((sell_price - last_buy_price_minus_fees) / sell_price) * 100), 2)) + '%'
+                    buy_sell_margin_fees = str(app.truncate((((sell_price - last_buy_price_minus_fees) / sell_price) * 100), 2)) + '%'
 
                     logging.info(current_df_index + ' | ' + market + ' ' + str(granularity) + ' | SELL | ' + str(sell_price) + ' | BUY | ' + str(last_buy_price) + ' | DIFF | ' + str(buy_sell_diff) + ' | MARGIN NO FEES | ' + str(buy_sell_margin_no_fees) + ' | MARGIN FEES | ' + str(buy_sell_margin_fees))
                     print ("\n", current_df_index, '|', market, granularity, '| SELL |', str(sell_price), '| BUY |', str(last_buy_price), '| DIFF |', str(buy_sell_diff) , '| MARGIN NO FEES |', str(buy_sell_margin_no_fees), '| MARGIN FEES |', str(buy_sell_margin_fees), "\n")                    
-                
-                    buy_sum = buy_sum + last_buy_price_minus_fees
-                    sell_sum = sell_sum + sell_price
                 else:
                     print('--------------------------------------------------------------------------------')
                     print('|                      *** Executing TEST Sell Order ***                        |')
                     print('--------------------------------------------------------------------------------')
-            #print(df_last[['close','ema12','ema26','ema12ltema26','ema12ltema26co','macd','signal','macdltsignal','obv','obv_pc']])
 
-            if save_graphs == 1:
+            if app.shouldSaveGraphs() == 1:
                 tradinggraphs = TradingGraphs(technicalAnalysis)
                 ts = datetime.now().timestamp()
-                filename = 'BTC-GBP_3600_buy_' + str(ts) + '.png'
+                filename = app.getMarket() + '_' + str(app.getGranularity()) + '_buy_' + str(ts) + '.png'
                 tradinggraphs.renderEMAandMACD(24, 'graphs/' + filename, True)
 
         # last significant action
@@ -723,17 +464,13 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             print ("\nSimulation Summary\n")
 
             if buy_count > sell_count:
-                # calculate last buy minus fees
                 fee = last_buy * 0.005
                 last_buy_minus_fees = last_buy + fee
-
-                buy_sum = buy_sum + (float(truncate(price, precision)) - last_buy_minus_fees)
+                buy_sum = buy_sum + (float(app.truncate(price, precision)) - last_buy_minus_fees)
 
             print ('   Buy Count :', buy_count)
             print ('  Sell Count :', sell_count, "\n")
-            print ('   Buy Total :', buy_sum)
-            print ('  Sell Total :', sell_sum)
-            print ('      Margin :', str(truncate((((sell_sum - buy_sum) / sell_sum) * 100), 2)) + '%', "\n")
+            print ('      Margin :', str(app.truncate((((sell_sum - buy_sum) / sell_sum) * 100), 2)) + '%', "\n")
     else:
         now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
         print (now, '|', market + goldendeathtext, '|', str(granularity), '| Current Price:', price)
@@ -742,13 +479,13 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
         iterations = iterations - 1
 
     # if live
-    if is_live == 1:
+    if app.isLive() == 1:
         # update order tracker csv
         account.saveTrackerCSV()
 
-    if is_sim == 1:
+    if app.isSimulation() == 1:
         if iterations < 300:
-            if sim_speed in [ 'fast', 'fast-sample' ]:
+            if app.simuluationSpeed() in [ 'fast', 'fast-sample' ]:
                 # fast processing
                 executeJob(sc, market, granularity, tradingData)
             else:
@@ -763,17 +500,17 @@ try:
     logging.basicConfig(filename='pycryptobot.log', format='%(asctime)s - %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filemode='a', level=logging.DEBUG)
 
     print('--------------------------------------------------------------------------------')
-    print('|                Python Crypto Bot using the Coinbase Pro API                  |')
+    print('|           Python Crypto Bot using the Coinbase Pro or Binanace APIs          |')
     print('--------------------------------------------------------------------------------')
 
-    if is_verbose == 1:   
-        txt = '           Market : ' + market
+    if app.isVerbose() == 1:   
+        txt = '           Market : ' + app.getMarket()
         print('|', txt, (' ' * (75 - len(txt))), '|')
-        txt = '      Granularity : ' + str(granularity) + ' seconds'
+        txt = '      Granularity : ' + str(app.getGranularity()) + ' seconds'
         print('|', txt, (' ' * (75 - len(txt))), '|')
         print('--------------------------------------------------------------------------------')
 
-    if is_live == 1:
+    if app.isLive() == 1:
         txt = '         Bot Mode : LIVE - live trades using your funds!'
     else:
         txt = '         Bot Mode : TEST - test trades using dummy funds :)'
@@ -783,39 +520,39 @@ try:
     txt = '      Bot Started : ' + str(datetime.now())
     print('|', txt, (' ' * (75 - len(txt))), '|')
     print('================================================================================')
-    if sell_upper_pcnt != 101:
-        txt = '       Sell Upper : ' + str(sell_upper_pcnt) + '%'
+    if app.sellUpperPcnt() != None:
+        txt = '       Sell Upper : ' + str(app.sellUpperPcnt()) + '%'
         print('|', txt, (' ' * (75 - len(txt))), '|')
     
-    if sell_lower_pcnt != -101:
-        txt = '       Sell Lower : ' + str(sell_lower_pcnt) + '%'
+    if app.sellUpperPcnt() != None:
+        txt = '       Sell Lower : ' + str(app.sellLowerPcnt()) + '%'
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
-    if sell_upper_pcnt != 101 or sell_lower_pcnt != 101:
+    if app.sellUpperPcnt() != None and app.sellLowerPcnt() != None:
         print('================================================================================')
 
     # if live
-    if is_live == 1:
+    if app.isLive() == 1:
         # if live, ensure sufficient funds to place next buy order
-        if (last_action == '' or last_action == 'SELL') and account.getBalance(fiatMarket) == 0:
-            raise Exception('Insufficient ' + fiatMarket + ' funds to place next buy order!')
+        if (last_action == '' or last_action == 'SELL') and account.getBalance(app.getQuoteCurrency()) == 0:
+            raise Exception('Insufficient ' + app.getQuoteCurrency() + ' funds to place next buy order!')
         # if live, ensure sufficient crypto to place next sell order
-        elif last_action == 'BUY' and account.getBalance(cryptoMarket) == 0:
-            raise Exception('Insufficient ' + cryptoMarket + ' funds to place next sell order!')
+        elif last_action == 'BUY' and account.getBalance(app.getBaseCurrency()) == 0:
+            raise Exception('Insufficient ' + app.getBaseCurrency() + ' funds to place next sell order!')
 
     s = sched.scheduler(time.time, time.sleep)
     # run the first job immediately after starting
-    if is_sim == 1:
+    if app.isSimulation() == 1:
         api = PublicAPI()
 
-        if sim_speed in [ 'fast-sample', 'slow-sample' ]:
+        if app.simuluationSpeed() in [ 'fast-sample', 'slow-sample' ]:
             tradingData = pd.DataFrame()
 
             attempts = 0
             while len(tradingData) != 300 and attempts < 10:
                 endDate = datetime.now() - timedelta(hours=random.randint(0,8760 * 3)) # 3 years in hours
                 startDate = endDate - timedelta(hours=300)
-                tradingData = api.getHistoricalData(market, granularity, startDate.isoformat(), endDate.isoformat())
+                tradingData = api.getHistoricalData(app.getMarket(), app.getGranularity(), startDate.isoformat(), endDate.isoformat())
                 attempts += 1
 
             if len(tradingData) != 300:
@@ -829,11 +566,11 @@ try:
             print('|', txt, (' ' * (75 - len(txt))), '|')
             print('================================================================================')
         else:
-            tradingData = api.getHistoricalData(market, granularity)
+            tradingData = api.getHistoricalData(app.getMarket(), app.getGranularity())
 
-        executeJob(s, market, granularity, tradingData)
+        executeJob(s, app.getMarket(), app.getGranularity(), tradingData)
     else: 
-        executeJob(s, market, granularity)
+        executeJob(s, app.getMarket(), app.getGranularity())
     
     s.run()
 
