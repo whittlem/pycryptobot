@@ -1,29 +1,4 @@
-"""Python Crypto Bot consuming Coinbase Pro API
-
-DISCLAIMER -- PLEASE READ!
-
-I developed this crypto trading bot for myself. I'm happy to share the project and code with others
-but I don't take responsibility for how it performs for you or any potential losses incurred due to
-market conditions or even bugs. I'm using this bot myself and will keep improving it so please make
-sure you are pulling the repo often for updates and bug fixes ("git pull"). 
-
-USAGE
-
-You are free to use this app and code however you wish. I know others who are using some of my code
-in their personal projects and I'm fine with that. I do however have a polite request and that is
-if you improve on my code to share it with me. You may have found this project via Medium where I am
-a writer (https://whittle.medium.com). I would really appreciate it if you follow me and read and 
-"clap" for my articles (especially related to this project). I get paid by Medium for my articles
-so that is one way you can reward me for my efforts without actually spending anything. If you 
-would like to share and promote my articles I would also really appreciate it.
-
-IMPORTANT
-
-In order to limit exposure by the trading bot, in your Coinbase Pro profile I suggest you create
-another "Portfolio" dedicted for this trading bot. Create your API keys associated with the
-"Trading Bot" portfolio and only keep funds you want to give the bot access to in the portfolio.
-That way if anything goes wrong only what is within this portfolio is at risk!
-"""
+"""Python Crypto Bot consuming Coinbase Pro API"""
 
 import pandas as pd
 import numpy as np
@@ -273,8 +248,7 @@ if is_live == 1:
     elif (account.getBalance(fiatMarket) > 30):
         last_action = 'SELL'
 
-    authAPI = AuthAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])    
-    orders = authAPI.getOrders(market, '', 'done')
+    orders = account.getOrders(market, '', 'done')
     if len(orders) > 0:
         df = orders[-1:]
         price = df[df.action == 'buy']['price']
