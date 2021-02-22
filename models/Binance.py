@@ -1,7 +1,99 @@
 import math, re
+import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 from binance.client import Client
+
+class AuthAPI():
+    def __init__(self, api_key='', api_secret='', api_url='https://api.binance.com'):
+        """Binance API object model
+    
+        Parameters
+        ----------
+        api_key : str
+            Your Binance account portfolio API key
+        api_secret : str
+            Your Binance account portfolio API secret
+        """
+    
+        # options
+        self.debug = False
+        self.die_on_api_error = False
+
+        if len(api_url) > 1 and api_url[-1] != '/':
+            api_url = api_url + '/'
+
+        valid_urls = [
+            'https://api.binance.com/',
+            'https://testnet.binance.vision/api/'
+        ]
+
+        # validate Binance API
+        if api_url not in valid_urls:
+            raise ValueError('Binance API URL is invalid')
+
+        # validates the api key is syntactically correct
+        p = re.compile(r"^[A-z0-9]{64,64}$")
+        if not p.match(api_key):
+            err = 'Binance API key is invalid'
+            if self.debug:
+                raise TypeError(err)
+            else:
+                raise SystemExit(err)
+ 
+        # validates the api secret is syntactically correct
+        p = re.compile(r"^[A-z0-9]{64,64}$")
+        if not p.match(api_secret):
+            err = 'Binance API secret is invalid'
+            if self.debug:
+                raise TypeError(err)
+            else:
+                raise SystemExit(err)
+
+        self.mode = 'live'
+        self.api_url = api_url
+        self.api_key = api_key
+        self.api_secret = api_secret
+        self.client = Client(self.api_key, self.api_secret, { 'verify': False, 'timeout': 20 })
+
+    def marketBuy(self, market='', fiat_amount=0):
+        """Executes a market buy providing a funding amount"""
+
+        # validates the market is syntactically correct
+        p = re.compile(r"^[A-Z]{6,12}$")
+        if not p.match(market):
+            raise ValueError('Binanace market is invalid.')
+
+        # validates fiat_amount is either an integer or float
+        if not isinstance(fiat_amount, int) and not isinstance(fiat_amount, float):
+            raise TypeError('The funding amount is not numeric.')
+
+        try:
+            # execute market buy
+            return self.client.order_market_buy(symbol=market, quantity=fiat_amount)
+        except Exception as err:
+            ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+            print (ts, 'Binance', 'marketBuy', str(err))
+            return []       
+
+    def marketSell(self, market='', crypto_amount=0):
+        """Executes a market sell providing a crypto amount"""
+
+        # validates the market is syntactically correct
+        p = re.compile(r"^[A-Z]{6,12}$")
+        if not p.match(market):
+            raise ValueError('Binanace market is invalid.')
+
+        if not isinstance(crypto_amount, int) and not isinstance(crypto_amount, float):
+            raise TypeError('The crypto amount is not numeric.')
+
+        try:
+            # execute market sell
+            return self.client.order_market_sell(symbol=market, quantity=crypto_amount)
+        except Exception as err:
+            ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+            print (ts, 'Binance', 'marketSell',  str(err))
+            return []
 
 class PublicAPI():
     def __init__(self):
@@ -125,6 +217,6 @@ class PublicAPI():
         resp = self.client.get_symbol_ticker(symbol=market)
 
         if 'price' in resp:
-            return '{:.8f}'.format(float(resp['price']))
+            return float('{:.8f}'.format(float(resp['price'])))
 
         return 0.0
