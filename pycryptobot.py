@@ -8,10 +8,11 @@ import logging, os, random, sched, sys, time
 from models.PyCryptoBot import PyCryptoBot
 from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
-from models.CoinbasePro import AuthAPI, PublicAPI
+#from models.CoinbasePro import AuthAPI, PublicAPI
 from views.TradingGraphs import TradingGraphs
 
 app = PyCryptoBot()
+s = sched.scheduler(time.time, time.sleep)
 
 # initial state is to wait
 action = 'WAIT'
@@ -69,11 +70,18 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     technicalAnalysis.addAll()
     df = technicalAnalysis.getDataFrame()
 
-    if len(df) != 300:
-        # data frame should have 300 rows, if not retry
-        print('error: data frame length is < 300 (' + str(len(df)) + ')')
-        logging.error('error: data frame length is < 300 (' + str(len(df)) + ')')
-        s.enter(300, 1, executeJob, (sc, market, granularity))
+    if app.getExchange() == 'binance' and app.getGranularity() == '1d':
+        if len(df) != 250:
+            # data frame should have 250 rows, if not retry
+            print('error: data frame length is < 250 (' + str(len(df)) + ')')
+            logging.error('error: data frame length is < 250 (' + str(len(df)) + ')')
+            s.enter(300, 1, executeJob, (sc, market, granularity))
+    else:
+        if len(df) != 300:
+            # data frame should have 300 rows, if not retry
+            print('error: data frame length is < 300 (' + str(len(df)) + ')')
+            logging.error('error: data frame length is < 300 (' + str(len(df)) + ')')
+            s.enter(300, 1, executeJob, (sc, market, granularity))
 
     if app.isSimulation() == 1:
         # with a simulation df_last will iterate through data
@@ -81,8 +89,11 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     else:
         # df_last contains the most recent entry
         df_last = df.tail(1)
- 
-    current_df_index = str(df_last.index.format()[0])
+    
+    if len(df_last.index.format()) > 0:
+        current_df_index = str(df_last.index.format()[0])
+    else:
+        raise Exception('Timestamp on data looks incorrect')
 
     if app.isSimulation() == 0:
         price = app.getTicker(market)
@@ -475,7 +486,10 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     # if live
     if app.isLive() == 1:
         # update order tracker csv
-        account.saveTrackerCSV()
+        if app.getExchange() == 'binance':
+            account.saveTrackerCSV(app.getMarket())
+        elif app.getExchange() == 'binance':
+            account.saveTrackerCSV()
 
     if app.isSimulation() == 1:
         if iterations < 300:
@@ -491,79 +505,18 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
         s.enter(300, 1, executeJob, (sc, market, granularity))
 
 try:
+    # initialise logging
     logging.basicConfig(filename='pycryptobot.log', format='%(asctime)s - %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filemode='a', level=logging.DEBUG)
 
-    print('--------------------------------------------------------------------------------')
-    print('|           Python Crypto Bot using the Coinbase Pro or Binanace APIs          |')
-    print('--------------------------------------------------------------------------------')
+    # initialise and start application
+    tradingData = app.startApp(account, last_action)
 
-    if app.isVerbose() == 1:   
-        txt = '           Market : ' + app.getMarket()
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-        txt = '      Granularity : ' + str(app.getGranularity()) + ' seconds'
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-        print('--------------------------------------------------------------------------------')
-
-    if app.isLive() == 1:
-        txt = '         Bot Mode : LIVE - live trades using your funds!'
-    else:
-        txt = '         Bot Mode : TEST - test trades using dummy funds :)'
-
-    print('|', txt, (' ' * (75 - len(txt))), '|')
-
-    txt = '      Bot Started : ' + str(datetime.now())
-    print('|', txt, (' ' * (75 - len(txt))), '|')
-    print('================================================================================')
-    if app.sellUpperPcnt() != None:
-        txt = '       Sell Upper : ' + str(app.sellUpperPcnt()) + '%'
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-    
-    if app.sellUpperPcnt() != None:
-        txt = '       Sell Lower : ' + str(app.sellLowerPcnt()) + '%'
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-
-    if app.sellUpperPcnt() != None and app.sellLowerPcnt() != None:
-        print('================================================================================')
-
-    # if live
-    if app.isLive() == 1:
-        # if live, ensure sufficient funds to place next buy order
-        if (last_action == '' or last_action == 'SELL') and account.getBalance(app.getQuoteCurrency()) == 0:
-            raise Exception('Insufficient ' + app.getQuoteCurrency() + ' funds to place next buy order!')
-        # if live, ensure sufficient crypto to place next sell order
-        elif last_action == 'BUY' and account.getBalance(app.getBaseCurrency()) == 0:
-            raise Exception('Insufficient ' + app.getBaseCurrency() + ' funds to place next sell order!')
-
-    s = sched.scheduler(time.time, time.sleep)
     # run the first job immediately after starting
     if app.isSimulation() == 1:
-        if app.simuluationSpeed() in [ 'fast-sample', 'slow-sample' ]:
-            tradingData = pd.DataFrame()
-
-            attempts = 0
-            while len(tradingData) != 300 and attempts < 10:
-                endDate = datetime.now() - timedelta(hours=random.randint(0,8760 * 3)) # 3 years in hours
-                startDate = endDate - timedelta(hours=300)
-                tradingData = app.getHistoricalData(app.getMarket(), app.getGranularity(), startDate.isoformat(), endDate.isoformat())
-                attempts += 1
-
-            if len(tradingData) != 300:
-                raise Exception('Unable to retrieve 300 random sets of data between ' + str(startDate) + ' and ' + str(endDate) + ' in ' + str(attempts) + ' attempts.')
-
-            startDate = str(startDate.isoformat())
-            endDate = str(endDate.isoformat())
-            txt = '   Sampling start : ' + str(startDate)
-            print('|', txt, (' ' * (75 - len(txt))), '|')
-            txt = '     Sampling end : ' + str(endDate)
-            print('|', txt, (' ' * (75 - len(txt))), '|')
-            print('================================================================================')
-        else:
-            tradingData = app.getHistoricalData(app.getMarket(), app.getGranularity())
-
         executeJob(s, app.getMarket(), app.getGranularity(), tradingData)
-    else: 
+    else:
         executeJob(s, app.getMarket(), app.getGranularity())
-    
+
     s.run()
 
 # catches a keyboard break of app, exits gracefully
