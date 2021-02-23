@@ -43,9 +43,9 @@ class PyCryptoBot():
         else:
             self.exchange = exchange
 
-        self.market = ''
-        self.base_currency = ''
-        self.quote_currency = ''
+        self.market = 'BTC-GBP'
+        self.base_currency = 'BTC'
+        self.quote_currency = 'GBP'
         self.granularity = 3600
         self.is_live = 0
         self.is_verbose = 1
@@ -58,26 +58,43 @@ class PyCryptoBot():
         try:
             with open(filename) as config_file:
                 config = json.load(config_file)
-                if self.exchange == 'coinbasepro' and 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
+                if self.exchange == 'coinbasepro' and 'api_key' in config and 'api_secret' in config and ('api_pass' in config or 'api_passphrase' in config) and 'api_url' in config:
                     self.api_key = config['api_key']
                     self.api_secret = config['api_secret']
-                    self.api_passphrase = config['api_passphrase']
+
+                    if 'api_pass' in config:
+                        self.api_passphrase = config['api_pass']
+                    elif 'api_passphrase' in config:
+                        self.api_passphrase = config['api_passphrase']
+                   
                     self.api_url = config['api_url']
 
                     if 'config' in config:
                         config = config['config']
-                        
+
                         if 'base_currency' in config:
                             p = re.compile(r"^[A-Z]{3,5}$")
                             if not p.match(config['base_currency']):
                                 raise TypeError('Base currency is invalid.')
                             self.base_currency = config['base_currency']
-                        
+
+                        if 'cryptoMarket' in config:
+                            p = re.compile(r"^[A-Z]{3,5}$")
+                            if not p.match(config['cryptoMarket']):
+                                raise TypeError('Base currency is invalid.')
+                            self.base_currency = config['cryptoMarket']
+
                         if 'quote_currency' in config:
                             p = re.compile(r"^[A-Z]{3,5}$")
                             if not p.match(config['quote_currency']):
                                 raise TypeError('Quote currency is invalid.')
                             self.quote_currency = config['quote_currency']
+
+                        if 'fiatMarket' in config:
+                            p = re.compile(r"^[A-Z]{3,5}$")
+                            if not p.match(config['fiatMarket']):
+                                raise TypeError('Quote currency is invalid.')
+                            self.quote_currency = config['fiatMarket']
                         
                         if 'market' in config:
                             p = re.compile(r"^[A-Z]{3,5}\-[A-Z]{3,5}$")
@@ -92,7 +109,7 @@ class PyCryptoBot():
                         
                         if 'granularity' in config:
                             if isinstance(config['granularity'], int):
-                                if config['granularity'] in [60, 300, 900, 3600, 21600, 86400]:
+                                if config['granularity'] in [ 60, 300, 900, 3600, 21600, 86400 ]:
                                     self.granularity = config['granularity']
 
                         if 'live' in config:
@@ -112,7 +129,7 @@ class PyCryptoBot():
 
                         if 'sim' in config:
                             if isinstance(config['sim'], str):
-                                if config['sim'] in ['slow', 'fast', 'slow-sample', 'fast-sample']:
+                                if config['sim'] in [ 'slow', 'fast', 'slow-sample', 'fast-sample' ]:
                                     self.is_live = 0
                                     self.is_sim = 1
                                     self.sim_speed = config['sim']
@@ -155,7 +172,7 @@ class PyCryptoBot():
                         
                         if 'granularity' in config:
                             if isinstance(config['granularity'], str):
-                                if config['granularity'] in ['1m', '5m', '15m', '1h', '6h', '1d']:
+                                if config['granularity'] in [ '1m', '5m', '15m', '1h', '6h', '1d' ]:
                                     self.granularity = config['granularity']
 
                         if 'live' in config:
@@ -175,7 +192,7 @@ class PyCryptoBot():
 
                         if 'sim' in config:
                             if isinstance(config['sim'], str):
-                                if config['sim'] in ['slow', 'fast', 'slow-sample', 'fast-sample']:
+                                if config['sim'] in [ 'slow', 'fast', 'slow-sample', 'fast-sample' ]:
                                     self.is_live = 0
                                     self.is_sim = 1
                                     self.sim_speed = config['sim']
@@ -664,11 +681,11 @@ class PyCryptoBot():
             txt = '       Sell Upper : ' + str(self.sellUpperPcnt()) + '%'
             print('|', txt, (' ' * (75 - len(txt))), '|')
         
-        if self.sellUpperPcnt() != None:
+        if self.sellLowerPcnt() != None:
             txt = '       Sell Lower : ' + str(self.sellLowerPcnt()) + '%'
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
-        if self.sellUpperPcnt() != None and self.sellLowerPcnt() != None:
+        if self.sellUpperPcnt() != None or self.sellLowerPcnt() != None:
             print('================================================================================')
 
         # if live
@@ -679,7 +696,6 @@ class PyCryptoBot():
             # if live, ensure sufficient crypto to place next sell order
             elif last_action == 'BUY' and account.getBalance(self.getBaseCurrency()) == 0:
                 raise Exception('Insufficient ' + self.getBaseCurrency() + ' funds to place next sell order!')
-
         
         # run the first job immediately after starting
         if self.isSimulation() == 1:
