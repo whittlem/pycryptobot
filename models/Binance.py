@@ -1,3 +1,5 @@
+import sys
+
 import math, re
 import numpy as np
 import pandas as pd
@@ -143,8 +145,12 @@ class PublicAPI():
             # calculate the end date using the granularity
             iso8601end = str((datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S.%f') + timedelta(minutes=granularity * multiplier)).isoformat())
 
-        if iso8601start != '' and iso8601end == '':
-            resp = self.client.get_historical_klines(market, granularity, iso8601start, iso8601end)
+        if iso8601start != '' and iso8601end != '':
+            print ('Attempting to retrieve data from ' + iso8601start)
+            resp = self.client.get_historical_klines(market, granularity, iso8601start)
+
+            if len(resp) > 300:
+                resp = resp[:300]
         else:
             if granularity == '5m':
                 resp = self.client.get_historical_klines(market, granularity, '2 days ago UTC')
