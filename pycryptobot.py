@@ -512,7 +512,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                     tradinggraphs.renderEMAandMACD(24, 'graphs/' + filename, True)
 
             # last significant action
-            if action in ['BUY','SELL']:
+            if action in [ 'BUY', 'SELL' ]:
                 last_action = action
             
             last_df_index = str(df_last.index.format()[0])
