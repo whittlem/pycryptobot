@@ -1,15 +1,15 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
+#import numpy as np
+#import matplotlib.pyplot as plt
+#import matplotlib.ticker as ticker
+from models.PyCryptoBot import PyCryptoBot
 from models.Trading import TechnicalAnalysis
-from models.CoinbasePro import PublicAPI
+from models.Binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
+from models.CoinbasePro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
 from views.TradingGraphs import TradingGraphs
 
-market = 'BTC-GBP'
-granularity = 3600
+app = PyCryptoBot()
+tradingData = app.getHistoricalData(app.getMarket(), app.getGranularity())
 
-api = PublicAPI()
-tradingData = api.getHistoricalData(market, granularity)
 technicalAnalysis = TechnicalAnalysis(tradingData)
 technicalAnalysis.addEMA(12)
 technicalAnalysis.addEMA(26)
@@ -24,10 +24,11 @@ technicalAnalysis.addCandleMorningDojiStar()
 technicalAnalysis.addCandleEveningDojiStar()
 technicalAnalysis.addCandleThreeLineStrike()
 technicalAnalysis.addCandleTwoBlackGapping()
+technicalAnalysis.addCandleMorningStar()
 technicalAnalysis.addCandleEveningStar()
 technicalAnalysis.addCandleAbandonedBaby()
 df = technicalAnalysis.getDataFrame()
 
 tradinggraphs = TradingGraphs(technicalAnalysis)
-tradinggraphs.renderEMA12EMA26CloseCandles()
-#tradinggraphs.renderEMA12EMA26CloseCandles(30, 'candles.png')
+tradinggraphs.renderCandlesticks()
+#tradinggraphs.rrenderCandlestickss(30, True)
