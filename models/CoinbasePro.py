@@ -348,7 +348,7 @@ class PublicAPI():
         self.api_url = 'https://api.pro.coinbase.com/'
 
     def getHistoricalData(self, market='BTC-GBP', granularity=86400, iso8601start='', iso8601end=''):
-       # validates the market is syntactically correct
+        # validates the market is syntactically correct
         p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
         if not p.match(market):
             raise TypeError('Coinbase Pro market required.')

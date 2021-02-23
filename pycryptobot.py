@@ -272,7 +272,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
             if app.isVerbose() == 0:
                 if last_action != '':
-                    output_text = current_df_index + ' | ' + market + goldendeathtext + ' | ' + str(granularity) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + action + ' ' + ' | Last Action: ' + last_action
+                    output_text = current_df_index + ' | ' + market + goldendeathtext + ' | ' + str(granularity) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + action + ' | Last Action: ' + last_action
                 else:
                     output_text = current_df_index + ' | ' + market + goldendeathtext + ' | ' + str(granularity) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + action + ' '
 
