@@ -353,8 +353,6 @@ class PublicAPI():
         if not p.match(market):
             raise TypeError('Coinbase Pro market required.')
 
-        print (granularity, type(granularity))
-
         # validates granularity is an integer
         if not isinstance(granularity, int):
             raise TypeError('Granularity integer required.')
