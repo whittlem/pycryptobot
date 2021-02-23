@@ -3,7 +3,7 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-import argparse, json, logging, math, os, random, re, sched, sys, time
+import logging, os, random, sched, sys, time
 
 from models.PyCryptoBot import PyCryptoBot
 from models.Trading import TechnicalAnalysis
@@ -11,14 +11,14 @@ from models.TradingAccount import TradingAccount
 from models.CoinbasePro import AuthAPI, PublicAPI
 from views.TradingGraphs import TradingGraphs
 
-app = PyCryptoBot('coinbasepro')
+app = PyCryptoBot()
 
 # initial state is to wait
 action = 'WAIT'
 last_action = ''
-last_buy = 0
 last_df_index = ''
 buy_state = ''
+last_buy = 0
 iterations = 0
 buy_count = 0
 sell_count = 0
@@ -59,12 +59,9 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     # increment iterations
     iterations = iterations + 1
 
-    # coinbase pro public api
-    api = PublicAPI()
-
     if app.isSimulation() == 0:
         # retrieve the app.getMarket() data
-        tradingData = api.getHistoricalData(app.getMarket(), granularity)
+        tradingData = app.getHistoricalData(app.getMarket(), granularity)
 
     # analyse the market data
     tradingDataCopy = tradingData.copy()
@@ -88,7 +85,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     current_df_index = str(df_last.index.format()[0])
 
     if app.isSimulation() == 0:
-        price = api.getTicker(market)
+        price = app.getTicker(market)
         if price < df_last['low'].values[0] or price == 0:
             price = float(df_last['close'].values[0])
     else:
@@ -380,12 +377,11 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                     print('--------------------------------------------------------------------------------')
                     print('|                      *** Executing LIVE Buy Order ***                        |')
                     print('--------------------------------------------------------------------------------')
-                # connect to coinbase pro api (authenticated)
-                model = AuthAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
+                
                 # execute a live market buy
-                resp = model.marketBuy(market, float(account.getBalance(app.getQuoteCurrency())))
+                resp = app.marketBuy(market, float(account.getBalance(app.getQuoteCurrency())))
                 logging.info(resp)
-                #logging.info('attempt to buy ' + resp['specified_funds'] + ' (' + resp['funds'] + ' after fees) of ' + resp['product_id'])
+
             # if not live
             else:
                 if app.isVerbose() == 0:
@@ -396,7 +392,6 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                     print('--------------------------------------------------------------------------------')
                     print('|                      *** Executing TEST Buy Order ***                        |')
                     print('--------------------------------------------------------------------------------')
-                #print(df_last[['close','ema12','ema26','ema12gtema26','ema12gtema26co','macd','signal','macdgtsignal','obv','obv_pc']])
 
             if app.shouldSaveGraphs() == 1:
                 tradinggraphs = TradingGraphs(technicalAnalysis)
@@ -421,12 +416,11 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                     print('--------------------------------------------------------------------------------')
                     print('|                      *** Executing LIVE Sell Order ***                        |')
                     print('--------------------------------------------------------------------------------')
-                # connect to Coinbase Pro API live
-                model = AuthAPI(config['api_key'], config['api_secret'], config['api_pass'], config['api_url'])
+
                 # execute a live market sell
-                resp = model.marketSell(market, float(account.getBalance(app.getBaseCurrency())))
+                resp = app.marketSell(market, float(account.getBalance(app.getBaseCurrency())))
                 logging.info(resp)
-                #logging.info('attempt to sell ' + resp['size'] + ' of ' + resp['product_id'])
+
             # if not live
             else:
                 if app.isVerbose() == 0:
@@ -543,8 +537,6 @@ try:
     s = sched.scheduler(time.time, time.sleep)
     # run the first job immediately after starting
     if app.isSimulation() == 1:
-        api = PublicAPI()
-
         if app.simuluationSpeed() in [ 'fast-sample', 'slow-sample' ]:
             tradingData = pd.DataFrame()
 
@@ -552,7 +544,7 @@ try:
             while len(tradingData) != 300 and attempts < 10:
                 endDate = datetime.now() - timedelta(hours=random.randint(0,8760 * 3)) # 3 years in hours
                 startDate = endDate - timedelta(hours=300)
-                tradingData = api.getHistoricalData(app.getMarket(), app.getGranularity(), startDate.isoformat(), endDate.isoformat())
+                tradingData = app.getHistoricalData(app.getMarket(), app.getGranularity(), startDate.isoformat(), endDate.isoformat())
                 attempts += 1
 
             if len(tradingData) != 300:
@@ -566,7 +558,7 @@ try:
             print('|', txt, (' ' * (75 - len(txt))), '|')
             print('================================================================================')
         else:
-            tradingData = api.getHistoricalData(app.getMarket(), app.getGranularity())
+            tradingData = app.getHistoricalData(app.getMarket(), app.getGranularity())
 
         executeJob(s, app.getMarket(), app.getGranularity(), tradingData)
     else: 
