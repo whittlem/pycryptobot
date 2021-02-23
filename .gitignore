@@ -138,3 +138,5 @@ config-binance.json
 graphs/
 
 .DS_Store
+
+troubleshoot.py
