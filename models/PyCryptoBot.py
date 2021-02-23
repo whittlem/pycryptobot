@@ -1,8 +1,11 @@
 import pandas as pd
-import argparse, json, logging, math, re, sys
+import argparse, json, logging, math, random, re, sys, urllib3
 from datetime import datetime, timedelta
 from models.Binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
 from models.CoinbasePro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
+
+# disable insecure ssl warning
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # reduce informational logging
 logging.getLogger("requests").setLevel(logging.WARNING)
@@ -631,3 +634,73 @@ class PyCryptoBot():
             return api.marketBuy(market, base_currency)
         else:
             return None
+
+    def startApp(self, account, last_action=''):
+        print('--------------------------------------------------------------------------------')
+        print('|                             Python Crypto Bot                                |')
+        print('--------------------------------------------------------------------------------')
+
+        if self.isVerbose() == 1:   
+            txt = '           Market : ' + self.getMarket()
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+            txt = '      Granularity : ' + str(self.getGranularity()) + ' seconds'
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+            print('--------------------------------------------------------------------------------')
+
+        if self.isLive() == 1:
+            txt = '         Bot Mode : LIVE - live trades using your funds!'
+        else:
+            txt = '         Bot Mode : TEST - test trades using dummy funds :)'
+
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+
+        txt = '      Bot Started : ' + str(datetime.now())
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+        print('================================================================================')
+        if self.sellUpperPcnt() != None:
+            txt = '       Sell Upper : ' + str(self.sellUpperPcnt()) + '%'
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+        
+        if self.sellUpperPcnt() != None:
+            txt = '       Sell Lower : ' + str(self.sellLowerPcnt()) + '%'
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+
+        if self.sellUpperPcnt() != None and self.sellLowerPcnt() != None:
+            print('================================================================================')
+
+        # if live
+        if self.isLive() == 1:
+            # if live, ensure sufficient funds to place next buy order
+            if (last_action == '' or last_action == 'SELL') and account.getBalance(self.getQuoteCurrency()) == 0:
+                raise Exception('Insufficient ' + self.getQuoteCurrency() + ' funds to place next buy order!')
+            # if live, ensure sufficient crypto to place next sell order
+            elif last_action == 'BUY' and account.getBalance(self.getBaseCurrency()) == 0:
+                raise Exception('Insufficient ' + self.getBaseCurrency() + ' funds to place next sell order!')
+
+        
+        # run the first job immediately after starting
+        if self.isSimulation() == 1:
+            if self.simuluationSpeed() in [ 'fast-sample', 'slow-sample' ]:
+                tradingData = pd.DataFrame()
+
+                attempts = 0
+                while len(tradingData) != 300 and attempts < 10:
+                    endDate = datetime.now() - timedelta(hours=random.randint(0,8760 * 3)) # 3 years in hours
+                    startDate = endDate - timedelta(hours=300)
+                    tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(), startDate.isoformat(), endDate.isoformat())
+                    attempts += 1
+
+                if len(tradingData) != 300:
+                    raise Exception('Unable to retrieve 300 random sets of data between ' + str(startDate) + ' and ' + str(endDate) + ' in ' + str(attempts) + ' attempts.')
+
+                startDate = str(startDate.isoformat())
+                endDate = str(endDate.isoformat())
+                txt = '   Sampling start : ' + str(startDate)
+                print('|', txt, (' ' * (75 - len(txt))), '|')
+                txt = '     Sampling end : ' + str(endDate)
+                print('|', txt, (' ' * (75 - len(txt))), '|')
+                print('================================================================================')
+            else:
+                tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity())
+
+            return tradingData 

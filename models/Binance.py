@@ -146,7 +146,22 @@ class PublicAPI():
         if iso8601start != '' and iso8601end == '':
             resp = self.client.get_historical_klines(market, granularity, iso8601start, iso8601end)
         else:
-            resp = self.client.get_historical_klines(market, granularity, '301 hours ago UTC')
+            if granularity == '5m':
+                resp = self.client.get_historical_klines(market, granularity, '2 days ago UTC')
+                resp = resp[-300:]
+            elif granularity == '15m':
+                resp = self.client.get_historical_klines(market, granularity, '4 days ago UTC')
+                resp = resp[-300:]
+            elif granularity == '1h':
+                resp = self.client.get_historical_klines(market, granularity, '13 days ago UTC')
+                resp = resp[-300:]
+            elif granularity == '6h':
+                resp = self.client.get_historical_klines(market, granularity, '75 days ago UTC')
+                resp = resp[-300:]
+            elif granularity == '1d':
+                resp = self.client.get_historical_klines(market, granularity, '251 days ago UTC')
+            else:
+                raise Exception('Something went wrong!')
             
         # convert the API response into a Pandas DataFrame
         df = pd.DataFrame(resp, columns=[ 'open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_asset_volume', 'number_of_trades', 'taker_buy_base_asset_volume', 'traker_buy_quote_asset_volume', 'ignore' ])

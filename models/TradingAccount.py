@@ -6,8 +6,8 @@ import pandas as pd
 import json, math, re, requests
 from datetime import datetime
 from binance.client import Client
-from models.Binance import PublicAPI
-from models.CoinbasePro import AuthAPI
+from models.Binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
+from models.CoinbasePro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
 
 class TradingAccount():
     def __init__(self, app={}):
@@ -121,10 +121,10 @@ class TradingAccount():
                         return self.orders[self.orders['market'] == market]
                     else:
                         return pd.DataFrame()                
-        else:
+        if self.app.getExchange() == 'coinbasepro':
             if self.mode == 'live':
                 # if config is provided and live connect to Coinbase Pro account portfolio
-                model = AuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
+                model = CBAuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
                 # retrieve orders from live Coinbase Pro account portfolio
                 self.orders = model.getOrders(market, action, status)
                 return self.orders
@@ -209,7 +209,7 @@ class TradingAccount():
         else:
             if self.mode == 'live':
                 # if config is provided and live connect to Coinbase Pro account portfolio
-                model = AuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
+                model = CBAuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
                 if currency == '':
                     # retrieve all balances
                     return model.getAccounts()[['currency', 'balance', 'hold', 'available']]
@@ -268,17 +268,26 @@ class TradingAccount():
             Output CSV file
         """
 
-        if market != '':
+        if self.app.getExchange() == 'coinbasepro' and market != '':
             # validate market is syntactically correct
             p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
             if not p.match(market):
                 raise TypeError('Coinbase Pro market is invalid.')
+        elif self.app.getExchange() == 'binance':
+             # validate market is syntactically correct
+            p = re.compile(r"^[A-Z]{6,12}$")
+            if not p.match(market):
+                raise TypeError('Binance market is invalid.')
 
         if self.mode == 'live':
-            # if config is provided and live connect to Coinbase Pro account portfolio
-            model = AuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
-            # retrieve orders from live Coinbase Pro account portfolio
-            df = model.getOrders(market, '', 'done')
+            if self.app.getExchange() == 'coinbasepro':
+                # retrieve orders from live Coinbase Pro account portfolio
+                df = self.getOrders(market, '', 'done')
+            elif self.app.getExchange() == 'binance':
+                # retrieve orders from live Binance account portfolio
+                df = self.getOrders(market, '', 'done')
+            else:
+                df = pd.DataFrame()
         else:
             # return dummy orders
             if market == '':
@@ -418,7 +427,7 @@ class TradingAccount():
                 # if manualPrice is non-positive retrieve the current live price
                 if manualPrice <= 0:
                     if self.app.getExchange() == 'binance':
-                        api = PublicAPI()
+                        api = BPublicAPI()
                         price = api.getTicker(market)
                     else:
                         resp = requests.get('https://api-public.sandbox.pro.coinbase.com/products/' + market + '/ticker')
@@ -453,7 +462,7 @@ class TradingAccount():
         else:
             if self.mode == 'live':
                 # connect to coinbase pro api (authenticated)
-                model = AuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
+                model = CBAuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
 
                 # execute a live market buy
                 if fiatAmount > 0:
@@ -603,7 +612,7 @@ class TradingAccount():
         else:
             if self.mode == 'live':
                 # connect to Coinbase Pro API live
-                model = AuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
+                model = CBAuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
 
                 # execute a live market sell
                 resp = model.marketSell(market, float(self.getBalance(cryptoMarket)))
