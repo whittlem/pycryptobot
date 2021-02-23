@@ -358,8 +358,8 @@ class PublicAPI():
             raise TypeError('Granularity integer required.')
 
         # validates the granularity is supported by Coinbase Pro
-        if not granularity in [60, 300, 900, 3600, 21600, 86400]:
-            raise TypeError('Granularity options: 60, 300, 900, 3600, 21600, 86400.')
+        if not granularity in [ 60, 300, 900, 3600, 21600, 86400 ]:
+            raise TypeError('Granularity options: 60, 300, 900, 3600, 21600, 86400')
 
         # validates the ISO 8601 start date is a string (if provided)
         if not isinstance(iso8601start, str):

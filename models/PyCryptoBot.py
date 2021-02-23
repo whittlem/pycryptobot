@@ -1,5 +1,8 @@
+import pandas as pd
 import argparse, json, logging, math, re, sys
 from datetime import datetime, timedelta
+from models.Binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
+from models.CoinbasePro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
 
 # reduce informational logging
 logging.getLogger("requests").setLevel(logging.WARNING)
@@ -35,8 +38,8 @@ class PyCryptoBot():
             else:
                 self.exchange = args.exchange
         else:
-            self.exchange = 'coinbasepro'
-      
+            self.exchange = exchange
+
         self.market = ''
         self.base_currency = ''
         self.quote_currency = ''
@@ -47,7 +50,7 @@ class PyCryptoBot():
         self.is_sim = 0
         self.sim_speed = 'fast'
         self.sell_upper_pcnt = None
-        self.sell_lower_pcnt = None   
+        self.sell_lower_pcnt = None
 
         try:
             with open(filename) as config_file:
@@ -160,7 +163,7 @@ class PyCryptoBot():
                         if 'verbose' in config:
                             if isinstance(config['verbose'], int):
                                 if config['verbose'] in [0, 1]:
-                                    self.is_live = config['verbose']
+                                    self.is_verbose = config['verbose']
 
                         if 'graphs' in config:
                             if isinstance(config['graphs'], int):
@@ -294,7 +297,7 @@ class PyCryptoBot():
                             if 'verbose' in config:
                                 if isinstance(config['verbose'], int):
                                     if config['verbose'] in [0, 1]:
-                                        self.is_live = config['verbose']
+                                        self.is_verbose = config['verbose']
 
                             if 'graphs' in config:
                                 if isinstance(config['graphs'], int):
@@ -548,6 +551,26 @@ class PyCryptoBot():
     def getGranularity(self):
         return self.granularity
 
+    def getHistoricalData(self, market, granularity, iso8601start='', iso8601end=''):
+        if self.exchange == 'coinbasepro':
+            api = CBPublicAPI()
+            return api.getHistoricalData(market, granularity, iso8601start, iso8601end)
+        elif self.exchange == 'binance':
+            api = BPublicAPI()
+            return api.getHistoricalData(market, granularity, iso8601start, iso8601end)
+        else:
+            return pd.DataFrame()
+
+    def getTicker(self, market):
+        if self.exchange == 'coinbasepro':
+            api = CBPublicAPI()
+            return api.getTicker(market)
+        elif self.exchange == 'binance':
+            api = BPublicAPI()
+            return api.getTicker(market)
+        else:
+            return None
+
     def isLive(self):
         return self.is_live
 
@@ -587,4 +610,24 @@ class PyCryptoBot():
             if label == '':
                 return str(self.truncate(val1, precision)) + ' = ' + str(self.truncate(val2, precision))
             else:
-                return label + ': ' + str(self.truncate(val1, precision)) + ' = ' + str(self.truncate(val2, precision))   
+                return label + ': ' + str(self.truncate(val1, precision)) + ' = ' + str(self.truncate(val2, precision))
+
+    def marketBuy(self, market, quote_currency):
+        if self.exchange == 'coinbasepro':
+            api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
+            return api.marketBuy(market, quote_currency)
+        elif self.exchange == 'binance':
+            api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
+            return api.marketBuy(market, quote_currency)
+        else:
+            return None
+
+    def marketSell(self, market, base_currency):
+        if self.exchange == 'coinbasepro':
+            api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
+            return api.marketBuy(market, base_currency)
+        elif self.exchange == 'binance':
+            api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
+            return api.marketBuy(market, base_currency)
+        else:
+            return None
