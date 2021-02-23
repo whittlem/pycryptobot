@@ -8,7 +8,6 @@ import logging, os, random, sched, sys, time
 from models.PyCryptoBot import PyCryptoBot
 from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
-#from models.CoinbasePro import AuthAPI, PublicAPI
 from views.TradingGraphs import TradingGraphs
 
 app = PyCryptoBot()
@@ -25,6 +24,8 @@ buy_count = 0
 sell_count = 0
 buy_sum = 0
 sell_sum = 0
+fib_high = 0
+fib_low = 0
 
 config = {}
 account = None
@@ -55,7 +56,7 @@ if app.isLive() == 1:
 
 def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     """Trading bot job which runs at a scheduled interval"""
-    global action, buy_count, buy_sum, iterations, last_action, last_buy, last_df_index, sell_count, sell_sum, buy_state
+    global action, buy_count, buy_sum, iterations, last_action, last_buy, last_df_index, sell_count, sell_sum, buy_state, fib_high, fib_low
 
     # increment iterations
     iterations = iterations + 1
@@ -66,9 +67,9 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
     # analyse the market data
     tradingDataCopy = tradingData.copy()
-    technicalAnalysis = TechnicalAnalysis(tradingDataCopy)
-    technicalAnalysis.addAll()
-    df = technicalAnalysis.getDataFrame()
+    ta = TechnicalAnalysis(tradingDataCopy)
+    ta.addAll()
+    df = ta.getDataFrame()
 
     if app.getExchange() == 'binance' and app.getGranularity() == '1d':
         if len(df) != 250:
@@ -142,6 +143,14 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
         
         if last_buy > 0 and last_action == 'BUY':
             change_pcnt = ((price / last_buy) - 1) * 100
+
+            # loss failsafe sell at fibonacci band
+            if fib_low > 0 and fib_low >= float(price):
+                action = 'SELL'
+                last_action = 'BUY'
+                log_text = '! Loss Failsafe Triggered (Fibonacci Band: ' + str(fib_low) + ')'
+                print (log_text, "\n")
+                logging.warning(log_text)
 
             # loss failsafe sell at sell_lower_pcnt
             if app.sellLowerPcnt() != None and change_pcnt < app.sellLowerPcnt():
@@ -399,14 +408,35 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                     if app.isVerbose() == 0:
                         logging.info(current_df_index + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | BUY')
                         print ("\n", current_df_index, '|', market, granularity, '|', price_text, '| BUY')
-                        print (' Fibonacci Retracement Levels:', str(technicalAnalysis.getFibonacciRetracementLevels(float(price))), "\n")                    
+
+                        bands = ta.getFibonacciRetracementLevels(float(price))                      
+                        print (' Fibonacci Retracement Levels:', str(bands), "\n")                    
+
+                        if len(bands) >= 1 and len(bands) <= 2:
+                            if len(bands) == 1:
+                                first_key = list(bands.keys())[0]
+                                if first_key == 'ratio1':
+                                    fib_low = 0
+                                    fib_high = bands[first_key]
+                                if first_key == 'ratio1_618':
+                                    fib_low = bands[first_key]
+                                    fib_high = bands[first_key] * 2
+                                else:
+                                    fib_low = bands[first_key]
+
+                            elif len(bands) == 2:
+                                first_key = list(bands.keys())[0]
+                                second_key = list(bands.keys())[1]
+                                fib_low = bands[first_key] 
+                                fib_high = bands[second_key]
+                            
                     else:
                         print('--------------------------------------------------------------------------------')
                         print('|                      *** Executing TEST Buy Order ***                        |')
                         print('--------------------------------------------------------------------------------')
 
                 if app.shouldSaveGraphs() == 1:
-                    tradinggraphs = TradingGraphs(technicalAnalysis)
+                    tradinggraphs = TradingGraphs(ta)
                     ts = datetime.now().timestamp()
                     filename = app.getMarket() + '_' + str(app.getGranularity()) + '_buy_' + str(ts) + '.png'
                     tradinggraphs.renderEMAandMACD(24, 'graphs/' + filename, True)
@@ -423,7 +453,28 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                     if app.isVerbose() == 0:
                         logging.info(current_df_index + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | SELL')
                         print ("\n", current_df_index, '|', market, granularity, '|', price_text, '| SELL')
-                        print (' Fibonacci Retracement Levels:', str(technicalAnalysis.getFibonacciRetracementLevels(float(price))), "\n")                      
+
+                        bands = ta.getFibonacciRetracementLevels(float(price))                      
+                        print (' Fibonacci Retracement Levels:', str(bands), "\n")                    
+
+                        if len(bands) >= 1 and len(bands) <= 2:
+                            if len(bands) == 1:
+                                first_key = list(bands.keys())[0]
+                                if first_key == 'ratio1':
+                                    fib_low = 0
+                                    fib_high = bands[first_key]
+                                if first_key == 'ratio1_618':
+                                    fib_low = bands[first_key]
+                                    fib_high = bands[first_key] * 2
+                                else:
+                                    fib_low = bands[first_key]
+
+                            elif len(bands) == 2:
+                                first_key = list(bands.keys())[0]
+                                second_key = list(bands.keys())[1]
+                                fib_low = bands[first_key] 
+                                fib_high = bands[second_key]
+
                     else:
                         print('--------------------------------------------------------------------------------')
                         print('|                      *** Executing LIVE Sell Order ***                        |')
@@ -455,7 +506,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                         print('--------------------------------------------------------------------------------')
 
                 if app.shouldSaveGraphs() == 1:
-                    tradinggraphs = TradingGraphs(technicalAnalysis)
+                    tradinggraphs = TradingGraphs(ta)
                     ts = datetime.now().timestamp()
                     filename = app.getMarket() + '_' + str(app.getGranularity()) + '_buy_' + str(ts) + '.png'
                     tradinggraphs.renderEMAandMACD(24, 'graphs/' + filename, True)
@@ -470,9 +521,10 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 print ("\nSimulation Summary\n")
 
                 if buy_count > sell_count:
-                    fee = last_buy * 0.005
-                    last_buy_minus_fees = last_buy + fee
-                    buy_sum = buy_sum + (float(app.truncate(price, precision)) - last_buy_minus_fees)
+                    fee = price * 0.005
+                    last_price_minus_fees = price - fee
+                    sell_sum = sell_sum + last_price_minus_fees
+                    sell_count = sell_count + 1
 
                 print ('   Buy Count :', buy_count)
                 print ('  Sell Count :', sell_count, "\n")
