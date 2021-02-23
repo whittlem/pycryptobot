@@ -426,7 +426,7 @@ class PyCryptoBot():
                 if not isinstance(int(args.granularity), int):
                     raise TypeError('Invalid granularity.')
 
-                if not args.granularity in [ 60, 300, 900, 3600, 21600, 86400 ]:
+                if not int(args.granularity) in [ 60, 300, 900, 3600, 21600, 86400 ]:
                     raise TypeError('Granularity options: 60, 300, 900, 3600, 21600, 86400')
             elif self.exchange == 'binance':
                 if not isinstance(args.granularity, str):
@@ -552,7 +552,10 @@ class PyCryptoBot():
         return self.market
 
     def getGranularity(self):
-        return self.granularity
+        if self.exchange == 'binance':
+            return str(self.granularity)
+        elif self.exchange == 'coinbasepro':
+            return int(self.granularity)
 
     def getHistoricalData(self, market, granularity, iso8601start='', iso8601end=''):
         if self.exchange == 'coinbasepro':
