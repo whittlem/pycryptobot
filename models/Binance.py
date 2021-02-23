@@ -162,16 +162,16 @@ class PublicAPI():
                 resp = self.client.get_historical_klines(market, granularity, '251 days ago UTC')
             else:
                 raise Exception('Something went wrong!')
-            
+                   
         # convert the API response into a Pandas DataFrame
         df = pd.DataFrame(resp, columns=[ 'open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_asset_volume', 'number_of_trades', 'taker_buy_base_asset_volume', 'traker_buy_quote_asset_volume', 'ignore' ])
         df['market'] = market
         df['granularity'] = granularity
 
         # binance epoch is too long
-        df['close_time'] = df['close_time'] + 1
-        df['close_time'] = df['close_time'].astype(str)
-        df['close_time'] = df['close_time'].str.replace(r'\d{3}$', '')   
+        df['open_time'] = df['open_time'] + 1
+        df['open_time'] = df['open_time'].astype(str)
+        df['open_time'] = df['open_time'].str.replace(r'\d{3}$', '')   
 
         if(granularity == '1m'):
             freq = 'T'
@@ -188,15 +188,15 @@ class PublicAPI():
 
         # convert the DataFrame into a time series with the date as the index/key
         try:
-            tsidx = pd.DatetimeIndex(pd.to_datetime(df['close_time'], unit='s'), dtype='datetime64[ns]', freq=freq)
+            tsidx = pd.DatetimeIndex(pd.to_datetime(df['open_time'], unit='s'), dtype='datetime64[ns]', freq=freq)
             df.set_index(tsidx, inplace=True)
-            df = df.drop(columns=['close_time'])
+            df = df.drop(columns=['open_time'])
             df.index.names = ['ts']
             df['date'] = tsidx
         except ValueError:
-            tsidx = pd.DatetimeIndex(pd.to_datetime(df['close_time'], unit='s'), dtype='datetime64[ns]')
+            tsidx = pd.DatetimeIndex(pd.to_datetime(df['open_time'], unit='s'), dtype='datetime64[ns]')
             df.set_index(tsidx, inplace=True)
-            df = df.drop(columns=['close_time'])
+            df = df.drop(columns=['open_time'])
             df.index.names = ['ts']           
             df['date'] = tsidx
 
@@ -209,6 +209,9 @@ class PublicAPI():
         df['open'] = df['open'].astype(float)   
         df['close'] = df['close'].astype(float)   
         df['volume'] = df['volume'].astype(float)      
+
+        # reset pandas dataframe index
+        df.reset_index()
 
         return df
 
