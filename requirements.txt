@@ -2,3 +2,4 @@ pandas
 requests
 statsmodels
 matplotlib
+python-binance
