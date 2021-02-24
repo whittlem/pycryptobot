@@ -580,7 +580,11 @@ class PyCryptoBot():
             return api.getHistoricalData(market, granularity, iso8601start, iso8601end)
         elif self.exchange == 'binance':
             api = BPublicAPI()
-            return api.getHistoricalData(market, granularity, str(datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S.%f').strftime('%d %b, %Y')), str(datetime.strptime(iso8601end, '%Y-%m-%dT%H:%M:%S.%f').strftime('%d %b, %Y')))
+            
+            if iso8601start != '' and iso8601end != '':
+                return api.getHistoricalData(market, granularity, str(datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S.%f').strftime('%d %b, %Y')), str(datetime.strptime(iso8601end, '%Y-%m-%dT%H:%M:%S.%f').strftime('%d %b, %Y')))
+            else:
+                return api.getHistoricalData(market, granularity)
         else:
             return pd.DataFrame()
 
