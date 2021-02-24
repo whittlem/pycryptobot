@@ -139,3 +139,7 @@ experiments/experiment*
 graphs/
 
 .DS_Store
+
+*.json
+
+troubleshoot.py

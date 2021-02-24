@@ -1,29 +1,4 @@
-"""Python Crypto Bot consuming Coinbase Pro API
-
-DISCLAIMER -- PLEASE READ!
-
-I developed this crypto trading bot for myself. I'm happy to share the project and code with others
-but I don't take responsibility for how it performs for you or any potential losses incurred due to
-market conditions or even bugs. I'm using this bot myself and will keep improving it so please make
-sure you are pulling the repo often for updates and bug fixes ("git pull"). 
-
-USAGE
-
-You are free to use this app and code however you wish. I know others who are using some of my code
-in their personal projects and I'm fine with that. I do however have a polite request and that is
-if you improve on my code to share it with me. You may have found this project via Medium where I am
-a writer (https://whittle.medium.com). I would really appreciate it if you follow me and read and 
-"clap" for my articles (especially related to this project). I get paid by Medium for my articles
-so that is one way you can reward me for my efforts without actually spending anything. If you 
-would like to share and promote my articles I would also really appreciate it.
-
-IMPORTANT
-
-In order to limit exposure by the trading bot, in your Coinbase Pro profile I suggest you create
-another "Portfolio" dedicated for this trading bot. Create your API keys associated with the
-"Trading Bot" portfolio and only keep funds you want to give the bot access to in the portfolio.
-That way if anything goes wrong only what is within this portfolio is at risk!
-"""
+"""Python Crypto Bot consuming Coinbase Pro API"""
 
 import pandas as pd
 import numpy as np
@@ -33,6 +8,9 @@ from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
 from models.CoinbasePro import AuthAPI, PublicAPI
 from views.TradingGraphs import TradingGraphs
+
+# production: disable traceback
+sys.tracebacklimit = 0
 
 def truncate(f, n):
     return math.floor(f * 10 ** n) / 10 ** n
@@ -387,7 +365,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     goldendeathtext = ''
     if goldencross == True:
         goldendeathtext = ' (BULL)'
-    elif deathcross == False:
+    else:
         goldendeathtext = ' (BEAR)'
 
     # polling is every 5 minutes (even for hourly intervals), but only process once per interval
@@ -758,8 +736,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
             print ('   Buy Count :', buy_count)
             print ('  Sell Count :', sell_count, "\n")
-            print ('   Buy Total :', buy_sum)
-            print ('  Sell Total :', sell_sum)
+
             print ('      Margin :', str(truncate((((sell_sum - buy_sum) / sell_sum) * 100), 2)) + '%', "\n")
     else:
         now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
