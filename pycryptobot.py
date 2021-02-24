@@ -10,6 +10,9 @@ from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
 from views.TradingGraphs import TradingGraphs
 
+# production: disable traceback
+sys.tracebacklimit = 0
+
 app = PyCryptoBot()
 s = sched.scheduler(time.time, time.sleep)
 
