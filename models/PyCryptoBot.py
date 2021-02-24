@@ -152,7 +152,10 @@ class PyCryptoBot():
                     self.quote_currency = 'GBP'
                     self.granularity = '1h'
 
-                    if 'config' in config['binance']:
+                    if 'binance' not in config:
+                        raise Exception('config.json does not contain Binance API keys.')
+
+                    elif 'config' in config['binance']:
                         config = config['binance']['config']
                         
                         if 'base_currency' in config:
@@ -214,7 +217,10 @@ class PyCryptoBot():
                         self.api_passphrase = config['coinbasepro']['api_passphrase']
                         self.api_url = config['coinbasepro']['api_url']
 
-                        if 'config' in config['coinbasepro']:
+                        if 'coinbasepro' not in config:
+                            raise Exception('config.json does not contain Coinbase Pro API keys.')
+                        
+                        elif 'config' in config['coinbasepro']:
                             config = config['coinbasepro']['config']
                             
                             if 'base_currency' in config:
