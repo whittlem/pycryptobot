@@ -20,7 +20,7 @@ would like to share and promote my articles I would also really appreciate it.
 IMPORTANT
 
 In order to limit exposure by the trading bot, in your Coinbase Pro profile I suggest you create
-another "Portfolio" dedicted for this trading bot. Create your API keys associated with the
+another "Portfolio" dedicated for this trading bot. Create your API keys associated with the
 "Trading Bot" portfolio and only keep funds you want to give the bot access to in the portfolio.
 That way if anything goes wrong only what is within this portfolio is at risk!
 """
