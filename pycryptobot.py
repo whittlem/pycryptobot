@@ -365,7 +365,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
     goldendeathtext = ''
     if goldencross == True:
         goldendeathtext = ' (BULL)'
-    elif deathcross == False:
+    else:
         goldendeathtext = ' (BEAR)'
 
     # polling is every 5 minutes (even for hourly intervals), but only process once per interval
@@ -736,8 +736,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
             print ('   Buy Count :', buy_count)
             print ('  Sell Count :', sell_count, "\n")
-            print ('   Buy Total :', buy_sum)
-            print ('  Sell Total :', sell_sum)
+
             print ('      Margin :', str(truncate((((sell_sum - buy_sum) / sell_sum) * 100), 2)) + '%', "\n")
     else:
         now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
