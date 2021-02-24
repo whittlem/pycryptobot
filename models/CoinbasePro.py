@@ -178,6 +178,21 @@ class AuthAPI():
         df[['size', 'value']] = df[['size', 'value']].apply(pd.to_numeric)
         return df
 
+    def getFees(self):
+        return self.authAPI('GET', 'fees')
+
+    def getMakerFee(self):
+        fees = self.getFees()
+        return float(fees['maker_fee_rate'].to_string(index=False).strip())
+
+    def getTakerFee(self):
+        fees = self.getFees()
+        return float(fees['taker_fee_rate'].to_string(index=False).strip())
+
+    def getUSDVolume(self):
+        fees = self.getFees()
+        return float(fees['usd_volume'].to_string(index=False).strip())
+
     def marketBuy(self, market='', fiatAmount=0):
         """Executes a market buy providing a funding amount"""
 

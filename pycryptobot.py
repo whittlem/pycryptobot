@@ -111,7 +111,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
         ema12gtema26 = bool(df_last['ema12gtema26'].values[0])
         ema12gtema26co = bool(df_last['ema12gtema26co'].values[0])
         goldencross = bool(df_last['goldencross'].values[0])
-        deathcross = bool(df_last['deathcross'].values[0])
+        #deathcross = bool(df_last['deathcross'].values[0])
         macdgtsignal = bool(df_last['macdgtsignal'].values[0])
         macdgtsignalco = bool(df_last['macdgtsignalco'].values[0])
         ema12ltema26 = bool(df_last['ema12ltema26'].values[0])
@@ -148,7 +148,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             change_pcnt = ((price / last_buy) - 1) * 100
 
             # loss failsafe sell at fibonacci band
-            if fib_low > 0 and fib_low >= float(price):
+            if app.sellLowerPcnt() == None and fib_low > 0 and fib_low >= float(price):
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Loss Failsafe Triggered (Fibonacci Band: ' + str(fib_low) + ')'
@@ -171,10 +171,20 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 print (log_text, "\n")
                 logging.warning(log_text)
 
+            print (app.sellUpperPcnt(), change_pcnt, fib_high, fib_low, float(price))
+
+            # profit bank at sell at fibonacci band
+            if app.sellUpperPcnt() != None and fib_high > fib_low and fib_high <= float(price):
+                action = 'SELL'
+                last_action = 'BUY'
+                log_text = '! Profit Bank Triggered (Fibonacci Band: ' + str(fib_high) + ')'
+                print (log_text, "\n")
+                logging.warning(log_text)
+
         goldendeathtext = ''
         if goldencross == True:
             goldendeathtext = ' (BULL)'
-        elif deathcross == False:
+        elif goldencross == False:
             goldendeathtext = ' (BEAR)'
 
         # polling is every 5 minutes (even for hourly intervals), but only process once per interval
