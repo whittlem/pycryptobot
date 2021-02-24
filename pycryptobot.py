@@ -171,8 +171,6 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 print (log_text, "\n")
                 logging.warning(log_text)
 
-            print (app.sellUpperPcnt(), change_pcnt, fib_high, fib_low, float(price))
-
             # profit bank at sell at fibonacci band
             if app.sellUpperPcnt() != None and fib_high > fib_low and fib_high <= float(price):
                 action = 'SELL'
@@ -543,7 +541,10 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 print ('  Sell Count :', sell_count, "\n")
 
                 if sell_count > 0:
-                    print ('      Margin :', str(app.truncate((((sell_sum - buy_sum) / sell_sum) * 100), 2)) + '%', "\n")
+                    print ('      Margin :', str(app.truncate((((sell_sum - buy_sum) / sell_sum) * 100), 2)) + '%', "\n\n")
+
+                    print ('  ** non-live simulation, assuming highest fees')
+
         else:
             now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
             print (now, '|', market + goldendeathtext, '|', str(granularity), '| Current Price:', price)
