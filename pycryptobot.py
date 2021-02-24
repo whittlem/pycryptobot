@@ -541,9 +541,9 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 print ('  Sell Count :', sell_count, "\n")
 
                 if sell_count > 0:
-                    print ('      Margin :', str(app.truncate((((sell_sum - buy_sum) / sell_sum) * 100), 2)) + '%', "\n\n")
+                    print ('      Margin :', str(app.truncate((((sell_sum - buy_sum) / sell_sum) * 100), 2)) + '%', "\n")
 
-                    print ('  ** non-live simulation, assuming highest fees')
+                    print ('  ** non-live simulation, assuming highest fees', "\n")
 
         else:
             now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
