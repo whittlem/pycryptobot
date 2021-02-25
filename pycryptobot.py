@@ -11,7 +11,7 @@ from models.TradingAccount import TradingAccount
 from views.TradingGraphs import TradingGraphs
 
 # production: disable traceback
-sys.tracebacklimit = 0
+#sys.tracebacklimit = 0
 
 app = PyCryptoBot()
 s = sched.scheduler(time.time, time.sleep)
@@ -57,7 +57,7 @@ if app.isLive() == 1:
         if len(price) > 0:
             last_buy = float(app.truncate(price, 2))
 
-def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
+def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
     """Trading bot job which runs at a scheduled interval"""
     global action, buy_count, buy_sum, iterations, last_action, last_buy, last_df_index, sell_count, sell_sum, buy_state, fib_high, fib_low
 
@@ -66,11 +66,11 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
     if app.isSimulation() == 0:
         # retrieve the app.getMarket() data
-        tradingData = app.getHistoricalData(app.getMarket(), granularity)
+        trading_data = app.getHistoricalData(app.getMarket(), app.getGranularity())
 
     # analyse the market data
-    tradingDataCopy = tradingData.copy()
-    ta = TechnicalAnalysis(tradingDataCopy)
+    trading_dataCopy = trading_data.copy()
+    ta = TechnicalAnalysis(trading_dataCopy)
     ta.addAll()
     df = ta.getDataFrame()
 
@@ -79,13 +79,13 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             # data frame should have 250 rows, if not retry
             print('error: data frame length is < 250 (' + str(len(df)) + ')')
             logging.error('error: data frame length is < 250 (' + str(len(df)) + ')')
-            s.enter(300, 1, executeJob, (sc, market, granularity))
+            s.enter(300, 1, executeJob, (sc, app))
     else:
         if len(df) != 300:
             # data frame should have 300 rows, if not retry
             print('error: data frame length is < 300 (' + str(len(df)) + ')')
             logging.error('error: data frame length is < 300 (' + str(len(df)) + ')')
-            s.enter(300, 1, executeJob, (sc, market, granularity))
+            s.enter(300, 1, executeJob, (sc, app))
 
     if app.isSimulation() == 1:
         # with a simulation df_last will iterate through data
@@ -101,7 +101,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
     if len(df_last) > 0:
         if app.isSimulation() == 0:
-            price = app.getTicker(market)
+            price = app.getTicker(app.getMarket())
             if price < df_last['low'].values[0] or price == 0:
                 price = float(df_last['close'].values[0])
         else:
@@ -292,9 +292,9 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
             if app.isVerbose() == 0:
                 if last_action != '':
-                    output_text = current_df_index + ' | ' + market + goldendeathtext + ' | ' + str(granularity) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + action + ' | Last Action: ' + last_action
+                    output_text = current_df_index + ' | ' + app.getMarket() + goldendeathtext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + action + ' | Last Action: ' + last_action
                 else:
-                    output_text = current_df_index + ' | ' + market + goldendeathtext + ' | ' + str(granularity) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + action + ' '
+                    output_text = current_df_index + ' | ' + app.getMarket() + goldendeathtext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + action + ' '
 
                 if last_action == 'BUY':
                     # calculate last buy minus fees
@@ -403,25 +403,26 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 # if live
                 if app.isLive() == 1:
                     if app.isVerbose() == 0:
-                        logging.info(current_df_index + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | BUY')
-                        print ("\n", current_df_index, '|', market, granularity, '|', price_text, '| BUY', "\n")                    
+                        logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + str(app.getGranularity()) + ' | ' + price_text + ' | BUY')
+                        print ("\n", current_df_index, '|', app.getMarket(), app.getGranularity(), '|', price_text, '| BUY', "\n")                    
                     else:
                         print('--------------------------------------------------------------------------------')
                         print('|                      *** Executing LIVE Buy Order ***                        |')
                         print('--------------------------------------------------------------------------------')
                     
                     # execute a live market buy
-                    resp = app.marketBuy(market, float(account.getBalance(app.getQuoteCurrency())))
+                    resp = app.marketBuy(app.getMarket(), float(account.getBalance(app.getQuoteCurrency())))
                     logging.info(resp)
 
                 # if not live
                 else:
                     if app.isVerbose() == 0:
-                        logging.info(current_df_index + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | BUY')
-                        print ("\n", current_df_index, '|', market, granularity, '|', price_text, '| BUY')
+                        logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + str(app.getGranularity()) + ' | ' + price_text + ' | BUY')
+                        print ("\n", current_df_index, '|', app.getMarket(), app.getGranularity(), '|', price_text, '| BUY')
 
                         bands = ta.getFibonacciRetracementLevels(float(price))                      
-                        print (' Fibonacci Retracement Levels:', str(bands), "\n")                    
+                        print (' Fibonacci Retracement Levels:', str(bands))
+                        ta.printSupportResistanceLevel(float(price))
 
                         if len(bands) >= 1 and len(bands) <= 2:
                             if len(bands) == 1:
@@ -462,8 +463,8 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 # if live
                 if app.isLive() == 1:
                     if app.isVerbose() == 0:
-                        logging.info(current_df_index + ' | ' + market + ' ' + str(granularity) + ' | ' + price_text + ' | SELL')
-                        print ("\n", current_df_index, '|', market, granularity, '|', price_text, '| SELL')
+                        logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + str(app.getGranularity()) + ' | ' + price_text + ' | SELL')
+                        print ("\n", current_df_index, '|', app.getMarket(), app.getGranularity(), '|', price_text, '| SELL')
 
                         bands = ta.getFibonacciRetracementLevels(float(price))                      
                         print (' Fibonacci Retracement Levels:', str(bands), "\n")                    
@@ -492,7 +493,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                         print('--------------------------------------------------------------------------------')
 
                     # execute a live market sell
-                    resp = app.marketSell(market, float(account.getBalance(app.getBaseCurrency())))
+                    resp = app.marketSell(app.getGranularity(), float(account.getBalance(app.getBaseCurrency())))
                     logging.info(resp)
 
                 # if not live
@@ -509,8 +510,8 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
                         buy_sell_margin_fees = str(app.truncate((((sell_price - last_buy_price_minus_fees) / sell_price) * 100), 2)) + '%'
 
-                        logging.info(current_df_index + ' | ' + market + ' ' + str(granularity) + ' | SELL | ' + str(sell_price) + ' | BUY | ' + str(last_buy_price) + ' | DIFF | ' + str(buy_sell_diff) + ' | MARGIN NO FEES | ' + str(buy_sell_margin_no_fees) + ' | MARGIN FEES | ' + str(buy_sell_margin_fees))
-                        print ("\n", current_df_index, '|', market, granularity, '| SELL |', str(sell_price), '| BUY |', str(last_buy_price), '| DIFF |', str(buy_sell_diff) , '| MARGIN NO FEES |', str(buy_sell_margin_no_fees), '| MARGIN FEES |', str(buy_sell_margin_fees), "\n")                    
+                        logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + str(app.getGranularity()) + ' | SELL | ' + str(sell_price) + ' | BUY | ' + str(last_buy_price) + ' | DIFF | ' + str(buy_sell_diff) + ' | MARGIN NO FEES | ' + str(buy_sell_margin_no_fees) + ' | MARGIN FEES | ' + str(buy_sell_margin_fees))
+                        print ("\n", current_df_index, '|', app.getMarket(), str(app.getGranularity()), '| SELL |', str(sell_price), '| BUY |', str(last_buy_price), '| DIFF |', str(buy_sell_diff) , '| MARGIN NO FEES |', str(buy_sell_margin_no_fees), '| MARGIN FEES |', str(buy_sell_margin_fees), "\n")                    
                     else:
                         print('--------------------------------------------------------------------------------')
                         print('|                      *** Executing TEST Sell Order ***                        |')
@@ -547,7 +548,7 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
 
         else:
             now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
-            print (now, '|', market + goldendeathtext, '|', str(granularity), '| Current Price:', price)
+            print (now, '|', app.getGranularity() + goldendeathtext, '|', str(app.getGranularity()), '| Current Price:', price)
 
             # decrement ignored iteration
             iterations = iterations - 1
@@ -564,27 +565,27 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             if iterations < 300:
                 if app.simuluationSpeed() in [ 'fast', 'fast-sample' ]:
                     # fast processing
-                    executeJob(sc, market, granularity, tradingData)
+                    executeJob(sc, app, trading_data)
                 else:
                     # slow processing
-                    s.enter(1, 1, executeJob, (sc, market, granularity, tradingData))
+                    s.enter(1, 1, executeJob, (sc, app, trading_data))
 
         else:
             # poll every 5 minute
-            s.enter(300, 1, executeJob, (sc, market, granularity))
+            s.enter(300, 1, executeJob, (sc, app))
 
 try:
     # initialise logging
     logging.basicConfig(filename='pycryptobot.log', format='%(asctime)s - %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filemode='a', level=logging.DEBUG)
 
     # initialise and start application
-    tradingData = app.startApp(account, last_action)
+    trading_data = app.startApp(account, last_action)
 
     # run the first job immediately after starting
     if app.isSimulation() == 1:
-        executeJob(s, app.getMarket(), app.getGranularity(), tradingData)
+        executeJob(s, app, trading_data)
     else:
-        executeJob(s, app.getMarket(), app.getGranularity())
+        executeJob(s, app)
 
     s.run()
 

@@ -31,7 +31,7 @@ class TradingGraphs():
         self.df = technical_analysis.getDataFrame()
 
         # stores the support and resistance levels from technical_analysis object
-        self.levels = technical_analysis.supportResistanceLevels()
+        self.levels = technical_analysis.getSupportResistanceLevels()
 
     def renderBuySellSignalEMA1226(self, saveFile='', saveOnly=False):
         """Render the EMA12 and EMA26 buy and sell signals
