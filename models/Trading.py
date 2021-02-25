@@ -453,7 +453,7 @@ class TechnicalAnalysis():
 
         self.df['deathcross'] = self.df['sma50'] < self.df['sma200']
 
-    def supportResistanceLevels(self):
+    def getSupportResistanceLevels(self):
         """Calculate the Support and Resistance Levels"""
 
         self.levels = [] 
@@ -463,6 +463,19 @@ class TechnicalAnalysis():
             levels_ts[self.df.index[level[0]]] = level[1]
         # add the support levels to the DataFrame
         return pd.Series(levels_ts)
+
+    def printSupportResistanceLevel(self, price=0):
+        if isinstance(price, int) or isinstance(price, float):
+            df = self.getSupportResistanceLevels()
+
+            if len(df) > 0:
+                df_last = df.tail(1)
+                if float(df_last[0]) < price:
+                    print (' Support level of ' + str(df_last[0]) + ' formed at ' + str(df_last.index[0]), "\n")
+                elif float(df_last[0]) > price:
+                    print (' Resistance level of ' + str(df_last[0]) + ' formed at ' + str(df_last.index[0]), "\n")
+                else:
+                    print (' Support/Resistance level of ' + str(df_last[0]) + ' formed at ' + str(df_last.index[0]), "\n")       
 
     def addEMABuySignals(self):
         """Adds the EMA12/EMA26 buy and sell signals to the DataFrame"""
@@ -538,11 +551,17 @@ class TechnicalAnalysis():
         elif price == 0:
             data['ratio1'] = float(self.__truncate(price_min, 2))
 
-        if price != 0 and (price > price_min) and (price <= (price_max - 0.618 * diff)):
+        if price != 0 and (price > price_min) and (price <= (price_max - 0.768 * diff)):
             data['ratio1'] = float(self.__truncate(price_min, 2))
+            data['ratio0_768'] = float(self.__truncate(price_max - 0.768 * diff, 2))
+        elif price == 0:
+            data['ratio0_768'] = float(self.__truncate(price_max - 0.768 * diff, 2))      
+
+        if price != 0 and (price > (price_max - 0.768 * diff)) and (price <= (price_max - 0.618 * diff)):
+            data['ratio0_768'] = float(self.__truncate(price_max - 0.768 * diff, 2))
             data['ratio0_618'] = float(self.__truncate(price_max - 0.618 * diff, 2))
         elif price == 0:
-            data['ratio0_618'] = float(self.__truncate(price_max - 0.618 * diff, 2))
+            data['ratio0_618'] = float(self.__truncate(price_max - 0.618 * diff, 2))          
 
         if price != 0 and (price > (price_max - 0.618 * diff)) and (price <= (price_max - 0.5 * diff)):
             data['ratio0_618'] = float(self.__truncate(price_max - 0.618 * diff, 2))
@@ -568,13 +587,19 @@ class TechnicalAnalysis():
         elif price == 0:
             data['ratio0'] = float(self.__truncate(price_max, 2))
 
-        if price != 0 and (price > price_max) and (price <= (price_max + 0.618 * diff)):
+        if price != 0 and (price < (price_max + 0.272 * diff)) and (price >= price_max):
             data['ratio0'] = float(self.__truncate(price_max, 2))
-            data['ratio1_618'] = float(self.__truncate(price_max + 0.618 * diff, 2))
+            data['ratio1_272'] = float(self.__truncate(price_max + 0.272 * diff, 2))
         elif price == 0:
-            data['ratio0'] = float(self.__truncate(price_max, 2))
+            data['ratio1_272'] = float(self.__truncate(price_max + 0.272 * diff, 2))
 
-        if price != 0 and (price > (price_max + 0.618 * diff)):
+        if price != 0 and (price < (price_max + 0.414 * diff)) and (price >= (price_max + 0.272 * diff)):
+            data['ratio1_272'] = float(self.__truncate(price_max, 2))
+            data['ratio1_414'] = float(self.__truncate(price_max + 0.414 * diff, 2))
+        elif price == 0:
+            data['ratio1_414'] = float(self.__truncate(price_max + 0.414 * diff, 2))
+
+        if price != 0 and (price < (price_max + 0.618 * diff)) and (price >= (price_max + 0.414 * diff)):
             data['ratio1_618'] = float(self.__truncate(price_max + 0.618 * diff, 2))
         elif price == 0:
             data['ratio1_618'] = float(self.__truncate(price_max + 0.618 * diff, 2))
