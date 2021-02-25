@@ -737,7 +737,8 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
             print ('   Buy Count :', buy_count)
             print ('  Sell Count :', sell_count, "\n")
 
-            print ('      Margin :', str(truncate((((sell_sum - buy_sum) / sell_sum) * 100), 2)) + '%', "\n")
+            margin_decimal = (sell_sum - buy_sum) / sell_sum if sell_sum else 0
+            print('      Margin :', str(truncate((margin_decimal * 100), 2)) + '%', "\n")
     else:
         now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
         print (now, '|', market + goldendeathtext, '|', str(granularity), '| Current Price:', price)
