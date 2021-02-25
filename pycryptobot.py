@@ -689,27 +689,28 @@ def executeJob(sc, market, granularity, tradingData=pd.DataFrame()):
                 #logging.info('attempt to sell ' + resp['size'] + ' of ' + resp['product_id'])
             # if not live
             else:
-                if is_verbose == 0:
-                    sell_price = float(str(truncate(price, precision)))
-                    last_buy_price = float(str(truncate(float(last_buy), precision)))
-                    buy_sell_diff = round(np.subtract(sell_price, last_buy_price), precision)
-                    buy_sell_margin_no_fees = str(truncate((((sell_price - last_buy_price) / sell_price) * 100), 2)) + '%'
-
-                    # calculate last buy minus fees
-                    buy_fee = last_buy_price * 0.005
-                    last_buy_price_minus_fees = last_buy_price + buy_fee
-
-                    buy_sell_margin_fees = str(truncate((((sell_price - last_buy_price_minus_fees) / sell_price) * 100), 2)) + '%'
-
-                    logging.info(current_df_index + ' | ' + market + ' ' + str(granularity) + ' | SELL | ' + str(sell_price) + ' | BUY | ' + str(last_buy_price) + ' | DIFF | ' + str(buy_sell_diff) + ' | MARGIN NO FEES | ' + str(buy_sell_margin_no_fees) + ' | MARGIN FEES | ' + str(buy_sell_margin_fees))
-                    print ("\n", current_df_index, '|', market, granularity, '| SELL |', str(sell_price), '| BUY |', str(last_buy_price), '| DIFF |', str(buy_sell_diff) , '| MARGIN NO FEES |', str(buy_sell_margin_no_fees), '| MARGIN FEES |', str(buy_sell_margin_fees), "\n")                    
-                
-                    buy_sum = buy_sum + last_buy_price_minus_fees
-                    sell_sum = sell_sum + sell_price
-                else:
+                if is_verbose == 1:
                     print('--------------------------------------------------------------------------------')
                     print('|                      *** Executing TEST Sell Order ***                        |')
                     print('--------------------------------------------------------------------------------')
+
+                sell_price = float(str(truncate(price, precision)))
+                last_buy_price = float(str(truncate(float(last_buy), precision)))
+                buy_sell_diff = round(np.subtract(sell_price, last_buy_price), precision)
+                buy_sell_margin_no_fees = str(truncate((((sell_price - last_buy_price) / sell_price) * 100), 2)) + '%'
+
+                # calculate last buy minus fees
+                buy_fee = last_buy_price * 0.005
+                last_buy_price_minus_fees = last_buy_price + buy_fee
+
+                buy_sell_margin_fees = str(truncate((((sell_price - last_buy_price_minus_fees) / sell_price) * 100), 2)) + '%'
+
+                logging.info(current_df_index + ' | ' + market + ' ' + str(granularity) + ' | SELL | ' + str(sell_price) + ' | BUY | ' + str(last_buy_price) + ' | DIFF | ' + str(buy_sell_diff) + ' | MARGIN NO FEES | ' + str(buy_sell_margin_no_fees) + ' | MARGIN FEES | ' + str(buy_sell_margin_fees))
+                print ("\n", current_df_index, '|', market, granularity, '| SELL |', str(sell_price), '| BUY |', str(last_buy_price), '| DIFF |', str(buy_sell_diff) , '| MARGIN NO FEES |', str(buy_sell_margin_no_fees), '| MARGIN FEES |', str(buy_sell_margin_fees), "\n")
+
+                buy_sum = buy_sum + last_buy_price_minus_fees
+                sell_sum = sell_sum + sell_price
+
             #print(df_last[['close','ema12','ema26','ema12ltema26','ema12ltema26co','macd','signal','macdltsignal','obv','obv_pc']])
 
             if save_graphs == 1:
