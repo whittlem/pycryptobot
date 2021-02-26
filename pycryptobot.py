@@ -71,7 +71,7 @@ try:
         config = json.load(config_file)
 
         if 'config' in config:
-            if 'cryptoMarket' and 'fiatMarket' in config['config']:
+            if 'cryptoMarket' in config['config'] and 'fiatMarket' in config['config']:
                 cryptoMarket = config['config']['cryptoMarket']
                 fiatMarket = config['config']['fiatMarket']
 
