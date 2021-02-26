@@ -74,7 +74,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
     ta.addAll()
     df = ta.getDataFrame()
 
-    if app.getExchange() == 'binance' and app.getGranularity() == '1d':
+    if app.getExchange() == 'binance' and str(app.getGranularity()) == '1d':
         if len(df) != 250:
             # data frame should have 250 rows, if not retry
             print('error: data frame length is < 250 (' + str(len(df)) + ')')
@@ -404,7 +404,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 if app.isLive() == 1:
                     if app.isVerbose() == 0:
                         logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + str(app.getGranularity()) + ' | ' + price_text + ' | BUY')
-                        print ("\n", current_df_index, '|', app.getMarket(), app.getGranularity(), '|', price_text, '| BUY', "\n")                    
+                        print ("\n", current_df_index, '|', app.getMarket(), str(app.getGranularity()), '|', price_text, '| BUY', "\n")                    
                     else:
                         print('--------------------------------------------------------------------------------')
                         print('|                      *** Executing LIVE Buy Order ***                        |')
@@ -418,7 +418,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 else:
                     if app.isVerbose() == 0:
                         logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + str(app.getGranularity()) + ' | ' + price_text + ' | BUY')
-                        print ("\n", current_df_index, '|', app.getMarket(), app.getGranularity(), '|', price_text, '| BUY')
+                        print ("\n", current_df_index, '|', app.getMarket(), str(app.getGranularity()), '|', price_text, '| BUY')
 
                         bands = ta.getFibonacciRetracementLevels(float(price))                      
                         print (' Fibonacci Retracement Levels:', str(bands))
@@ -464,7 +464,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 if app.isLive() == 1:
                     if app.isVerbose() == 0:
                         logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + str(app.getGranularity()) + ' | ' + price_text + ' | SELL')
-                        print ("\n", current_df_index, '|', app.getMarket(), app.getGranularity(), '|', price_text, '| SELL')
+                        print ("\n", current_df_index, '|', app.getMarket(), str(app.getGranularity()), '|', price_text, '| SELL')
 
                         bands = ta.getFibonacciRetracementLevels(float(price))                      
                         print (' Fibonacci Retracement Levels:', str(bands), "\n")                    
@@ -493,7 +493,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                         print('--------------------------------------------------------------------------------')
 
                     # execute a live market sell
-                    resp = app.marketSell(app.getGranularity(), float(account.getBalance(app.getBaseCurrency())))
+                    resp = app.marketSell(app.getMarket(), float(account.getBalance(app.getBaseCurrency())))
                     logging.info(resp)
 
                 # if not live
@@ -529,7 +529,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             
             last_df_index = str(df_last.index.format()[0])
 
-            if (app.getExchange() == 'binance' and app.getGranularity() == '1d' and iterations == 250) or iterations == 300:
+            if (app.getExchange() == 'binance' and str(app.getGranularity()) == '1d' and iterations == 250) or iterations == 300:
                 print ("\nSimulation Summary\n")
 
                 if buy_count > sell_count:
@@ -548,7 +548,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
 
         else:
             now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
-            print (now, '|', app.getGranularity() + goldendeathtext, '|', str(app.getGranularity()), '| Current Price:', price)
+            print (now, '|', app.getMarket() + goldendeathtext, '|', str(app.getGranularity()), '| Current Price:', price)
 
             # decrement ignored iteration
             iterations = iterations - 1
