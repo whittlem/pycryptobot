@@ -83,8 +83,8 @@ class TradingGraphs():
             Save the figure without displaying it         
         """
 
-        buysignals = ((self.df.ema12gtema26co == True) & (self.df.macdgtsignal == True) & (self.df.obv_pc >= 2)) | ((self.df.ema12gtema26 == True) & (self.df.macdgtsignal == True) & (self.df.obv_pc >= 5)) 
-        sellsignals = ((self.df.ema12ltema26co == True) & (self.df.macdltsignal == True)) | ((self.df.ema12gtema26 == True) & (self.df.macdltsignal == True) & (self.df.obv_pc < 0))
+        buysignals = ((self.df.ema12gtema26co == True) & (self.df.macdgtsignal == True) & (self.df.goldencross == True)) 
+        sellsignals = ((self.df.ema12ltema26co == True) & (self.df.macdltsignal == True))
         df_signals = self.df[(buysignals) | (sellsignals)]
 
         ax1 = plt.subplot(211)
