@@ -107,6 +107,9 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         else:
             price = float(df_last['close'].values[0])
 
+        if price < 0.0001:
+            raise Exception(app.getMarket() + ' is unsuitable for trading, quote price is less than 0.0001!')
+
         # technical indicators
         ema12gtema26 = bool(df_last['ema12gtema26'].values[0])
         ema12gtema26co = bool(df_last['ema12gtema26co'].values[0])
@@ -180,7 +183,9 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.warning(log_text)
 
         goldendeathtext = ''
-        if goldencross == True:
+        if df_last['sma50'].values[0] == df_last['sma200'].values[0]:
+            goldendeathtext = ''
+        elif goldencross == True:
             goldendeathtext = ' (BULL)'
         elif goldencross == False:
             goldendeathtext = ' (BEAR)'
@@ -188,8 +193,9 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         # polling is every 5 minutes (even for hourly intervals), but only process once per interval
         if (last_df_index != current_df_index):
             precision = 2
-            if app.getBaseCurrency() == 'XLM':
-                precision = 4
+
+            if (price < 0.01):
+                precision = 8
 
             price_text = 'Close: ' + str(app.truncate(price, precision))
             ema_text = app.compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26', precision)
@@ -313,15 +319,17 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     margin = str(app.truncate((((price - last_buy) / price) * 100), 2)) + '%'
                     logging.debug('-- Margin: ' + margin + '% --')            
                 
-                logging.debug('price: ' + str(app.truncate(price, 2)))
-                logging.debug('ema12: ' + str(app.truncate(float(df_last['ema12'].values[0]), 2)))
-                logging.debug('ema26: ' + str(app.truncate(float(df_last['ema26'].values[0]), 2)))
+                logging.debug('price: ' + str(app.truncate(price, precision)))
+                logging.debug('ema12: ' + str(app.truncate(float(df_last['ema12'].values[0]), precision)))
+                logging.debug('ema26: ' + str(app.truncate(float(df_last['ema26'].values[0]), precision)))
                 logging.debug('ema12gtema26co: ' + str(ema12gtema26co))
                 logging.debug('ema12gtema26: ' + str(ema12gtema26))
                 logging.debug('ema12ltema26co: ' + str(ema12ltema26co))
                 logging.debug('ema12ltema26: ' + str(ema12ltema26))
-                logging.debug('macd: ' + str(app.truncate(float(df_last['macd'].values[0]), 2)))
-                logging.debug('signal: ' + str(app.truncate(float(df_last['signal'].values[0]), 2)))
+                logging.debug('sma50: ' + str(app.truncate(float(df_last['sma50'].values[0]), precision)))
+                logging.debug('sma200: ' + str(app.truncate(float(df_last['sma200'].values[0]), precision)))
+                logging.debug('macd: ' + str(app.truncate(float(df_last['macd'].values[0]), precision)))
+                logging.debug('signal: ' + str(app.truncate(float(df_last['signal'].values[0]), precision)))
                 logging.debug('macdgtsignal: ' + str(macdgtsignal))
                 logging.debug('macdltsignal: ' + str(macdltsignal))
                 logging.debug('action: ' + action)
@@ -334,12 +342,12 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 txt = '        Timestamp : ' + str(df_last.index.format()[0])
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 print('--------------------------------------------------------------------------------')
-                txt = '            Close : ' + str(app.truncate(price, 2))
+                txt = '            Close : ' + str(app.truncate(price, precision))
                 print('|', txt, (' ' * (75 - len(txt))), '|')
-                txt = '            EMA12 : ' + str(app.truncate(float(df_last['ema12'].values[0]), 2))
+                txt = '            EMA12 : ' + str(app.truncate(float(df_last['ema12'].values[0]), precision))
                 print('|', txt, (' ' * (75 - len(txt))), '|')
-                txt = '            EMA26 : ' + str(app.truncate(float(df_last['ema26'].values[0]), 2))
-                print('|', txt, (' ' * (75 - len(txt))), '|')
+                txt = '            EMA26 : ' + str(app.truncate(float(df_last['ema26'].values[0]), precision))
+                print('|', txt, (' ' * (75 - len(txt))), '|')               
                 txt = '   Crossing Above : ' + str(ema12gtema26co)
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 txt = '  Currently Above : ' + str(ema12gtema26)
@@ -361,10 +369,15 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     txt = '        Condition : -'
                 print('|', txt, (' ' * (75 - len(txt))), '|')
 
-                print('--------------------------------------------------------------------------------')
-                txt = '             MACD : ' + str(app.truncate(float(df_last['macd'].values[0]), 2))
+                txt = '            SMA20 : ' + str(app.truncate(float(df_last['sma20'].values[0]), precision))
                 print('|', txt, (' ' * (75 - len(txt))), '|')
-                txt = '           Signal : ' + str(app.truncate(float(df_last['signal'].values[0]), 2))
+                txt = '           SMA200 : ' + str(app.truncate(float(df_last['sma200'].values[0]), precision))
+                print('|', txt, (' ' * (75 - len(txt))), '|')
+
+                print('--------------------------------------------------------------------------------')
+                txt = '             MACD : ' + str(app.truncate(float(df_last['macd'].values[0]), precision))
+                print('|', txt, (' ' * (75 - len(txt))), '|')
+                txt = '           Signal : ' + str(app.truncate(float(df_last['signal'].values[0]), precision))
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 txt = '  Currently Above : ' + str(macdgtsignal)
                 print('|', txt, (' ' * (75 - len(txt))), '|')
@@ -502,13 +515,20 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                         sell_price = float(str(app.truncate(price, precision)))
                         last_buy_price = float(str(app.truncate(float(last_buy), precision)))
                         buy_sell_diff = round(np.subtract(sell_price, last_buy_price), precision)
-                        buy_sell_margin_no_fees = str(app.truncate((((sell_price - last_buy_price) / sell_price) * 100), 2)) + '%'
+
+                        if (sell_price != 0):
+                            buy_sell_margin_no_fees = str(app.truncate((((sell_price - last_buy_price) / sell_price) * 100), 2)) + '%'
+                        else:
+                            buy_sell_margin_no_fees = '0%'
 
                         # calculate last buy minus fees
                         buy_fee = last_buy_price * 0.005
                         last_buy_price_minus_fees = last_buy_price + buy_fee
 
-                        buy_sell_margin_fees = str(app.truncate((((sell_price - last_buy_price_minus_fees) / sell_price) * 100), 2)) + '%'
+                        if (sell_price != 0):
+                            buy_sell_margin_fees = str(app.truncate((((sell_price - last_buy_price_minus_fees) / sell_price) * 100), 2)) + '%'
+                        else:
+                            buy_sell_margin_fees = '0%'
 
                         logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + str(app.getGranularity()) + ' | SELL | ' + str(sell_price) + ' | BUY | ' + str(last_buy_price) + ' | DIFF | ' + str(buy_sell_diff) + ' | MARGIN NO FEES | ' + str(buy_sell_margin_no_fees) + ' | MARGIN FEES | ' + str(buy_sell_margin_fees))
                         print ("\n", current_df_index, '|', app.getMarket(), str(app.getGranularity()), '| SELL |', str(sell_price), '| BUY |', str(last_buy_price), '| DIFF |', str(buy_sell_diff) , '| MARGIN NO FEES |', str(buy_sell_margin_no_fees), '| MARGIN FEES |', str(buy_sell_margin_fees), "\n")                    

@@ -56,6 +56,7 @@ class TechnicalAnalysis():
         self.addOBV()
 
         self.addEMABuySignals()
+        self.addSMABuySignals()
         self.addMACDBuySignals()       
 
         self.addCandleHammer()
@@ -505,6 +506,35 @@ class TechnicalAnalysis():
         # true if the current frame is where EMA12 crosses over below
         self.df['ema12ltema26co'] = self.df.ema12ltema26.ne(self.df.ema12ltema26.shift())
         self.df.loc[self.df['ema12ltema26'] == False, 'ema12ltema26co'] = False
+
+    def addSMABuySignals(self):
+        """Adds the SMA50/SMA200 buy and sell signals to the DataFrame"""
+
+        if not isinstance(self.df, pd.DataFrame):
+            raise TypeError('Pandas DataFrame required.')
+
+        if not 'close' in self.df.columns:
+            raise AttributeError("Pandas DataFrame 'close' column required.")
+
+        if not self.df['close'].dtype == 'float64' and not self.df['close'].dtype == 'int64':
+            raise AttributeError(
+                "Pandas DataFrame 'close' column not int64 or float64.")
+
+        if not 'sma50' or not 'sma200' in self.df.columns:
+            self.addSMA(50)
+            self.addSMA(200)
+
+        # true if SMA50 is above the SMA200
+        self.df['sma50gtsma200'] = self.df.sma50 > self.df.sma200
+        # true if the current frame is where SMA50 crosses over above
+        self.df['sma50gtsma200co'] = self.df.sma50gtsma200.ne(self.df.sma50gtsma200.shift())
+        self.df.loc[self.df['sma50gtsma200'] == False, 'sma50gtsma200co'] = False
+
+        # true if the SMA50 is below the SMA200
+        self.df['sma50ltsma200'] = self.df.sma50 < self.df.sma200
+        # true if the current frame is where SMA50 crosses over below
+        self.df['sma50ltsma200co'] = self.df.sma50ltsma200.ne(self.df.sma50ltsma200.shift())
+        self.df.loc[self.df['sma50ltsma200'] == False, 'sma50ltsma200co'] = False
 
     def addMACDBuySignals(self):
         """Adds the MACD/Signal buy and sell signals to the DataFrame"""

@@ -87,6 +87,10 @@ class TradingAccount():
                     df = pd.DataFrame(resp)
                 else:
                     df = pd.DataFrame()
+
+                if len(df) == 0:
+                    return pd.DataFrame()
+
                 df = df[[ 'time', 'symbol', 'side', 'type', 'executedQty', 'cummulativeQuoteQty', 'status' ]]
                 df.columns = [ 'created_at', 'market', 'action', 'type', 'size', 'value', 'status' ]
                 df['created_at'] = df['created_at'].apply(lambda x: int(str(x)[:10]))
