@@ -4,7 +4,8 @@ from models.Binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
 from models.CoinbasePro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
 from views.TradingGraphs import TradingGraphs
 
-app = PyCryptoBot()
+#app = PyCryptoBot()
+app = PyCryptoBot('binance')
 tradingData = app.getHistoricalData(app.getMarket(), app.getGranularity())
 
 technicalAnalysis = TechnicalAnalysis(tradingData)

@@ -58,6 +58,10 @@ class PyCryptoBot():
         try:
             with open(filename) as config_file:
                 config = json.load(config_file)
+
+                if exchange not in config and 'binance' in config:
+                    self.exchange = 'binance'
+
                 if self.exchange == 'coinbasepro' and 'api_key' in config and 'api_secret' in config and ('api_pass' in config or 'api_passphrase' in config) and 'api_url' in config:
                     self.api_key = config['api_key']
                     self.api_secret = config['api_secret']
