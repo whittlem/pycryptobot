@@ -177,7 +177,7 @@ class PublicAPI():
         # binance epoch is too long
         df['open_time'] = df['open_time'] + 1
         df['open_time'] = df['open_time'].astype(str)
-        df['open_time'] = df['open_time'].str.replace(r'\d{3}$', '')   
+        df['open_time'] = df['open_time'].str.replace(r'\d{3}$', '', regex=True)   
 
         if(granularity == '1m'):
             freq = 'T'

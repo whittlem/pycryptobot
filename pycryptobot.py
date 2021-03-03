@@ -75,13 +75,13 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
     df = ta.getDataFrame()
 
     if app.getExchange() == 'binance' and str(app.getGranularity()) == '1d':
-        if len(df) != 250:
+        if len(df) < 250:
             # data frame should have 250 rows, if not retry
             print('error: data frame length is < 250 (' + str(len(df)) + ')')
             logging.error('error: data frame length is < 250 (' + str(len(df)) + ')')
             s.enter(300, 1, executeJob, (sc, app))
     else:
-        if len(df) != 300:
+        if len(df) < 300:
             # data frame should have 300 rows, if not retry
             print('error: data frame length is < 300 (' + str(len(df)) + ')')
             logging.error('error: data frame length is < 300 (' + str(len(df)) + ')')
@@ -549,7 +549,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             
             last_df_index = str(df_last.index.format()[0])
 
-            if (app.getExchange() == 'binance' and str(app.getGranularity()) == '1d' and iterations == 250) or iterations == 300:
+            if iterations == len(df):
                 print ("\nSimulation Summary\n")
 
                 if buy_count > sell_count:
