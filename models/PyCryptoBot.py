@@ -630,6 +630,12 @@ class PyCryptoBot():
         return self.sell_lower_pcnt
 
     def truncate(self, f, n):
+        if not isinstance(f, int) and not isinstance(f, float):
+            return 0.0
+
+        if not isinstance(n, int) and not isinstance(n, float):
+            return 0.0
+
         if (f < 0.001):
             if n == 4:
                 return '{:.4f}'.format(f)
