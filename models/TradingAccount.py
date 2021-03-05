@@ -173,9 +173,9 @@ class TradingAccount():
                         else:
                             # return balance of specified currency (if positive)
                             if currency in ['EUR','GBP','USD']:
-                                return self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2)
+                                return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2))
                             else:
-                                return self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4)
+                                return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
                 else:
                     return 0.0
             else:
@@ -206,9 +206,9 @@ class TradingAccount():
                     else:
                         # return balance of specified currency (if positive)
                         if currency in ['EUR','GBP','USD']:
-                            return self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2)
+                            return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2))
                         else:
-                            return self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4)
+                            return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
 
         else:
             if self.mode == 'live':
@@ -227,9 +227,9 @@ class TradingAccount():
                     else:
                         # return balance of specified currency (if positive)
                         if currency in ['EUR','GBP','USD']:
-                            return self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2)
+                            return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2))
                         else:
-                            return self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4)
+                            return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
                             
             else:
                 # return dummy balances
@@ -257,9 +257,9 @@ class TradingAccount():
                     else:
                         # return balance of specified currency (if positive)
                         if currency in ['EUR','GBP','USD']:
-                            return self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2)
+                            return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2))
                         else:
-                            return self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4)
+                            return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
 
     def saveTrackerCSV(self, market='', save_file='tracker.csv'):
         """Saves order tracker to CSV
