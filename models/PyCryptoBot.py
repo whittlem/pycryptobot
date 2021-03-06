@@ -212,7 +212,7 @@ class PyCryptoBot():
                         if 'selllowerpcnt' in config:
                             if isinstance(config['selllowerpcnt'], int):
                                 if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
-                                    self.sell_lower_pcnt = int(config['selllowerpcnt'])      
+                                    self.sell_lower_pcnt = int(config['selllowerpcnt'])
 
                 elif self.exchange == 'coinbasepro' and 'coinbasepro' in config:
                     if 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
@@ -287,6 +287,9 @@ class PyCryptoBot():
                                     if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
                                         self.sell_lower_pcnt = int(config['selllowerpcnt'])
 
+                    else:
+                        raise Exception('There is an error in your config.json')
+
                 elif self.exchange == 'binance' and 'binance' in config:
                     if 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
                         self.api_key = config['binance']['api_key']
@@ -350,6 +353,8 @@ class PyCryptoBot():
                                 if isinstance(config['selllowerpcnt'], int):
                                     if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
                                         self.sell_lower_pcnt = int(config['selllowerpcnt'])                    
+                    else:
+                        raise Exception('There is an error in your config.json')
 
         except IOError as err:
             now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
