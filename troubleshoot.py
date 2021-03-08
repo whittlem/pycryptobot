@@ -1,3 +1,6 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
 from models.PyCryptoBot import PyCryptoBot
 from models.Trading import TechnicalAnalysis
 from models.Binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
@@ -20,3 +23,7 @@ print (df_sr)
 
 graphs = TradingGraphs(ta)
 graphs.renderBuySellSignalEMA1226MACD(saveOnly=False)
+#graphs = TradingGraphs(ta)
+#graphs.renderPercentageChangeHistogram()
+#graphs.renderCumulativeReturn()
+#graphs.renderPercentageChangeScatterMatrix()
