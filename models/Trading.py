@@ -286,14 +286,17 @@ class TechnicalAnalysis():
     def changePct(self):
         """Close change percentage"""
 
-        close_pc = self.df['close'].pct_change() * 100
-        close_pc = np.round(close_pc.fillna(0), 2)
+        close_pc = self.df['close'] / self.df['close'].shift(1) - 1
+        close_pc = close_pc.fillna(0)
         return close_pc
     
     def addChangePct(self):
         """Adds the close percentage to the DataFrame"""
 
         self.df['close_pc'] = self.changePct()
+
+        # cumulative returns
+        self.df['close_cpc'] = (1 + self.df['close_pc']).cumprod()
 
     def cumulativeMovingAverage(self):
         """Calculates the Cumulative Moving Average (CMA)"""

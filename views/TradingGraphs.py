@@ -628,3 +628,86 @@ class TradingGraphs():
 
         if saveOnly == False:
             plt.show()
+
+    def renderPercentageChangeHistogram(self, show_desc=True):
+        """Render Percentage Change Histogram
+        
+        Parameters
+        ----------
+        saveOnly : bool
+            Save the figure without displaying it
+        """
+
+        # get dataframe from technical analysis object
+        df = self.technical_analysis.getDataFrame()
+
+        # extract market and granularity from trading dataframe
+        market = df.iloc[0].market
+        granularity = df.iloc[0].granularity
+
+        fig, ax = plt.subplots(ncols=1, figsize=(12, 6)) #pylint: disable=unused-variable
+        fig.autofmt_xdate()
+
+        ax = plt.subplot(111)
+        df.close_pc.hist(bins=50)
+        ax.set_title('Close Percent Change')
+
+        plt.style.use('seaborn')
+        plt.xlabel(market + ' - ' + str(granularity))
+        plt.xticks(rotation=90)
+        plt.tight_layout()
+        plt.legend()
+
+        plt.show()
+
+        if show_desc == True:
+            print(df['close_pc'].describe())
+
+    def renderPercentageChangeScatterMatrix(self):
+        """Render Percentage Change Scatter Matrix
+        
+        Parameters
+        ----------
+        saveOnly : bool
+            Save the figure without displaying it
+        """
+
+        # get dataframe from technical analysis object
+        df = self.technical_analysis.getDataFrame()
+
+        pd.plotting.scatter_matrix(df[['close','close_pc','close_cpc']], diagonal='kde', alpha=0.1, figsize=(12,12))       
+        plt.style.use('seaborn')
+        plt.tight_layout()
+        plt.show()
+
+    def renderCumulativeReturn(self):
+        """Render Percentage Change Histogram
+        
+        Parameters
+        ----------
+        saveOnly : bool
+            Save the figure without displaying it
+        """
+
+        # get dataframe from technical analysis object
+        df = self.technical_analysis.getDataFrame()
+
+        # extract market and granularity from trading dataframe
+        market = df.iloc[0].market
+        granularity = df.iloc[0].granularity
+
+        fig, ax = plt.subplots(ncols=1, figsize=(12, 6)) #pylint: disable=unused-variable
+        fig.autofmt_xdate()
+
+        ax = plt.subplot(111)
+        ax.plot(df.close_cpc, label='Adj Close', color='black')
+        ax.set_title('Cumulative Return')
+
+        plt.style.use('seaborn')
+        plt.xlabel(market + ' - ' + str(granularity))
+        plt.ylabel('Return')
+        plt.xticks(rotation=90)
+        plt.tight_layout()
+        plt.legend()
+
+        plt.show()
