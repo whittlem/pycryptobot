@@ -352,6 +352,58 @@ class TradingGraphs():
         if saveOnly == False:
             plt.show()
 
+    def renderCandlestickAstralPattern(self, period=30, saveOnly=False):
+        # get dataframe from technical analysis object
+        df = self.technical_analysis.getDataFrame()
+
+        if not isinstance(period, int):
+            raise TypeError('Period parameter is not perioderic.')
+
+        if period < 1 or period > len(df):
+            raise ValueError('Period is out of range')
+
+        # extract market and granularity from trading dataframe
+        market = df.iloc[0].market
+        granularity = df.iloc[0].granularity
+
+        df_subset = df.iloc[-period::]
+
+        fig, axes = plt.subplots(ncols=1, figsize=(12, 6)) #pylint: disable=unused-variable
+        fig.autofmt_xdate()
+        ax1 = plt.subplot(111)
+        ax1.set_title('Astral Candlestick Pattern')
+        plt.style.use('seaborn')
+        plt.plot(df_subset['close'], label='price', color='black')
+        plt.plot(df_subset['ema12'], label='ema12', color='orange')
+        plt.plot(df_subset['ema26'], label='ema26', color='purple')
+        plt.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
+
+        df_candlestick = self.df[self.df['astral_buy'] == True]
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+        for idx in df_candlestick_in_range.index.tolist():
+            plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'g^', markersize=8)
+            
+        df_candlestick = self.df[self.df['astral_sell'] == True]
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+        for idx in df_candlestick_in_range.index.tolist():
+            plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'rv', markersize=8)  
+
+        plt.style.use('seaborn')
+        plt.xlabel(market + ' - ' + str(granularity))
+        plt.ylabel('Price')
+        plt.xticks(rotation=90)
+        plt.tight_layout()
+        plt.legend()
+
+        try:
+            print ('creating: graphs/CAP_' + market + '_' + str(granularity) + '.png')
+            plt.savefig('graphs/CAP_' + market + '_' + str(granularity) + '.png', dpi=300)
+        except OSError:
+            raise SystemExit('Unable to save: graphs/CAP_' + market + '_' + str(granularity) + '.png') 
+
+        if saveOnly == False:
+            plt.show()
+
     def renderCandlesticks(self, period=30, saveOnly=False):
         # get dataframe from technical analysis object
         df = self.technical_analysis.getDataFrame()

@@ -59,6 +59,8 @@ class TechnicalAnalysis():
         self.addSMABuySignals()
         self.addMACDBuySignals()       
 
+        self.addCandleAstralBuy()
+        self.addCandleAstralSell()
         self.addCandleHammer()
         self.addCandleInvertedHammer()
         self.addCandleShootingStar()
@@ -250,6 +252,36 @@ class TechnicalAnalysis():
 
     def addCandleEveningDojiStar(self):
         self.df['evening_doji_star'] = self.candleEveningDojiStar()
+
+    def candleAstralBuy(self):
+        """*** Candlestick Detected: Astral Buy (Fibonacci 3, 5, 8)"""
+
+        return (self.df['close'] < self.df['close'].shift(3)) & (self.df['low'] < self.df['low'].shift(5)) \
+            & (self.df['close'].shift(1) < self.df['close'].shift(4)) & (self.df['low'].shift(1) < self.df['low'].shift(6)) \
+            & (self.df['close'].shift(2) < self.df['close'].shift(5)) & (self.df['low'].shift(2) < self.df['low'].shift(7)) \
+            & (self.df['close'].shift(3) < self.df['close'].shift(6)) & (self.df['low'].shift(3) < self.df['low'].shift(8)) \
+            & (self.df['close'].shift(4) < self.df['close'].shift(7)) & (self.df['low'].shift(4) < self.df['low'].shift(9)) \
+            & (self.df['close'].shift(5) < self.df['close'].shift(8)) & (self.df['low'].shift(5) < self.df['low'].shift(10)) \
+            & (self.df['close'].shift(6) < self.df['close'].shift(9)) & (self.df['low'].shift(6) < self.df['low'].shift(11)) \
+            & (self.df['close'].shift(7) < self.df['close'].shift(10)) & (self.df['low'].shift(7) < self.df['low'].shift(12))
+  
+    def addCandleAstralBuy(self):
+        self.df['astral_buy'] = self.candleAstralBuy()
+
+    def candleAstralSell(self):
+        """*** Candlestick Detected: Astral Sell (Fibonacci 3, 5, 8)"""
+
+        return (self.df['close'] > self.df['close'].shift(3)) & (self.df['high'] > self.df['high'].shift(5)) \
+            & (self.df['close'].shift(1) > self.df['close'].shift(4)) & (self.df['high'].shift(1) > self.df['high'].shift(6)) \
+            & (self.df['close'].shift(2) > self.df['close'].shift(5)) & (self.df['high'].shift(2) > self.df['high'].shift(7)) \
+            & (self.df['close'].shift(3) > self.df['close'].shift(6)) & (self.df['high'].shift(3) > self.df['high'].shift(8)) \
+            & (self.df['close'].shift(4) > self.df['close'].shift(7)) & (self.df['high'].shift(4) > self.df['high'].shift(9)) \
+            & (self.df['close'].shift(5) > self.df['close'].shift(8)) & (self.df['high'].shift(5) > self.df['high'].shift(10)) \
+            & (self.df['close'].shift(6) > self.df['close'].shift(9)) & (self.df['high'].shift(6) > self.df['high'].shift(11)) \
+            & (self.df['close'].shift(7) > self.df['close'].shift(10)) & (self.df['high'].shift(7) > self.df['high'].shift(12))
+  
+    def addCandleAstralSell(self):
+        self.df['astral_sell'] = self.candleAstralSell()
 
     def changePct(self):
         """Close change percentage"""
