@@ -92,11 +92,13 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
     if app.getExchange() == 'binance' and app.getGranularity() == '1h' and bool(df_last['ema12gtema26'].values[0]) == True and last_action == 'SELL':
         print ("*** Smart switch from granularity '1h' (1 hour) to '15m' (15 min) ***")
         app.setGranularity('15m')
+        list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, app))
 
     elif app.getExchange() == 'coinbasepro' and app.getGranularity() == 3600 and bool(df_last['ema12gtema26'].values[0]) == True:
         print ('*** Smart switch from granularity 3600 (1 hour) to 900 (15 min) ***')
         app.setGranularity(900)
+        list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, app))
 
     elif app.getExchange() == 'binance' and app.getGranularity() == '15m' and bool(df_last['ema12gtema26'].values[0]) == True:
@@ -111,6 +113,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             if df_1h_ema12ltema26 == True:
                 print ('*** Smart switch from granularity 900 (15 min) to 3600 (1 hour) ***')
                 app.setGranularity(3600)
+                list(map(s.cancel, s.queue))
                 s.enter(5, 1, executeJob, (sc, app))
 
     elif app.getExchange() == 'coinbasepro' and app.getGranularity() == 900:
@@ -125,6 +128,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             if df_1h_ema12ltema26 == True:
                 print ('*** Smart switch from granularity 900 (15 min) to 3600 (1 hour) ***')
                 app.setGranularity(3600)
+                list(map(s.cancel, s.queue))
                 s.enter(5, 1, executeJob, (sc, app))
 
     if app.getExchange() == 'binance' and str(app.getGranularity()) == '1d':
@@ -132,12 +136,14 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             # data frame should have 250 rows, if not retry
             print('error: data frame length is < 250 (' + str(len(df)) + ')')
             logging.error('error: data frame length is < 250 (' + str(len(df)) + ')')
+            list(map(s.cancel, s.queue))
             s.enter(300, 1, executeJob, (sc, app))
     else:
         if len(df) < 300:
             # data frame should have 300 rows, if not retry
             print('error: data frame length is < 300 (' + str(len(df)) + ')')
             logging.error('error: data frame length is < 300 (' + str(len(df)) + ')')
+            list(map(s.cancel, s.queue))
             s.enter(300, 1, executeJob, (sc, app))
 
     if len(df_last) > 0:
@@ -652,10 +658,12 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     executeJob(sc, app, trading_data)
                 else:
                     # slow processing
+                    list(map(s.cancel, s.queue))
                     s.enter(1, 1, executeJob, (sc, app, trading_data))
 
         else:
             # poll every 5 minute
+            list(map(s.cancel, s.queue))
             s.enter(300, 1, executeJob, (sc, app))
 
 try:
