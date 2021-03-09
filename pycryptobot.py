@@ -121,6 +121,8 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         ema12ltema26co = bool(df_last['ema12ltema26co'].values[0])
         macdltsignal = bool(df_last['macdltsignal'].values[0])
         macdltsignalco = bool(df_last['macdltsignalco'].values[0])
+        obv = float(df_last['obv'].values[0])
+        obv_pc = float(df_last['obv_pc'].values[0])
 
         # candlestick detection
         hammer = bool(df_last['hammer'].values[0])
@@ -138,7 +140,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         two_black_gapping = bool(df_last['two_black_gapping'].values[0])
 
         # criteria for a buy signal
-        if ema12gtema26co == True and macdgtsignal == True and goldencross == True and last_action != 'BUY':
+        if ema12gtema26co == True and macdgtsignal == True and goldencross == True and obv_pc > -5 and last_action != 'BUY':
             action = 'BUY'
         # criteria for a sell signal
         elif ema12ltema26co == True and macdltsignal == True and last_action not in ['','SELL']:
@@ -146,9 +148,14 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         # anything other than a buy or sell, just wait
         else:
             action = 'WAIT'
-        
+
         if last_buy > 0 and last_action == 'BUY':
             change_pcnt = ((price / last_buy) - 1) * 100
+
+            # calculate last buy minus fees
+            fee = last_buy * 0.005
+            last_buy_minus_fees = last_buy + fee
+            margin = ((price - last_buy_minus_fees) / price) * 100
 
             # loss failsafe sell at fibonacci band
             if app.sellLowerPcnt() == None and fib_low > 0 and fib_low >= float(price):
@@ -175,12 +182,20 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.warning(log_text)
 
             # profit bank at sell at fibonacci band
-            if app.sellUpperPcnt() != None and fib_high > fib_low and fib_high <= float(price):
+            if margin > 3 and app.sellUpperPcnt() != None and fib_high > fib_low and fib_high <= float(price):
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Profit Bank Triggered (Fibonacci Band: ' + str(fib_high) + ')'
                 print (log_text, "\n")
                 logging.warning(log_text)
+
+            # profit bank when strong reversal detected
+            if margin > 3 and obv_pc < 0 and macdltsignal == True:
+                action = 'SELL'
+                last_action = 'BUY'
+                log_text = '! Profit Bank Triggered (Strong Reversal Detected)'
+                print (log_text, "\n")
+                logging.warning(log_text)      
 
         goldendeathtext = ''
         if df_last['sma50'].values[0] == df_last['sma200'].values[0]:
@@ -200,6 +215,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             price_text = 'Close: ' + str(app.truncate(price, precision))
             ema_text = app.compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26', precision)
             macd_text = app.compare(df_last['macd'].values[0], df_last['signal'].values[0], 'MACD', precision)
+            obv_text = 'OBV: ' + str(app.truncate(df_last['obv'].values[0], 4)) + ' (' + str(app.truncate(df_last['obv_pc'].values[0], 2)) + '%)'
 
             if hammer == True:
                 log_text = '* Candlestick Detected: Hammer ("Weak - Reversal - Bullish Signal - Up")'
@@ -296,17 +312,22 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 macd_co_prefix = 'v '
                 macd_co_suffix = ' v'
 
+            obv_prefix = ''
+            obv_suffix = ''
+            if float(obv_pc) > 0:
+                obv_prefix = '^ '
+                obv_suffix = ' ^'
+            elif float(obv_pc) < 0:
+                obv_prefix = 'v '
+                obv_suffix = ' v'
+
             if app.isVerbose() == 0:
                 if last_action != '':
-                    output_text = current_df_index + ' | ' + app.getMarket() + goldendeathtext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + action + ' | Last Action: ' + last_action
+                    output_text = current_df_index + ' | ' + app.getMarket() + goldendeathtext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' | Last Action: ' + last_action
                 else:
-                    output_text = current_df_index + ' | ' + app.getMarket() + goldendeathtext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + action + ' '
+                    output_text = current_df_index + ' | ' + app.getMarket() + goldendeathtext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' '
 
                 if last_action == 'BUY':
-                    # calculate last buy minus fees
-                    fee = last_buy * 0.005
-                    last_buy_minus_fees = last_buy + fee
-
                     margin = str(app.truncate((((price - last_buy_minus_fees) / price) * 100), 2)) + '%'
                     output_text += ' | ' +  margin
 
@@ -332,6 +353,8 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.debug('signal: ' + str(app.truncate(float(df_last['signal'].values[0]), precision)))
                 logging.debug('macdgtsignal: ' + str(macdgtsignal))
                 logging.debug('macdltsignal: ' + str(macdltsignal))
+                logging.debug('obv: ' + str(obv))
+                logging.debug('obv_pc: ' + str(obv_pc))
                 logging.debug('action: ' + action)
 
                 # informational output on the most recent entry  
