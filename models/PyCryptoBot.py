@@ -634,6 +634,12 @@ class PyCryptoBot():
     def sellLowerPcnt(self):
         return self.sell_lower_pcnt
 
+    def setGranularity(self, granularity):
+        if self.exchange == 'binance' and isinstance(granularity, str) and granularity in [ '1m', '5m', '15m', '1h', '6h', '1d' ]:
+            self.granularity = granularity
+        elif self.exchange == 'coinbasepro' and isinstance(granularity, int) and granularity in [ 60, 300, 900, 3600, 21600, 86400 ]:
+            self.granularity = granularity
+
     def truncate(self, f, n):
         if not isinstance(f, int) and not isinstance(f, float):
             return 0.0
