@@ -36,9 +36,9 @@ account = None
 if app.isLive() == 1:
     account = TradingAccount(app)
 
-    if account.getBalance(app.getBaseCurrency()) > account.getBalance(app.getQuoteCurrency()):
+    if account.getBalance(app.getBaseCurrency()) < account.getBalance(app.getQuoteCurrency()):
         last_action = 'SELL'
-    elif account.getBalance(app.getBaseCurrency()) < account.getBalance(app.getQuoteCurrency()):
+    elif account.getBalance(app.getBaseCurrency()) > account.getBalance(app.getQuoteCurrency()):
         last_action = 'BUY'
 
     if app.getExchange() == 'binance':
