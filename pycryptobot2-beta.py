@@ -62,9 +62,6 @@ if app.isLive() == 1:
         else:
             last_buy = 0.0
 
-print (last_buy)
-sys.exit()
-
 def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
     """Trading bot job which runs at a scheduled interval"""
     global action, buy_count, buy_sum, iterations, last_action, last_buy, last_df_index, sell_count, sell_sum, buy_state, fib_high, fib_low
