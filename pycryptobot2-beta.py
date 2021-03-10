@@ -196,6 +196,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         else:
             action = 'WAIT'
 
+        last_buy_minus_fees = 0
         if last_buy > 0 and last_action == 'BUY':
             change_pcnt = ((price / last_buy) - 1) * 100
 
@@ -375,7 +376,11 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     output_text = current_df_index + ' | ' + app.getMarket() + goldendeathtext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' '
 
                 if last_action == 'BUY':
-                    margin = str(app.truncate((((price - last_buy_minus_fees) / price) * 100), 2)) + '%'
+                    if last_buy_minus_fees > 0:
+                        margin = str(app.truncate((((price - last_buy_minus_fees) / price) * 100), 2)) + '%'
+                    else:
+                        margin = '0%'
+
                     output_text += ' | ' +  margin
 
                 logging.debug(output_text)
