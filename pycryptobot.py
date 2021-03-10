@@ -149,6 +149,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         else:
             action = 'WAIT'
 
+        last_buy_minus_fees = 0
         if last_buy > 0 and last_action == 'BUY':
             change_pcnt = ((price / last_buy) - 1) * 100
 
