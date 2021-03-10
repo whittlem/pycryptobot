@@ -812,15 +812,20 @@ class PyCryptoBot():
         if self.sellUpperPcnt() != None or self.sellLowerPcnt() != None:
             print('================================================================================')
 
-        # if live
+        # if live       
         if self.isLive() == 1:
-            # if live, ensure sufficient funds to place next buy order
-            if (last_action == '' or last_action == 'SELL') and account.getBalance(self.getQuoteCurrency()) == 0:
-                raise Exception('Insufficient ' + self.getQuoteCurrency() + ' funds to place next buy order!')
-            # if live, ensure sufficient crypto to place next sell order
-            elif last_action == 'BUY' and account.getBalance(self.getBaseCurrency()) == 0:
-                raise Exception('Insufficient ' + self.getBaseCurrency() + ' funds to place next sell order!')
-        
+            if self.getExchange() == 'binance':
+                if last_action == 'SELL' and account.getBalance(self.getQuoteCurrency()) < 0.1:
+                    raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(self.getBaseCurrency())) + ' < 0.1 ' + self.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
+                elif last_action == 'BUY' and account.getBalance(self.getQuoteCurrency()) < 0.1:
+                    raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(self.getQuoteCurrency())) + ' < 0.1 ' + self.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")  
+
+            elif self.getExchange() == 'coinbasepro':
+                if last_action == 'SELL' and account.getBalance(self.getQuoteCurrency()) < 0.1:
+                    raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(self.getBaseCurrency())) + ' < 0.1 ' + self.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
+                elif last_action == 'BUY' and account.getBalance(self.getQuoteCurrency()) < 50:
+                    raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(self.getQuoteCurrency())) + ' < 50 ' + self.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")    
+
         # run the first job immediately after starting
         if self.isSimulation() == 1:
             if self.simuluationSpeed() in [ 'fast-sample', 'slow-sample' ]:
