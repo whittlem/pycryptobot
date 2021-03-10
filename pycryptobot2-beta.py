@@ -36,26 +36,32 @@ account = None
 if app.isLive() == 1:
     account = TradingAccount(app)
 
-    # if the bot is restarted between a buy and sell it will sell first
-    if (app.getMarket().startswith('BTC-') and account.getBalance(app.getBaseCurrency()) > 0.001):
-        last_action = 'BUY'
-    elif (app.getMarket().startswith('BCH-') and account.getBalance(app.getBaseCurrency()) > 0.01):
-        last_action = 'BUY'
-    elif (app.getMarket().startswith('ETH-') and account.getBalance(app.getBaseCurrency()) > 0.01):
-        last_action = 'BUY'
-    elif (app.getMarket().startswith('LTC-') and account.getBalance(app.getBaseCurrency()) > 0.1):
-        last_action = 'BUY'
-    elif (app.getMarket().startswith('XLM-') and account.getBalance(app.getBaseCurrency()) > 35):
-        last_action = 'BUY'
-    elif (account.getBalance(app.getQuoteCurrency()) > 30):
+    if account.getBalance(app.getBaseCurrency()) > account.getBalance(app.getQuoteCurrency()):
         last_action = 'SELL'
+    elif account.getBalance(app.getBaseCurrency()) < account.getBalance(app.getQuoteCurrency()):
+        last_action = 'BUY'
+
+    if app.getExchange() == 'binance':
+        if last_action == 'SELL' and account.getBalance(app.getQuoteCurrency()) < 0.1:
+            raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(app.getBaseCurrency())) + ' < 0.1 ' + app.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
+        elif last_action == 'BUY' and account.getBalance(app.getQuoteCurrency()) < 0.1:
+            raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(app.getQuoteCurrency())) + ' < 0.1 ' + app.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
+
+    elif app.getExchange() == 'coinbasepro':
+        if last_action == 'SELL' and account.getBalance(app.getQuoteCurrency()) < 0.1:
+            raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(app.getBaseCurrency())) + ' < 0.1 ' + app.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
+        elif last_action == 'BUY' and account.getBalance(app.getQuoteCurrency()) < 50:
+            raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(app.getQuoteCurrency())) + ' < 50 ' + app.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
 
     orders = account.getOrders(app.getMarket(), '', 'done')
     if len(orders) > 0:
         df = orders[-1:]
-        price = df[df.action == 'buy']['price']
-        if len(price) > 0:
-            last_buy = float(app.truncate(price, 2))
+
+        print (df)
+        if len(df) > 0:
+            last_buy = float(df[df.action == 'buy']['price'])
+        else:
+            last_buy = 0.0
 
 def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
     """Trading bot job which runs at a scheduled interval"""
