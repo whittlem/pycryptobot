@@ -1,6 +1,7 @@
 import pandas as pd
 import argparse, json, logging, math, random, re, sys, urllib3
 from datetime import datetime, timedelta
+from models.Trading import TechnicalAnalysis
 from models.Binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
 from models.CoinbasePro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
 
@@ -602,6 +603,86 @@ class PyCryptoBot():
                 return api.getHistoricalData(market, granularity)
         else:
             return pd.DataFrame()
+
+    def is1hEMA1226Bull(self):
+        try:
+            if self.exchange == 'coinbasepro':
+                api = CBPublicAPI()
+                df_data = api.getHistoricalData(self.market, 3600)
+            elif self.exchange == 'binance':
+                api = BPublicAPI()
+                df_data = api.getHistoricalData(self.market, '1h')
+            else:
+                return False        
+
+            ta = TechnicalAnalysis(df_data)
+            ta.addEMA(12)
+            ta.addEMA(26)
+            df_last = ta.getDataFrame().copy().iloc[-1,:]
+            df_last['bull'] = df_last['ema12'] > df_last['ema26']
+            return bool(df_last['bull'])
+        except Exception:
+            return False
+
+    def is1hSMA50200Bull(self):
+        try:
+            if self.exchange == 'coinbasepro':
+                api = CBPublicAPI()
+                df_data = api.getHistoricalData(self.market, 3600)
+            elif self.exchange == 'binance':
+                api = BPublicAPI()
+                df_data = api.getHistoricalData(self.market, '1h')
+            else:
+                return False        
+
+            ta = TechnicalAnalysis(df_data)
+            ta.addSMA(50)
+            ta.addSMA(200)
+            df_last = ta.getDataFrame().copy().iloc[-1,:]
+            df_last['bull'] = df_last['sma50'] > df_last['sma200']
+            return bool(df_last['bull'])
+        except Exception:
+            return False  
+
+    def is6hEMA1226Bull(self):
+        try:
+            if self.exchange == 'coinbasepro':
+                api = CBPublicAPI()
+                df_data = api.getHistoricalData(self.market, 21600)
+            elif self.exchange == 'binance':
+                api = BPublicAPI()
+                df_data = api.getHistoricalData(self.market, '6h')
+            else:
+                return False        
+
+            ta = TechnicalAnalysis(df_data)
+            ta.addEMA(12)
+            ta.addEMA(26)
+            df_last = ta.getDataFrame().copy().iloc[-1,:]
+            df_last['bull'] = df_last['ema12'] > df_last['ema26']
+            return bool(df_last['bull'])
+        except Exception:
+            return False
+
+    def is6hSMA50200Bull(self):
+        try:
+            if self.exchange == 'coinbasepro':
+                api = CBPublicAPI()
+                df_data = api.getHistoricalData(self.market, 21600)
+            elif self.exchange == 'binance':
+                api = BPublicAPI()
+                df_data = api.getHistoricalData(self.market, '6h')
+            else:
+                return False        
+
+            ta = TechnicalAnalysis(df_data)
+            ta.addSMA(50)
+            ta.addSMA(200)
+            df_last = ta.getDataFrame().copy().iloc[-1,:]
+            df_last['bull'] = df_last['sma50'] > df_last['sma200']
+            return bool(df_last['bull'])
+        except Exception:
+            return False  
 
     def getTicker(self, market):
         if self.exchange == 'coinbasepro':
