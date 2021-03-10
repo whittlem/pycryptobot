@@ -57,10 +57,13 @@ if app.isLive() == 1:
     if len(orders) > 0:
         df = orders[-1:]
 
-        if len(df) > 0:
+        if str(df['action']) == 'buy':
             last_buy = float(df[df.action == 'buy']['price'])
         else:
             last_buy = 0.0
+
+print (last_buy)
+sys.exit()
 
 def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
     """Trading bot job which runs at a scheduled interval"""
