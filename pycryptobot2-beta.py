@@ -89,47 +89,29 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
     else:
         current_df_index = last_df_index
 
-    if app.getExchange() == 'binance' and app.getGranularity() == '1h' and bool(df_last['ema12gtema26'].values[0]) == True and last_action == 'SELL':
+    if app.getExchange() == 'binance' and app.getGranularity() == '1h' and app.is6hEMA1226Bull() == True:
         print ("*** Smart switch from granularity '1h' (1 hour) to '15m' (15 min) ***")
         app.setGranularity('15m')
         list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, app))
 
-    elif app.getExchange() == 'coinbasepro' and app.getGranularity() == 3600 and bool(df_last['ema12gtema26'].values[0]) == True:
+    elif app.getExchange() == 'coinbasepro' and app.getGranularity() == 3600 and app.is6hEMA1226Bull() == True:
         print ('*** Smart switch from granularity 3600 (1 hour) to 900 (15 min) ***')
         app.setGranularity(900)
         list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, app))
 
-    elif app.getExchange() == 'binance' and app.getGranularity() == '15m' and bool(df_last['ema12gtema26'].values[0]) == True:
-        if app.isSimulation() == 0: 
-            df_1h = app.getHistoricalData(app.getMarket(), '1h')
-            ta_1h = TechnicalAnalysis(df_1h)
-            ta_1h.addAll()
-            df_1h_ta = ta_1h.getDataFrame()
-            df_1h_last = df_1h_ta.tail(1)
-            df_1h_ema12ltema26 = bool(df_1h_last['ema12ltema26'].values[0])
+    if app.getExchange() == 'binance' and app.getGranularity() == '15m' and app.is6hEMA1226Bull() == False:
+        print ("*** Smart switch from granularity '15m' (15 min) to '1h' (1 hour) ***")
+        app.setGranularity('1h')
+        list(map(s.cancel, s.queue))
+        s.enter(5, 1, executeJob, (sc, app))
 
-            if df_1h_ema12ltema26 == True:
-                print ('*** Smart switch from granularity 900 (15 min) to 3600 (1 hour) ***')
-                app.setGranularity(3600)
-                list(map(s.cancel, s.queue))
-                s.enter(5, 1, executeJob, (sc, app))
-
-    elif app.getExchange() == 'coinbasepro' and app.getGranularity() == 900:
-        if app.isSimulation() == 0: 
-            df_1h = app.getHistoricalData(app.getMarket(), 3600)
-            ta_1h = TechnicalAnalysis(df_1h)
-            ta_1h.addAll()
-            df_1h_ta = ta_1h.getDataFrame()
-            df_1h_last = df_1h_ta.tail(1)
-            df_1h_ema12ltema26 = bool(df_1h_last['ema12ltema26'].values[0])
-
-            if df_1h_ema12ltema26 == True:
-                print ('*** Smart switch from granularity 900 (15 min) to 3600 (1 hour) ***')
-                app.setGranularity(3600)
-                list(map(s.cancel, s.queue))
-                s.enter(5, 1, executeJob, (sc, app))
+    elif app.getExchange() == 'coinbasepro' and app.getGranularity() == 3600 and app.is6hEMA1226Bull() == True:
+        print ("*** Smart switch from granularity 900 (15 min) to 3600 (1 hour) ***")
+        app.setGranularity(3600)
+        list(map(s.cancel, s.queue))
+        s.enter(5, 1, executeJob, (sc, app))
 
     if app.getExchange() == 'binance' and str(app.getGranularity()) == '1d':
         if len(df) < 250:
@@ -218,6 +200,22 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Loss Failsafe Triggered (< ' + str(app.sellLowerPcnt()) + '%)'
+                print (log_text, "\n")
+                logging.warning(log_text)
+
+            if app.getExchange() == 'binance' and app.getGranularity() == '15m' and change_pcnt >= 2:
+                # profit bank at 2% in smart switched mode
+                action = 'SELL'
+                last_action = 'BUY'
+                log_text = '! Profit Bank Triggered (Smart Switch 2%)'
+                print (log_text, "\n")
+                logging.warning(log_text)
+
+            if app.getExchange() == 'coinbasepro' and app.getGranularity() == 900 and change_pcnt >= 2:
+                # profit bank at 2% in smart switched mode
+                action = 'SELL'
+                last_action = 'BUY'
+                log_text = '! Profit Bank Triggered (Smart Switch 2%)'
                 print (log_text, "\n")
                 logging.warning(log_text)
 
