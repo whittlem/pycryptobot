@@ -57,7 +57,6 @@ if app.isLive() == 1:
     if len(orders) > 0:
         df = orders[-1:]
 
-        print (df)
         if len(df) > 0:
             last_buy = float(df[df.action == 'buy']['price'])
         else:
