@@ -42,16 +42,16 @@ if app.isLive() == 1:
         last_action = 'BUY'
 
     if app.getExchange() == 'binance':
-        if last_action == 'SELL' and account.getBalance(app.getQuoteCurrency()) < 0.1:
-            raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(app.getBaseCurrency())) + ' < 0.1 ' + app.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
-        elif last_action == 'BUY' and account.getBalance(app.getQuoteCurrency()) < 0.1:
-            raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(app.getQuoteCurrency())) + ' < 0.1 ' + app.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
-
-    elif app.getExchange() == 'coinbasepro':
-        if last_action == 'SELL' and account.getBalance(app.getQuoteCurrency()) < 50:
-            raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(app.getBaseCurrency())) + ' < 50 ' + app.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
-        elif last_action == 'BUY' and account.getBalance(app.getBaseCurrency()) < 0.1:
+        if last_action == 'SELL'and account.getBalance(app.getQuoteCurrency()) < 0.001:
             raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(app.getQuoteCurrency())) + ' < 0.1 ' + app.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
+        elif last_action == 'BUY'and account.getBalance(app.getBaseCurrency()) < 0.001:
+            raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(app.getBaseCurrency())) + ' < 0.1 ' + app.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
+ 
+    elif app.getExchange() == 'coinbasepro':
+        if last_action == 'SELL'and account.getBalance(app.getQuoteCurrency()) < 50:
+            raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(app.getQuoteCurrency())) + ' < 50 ' + app.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
+        elif last_action == 'BUY'and account.getBalance(app.getBaseCurrency()) < 0.001:
+            raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(app.getBaseCurrency())) + ' < 0.1 ' + app.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
 
     orders = account.getOrders(app.getMarket(), '', 'done')
     if len(orders) > 0:
