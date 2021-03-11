@@ -765,7 +765,7 @@ class PyCryptoBot():
             return api.marketBuy(market, quote_currency)
         elif self.exchange == 'binance':
             api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
-            return api.marketBuy(market, quote_currency)
+            return api.marketBuy(market, quote_currency * 0.9995) # remove fees
         else:
             return None
 
@@ -775,7 +775,7 @@ class PyCryptoBot():
             return api.marketSell(market, base_currency)
         elif self.exchange == 'binance':
             api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
-            return api.marketSell(market, base_currency)
+            return api.marketSell(market, base_currency * 0.9995) # remove fees
         else:
             return None
 
