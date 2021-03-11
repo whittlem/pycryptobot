@@ -94,25 +94,25 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
     else:
         current_df_index = last_df_index
 
-    if app.getExchange() == 'binance' and app.getGranularity() == '1h' and app.is6hEMA1226Bull() == True:
+    if app.getExchange() == 'binance' and app.getGranularity() == '1h' and app.is1hEMA1226Bull() == True and app.is6hEMA1226Bull() == True:
         print ("*** Smart switch from granularity '1h' (1 hour) to '15m' (15 min) ***")
         app.setGranularity('15m')
         list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, app))
 
-    elif app.getExchange() == 'coinbasepro' and app.getGranularity() == 3600 and app.is6hEMA1226Bull() == True:
+    elif app.getExchange() == 'coinbasepro' and app.getGranularity() == 3600 and app.is1hEMA1226Bull() == True and app.is6hEMA1226Bull() == True:
         print ('*** Smart switch from granularity 3600 (1 hour) to 900 (15 min) ***')
         app.setGranularity(900)
         list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, app))
 
-    if app.getExchange() == 'binance' and app.getGranularity() == '15m' and app.is6hEMA1226Bull() == False:
+    if app.getExchange() == 'binance' and app.getGranularity() == '15m' and app.is1hEMA1226Bull() == False and app.is6hEMA1226Bull() == False:
         print ("*** Smart switch from granularity '15m' (15 min) to '1h' (1 hour) ***")
         app.setGranularity('1h')
         list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, app))
 
-    elif app.getExchange() == 'coinbasepro' and app.getGranularity() == 3600 and app.is6hEMA1226Bull() == True:
+    elif app.getExchange() == 'coinbasepro' and app.getGranularity() == 900 and app.is1hEMA1226Bull() == False and app.is6hEMA1226Bull() == False:
         print ("*** Smart switch from granularity 900 (15 min) to 3600 (1 hour) ***")
         app.setGranularity(3600)
         list(map(s.cancel, s.queue))
