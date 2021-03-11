@@ -141,3 +141,5 @@ config-binance.json
 graphs/
 
 .DS_Store
+
+.vs/
