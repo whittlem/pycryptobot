@@ -58,7 +58,7 @@ class AuthAPI():
         self.api_secret = api_secret
         self.client = Client(self.api_key, self.api_secret, { 'verify': False, 'timeout': 20 })
 
-    def marketBuy(self, market='', fiat_amount=0):
+    def marketBuy(self, market='', quote_quantity=0):
         """Executes a market buy providing a funding amount"""
 
         # validates the market is syntactically correct
@@ -66,13 +66,47 @@ class AuthAPI():
         if not p.match(market):
             raise ValueError('Binanace market is invalid.')
 
-        # validates fiat_amount is either an integer or float
-        if not isinstance(fiat_amount, int) and not isinstance(fiat_amount, float):
+        # validates quote_quantity is either an integer or float
+        if not isinstance(quote_quantity, int) and not isinstance(quote_quantity, float):
             raise TypeError('The funding amount is not numeric.')
 
         try:
+            print (market, 'exchange info filters:')
+
+            df_filters = self.getMarketInfoFilters(market)
+            print ("\n", df_filters, "\n")
+
+            lot_size_min_qty = float(df_filters.loc[df_filters['filterType'] == 'LOT_SIZE']['minQty'])
+            lot_size_max_qty = float(df_filters.loc[df_filters['filterType'] == 'LOT_SIZE']['maxQty'])
+            lot_size_step_size = float(df_filters.loc[df_filters['filterType'] == 'LOT_SIZE']['stepSize'])
+            lot_size_precision = int(round(-math.log(lot_size_step_size, 10), 0))
+
+            print ('LOT_SIZE', 'min_qty', format(lot_size_min_qty, '.8f'))
+            print ('LOT_SIZE', 'max_qty', format(lot_size_max_qty, '.8f'))
+            print ('LOT_SIZE', 'step_size:', format(lot_size_step_size, '.8f'))
+            print ('LOT_SIZE', 'precision:', lot_size_precision)
+
+            market_lot_min_qty = float(df_filters.loc[df_filters['filterType'] == 'MARKET_LOT_SIZE']['minQty'])
+            market_lot_max_qty = float(df_filters.loc[df_filters['filterType'] == 'MARKET_LOT_SIZE']['maxQty'])
+            market_lot_step_size = float(df_filters.loc[df_filters['filterType'] == 'MARKET_LOT_SIZE']['stepSize'])
+
+            print ('')
+            print ('MARKET_LOT_SIZE', 'min_qty', format(market_lot_min_qty, '.8f'))
+            print ('MARKET_LOT_SIZE', 'max_qty', format(market_lot_max_qty, '.8f'))
+            print ('MARKET_LOT_SIZE', 'step_size:', format(market_lot_step_size, '.8f'))
+
+            # remove fees
+            quote_quantity = quote_quantity * 0.9995
+
+            print ('')
+            print ('Attemping to buy', quote_quantity, 'of', market, "after fees...\n")
+
+            print ('LOT_SIZE rule #1 (quote_quantity >= lot_size_min_qty) :', quote_quantity >= lot_size_min_qty)
+            print ('LOT_SIZE rule #2 (quote_quantity <= lot_size_max_qty) :', quote_quantity <= lot_size_max_qty)
+            print ('LOT_SIZE rule #3 ((quote_quantity - lot_size_min_qty) % lot_size_step_size):', ((quote_quantity - lot_size_min_qty) % lot_size_step_size) == 0)
+
             # execute market buy
-            return self.client.order_market_buy(symbol=market, quantity=fiat_amount)
+            return self.client.order_market_buy(symbol=market, quantity=round(quote_quantity, lot_size_precision))
         except Exception as err:
             ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
             print (ts, 'Binance', 'marketBuy', str(err))
@@ -96,6 +130,17 @@ class AuthAPI():
             ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
             print (ts, 'Binance', 'marketSell',  str(err))
             return []
+
+    def getMarketInfo(self, market):
+        # validates the market is syntactically correct
+        p = re.compile(r"^[A-Z]{6,12}$")
+        if not p.match(market):
+            raise TypeError('Binance market required.')
+
+        return self.client.get_symbol_info(symbol=market)
+
+    def getMarketInfoFilters(self, market):
+        return pd.DataFrame(self.client.get_symbol_info(symbol=market)['filters'])
 
 class PublicAPI():
     def __init__(self):
@@ -221,7 +266,7 @@ class PublicAPI():
 
         return df
 
-    def getTicker(self, market='BTC-GBP'):
+    def getTicker(self, market):
         # validates the market is syntactically correct
         p = re.compile(r"^[A-Z]{6,12}$")
         if not p.match(market):
