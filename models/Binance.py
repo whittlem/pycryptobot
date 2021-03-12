@@ -58,6 +58,9 @@ class AuthAPI():
         self.api_secret = api_secret
         self.client = Client(self.api_key, self.api_secret, { 'verify': False, 'timeout': 20 })
 
+    def getClient(self):
+        return self.client
+
     def marketBuy(self, market='', quote_quantity=0):
         """Executes a market buy providing a funding amount"""
 
@@ -148,6 +151,9 @@ class PublicAPI():
 
     def __truncate(self, f, n):
         return math.floor(f * 10 ** n) / 10 ** n
+
+    def getClient(self):
+        return self.client
 
     def getHistoricalData(self, market='BTCGBP', granularity='1h', iso8601start='', iso8601end=''):
         # validates the market is syntactically correct
