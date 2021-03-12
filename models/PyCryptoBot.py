@@ -765,7 +765,7 @@ class PyCryptoBot():
             return api.marketBuy(market, quote_currency)
         elif self.exchange == 'binance':
             api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
-            return api.marketBuy(market, quote_currency * 0.9995) # remove fees
+            return api.marketBuy(market, quote_currency)
         else:
             return None
 
@@ -775,9 +775,97 @@ class PyCryptoBot():
             return api.marketSell(market, base_currency)
         elif self.exchange == 'binance':
             api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
-            return api.marketSell(market, base_currency * 0.9995) # remove fees
+            return api.marketSell(market, base_currency)
         else:
             return None
+
+    def setMarket(self, market):
+        if self.exchange == 'binance':
+            p = re.compile(r"^[A-Z]{6,12}$")
+            if p.match(market):
+                self.market = market
+
+                if self.market.endswith('BTC'):
+                    self.base_currency = self.market.replace('BTC', '')
+                    self.quote_currency = 'BTC'
+                elif self.market.endswith('BNB'):
+                    self.base_currency = self.market.replace('BNB', '')
+                    self.quote_currency = 'BNB'
+                elif self.market.endswith('ETH'):
+                    self.base_currency = self.market.replace('ETH', '')
+                    self.quote_currency = 'ETH'
+                elif self.market.endswith('USDT'):
+                    self.base_currency = self.market.replace('USDT', '')
+                    self.quote_currency = 'USDT'
+                elif self.market.endswith('TUSD'):
+                    self.base_currency = self.market.replace('TUSD', '')
+                    self.quote_currency = 'TUSD'
+                elif self.market.endswith('BUSD'):
+                    self.base_currency = self.market.replace('BUSD', '')
+                    self.quote_currency = 'BUSD'
+                elif self.market.endswith('DAX'):
+                    self.base_currency = self.market.replace('DAX', '')
+                    self.quote_currency = 'DAX'
+                elif self.market.endswith('NGN'):
+                    self.base_currency = self.market.replace('NGN', '')
+                    self.quote_currency = 'NGN'
+                elif self.market.endswith('RUB'):
+                    self.base_currency = self.market.replace('RUB', '')
+                    self.quote_currency = 'RUB'
+                elif self.market.endswith('TRY'):
+                    self.base_currency = self.market.replace('TRY', '')
+                    self.quote_currency = 'TRY'
+                elif self.market.endswith('EUR'):
+                    self.base_currency = self.market.replace('EUR', '')
+                    self.quote_currency = 'EUR'
+                elif self.market.endswith('GBP'):
+                    self.base_currency = self.market.replace('GBP', '')
+                    self.quote_currency = 'GBP'
+                elif self.market.endswith('ZAR'):
+                    self.base_currency = self.market.replace('ZAR', '')
+                    self.quote_currency = 'ZAR'
+                elif self.market.endswith('UAH'):
+                    self.base_currency = self.market.replace('UAH', '')
+                    self.quote_currency = 'UAH'
+                elif self.market.endswith('DAI'):
+                    self.base_currency = self.market.replace('DAI', '')
+                    self.quote_currency = 'DAI'
+                elif self.market.endswith('BIDR'):
+                    self.base_currency = self.market.replace('BIDR', '')
+                    self.quote_currency = 'BIDR'
+                elif self.market.endswith('AUD'):
+                    self.base_currency = self.market.replace('AUD', '')
+                    self.quote_currency = 'AUD'
+                elif self.market.endswith('US'):
+                    self.base_currency = self.market.replace('US', '')
+                    self.quote_currency = 'US'
+                elif self.market.endswith('NGN'):
+                    self.base_currency = self.market.replace('NGN', '')
+                    self.quote_currency = 'NGN'
+                elif self.market.endswith('BRL'):
+                    self.base_currency = self.market.replace('BRL', '')
+                    self.quote_currency = 'BRL'
+                elif self.market.endswith('BVND'):
+                    self.base_currency = self.market.replace('BVND', '')
+                    self.quote_currency = 'BVND'
+                elif self.market.endswith('VAI'):
+                    self.base_currency = self.market.replace('VAI', '')
+                    self.quote_currency = 'VAI'
+
+                if len(self.market) != len(self.base_currency) + len(self.quote_currency):
+                    raise ValueError('Binance market error.')
+
+        elif self.exchange == 'coinbasepro':
+            p = re.compile(r"^[A-Z]{3,5}\-[A-Z]{3,5}$")
+            if p.match(market):
+                self.market = market
+                self.base_currency, self.quote_currency = market.split('-',  2)
+
+        return (self.market, self.base_currency, self.quote_currency)
+
+    def setLive(self, flag):
+        if isinstance(flag, int) and flag in [0, 1]:
+            self.is_live = flag
 
     def startApp(self, account, last_action=''):
         print('--------------------------------------------------------------------------------')
