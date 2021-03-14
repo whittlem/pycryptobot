@@ -193,7 +193,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             margin = ((price - last_buy_minus_fees) / price) * 100
 
             # loss failsafe sell at fibonacci band
-            if app.sellLowerPcnt() == None and fib_low > 0 and fib_low >= float(price):
+            if app.allowSellAtLoss() and app.sellLowerPcnt() == None and fib_low > 0 and fib_low >= float(price):
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Loss Failsafe Triggered (Fibonacci Band: ' + str(fib_low) + ')'
@@ -201,7 +201,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.warning(log_text)
 
             # loss failsafe sell at sell_lower_pcnt
-            if app.sellLowerPcnt() != None and change_pcnt < app.sellLowerPcnt():
+            if app.allowSellAtLoss() and app.sellLowerPcnt() != None and change_pcnt < app.sellLowerPcnt():
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Loss Failsafe Triggered (< ' + str(app.sellLowerPcnt()) + '%)'
@@ -246,7 +246,15 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 last_action = 'BUY'
                 log_text = '! Profit Bank Triggered (Strong Reversal Detected)'
                 print (log_text, "\n")
-                logging.warning(log_text)      
+                logging.warning(log_text)
+
+            # configuration specifies to not sell at a loss
+            if not app.allowSellAtLoss() and margin <= 0:
+                action = 'WAIT'
+                last_action = 'BUY'
+                log_text = '! Ignore Sell Signal (No Sell At Loss)'
+                print (log_text, "\n")
+                logging.warning(log_text)
 
         goldendeathtext = ''
         if df_last['sma50'].values[0] == df_last['sma200'].values[0]:

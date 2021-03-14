@@ -25,6 +25,7 @@ parser.add_argument('--sim', type=str, help='simulation modes: fast, fast-sample
 parser.add_argument('--verbose', type=int, help='verbose output=1, minimal output=0')
 parser.add_argument('--sellupperpcnt', type=int, help='optionally set sell upper percent limit')
 parser.add_argument('--selllowerpcnt', type=int, help='optionally set sell lower percent limit')
+parser.add_argument('--nosellatloss', type=int, help='optionally do not sell at a loss')
 
 # parse arguments
 args = parser.parse_args()
@@ -55,6 +56,7 @@ class PyCryptoBot():
         self.sim_speed = 'fast'
         self.sell_upper_pcnt = None
         self.sell_lower_pcnt = None
+        self.no_sell_at_loss = 0
 
         try:
             with open(filename) as config_file:
@@ -149,6 +151,11 @@ class PyCryptoBot():
                                 if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
                                     self.sell_lower_pcnt = int(config['selllowerpcnt'])
 
+                        if 'nosellatloss' in config:
+                            if isinstance(config['nosellatloss'], int):
+                                if config['nosellatloss'] in [ 0, 1 ]:
+                                    self.no_sell_at_loss = config['nosellatloss']
+
                 elif self.exchange == 'binance' and 'api_key' in config and 'api_secret' in config and 'api_url' in config:
                     self.api_key = config['api_key']
                     self.api_secret = config['api_secret']
@@ -214,6 +221,11 @@ class PyCryptoBot():
                             if isinstance(config['selllowerpcnt'], int):
                                 if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
                                     self.sell_lower_pcnt = int(config['selllowerpcnt'])
+
+                        if 'nosellatloss' in config:
+                            if isinstance(config['nosellatloss'], int):
+                                if config['nosellatloss'] in [ 0, 1 ]:
+                                    self.no_sell_at_loss = config['nosellatloss']
 
                 elif self.exchange == 'coinbasepro' and 'coinbasepro' in config:
                     if 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
@@ -287,6 +299,11 @@ class PyCryptoBot():
                                 if isinstance(config['selllowerpcnt'], int):
                                     if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
                                         self.sell_lower_pcnt = int(config['selllowerpcnt'])
+                                    
+                            if 'nosellatloss' in config:
+                                if isinstance(config['nosellatloss'], int):
+                                    if config['nosellatloss'] in [ 0, 1 ]:
+                                        self.no_sell_at_loss = config['nosellatloss']
 
                     else:
                         raise Exception('There is an error in your config.json')
@@ -353,7 +370,12 @@ class PyCryptoBot():
                             if 'selllowerpcnt' in config:
                                 if isinstance(config['selllowerpcnt'], int):
                                     if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
-                                        self.sell_lower_pcnt = int(config['selllowerpcnt'])                    
+                                        self.sell_lower_pcnt = int(config['selllowerpcnt'])
+
+                            if 'nosellatloss' in config:
+                                if isinstance(config['nosellatloss'], int):
+                                    if config['nosellatloss'] in [ 0, 1 ]:
+                                        self.no_sell_at_loss = config['nosellatloss']                    
                     else:
                         raise Exception('There is an error in your config.json')
 
@@ -509,6 +531,10 @@ class PyCryptoBot():
             if isinstance(args.selllowerpcnt, int):
                 if args.selllowerpcnt >= -100 and args.selllowerpcnt < 0:
                     self.sell_lower_pcnt = float(args.selllowerpcnt)
+
+        if args.nosellatloss != None:
+            if not args.nosellatlos in [ '0', '1' ]:
+                self.no_sell_at_loss = args.nosellatloss
 
         if self.exchange == 'binance':
             if len(self.api_url) > 1 and self.api_url[-1] != '/':
@@ -715,6 +741,9 @@ class PyCryptoBot():
     def sellLowerPcnt(self):
         return self.sell_lower_pcnt
 
+    def allowSellAtLoss(self):
+        return not self.no_sell_at_loss
+
     def setGranularity(self, granularity):
         if self.exchange == 'binance' and isinstance(granularity, str) and granularity in [ '1m', '5m', '15m', '1h', '6h', '1d' ]:
             self.granularity = granularity
@@ -866,6 +895,10 @@ class PyCryptoBot():
     def setLive(self, flag):
         if isinstance(flag, int) and flag in [0, 1]:
             self.is_live = flag
+
+    def setNoSellAtLoss(self, flag):
+        if isinstance(flag, int) and flag in [0, 1]:
+            self.no_sell_at_loss = flag
 
     def startApp(self, account, last_action=''):
         print('--------------------------------------------------------------------------------')
