@@ -1,5 +1,4 @@
 import sys
-
 import math, re
 import numpy as np
 import pandas as pd
@@ -74,42 +73,18 @@ class AuthAPI():
             raise TypeError('The funding amount is not numeric.')
 
         try:
-            print (market, 'exchange info filters:')
+            current_price = self.getTicker(market)
 
+            base_quantity = np.divide(quote_quantity, current_price)
             df_filters = self.getMarketInfoFilters(market)
-            print ("\n", df_filters, "\n")
-
-            lot_size_min_qty = float(df_filters.loc[df_filters['filterType'] == 'LOT_SIZE']['minQty'])
-            lot_size_max_qty = float(df_filters.loc[df_filters['filterType'] == 'LOT_SIZE']['maxQty'])
-            lot_size_step_size = float(df_filters.loc[df_filters['filterType'] == 'LOT_SIZE']['stepSize'])
-            lot_size_precision = int(round(-math.log(lot_size_step_size, 10), 0))
-
-            print ('LOT_SIZE', 'min_qty', format(lot_size_min_qty, '.8f'))
-            print ('LOT_SIZE', 'max_qty', format(lot_size_max_qty, '.8f'))
-            print ('LOT_SIZE', 'step_size:', format(lot_size_step_size, '.8f'))
-            print ('LOT_SIZE', 'precision:', lot_size_precision)
-
-            market_lot_min_qty = float(df_filters.loc[df_filters['filterType'] == 'MARKET_LOT_SIZE']['minQty'])
-            market_lot_max_qty = float(df_filters.loc[df_filters['filterType'] == 'MARKET_LOT_SIZE']['maxQty'])
-            market_lot_step_size = float(df_filters.loc[df_filters['filterType'] == 'MARKET_LOT_SIZE']['stepSize'])
-
-            print ('')
-            print ('MARKET_LOT_SIZE', 'min_qty', format(market_lot_min_qty, '.8f'))
-            print ('MARKET_LOT_SIZE', 'max_qty', format(market_lot_max_qty, '.8f'))
-            print ('MARKET_LOT_SIZE', 'step_size:', format(market_lot_step_size, '.8f'))
+            step_size = float(df_filters.loc[df_filters['filterType'] == 'LOT_SIZE']['stepSize'])
+            precision = int(round(-math.log(step_size, 10), 0))
 
             # remove fees
-            quote_quantity = quote_quantity * 0.9995
-
-            print ('')
-            print ('Attemping to buy', quote_quantity, 'of', market, "after fees...\n")
-
-            print ('LOT_SIZE rule #1 (quote_quantity >= lot_size_min_qty) :', quote_quantity >= lot_size_min_qty)
-            print ('LOT_SIZE rule #2 (quote_quantity <= lot_size_max_qty) :', quote_quantity <= lot_size_max_qty)
-            print ('LOT_SIZE rule #3 ((quote_quantity - lot_size_min_qty) % lot_size_step_size):', ((quote_quantity - lot_size_min_qty) % lot_size_step_size) == 0)
+            base_quantity = base_quantity * 0.9995
 
             # execute market buy
-            return self.client.order_market_buy(symbol=market, quantity=round(quote_quantity, lot_size_precision))
+            return self.client.order_market_buy(symbol=market, quantity=round(base_quantity, precision))
         except Exception as err:
             ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
             print (ts, 'Binance', 'marketBuy', str(err))
@@ -144,6 +119,19 @@ class AuthAPI():
 
     def getMarketInfoFilters(self, market):
         return pd.DataFrame(self.client.get_symbol_info(symbol=market)['filters'])
+
+    def getTicker(self, market):
+        # validates the market is syntactically correct
+        p = re.compile(r"^[A-Z]{6,12}$")
+        if not p.match(market):
+            raise TypeError('Binance market required.')
+
+        resp = self.client.get_symbol_ticker(symbol=market)
+
+        if 'price' in resp:
+            return float('{:.8f}'.format(float(resp['price'])))
+
+        return 0.0
 
 class PublicAPI():
     def __init__(self):
