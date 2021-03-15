@@ -54,6 +54,7 @@ class TechnicalAnalysis():
         self.addRSI(14)
         self.addMACD()
         self.addOBV()
+        self.addElderRayIndex()
 
         self.addEMABuySignals()
         self.addSMABuySignals()
@@ -488,6 +489,15 @@ class TechnicalAnalysis():
             self.addSMA(200)
 
         self.df['deathcross'] = self.df['sma50'] < self.df['sma200']
+
+    def addElderRayIndex(self):
+        """Add Elder Ray Index"""
+
+        if 'ema13' not in self.df:
+            self.addEMA(13)
+
+        self.df['elder_ray_bull'] = self.df['high'] - self.df['ema13']
+        self.df['elder_ray_bear'] = self.df['low'] - self.df['ema13']        
 
     def getSupportResistanceLevels(self):
         """Calculate the Support and Resistance Levels"""
