@@ -128,6 +128,8 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         macdltsignalco = bool(df_last['macdltsignalco'].values[0])
         obv = float(df_last['obv'].values[0])
         obv_pc = float(df_last['obv_pc'].values[0])
+        elder_ray_bull = float(df_last['elder_ray_bull'].values[0])
+        elder_ray_bear = float(df_last['elder_ray_bear'].values[0])
 
         # candlestick detection
         hammer = bool(df_last['hammer'].values[0])
@@ -145,10 +147,10 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         two_black_gapping = bool(df_last['two_black_gapping'].values[0])
 
         # criteria for a buy signal
-        if ema12gtema26co == True and macdgtsignal == True and goldencross == True and obv_pc > -5 and last_action != 'BUY':
+        if ema12gtema26co == True and macdgtsignal == True and goldencross == True and obv_pc > -5 and elder_ray_bull > 0 and last_action != 'BUY':
             action = 'BUY'
         # criteria for a sell signal
-        elif ema12ltema26co == True and macdltsignal == True and last_action not in ['','SELL']:
+        elif ((ema12ltema26co == True and macdltsignal == True) or (elder_ray_bull < 0 and elder_ray_bear < 0)) and last_action not in ['','SELL']:
             action = 'SELL'
         # anything other than a buy or sell, just wait
         else:
@@ -210,13 +212,18 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 print (log_text, "\n")
                 logging.warning(log_text)      
 
-        goldendeathtext = ''
+        bullbeartext = ''
         if df_last['sma50'].values[0] == df_last['sma200'].values[0]:
-            goldendeathtext = ''
+            bullbeartext = ''
         elif goldencross == True:
-            goldendeathtext = ' (BULL)'
+            bullbeartext = ' (BULL)'
         elif goldencross == False:
-            goldendeathtext = ' (BEAR)'
+            bullbeartext = ' (BEAR)'
+
+        if elder_ray_bull < 0 and elder_ray_bear < 0:
+            bullbeartext = ' (BEAR)'
+        elif elder_ray_bull > 0 and elder_ray_bear > 0:
+            bullbeartext = ' (BULL)'
 
         # polling is every 5 minutes (even for hourly intervals), but only process once per interval
         if (last_df_index != current_df_index):
@@ -229,6 +236,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             ema_text = app.compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26', precision)
             macd_text = app.compare(df_last['macd'].values[0], df_last['signal'].values[0], 'MACD', precision)
             obv_text = 'OBV: ' + str(app.truncate(df_last['obv'].values[0], 4)) + ' (' + str(app.truncate(df_last['obv_pc'].values[0], 2)) + '%)'
+            eri_text = 'ERI: ' + str(app.truncate(elder_ray_bull, 4)) + ' / ' + str(app.truncate(elder_ray_bear, 4))
 
             if hammer == True:
                 log_text = '* Candlestick Detected: Hammer ("Weak - Reversal - Bullish Signal - Up")'
@@ -336,9 +344,9 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
 
             if app.isVerbose() == 0:
                 if last_action != '':
-                    output_text = current_df_index + ' | ' + app.getMarket() + goldendeathtext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' | Last Action: ' + last_action
+                    output_text = current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + eri_text + ' | ' + action + ' | Last Action: ' + last_action
                 else:
-                    output_text = current_df_index + ' | ' + app.getMarket() + goldendeathtext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + action + ' '
+                    output_text = current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + eri_text + ' | ' + action + ' '
 
                 if last_action == 'BUY':
                     margin = str(app.truncate((((price - last_buy_minus_fees) / price) * 100), 2)) + '%'
@@ -347,7 +355,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.debug(output_text)
                 print (output_text)
             else:
-                logging.debug('-- Iteration: ' + str(iterations) + ' --' + goldendeathtext)
+                logging.debug('-- Iteration: ' + str(iterations) + ' --' + bullbeartext)
 
                 if last_action == 'BUY':
                     margin = str(app.truncate((((price - last_buy) / price) * 100), 2)) + '%'
@@ -373,7 +381,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 # informational output on the most recent entry  
                 print('')
                 print('================================================================================')
-                txt = '        Iteration : ' + str(iterations) + goldendeathtext
+                txt = '        Iteration : ' + str(iterations) + bullbeartext
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 txt = '        Timestamp : ' + str(df_last.index.format()[0])
                 print('|', txt, (' ' * (75 - len(txt))), '|')
@@ -604,7 +612,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
 
         else:
             now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
-            print (now, '|', app.getMarket() + goldendeathtext, '|', str(app.getGranularity()), '| Current Price:', price)
+            print (now, '|', app.getMarket() + bullbeartext, '|', str(app.getGranularity()), '| Current Price:', price)
 
             # decrement ignored iteration
             iterations = iterations - 1
