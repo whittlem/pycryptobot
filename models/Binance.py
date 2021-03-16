@@ -84,7 +84,9 @@ class AuthAPI():
             base_quantity = base_quantity * 0.9995
 
             # execute market buy
-            return self.client.order_market_buy(symbol=market, quantity=round(base_quantity, precision))
+            stepper = 10.0 ** precision
+            truncated = math.trunc(stepper * base_quantity) / stepper
+            return self.client.order_market_buy(symbol=market, quantity=truncated)
         except Exception as err:
             ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
             print (ts, 'Binance', 'marketBuy', str(err))
@@ -110,7 +112,9 @@ class AuthAPI():
             base_quantity = base_quantity * 0.9995
 
             # execute market sell
-            return self.client.order_market_sell(symbol=market, quantity=round(base_quantity, precision))
+            stepper = 10.0 ** precision
+            truncated = math.trunc(stepper * base_quantity) / stepper
+            return self.client.order_market_sell(symbol=market, quantity=truncated)
         except Exception as err:
             ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
             print (ts, 'Binance', 'marketSell',  str(err))
