@@ -90,7 +90,7 @@ class AuthAPI():
             print (ts, 'Binance', 'marketBuy', str(err))
             return []       
 
-    def marketSell(self, market='', crypto_amount=0):
+    def marketSell(self, market='', base_quantity=0):
         """Executes a market sell providing a crypto amount"""
 
         # validates the market is syntactically correct
@@ -98,12 +98,19 @@ class AuthAPI():
         if not p.match(market):
             raise ValueError('Binanace market is invalid.')
 
-        if not isinstance(crypto_amount, int) and not isinstance(crypto_amount, float):
+        if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
             raise TypeError('The crypto amount is not numeric.')
 
         try:
+            df_filters = self.getMarketInfoFilters(market)
+            step_size = float(df_filters.loc[df_filters['filterType'] == 'LOT_SIZE']['stepSize'])
+            precision = int(round(-math.log(step_size, 10), 0))
+
+            # remove fees
+            base_quantity = base_quantity * 0.9995
+
             # execute market sell
-            return self.client.order_market_sell(symbol=market, quantity=crypto_amount)
+            return self.client.order_market_sell(symbol=market, quantity=round(base_quantity, precision))
         except Exception as err:
             ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
             print (ts, 'Binance', 'marketSell',  str(err))
