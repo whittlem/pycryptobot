@@ -126,6 +126,47 @@ class TradingGraphs():
         if saveOnly == False:
             plt.show()
 
+    def renderFibonacciBollingerBands(self, period=50, saveFile='', saveOnly=False):
+        """Render FibonacciBollingerBands"""
+
+        if not isinstance(period, int):
+            raise TypeError('Period parameter is not perioderic.')
+
+        if period < 1 or period > len(self.df):
+            raise ValueError('Period is out of range')
+
+        df_subset = self.df.iloc[-period::]
+
+        plt.subplot(111)
+        plt.suptitle(df_subset.iloc[0]['market'] + ' | ' + str(df_subset.iloc[0]['granularity']), fontsize=12)
+        plt.plot(df_subset.fbb_upper0_236, label="23.6%", color="blue")
+        plt.plot(df_subset.fbb_lower0_236, label="-23.6%", color="blue")
+        plt.plot(df_subset.fbb_upper0_382, label="38.2%", color="green")
+        plt.plot(df_subset.fbb_lower0_382, label="3-8.2%", color="green")
+        plt.plot(df_subset.fbb_upper0_5, label="50%", color="cyan")
+        plt.plot(df_subset.fbb_lower0_5, label="-50%", color="cyan")
+        plt.plot(df_subset.fbb_upper0_618, label="61.8%", color="pink")
+        plt.plot(df_subset.fbb_lower0_618, label="-61.8%", color="pink")
+        plt.plot(df_subset.fbb_upper0_764, label="76.4%", color="red")
+        plt.plot(df_subset.fbb_lower0_764, label="-76.4%", color="red")
+        plt.plot(df_subset.fbb_upper1, label="100%", color="magenta")
+        plt.plot(df_subset.fbb_lower1, label="-100%", color="magenta")
+        plt.plot(df_subset.fbb_mid, label="mid", color="orange")
+        plt.plot(df_subset.close, label="price", color="black")
+        plt.legend()
+        plt.ylabel('Price')
+        plt.xticks(rotation=90)
+        plt.tight_layout()
+
+        try:
+            if saveFile != '':
+                plt.savefig(saveFile)
+        except OSError:
+            raise SystemExit('Unable to save: ', saveFile) 
+
+        if saveOnly == False:
+            plt.show()
+
     def renderPriceEMA12EMA26(self, saveFile='', saveOnly=False):
         """Render the price, EMA12 and EMA26
         
