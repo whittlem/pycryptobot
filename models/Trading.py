@@ -50,6 +50,7 @@ class TechnicalAnalysis():
         self.addEMA(26)
         self.addGoldenCross()
         self.addDeathCross()
+        self.addFibonacciBollingerBands()
 
         self.addRSI(14)
         self.addMACD()
@@ -363,6 +364,36 @@ class TechnicalAnalysis():
         rsi = 100 - 100 / (1 + rs)
 
         return rsi
+
+    def addFibonacciBollingerBands(self, interval=20, multiplier=3):
+        """Adds Fibonacci Bollinger Bands."""
+
+        if not isinstance(interval, int):
+            raise TypeError('Interval integer required.')
+
+        if not isinstance(multiplier, int):
+            raise TypeError('Multiplier integer required.')
+
+        tp = (self.df['high'] + self.df['low'] + self.df['close']) / 3
+        sma = tp.rolling(interval).mean()
+        sd = multiplier * tp.rolling(interval).std()
+
+        sma = sma.fillna(0)
+        sd = sd.fillna(0)
+
+        self.df['fbb_mid'] = sma
+        self.df['fbb_upper0_236'] = sma + (0.236 * sd)
+        self.df['fbb_upper0_382'] = sma + (0.382 * sd)
+        self.df['fbb_upper0_5'] = sma + (0.5 * sd)
+        self.df['fbb_upper0_618'] = sma + (0.618 * sd)
+        self.df['fbb_upper0_764'] = sma + (0.764 * sd)
+        self.df['fbb_upper1'] = sma + (1 * sd)
+        self.df['fbb_lower0_236'] = sma - (0.236 * sd)
+        self.df['fbb_lower0_382'] = sma - (0.382 * sd)
+        self.df['fbb_lower0_5'] = sma - (0.5 * sd)
+        self.df['fbb_lower0_618'] = sma - (0.618 * sd)
+        self.df['fbb_lower0_764'] = sma - (0.764 * sd)
+        self.df['fbb_lower1'] = sma - (1 * sd)
 
     def movingAverageConvergenceDivergence(self):
         """Calculates the Moving Average Convergence Divergence (MACD)"""
