@@ -193,7 +193,7 @@ class AuthAPI():
         fees = self.getFees()
         return float(fees['usd_volume'].to_string(index=False).strip())
 
-    def marketBuy(self, market='', fiatAmount=0):
+    def marketBuy(self, market='', quote_quantity=0):
         """Executes a market buy providing a funding amount"""
 
         # validates the market is syntactically correct
@@ -201,19 +201,19 @@ class AuthAPI():
         if not p.match(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
-        # validates fiatAmount is either an integer or float
-        if not isinstance(fiatAmount, int) and not isinstance(fiatAmount, float):
+        # validates quote_quantity is either an integer or float
+        if not isinstance(quote_quantity, int) and not isinstance(quote_quantity, float):
             raise TypeError('The funding amount is not numeric.')
 
         # funding amount needs to be greater than 10
-        if fiatAmount < 10:
+        if quote_quantity < 10:
             raise ValueError('Trade amount is too small (>= 10).')
 
         order = {
             'product_id': market,
             'type': 'market',
             'side': 'buy',
-            'funds': fiatAmount
+            'funds': quote_quantity
         }
 
         if self.debug == True:
@@ -225,19 +225,19 @@ class AuthAPI():
         # place order and return result
         return model.authAPI('POST', 'orders', order)
 
-    def marketSell(self, market='', cryptoAmount=0):
+    def marketSell(self, market='', base_quantity=0):
         p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
         if not p.match(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
-        if not isinstance(cryptoAmount, int) and not isinstance(cryptoAmount, float):
+        if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
             raise TypeError('The crypto amount is not numeric.')
 
         order = {
             'product_id': market,
             'type': 'market',
             'side': 'sell',
-            'size': cryptoAmount
+            'size': base_quantity
         }
 
         print (order)
@@ -245,22 +245,22 @@ class AuthAPI():
         model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
         return model.authAPI('POST', 'orders', order)
 
-    def limitSell(self, market='', cryptoAmount=0, futurePrice=0):
+    def limitSell(self, market='', base_quantity=0, futurePrice=0):
         p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
         if not p.match(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
-        if not isinstance(cryptoAmount, int) and not isinstance(cryptoAmount, float):
+        if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
             raise TypeError('The crypto amount is not numeric.')
 
-        if not isinstance(cryptoAmount, int) and not isinstance(cryptoAmount, float):
+        if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
             raise TypeError('The future crypto price is not numeric.')
 
         order = {
             'product_id': market,
             'type': 'limit',
             'side': 'sell',
-            'size': cryptoAmount,
+            'size': base_quantity,
             'price': futurePrice
         }
 
