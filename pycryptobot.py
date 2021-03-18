@@ -467,9 +467,17 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                         print('|                      *** Executing LIVE Buy Order ***                        |')
                         print('--------------------------------------------------------------------------------')
                     
+                    # display balances
+                    print (app.getBaseCurrency(), 'balance before order:', account.getBalance(app.getBaseCurrency()))
+                    print (app.getQuoteCurrency(), 'balance before order:', account.getBalance(app.getQuoteCurrency()))
+
                     # execute a live market buy
                     resp = app.marketBuy(app.getMarket(), float(account.getBalance(app.getQuoteCurrency())))
                     logging.info(resp)
+
+                    # display balances
+                    print (app.getBaseCurrency(), 'balance after order:', account.getBalance(app.getBaseCurrency()))
+                    print (app.getQuoteCurrency(), 'balance after order:', account.getBalance(app.getQuoteCurrency()))
 
                 # if not live
                 else:
@@ -549,9 +557,17 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                         print('|                      *** Executing LIVE Sell Order ***                        |')
                         print('--------------------------------------------------------------------------------')
 
+                    # display balances
+                    print (app.getBaseCurrency(), 'balance before order:', account.getBalance(app.getBaseCurrency()))
+                    print (app.getQuoteCurrency(), 'balance before order:', account.getBalance(app.getQuoteCurrency()))
+
                     # execute a live market sell
                     resp = app.marketSell(app.getMarket(), float(account.getBalance(app.getBaseCurrency())))
                     logging.info(resp)
+
+                    # display balances
+                    print (app.getBaseCurrency(), 'balance after order:', account.getBalance(app.getBaseCurrency()))
+                    print (app.getQuoteCurrency(), 'balance after order:', account.getBalance(app.getQuoteCurrency()))
 
                 # if not live
                 else:
