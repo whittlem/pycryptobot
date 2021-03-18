@@ -542,7 +542,7 @@ class PyCryptoBot():
                     self.sell_lower_pcnt = float(args.selllowerpcnt)
 
         if args.nosellatloss != None:
-            if not args.nosellatlos in [ '0', '1' ]:
+            if not args.nosellatloss in [ '0', '1' ]:
                 self.no_sell_at_loss = args.nosellatloss
                 if self.no_sell_at_loss == 1:
                     self.sell_lower_pcnt = None
