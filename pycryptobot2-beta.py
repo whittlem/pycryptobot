@@ -157,8 +157,8 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         macdltsignalco = bool(df_last['macdltsignalco'].values[0])
         obv = float(df_last['obv'].values[0])
         obv_pc = float(df_last['obv_pc'].values[0])
-        elder_ray_bull = float(df_last['elder_ray_bull'].values[0])
-        elder_ray_bear = float(df_last['elder_ray_bear'].values[0])
+        elder_ray_buy = bool(df_last['eri_buy'].values[0])
+        elder_ray_sell = bool(df_last['eri_sell'].values[0])
 
         # candlestick detection
         hammer = bool(df_last['hammer'].values[0])
@@ -176,10 +176,10 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         two_black_gapping = bool(df_last['two_black_gapping'].values[0])
 
         # criteria for a buy signal
-        if ema12gtema26co == True and macdgtsignal == True and goldencross == True and obv_pc > -5 and elder_ray_bull > 0 and last_action != 'BUY':
+        if ema12gtema26co == True and macdgtsignal == True and goldencross == True and obv_pc > -5 and elder_ray_buy == True and last_action != 'BUY':
             action = 'BUY'
         # criteria for a sell signal
-        elif ((ema12ltema26co == True and macdltsignal == True) or (elder_ray_bull < 0 and elder_ray_bear < 0)) and last_action not in ['','SELL']:
+        elif ema12ltema26co == True and macdltsignal == True and last_action not in ['','SELL']:
             action = 'SELL'
         # anything other than a buy or sell, just wait
         else:
@@ -261,15 +261,10 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         bullbeartext = ''
         if df_last['sma50'].values[0] == df_last['sma200'].values[0]:
             bullbeartext = ''
-        elif goldencross == True and elder_ray_bull > 0:
+        elif goldencross == True:
             bullbeartext = ' (BULL)'
-        elif goldencross == False and elder_ray_bear < 0:
+        elif goldencross == False:
             bullbeartext = ' (BEAR)'
-
-        if elder_ray_bull < 0 and elder_ray_bear < 0:
-            bullbeartext = ' (BEAR)'
-        elif elder_ray_bull > 0 and elder_ray_bear > 0:
-            bullbeartext = ' (BULL)'
 
         # polling is every 5 minutes (even for hourly intervals), but only process once per interval
         if (last_df_index != current_df_index):
@@ -282,7 +277,13 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             ema_text = app.compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26', precision)
             macd_text = app.compare(df_last['macd'].values[0], df_last['signal'].values[0], 'MACD', precision)
             obv_text = 'OBV: ' + str(app.truncate(df_last['obv'].values[0], 4)) + ' (' + str(app.truncate(df_last['obv_pc'].values[0], 2)) + '%)'
-            eri_text = 'ERI: ' + str(app.truncate(elder_ray_bull, 4)) + ' / ' + str(app.truncate(elder_ray_bear, 4))
+
+            if elder_ray_buy == True:
+                eri_text = 'ERI: buy'
+            elif elder_ray_sell == True:
+                eri_text = 'ERI: sell'
+            else:
+                eri_text = 'ERI:'
 
             if hammer == True:
                 log_text = '* Candlestick Detected: Hammer ("Weak - Reversal - Bullish Signal - Up")'

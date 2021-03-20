@@ -528,7 +528,15 @@ class TechnicalAnalysis():
             self.addEMA(13)
 
         self.df['elder_ray_bull'] = self.df['high'] - self.df['ema13']
-        self.df['elder_ray_bear'] = self.df['low'] - self.df['ema13']        
+        self.df['elder_ray_bear'] = self.df['low'] - self.df['ema13']
+
+        # bear power’s value is negative but increasing (i.e. becoming less bearish)
+        # bull power’s value is increasing (i.e. becoming more bullish)
+        self.df['eri_buy'] = ((self.df['elder_ray_bear'] < 0) & (self.df['elder_ray_bear'] > self.df['elder_ray_bear'].shift(1))) | ((self.df['elder_ray_bull'] > self.df['elder_ray_bull'].shift(1))) 
+                
+        # bull power’s value is positive but decreasing (i.e. becoming less bullish)
+        # bear power’s value is decreasing (i.e., becoming more bearish)
+        self.df['eri_sell'] = ((self.df['elder_ray_bull'] > 0) & (self.df['elder_ray_bull'] < self.df['elder_ray_bull'].shift(1))) | ((self.df['elder_ray_bull'] < self.df['elder_ray_bull'].shift(1)))
 
     def getSupportResistanceLevels(self):
         """Calculate the Support and Resistance Levels"""
