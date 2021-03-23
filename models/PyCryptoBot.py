@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(description='Python Crypto Bot using the Coinba
 
 # optional arguments
 parser.add_argument('--exchange', type=str, help="'coinbasepro', 'binance', 'dummy'")
-parser.add_argument('--granularity', type=str, help="coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6g,1d)")
+parser.add_argument('--granularity', type=str, help="coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6h,1d)")
 parser.add_argument('--live', type=int, help='live=1, test=0')
 parser.add_argument('--market', type=str, help='coinbasepro: BTC-GBP, binance: BTCGBP etc.')
 parser.add_argument('--graphs', type=int, help='save graphs=1, do not save graphs=0')
