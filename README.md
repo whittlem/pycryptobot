@@ -50,6 +50,8 @@ The "requirements.txt" was created with "python3 -m pip freeze"
 % python3 pycryptobot.py <arguments>
 
     * Arguments
+    --exchange <exchange> (coinbasepro or binance)
+        * Specify the exchange to use, leaving it out defaults to coinbasepro
     --market <market> (coinbase format: BTC-GBP, binance format: BTCGBP)
         * Coinbase Pro market
     --granularity <granularity> (coinbase format: 3600, binance format: 1h)
