@@ -132,14 +132,14 @@ dmypy.json
 .pyre/
 
 .vscode
+
 config.json
-experiments/experiment*
+config-coinbasepro.json
+config-binance.json
 
 *.csv
 graphs/
 
 .DS_Store
 
-*.json
-
-troubleshoot.py
+.vs/
