@@ -1,13 +1,29 @@
-# Python Crypto Bot (pycryptobot)
+# Python Crypto Bot v2.0.0 (pycryptobot)
+
+## What's New?
+
+* Bot can now use Binance as well as Coinbase Pro
+* Optimised bot mechanics for buy and sell signals
+* Added "smart switching" between 15 minute and 1 hour graphs
+* Added additional technical indicators and candlesticks
+* Improved visual graphs for analysis
 
 ## Introduction
 
 Follow me on Medium for updates!
 https://whittle.medium.com
 
+## Optional Add-on
+
+Coinbase Pro Portfolio Tracker
+https://github.com/whittlem/coinbaseprotracker
+
+An all-in-one view of all your Coinbase Pro portfolios. Highly recommended
+if running multiple bots and keeping track of their progress.
+
 ## Prerequisites
 
-* Python 3.x installed -- https://installpython3.com
+* Python 3.9.x installed -- https://installpython3.com  (must be Python 3.9 or greater)
 
     % python3 --version
     
@@ -18,8 +34,6 @@ https://whittle.medium.com
     % python3 -m pip --version
     
     pip 21.0.1 from /usr/local/lib/python3.9/site-packages/pip (python 3.9)
-
- * The app should work with Python 3.x, but to avoid issues try run Python 3.8 or higher
 
 ## Installation
 
@@ -36,22 +50,32 @@ The "requirements.txt" was created with "python3 -m pip freeze"
 % python3 pycryptobot.py <arguments>
 
     * Arguments
-    --market <market> (default: BTC-GBP)
+    --market <market> (coinbase format: BTC-GBP, binance format: BTCGBP)
         * Coinbase Pro market
-    --granularity <granularity> (default: 3600)
-        * Supported granularity in seconds
-    --live <1 or 0> <default: 0>
+    --granularity <granularity> (coinbase format: 3600, binance format: 1h)
+        * Supported granularity
+    --live <1 or 0> (default: 0)
         * Is the bot live or in test/demo mode
     --graphs <1 or 0> (default: 0)
         * Save graphs on buy and sell events
-    --sim <fast or slow>
-        * Run a simulation on last 300 intervals of data
+    --sim <fast, fast-sample, slow, slow-sample>
+        * Run a simulation on last 300 intervals of data OR on a random 300 intervals (sample)
     --verbose <1 or 0> (default: 1)
         * Toggle verbose or minimal output
+    --sellupperpcnt <1-100>
+        * (Optional) Force a sell when the margin reaches an upper limit
+    --selllowerpcnt <-1-100>
+        * (Optional) Force a sell when the margin reaches an lower limit
+    --nosellatloss <1 or 0> (default: 0)
+        * No not sell at a loss (no small losses but could prevent getting out before a big crash)
+
+Typically I would save all my settings in the config.json but running from the command line I would usually run it like this.
+
+% python3 pycryptobot.py --market BTC-GBP --granularity 3600 --live 1 --verbose 0 --selllowerpcnt -2
 
 ## Live Trading
 
-In order to trade live you need to authenticate with the Coinbase Pro API. This is all documented in my Medium articles. In summary you will need to include a config.json file in your project root which contains your API keys. If the file does not exist it will only work in test/demo mode.
+In order to trade live you need to authenticate with the Coinbase Pro or Binance APIs. This is all documented in my Medium articles. In summary you will need to include a config.json file in your project root which contains your API keys. If the file does not exist it will only work in test/demo mode.
 
 ## Multi-Market Trading
 
