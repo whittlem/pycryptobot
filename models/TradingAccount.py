@@ -3,11 +3,14 @@
 import sys
 import numpy as np
 import pandas as pd
-import json, math, re, requests
+import json, math, re, requests, sys
 from datetime import datetime
 from binance.client import Client
 from models.Binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
 from models.CoinbasePro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
+
+# production: disable traceback
+sys.tracebacklimit = 0
 
 class TradingAccount():
     def __init__(self, app={}):

@@ -1,9 +1,12 @@
 """Remotely control your Coinbase Pro account via their API"""
 
 import pandas as pd
-import re, json, hmac, hashlib, time, requests, base64
+import re, json, hmac, hashlib, time, requests, base64, sys
 from datetime import datetime, timedelta
 from requests.auth import AuthBase
+
+# production: disable traceback
+sys.tracebacklimit = 0
 
 class AuthAPI():
     def __init__(self, api_key='', api_secret='', api_pass='', api_url='https://api.pro.coinbase.com'):
@@ -117,6 +120,21 @@ class AuthAPI():
                 raise SystemExit(err)
     
         return self.authAPI('GET', 'accounts/' + account)
+
+    def getFees(self):
+        return self.authAPI('GET', 'fees')
+
+    def getMakerFee(self):
+        fees = self.getFees()
+        return float(fees['maker_fee_rate'].to_string(index=False).strip())
+
+    def getTakerFee(self):
+        fees = self.getFees()
+        return float(fees['taker_fee_rate'].to_string(index=False).strip())
+
+    def getUSDVolume(self):
+        fees = self.getFees()
+        return float(fees['usd_volume'].to_string(index=False).strip())
 
     def getOrders(self, market='', action='', status='all'):
         """Retrieves your list of orders with optional filtering"""
