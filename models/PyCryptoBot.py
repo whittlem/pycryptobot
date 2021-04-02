@@ -18,14 +18,15 @@ parser = argparse.ArgumentParser(description='Python Crypto Bot using the Coinba
 # optional arguments
 parser.add_argument('--exchange', type=str, help="'coinbasepro', 'binance', 'dummy'")
 parser.add_argument('--granularity', type=str, help="coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6h,1d)")
+parser.add_argument('--graphs', type=int, help='save graphs=1, do not save graphs=0')
 parser.add_argument('--live', type=int, help='live=1, test=0')
 parser.add_argument('--market', type=str, help='coinbasepro: BTC-GBP, binance: BTCGBP etc.')
-parser.add_argument('--graphs', type=int, help='save graphs=1, do not save graphs=0')
-parser.add_argument('--sim', type=str, help='simulation modes: fast, fast-sample, slow-sample')
-parser.add_argument('--verbose', type=int, help='verbose output=1, minimal output=0')
+parser.add_argument('--nosellatloss', type=int, help='optionally do not sell at a loss')
 parser.add_argument('--sellupperpcnt', type=int, help='optionally set sell upper percent limit')
 parser.add_argument('--selllowerpcnt', type=int, help='optionally set sell lower percent limit')
-parser.add_argument('--nosellatloss', type=int, help='optionally do not sell at a loss')
+parser.add_argument('--sim', type=str, help='simulation modes: fast, fast-sample, slow-sample')
+parser.add_argument('--smartswitch', type=int, help='optionally smart switch between 1 hour and 15 minute intervals')
+parser.add_argument('--verbose', type=int, help='verbose output=1, minimal output=0')
 
 # parse arguments
 args = parser.parse_args()
@@ -48,15 +49,16 @@ class PyCryptoBot():
         self.market = 'BTC-GBP'
         self.base_currency = 'BTC'
         self.quote_currency = 'GBP'
-        self.granularity = 3600
+        self.granularity = None
         self.is_live = 0
-        self.is_verbose = 1
+        self.is_verbose = 0
         self.save_graphs = 0
         self.is_sim = 0
         self.sim_speed = 'fast'
         self.sell_upper_pcnt = None
         self.sell_lower_pcnt = None
         self.no_sell_at_loss = 0
+        self.smart_switch = 1
 
         try:
             with open(filename) as config_file:
@@ -114,11 +116,6 @@ class PyCryptoBot():
                         if self.base_currency != '' and self.quote_currency != '':
                             self.market = self.base_currency + '-' + self.quote_currency
                         
-                        if 'granularity' in config:
-                            if isinstance(config['granularity'], int):
-                                if config['granularity'] in [ 60, 300, 900, 3600, 21600, 86400 ]:
-                                    self.granularity = config['granularity']
-
                         if 'live' in config:
                             if isinstance(config['live'], int):
                                 if config['live'] in [ 0, 1 ]:
@@ -158,6 +155,21 @@ class PyCryptoBot():
                                     if self.no_sell_at_loss == 1:
                                         self.sell_lower_pcnt = None
 
+                        if 'smartswitch' in config:
+                            if isinstance(config['smartswitch'], int):
+                                if config['smartswitch'] in [ 0, 1 ]:
+                                    self.smart_switch = config['smartswitch']
+                                    if self.smart_switch == 1:
+                                        self.smart_switch = 1
+                                    else:
+                                        self.smart_switch = 0
+
+                        if 'granularity' in config:
+                            if isinstance(config['granularity'], int):
+                                if config['granularity'] in [ 60, 300, 900, 3600, 21600, 86400 ]:
+                                    self.granularity = config['granularity']
+                                    self.smart_switch = 0
+
                 elif self.exchange == 'binance' and 'api_key' in config and 'api_secret' in config and 'api_url' in config:
                     self.api_key = config['api_key']
                     self.api_secret = config['api_secret']
@@ -187,11 +199,6 @@ class PyCryptoBot():
                         if self.base_currency != '' and self.quote_currency != '':
                             self.market = self.base_currency + self.quote_currency
                         
-                        if 'granularity' in config:
-                            if isinstance(config['granularity'], str):
-                                if config['granularity'] in [ '1m', '5m', '15m', '1h', '6h', '1d' ]:
-                                    self.granularity = config['granularity']
-
                         if 'live' in config:
                             if isinstance(config['live'], int):
                                 if config['live'] in [0, 1]:
@@ -231,6 +238,21 @@ class PyCryptoBot():
                                     if self.no_sell_at_loss == 1:
                                         self.sell_lower_pcnt = None
 
+                        if 'smartswitch' in config:
+                            if isinstance(config['smartswitch'], int):
+                                if config['smartswitch'] in [ 0, 1 ]:
+                                    self.smart_switch = config['smartswitch']
+                                    if self.smart_switch == 1:
+                                        self.smart_switch = 1
+                                    else:
+                                        self.smart_switch = 0
+
+                        if 'granularity' in config:
+                            if isinstance(config['granularity'], str):
+                                if config['granularity'] in [ '1m', '5m', '15m', '1h', '6h', '1d' ]:
+                                    self.granularity = config['granularity']
+                                    self.smart_switch = 0
+
                 elif self.exchange == 'coinbasepro' and 'coinbasepro' in config:
                     if 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
                         self.api_key = config['coinbasepro']['api_key']
@@ -267,11 +289,6 @@ class PyCryptoBot():
                             if self.base_currency != '' and self.quote_currency != '':
                                 self.market = self.base_currency + '-' + self.quote_currency
                             
-                            if 'granularity' in config:
-                                if isinstance(config['granularity'], int):
-                                    if config['granularity'] in [60, 300, 900, 3600, 21600, 86400]:
-                                        self.granularity = config['granularity']
-
                             if 'live' in config:
                                 if isinstance(config['live'], int):
                                     if config['live'] in [0, 1]:
@@ -311,6 +328,21 @@ class PyCryptoBot():
                                         if self.no_sell_at_loss == 1:
                                             self.sell_lower_pcnt = None
 
+                            if 'smartswitch' in config:
+                                if isinstance(config['smartswitch'], int):
+                                    if config['smartswitch'] in [ 0, 1 ]:
+                                        self.smart_switch = config['smartswitch']
+                                        if self.smart_switch == 1:
+                                            self.smart_switch = 1
+                                        else:
+                                            self.smart_switch = 0
+
+                            if 'granularity' in config:
+                                if isinstance(config['granularity'], int):
+                                    if config['granularity'] in [60, 300, 900, 3600, 21600, 86400]:
+                                        self.granularity = config['granularity']
+                                        self.smart_switch = 0
+
                     else:
                         raise Exception('There is an error in your config.json')
 
@@ -341,11 +373,6 @@ class PyCryptoBot():
                             if self.base_currency != '' and self.quote_currency != '':
                                 self.market = self.base_currency + self.quote_currency
                             
-                            if 'granularity' in config:
-                                if isinstance(config['granularity'], str):
-                                    if config['granularity'] in ['1m', '5m', '15m', '1h', '6h', '1d']:
-                                        self.granularity = config['granularity']
-
                             if 'live' in config:
                                 if isinstance(config['live'], int):
                                     if config['live'] in [0, 1]:
@@ -383,7 +410,22 @@ class PyCryptoBot():
                                     if config['nosellatloss'] in [ 0, 1 ]:
                                         self.no_sell_at_loss = config['nosellatloss']
                                         if self.no_sell_at_loss == 1:
-                                            self.sell_lower_pcnt = None                                        
+                                            self.sell_lower_pcnt = None
+
+                            if 'smartswitch' in config:
+                                if isinstance(config['smartswitch'], int):
+                                    if config['smartswitch'] in [ 0, 1 ]:
+                                        self.smart_switch = config['smartswitch']
+                                        if self.smart_switch == 1:
+                                            self.smart_switch = 1
+                                        else:
+                                            self.smart_switch = 0
+
+                            if 'granularity' in config:
+                                if isinstance(config['granularity'], str):
+                                    if config['granularity'] in ['1m', '5m', '15m', '1h', '6h', '1d']:
+                                        self.granularity = config['granularity']
+                                        self.smart_switch = 0                                        
 
                     else:
                         raise Exception('There is an error in your config.json')
@@ -485,6 +527,14 @@ class PyCryptoBot():
                     self.base_currency = 'BTC'
                     self.quote_currency = 'GBP'
 
+        if args.smartswitch != None:
+            if not args.smartswitch in [ '0', '1' ]:
+                self.smart_switch = args.smartswitch
+                if self.smart_switch == 1:
+                    self.smart_switch = 1
+                else:
+                    self.smart_switch = 0
+
         if args.granularity != None:
             if self.exchange == 'coinbasepro':
                 if not isinstance(int(args.granularity), int):
@@ -500,6 +550,13 @@ class PyCryptoBot():
                     raise TypeError('Granularity options: 1m, 5m, 15m, 1h, 6h, 1d')
 
             self.granularity = args.granularity
+            self.smart_switch = 0
+
+        if self.smart_switch == 1 and self.granularity == None:
+            if self.exchange == 'coinbasepro':
+                self.granularity = 3600
+            elif self.exchange == 'binance':
+                self.granularity = '1h'
 
         if args.graphs != None:
             if not args.graphs in [ '0', '1' ]:
@@ -640,6 +697,9 @@ class PyCryptoBot():
                 return api.getHistoricalData(market, granularity)
         else:
             return pd.DataFrame()
+
+    def getSmartSwitch(self):
+        return self.smart_switch
 
     def is1hEMA1226Bull(self):
         try:
