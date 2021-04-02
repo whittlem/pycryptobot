@@ -72,25 +72,15 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
     if app.isSimulation() == 0:
         # retrieve the app.getMarket() data
         trading_data = app.getHistoricalData(app.getMarket(), app.getGranularity())
+    else:
+        if len(trading_data) == 0:
+            return None
 
     # analyse the market data
     trading_dataCopy = trading_data.copy()
     ta = TechnicalAnalysis(trading_dataCopy)
     ta.addAll()
     df = ta.getDataFrame()
-
-    if app.getExchange() == 'binance' and str(app.getGranularity()) == '1d':
-        if len(df) < 250:
-            # data frame should have 250 rows, if not retry
-            print('error: data frame length is < 250 (' + str(len(df)) + ')')
-            logging.error('error: data frame length is < 250 (' + str(len(df)) + ')')
-            s.enter(300, 1, executeJob, (sc, app))
-    else:
-        if len(df) < 300:
-            # data frame should have 300 rows, if not retry
-            print('error: data frame length is < 300 (' + str(len(df)) + ')')
-            logging.error('error: data frame length is < 300 (' + str(len(df)) + ')')
-            s.enter(300, 1, executeJob, (sc, app))
 
     if app.isSimulation() == 1:
         # with a simulation df_last will iterate through data
@@ -103,6 +93,45 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         current_df_index = str(df_last.index.format()[0])
     else:
         current_df_index = last_df_index
+
+    if app.getSmartSwitch() == 1 and app.getExchange() == 'binance' and app.getGranularity() == '1h' and app.is1hEMA1226Bull() == True and app.is6hEMA1226Bull() == True:
+        print ("*** smart switch from granularity '1h' (1 hour) to '15m' (15 min) ***")
+        app.setGranularity('15m')
+        list(map(s.cancel, s.queue))
+        s.enter(5, 1, executeJob, (sc, app))
+
+    elif app.getSmartSwitch() == 1 and app.getExchange() == 'coinbasepro' and app.getGranularity() == 3600 and app.is1hEMA1226Bull() == True and app.is6hEMA1226Bull() == True:
+        print ('*** smart switch from granularity 3600 (1 hour) to 900 (15 min) ***')
+        app.setGranularity(900)
+        list(map(s.cancel, s.queue))
+        s.enter(5, 1, executeJob, (sc, app))
+
+    if app.getSmartSwitch() == 1 and app.getExchange() == 'binance' and app.getGranularity() == '15m' and app.is1hEMA1226Bull() == False and app.is6hEMA1226Bull() == False:
+        print ("*** smart switch from granularity '15m' (15 min) to '1h' (1 hour) ***")
+        app.setGranularity('1h')
+        list(map(s.cancel, s.queue))
+        s.enter(5, 1, executeJob, (sc, app))
+
+    elif app.getSmartSwitch() == 1 and app.getExchange() == 'coinbasepro' and app.getGranularity() == 900 and app.is1hEMA1226Bull() == False and app.is6hEMA1226Bull() == False:
+        print ("*** smart switch from granularity 900 (15 min) to 3600 (1 hour) ***")
+        app.setGranularity(3600)
+        list(map(s.cancel, s.queue))
+        s.enter(5, 1, executeJob, (sc, app))
+
+    if app.getExchange() == 'binance' and str(app.getGranularity()) == '1d':
+        if len(df) < 250:
+            # data frame should have 250 rows, if not retry
+            print('error: data frame length is < 250 (' + str(len(df)) + ')')
+            logging.error('error: data frame length is < 250 (' + str(len(df)) + ')')
+            list(map(s.cancel, s.queue))
+            s.enter(300, 1, executeJob, (sc, app))
+    else:
+        if len(df) < 300:
+            # data frame should have 300 rows, if not retry
+            print('error: data frame length is < 300 (' + str(len(df)) + ')')
+            logging.error('error: data frame length is < 300 (' + str(len(df)) + ')')
+            list(map(s.cancel, s.queue))
+            s.enter(300, 1, executeJob, (sc, app))
 
     if len(df_last) > 0:
         if app.isSimulation() == 0:
@@ -181,6 +210,22 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 print (log_text, "\n")
                 logging.warning(log_text)
 
+            if app.getSmartSwitch() == 1 and app.getExchange() == 'binance' and app.getGranularity() == '15m' and change_pcnt >= 2:
+                # profit bank at 2% in smart switched mode
+                action = 'SELL'
+                last_action = 'BUY'
+                log_text = '! Profit Bank Triggered (Smart Switch 2%)'
+                print (log_text, "\n")
+                logging.warning(log_text)
+
+            if app.getSmartSwitch() == 1 and app.getExchange() == 'coinbasepro' and app.getGranularity() == 900 and change_pcnt >= 2:
+                # profit bank at 2% in smart switched mode
+                action = 'SELL'
+                last_action = 'BUY'
+                log_text = '! Profit Bank Triggered (Smart Switch 2%)'
+                print (log_text, "\n")
+                logging.warning(log_text)
+
             # profit bank at sell_upper_pcnt
             if app.sellUpperPcnt() != None and change_pcnt > app.sellUpperPcnt():
                 action = 'SELL'
@@ -205,12 +250,13 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 print (log_text, "\n")
                 logging.warning(log_text)
 
+            # configuration specifies to not sell at a loss
             if not app.allowSellAtLoss() and margin <= 0:
                 action = 'WAIT'
                 last_action = 'BUY'
                 log_text = '! Ignore Sell Signal (No Sell At Loss)'
                 print (log_text, "\n")
-                logging.warning(log_text)      
+                logging.warning(log_text)
 
         bullbeartext = ''
         if df_last['sma50'].values[0] == df_last['sma200'].values[0]:
@@ -350,7 +396,11 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     output_text = current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + eri_text + ' | ' + action + ' '
 
                 if last_action == 'BUY':
-                    margin = str(app.truncate((((price - last_buy_minus_fees) / price) * 100), 2)) + '%'
+                    if last_buy_minus_fees > 0:
+                        margin = str(app.truncate((((price - last_buy_minus_fees) / price) * 100), 2)) + '%'
+                    else:
+                        margin = '0%'
+
                     output_text += ' | ' +  margin
 
                 logging.debug(output_text)
@@ -649,10 +699,12 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     executeJob(sc, app, trading_data)
                 else:
                     # slow processing
+                    list(map(s.cancel, s.queue))
                     s.enter(1, 1, executeJob, (sc, app, trading_data))
 
         else:
             # poll every 5 minute
+            list(map(s.cancel, s.queue))
             s.enter(300, 1, executeJob, (sc, app))
 
 try:
@@ -660,6 +712,7 @@ try:
     logging.basicConfig(filename='pycryptobot.log', format='%(asctime)s - %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filemode='a', level=logging.DEBUG)
 
     # initialise and start application
+    app.setGranularity(3600)
     trading_data = app.startApp(account, last_action)
 
     # run the first job immediately after starting
