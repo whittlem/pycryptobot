@@ -8,7 +8,7 @@ from binance.client import Client
 class AuthAPI():
     def __init__(self, api_key='', api_secret='', api_url='https://api.binance.com'):
         """Binance API object model
-    
+
         Parameters
         ----------
         api_key : str
@@ -16,7 +16,7 @@ class AuthAPI():
         api_secret : str
             Your Binance account portfolio API secret
         """
-    
+
         # options
         self.debug = False
         self.die_on_api_error = False
@@ -41,7 +41,7 @@ class AuthAPI():
                 raise TypeError(err)
             else:
                 raise SystemExit(err)
- 
+
         # validates the api secret is syntactically correct
         p = re.compile(r"^[A-z0-9]{64,64}$")
         if not p.match(api_secret):
@@ -91,7 +91,7 @@ class AuthAPI():
         except Exception as err:
             ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
             print (ts, 'Binance', 'marketBuy', str(err))
-            return []       
+            return []
 
     def marketSell(self, market='', base_quantity=0):
         """Executes a market sell providing a crypto amount"""
@@ -167,8 +167,8 @@ class PublicAPI():
             raise TypeError('Granularity string required.')
 
         # validates the granularity is supported by Binance
-        if not granularity in [ '1m', '5m', '15m', '1h', '6h', '1d' ]:
-            raise TypeError('Granularity options: 1m, 5m, 15m. 1h, 6h, 1d')
+        if not granularity in [ '5m', '15m', '1h', '6h', '1d' ]:
+            raise TypeError('Granularity options: 5m, 15m. 1h, 6h, 1d')
 
         # validates the ISO 8601 start date is a string (if provided)
         if not isinstance(iso8601start, str):
@@ -180,19 +180,19 @@ class PublicAPI():
 
         # if only a start date is provided
         if iso8601start != '' and iso8601end == '':
-            multiplier = 1
-            if(granularity == '1m'):
-                multiplier = 1
-            elif(granularity == '5m'):
+            multiplier = 5
+            if granularity == '5m':
                 multiplier = 5
-            elif(granularity == '15m'):
+            elif granularity == '15m':
                 multiplier = 10
-            elif(granularity == '1h'):
+            elif granularity == '1h':
                 multiplier = 60
-            elif(granularity == '6h'):
+            elif granularity == '6h':
                 multiplier = 360
-            elif(granularity == '1d'):
+            elif granularity == '1d':
                 multiplier = 1440
+            elif granularity == '1m':
+                raise Exception('Granularity of 1m is not supported in Binance')
 
             # calculate the end date using the granularity
             iso8601end = str((datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S.%f') + timedelta(minutes=granularity * multiplier)).isoformat())
@@ -218,9 +218,11 @@ class PublicAPI():
                 resp = resp[-300:]
             elif granularity == '1d':
                 resp = self.client.get_historical_klines(market, granularity, '251 days ago UTC')
+            elif granularity == '1m':
+                raise Exception('Granularity of 1m is not supported in Binance')
             else:
                 raise Exception('Something went wrong!')
-                   
+
         # convert the API response into a Pandas DataFrame
         df = pd.DataFrame(resp, columns=[ 'open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_asset_volume', 'number_of_trades', 'taker_buy_base_asset_volume', 'traker_buy_quote_asset_volume', 'ignore' ])
         df['market'] = market
@@ -229,17 +231,15 @@ class PublicAPI():
         # binance epoch is too long
         df['open_time'] = df['open_time'] + 1
         df['open_time'] = df['open_time'].astype(str)
-        df['open_time'] = df['open_time'].str.replace(r'\d{3}$', '', regex=True)   
+        df['open_time'] = df['open_time'].str.replace(r'\d{3}$', '', regex=True)
 
-        if(granularity == '1m'):
-            freq = 'T'
-        elif(granularity == '5m'):
+        if granularity == '5m':
             freq = '5T'
-        elif(granularity == '15m'):
+        elif granularity == '15m':
             freq = '15T'
-        elif(granularity == '1h'):
+        elif granularity == '1h':
             freq = 'H'
-        elif(granularity == '6h'):
+        elif granularity == '6h':
             freq = '6H'
         else:
             freq = 'D'
@@ -255,7 +255,7 @@ class PublicAPI():
             tsidx = pd.DatetimeIndex(pd.to_datetime(df['open_time'], unit='s'), dtype='datetime64[ns]')
             df.set_index(tsidx, inplace=True)
             df = df.drop(columns=['open_time'])
-            df.index.names = ['ts']           
+            df.index.names = ['ts']
             df['date'] = tsidx
 
         # re-order columns
@@ -263,10 +263,10 @@ class PublicAPI():
 
         # correct column types
         df['low'] = df['low'].astype(float)
-        df['high'] = df['high'].astype(float)   
-        df['open'] = df['open'].astype(float)   
-        df['close'] = df['close'].astype(float)   
-        df['volume'] = df['volume'].astype(float)      
+        df['high'] = df['high'].astype(float)
+        df['open'] = df['open'].astype(float)
+        df['close'] = df['close'].astype(float)
+        df['volume'] = df['volume'].astype(float)
 
         # reset pandas dataframe index
         df.reset_index()
