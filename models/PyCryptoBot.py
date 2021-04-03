@@ -979,7 +979,10 @@ class PyCryptoBot():
         if self.isVerbose() == 1:   
             txt = '           Market : ' + self.getMarket()
             print('|', txt, (' ' * (75 - len(txt))), '|')
-            txt = '      Granularity : ' + str(self.getGranularity()) + ' seconds'
+            if self.exchange == 'coinbasepro':
+                txt = '      Granularity : ' + str(self.getGranularity()) + ' seconds'
+            elif self.exchange == 'binance':
+                txt = '      Granularity : ' + str(self.getGranularity())
             print('|', txt, (' ' * (75 - len(txt))), '|')
             print('--------------------------------------------------------------------------------')
 
