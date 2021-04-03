@@ -21,7 +21,7 @@ parser.add_argument('--granularity', type=str, help="coinbasepro: (60,300,900,36
 parser.add_argument('--graphs', type=int, help='save graphs=1, do not save graphs=0')
 parser.add_argument('--live', type=int, help='live=1, test=0')
 parser.add_argument('--market', type=str, help='coinbasepro: BTC-GBP, binance: BTCGBP etc.')
-parser.add_argument('--nosellatloss', type=int, help='optionally do not sell at a loss')
+parser.add_argument('--sellatloss', type=int, help='toggle if bot should sell at a loss')
 parser.add_argument('--sellupperpcnt', type=int, help='optionally set sell upper percent limit')
 parser.add_argument('--selllowerpcnt', type=int, help='optionally set sell lower percent limit')
 parser.add_argument('--sim', type=str, help='simulation modes: fast, fast-sample, slow-sample')
@@ -57,7 +57,7 @@ class PyCryptoBot():
         self.sim_speed = 'fast'
         self.sell_upper_pcnt = None
         self.sell_lower_pcnt = None
-        self.no_sell_at_loss = 0
+        self.sell_at_loss = 1
         self.smart_switch = 1
 
         try:
@@ -148,11 +148,19 @@ class PyCryptoBot():
                                 if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
                                     self.sell_lower_pcnt = int(config['selllowerpcnt'])
 
+                        if 'sellatloss' in config:
+                            if isinstance(config['sellatloss'], int):
+                                if config['sellatloss'] in [ 0, 1 ]:
+                                    self.sell_at_loss = config['sellatloss']
+                                    if self.sell_at_loss == 0:
+                                        self.sell_lower_pcnt = None
+
+                        # backward compatibility
                         if 'nosellatloss' in config:
                             if isinstance(config['nosellatloss'], int):
                                 if config['nosellatloss'] in [ 0, 1 ]:
-                                    self.no_sell_at_loss = config['nosellatloss']
-                                    if self.no_sell_at_loss == 1:
+                                    self.sell_at_loss = int(not config['nosellatloss'])
+                                    if self.sell_at_loss == 0:
                                         self.sell_lower_pcnt = None
 
                         if 'smartswitch' in config:
@@ -231,11 +239,19 @@ class PyCryptoBot():
                                 if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
                                     self.sell_lower_pcnt = int(config['selllowerpcnt'])
 
+                        if 'sellatloss' in config:
+                            if isinstance(config['sellatloss'], int):
+                                if config['sellatloss'] in [ 0, 1 ]:
+                                    self.sell_at_loss = config['sellatloss']
+                                    if self.sell_at_loss == 0:
+                                        self.sell_lower_pcnt = None
+
+                        # backward compatibility
                         if 'nosellatloss' in config:
                             if isinstance(config['nosellatloss'], int):
                                 if config['nosellatloss'] in [ 0, 1 ]:
-                                    self.no_sell_at_loss = config['nosellatloss']
-                                    if self.no_sell_at_loss == 1:
+                                    self.sell_at_loss = int(not config['nosellatloss'])
+                                    if self.sell_at_loss == 0:
                                         self.sell_lower_pcnt = None
 
                         if 'smartswitch' in config:
@@ -320,12 +336,20 @@ class PyCryptoBot():
                                 if isinstance(config['selllowerpcnt'], int):
                                     if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
                                         self.sell_lower_pcnt = int(config['selllowerpcnt'])
-                                    
+                                       
+                            if 'sellatloss' in config:
+                                if isinstance(config['sellatloss'], int):
+                                    if config['sellatloss'] in [ 0, 1 ]:
+                                        self.sell_at_loss = config['sellatloss']
+                                        if self.sell_at_loss == 0:
+                                            self.sell_lower_pcnt = None
+
+                            # backward compatibility
                             if 'nosellatloss' in config:
                                 if isinstance(config['nosellatloss'], int):
                                     if config['nosellatloss'] in [ 0, 1 ]:
-                                        self.no_sell_at_loss = config['nosellatloss']
-                                        if self.no_sell_at_loss == 1:
+                                        self.sell_at_loss = int(not config['nosellatloss'])
+                                        if self.sell_at_loss == 0:
                                             self.sell_lower_pcnt = None
 
                             if 'smartswitch' in config:
@@ -405,11 +429,19 @@ class PyCryptoBot():
                                     if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
                                         self.sell_lower_pcnt = int(config['selllowerpcnt'])
 
+                            if 'sellatloss' in config:
+                                if isinstance(config['sellatloss'], int):
+                                    if config['sellatloss'] in [ 0, 1 ]:
+                                        self.sell_at_loss = config['sellatloss']
+                                        if self.sell_at_loss == 0:
+                                            self.sell_lower_pcnt = None
+
+                            # backward compatibility
                             if 'nosellatloss' in config:
                                 if isinstance(config['nosellatloss'], int):
                                     if config['nosellatloss'] in [ 0, 1 ]:
-                                        self.no_sell_at_loss = config['nosellatloss']
-                                        if self.no_sell_at_loss == 1:
+                                        self.sell_at_loss = int(not config['nosellatloss'])
+                                        if self.sell_at_loss == 0:
                                             self.sell_lower_pcnt = None
 
                             if 'smartswitch' in config:
@@ -598,10 +630,10 @@ class PyCryptoBot():
                 if args.selllowerpcnt >= -100 and args.selllowerpcnt < 0:
                     self.sell_lower_pcnt = float(args.selllowerpcnt)
 
-        if args.nosellatloss != None:
-            if not args.nosellatloss in [ '0', '1' ]:
-                self.no_sell_at_loss = args.nosellatloss
-                if self.no_sell_at_loss == 1:
+        if args.sellatloss != None:
+            if not args.sellatloss in [ '0', '1' ]:
+                self.sell_at_loss = args.sellatloss
+                if self.sell_at_loss == 0:
                     self.sell_lower_pcnt = None
 
         if self.exchange == 'binance':
@@ -813,7 +845,7 @@ class PyCryptoBot():
         return self.sell_lower_pcnt
 
     def allowSellAtLoss(self):
-        return not self.no_sell_at_loss
+        return self.sell_at_loss
 
     def setGranularity(self, granularity):
         if self.exchange == 'binance' and isinstance(granularity, str) and granularity in [ '1m', '5m', '15m', '1h', '6h', '1d' ]:
@@ -969,7 +1001,7 @@ class PyCryptoBot():
 
     def setNoSellAtLoss(self, flag):
         if isinstance(flag, int) and flag in [0, 1]:
-            self.no_sell_at_loss = flag
+            self.sell_at_loss = flag
 
     def startApp(self, account, last_action=''):
         print('--------------------------------------------------------------------------------')
