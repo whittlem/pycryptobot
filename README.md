@@ -68,8 +68,8 @@ The "requirements.txt" was created with "python3 -m pip freeze"
         * (Optional) Force a sell when the margin reaches an upper limit
     --selllowerpcnt <-1-100>
         * (Optional) Force a sell when the margin reaches an lower limit
-    --nosellatloss <1 or 0> (default: 0)
-        * No not sell at a loss (no small losses but could prevent getting out before a big crash)
+    --sellatloss <1 or 0> (default: 1)
+        * Toggle bot to sell at a loss (no small losses but could prevent getting out before a big crash)
 
 Typically I would save all my settings in the config.json but running from the command line I would usually run it like this.
 
@@ -96,16 +96,16 @@ Sell signal:
     * MACD is below the Signal
 
 Special sell cases:
-    * If "nosellatloss" is off, bot will sell if price drops below the lower Fibonacci band
-    * If "nosellatloss" is off and "selllowerpcnt" is specified the bot will sell at the specified amount E.g. -2 for -2% margin
+    * If "sellatloss" is on, bot will sell if price drops below the lower Fibonacci band
+    * If "sellatloss" is on and "selllowerpcnt" is specified the bot will sell at the specified amount E.g. -2 for -2% margin
     * If "sellupperpcnt" is specified the bot will sell at the specified amount E.g. 10 for 10% margin (Depending on the conditions I lock in profit at 3%)
     * If the margin exceeds 3% and the price reaches a Fibonacci band it will sell to lock in profit
     * If the margin exceeds 3% but a strong reversal is detected with negative OBV and MACD < Signal it will sell
-    * "nosellatloss" prevents selling at a loss
+    * "sellatloss" set to 0 prevents selling at a loss
 
-## "No Sell At Loss" explained
+## "Sell At Loss" explained
 
-The "nosellatloss" option has it's benefits and disadvantages. It does prevent any losses but also prevents you from exiting a market before a crash or bear market. Sometimes it's better to make an occasional small loss and make it up with several buys than be conservative and potentially lock a trade for weeks if not months. It happened to me while testing this with the last crash (after Elon's tweet!). Three of my bots did not sell while the profit dropped to -10 to -20%. It did bounce back and I made over 3% a trade with any losses but I also lost out of loads of trading opportunities. It's really a matter of preference. Maybe some markets would be more appropriate than others for this.
+The "sellatloss" option disabled has it's benefits and disadvantages. It does prevent any losses but also prevents you from exiting a market before a crash or bear market. Sometimes it's better to make an occasional small loss and make it up with several buys than be conservative and potentially lock a trade for weeks if not months. It happened to me while testing this with the last crash (after Elon's tweet!). Three of my bots did not sell while the profit dropped to -10 to -20%. It did bounce back and I made over 3% a trade with any losses but I also lost out of loads of trading opportunities. It's really a matter of preference. Maybe some markets would be more appropriate than others for this.
 
 ## Live Trading
 
@@ -124,7 +124,7 @@ Coinbase Pro basic (using smart switching)
             "cryptoMarket" : "BTC",
             "fiatMarket" : "GBP",
             "live" : 1,
-            "nosellatloss" : 1
+            "sellatloss" : 0
         }
     }
 
@@ -140,7 +140,7 @@ Coinbase Pro basic (specific granularity, no smart switching)
             "fiatMarket" : "GBP",
             "granularity" : 3600,
             "live" : 1,
-            "nosellatloss" : 1
+            "sellatloss" : 0
         }
     }
 
