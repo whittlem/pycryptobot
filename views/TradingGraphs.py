@@ -33,6 +33,9 @@ class TradingGraphs():
         # stores the support and resistance levels from technical_analysis object
         self.levels = technical_analysis.getSupportResistanceLevels()
 
+        # set graph format
+        plt.style.use('seaborn')
+
     def renderBuySellSignalEMA1226(self, saveFile='', saveOnly=False):
         """Render the EMA12 and EMA26 buy and sell signals
         
@@ -196,7 +199,7 @@ class TradingGraphs():
         if saveOnly == False:
             plt.show()
 
-    def renderEMAandMACD(self,  period=30, saveFile='', saveOnly=False):
+    def renderEMAandMACD(self, period=30, saveFile='', saveOnly=False):
         """Render the price, EMA12, EMA26 and MACD
         
         Parameters
@@ -226,7 +229,6 @@ class TradingGraphs():
 
         fig, (ax1, ax2) = plt.subplots(nrows=2, figsize=(12, 6))
         fig.suptitle(df_subset.iloc[0]['market'] + ' | ' + str(df_subset.iloc[0]['granularity']), fontsize=16)
-        plt.style.use('seaborn')
         plt.xticks(rotation=90)
         #plt.tight_layout()
 
@@ -380,7 +382,6 @@ class TradingGraphs():
         ax.plot(pred, label='prediction', color='black')
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
         
-        plt.style.use('seaborn')
         plt.xticks(rotation=90)
         plt.tight_layout()
 
@@ -413,7 +414,6 @@ class TradingGraphs():
         fig.autofmt_xdate()
         ax1 = plt.subplot(111)
         ax1.set_title('Astral Candlestick Pattern')
-        plt.style.use('seaborn')
         plt.plot(df_subset['close'], label='price', color='black')
         plt.plot(df_subset['ema12'], label='ema12', color='orange')
         plt.plot(df_subset['ema26'], label='ema26', color='purple')
@@ -429,7 +429,6 @@ class TradingGraphs():
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'rv', markersize=8)  
 
-        plt.style.use('seaborn')
         plt.xlabel(market + ' - ' + str(granularity))
         plt.ylabel('Price')
         plt.xticks(rotation=90)
@@ -465,7 +464,6 @@ class TradingGraphs():
         fig.autofmt_xdate()
         ax1 = plt.subplot(111)
         ax1.set_title('Candlestick Patterns')
-        plt.style.use('seaborn')
         plt.plot(df_subset['close'], label='price', color='black')
         plt.plot(df_subset['ema12'], label='ema12', color='orange')
         plt.plot(df_subset['ema26'], label='ema26', color='purple')
@@ -541,7 +539,6 @@ class TradingGraphs():
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'g*', markersize=10, label='Abandoned Baby')  
 
-        plt.style.use('seaborn')
         plt.xlabel(market + ' - ' + str(granularity))
         plt.ylabel('Price')
         plt.xticks(rotation=90)
@@ -594,7 +591,6 @@ class TradingGraphs():
         ax.axhspan(level2, level1, alpha=0.5, color='palegoldenrod', label='0.236')
         ax.axhspan(price_max, level3, alpha=0.5, color='powderblue', label='0')
 
-        plt.style.use('seaborn')
         plt.xlabel(market + ' - ' + str(granularity))
         plt.ylabel('Price')
         plt.xticks(rotation=90)
@@ -654,7 +650,6 @@ class TradingGraphs():
             else:
                 rotation = 1
 
-        plt.style.use('seaborn')
         plt.xlabel(market + ' - ' + str(granularity))
         plt.ylabel('Price')
         plt.xticks(rotation=90)
@@ -693,7 +688,6 @@ class TradingGraphs():
         df.close_pc.hist(bins=50)
         ax.set_title('Close Percent Change')
 
-        plt.style.use('seaborn')
         plt.xlabel(market + ' - ' + str(granularity))
         plt.xticks(rotation=90)
         plt.tight_layout()
@@ -717,7 +711,6 @@ class TradingGraphs():
         df = self.technical_analysis.getDataFrame()
 
         pd.plotting.scatter_matrix(df[['close','close_pc','close_cpc']], diagonal='kde', alpha=0.1, figsize=(12,12))       
-        plt.style.use('seaborn')
         plt.tight_layout()
         plt.show()
 
@@ -744,7 +737,6 @@ class TradingGraphs():
         ax.plot(df.close_cpc, label='Adj Close', color='black')
         ax.set_title('Cumulative Return')
 
-        plt.style.use('seaborn')
         plt.xlabel(market + ' - ' + str(granularity))
         plt.ylabel('Return')
         plt.xticks(rotation=90)
