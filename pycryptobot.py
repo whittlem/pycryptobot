@@ -323,20 +323,8 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         if df_last['sma50'].values[0] == df_last['sma200'].values[0]:
             bullbeartext = ''
         elif goldencross == True:
-            # telegram
-            if app.isTelegramEnabled():
-                if bullbeartext != ' (BULL)':
-                    telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
-                    telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') Bull Market Detected!')
-
             bullbeartext = ' (BULL)'
         elif goldencross == False:
-            # telegram
-            if app.isTelegramEnabled():
-                if bullbeartext != ' (BEAR)':
-                    telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
-                    telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') Bear Market Detected!')
-
             bullbeartext = ' (BEAR)'
 
         # polling is every 5 minutes (even for hourly intervals), but only process once per interval
@@ -352,20 +340,8 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             obv_text = 'OBV: ' + str(app.truncate(df_last['obv'].values[0], 4)) + ' (' + str(app.truncate(df_last['obv_pc'].values[0], 2)) + '%)'
 
             if elder_ray_buy == True:
-                # telegram
-                if app.isTelegramEnabled():
-                    if eri_text != 'ERI: buy':
-                        telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
-                        telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') Elder Ray Bull Market!')
-
                 eri_text = 'ERI: buy'
             elif elder_ray_sell == True:
-                # telegram
-                if app.isTelegramEnabled():
-                    if eri_text != 'ERI: sell':
-                        telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
-                        telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') Elder Ray Bear Market!')
-
                 eri_text = 'ERI: sell'
             else:
                 eri_text = 'ERI:'
