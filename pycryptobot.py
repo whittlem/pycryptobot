@@ -712,7 +712,6 @@ try:
     logging.basicConfig(filename='pycryptobot.log', format='%(asctime)s - %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filemode='a', level=logging.DEBUG)
 
     # initialise and start application
-    app.setGranularity(3600)
     trading_data = app.startApp(account, last_action)
 
     # run the first job immediately after starting
