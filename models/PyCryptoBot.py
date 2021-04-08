@@ -59,10 +59,29 @@ class PyCryptoBot():
         self.sell_lower_pcnt = None
         self.sell_at_loss = 1
         self.smart_switch = 1
+        self.telegram = False
+
+        self._telegram_token = None
+        self._telegram_client_id = None
 
         try:
             with open(filename) as config_file:
                 config = json.load(config_file)
+
+                if 'telegram' in config and 'token' in config['telegram'] and 'client_id' in config['telegram']:
+                    telegram = config['telegram']
+
+                    p1 = re.compile(r"^\d{1,10}:[A-z0-9-_]{35,35}$")
+                    p2 = re.compile(r"^\d{10,10}$")
+                    
+                    if not p1.match(telegram['token']):
+                        print ('Error: Telegram token is invalid')
+                    elif not p2.match(telegram['client_id']):
+                        print ('Error: Telegram client_id is invalid')
+                    else:
+                        self.telegram = True
+                        self._telegram_token = telegram['token']
+                        self._telegram_client_id = telegram['client_id']
 
                 if exchange not in config and 'binance' in config:
                     self.exchange = 'binance'
@@ -823,6 +842,12 @@ class PyCryptoBot():
         else:
             return None
 
+    def getTelegramToken(self):
+        return self._telegram_token
+
+    def getTelegramClientId(self):
+        return self._telegram_client_id
+
     def isLive(self):
         return self.is_live
 
@@ -834,6 +859,9 @@ class PyCryptoBot():
 
     def isSimulation(self):
         return self.is_sim
+
+    def isTelegramEnabled(self):
+        return self.telegram
 
     def simuluationSpeed(self):
         return self.sim_speed
