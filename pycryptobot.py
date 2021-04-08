@@ -567,7 +567,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     tradinggraphs = TradingGraphs(ta)
                     ts = datetime.now().timestamp()
                     filename = app.getMarket() + '_' + str(app.getGranularity()) + '_buy_' + str(ts) + '.png'
-                    tradinggraphs.renderEMAandMACD(24, 'graphs/' + filename, True)
+                    tradinggraphs.renderEMAandMACD(len(trading_data), 'graphs/' + filename, True)
 
             # if a sell signal
             elif action == 'SELL':
@@ -651,8 +651,8 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 if app.shouldSaveGraphs() == 1:
                     tradinggraphs = TradingGraphs(ta)
                     ts = datetime.now().timestamp()
-                    filename = app.getMarket() + '_' + str(app.getGranularity()) + '_buy_' + str(ts) + '.png'
-                    tradinggraphs.renderEMAandMACD(24, 'graphs/' + filename, True)
+                    filename = app.getMarket() + '_' + str(app.getGranularity()) + '_sell_' + str(ts) + '.png'
+                    tradinggraphs.renderEMAandMACD(len(trading_data), 'graphs/' + filename, True)
 
             # last significant action
             if action in [ 'BUY', 'SELL' ]:
