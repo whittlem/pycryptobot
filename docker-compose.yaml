@@ -2,7 +2,7 @@ version: "3"
 
 services:
   pycryptobot:
-    image: ghcr.io/whittlem/pycryptobot:latest
+    image: ghcr.io/whittlem/pycryptobot/pycryptobot:latest
     container_name: pycryptobot
     volumes:
       - ./config.json:/app/config.json
