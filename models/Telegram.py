@@ -8,11 +8,11 @@ class Telegram():
 
         p = re.compile(r"^\d{1,10}:[A-z0-9-_]{35,35}$")
         if not p.match(token):
-            raise Exception('Telegram token is invalid')        
-        
-        p = re.compile(r"^\d{10,10}$")
+            raise Exception('Telegram token is invalid')
+
+        p = re.compile(r"^\d{7,10}$")
         if not p.match(client_id):
-            raise Exception('Telegram client_id is invalid')                
+            raise Exception('Telegram client_id is invalid')
 
     def send(self, message=''):
         try:
