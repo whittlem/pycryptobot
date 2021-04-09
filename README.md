@@ -50,7 +50,7 @@ if running multiple bots and keeping track of their progress.
 
 ### Container
 
-    % docker pull ghcr.io/whittlem/pycryptobot:latest
+    % docker pull ghcr.io/whittlem/pycryptobot/pycryptobot:latest
 
 ## Additional Information
 
@@ -64,7 +64,7 @@ Manual:
 
 Container:
 
-    % docker run -d -v ./config.json:/app/config.json ghcr.io/whittlem/pycryptobot:latest <arguments>
+    % docker run -d -v ./config.json:/app/config.json ghcr.io/whittlem/pycryptobot/pycryptobot:latest <arguments>
 
     * Arguments
     --exchange <exchange> (coinbasepro or binance)
