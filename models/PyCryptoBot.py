@@ -72,8 +72,8 @@ class PyCryptoBot():
                     telegram = config['telegram']
 
                     p1 = re.compile(r"^\d{1,10}:[A-z0-9-_]{35,35}$")
-                    p2 = re.compile(r"^\d{10,10}$")
-                    
+                    p2 = re.compile(r"^\d{7,10}$")
+
                     if not p1.match(telegram['token']):
                         print ('Error: Telegram token is invalid')
                     elif not p2.match(telegram['client_id']):
@@ -94,7 +94,7 @@ class PyCryptoBot():
                         self.api_passphrase = config['api_pass']
                     elif 'api_passphrase' in config:
                         self.api_passphrase = config['api_passphrase']
-                   
+
                     self.api_url = config['api_url']
 
                     if 'config' in config:
@@ -123,7 +123,7 @@ class PyCryptoBot():
                             if not p.match(config['fiatMarket']):
                                 raise TypeError('Quote currency is invalid.')
                             self.quote_currency = config['fiatMarket']
-                        
+
                         if 'market' in config:
                             p = re.compile(r"^[A-Z]{3,5}\-[A-Z]{3,5}$")
                             if not p.match(config['market']):
@@ -134,7 +134,7 @@ class PyCryptoBot():
 
                         if self.base_currency != '' and self.quote_currency != '':
                             self.market = self.base_currency + '-' + self.quote_currency
-                        
+
                         if 'live' in config:
                             if isinstance(config['live'], int):
                                 if config['live'] in [ 0, 1 ]:
@@ -210,13 +210,13 @@ class PyCryptoBot():
 
                     elif 'config' in config['binance']:
                         config = config['binance']['config']
-                        
+
                         if 'base_currency' in config:
                             p = re.compile(r"^[A-Z]{3,5}$")
                             if not p.match(config['base_currency']):
                                 raise TypeError('Base currency is invalid.')
                             self.base_currency = config['base_currency']
-                        
+
                         if 'quote_currency' in config:
                             p = re.compile(r"^[A-Z]{3,5}$")
                             if not p.match(config['quote_currency']):
@@ -225,7 +225,7 @@ class PyCryptoBot():
 
                         if self.base_currency != '' and self.quote_currency != '':
                             self.market = self.base_currency + self.quote_currency
-                        
+
                         if 'live' in config:
                             if isinstance(config['live'], int):
                                 if config['live'] in [0, 1]:
@@ -297,22 +297,22 @@ class PyCryptoBot():
 
                         if 'coinbasepro' not in config:
                             raise Exception('config.json does not contain Coinbase Pro API keys.')
-                        
+
                         elif 'config' in config['coinbasepro']:
                             config = config['coinbasepro']['config']
-                            
+
                             if 'base_currency' in config:
                                 p = re.compile(r"^[A-Z]{3,5}$")
                                 if not p.match(config['base_currency']):
                                     raise TypeError('Base currency is invalid.')
                                 self.base_currency = config['base_currency']
-                            
+
                             if 'quote_currency' in config:
                                 p = re.compile(r"^[A-Z]{3,5}$")
                                 if not p.match(config['quote_currency']):
                                     raise TypeError('Quote currency is invalid.')
                                 self.quote_currency = config['quote_currency']
-                            
+
                             if 'market' in config:
                                 p = re.compile(r"^[A-Z]{3,5}\-[A-Z]{3,5}$")
                                 if not p.match(config['market']):
@@ -323,7 +323,7 @@ class PyCryptoBot():
 
                             if self.base_currency != '' and self.quote_currency != '':
                                 self.market = self.base_currency + '-' + self.quote_currency
-                            
+
                             if 'live' in config:
                                 if isinstance(config['live'], int):
                                     if config['live'] in [0, 1]:
@@ -355,7 +355,7 @@ class PyCryptoBot():
                                 if isinstance(config['selllowerpcnt'], int):
                                     if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
                                         self.sell_lower_pcnt = int(config['selllowerpcnt'])
-                                       
+
                             if 'sellatloss' in config:
                                 if isinstance(config['sellatloss'], int):
                                     if config['sellatloss'] in [ 0, 1 ]:
@@ -400,13 +400,13 @@ class PyCryptoBot():
 
                         if 'config' in config['binance']:
                             config = config['binance']['config']
-                            
+
                             if 'base_currency' in config:
                                 p = re.compile(r"^[A-Z]{3,5}$")
                                 if not p.match(config['base_currency']):
                                     raise TypeError('Base currency is invalid.')
                                 self.base_currency = config['base_currency']
-                            
+
                             if 'quote_currency' in config:
                                 p = re.compile(r"^[A-Z]{3,5}$")
                                 if not p.match(config['quote_currency']):
@@ -415,7 +415,7 @@ class PyCryptoBot():
 
                             if self.base_currency != '' and self.quote_currency != '':
                                 self.market = self.base_currency + self.quote_currency
-                            
+
                             if 'live' in config:
                                 if isinstance(config['live'], int):
                                     if config['live'] in [0, 1]:
@@ -476,7 +476,7 @@ class PyCryptoBot():
                                 if isinstance(config['granularity'], str):
                                     if config['granularity'] in ['1m', '5m', '15m', '1h', '6h', '1d']:
                                         self.granularity = config['granularity']
-                                        self.smart_switch = 0                                        
+                                        self.smart_switch = 0
 
                     else:
                         raise Exception('There is an error in your config.json')
@@ -672,7 +672,7 @@ class PyCryptoBot():
             p = re.compile(r"^[A-z0-9]{64,64}$")
             if not p.match(self.api_key):
                 raise TypeError('Binance API key is invalid')
-    
+
             # validates the api secret is syntactically correct
             p = re.compile(r"^[A-z0-9]{64,64}$")
             if not p.match(self.api_secret):
@@ -680,7 +680,7 @@ class PyCryptoBot():
 
         elif self.exchange == 'coinbasepro':
             if self.api_url[-1] != '/':
-                self.api_url = self.api_url + '/' 
+                self.api_url = self.api_url + '/'
 
             valid_urls = [
                 'https://api.pro.coinbase.com/'
@@ -694,7 +694,7 @@ class PyCryptoBot():
             p = re.compile(r"^[a-f0-9]{32,32}$")
             if not p.match(self.api_key):
                 raise TypeError('Coinbase Pro API key is invalid')
-    
+
             # validates the api secret is syntactically correct
             p = re.compile(r"^[A-z0-9+\/]+==$")
             if not p.match(self.api_secret):
@@ -704,7 +704,7 @@ class PyCryptoBot():
             p = re.compile(r"^[a-z0-9]{10,11}$")
             if not p.match(self.api_passphrase):
                 raise TypeError('Coinbase Pro API passphrase is invalid')
-        
+
     def getExchange(self):
         return self.exchange
 
@@ -741,7 +741,7 @@ class PyCryptoBot():
             return api.getHistoricalData(market, granularity, iso8601start, iso8601end)
         elif self.exchange == 'binance':
             api = BPublicAPI()
-            
+
             if iso8601start != '' and iso8601end != '':
                 return api.getHistoricalData(market, granularity, str(datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S.%f').strftime('%d %b, %Y')), str(datetime.strptime(iso8601end, '%Y-%m-%dT%H:%M:%S.%f').strftime('%d %b, %Y')))
             else:
@@ -761,7 +761,7 @@ class PyCryptoBot():
                 api = BPublicAPI()
                 df_data = api.getHistoricalData(self.market, '1h')
             else:
-                return False        
+                return False
 
             ta = TechnicalAnalysis(df_data)
             ta.addEMA(12)
@@ -781,7 +781,7 @@ class PyCryptoBot():
                 api = BPublicAPI()
                 df_data = api.getHistoricalData(self.market, '1h')
             else:
-                return False        
+                return False
 
             ta = TechnicalAnalysis(df_data)
             ta.addSMA(50)
@@ -790,7 +790,7 @@ class PyCryptoBot():
             df_last['bull'] = df_last['sma50'] > df_last['sma200']
             return bool(df_last['bull'])
         except Exception:
-            return False  
+            return False
 
     def is6hEMA1226Bull(self):
         try:
@@ -801,7 +801,7 @@ class PyCryptoBot():
                 api = BPublicAPI()
                 df_data = api.getHistoricalData(self.market, '6h')
             else:
-                return False        
+                return False
 
             ta = TechnicalAnalysis(df_data)
             ta.addEMA(12)
@@ -821,7 +821,7 @@ class PyCryptoBot():
                 api = BPublicAPI()
                 df_data = api.getHistoricalData(self.market, '6h')
             else:
-                return False        
+                return False
 
             ta = TechnicalAnalysis(df_data)
             ta.addSMA(50)
@@ -830,7 +830,7 @@ class PyCryptoBot():
             df_last['bull'] = df_last['sma50'] > df_last['sma200']
             return bool(df_last['bull'])
         except Exception:
-            return False  
+            return False
 
     def getTicker(self, market):
         if self.exchange == 'coinbasepro':
@@ -865,7 +865,7 @@ class PyCryptoBot():
 
     def simuluationSpeed(self):
         return self.sim_speed
-    
+
     def sellUpperPcnt(self):
         return self.sell_upper_pcnt
 
@@ -1036,7 +1036,7 @@ class PyCryptoBot():
         print('|                             Python Crypto Bot                                |')
         print('--------------------------------------------------------------------------------')
 
-        if self.isVerbose() == 1:   
+        if self.isVerbose() == 1:
             txt = '           Market : ' + self.getMarket()
             print('|', txt, (' ' * (75 - len(txt))), '|')
             if self.exchange == 'coinbasepro':
@@ -1056,30 +1056,30 @@ class PyCryptoBot():
         txt = '      Bot Started : ' + str(datetime.now())
         print('|', txt, (' ' * (75 - len(txt))), '|')
         print('================================================================================')
-        
+
         if self.sellUpperPcnt() != None:
             txt = '       Sell Upper : ' + str(self.sellUpperPcnt()) + '%'
             print('|', txt, (' ' * (75 - len(txt))), '|')
-        
+
         if self.sellLowerPcnt() != None:
             txt = '       Sell Lower : ' + str(self.sellLowerPcnt()) + '%'
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
         if self.allowSellAtLoss() == False:
             txt = '     Sell At Loss : ' + str(self.allowSellAtLoss())
-            print('|', txt, (' ' * (75 - len(txt))), '|')           
+            print('|', txt, (' ' * (75 - len(txt))), '|')
 
         if self.sellUpperPcnt() != None or self.sellLowerPcnt() != None or self.allowSellAtLoss() == False:
             print('================================================================================')
 
-        # if live       
+        # if live
         if self.isLive() == 1:
             if self.getExchange() == 'binance':
                 if last_action == 'SELL'and account.getBalance(self.getQuoteCurrency()) < 0.001:
                     raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(self.getQuoteCurrency())) + ' < 0.1 ' + self.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
                 elif last_action == 'BUY'and account.getBalance(self.getBaseCurrency()) < 0.001:
                     raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(self.getBaseCurrency())) + ' < 0.1 ' + self.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
-        
+
             elif self.getExchange() == 'coinbasepro':
                 if last_action == 'SELL'and account.getBalance(self.getQuoteCurrency()) < 50:
                     raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(self.getQuoteCurrency())) + ' < 50 ' + self.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
@@ -1112,4 +1112,4 @@ class PyCryptoBot():
             else:
                 tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity())
 
-            return tradingData 
+            return tradingData
