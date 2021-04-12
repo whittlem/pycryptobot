@@ -888,17 +888,8 @@ class PyCryptoBot():
         if not isinstance(n, int) and not isinstance(n, float):
             return 0.0
 
-        if (f < 0.001):
-            if n == 4:
-                return '{:.4f}'.format(f)
-            elif n == 5:
-                return '{:.4f}'.format(f)
-            elif n == 6:
-                return '{:.4f}'.format(f)
-            elif n == 7:
-                return '{:.4f}'.format(f)
-            elif n >= 8:
-                return '{:.4f}'.format(f)
+        if (f < 0.001) and n >= 4:
+            return '{:.4f}'.format(f)
 
         return math.floor(f * 10 ** n) / 10 ** n
 
