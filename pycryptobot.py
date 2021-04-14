@@ -794,8 +794,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     print ('  ** non-live simulation, assuming highest fees', "\n")
 
         else:
-            now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
-            print (now, '|', app.getMarket() + bullbeartext, '|', str(app.getGranularity()), '| Current Price:', price)
+            print (str(app.getTime()), '|', app.getMarket() + bullbeartext, '|', str(app.getGranularity()), '| Current Price:', price)
 
             # decrement ignored iteration
             iterations = iterations - 1
