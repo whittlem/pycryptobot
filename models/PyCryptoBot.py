@@ -922,6 +922,9 @@ class PyCryptoBot():
 
     def marketSell(self, market, base_currency):
         if self.exchange == 'coinbasepro':
+            if market.startswith('XLM-'):
+                base_currency = int(base_currency)
+
             api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
             return api.marketSell(market, base_currency)
         elif self.exchange == 'binance':
