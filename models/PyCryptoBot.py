@@ -842,6 +842,14 @@ class PyCryptoBot():
         else:
             return None
 
+    def getTime(self):
+        if self.exchange == 'coinbasepro':
+            return CBPublicAPI().getTime()
+        elif self.exchange == 'binance':
+            return BPublicAPI().getTime()
+        else:
+            return ''
+
     def getTelegramToken(self):
         return self._telegram_token
 

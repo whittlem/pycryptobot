@@ -146,6 +146,13 @@ class AuthAPI():
 
         return 0.0
 
+    def getTime(self):
+        """Retrieves the exchange time"""
+    
+        resp = self.client.get_server_time()
+        epoch = int(str(resp['serverTime'])[0:10])
+        return datetime.fromtimestamp(epoch)
+
 class PublicAPI():
     def __init__(self):
         self.client = Client()
@@ -285,3 +292,10 @@ class PublicAPI():
             return float('{:.8f}'.format(float(resp['price'])))
 
         return 0.0
+
+    def getTime(self):
+        """Retrieves the exchange time"""
+    
+        resp = self.client.get_server_time()
+        epoch = int(str(resp['serverTime'])[0:10])
+        return datetime.fromtimestamp(epoch)

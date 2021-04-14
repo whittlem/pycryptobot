@@ -196,6 +196,13 @@ class AuthAPI():
         df[['size', 'value']] = df[['size', 'value']].apply(pd.to_numeric)
         return df
 
+    def getTime(self):
+        """Retrieves the exchange time"""
+    
+        resp = self.authAPI('GET', 'time')
+        epoch = int(resp['epoch'])
+        return datetime.fromtimestamp(epoch)
+
     def marketBuy(self, market='', quote_quantity=0):
         """Executes a market buy providing a funding amount"""
 
@@ -459,6 +466,13 @@ class PublicAPI():
             return float(resp['price'])
 
         return 0.0
+
+    def getTime(self):
+        """Retrieves the exchange time"""
+    
+        resp = self.authAPI('GET', 'time')
+        epoch = int(resp['epoch'])
+        return datetime.fromtimestamp(epoch)
 
     def authAPI(self, method, uri, payload=''):
         if not isinstance(method, str):
