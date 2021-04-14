@@ -103,7 +103,7 @@ class TradingAccount():
                 df['action'] = df['action'].str.lower()
                 df['type'] = df['type'].str.lower()
                 df['status'] = df['status'].str.lower()
-                df['price'] = df['size'] * df['value']
+                df['price'] = df['value'] / df['size']
 
                 # pylint: disable=unused-variable
                 for k, v in df.items():
