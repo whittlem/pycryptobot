@@ -804,7 +804,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             # update order tracker csv
             if app.getExchange() == 'binance':
                 account.saveTrackerCSV(app.getMarket())
-            elif app.getExchange() == 'binance':
+            elif app.getExchange() == 'coinbasepro':
                 account.saveTrackerCSV()
 
         if app.isSimulation() == 1:
