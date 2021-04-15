@@ -159,16 +159,31 @@ class AuthAPI():
         # GET /orders?status
         resp = self.authAPI('GET', 'orders?status=' + status)
         if len(resp) > 0:
-            df = resp.copy()[[ 'created_at', 'product_id', 'side', 'type', 'filled_size', 'executed_value', 'status' ]]
+            if status == 'open':
+                df = resp.copy()[[ 'created_at', 'product_id', 'side', 'type', 'size', 'price', 'status' ]]
+                df['value'] = float(df['price']) * float(df['size'])
+            else:
+                df = resp.copy()[[ 'created_at', 'product_id', 'side', 'type', 'filled_size', 'executed_value', 'fill_fees', 'status' ]]
         else:
             return pd.DataFrame()
 
         # calculates the price at the time of purchase
-        df['price'] = df.apply(lambda row: (float(row.executed_value) * 100) / (float(row.filled_size) * 100), axis=1)
+        if status != 'open':
+            df['price'] = df.apply(lambda row: (float(row.executed_value) * 100) / (float(row.filled_size) * 100) if float(row.filled_size) > 0 else 0, axis=1)
 
         # rename the columns
-        df.columns = [ 'created_at', 'market', 'action', 'type', 'size', 'value', 'status', 'price' ]
-        
+        if status == 'open':
+            df.columns = [ 'created_at', 'market', 'action', 'type', 'size', 'price', 'status', 'value' ]
+            df = df[[ 'created_at', 'market', 'action', 'type', 'size', 'value', 'status', 'price' ]]
+        else:
+            df.columns = [ 'created_at', 'market', 'action', 'type', 'size', 'value', 'fees', 'status', 'price' ]
+            df = df[[ 'created_at', 'market', 'action', 'type', 'size', 'value', 'fees', 'price', 'status' ]]
+            df['fees'] = df['fees'].astype(float).round(2)
+
+        df['size'] = df['size'].astype(float)
+        df['value'] = df['value'].astype(float)
+        df['price'] = df['price'].astype(float)
+
         # convert dataframe to a time series
         tsidx = pd.DatetimeIndex(pd.to_datetime(df['created_at']).dt.strftime('%Y-%m-%dT%H:%M:%S.%Z'))
         df.set_index(tsidx, inplace=True)
