@@ -53,14 +53,19 @@ class TechnicalAnalysis():
         self.addEMA(26)
         self.addGoldenCross()
         self.addDeathCross()
+        self.addFibonacciBollingerBands()
 
         self.addRSI(14)
         self.addMACD()
         self.addOBV()
+        self.addElderRayIndex()
 
         self.addEMABuySignals()
+        self.addSMABuySignals()
         self.addMACDBuySignals()       
 
+        self.addCandleAstralBuy()
+        self.addCandleAstralSell()
         self.addCandleHammer()
         self.addCandleInvertedHammer()
         self.addCandleShootingStar()
@@ -253,17 +258,50 @@ class TechnicalAnalysis():
     def addCandleEveningDojiStar(self):
         self.df['evening_doji_star'] = self.candleEveningDojiStar()
 
+    def candleAstralBuy(self):
+        """*** Candlestick Detected: Astral Buy (Fibonacci 3, 5, 8)"""
+
+        return (self.df['close'] < self.df['close'].shift(3)) & (self.df['low'] < self.df['low'].shift(5)) \
+            & (self.df['close'].shift(1) < self.df['close'].shift(4)) & (self.df['low'].shift(1) < self.df['low'].shift(6)) \
+            & (self.df['close'].shift(2) < self.df['close'].shift(5)) & (self.df['low'].shift(2) < self.df['low'].shift(7)) \
+            & (self.df['close'].shift(3) < self.df['close'].shift(6)) & (self.df['low'].shift(3) < self.df['low'].shift(8)) \
+            & (self.df['close'].shift(4) < self.df['close'].shift(7)) & (self.df['low'].shift(4) < self.df['low'].shift(9)) \
+            & (self.df['close'].shift(5) < self.df['close'].shift(8)) & (self.df['low'].shift(5) < self.df['low'].shift(10)) \
+            & (self.df['close'].shift(6) < self.df['close'].shift(9)) & (self.df['low'].shift(6) < self.df['low'].shift(11)) \
+            & (self.df['close'].shift(7) < self.df['close'].shift(10)) & (self.df['low'].shift(7) < self.df['low'].shift(12))
+  
+    def addCandleAstralBuy(self):
+        self.df['astral_buy'] = self.candleAstralBuy()
+
+    def candleAstralSell(self):
+        """*** Candlestick Detected: Astral Sell (Fibonacci 3, 5, 8)"""
+
+        return (self.df['close'] > self.df['close'].shift(3)) & (self.df['high'] > self.df['high'].shift(5)) \
+            & (self.df['close'].shift(1) > self.df['close'].shift(4)) & (self.df['high'].shift(1) > self.df['high'].shift(6)) \
+            & (self.df['close'].shift(2) > self.df['close'].shift(5)) & (self.df['high'].shift(2) > self.df['high'].shift(7)) \
+            & (self.df['close'].shift(3) > self.df['close'].shift(6)) & (self.df['high'].shift(3) > self.df['high'].shift(8)) \
+            & (self.df['close'].shift(4) > self.df['close'].shift(7)) & (self.df['high'].shift(4) > self.df['high'].shift(9)) \
+            & (self.df['close'].shift(5) > self.df['close'].shift(8)) & (self.df['high'].shift(5) > self.df['high'].shift(10)) \
+            & (self.df['close'].shift(6) > self.df['close'].shift(9)) & (self.df['high'].shift(6) > self.df['high'].shift(11)) \
+            & (self.df['close'].shift(7) > self.df['close'].shift(10)) & (self.df['high'].shift(7) > self.df['high'].shift(12))
+  
+    def addCandleAstralSell(self):
+        self.df['astral_sell'] = self.candleAstralSell()
+
     def changePct(self):
         """Close change percentage"""
 
-        close_pc = self.df['close'].pct_change() * 100
-        close_pc = np.round(close_pc.fillna(0), 2)
+        close_pc = self.df['close'] / self.df['close'].shift(1) - 1
+        close_pc = close_pc.fillna(0)
         return close_pc
     
     def addChangePct(self):
         """Adds the close percentage to the DataFrame"""
 
         self.df['close_pc'] = self.changePct()
+
+        # cumulative returns
+        self.df['close_cpc'] = (1 + self.df['close_pc']).cumprod()
 
     def cumulativeMovingAverage(self):
         """Calculates the Cumulative Moving Average (CMA)"""
@@ -329,6 +367,36 @@ class TechnicalAnalysis():
         rsi = 100 - 100 / (1 + rs)
 
         return rsi
+
+    def addFibonacciBollingerBands(self, interval=20, multiplier=3):
+        """Adds Fibonacci Bollinger Bands."""
+
+        if not isinstance(interval, int):
+            raise TypeError('Interval integer required.')
+
+        if not isinstance(multiplier, int):
+            raise TypeError('Multiplier integer required.')
+
+        tp = (self.df['high'] + self.df['low'] + self.df['close']) / 3
+        sma = tp.rolling(interval).mean()
+        sd = multiplier * tp.rolling(interval).std()
+
+        sma = sma.fillna(0)
+        sd = sd.fillna(0)
+
+        self.df['fbb_mid'] = sma
+        self.df['fbb_upper0_236'] = sma + (0.236 * sd)
+        self.df['fbb_upper0_382'] = sma + (0.382 * sd)
+        self.df['fbb_upper0_5'] = sma + (0.5 * sd)
+        self.df['fbb_upper0_618'] = sma + (0.618 * sd)
+        self.df['fbb_upper0_764'] = sma + (0.764 * sd)
+        self.df['fbb_upper1'] = sma + (1 * sd)
+        self.df['fbb_lower0_236'] = sma - (0.236 * sd)
+        self.df['fbb_lower0_382'] = sma - (0.382 * sd)
+        self.df['fbb_lower0_5'] = sma - (0.5 * sd)
+        self.df['fbb_lower0_618'] = sma - (0.618 * sd)
+        self.df['fbb_lower0_764'] = sma - (0.764 * sd)
+        self.df['fbb_lower1'] = sma - (1 * sd)
 
     def movingAverageConvergenceDivergence(self):
         """Calculates the Moving Average Convergence Divergence (MACD)"""
@@ -456,7 +524,24 @@ class TechnicalAnalysis():
 
         self.df['deathcross'] = self.df['sma50'] < self.df['sma200']
 
-    def supportResistanceLevels(self):
+    def addElderRayIndex(self):
+        """Add Elder Ray Index"""
+
+        if 'ema13' not in self.df:
+            self.addEMA(13)
+
+        self.df['elder_ray_bull'] = self.df['high'] - self.df['ema13']
+        self.df['elder_ray_bear'] = self.df['low'] - self.df['ema13']
+
+        # bear power’s value is negative but increasing (i.e. becoming less bearish)
+        # bull power’s value is increasing (i.e. becoming more bullish)
+        self.df['eri_buy'] = ((self.df['elder_ray_bear'] < 0) & (self.df['elder_ray_bear'] > self.df['elder_ray_bear'].shift(1))) | ((self.df['elder_ray_bull'] > self.df['elder_ray_bull'].shift(1))) 
+                
+        # bull power’s value is positive but decreasing (i.e. becoming less bullish)
+        # bear power’s value is decreasing (i.e., becoming more bearish)
+        self.df['eri_sell'] = ((self.df['elder_ray_bull'] > 0) & (self.df['elder_ray_bull'] < self.df['elder_ray_bull'].shift(1))) | ((self.df['elder_ray_bull'] < self.df['elder_ray_bull'].shift(1)))
+
+    def getSupportResistanceLevels(self):
         """Calculate the Support and Resistance Levels"""
 
         self.levels = [] 
@@ -466,6 +551,19 @@ class TechnicalAnalysis():
             levels_ts[self.df.index[level[0]]] = level[1]
         # add the support levels to the DataFrame
         return pd.Series(levels_ts)
+
+    def printSupportResistanceLevel(self, price=0):
+        if isinstance(price, int) or isinstance(price, float):
+            df = self.getSupportResistanceLevels()
+
+            if len(df) > 0:
+                df_last = df.tail(1)
+                if float(df_last[0]) < price:
+                    print (' Support level of ' + str(df_last[0]) + ' formed at ' + str(df_last.index[0]), "\n")
+                elif float(df_last[0]) > price:
+                    print (' Resistance level of ' + str(df_last[0]) + ' formed at ' + str(df_last.index[0]), "\n")
+                else:
+                    print (' Support/Resistance level of ' + str(df_last[0]) + ' formed at ' + str(df_last.index[0]), "\n")       
 
     def addEMABuySignals(self):
         """Adds the EMA12/EMA26 buy and sell signals to the DataFrame"""
@@ -495,6 +593,35 @@ class TechnicalAnalysis():
         # true if the current frame is where EMA12 crosses over below
         self.df['ema12ltema26co'] = self.df.ema12ltema26.ne(self.df.ema12ltema26.shift())
         self.df.loc[self.df['ema12ltema26'] == False, 'ema12ltema26co'] = False
+
+    def addSMABuySignals(self):
+        """Adds the SMA50/SMA200 buy and sell signals to the DataFrame"""
+
+        if not isinstance(self.df, pd.DataFrame):
+            raise TypeError('Pandas DataFrame required.')
+
+        if not 'close' in self.df.columns:
+            raise AttributeError("Pandas DataFrame 'close' column required.")
+
+        if not self.df['close'].dtype == 'float64' and not self.df['close'].dtype == 'int64':
+            raise AttributeError(
+                "Pandas DataFrame 'close' column not int64 or float64.")
+
+        if not 'sma50' or not 'sma200' in self.df.columns:
+            self.addSMA(50)
+            self.addSMA(200)
+
+        # true if SMA50 is above the SMA200
+        self.df['sma50gtsma200'] = self.df.sma50 > self.df.sma200
+        # true if the current frame is where SMA50 crosses over above
+        self.df['sma50gtsma200co'] = self.df.sma50gtsma200.ne(self.df.sma50gtsma200.shift())
+        self.df.loc[self.df['sma50gtsma200'] == False, 'sma50gtsma200co'] = False
+
+        # true if the SMA50 is below the SMA200
+        self.df['sma50ltsma200'] = self.df.sma50 < self.df.sma200
+        # true if the current frame is where SMA50 crosses over below
+        self.df['sma50ltsma200co'] = self.df.sma50ltsma200.ne(self.df.sma50ltsma200.shift())
+        self.df.loc[self.df['sma50ltsma200'] == False, 'sma50ltsma200co'] = False
 
     def addMACDBuySignals(self):
         """Adds the MACD/Signal buy and sell signals to the DataFrame"""
@@ -541,11 +668,17 @@ class TechnicalAnalysis():
         elif price == 0:
             data['ratio1'] = float(self.__truncate(price_min, 2))
 
-        if price != 0 and (price > price_min) and (price <= (price_max - 0.618 * diff)):
+        if price != 0 and (price > price_min) and (price <= (price_max - 0.768 * diff)):
             data['ratio1'] = float(self.__truncate(price_min, 2))
+            data['ratio0_768'] = float(self.__truncate(price_max - 0.768 * diff, 2))
+        elif price == 0:
+            data['ratio0_768'] = float(self.__truncate(price_max - 0.768 * diff, 2))      
+
+        if price != 0 and (price > (price_max - 0.768 * diff)) and (price <= (price_max - 0.618 * diff)):
+            data['ratio0_768'] = float(self.__truncate(price_max - 0.768 * diff, 2))
             data['ratio0_618'] = float(self.__truncate(price_max - 0.618 * diff, 2))
         elif price == 0:
-            data['ratio0_618'] = float(self.__truncate(price_max - 0.618 * diff, 2))
+            data['ratio0_618'] = float(self.__truncate(price_max - 0.618 * diff, 2))          
 
         if price != 0 and (price > (price_max - 0.618 * diff)) and (price <= (price_max - 0.5 * diff)):
             data['ratio0_618'] = float(self.__truncate(price_max - 0.618 * diff, 2))
@@ -571,13 +704,19 @@ class TechnicalAnalysis():
         elif price == 0:
             data['ratio0'] = float(self.__truncate(price_max, 2))
 
-        if price != 0 and (price > price_max) and (price <= (price_max + 0.618 * diff)):
+        if price != 0 and (price < (price_max + 0.272 * diff)) and (price >= price_max):
             data['ratio0'] = float(self.__truncate(price_max, 2))
-            data['ratio1_618'] = float(self.__truncate(price_max + 0.618 * diff, 2))
+            data['ratio1_272'] = float(self.__truncate(price_max + 0.272 * diff, 2))
         elif price == 0:
-            data['ratio0'] = float(self.__truncate(price_max, 2))
+            data['ratio1_272'] = float(self.__truncate(price_max + 0.272 * diff, 2))
 
-        if price != 0 and (price > (price_max + 0.618 * diff)):
+        if price != 0 and (price < (price_max + 0.414 * diff)) and (price >= (price_max + 0.272 * diff)):
+            data['ratio1_272'] = float(self.__truncate(price_max, 2))
+            data['ratio1_414'] = float(self.__truncate(price_max + 0.414 * diff, 2))
+        elif price == 0:
+            data['ratio1_414'] = float(self.__truncate(price_max + 0.414 * diff, 2))
+
+        if price != 0 and (price < (price_max + 0.618 * diff)) and (price >= (price_max + 0.414 * diff)):
             data['ratio1_618'] = float(self.__truncate(price_max + 0.618 * diff, 2))
         elif price == 0:
             data['ratio1_618'] = float(self.__truncate(price_max + 0.618 * diff, 2))
