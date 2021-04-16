@@ -79,6 +79,8 @@ Container:
         * Save graphs on buy and sell events
     --sim <fast, fast-sample, slow, slow-sample>
         * Run a simulation on last 300 intervals of data OR on a random 300 intervals (sample)
+    --simstartdate <YYYY-MM-DD>
+        * Start date for sample simulation e.g '2021-01-15'
     --verbose <1 or 0> (default: 1)
         * Toggle verbose or minimal output
     --sellupperpcnt <1-100>

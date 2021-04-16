@@ -25,6 +25,7 @@ parser.add_argument('--sellatloss', type=int, help='toggle if bot should sell at
 parser.add_argument('--sellupperpcnt', type=int, help='optionally set sell upper percent limit')
 parser.add_argument('--selllowerpcnt', type=int, help='optionally set sell lower percent limit')
 parser.add_argument('--sim', type=str, help='simulation modes: fast, fast-sample, slow-sample')
+parser.add_argument('--simstartdate', type=str, help="start date for sample simulation e.g '2021-01-15'")
 parser.add_argument('--smartswitch', type=int, help='optionally smart switch between 1 hour and 15 minute intervals')
 parser.add_argument('--verbose', type=int, help='verbose output=1, minimal output=0')
 
@@ -54,6 +55,7 @@ class PyCryptoBot():
         self.is_verbose = 0
         self.save_graphs = 0
         self.is_sim = 0
+        self.simstartdate = None
         self.sim_speed = 'fast'
         self.sell_upper_pcnt = None
         self.sell_lower_pcnt = None
@@ -147,10 +149,17 @@ class PyCryptoBot():
 
                         if 'sim' in config:
                             if isinstance(config['sim'], str):
-                                if config['sim'] in [ 'slow', 'fast', 'slow-sample', 'fast-sample' ]:
+                                if config['sim'] in [ 'slow', 'fast']:
                                     self.is_live = 0
                                     self.is_sim = 1
                                     self.sim_speed = config['sim']
+
+                                if config['sim'] in ['slow-sample', 'fast-sample' ]:
+                                    self.is_live = 0
+                                    self.is_sim = 1
+                                    self.sim_speed = config['sim']
+                                    if 'simstartdate' in config:
+                                        self.simstartdate = config['simstartdate']
 
                         if 'sellupperpcnt' in config:
                             if isinstance(config['sellupperpcnt'], int):
@@ -236,10 +245,17 @@ class PyCryptoBot():
 
                         if 'sim' in config:
                             if isinstance(config['sim'], str):
-                                if config['sim'] in [ 'slow', 'fast', 'slow-sample', 'fast-sample' ]:
+                                if config['sim'] in [ 'slow', 'fast']:
                                     self.is_live = 0
                                     self.is_sim = 1
                                     self.sim_speed = config['sim']
+
+                                if config['sim'] in ['slow-sample', 'fast-sample' ]:
+                                    self.is_live = 0
+                                    self.is_sim = 1
+                                    self.sim_speed = config['sim']
+                                    if 'simstartdate' in config:
+                                        self.simstartdate = config['simstartdate']
 
                         if 'sellupperpcnt' in config:
                             if isinstance(config['sellupperpcnt'], int):
@@ -331,10 +347,17 @@ class PyCryptoBot():
 
                             if 'sim' in config:
                                 if isinstance(config['sim'], str):
-                                    if config['sim'] in ['slow', 'fast', 'slow-sample', 'fast-sample']:
+                                    if config['sim'] in [ 'slow', 'fast']:
                                         self.is_live = 0
                                         self.is_sim = 1
                                         self.sim_speed = config['sim']
+
+                                if config['sim'] in ['slow-sample', 'fast-sample' ]:
+                                    self.is_live = 0
+                                    self.is_sim = 1
+                                    self.sim_speed = config['sim']
+                                    if 'simstartdate' in config:
+                                        self.simstartdate = config['simstartdate']
 
                             if 'sellupperpcnt' in config:
                                 if isinstance(config['sellupperpcnt'], int):
@@ -421,10 +444,17 @@ class PyCryptoBot():
 
                             if 'sim' in config:
                                 if isinstance(config['sim'], str):
-                                    if config['sim'] in ['slow', 'fast', 'slow-sample', 'fast-sample']:
+                                    if config['sim'] in [ 'slow', 'fast']:
                                         self.is_live = 0
                                         self.is_sim = 1
                                         self.sim_speed = config['sim']
+
+                                    if config['sim'] in ['slow-sample', 'fast-sample' ]:
+                                        self.is_live = 0
+                                        self.is_sim = 1
+                                        self.sim_speed = config['sim']
+                                        if 'simstartdate' in config:
+                                            self.simstartdate = config['simstartdate']
 
                             if 'sellupperpcnt' in config:
                                 if isinstance(config['sellupperpcnt'], int):
@@ -616,6 +646,8 @@ class PyCryptoBot():
                 self.is_sim = 1
                 self.sim_speed = 'slow-sample'
                 self.is_live = 0
+                if args.simstartdate != None:
+                    self.simstartdate = args.simstartdate
             elif args.sim == 'fast':
                 self.is_sim = 1
                 self.sim_speed = 'fast'
@@ -624,6 +656,13 @@ class PyCryptoBot():
                 self.is_sim = 1
                 self.sim_speed = 'fast-sample'
                 self.is_live = 0
+                if args.simstartdate != None:
+                    self.simstartdate = args.simstartdate
+        
+        if self.simstartdate != None:
+            p = re.compile(r"^\d{4,4}-\d{2,2}-\d{2,2}$")
+            if not p.match(self.simstartdate):
+                self.simstartdate = None
 
         if args.sellupperpcnt != None:
             if isinstance(args.sellupperpcnt, int):
@@ -1097,14 +1136,24 @@ class PyCryptoBot():
                 tradingData = pd.DataFrame()
 
                 attempts = 0
-                while len(tradingData) != 300 and attempts < 10:
-                    endDate = datetime.now() - timedelta(hours=random.randint(0,8760 * 3)) # 3 years in hours
-                    startDate = endDate - timedelta(hours=300)
-                    tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(), startDate.isoformat(), endDate.isoformat())
-                    attempts += 1
 
-                if len(tradingData) != 300:
-                    raise Exception('Unable to retrieve 300 random sets of data between ' + str(startDate) + ' and ' + str(endDate) + ' in ' + str(attempts) + ' attempts.')
+                if self.simstartdate != None:
+                    date = self.simstartdate.split('-')
+                    startDate = datetime(int(date[0]),int(date[1]),int(date[2]))
+                    endDate = startDate + timedelta(hours=300)
+
+                    while len(tradingData) != 300 and attempts < 10:
+                        tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(), startDate.isoformat(), endDate.isoformat())
+                        attempts += 1
+                else:
+                    while len(tradingData) != 300 and attempts < 10:
+                        endDate = datetime.now() - timedelta(hours=random.randint(0,8760 * 3)) # 3 years in hours
+                        startDate = endDate - timedelta(hours=300)
+                        tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(), startDate.isoformat(), endDate.isoformat())
+                        attempts += 1
+        
+                    if len(tradingData) != 300:
+                        raise Exception('Unable to retrieve 300 random sets of data between ' + str(startDate) + ' and ' + str(endDate) + ' in ' + str(attempts) + ' attempts.')
 
                 startDate = str(startDate.isoformat())
                 endDate = str(endDate.isoformat())
@@ -1112,7 +1161,13 @@ class PyCryptoBot():
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 txt = '     Sampling end : ' + str(endDate)
                 print('|', txt, (' ' * (75 - len(txt))), '|')
+                if self.simstartdate != None:
+                    txt = '    WARNING: Using less than 300 intervals'
+                    print('|', txt, (' ' * (75 - len(txt))), '|')
+                    txt = '    Interval size : ' + str(len(tradingData))
+                    print('|', txt, (' ' * (75 - len(txt))), '|')
                 print('================================================================================')
+
 
             else:
                 tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity())
