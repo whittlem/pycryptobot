@@ -50,6 +50,23 @@ class TradingAccount():
         else:
             return val
 
+    def _checkMarketSyntax(self, market):
+        """Check that the market is syntactically correct
+
+        Parameters
+        ----------
+        market : str
+            market to check
+        """
+        if self.app.getExchange() == 'coinbasepro' and market != '':
+            p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
+            if not p.match(market):
+                raise TypeError('Coinbase Pro market is invalid.')
+        elif self.app.getExchange() == 'binance':
+            p = re.compile(r"^[A-Z]{6,12}$")
+            if not p.match(market):
+                raise TypeError('Binance market is invalid.')
+
     def getOrders(self, market='', action='', status='all'):
         """Retrieves orders either live or simulation
 
@@ -63,16 +80,8 @@ class TradingAccount():
             Filters orders by status, defaults to 'all'
         """
 
-        if self.app.getExchange() == 'coinbasepro' and market != '':
-            # validate market is syntactically correct
-            p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-            if not p.match(market):
-                raise TypeError('Coinbase Pro market is invalid.')
-        elif self.app.getExchange() == 'binance':
-             # validate market is syntactically correct
-            p = re.compile(r"^[A-Z]{6,12}$")
-            if not p.match(market):
-                raise TypeError('Binance market is invalid.')
+        # validate market is syntactically correct
+        self._checkMarketSyntax(market)
 
         if action != '':
             # validate action is either a buy or sell
@@ -275,16 +284,8 @@ class TradingAccount():
             Output CSV file
         """
 
-        if self.app.getExchange() == 'coinbasepro' and market != '':
-            # validate market is syntactically correct
-            p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-            if not p.match(market):
-                raise TypeError('Coinbase Pro market is invalid.')
-        elif self.app.getExchange() == 'binance':
-             # validate market is syntactically correct
-            p = re.compile(r"^[A-Z]{6,12}$")
-            if not p.match(market):
-                raise TypeError('Binance market is invalid.')
+        # validate market is syntactically correct
+        self._checkMarketSyntax(market)
 
         if self.mode == 'live':
             if self.app.getExchange() == 'coinbasepro':

@@ -101,32 +101,27 @@ class PyCryptoBot():
                         config = config['config']
 
                         if 'base_currency' in config:
-                            p = re.compile(r"^[A-Z]{3,5}$")
-                            if not p.match(config['base_currency']):
+                            if not self._isCurrencyValid(config['base_currency']):
                                 raise TypeError('Base currency is invalid.')
                             self.base_currency = config['base_currency']
 
                         if 'cryptoMarket' in config:
-                            p = re.compile(r"^[A-Z]{3,5}$")
-                            if not p.match(config['cryptoMarket']):
+                            if not self._isCurrencyValid(config['cryptoMarket']):
                                 raise TypeError('Base currency is invalid.')
                             self.base_currency = config['cryptoMarket']
 
                         if 'quote_currency' in config:
-                            p = re.compile(r"^[A-Z]{3,5}$")
-                            if not p.match(config['quote_currency']):
+                            if not self._isCurrencyValid(config['quote_currency']):
                                 raise TypeError('Quote currency is invalid.')
                             self.quote_currency = config['quote_currency']
 
                         if 'fiatMarket' in config:
-                            p = re.compile(r"^[A-Z]{3,5}$")
-                            if not p.match(config['fiatMarket']):
+                            if not self._isCurrencyValid(config['fiatMarket']):
                                 raise TypeError('Quote currency is invalid.')
                             self.quote_currency = config['fiatMarket']
 
                         if 'market' in config:
-                            p = re.compile(r"^[A-Z]{3,5}\-[A-Z]{3,5}$")
-                            if not p.match(config['market']):
+                            if not self._isMarketValid(config['market']):
                                 raise TypeError('Market is invalid.')
 
                             self.base_currency, self.quote_currency = config['market'].split('-',  2)
@@ -212,14 +207,12 @@ class PyCryptoBot():
                         config = config['binance']['config']
 
                         if 'base_currency' in config:
-                            p = re.compile(r"^[A-Z]{3,5}$")
-                            if not p.match(config['base_currency']):
+                            if not self._isCurrencyValid(config['base_currency']):
                                 raise TypeError('Base currency is invalid.')
                             self.base_currency = config['base_currency']
 
                         if 'quote_currency' in config:
-                            p = re.compile(r"^[A-Z]{3,5}$")
-                            if not p.match(config['quote_currency']):
+                            if not self._isCurrencyValid(config['base_currency']):
                                 raise TypeError('Quote currency is invalid.')
                             self.quote_currency = config['quote_currency']
 
@@ -302,20 +295,17 @@ class PyCryptoBot():
                             config = config['coinbasepro']['config']
 
                             if 'base_currency' in config:
-                                p = re.compile(r"^[A-Z]{3,5}$")
-                                if not p.match(config['base_currency']):
+                                if not self._isCurrencyValid(config['base_currency']):
                                     raise TypeError('Base currency is invalid.')
                                 self.base_currency = config['base_currency']
 
                             if 'quote_currency' in config:
-                                p = re.compile(r"^[A-Z]{3,5}$")
-                                if not p.match(config['quote_currency']):
+                                if not self._isCurrencyValid(config['quote_currency']):
                                     raise TypeError('Quote currency is invalid.')
                                 self.quote_currency = config['quote_currency']
 
                             if 'market' in config:
-                                p = re.compile(r"^[A-Z]{3,5}\-[A-Z]{3,5}$")
-                                if not p.match(config['market']):
+                                if not self._isMarketValid(config['market']):
                                     raise TypeError('Market is invalid.')
 
                                 self.base_currency, self.quote_currency = config['market'].split('-',  2)
@@ -402,14 +392,12 @@ class PyCryptoBot():
                             config = config['binance']['config']
 
                             if 'base_currency' in config:
-                                p = re.compile(r"^[A-Z]{3,5}$")
-                                if not p.match(config['base_currency']):
+                                if not self._isCurrencyValid(config['base_currency']):
                                     raise TypeError('Base currency is invalid.')
                                 self.base_currency = config['base_currency']
 
                             if 'quote_currency' in config:
-                                p = re.compile(r"^[A-Z]{3,5}$")
-                                if not p.match(config['quote_currency']):
+                                if not self._isCurrencyValid(config['quote_currency']):
                                     raise TypeError('Quote currency is invalid.')
                                 self.quote_currency = config['quote_currency']
 
@@ -490,15 +478,13 @@ class PyCryptoBot():
 
         if args.market != None:
             if self.exchange == 'coinbasepro':
-                p = re.compile(r"^[A-Z]{3,5}\-[A-Z]{3,5}$")
-                if not p.match(args.market):
+                if not self._isMarketValid(args.market):
                     raise ValueError('Coinbase Pro market required.')
 
                 self.market = args.market
                 self.base_currency, self.quote_currency = args.market.split('-',  2)
             elif self.exchange == 'binance':
-                p = re.compile(r"^[A-Z]{6,12}$")
-                if not p.match(args.market):
+                if not self._isMarketValid(args.market):
                     raise ValueError('Binance market required.')
 
                 self.market = args.market
@@ -704,6 +690,23 @@ class PyCryptoBot():
             p = re.compile(r"^[a-z0-9]{10,11}$")
             if not p.match(self.api_passphrase):
                 raise TypeError('Coinbase Pro API passphrase is invalid')
+
+    def _isCurrencyValid(self, currency):
+        if self.exchange == 'coinbasepro' or self.exchange == 'binance':
+            p = re.compile(r"^[1-9A-Z]{2,5}$")
+            return p.match(currency)
+
+        return False
+
+    def _isMarketValid(self, market):
+        if self.exchange == 'coinbasepro':
+            p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
+            return p.match(market)
+        elif self.exchange == 'binance':
+            p = re.compile(r"^[A-Z]{6,12}$")
+            return p.match(market)
+
+        return False
 
     def getExchange(self):
         return self.exchange
