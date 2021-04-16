@@ -8,7 +8,7 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 from models.CoinbasePro import AuthAPI
 
 # production: disable traceback
-sys.tracebacklimit = 0
+#sys.tracebacklimit = 0
 
 class TechnicalAnalysis():
     def __init__(self, data=pd.DataFrame()):
