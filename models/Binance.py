@@ -193,7 +193,7 @@ class PublicAPI():
             elif(granularity == '5m'):
                 multiplier = 5
             elif(granularity == '15m'):
-                multiplier = 10
+                multiplier = 15
             elif(granularity == '1h'):
                 multiplier = 60
             elif(granularity == '6h'):
