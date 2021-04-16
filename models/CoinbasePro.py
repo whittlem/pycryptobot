@@ -8,7 +8,12 @@ from requests.auth import AuthBase
 # production: disable traceback
 sys.tracebacklimit = 0
 
-class AuthAPI():
+class AuthAPIBase():
+    def _isMarketValid(self, market):
+        p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
+        return p.match(market)
+
+class AuthAPI(AuthAPIBase):
     def __init__(self, api_key='', api_secret='', api_pass='', api_url='https://api.pro.coinbase.com'):
         """Coinbase Pro API object model
     
@@ -142,8 +147,7 @@ class AuthAPI():
         # if market provided
         if market != '':
             # validates the market is syntactically correct
-            p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-            if not p.match(market):
+            if not self._isMarketValid(market):
                 raise ValueError('Coinbase Pro market is invalid.')
 
         # if action provided
@@ -222,8 +226,7 @@ class AuthAPI():
         """Executes a market buy providing a funding amount"""
 
         # validates the market is syntactically correct
-        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-        if not p.match(market):
+        if not self._isMarketValid(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
         # validates quote_quantity is either an integer or float
@@ -251,8 +254,7 @@ class AuthAPI():
         return model.authAPI('POST', 'orders', order)
 
     def marketSell(self, market='', base_quantity=0):
-        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-        if not p.match(market):
+        if not self._isMarketValid(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
         if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
@@ -271,8 +273,7 @@ class AuthAPI():
         return model.authAPI('POST', 'orders', order)
 
     def limitSell(self, market='', base_quantity=0, futurePrice=0):
-        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-        if not p.match(market):
+        if not self._isMarketValid(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
         if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
@@ -295,8 +296,7 @@ class AuthAPI():
         return model.authAPI('POST', 'orders', order)
 
     def cancelOrders(self, market=''):
-        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-        if not p.match(market):
+        if not self._isMarketValid(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
         model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
@@ -379,7 +379,7 @@ class AuthAPI():
                     print ('Timeout: ' + self.api_url)
                     return pd.DataFrame()
 
-class PublicAPI():
+class PublicAPI(AuthAPIBase):
     def __init__(self):
         # options
         self.debug = False
@@ -389,8 +389,7 @@ class PublicAPI():
 
     def getHistoricalData(self, market='BTC-GBP', granularity=86400, iso8601start='', iso8601end=''):
         # validates the market is syntactically correct
-        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-        if not p.match(market):
+        if not self._isMarketValid(market):
             raise TypeError('Coinbase Pro market required.')
 
         # validates granularity is an integer
@@ -472,8 +471,7 @@ class PublicAPI():
 
     def getTicker(self, market='BTC-GBP'):
        # validates the market is syntactically correct
-        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-        if not p.match(market):
+        if not self._isMarketValid(market):
             raise TypeError('Coinbase Pro market required.')
 
         resp = self.authAPI('GET','products/' + market + '/ticker')
