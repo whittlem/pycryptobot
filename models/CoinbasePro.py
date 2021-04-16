@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from requests.auth import AuthBase
 
 # production: disable traceback
-sys.tracebacklimit = 0
+#sys.tracebacklimit = 0
 
 class AuthAPIBase():
     def _isMarketValid(self, market):
