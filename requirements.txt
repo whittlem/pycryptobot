@@ -1,4 +1,7 @@
+urllib3
 pandas
 requests
 statsmodels
 matplotlib
+binance
+python-binance

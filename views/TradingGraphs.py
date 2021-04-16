@@ -31,7 +31,10 @@ class TradingGraphs():
         self.df = technical_analysis.getDataFrame()
 
         # stores the support and resistance levels from technical_analysis object
-        self.levels = technical_analysis.supportResistanceLevels()
+        self.levels = technical_analysis.getSupportResistanceLevels()
+
+        # set graph format
+        plt.style.use('seaborn')
 
     def renderBuySellSignalEMA1226(self, saveFile='', saveOnly=False):
         """Render the EMA12 and EMA26 buy and sell signals
@@ -83,8 +86,8 @@ class TradingGraphs():
             Save the figure without displaying it         
         """
 
-        buysignals = ((self.df.ema12gtema26co == True) & (self.df.macdgtsignal == True) & (self.df.obv_pc >= 2)) | ((self.df.ema12gtema26 == True) & (self.df.macdgtsignal == True) & (self.df.obv_pc >= 5)) 
-        sellsignals = ((self.df.ema12ltema26co == True) & (self.df.macdltsignal == True)) | ((self.df.ema12gtema26 == True) & (self.df.macdltsignal == True) & (self.df.obv_pc < 0))
+        buysignals = ((self.df.ema12gtema26co == True) & (self.df.macdgtsignal == True) & (self.df.goldencross == True)) 
+        sellsignals = ((self.df.ema12ltema26co == True) & (self.df.macdltsignal == True))
         df_signals = self.df[(buysignals) | (sellsignals)]
 
         ax1 = plt.subplot(211)
@@ -126,6 +129,47 @@ class TradingGraphs():
         if saveOnly == False:
             plt.show()
 
+    def renderFibonacciBollingerBands(self, period=50, saveFile='', saveOnly=False):
+        """Render FibonacciBollingerBands"""
+
+        if not isinstance(period, int):
+            raise TypeError('Period parameter is not perioderic.')
+
+        if period < 1 or period > len(self.df):
+            raise ValueError('Period is out of range')
+
+        df_subset = self.df.iloc[-period::]
+
+        plt.subplot(111)
+        plt.suptitle(df_subset.iloc[0]['market'] + ' | ' + str(df_subset.iloc[0]['granularity']), fontsize=12)
+        plt.plot(df_subset.fbb_upper0_236, label="23.6%", color="blue")
+        plt.plot(df_subset.fbb_lower0_236, label="-23.6%", color="blue")
+        plt.plot(df_subset.fbb_upper0_382, label="38.2%", color="green")
+        plt.plot(df_subset.fbb_lower0_382, label="3-8.2%", color="green")
+        plt.plot(df_subset.fbb_upper0_5, label="50%", color="cyan")
+        plt.plot(df_subset.fbb_lower0_5, label="-50%", color="cyan")
+        plt.plot(df_subset.fbb_upper0_618, label="61.8%", color="pink")
+        plt.plot(df_subset.fbb_lower0_618, label="-61.8%", color="pink")
+        plt.plot(df_subset.fbb_upper0_764, label="76.4%", color="red")
+        plt.plot(df_subset.fbb_lower0_764, label="-76.4%", color="red")
+        plt.plot(df_subset.fbb_upper1, label="100%", color="magenta")
+        plt.plot(df_subset.fbb_lower1, label="-100%", color="magenta")
+        plt.plot(df_subset.fbb_mid, label="mid", color="orange")
+        plt.plot(df_subset.close, label="price", color="black")
+        plt.legend()
+        plt.ylabel('Price')
+        plt.xticks(rotation=90)
+        plt.tight_layout()
+
+        try:
+            if saveFile != '':
+                plt.savefig(saveFile)
+        except OSError:
+            raise SystemExit('Unable to save: ', saveFile) 
+
+        if saveOnly == False:
+            plt.show()
+
     def renderPriceEMA12EMA26(self, saveFile='', saveOnly=False):
         """Render the price, EMA12 and EMA26
         
@@ -155,7 +199,7 @@ class TradingGraphs():
         if saveOnly == False:
             plt.show()
 
-    def renderEMAandMACD(self,  period=30, saveFile='', saveOnly=False):
+    def renderEMAandMACD(self, period=30, saveFile='', saveOnly=False):
         """Render the price, EMA12, EMA26 and MACD
         
         Parameters
@@ -185,7 +229,6 @@ class TradingGraphs():
 
         fig, (ax1, ax2) = plt.subplots(nrows=2, figsize=(12, 6))
         fig.suptitle(df_subset.iloc[0]['market'] + ' | ' + str(df_subset.iloc[0]['granularity']), fontsize=16)
-        plt.style.use('seaborn')
         plt.xticks(rotation=90)
         #plt.tight_layout()
 
@@ -307,20 +350,7 @@ class TradingGraphs():
 
         # extract market and granularity from trading dataframe
         market = df.iloc[0].market
-        granularity = int(df.iloc[0].granularity)
-
-        # validates the market is syntactically correct
-        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-        if not p.match(market):
-            raise TypeError('Coinbase Pro market required.')
-
-        # validates granularity is an integer
-        if not isinstance(granularity, int):
-            raise TypeError('Granularity integer required.')
-
-        # validates the granularity is supported by Coinbase Pro
-        if not granularity in [60, 300, 900, 3600, 21600, 86400]:
-            raise TypeError('Granularity options: 60, 300, 900, 3600, 21600, 86400.')
+        granularity = df.iloc[0].granularity
 
         results_ARIMA = self.technical_analysis.seasonalARIMAModel()
 
@@ -352,7 +382,6 @@ class TradingGraphs():
         ax.plot(pred, label='prediction', color='black')
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
         
-        plt.style.use('seaborn')
         plt.xticks(rotation=90)
         plt.tight_layout()
 
@@ -361,6 +390,56 @@ class TradingGraphs():
             plt.savefig('graphs/SAM_' + market + '_' + str(granularity) + '.png', dpi=300)
         except OSError:
             raise SystemExit('Unable to save: graphs/SAM_' + market + '_' + str(granularity) + '.png') 
+
+        if saveOnly == False:
+            plt.show()
+
+    def renderCandlestickAstralPattern(self, period=30, saveOnly=False):
+        # get dataframe from technical analysis object
+        df = self.technical_analysis.getDataFrame()
+
+        if not isinstance(period, int):
+            raise TypeError('Period parameter is not perioderic.')
+
+        if period < 1 or period > len(df):
+            raise ValueError('Period is out of range')
+
+        # extract market and granularity from trading dataframe
+        market = df.iloc[0].market
+        granularity = df.iloc[0].granularity
+
+        df_subset = df.iloc[-period::]
+
+        fig, axes = plt.subplots(ncols=1, figsize=(12, 6)) #pylint: disable=unused-variable
+        fig.autofmt_xdate()
+        ax1 = plt.subplot(111)
+        ax1.set_title('Astral Candlestick Pattern')
+        plt.plot(df_subset['close'], label='price', color='black')
+        plt.plot(df_subset['ema12'], label='ema12', color='orange')
+        plt.plot(df_subset['ema26'], label='ema26', color='purple')
+        plt.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
+
+        df_candlestick = self.df[self.df['astral_buy'] == True]
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+        for idx in df_candlestick_in_range.index.tolist():
+            plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'g^', markersize=8)
+            
+        df_candlestick = self.df[self.df['astral_sell'] == True]
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
+        for idx in df_candlestick_in_range.index.tolist():
+            plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'rv', markersize=8)  
+
+        plt.xlabel(market + ' - ' + str(granularity))
+        plt.ylabel('Price')
+        plt.xticks(rotation=90)
+        plt.tight_layout()
+        plt.legend()
+
+        try:
+            print ('creating: graphs/CAP_' + market + '_' + str(granularity) + '.png')
+            plt.savefig('graphs/CAP_' + market + '_' + str(granularity) + '.png', dpi=300)
+        except OSError:
+            raise SystemExit('Unable to save: graphs/CAP_' + market + '_' + str(granularity) + '.png') 
 
         if saveOnly == False:
             plt.show()
@@ -377,20 +456,7 @@ class TradingGraphs():
 
         # extract market and granularity from trading dataframe
         market = df.iloc[0].market
-        granularity = int(df.iloc[0].granularity)
-
-        # validates the market is syntactically correct
-        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-        if not p.match(market):
-            raise TypeError('Coinbase Pro market required.')
-
-        # validates granularity is an integer
-        if not isinstance(granularity, int):
-            raise TypeError('Granularity integer required.')
-
-        # validates the granularity is supported by Coinbase Pro
-        if not granularity in [60, 300, 900, 3600, 21600, 86400]:
-            raise TypeError('Granularity options: 60, 300, 900, 3600, 21600, 86400.')
+        granularity = df.iloc[0].granularity
 
         df_subset = df.iloc[-period::]
 
@@ -398,7 +464,6 @@ class TradingGraphs():
         fig.autofmt_xdate()
         ax1 = plt.subplot(111)
         ax1.set_title('Candlestick Patterns')
-        plt.style.use('seaborn')
         plt.plot(df_subset['close'], label='price', color='black')
         plt.plot(df_subset['ema12'], label='ema12', color='orange')
         plt.plot(df_subset['ema26'], label='ema26', color='purple')
@@ -474,7 +539,6 @@ class TradingGraphs():
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(idx, df_candlestick_in_range.loc[idx]['close'], 'g*', markersize=10, label='Abandoned Baby')  
 
-        plt.style.use('seaborn')
         plt.xlabel(market + ' - ' + str(granularity))
         plt.ylabel('Price')
         plt.xticks(rotation=90)
@@ -504,20 +568,7 @@ class TradingGraphs():
 
         # extract market and granularity from trading dataframe
         market = df.iloc[0].market
-        granularity = int(df.iloc[0].granularity)
-
-        # validates the market is syntactically correct
-        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-        if not p.match(market):
-            raise TypeError('Coinbase Pro market required.')
-
-        # validates granularity is an integer
-        if not isinstance(granularity, int):
-            raise TypeError('Granularity integer required.')
-
-        # validates the granularity is supported by Coinbase Pro
-        if not granularity in [60, 300, 900, 3600, 21600, 86400]:
-            raise TypeError('Granularity options: 60, 300, 900, 3600, 21600, 86400.')
+        granularity = df.iloc[0].granularity
 
         # closing price min and max values
         price_min = df.close.min()
@@ -540,7 +591,6 @@ class TradingGraphs():
         ax.axhspan(level2, level1, alpha=0.5, color='palegoldenrod', label='0.236')
         ax.axhspan(price_max, level3, alpha=0.5, color='powderblue', label='0')
 
-        plt.style.use('seaborn')
         plt.xlabel(market + ' - ' + str(granularity))
         plt.ylabel('Price')
         plt.xticks(rotation=90)
@@ -570,20 +620,7 @@ class TradingGraphs():
 
         # extract market and granularity from trading dataframe
         market = df.iloc[0].market
-        granularity = int(df.iloc[0].granularity)
-
-        # validates the market is syntactically correct
-        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-        if not p.match(market):
-            raise TypeError('Coinbase Pro market required.')
-
-        # validates granularity is an integer
-        if not isinstance(granularity, int):
-            raise TypeError('Granularity integer required.')
-
-        # validates the granularity is supported by Coinbase Pro
-        if not granularity in [60, 300, 900, 3600, 21600, 86400]:
-            raise TypeError('Granularity options: 60, 300, 900, 3600, 21600, 86400.')
+        granularity = df.iloc[0].granularity
 
         fig, ax = plt.subplots(ncols=1, figsize=(12, 6)) #pylint: disable=unused-variable
         fig.autofmt_xdate()
@@ -613,7 +650,6 @@ class TradingGraphs():
             else:
                 rotation = 1
 
-        plt.style.use('seaborn')
         plt.xlabel(market + ' - ' + str(granularity))
         plt.ylabel('Price')
         plt.xticks(rotation=90)
@@ -628,3 +664,83 @@ class TradingGraphs():
 
         if saveOnly == False:
             plt.show()
+
+    def renderPercentageChangeHistogram(self, show_desc=True):
+        """Render Percentage Change Histogram
+        
+        Parameters
+        ----------
+        saveOnly : bool
+            Save the figure without displaying it
+        """
+
+        # get dataframe from technical analysis object
+        df = self.technical_analysis.getDataFrame()
+
+        # extract market and granularity from trading dataframe
+        market = df.iloc[0].market
+        granularity = df.iloc[0].granularity
+
+        fig, ax = plt.subplots(ncols=1, figsize=(12, 6)) #pylint: disable=unused-variable
+        fig.autofmt_xdate()
+
+        ax = plt.subplot(111)
+        df.close_pc.hist(bins=50)
+        ax.set_title('Close Percent Change')
+
+        plt.xlabel(market + ' - ' + str(granularity))
+        plt.xticks(rotation=90)
+        plt.tight_layout()
+        plt.legend()
+
+        plt.show()
+
+        if show_desc == True:
+            print(df['close_pc'].describe())
+
+    def renderPercentageChangeScatterMatrix(self):
+        """Render Percentage Change Scatter Matrix
+        
+        Parameters
+        ----------
+        saveOnly : bool
+            Save the figure without displaying it
+        """
+
+        # get dataframe from technical analysis object
+        df = self.technical_analysis.getDataFrame()
+
+        pd.plotting.scatter_matrix(df[['close','close_pc','close_cpc']], diagonal='kde', alpha=0.1, figsize=(12,12))       
+        plt.tight_layout()
+        plt.show()
+
+    def renderCumulativeReturn(self):
+        """Render Percentage Change Histogram
+        
+        Parameters
+        ----------
+        saveOnly : bool
+            Save the figure without displaying it
+        """
+
+        # get dataframe from technical analysis object
+        df = self.technical_analysis.getDataFrame()
+
+        # extract market and granularity from trading dataframe
+        market = df.iloc[0].market
+        granularity = df.iloc[0].granularity
+
+        fig, ax = plt.subplots(ncols=1, figsize=(12, 6)) #pylint: disable=unused-variable
+        fig.autofmt_xdate()
+
+        ax = plt.subplot(111)
+        ax.plot(df.close_cpc, label='Adj Close', color='black')
+        ax.set_title('Cumulative Return')
+
+        plt.xlabel(market + ' - ' + str(granularity))
+        plt.ylabel('Return')
+        plt.xticks(rotation=90)
+        plt.tight_layout()
+        plt.legend()
+
+        plt.show()

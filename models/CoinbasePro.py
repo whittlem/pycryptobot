@@ -8,7 +8,12 @@ from requests.auth import AuthBase
 # production: disable traceback
 sys.tracebacklimit = 0
 
-class AuthAPI():
+class AuthAPIBase():
+    def _isMarketValid(self, market):
+        p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
+        return p.match(market)
+
+class AuthAPI(AuthAPIBase):
     def __init__(self, api_key='', api_secret='', api_pass='', api_url='https://api.pro.coinbase.com'):
         """Coinbase Pro API object model
     
@@ -142,8 +147,7 @@ class AuthAPI():
         # if market provided
         if market != '':
             # validates the market is syntactically correct
-            p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-            if not p.match(market):
+            if not self._isMarketValid(market):
                 raise ValueError('Coinbase Pro market is invalid.')
 
         # if action provided
@@ -159,16 +163,31 @@ class AuthAPI():
         # GET /orders?status
         resp = self.authAPI('GET', 'orders?status=' + status)
         if len(resp) > 0:
-            df = resp.copy()[[ 'created_at', 'product_id', 'side', 'type', 'filled_size', 'executed_value', 'status' ]]
+            if status == 'open':
+                df = resp.copy()[[ 'created_at', 'product_id', 'side', 'type', 'size', 'price', 'status' ]]
+                df['value'] = float(df['price']) * float(df['size'])
+            else:
+                df = resp.copy()[[ 'created_at', 'product_id', 'side', 'type', 'filled_size', 'executed_value', 'fill_fees', 'status' ]]
         else:
             return pd.DataFrame()
 
         # calculates the price at the time of purchase
-        df['price'] = df.apply(lambda row: (float(row.executed_value) * 100) / (float(row.filled_size) * 100), axis=1)
+        if status != 'open':
+            df['price'] = df.apply(lambda row: (float(row.executed_value) * 100) / (float(row.filled_size) * 100) if float(row.filled_size) > 0 else 0, axis=1)
 
         # rename the columns
-        df.columns = [ 'created_at', 'market', 'action', 'type', 'size', 'value', 'status', 'price' ]
-        
+        if status == 'open':
+            df.columns = [ 'created_at', 'market', 'action', 'type', 'size', 'price', 'status', 'value' ]
+            df = df[[ 'created_at', 'market', 'action', 'type', 'size', 'value', 'status', 'price' ]]
+        else:
+            df.columns = [ 'created_at', 'market', 'action', 'type', 'size', 'value', 'fees', 'status', 'price' ]
+            df = df[[ 'created_at', 'market', 'action', 'type', 'size', 'value', 'fees', 'price', 'status' ]]
+            df['fees'] = df['fees'].astype(float).round(2)
+
+        df['size'] = df['size'].astype(float)
+        df['value'] = df['value'].astype(float)
+        df['price'] = df['price'].astype(float)
+
         # convert dataframe to a time series
         tsidx = pd.DatetimeIndex(pd.to_datetime(df['created_at']).dt.strftime('%Y-%m-%dT%H:%M:%S.%Z'))
         df.set_index(tsidx, inplace=True)
@@ -196,27 +215,33 @@ class AuthAPI():
         df[['size', 'value']] = df[['size', 'value']].apply(pd.to_numeric)
         return df
 
-    def marketBuy(self, market='', fiatAmount=0):
+    def getTime(self):
+        """Retrieves the exchange time"""
+    
+        resp = self.authAPI('GET', 'time')
+        epoch = int(resp['epoch'])
+        return datetime.fromtimestamp(epoch)
+
+    def marketBuy(self, market='', quote_quantity=0):
         """Executes a market buy providing a funding amount"""
 
         # validates the market is syntactically correct
-        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-        if not p.match(market):
+        if not self._isMarketValid(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
-        # validates fiatAmount is either an integer or float
-        if not isinstance(fiatAmount, int) and not isinstance(fiatAmount, float):
+        # validates quote_quantity is either an integer or float
+        if not isinstance(quote_quantity, int) and not isinstance(quote_quantity, float):
             raise TypeError('The funding amount is not numeric.')
 
         # funding amount needs to be greater than 10
-        if fiatAmount < 10:
+        if quote_quantity < 10:
             raise ValueError('Trade amount is too small (>= 10).')
 
         order = {
             'product_id': market,
             'type': 'market',
             'side': 'buy',
-            'funds': fiatAmount
+            'funds': quote_quantity
         }
 
         if self.debug == True:
@@ -228,19 +253,18 @@ class AuthAPI():
         # place order and return result
         return model.authAPI('POST', 'orders', order)
 
-    def marketSell(self, market='', cryptoAmount=0):
-        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-        if not p.match(market):
+    def marketSell(self, market='', base_quantity=0):
+        if not self._isMarketValid(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
-        if not isinstance(cryptoAmount, int) and not isinstance(cryptoAmount, float):
+        if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
             raise TypeError('The crypto amount is not numeric.')
 
         order = {
             'product_id': market,
             'type': 'market',
             'side': 'sell',
-            'size': cryptoAmount
+            'size': base_quantity
         }
 
         print (order)
@@ -248,22 +272,21 @@ class AuthAPI():
         model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
         return model.authAPI('POST', 'orders', order)
 
-    def limitSell(self, market='', cryptoAmount=0, futurePrice=0):
-        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-        if not p.match(market):
+    def limitSell(self, market='', base_quantity=0, futurePrice=0):
+        if not self._isMarketValid(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
-        if not isinstance(cryptoAmount, int) and not isinstance(cryptoAmount, float):
+        if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
             raise TypeError('The crypto amount is not numeric.')
 
-        if not isinstance(cryptoAmount, int) and not isinstance(cryptoAmount, float):
+        if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
             raise TypeError('The future crypto price is not numeric.')
 
         order = {
             'product_id': market,
             'type': 'limit',
             'side': 'sell',
-            'size': cryptoAmount,
+            'size': base_quantity,
             'price': futurePrice
         }
 
@@ -273,8 +296,7 @@ class AuthAPI():
         return model.authAPI('POST', 'orders', order)
 
     def cancelOrders(self, market=''):
-        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-        if not p.match(market):
+        if not self._isMarketValid(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
         model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
@@ -357,7 +379,7 @@ class AuthAPI():
                     print ('Timeout: ' + self.api_url)
                     return pd.DataFrame()
 
-class PublicAPI():
+class PublicAPI(AuthAPIBase):
     def __init__(self):
         # options
         self.debug = False
@@ -366,9 +388,8 @@ class PublicAPI():
         self.api_url = 'https://api.pro.coinbase.com/'
 
     def getHistoricalData(self, market='BTC-GBP', granularity=86400, iso8601start='', iso8601end=''):
-       # validates the market is syntactically correct
-        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-        if not p.match(market):
+        # validates the market is syntactically correct
+        if not self._isMarketValid(market):
             raise TypeError('Coinbase Pro market required.')
 
         # validates granularity is an integer
@@ -376,8 +397,8 @@ class PublicAPI():
             raise TypeError('Granularity integer required.')
 
         # validates the granularity is supported by Coinbase Pro
-        if not granularity in [60, 300, 900, 3600, 21600, 86400]:
-            raise TypeError('Granularity options: 60, 300, 900, 3600, 21600, 86400.')
+        if not granularity in [ 60, 300, 900, 3600, 21600, 86400 ]:
+            raise TypeError('Granularity options: 60, 300, 900, 3600, 21600, 86400')
 
         # validates the ISO 8601 start date is a string (if provided)
         if not isinstance(iso8601start, str):
@@ -450,8 +471,7 @@ class PublicAPI():
 
     def getTicker(self, market='BTC-GBP'):
        # validates the market is syntactically correct
-        p = re.compile(r"^[A-Z]{3,4}\-[A-Z]{3,4}$")
-        if not p.match(market):
+        if not self._isMarketValid(market):
             raise TypeError('Coinbase Pro market required.')
 
         resp = self.authAPI('GET','products/' + market + '/ticker')
@@ -459,6 +479,13 @@ class PublicAPI():
             return float(resp['price'])
 
         return 0.0
+
+    def getTime(self):
+        """Retrieves the exchange time"""
+    
+        resp = self.authAPI('GET', 'time')
+        epoch = int(resp['epoch'])
+        return datetime.fromtimestamp(epoch)
 
     def authAPI(self, method, uri, payload=''):
         if not isinstance(method, str):
