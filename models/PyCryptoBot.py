@@ -352,12 +352,12 @@ class PyCryptoBot():
                                         self.is_sim = 1
                                         self.sim_speed = config['sim']
 
-                                if config['sim'] in ['slow-sample', 'fast-sample' ]:
-                                    self.is_live = 0
-                                    self.is_sim = 1
-                                    self.sim_speed = config['sim']
-                                    if 'simstartdate' in config:
-                                        self.simstartdate = config['simstartdate']
+                                    if config['sim'] in ['slow-sample', 'fast-sample' ]:
+                                        self.is_live = 0
+                                        self.is_sim = 1
+                                        self.sim_speed = config['sim']
+                                        if 'simstartdate' in config:
+                                            self.simstartdate = config['simstartdate']
 
                             if 'sellupperpcnt' in config:
                                 if isinstance(config['sellupperpcnt'], int):
