@@ -5,7 +5,12 @@ import pandas as pd
 from datetime import datetime, timedelta
 from binance.client import Client
 
-class AuthAPI():
+class AuthAPIBase():
+    def _isMarketValid(self, market):
+        p = re.compile(r"^[A-Z]{6,12}$")
+        return p.match(market)
+
+class AuthAPI(AuthAPIBase):
     def __init__(self, api_key='', api_secret='', api_url='https://api.binance.com'):
         """Binance API object model
     
@@ -64,9 +69,8 @@ class AuthAPI():
         """Executes a market buy providing a funding amount"""
 
         # validates the market is syntactically correct
-        p = re.compile(r"^[A-Z]{6,12}$")
-        if not p.match(market):
-            raise ValueError('Binanace market is invalid.')
+        if not self._isMarketValid(market):
+            raise ValueError('Binance market is invalid.')
 
         # validates quote_quantity is either an integer or float
         if not isinstance(quote_quantity, int) and not isinstance(quote_quantity, float):
@@ -97,9 +101,8 @@ class AuthAPI():
         """Executes a market sell providing a crypto amount"""
 
         # validates the market is syntactically correct
-        p = re.compile(r"^[A-Z]{6,12}$")
-        if not p.match(market):
-            raise ValueError('Binanace market is invalid.')
+        if not self._isMarketValid(market):
+            raise ValueError('Binance market is invalid.')
 
         if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
             raise TypeError('The crypto amount is not numeric.')
@@ -124,8 +127,7 @@ class AuthAPI():
 
     def getMarketInfo(self, market):
         # validates the market is syntactically correct
-        p = re.compile(r"^[A-Z]{6,12}$")
-        if not p.match(market):
+        if not self._isMarketValid(market):
             raise TypeError('Binance market required.')
 
         return self.client.get_symbol_info(symbol=market)
@@ -135,8 +137,7 @@ class AuthAPI():
 
     def getTicker(self, market):
         # validates the market is syntactically correct
-        p = re.compile(r"^[A-Z]{6,12}$")
-        if not p.match(market):
+        if not self._isMarketValid(market):
             raise TypeError('Binance market required.')
 
         resp = self.client.get_symbol_ticker(symbol=market)
@@ -153,7 +154,7 @@ class AuthAPI():
         epoch = int(str(resp['serverTime'])[0:10])
         return datetime.fromtimestamp(epoch)
 
-class PublicAPI():
+class PublicAPI(AuthAPIBase):
     def __init__(self):
         self.client = Client()
 
@@ -165,8 +166,7 @@ class PublicAPI():
 
     def getHistoricalData(self, market='BTCGBP', granularity='1h', iso8601start='', iso8601end=''):
         # validates the market is syntactically correct
-        p = re.compile(r"^[A-Z]{6,12}$")
-        if not p.match(market):
+        if not self._isMarketValid(market):
             raise TypeError('Binance market required.')
 
         # validates granularity is a string
@@ -282,8 +282,7 @@ class PublicAPI():
 
     def getTicker(self, market):
         # validates the market is syntactically correct
-        p = re.compile(r"^[A-Z]{6,12}$")
-        if not p.match(market):
+        if not self._isMarketValid(market):
             raise TypeError('Binance market required.')
 
         resp = self.client.get_symbol_ticker(symbol=market)
