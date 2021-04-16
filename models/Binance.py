@@ -70,7 +70,7 @@ class AuthAPI(AuthAPIBase):
 
         # validates the market is syntactically correct
         if not self._isMarketValid(market):
-            raise ValueError('Binanace market is invalid.')
+            raise ValueError('Binance market is invalid.')
 
         # validates quote_quantity is either an integer or float
         if not isinstance(quote_quantity, int) and not isinstance(quote_quantity, float):
@@ -102,7 +102,7 @@ class AuthAPI(AuthAPIBase):
 
         # validates the market is syntactically correct
         if not self._isMarketValid(market):
-            raise ValueError('Binanace market is invalid.')
+            raise ValueError('Binance market is invalid.')
 
         if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
             raise TypeError('The crypto amount is not numeric.')
