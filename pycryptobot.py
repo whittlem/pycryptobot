@@ -153,12 +153,13 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             s.enter(300, 1, executeJob, (sc, app))
     else:
         if len(df) < 300:
-            # data frame should have 300 rows, if not retry
-            print('error: data frame length is < 300 (' + str(len(df)) + ')')
-            logging.error('error: data frame length is < 300 (' + str(len(df)) + ')')
-            list(map(s.cancel, s.queue))
-            s.enter(300, 1, executeJob, (sc, app))
-
+            if app.isSimulation() == 0:
+                # data frame should have 300 rows, if not retry
+                print('error: data frame length is < 300 (' + str(len(df)) + ')')
+                logging.error('error: data frame length is < 300 (' + str(len(df)) + ')')
+                list(map(s.cancel, s.queue))
+                s.enter(300, 1, executeJob, (sc, app))
+                s
     if len(df_last) > 0:
         if app.isSimulation() == 0:
             price = app.getTicker(app.getMarket())
