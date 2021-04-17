@@ -5,9 +5,6 @@ import re, json, hmac, hashlib, time, requests, base64, sys
 from datetime import datetime, timedelta
 from requests.auth import AuthBase
 
-# production: disable traceback
-#sys.tracebacklimit = 0
-
 class AuthAPIBase():
     def _isMarketValid(self, market):
         p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
@@ -218,9 +215,12 @@ class AuthAPI(AuthAPIBase):
     def getTime(self):
         """Retrieves the exchange time"""
     
-        resp = self.authAPI('GET', 'time')
-        epoch = int(resp['epoch'])
-        return datetime.fromtimestamp(epoch)
+        try:
+            resp = self.authAPI('GET', 'time')
+            epoch = int(resp['epoch'])
+            return datetime.fromtimestamp(epoch)
+        except:
+            return None
 
     def marketBuy(self, market='', quote_quantity=0):
         """Executes a market buy providing a funding amount"""
@@ -483,9 +483,12 @@ class PublicAPI(AuthAPIBase):
     def getTime(self):
         """Retrieves the exchange time"""
     
-        resp = self.authAPI('GET', 'time')
-        epoch = int(resp['epoch'])
-        return datetime.fromtimestamp(epoch)
+        try:
+            resp = self.authAPI('GET', 'time')
+            epoch = int(resp['epoch'])
+            return datetime.fromtimestamp(epoch)
+        except:
+            return None
 
     def authAPI(self, method, uri, payload=''):
         if not isinstance(method, str):

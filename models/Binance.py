@@ -150,9 +150,12 @@ class AuthAPI(AuthAPIBase):
     def getTime(self):
         """Retrieves the exchange time"""
     
-        resp = self.client.get_server_time()
-        epoch = int(str(resp['serverTime'])[0:10])
-        return datetime.fromtimestamp(epoch)
+        try:
+            resp = self.client.get_server_time()
+            epoch = int(str(resp['serverTime'])[0:10])
+            return datetime.fromtimestamp(epoch)
+        except:
+            return None
 
 class PublicAPI(AuthAPIBase):
     def __init__(self):
@@ -295,6 +298,9 @@ class PublicAPI(AuthAPIBase):
     def getTime(self):
         """Retrieves the exchange time"""
     
-        resp = self.client.get_server_time()
-        epoch = int(str(resp['serverTime'])[0:10])
-        return datetime.fromtimestamp(epoch)
+        try:
+            resp = self.client.get_server_time()
+            epoch = int(str(resp['serverTime'])[0:10])
+            return datetime.fromtimestamp(epoch)
+        except:
+            return None

@@ -12,7 +12,7 @@ from models.Telegram import Telegram
 from views.TradingGraphs import TradingGraphs
 
 # production: disable traceback
-#sys.tracebacklimit = 0
+sys.tracebacklimit = 0
 
 app = PyCryptoBot()
 s = sched.scheduler(time.time, time.sleep)
@@ -36,6 +36,10 @@ config = {}
 account = None
 # if live trading is enabled
 if app.isLive() == 1:
+    # connectivity check
+    if app.getTime() == None:
+        raise ConnectionError('Unable to start the bot as your connection to the exchange is down. Please check your Internet connectivity!')
+
     account = TradingAccount(app)
 
     if account.getBalance(app.getBaseCurrency()) < account.getBalance(app.getQuoteCurrency()):
@@ -67,6 +71,15 @@ if app.isLive() == 1:
 def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
     """Trading bot job which runs at a scheduled interval"""
     global action, buy_count, buy_sum, iterations, last_action, last_buy, eri_text, last_df_index, sell_count, sell_sum, buy_state, fib_high, fib_low
+
+    # connectivity check
+    if app.getTime() == None:
+        print ('Your connection to the exchange has gone down, will retry in 1 minute!')
+    
+        # poll every 5 minute
+        list(map(s.cancel, s.queue))
+        s.enter(300, 1, executeJob, (sc, app))
+        return
 
     # increment iterations
     iterations = iterations + 1
