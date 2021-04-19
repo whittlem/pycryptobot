@@ -74,7 +74,7 @@ class PyCryptoBot():
                     telegram = config['telegram']
 
                     p1 = re.compile(r"^\d{1,10}:[A-z0-9-_]{35,35}$")
-                    p2 = re.compile(r"^\d{7,10}$")
+                    p2 = re.compile(r"^\-*\d{7,10}$")
 
                     if not p1.match(telegram['token']):
                         print ('Error: Telegram token is invalid')
