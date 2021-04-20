@@ -12,7 +12,7 @@ from models.Telegram import Telegram
 from views.TradingGraphs import TradingGraphs
 
 # production: disable traceback
-sys.tracebacklimit = 0
+#sys.tracebacklimit = 0
 
 app = PyCryptoBot()
 s = sched.scheduler(time.time, time.sleep)
@@ -72,8 +72,8 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
     """Trading bot job which runs at a scheduled interval"""
     global action, buy_count, buy_sum, iterations, last_action, last_buy, eri_text, last_df_index, sell_count, sell_sum, buy_state, fib_high, fib_low
 
-    # connectivity check
-    if app.getTime() == None:
+    # connectivity check (only when running live)
+    if app.isLive() and app.getTime() == None:
         print ('Your connection to the exchange has gone down, will retry in 1 minute!')
     
         # poll every 5 minute
@@ -521,7 +521,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     else:
                         margin = '0%'
 
-                    output_text += ' | ' +  margin
+                    output_text += ' | ' +  margin + ' (delta: ' + str(round(price - last_buy, 2)) + ')'
 
                 logging.debug(output_text)
                 print (output_text)
@@ -784,6 +784,9 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     filename = app.getMarket() + '_' + str(app.getGranularity()) + '_sell_' + str(ts) + '.png'
                     tradinggraphs.renderEMAandMACD(len(trading_data), 'graphs/' + filename, True)
 
+                # reset last buy
+                last_buy = 0
+
             # last significant action
             if action in [ 'BUY', 'SELL' ]:
                 last_action = action
@@ -793,11 +796,16 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             if iterations == len(df):
                 print ("\nSimulation Summary\n")
 
-                if buy_count > sell_count:
+                if buy_count > sell_count and app.allowSellAtLoss() == 1:
                     fee = price * 0.005
                     last_price_minus_fees = price - fee
                     sell_sum = sell_sum + last_price_minus_fees
                     sell_count = sell_count + 1
+
+                elif buy_count > sell_count and app.allowSellAtLoss() == 0:
+                    print ('        Note : "sell at loss" is disabled and you have an open trade, if the margin')
+                    print ('               result below is negative it will assume you sold at the end of the')
+                    print ('               simulation which may not be ideal. Try setting --sellatloss 1', "\n")
 
                 print ('   Buy Count :', buy_count)
                 print ('  Sell Count :', sell_count, "\n")
