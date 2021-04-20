@@ -65,7 +65,7 @@ Manual:
 Container:
 
     % docker run -d -v ./config.json:/app/config.json ghcr.io/whittlem/pycryptobot/pycryptobot:latest <arguments>
-
+    
     * Arguments
     --exchange <exchange> (coinbasepro or binance)
         * Specify the exchange to use, leaving it out defaults to coinbasepro
@@ -89,6 +89,8 @@ Container:
         * (Optional) Force a sell when the margin reaches an lower limit
     --sellatloss <1 or 0> (default: 1)
         * Toggle bot to sell at a loss (no small losses but could prevent getting out before a big crash)
+    --config myconfig.json
+    	* Use a custom configuration file at the given location.
 
 Typically I would save all my settings in the config.json but running from the command line I would usually run it like this.
 
