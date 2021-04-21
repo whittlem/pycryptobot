@@ -50,7 +50,19 @@ if running multiple bots and keeping track of their progress.
 
 ### Container
 
+    Install Docker Desktop
+    https://docs.docker.com/desktop
+
     % docker pull ghcr.io/whittlem/pycryptobot/pycryptobot:latest
+    latest: Pulling from whittlem/pycryptobot/pycryptobot
+    8f403cb21126: Pull complete 
+    65c0f2178ac8: Pull complete 
+    1091bd628216: Pull complete 
+    cb1eb04426a4: Pull complete 
+    ec065b94ad1c: Pull complete 
+    Digest: sha256:031fd6c7b7b2d08a743127e5850bc3d9c97a46e02ed0878f4445012eaf0619d3
+    Status: Downloaded newer image for ghcr.io/whittlem/pycryptobot/pycryptobot:latest
+    ghcr.io/whittlem/pycryptobot/pycryptobot:latest
 
 ## Additional Information
 
@@ -64,33 +76,36 @@ Manual:
 
 Container:
 
-    % docker run -d -v ./config.json:/app/config.json ghcr.io/whittlem/pycryptobot/pycryptobot:latest <arguments>
+    Example Local Absolute Path: /home/example/config.json
+    Example Market: BTC-GBP
+
+    Daemon:
+    % docker run --name BTC-GBP -v /home/example/config.json:/app/config.json -d ghcr.io/whittlem/pycryptobot/pycryptobot:latest <arguments>
     
-    * Arguments
-    --exchange <exchange> (coinbasepro or binance)
-        * Specify the exchange to use, leaving it out defaults to coinbasepro
-    --market <market> (coinbase format: BTC-GBP, binance format: BTCGBP)
-        * Coinbase Pro market
-    --granularity <granularity> (coinbase format: 3600, binance format: 1h)
-        * Supported granularity
-    --live <1 or 0> (default: 0)
-        * Is the bot live or in test/demo mode
-    --graphs <1 or 0> (default: 0)
-        * Save graphs on buy and sell events
-    --sim <fast, fast-sample, slow, slow-sample>
-        * Run a simulation on last 300 intervals of data OR on a random 300 intervals (sample)
-    --simstartdate <YYYY-MM-DD>
-        * Start date for sample simulation e.g '2021-01-15'
-    --verbose <1 or 0> (default: 1)
-        * Toggle verbose or minimal output
-    --sellupperpcnt <1-100>
-        * (Optional) Force a sell when the margin reaches an upper limit
-    --selllowerpcnt <-1-100>
-        * (Optional) Force a sell when the margin reaches an lower limit
-    --sellatloss <1 or 0> (default: 1)
-        * Toggle bot to sell at a loss (no small losses but could prevent getting out before a big crash)
-    --config myconfig.json
-    	* Use a custom configuration file at the given location.
+    Example:
+    % docker run --name BTC-GBP -v /Users/whittlem/Documents/Repos/Docker/config.json:/app/config.json -d ghcr.io/whittlem/pycryptobot/pycryptobot:latest --live 0
+    e491ae4fdba28aa9e74802895adf5e856006c3c63cf854c657482a6562a1e15
+    
+    Interactive:
+    % docker run --name BTC-GBP -v /home/example/config.json:/app/config.json -it ghcr.io/whittlem/pycryptobot/pycryptobot:latest <arguments>
+    
+    List Processes:
+    % docker ps
+
+    Example:
+    % docker ps
+    CONTAINER ID   IMAGE                                             COMMAND                  CREATED          STATUS          PORTS     NAMES
+    e491ae4fdba2   ghcr.io/whittlem/pycryptobot/pycryptobot:latest   "python3 pycryptobot…"   46 seconds ago   Up 44 seconds             BTC-GBP
+    
+    Container Shell:
+    % docker exec -it BTC-GBP /bin/bash                                                                                                                           
+    [root@e491ae4fdba2 app]#
+    
+    Build your own image (if necessary):
+    docker build -t pycryptobot_BTC-GBP .
+
+    Running the docker image:
+    docker run -d --rm --name pycryptobot_BTC-GBP_container pycryptobot_BTC-GBP
 
 Typically I would save all my settings in the config.json but running from the command line I would usually run it like this.
 
