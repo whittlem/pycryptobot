@@ -837,6 +837,30 @@ class PyCryptoBot():
         except Exception:
             return False
 
+    def isCryptoRecession(self):
+        try:
+            if self.exchange == 'coinbasepro':
+                api = CBPublicAPI()
+                df_data = api.getHistoricalData(self.market, 86400)
+            elif self.exchange == 'binance':
+                api = BPublicAPI()
+                df_data = api.getHistoricalData(self.market, '1d')
+            else:
+                return False # if there is an API issue, default to False to avoid hard sells
+
+            if len(df_data) <= 200:
+                return False # if there is unsufficient data, default to False to avoid hard sells
+
+            ta = TechnicalAnalysis(df_data)
+            ta.addSMA(50)
+            ta.addSMA(200)
+            df_last = ta.getDataFrame().copy().iloc[-1,:]
+            df_last['crypto_recession'] = df_last['sma50'] < df_last['sma200']
+
+            return bool(df_last['crypto_recession'])
+        except Exception:
+            return False
+
     def is6hEMA1226Bull(self):
         try:
             if self.exchange == 'coinbasepro':
