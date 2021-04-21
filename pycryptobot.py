@@ -172,7 +172,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.error('error: data frame length is < 300 (' + str(len(df)) + ')')
                 list(map(s.cancel, s.queue))
                 s.enter(300, 1, executeJob, (sc, app))
-                s
+                
     if len(df_last) > 0:
         if app.isSimulation() == 0:
             price = app.getTicker(app.getMarket())
@@ -188,7 +188,6 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         ema12gtema26 = bool(df_last['ema12gtema26'].values[0])
         ema12gtema26co = bool(df_last['ema12gtema26co'].values[0])
         goldencross = bool(df_last['goldencross'].values[0])
-        #deathcross = bool(df_last['deathcross'].values[0])
         macdgtsignal = bool(df_last['macdgtsignal'].values[0])
         macdgtsignalco = bool(df_last['macdgtsignalco'].values[0])
         ema12ltema26 = bool(df_last['ema12ltema26'].values[0])
@@ -215,8 +214,14 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         evening_doji_star = bool(df_last['evening_doji_star'].values[0])
         two_black_gapping = bool(df_last['two_black_gapping'].values[0])
 
+        # is crypto recession?
+        is_crypto_recession = app.isCryptoRecession()
+
+        if is_crypto_recession == True:
+            print ('Crypto Recession Warning - Time to get out!', "\n")
+
         # criteria for a buy signal
-        if ema12gtema26co == True and macdgtsignal == True and goldencross == True and obv_pc > -5 and elder_ray_buy == True and last_action != 'BUY':
+        if ema12gtema26co == True and macdgtsignal == True and goldencross == True and obv_pc > -5 and elder_ray_buy == True and is_crypto_recession == False and last_action != 'BUY':
             action = 'BUY'
         # criteria for a sell signal
         elif ema12ltema26co == True and macdltsignal == True and last_action not in ['','SELL']:
@@ -233,6 +238,19 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             fee = last_buy * 0.005
             last_buy_minus_fees = last_buy + fee
             margin = ((price - last_buy_minus_fees) / price) * 100
+
+            # crypto recession
+            if is_crypto_recession == True:
+                action = 'SELL'
+                last_action = 'BUY'
+                log_text = '! Loss Failsafe Triggered (Crypto Recession! - SMA50 < SMA200 on day charts)'
+                print (log_text, "\n")
+                logging.warning(log_text)
+
+                # telegram
+                if app.isTelegramEnabled():
+                    telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
+                    telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)                
 
             # loss failsafe sell at fibonacci band
             if app.allowSellAtLoss() and app.sellLowerPcnt() == None and fib_low > 0 and fib_low >= float(price):
