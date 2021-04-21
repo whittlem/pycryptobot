@@ -30,6 +30,11 @@ parser.add_argument('--smartswitch', type=int, help='optionally smart switch bet
 parser.add_argument('--verbose', type=int, help='verbose output=1, minimal output=0')
 parser.add_argument('--config', type=str, help="Use the config file at the given location. e.g 'myconfig.json'")
 
+# disable defaults
+parser.add_argument('--disablebullonly', action="store_true", help="disable only buying in bull market")
+parser.add_argument('--disablebuyobv', action="store_true", help="disable obv buy signal")
+parser.add_argument('--disablebuyelderray', action="store_true", help="disable elder ray buy signal")
+
 # parse arguments
 args = parser.parse_args()
 
@@ -65,6 +70,10 @@ class PyCryptoBot():
         self.sell_at_loss = 1
         self.smart_switch = 1
         self.telegram = False
+
+        self.disablebullonly = False
+        self.disablebuyobv = False
+        self.disablebuyelderray = False
 
         self._telegram_token = None
         self._telegram_client_id = None
@@ -181,6 +190,21 @@ class PyCryptoBot():
                                     if self.sell_at_loss == 0:
                                         self.sell_lower_pcnt = None
 
+                        if 'disablebullonly' in config:
+                            if isinstance(config['disablebullonly'], int):
+                                if config['disablebullonly'] in [ 0, 1 ]:
+                                    self.disablebullonly = bool(config['disablebullonly'])
+
+                        if 'disablebuyobv' in config:
+                            if isinstance(config['disablebuyobv'], int):
+                                if config['disablebuyobv'] in [ 0, 1 ]:
+                                    self.disablebuyobv = bool(config['disablebuyobv'])
+
+                        if 'disablebuyelderray' in config:
+                            if isinstance(config['disablebuyelderray'], int):
+                                if config['disablebuyelderray'] in [ 0, 1 ]:
+                                    self.disablebuyelderray = bool(config['disablebuyelderray'])
+
                         # backward compatibility
                         if 'nosellatloss' in config:
                             if isinstance(config['nosellatloss'], int):
@@ -276,6 +300,21 @@ class PyCryptoBot():
                                     self.sell_at_loss = config['sellatloss']
                                     if self.sell_at_loss == 0:
                                         self.sell_lower_pcnt = None
+
+                        if 'disablebullonly' in config:
+                            if isinstance(config['disablebullonly'], int):
+                                if config['disablebullonly'] in [ 0, 1 ]:
+                                    self.disablebullonly = bool(config['disablebullonly'])
+
+                        if 'disablebuyobv' in config:
+                            if isinstance(config['disablebuyobv'], int):
+                                if config['disablebuyobv'] in [ 0, 1 ]:
+                                    self.disablebuyobv = bool(config['disablebuyobv'])
+
+                        if 'disablebuyelderray' in config:
+                            if isinstance(config['disablebuyelderray'], int):
+                                if config['disablebuyelderray'] in [ 0, 1 ]:
+                                    self.disablebuyelderray = bool(config['disablebuyelderray'])
 
                         # backward compatibility
                         if 'nosellatloss' in config:
@@ -379,6 +418,21 @@ class PyCryptoBot():
                                         if self.sell_at_loss == 0:
                                             self.sell_lower_pcnt = None
 
+                            if 'disablebullonly' in config:
+                                if isinstance(config['disablebullonly'], int):
+                                    if config['disablebullonly'] in [ 0, 1 ]:
+                                        self.disablebullonly = bool(config['disablebullonly'])
+
+                            if 'disablebuyobv' in config:
+                                if isinstance(config['disablebuyobv'], int):
+                                    if config['disablebuyobv'] in [ 0, 1 ]:
+                                        self.disablebuyobv = bool(config['disablebuyobv'])
+
+                            if 'disablebuyelderray' in config:
+                                if isinstance(config['disablebuyelderray'], int):
+                                    if config['disablebuyelderray'] in [ 0, 1 ]:
+                                        self.disablebuyelderray = bool(config['disablebuyelderray'])
+
                             # backward compatibility
                             if 'nosellatloss' in config:
                                 if isinstance(config['nosellatloss'], int):
@@ -475,6 +529,21 @@ class PyCryptoBot():
                                         self.sell_at_loss = config['sellatloss']
                                         if self.sell_at_loss == 0:
                                             self.sell_lower_pcnt = None
+
+                            if 'disablebullonly' in config:
+                                if isinstance(config['disablebullonly'], int):
+                                    if config['disablebullonly'] in [ 0, 1 ]:
+                                        self.disablebullonly = bool(config['disablebullonly'])
+
+                            if 'disablebuyobv' in config:
+                                if isinstance(config['disablebuyobv'], int):
+                                    if config['disablebuyobv'] in [ 0, 1 ]:
+                                        self.disablebuyobv = bool(config['disablebuyobv'])
+
+                            if 'disablebuyelderray' in config:
+                                if isinstance(config['disablebuyelderray'], int):
+                                    if config['disablebuyelderray'] in [ 0, 1 ]:
+                                        self.disablebuyelderray = bool(config['disablebuyelderray'])
 
                             # backward compatibility
                             if 'nosellatloss' in config:
@@ -682,6 +751,15 @@ class PyCryptoBot():
                 self.sell_at_loss = args.sellatloss
                 if self.sell_at_loss == 0:
                     self.sell_lower_pcnt = None
+
+        if args.disablebullonly == True:
+            self.disablebullonly = True
+
+        if args.disablebuyobv == True:
+            self.disablebuyobv = True
+    
+        if args.disablebuyelderray == True:
+            self.disablebuyelderray = True
 
         if self.exchange == 'binance':
             if len(self.api_url) > 1 and self.api_url[-1] != '/':
@@ -951,6 +1029,15 @@ class PyCryptoBot():
 
     def allowSellAtLoss(self):
         return self.sell_at_loss
+
+    def disableBullOnly(self):
+        return self.disablebullonly
+
+    def disableBuyOBV(self):
+        return self.disablebuyobv
+
+    def disableBuyElderRay(self):
+        return self.disablebuyelderray
 
     def setGranularity(self, granularity):
         if self.exchange == 'binance' and isinstance(granularity, str) and granularity in [ '1m', '5m', '15m', '1h', '6h', '1d' ]:

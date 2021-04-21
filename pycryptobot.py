@@ -221,7 +221,13 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             print ('Crypto Recession Warning - Time to get out!', "\n")
 
         # criteria for a buy signal
-        if ema12gtema26co == True and macdgtsignal == True and goldencross == True and obv_pc > -5 and elder_ray_buy == True and is_crypto_recession == False and last_action != 'BUY':
+        if ema12gtema26co == True \
+                and macdgtsignal == True \
+                and (app.disableBullOnly() == False and goldencross == True) \
+                and (app.disableBuyOBV() == False and obv_pc > -5) \
+                and (app.disableBuyElderRay() == False and elder_ray_buy == True) \
+                and is_crypto_recession == False \
+                and last_action != 'BUY':
             action = 'BUY'
         # criteria for a sell signal
         elif ema12ltema26co == True and macdltsignal == True and last_action not in ['','SELL']:
@@ -240,7 +246,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             margin = ((price - last_buy_minus_fees) / price) * 100
 
             # crypto recession
-            if is_crypto_recession == True:
+            if app.allowSellAtLoss() and is_crypto_recession == True:
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Loss Failsafe Triggered (Crypto Recession! - SMA50 < SMA200 on day charts)'
@@ -352,7 +358,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.warning(log_text)
 
         bullbeartext = ''
-        if df_last['sma50'].values[0] == df_last['sma200'].values[0]:
+        if app.disableBullOnly() == True or (df_last['sma50'].values[0] == df_last['sma200'].values[0]):
             bullbeartext = ''
         elif goldencross == True:
             bullbeartext = ' (BULL)'
@@ -369,14 +375,19 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             price_text = 'Close: ' + str(app.truncate(price, precision))
             ema_text = app.compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26', precision)
             macd_text = app.compare(df_last['macd'].values[0], df_last['signal'].values[0], 'MACD', precision)
-            obv_text = 'OBV: ' + str(app.truncate(df_last['obv'].values[0], 4)) + ' (' + str(app.truncate(df_last['obv_pc'].values[0], 2)) + '%)'
 
-            if elder_ray_buy == True:
-                eri_text = 'ERI: buy'
-            elif elder_ray_sell == True:
-                eri_text = 'ERI: sell'
-            else:
-                eri_text = 'ERI:'
+            obv_text = ''
+            if app.disableBuyOBV() == False:
+                obv_text = 'OBV: ' + str(app.truncate(df_last['obv'].values[0], 4)) + ' (' + str(app.truncate(df_last['obv_pc'].values[0], 2)) + '%)'
+
+            eri_text = ''
+            if app.disableBuyElderRay() == False:
+                if elder_ray_buy == True:
+                    eri_text = 'ERI: buy | '
+                elif elder_ray_sell == True:
+                    eri_text = 'ERI: sell | '
+                else:
+                    eri_text = 'ERI: | '
 
             if hammer == True:
                 log_text = '* Candlestick Detected: Hammer ("Weak - Reversal - Bullish Signal - Up")'
@@ -520,18 +531,19 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
 
             obv_prefix = ''
             obv_suffix = ''
-            if float(obv_pc) > 0:
-                obv_prefix = '^ '
-                obv_suffix = ' ^'
-            elif float(obv_pc) < 0:
-                obv_prefix = 'v '
-                obv_suffix = ' v'
+            if app.disableBuyOBV() == False:
+                if float(obv_pc) > 0:
+                    obv_prefix = '^ '
+                    obv_suffix = ' ^ | '
+                elif float(obv_pc) < 0:
+                    obv_prefix = 'v '
+                    obv_suffix = ' v | '
 
             if app.isVerbose() == 0:
                 if last_action != '':
-                    output_text = current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + eri_text + ' | ' + action + ' | Last Action: ' + last_action
+                    output_text = current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + eri_text + action + ' | Last Action: ' + last_action
                 else:
-                    output_text = current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + eri_text + ' | ' + action + ' '
+                    output_text = current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + eri_text + action + ' '
 
                 if last_action == 'BUY':
                     if last_buy_minus_fees > 0:
