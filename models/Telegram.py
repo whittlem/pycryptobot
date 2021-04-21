@@ -10,7 +10,7 @@ class Telegram():
         if not p.match(token):
             raise Exception('Telegram token is invalid')
 
-        p = re.compile(r"^\d{7,10}$")
+        p = re.compile(r"^-*\d{7,10}$")
         if not p.match(client_id):
             raise Exception('Telegram client_id is invalid')
 
