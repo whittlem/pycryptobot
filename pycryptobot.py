@@ -223,14 +223,17 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         # criteria for a buy signal
         if ema12gtema26co == True \
                 and macdgtsignal == True \
-                and (app.disableBullOnly() == False and goldencross == True) \
-                and (app.disableBuyOBV() == False and obv_pc > -5) \
-                and (app.disableBuyElderRay() == False and elder_ray_buy == True) \
+                and goldencross == True \
+                and obv_pc > -5 \
+                and elder_ray_buy == True \
                 and is_crypto_recession == False \
                 and last_action != 'BUY':
-            action = 'BUY'
+            last_action = 'BUY'
+
         # criteria for a sell signal
-        elif ema12ltema26co == True and macdltsignal == True and last_action not in ['','SELL']:
+        elif ema12ltema26co == True \
+                and macdltsignal == True \
+                and last_action not in ['', 'SELL']:
             action = 'SELL'
         # anything other than a buy or sell, just wait
         else:
@@ -246,7 +249,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             margin = ((price - last_buy_minus_fees) / price) * 100
 
             # crypto recession
-            if app.allowSellAtLoss() and is_crypto_recession == True:
+            if app.disableCryptoRecession() == False and app.allowSellAtLoss() and is_crypto_recession == True:
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Loss Failsafe Triggered (Crypto Recession! - SMA50 < SMA200 on day charts)'
