@@ -199,6 +199,10 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         elder_ray_buy = bool(df_last['eri_buy'].values[0])
         elder_ray_sell = bool(df_last['eri_sell'].values[0])
 
+        # if simulation interations < 200 set goldencross to true
+        if app.isSimulation() == 1 and iterations < 200:
+            goldencross = True
+
         # candlestick detection
         hammer = bool(df_last['hammer'].values[0])
         inverted_hammer = bool(df_last['inverted_hammer'].values[0])
@@ -215,16 +219,27 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         two_black_gapping = bool(df_last['two_black_gapping'].values[0])
 
         # is crypto recession?
-        is_crypto_recession = app.isCryptoRecession()
+        is_crypto_recession = False
+        if app.disableCryptoRecession() == False:
+             is_crypto_recession = app.isCryptoRecession()
 
         if is_crypto_recession == True:
             print ('Crypto Recession Warning - Time to get out!', "\n")
 
         # criteria for a buy signal
-        if ema12gtema26co == True and macdgtsignal == True and goldencross == True and obv_pc > -5 and elder_ray_buy == True and is_crypto_recession == False and last_action != 'BUY':
+        if ema12gtema26co == True \
+                and macdgtsignal == True \
+                and (goldencross == True or app.disableBullOnly()) \
+                and (obv_pc > -5 or app.disableBuyOBV()) \
+                and (elder_ray_buy == True or app.disableBuyElderRay()) \
+                and (is_crypto_recession == False or app.disableCryptoRecession()) \
+                and last_action != 'BUY':
             action = 'BUY'
+
         # criteria for a sell signal
-        elif ema12ltema26co == True and macdltsignal == True and last_action not in ['','SELL']:
+        elif ema12ltema26co == True \
+                and macdltsignal == True \
+                and last_action not in ['', 'SELL']:
             action = 'SELL'
         # anything other than a buy or sell, just wait
         else:
@@ -240,7 +255,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             margin = ((price - last_buy_minus_fees) / price) * 100
 
             # crypto recession
-            if is_crypto_recession == True:
+            if app.disableCryptoRecession() == False and app.allowSellAtLoss() and is_crypto_recession == True:
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Loss Failsafe Triggered (Crypto Recession! - SMA50 < SMA200 on day charts)'
@@ -253,7 +268,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)                
 
             # loss failsafe sell at fibonacci band
-            if app.allowSellAtLoss() and app.sellLowerPcnt() == None and fib_low > 0 and fib_low >= float(price):
+            if app.disableFailsafeFibonacciLow() == False and app.allowSellAtLoss() and app.sellLowerPcnt() == None and fib_low > 0 and fib_low >= float(price):
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Loss Failsafe Triggered (Fibonacci Band: ' + str(fib_low) + ')'
@@ -266,7 +281,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
             # loss failsafe sell at sell_lower_pcnt
-            if app.allowSellAtLoss() and app.sellLowerPcnt() != None and change_pcnt < app.sellLowerPcnt():
+            if app.disableFailsafeLowerPcnt() == False and app.allowSellAtLoss() and app.sellLowerPcnt() != None and change_pcnt < app.sellLowerPcnt():
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Loss Failsafe Triggered (< ' + str(app.sellLowerPcnt()) + '%)'
@@ -278,34 +293,8 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
-            if app.getSmartSwitch() == 1 and app.getExchange() == 'binance' and app.getGranularity() == '15m' and change_pcnt >= 2:
-                # profit bank at 2% in smart switched mode
-                action = 'SELL'
-                last_action = 'BUY'
-                log_text = '! Profit Bank Triggered (Smart Switch 2%)'
-                print (log_text, "\n")
-                logging.warning(log_text)
-
-                # telegram
-                if app.isTelegramEnabled():
-                    telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
-                    telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
-
-            if app.getSmartSwitch() == 1 and app.getExchange() == 'coinbasepro' and app.getGranularity() == 900 and change_pcnt >= 2:
-                # profit bank at 2% in smart switched mode
-                action = 'SELL'
-                last_action = 'BUY'
-                log_text = '! Profit Bank Triggered (Smart Switch 2%)'
-                print (log_text, "\n")
-                logging.warning(log_text)
-
-                # telegram
-                if app.isTelegramEnabled():
-                    telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
-                    telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
-
             # profit bank at sell_upper_pcnt
-            if app.sellUpperPcnt() != None and change_pcnt > app.sellUpperPcnt():
+            if app.disableProfitbankUpperPcnt() == False and app.sellUpperPcnt() != None and change_pcnt > app.sellUpperPcnt():
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Profit Bank Triggered (> ' + str(app.sellUpperPcnt()) + '%)'
@@ -318,7 +307,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
             # profit bank at sell at fibonacci band
-            if margin > 3 and app.sellUpperPcnt() != None and fib_high > fib_low and fib_high <= float(price):
+            if app.disableProfitbankFibonacciHigh() == False and margin > 3 and app.sellUpperPcnt() != None and fib_high > fib_low and fib_high <= float(price):
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Profit Bank Triggered (Fibonacci Band: ' + str(fib_high) + ')'
@@ -331,7 +320,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
             # profit bank when strong reversal detected
-            if margin > 3 and obv_pc < 0 and macdltsignal == True:
+            if app.disableProfitbankReversal() == False and margin > 3 and obv_pc < 0 and macdltsignal == True:
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Profit Bank Triggered (Strong Reversal Detected)'
@@ -344,7 +333,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
             # configuration specifies to not sell at a loss
-            if not app.allowSellAtLoss() and margin <= 0:
+            if action == 'SELL' and not app.allowSellAtLoss() and margin <= 0:
                 action = 'WAIT'
                 last_action = 'BUY'
                 log_text = '! Ignore Sell Signal (No Sell At Loss)'
@@ -352,7 +341,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.warning(log_text)
 
         bullbeartext = ''
-        if df_last['sma50'].values[0] == df_last['sma200'].values[0]:
+        if app.disableBullOnly() == True or (df_last['sma50'].values[0] == df_last['sma200'].values[0]):
             bullbeartext = ''
         elif goldencross == True:
             bullbeartext = ' (BULL)'
@@ -369,14 +358,19 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             price_text = 'Close: ' + str(app.truncate(price, precision))
             ema_text = app.compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26', precision)
             macd_text = app.compare(df_last['macd'].values[0], df_last['signal'].values[0], 'MACD', precision)
-            obv_text = 'OBV: ' + str(app.truncate(df_last['obv'].values[0], 4)) + ' (' + str(app.truncate(df_last['obv_pc'].values[0], 2)) + '%)'
 
-            if elder_ray_buy == True:
-                eri_text = 'ERI: buy'
-            elif elder_ray_sell == True:
-                eri_text = 'ERI: sell'
-            else:
-                eri_text = 'ERI:'
+            obv_text = ''
+            if app.disableBuyOBV() == False:
+                obv_text = 'OBV: ' + str(app.truncate(df_last['obv'].values[0], 4)) + ' (' + str(app.truncate(df_last['obv_pc'].values[0], 2)) + '%)'
+
+            eri_text = ''
+            if app.disableBuyElderRay() == False:
+                if elder_ray_buy == True:
+                    eri_text = 'ERI: buy | '
+                elif elder_ray_sell == True:
+                    eri_text = 'ERI: sell | '
+                else:
+                    eri_text = 'ERI: | '
 
             if hammer == True:
                 log_text = '* Candlestick Detected: Hammer ("Weak - Reversal - Bullish Signal - Up")'
@@ -504,34 +498,35 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 ema_co_suffix = ' v'
 
             macd_co_prefix = ''
-            macd_co_suffix = ''
+            macd_co_suffix = ' | '
             if macdgtsignalco == True:
                 macd_co_prefix = '*^ '
-                macd_co_suffix = ' ^*'
+                macd_co_suffix = ' ^* | '
             elif macdltsignalco == True:
                 macd_co_prefix = '*v '
-                macd_co_suffix = ' v*'
+                macd_co_suffix = ' v* | '
             elif macdgtsignal == True:
                 macd_co_prefix = '^ '
-                macd_co_suffix = ' ^'
+                macd_co_suffix = ' ^ | '
             elif macdltsignal == True:
                 macd_co_prefix = 'v '
-                macd_co_suffix = ' v'
+                macd_co_suffix = ' v | '
 
             obv_prefix = ''
             obv_suffix = ''
-            if float(obv_pc) > 0:
-                obv_prefix = '^ '
-                obv_suffix = ' ^'
-            elif float(obv_pc) < 0:
-                obv_prefix = 'v '
-                obv_suffix = ' v'
+            if app.disableBuyOBV() == False:
+                if float(obv_pc) > 0:
+                    obv_prefix = '^ '
+                    obv_suffix = ' ^ | '
+                elif float(obv_pc) < 0:
+                    obv_prefix = 'v '
+                    obv_suffix = ' v | '
 
             if app.isVerbose() == 0:
                 if last_action != '':
-                    output_text = current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + eri_text + ' | ' + action + ' | Last Action: ' + last_action
+                    output_text = current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + obv_prefix + obv_text + obv_suffix + eri_text + action + ' | Last Action: ' + last_action
                 else:
-                    output_text = current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + eri_text + ' | ' + action + ' '
+                    output_text = current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + obv_prefix + obv_text + obv_suffix + eri_text + action + ' '
 
                 if last_action == 'BUY':
                     if last_buy_minus_fees > 0:
