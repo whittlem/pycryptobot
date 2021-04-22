@@ -143,6 +143,18 @@ Special sell cases:
 * If the margin exceeds 3% but a strong reversal is detected with negative OBV and MACD < Signal it will sell
 * "sellatloss" set to 0 prevents selling at a loss
 
+## Disabling Default Functionality
+
+    --disablebullonly                   Disable only buying in bull market
+    --disablebuyobv                     Disable obv buy signal
+    --disablebuyelderray                Disable elder ray buy signal
+    --disablecryptorecession            Disable crypto recession check
+    --disablefailsafefibonaccilow       Disable failsafe sell on fibonacci lower band
+    --disablefailsafelowerpcnt          Disable failsafe sell on 'selllowerpcnt'
+    --disableprofitbankupperpcnt        Disable profit bank on 'sellupperpcnt'
+    --disableprofitbankfibonaccihigh    Disable profit bank on fibonacci upper band
+    --disableprofitbankreversal         Disable profit bank on strong candlestick reversal
+
 ## "Sell At Loss" explained
 
 The "sellatloss" option disabled has it's benefits and disadvantages. It does prevent any losses but also prevents you from exiting a market before a crash or bear market. Sometimes it's better to make an occasional small loss and make it up with several buys than be conservative and potentially lock a trade for weeks if not months. It happened to me while testing this with the last crash (after Elon's tweet!). Three of my bots did not sell while the profit dropped to -10 to -20%. It did bounce back and I made over 3% a trade with any losses but I also lost out of loads of trading opportunities. It's really a matter of preference. Maybe some markets would be more appropriate than others for this.
