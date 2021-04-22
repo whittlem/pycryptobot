@@ -4,8 +4,6 @@ services:
   pycryptobot:
     image: ghcr.io/whittlem/pycryptobot/pycryptobot:latest
     container_name: pycryptobot
-    environment:
-      - PYTHONUNBUFFERED=1
     volumes:
       - ./config.json:/app/config.json
       - ./graphs:/app/graphs
@@ -16,8 +14,6 @@ services:
 #  pycryptobot_btceur:
 #    image: ghcr.io/whittlem/pycryptobot:latest
 #    container_name: pycryptobot
-#    environment:
-#      - PYTHONUNBUFFERED=1
 #    volumes:
 #      - ./config_btceur.json:/app/config.json
 #      - ./graphs:/app/graphs
@@ -26,8 +22,6 @@ services:
 #  pycryptobot_etheur:
 #    image: ghcr.io/whittlem/pycryptobot:latest
 #    container_name: pycryptobot
-#    environment:
-#      - PYTHONUNBUFFERED=1
 #    volumes:
 #      - ./config_etheur.json:/app/config.json
 #      - ./graphs:/app/graphs
