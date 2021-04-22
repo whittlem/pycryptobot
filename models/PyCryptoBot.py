@@ -35,6 +35,11 @@ parser.add_argument('--disablebullonly', action="store_true", help="disable only
 parser.add_argument('--disablebuyobv', action="store_true", help="disable obv buy signal")
 parser.add_argument('--disablebuyelderray', action="store_true", help="disable elder ray buy signal")
 parser.add_argument('--disablecryptorecession', action="store_true", help="disable crypto recession check")
+parser.add_argument('--disablefailsafefibonaccilow', action="store_true", help="disable failsafe sell on fibonacci lower band")
+parser.add_argument('--disablefailsafelowerpcnt', action="store_true", help="disable failsafe sell on 'selllowerpcnt'")
+parser.add_argument('--disableprofitbankupperpcnt', action="store_true", help="disable profit bank on 'sellupperpcnt'")
+parser.add_argument('--disableprofitbankfibonaccihigh', action="store_true", help="disable profit bank on fibonacci upper band")
+parser.add_argument('--disableprofitbankreversal', action="store_true", help="disable profit bank on strong candlestick reversal")
 
 # parse arguments
 args = parser.parse_args()
@@ -76,6 +81,11 @@ class PyCryptoBot():
         self.disablebuyobv = False
         self.disablebuyelderray = False
         self.disablecryptorecession = False
+        self.disablefailsafefibonaccilow = False
+        self.disablefailsafelowerpcnt = False
+        self.disableprofitbankupperpcnt = False
+        self.disableprofitbankfibonaccihigh = False
+        self.disableprofitbankreversal = False
 
         self._telegram_token = None
         self._telegram_client_id = None
@@ -212,6 +222,31 @@ class PyCryptoBot():
                                 if config['disablecryptorecession'] in [ 0, 1 ]:
                                     self.disablecryptorecession = bool(config['disablecryptorecession'])
 
+                        if 'disablefailsafefibonaccilow' in config:
+                            if isinstance(config['disablefailsafefibonaccilow'], int):
+                                if config['disablefailsafefibonaccilow'] in [ 0, 1 ]:
+                                    self.disablefailsafefibonaccilow = bool(config['disablefailsafefibonaccilow'])
+
+                        if 'disablefailsafelowerpcnt' in config:
+                            if isinstance(config['disablefailsafelowerpcnt'], int):
+                                if config['disablefailsafelowerpcnt'] in [ 0, 1 ]:
+                                    self.disablefailsafelowerpcnt = bool(config['disablefailsafelowerpcnt'])
+
+                        if 'disableprofitbankupperpcnt' in config:
+                            if isinstance(config['disableprofitbankupperpcnt'], int):
+                                if config['disableprofitbankupperpcnt'] in [ 0, 1 ]:
+                                    self.disableprofitbankupperpcnt = bool(config['disableprofitbankupperpcnt'])
+
+                        if 'disableprofitbankfibonaccihigh' in config:
+                            if isinstance(config['disableprofitbankfibonaccihigh'], int):
+                                if config['disableprofitbankfibonaccihigh'] in [ 0, 1 ]:
+                                    self.disableprofitbankfibonaccihigh = bool(config['disableprofitbankfibonaccihigh'])
+
+                        if 'disableprofitbankreversal' in config:
+                            if isinstance(config['disableprofitbankreversal'], int):
+                                if config['disableprofitbankreversal'] in [ 0, 1 ]:
+                                    self.disableprofitbankreversal = bool(config['disableprofitbankreversal'])
+
                         # backward compatibility
                         if 'nosellatloss' in config:
                             if isinstance(config['nosellatloss'], int):
@@ -327,6 +362,31 @@ class PyCryptoBot():
                             if isinstance(config['disablecryptorecession'], int):
                                 if config['disablecryptorecession'] in [ 0, 1 ]:
                                     self.disablecryptorecession = bool(config['disablecryptorecession'])
+
+                        if 'disablefailsafefibonaccilow' in config:
+                            if isinstance(config['disablefailsafefibonaccilow'], int):
+                                if config['disablefailsafefibonaccilow'] in [ 0, 1 ]:
+                                    self.disablefailsafefibonaccilow = bool(config['disablefailsafefibonaccilow'])
+
+                        if 'disablefailsafelowerpcnt' in config:
+                            if isinstance(config['disablefailsafelowerpcnt'], int):
+                                if config['disablefailsafelowerpcnt'] in [ 0, 1 ]:
+                                    self.disablefailsafelowerpcnt = bool(config['disablefailsafelowerpcnt'])
+
+                        if 'disableprofitbankupperpcnt' in config:
+                            if isinstance(config['disableprofitbankupperpcnt'], int):
+                                if config['disableprofitbankupperpcnt'] in [ 0, 1 ]:
+                                    self.disableprofitbankupperpcnt = bool(config['disableprofitbankupperpcnt'])
+
+                        if 'disableprofitbankfibonaccihigh' in config:
+                            if isinstance(config['disableprofitbankfibonaccihigh'], int):
+                                if config['disableprofitbankfibonaccihigh'] in [ 0, 1 ]:
+                                    self.disableprofitbankfibonaccihigh = bool(config['disableprofitbankfibonaccihigh'])
+
+                        if 'disableprofitbankreversal' in config:
+                            if isinstance(config['disableprofitbankreversal'], int):
+                                if config['disableprofitbankreversal'] in [ 0, 1 ]:
+                                    self.disableprofitbankreversal = bool(config['disableprofitbankreversal'])
 
                         # backward compatibility
                         if 'nosellatloss' in config:
@@ -450,6 +510,31 @@ class PyCryptoBot():
                                     if config['disablecryptorecession'] in [ 0, 1 ]:
                                         self.disablecryptorecession = bool(config['disablecryptorecession'])
 
+                            if 'disablefailsafefibonaccilow' in config:
+                                if isinstance(config['disablefailsafefibonaccilow'], int):
+                                    if config['disablefailsafefibonaccilow'] in [ 0, 1 ]:
+                                        self.disablefailsafefibonaccilow = bool(config['disablefailsafefibonaccilow'])
+
+                            if 'disablefailsafelowerpcnt' in config:
+                                if isinstance(config['disablefailsafelowerpcnt'], int):
+                                    if config['disablefailsafelowerpcnt'] in [ 0, 1 ]:
+                                        self.disablefailsafelowerpcnt = bool(config['disablefailsafelowerpcnt'])
+
+                            if 'disableprofitbankupperpcnt' in config:
+                                if isinstance(config['disableprofitbankupperpcnt'], int):
+                                    if config['disableprofitbankupperpcnt'] in [ 0, 1 ]:
+                                        self.disableprofitbankupperpcnt = bool(config['disableprofitbankupperpcnt'])
+
+                            if 'disableprofitbankfibonaccihigh' in config:
+                                if isinstance(config['disableprofitbankfibonaccihigh'], int):
+                                    if config['disableprofitbankfibonaccihigh'] in [ 0, 1 ]:
+                                        self.disableprofitbankfibonaccihigh = bool(config['disableprofitbankfibonaccihigh'])
+
+                            if 'disableprofitbankreversal' in config:
+                                if isinstance(config['disableprofitbankreversal'], int):
+                                    if config['disableprofitbankreversal'] in [ 0, 1 ]:
+                                        self.disableprofitbankreversal = bool(config['disableprofitbankreversal'])
+
                             # backward compatibility
                             if 'nosellatloss' in config:
                                 if isinstance(config['nosellatloss'], int):
@@ -566,6 +651,31 @@ class PyCryptoBot():
                                 if isinstance(config['disablecryptorecession'], int):
                                     if config['disablecryptorecession'] in [ 0, 1 ]:
                                         self.disablecryptorecession = bool(config['disablecryptorecession'])
+
+                            if 'disablefailsafefibonaccilow' in config:
+                                if isinstance(config['disablefailsafefibonaccilow'], int):
+                                    if config['disablefailsafefibonaccilow'] in [ 0, 1 ]:
+                                        self.disablefailsafefibonaccilow = bool(config['disablefailsafefibonaccilow'])
+
+                            if 'disablefailsafelowerpcnt' in config:
+                                if isinstance(config['disablefailsafelowerpcnt'], int):
+                                    if config['disablefailsafelowerpcnt'] in [ 0, 1 ]:
+                                        self.disablefailsafelowerpcnt = bool(config['disablefailsafelowerpcnt'])
+
+                            if 'disableprofitbankupperpcnt' in config:
+                                if isinstance(config['disableprofitbankupperpcnt'], int):
+                                    if config['disableprofitbankupperpcnt'] in [ 0, 1 ]:
+                                        self.disableprofitbankupperpcnt = bool(config['disableprofitbankupperpcnt'])
+
+                            if 'disableprofitbankfibonaccihigh' in config:
+                                if isinstance(config['disableprofitbankfibonaccihigh'], int):
+                                    if config['disableprofitbankfibonaccihigh'] in [ 0, 1 ]:
+                                        self.disableprofitbankfibonaccihigh = bool(config['disableprofitbankfibonaccihigh'])
+
+                            if 'disableprofitbankreversal' in config:
+                                if isinstance(config['disableprofitbankreversal'], int):
+                                    if config['disableprofitbankreversal'] in [ 0, 1 ]:
+                                        self.disableprofitbankreversal = bool(config['disableprofitbankreversal'])
 
                             # backward compatibility
                             if 'nosellatloss' in config:
@@ -786,6 +896,21 @@ class PyCryptoBot():
         if args.disablecryptorecession == True:
             self.disablecryptorecession = True
 
+        if args.disablefailsafefibonaccilow == True:
+            self.disablefailsafefibonaccilow = True
+
+        if args.disablefailsafelowerpcnt == True:
+            self.disablefailsafelowerpcnt = True
+
+        if args.disableprofitbankupperpcnt == True:
+            self.disableprofitbankupperpcnt = True
+        
+        if args.disableprofitbankfibonaccihigh == True:
+            self.disableprofitbankfibonaccihigh = True
+        
+        if args.disableprofitbankreversal == True:
+            self.disableprofitbankreversal = True
+        
         if self.exchange == 'binance':
             if len(self.api_url) > 1 and self.api_url[-1] != '/':
                 self.api_url = self.api_url + '/'
@@ -1066,6 +1191,21 @@ class PyCryptoBot():
 
     def disableCryptoRecession(self):
         return self.disablecryptorecession
+
+    def disableFailsafeFibonacciLow(self):
+        return self.disablefailsafefibonaccilow
+
+    def disableFailsafeLowerPcnt(self):
+        return self.disablefailsafelowerpcnt
+    
+    def disableProfitbankUpperPcnt(self):
+        return self.disableprofitbankupperpcnt
+
+    def disableProfitbankFibonacciHigh(self):
+        return self.disableprofitbankfibonaccihigh
+
+    def disableProfitbankReversal(self):
+        return self.disableprofitbankreversal
 
     def setGranularity(self, granularity):
         if self.exchange == 'binance' and isinstance(granularity, str) and granularity in [ '1m', '5m', '15m', '1h', '6h', '1d' ]:
