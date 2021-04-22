@@ -34,6 +34,7 @@ parser.add_argument('--config', type=str, help="Use the config file at the given
 parser.add_argument('--disablebullonly', action="store_true", help="disable only buying in bull market")
 parser.add_argument('--disablebuyobv', action="store_true", help="disable obv buy signal")
 parser.add_argument('--disablebuyelderray', action="store_true", help="disable elder ray buy signal")
+parser.add_argument('--disablecryptorecession', action="store_true", help="disable crypto recession check")
 
 # parse arguments
 args = parser.parse_args()
@@ -74,6 +75,7 @@ class PyCryptoBot():
         self.disablebullonly = False
         self.disablebuyobv = False
         self.disablebuyelderray = False
+        self.disablecryptorecession = False
 
         self._telegram_token = None
         self._telegram_client_id = None
@@ -205,6 +207,11 @@ class PyCryptoBot():
                                 if config['disablebuyelderray'] in [ 0, 1 ]:
                                     self.disablebuyelderray = bool(config['disablebuyelderray'])
 
+                        if 'disablecryptorecession' in config:
+                            if isinstance(config['disablecryptorecession'], int):
+                                if config['disablecryptorecession'] in [ 0, 1 ]:
+                                    self.disablecryptorecession = bool(config['disablecryptorecession'])
+
                         # backward compatibility
                         if 'nosellatloss' in config:
                             if isinstance(config['nosellatloss'], int):
@@ -315,6 +322,11 @@ class PyCryptoBot():
                             if isinstance(config['disablebuyelderray'], int):
                                 if config['disablebuyelderray'] in [ 0, 1 ]:
                                     self.disablebuyelderray = bool(config['disablebuyelderray'])
+
+                        if 'disablecryptorecession' in config:
+                            if isinstance(config['disablecryptorecession'], int):
+                                if config['disablecryptorecession'] in [ 0, 1 ]:
+                                    self.disablecryptorecession = bool(config['disablecryptorecession'])
 
                         # backward compatibility
                         if 'nosellatloss' in config:
@@ -433,6 +445,11 @@ class PyCryptoBot():
                                     if config['disablebuyelderray'] in [ 0, 1 ]:
                                         self.disablebuyelderray = bool(config['disablebuyelderray'])
 
+                            if 'disablecryptorecession' in config:
+                                if isinstance(config['disablecryptorecession'], int):
+                                    if config['disablecryptorecession'] in [ 0, 1 ]:
+                                        self.disablecryptorecession = bool(config['disablecryptorecession'])
+
                             # backward compatibility
                             if 'nosellatloss' in config:
                                 if isinstance(config['nosellatloss'], int):
@@ -544,6 +561,11 @@ class PyCryptoBot():
                                 if isinstance(config['disablebuyelderray'], int):
                                     if config['disablebuyelderray'] in [ 0, 1 ]:
                                         self.disablebuyelderray = bool(config['disablebuyelderray'])
+
+                            if 'disablecryptorecession' in config:
+                                if isinstance(config['disablecryptorecession'], int):
+                                    if config['disablecryptorecession'] in [ 0, 1 ]:
+                                        self.disablecryptorecession = bool(config['disablecryptorecession'])
 
                             # backward compatibility
                             if 'nosellatloss' in config:
@@ -760,6 +782,9 @@ class PyCryptoBot():
     
         if args.disablebuyelderray == True:
             self.disablebuyelderray = True
+
+        if args.disablecryptorecession == True:
+            self.disablecryptorecession = True
 
         if self.exchange == 'binance':
             if len(self.api_url) > 1 and self.api_url[-1] != '/':
@@ -1038,6 +1063,9 @@ class PyCryptoBot():
 
     def disableBuyElderRay(self):
         return self.disablebuyelderray
+
+    def disableCryptoRecession(self):
+        return self.disablecryptorecession
 
     def setGranularity(self, granularity):
         if self.exchange == 'binance' and isinstance(granularity, str) and granularity in [ '1m', '5m', '15m', '1h', '6h', '1d' ]:
