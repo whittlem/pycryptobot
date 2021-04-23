@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from models.Trading import TechnicalAnalysis
 from models.Binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
 from models.CoinbasePro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
+from models.Github import Github
 
 # disable insecure ssl warning
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -1358,28 +1359,34 @@ class PyCryptoBot():
             self.sell_at_loss = flag
 
     def startApp(self, account, last_action=''):
+        github = Github()
+
         print('--------------------------------------------------------------------------------')
         print('|                             Python Crypto Bot                                |')
         print('--------------------------------------------------------------------------------')
+        txt = '              Release : ' + github.getLatestReleaseName() + ' (commit: ' + str(github.getMainBranchCommitTotal()) + ')'
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+
+        print('--------------------------------------------------------------------------------')
 
         if self.isVerbose() == 1:
-            txt = '           Market : ' + self.getMarket()
+            txt = '               Market : ' + self.getMarket()
             print('|', txt, (' ' * (75 - len(txt))), '|')
             if self.exchange == 'coinbasepro':
-                txt = '      Granularity : ' + str(self.getGranularity()) + ' seconds'
+                txt = '          Granularity : ' + str(self.getGranularity()) + ' seconds'
             elif self.exchange == 'binance':
-                txt = '      Granularity : ' + str(self.getGranularity())
+                txt = '          Granularity : ' + str(self.getGranularity())
             print('|', txt, (' ' * (75 - len(txt))), '|')
             print('--------------------------------------------------------------------------------')
 
         if self.isLive() == 1:
-            txt = '         Bot Mode : LIVE - live trades using your funds!'
+            txt = '             Bot Mode : LIVE - live trades using your funds!'
         else:
-            txt = '         Bot Mode : TEST - test trades using dummy funds :)'
+            txt = '             Bot Mode : TEST - test trades using dummy funds :)'
 
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
-        txt = '      Bot Started : ' + str(datetime.now())
+        txt = '          Bot Started : ' + str(datetime.now())
         print('|', txt, (' ' * (75 - len(txt))), '|')
         print('================================================================================')
 
@@ -1391,9 +1398,37 @@ class PyCryptoBot():
             txt = '       Sell Lower : ' + str(self.sellLowerPcnt()) + '%'
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
-        if self.allowSellAtLoss() == False:
-            txt = '     Sell At Loss : ' + str(self.allowSellAtLoss())
-            print('|', txt, (' ' * (75 - len(txt))), '|')
+        txt = '         Sell At Loss : ' + str(self.allowSellAtLoss()) + '  --sellatloss ' + str(self.allowSellAtLoss())
+        print('|', txt, (' ' * (75 - len(txt))), '|')   
+
+        txt = '      Trade Bull Only : ' + str(not self.disableBullOnly()) + '  --disablebullonly'
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+
+        txt = '          Use Buy OBV : ' + str(not self.disableBuyOBV()) + '  --disablebuyobv'
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+
+        txt = '    Use Buy Elder-Ray : ' + str(not self.disableBuyElderRay()) + '  --disablebuyelderray'
+        print('|', txt, (' ' * (75 - len(txt))), '|')            
+
+        txt = '     Crypto Recession : ' + str(not self.disableCryptoRecession()) + '  --disablecryptorecession'
+        print('|', txt, (' ' * (75 - len(txt))), '|')            
+
+        txt = '   Sell Fibonacci Low : ' + str(not self.disableFailsafeFibonacciLow()) + '  --disablefailsafefibonaccilow'
+        print('|', txt, (' ' * (75 - len(txt))), '|')   
+
+        txt = '  Sell Fibonacci High : ' + str(not self.disableProfitbankFibonacciHigh()) + '  --disableprofitbankfibonaccihigh'
+        print('|', txt, (' ' * (75 - len(txt))), '|')      
+
+        if self.sellLowerPcnt() != None:
+            txt = '      Sell Lower Pcnt : ' + str(not self.disableFailsafeLowerPcnt()) + '  --disablefailsafelowerpcnt'
+            print('|', txt, (' ' * (75 - len(txt))), '|')   
+
+        if self.sellUpperPcnt() != None:
+            txt = '      Sell Upper Pcnt : ' + str(not self.disableFailsafeLowerPcnt()) + '  --disableprofitbankupperpcnt'
+            print('|', txt, (' ' * (75 - len(txt))), '|')   
+
+        txt = ' Candlestick Reversal : ' + str(not self.disableProfitbankReversal()) + '  --disableprofitbankreversal'
+        print('|', txt, (' ' * (75 - len(txt))), '|')   
 
         if self.sellUpperPcnt() != None or self.sellLowerPcnt() != None or self.allowSellAtLoss() == False:
             print('================================================================================')
