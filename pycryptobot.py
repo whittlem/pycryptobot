@@ -891,3 +891,10 @@ except KeyboardInterrupt:
         sys.exit(0)
     except SystemExit:
         os._exit(0)
+except(BaseException, Exception) as e:
+    # catch all not managed exceptions and send a Telegram message if configured
+    if app.isTelegramEnabled():
+        telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
+        telegram.send('Bot for ' + app.getMarket() + ' got an exception: ' + repr(e))
+
+    raise
