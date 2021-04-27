@@ -24,6 +24,7 @@ last_df_index = ''
 buy_state = ''
 eri_text = ''
 last_buy = 0
+last_buy_high = 0
 iterations = 0
 buy_count = 0
 sell_count = 0
@@ -70,7 +71,7 @@ if app.isLive() == 1:
 
 def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
     """Trading bot job which runs at a scheduled interval"""
-    global action, buy_count, buy_sum, iterations, last_action, last_buy, eri_text, last_df_index, sell_count, sell_sum, buy_state, fib_high, fib_low
+    global action, buy_count, buy_sum, iterations, last_action, last_buy, last_buy_high, eri_text, last_df_index, sell_count, sell_sum, buy_state, fib_high, fib_low
 
     # connectivity check (only when running live)
     if app.isLive() and app.getTime() == None:
@@ -248,6 +249,11 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         last_buy_minus_fees = 0
         if last_buy > 0 and last_action == 'BUY':
             change_pcnt = ((price / last_buy) - 1) * 100
+            change_pcnt_high = ((price / last_buy_high) - 1) * 100
+
+            # update last buy high
+            if price > last_buy_high:
+                last_buy_high = price
 
             # calculate last buy minus fees
             fee = last_buy * 0.005
@@ -265,7 +271,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 # telegram
                 if app.isTelegramEnabled():
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
-                    telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)                
+                    telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)      
 
             # loss failsafe sell at fibonacci band
             if app.disableFailsafeFibonacciLow() == False and app.allowSellAtLoss() and app.sellLowerPcnt() == None and fib_low > 0 and fib_low >= float(price):
@@ -280,8 +286,21 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
+            # loss failsafe sell at trailing_stop_loss
+            if app.allowSellAtLoss() and app.trailingStopLoss() != None and change_pcnt_high < app.trailingStopLoss():
+                action = 'SELL'
+                last_action = 'BUY'
+                log_text = '! Trailing Stop Loss Triggered (< ' + str(app.trailingStopLoss()) + '%)'
+                print (log_text, "\n")
+                logging.warning(log_text)
+
+                # telegram
+                if app.isTelegramEnabled():
+                    telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
+                    telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
+
             # loss failsafe sell at sell_lower_pcnt
-            if app.disableFailsafeLowerPcnt() == False and app.allowSellAtLoss() and app.sellLowerPcnt() != None and change_pcnt < app.sellLowerPcnt():
+            elif app.disableFailsafeLowerPcnt() == False and app.allowSellAtLoss() and app.sellLowerPcnt() != None and change_pcnt < app.sellLowerPcnt():
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Loss Failsafe Triggered (< ' + str(app.sellLowerPcnt()) + '%)'
@@ -634,8 +653,10 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     print('================================================================================')
 
             # if a buy signal
-            if action == 'BUY':
+            if action == 'BUY':               
                 last_buy = price
+                last_buy_high = last_buy
+
                 buy_count = buy_count + 1
                 fee = float(price) * 0.005
                 price_incl_fees = float(price) + fee
@@ -709,6 +730,8 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
 
             # if a sell signal
             elif action == 'SELL':
+                last_buy_high = 0
+
                 sell_count = sell_count + 1
                 fee = float(price) * 0.005
                 price_incl_fees = float(price) - fee
