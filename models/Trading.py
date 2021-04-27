@@ -536,7 +536,7 @@ class TechnicalAnalysis():
                 
         # bull power’s value is positive but decreasing (i.e. becoming less bullish)
         # bear power’s value is decreasing (i.e., becoming more bearish)
-        self.df['eri_sell'] = ((self.df['elder_ray_bull'] > 0) & (self.df['elder_ray_bear'] < self.df['elder_ray_bear'].shift(1))) | ((self.df['elder_ray_bull'] < self.df['elder_ray_bull'].shift(1)))
+        self.df['eri_sell'] = ((self.df['elder_ray_bull'] > 0) & (self.df['elder_ray_bull'] < self.df['elder_ray_bull'].shift(1))) | ((self.df['elder_ray_bear'] < self.df['elder_ray_bear'].shift(1)))
 
     def getSupportResistanceLevels(self):
         """Calculate the Support and Resistance Levels"""
