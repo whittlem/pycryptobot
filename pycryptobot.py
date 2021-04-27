@@ -114,7 +114,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         print ("*** smart switch from granularity '1h' (1 hour) to '15m' (15 min) ***")
 
         # telegram
-        if app.isTelegramEnabled():
+        if not app.disableTelegram() and app.isTelegramEnabled():
             telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
             telegram.send(app.getMarket() + " smart switch from granularity '1h' (1 hour) to '15m' (15 min)")
 
@@ -126,7 +126,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         print ('*** smart switch from granularity 3600 (1 hour) to 900 (15 min) ***')
 
         # telegram
-        if app.isTelegramEnabled():
+        if not app.disableTelegram() and app.isTelegramEnabled():
             telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
             telegram.send(app.getMarket() + " smart switch from granularity 3600 (1 hour) to 900 (15 min)")
 
@@ -138,7 +138,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         print ("*** smart switch from granularity '15m' (15 min) to '1h' (1 hour) ***")
 
         # telegram
-        if app.isTelegramEnabled():
+        if not app.disableTelegram() and app.isTelegramEnabled():
             telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
             telegram.send(app.getMarket() + " smart switch from granularity '15m' (15 min) to '1h' (1 hour)")
 
@@ -150,7 +150,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         print ("*** smart switch from granularity 900 (15 min) to 3600 (1 hour) ***")
 
         # telegram
-        if app.isTelegramEnabled():
+        if not app.disableTelegram() and app.isTelegramEnabled():
             telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
             telegram.send(app.getMarket() + " smart switch from granularity 900 (15 min) to 3600 (1 hour)")
 
@@ -229,7 +229,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
 
         # criteria for a buy signal
         if ema12gtema26co == True \
-                and macdgtsignal == True \
+                and (macdgtsignal == True or app.disableBuyMACD()) \
                 and (goldencross == True or app.disableBullOnly()) \
                 and (obv_pc > -5 or app.disableBuyOBV()) \
                 and (elder_ray_buy == True or app.disableBuyElderRay()) \
@@ -239,7 +239,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
 
         # criteria for a sell signal
         elif ema12ltema26co == True \
-                and macdltsignal == True \
+                and (macdgtsignal == True or app.disableBuyMACD()) \
                 and last_action not in ['', 'SELL']:
             action = 'SELL'
         # anything other than a buy or sell, just wait
@@ -260,7 +260,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             last_buy_minus_fees = last_buy + fee
             margin = ((price - last_buy_minus_fees) / price) * 100
 
-            # crypto recession
+             # crypto recession
             if app.disableCryptoRecession() == False and app.allowSellAtLoss() and is_crypto_recession == True:
                 action = 'SELL'
                 last_action = 'BUY'
@@ -269,7 +269,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.warning(log_text)
 
                 # telegram
-                if app.isTelegramEnabled():
+                if not app.disableTelegram() and app.isTelegramEnabled():
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)      
 
@@ -282,7 +282,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.warning(log_text)
 
                 # telegram
-                if app.isTelegramEnabled():
+                if not app.disableTelegram() and app.isTelegramEnabled():
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
@@ -295,7 +295,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.warning(log_text)
 
                 # telegram
-                if app.isTelegramEnabled():
+                if not app.disableTelegram() and app.isTelegramEnabled():
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
@@ -308,7 +308,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.warning(log_text)
 
                 # telegram
-                if app.isTelegramEnabled():
+                if not app.disableTelegram() and app.isTelegramEnabled():
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
@@ -321,7 +321,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.warning(log_text)
 
                 # telegram
-                if app.isTelegramEnabled():
+                if not app.disableTelegram() and app.isTelegramEnabled():
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
@@ -334,7 +334,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.warning(log_text)
 
                 # telegram
-                if app.isTelegramEnabled():
+                if not app.disableTelegram() and app.isTelegramEnabled():
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
@@ -347,7 +347,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.warning(log_text)
 
                 # telegram
-                if app.isTelegramEnabled():
+                if not app.disableTelegram() and app.isTelegramEnabled():
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
@@ -376,7 +376,10 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
 
             price_text = 'Close: ' + str(app.truncate(price, precision))
             ema_text = app.compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26', precision)
-            macd_text = app.compare(df_last['macd'].values[0], df_last['signal'].values[0], 'MACD', precision)
+
+            macd_text = ''
+            if app.disableBuyMACD() == False:
+                macd_text = app.compare(df_last['macd'].values[0], df_last['signal'].values[0], 'MACD', precision)
 
             obv_text = ''
             if app.disableBuyOBV() == False:
@@ -417,7 +420,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.debug(log_text)
 
                 # telegram
-                if app.isTelegramEnabled():
+                if not app.disableTelegram() and app.isTelegramEnabled():
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
@@ -427,7 +430,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.debug(log_text)
 
                 # telegram
-                if app.isTelegramEnabled():
+                if not app.disableTelegram() and app.isTelegramEnabled():
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
@@ -437,7 +440,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.debug(log_text)
 
                 # telegram
-                if app.isTelegramEnabled():
+                if not app.disableTelegram() and app.isTelegramEnabled():
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
@@ -447,7 +450,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.debug(log_text)
 
                 # telegram
-                if app.isTelegramEnabled():
+                if not app.disableTelegram() and app.isTelegramEnabled():
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
@@ -457,7 +460,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.debug(log_text)
 
                 # telegram
-                if app.isTelegramEnabled():
+                if not app.disableTelegram() and app.isTelegramEnabled():
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
@@ -467,7 +470,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.debug(log_text)
 
                 # telegram
-                if app.isTelegramEnabled():
+                if not app.disableTelegram() and app.isTelegramEnabled():
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
@@ -477,7 +480,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.debug(log_text)
 
                 # telegram
-                if app.isTelegramEnabled():
+                if not app.disableTelegram() and app.isTelegramEnabled():
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
@@ -487,7 +490,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.debug(log_text)
 
                 # telegram
-                if app.isTelegramEnabled():
+                if not app.disableTelegram() and app.isTelegramEnabled():
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
@@ -497,7 +500,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.debug(log_text)
 
                 # telegram
-                if app.isTelegramEnabled():
+                if not app.disableTelegram() and app.isTelegramEnabled():
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
@@ -517,19 +520,20 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 ema_co_suffix = ' v'
 
             macd_co_prefix = ''
-            macd_co_suffix = ' | '
-            if macdgtsignalco == True:
-                macd_co_prefix = '*^ '
-                macd_co_suffix = ' ^* | '
-            elif macdltsignalco == True:
-                macd_co_prefix = '*v '
-                macd_co_suffix = ' v* | '
-            elif macdgtsignal == True:
-                macd_co_prefix = '^ '
-                macd_co_suffix = ' ^ | '
-            elif macdltsignal == True:
-                macd_co_prefix = 'v '
-                macd_co_suffix = ' v | '
+            macd_co_suffix = ''
+            if app.disableBuyMACD() == False:
+                if macdgtsignalco == True:
+                    macd_co_prefix = '*^ '
+                    macd_co_suffix = ' ^* | '
+                elif macdltsignalco == True:
+                    macd_co_prefix = '*v '
+                    macd_co_suffix = ' v* | '
+                elif macdgtsignal == True:
+                    macd_co_prefix = '^ '
+                    macd_co_suffix = ' ^ | '
+                elif macdltsignal == True:
+                    macd_co_prefix = 'v '
+                    macd_co_suffix = ' v | '
 
             obv_prefix = ''
             obv_suffix = ''
@@ -665,7 +669,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 # if live
                 if app.isLive() == 1:
                     # telegram
-                    if app.isTelegramEnabled():
+                    if not app.disableTelegram() and app.isTelegramEnabled():
                         telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                         telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') BUY at ' + price_text)
 
@@ -740,7 +744,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 # if live
                 if app.isLive() == 1:
                     # telegram
-                    if app.isTelegramEnabled():
+                    if not app.disableTelegram() and app.isTelegramEnabled():
                         telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                         telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') SELL at ' + price_text)
 
@@ -889,7 +893,7 @@ try:
     logging.basicConfig(filename='pycryptobot.log', format='%(asctime)s - %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filemode='a', level=logging.DEBUG)
 
     # telegram
-    if app.isTelegramEnabled():
+    if not app.disableTelegram() and app.isTelegramEnabled():
         telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
         if app.getExchange() == 'coinbasepro':
             telegram.send('Starting Coinbase Pro bot for ' + app.getMarket() + ' using granularity ' + str(app.getGranularity()))
@@ -916,7 +920,7 @@ except KeyboardInterrupt:
         os._exit(0)
 except(BaseException, Exception) as e:
     # catch all not managed exceptions and send a Telegram message if configured
-    if app.isTelegramEnabled():
+    if not app.disableTelegram() and app.isTelegramEnabled():
         telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
         telegram.send('Bot for ' + app.getMarket() + ' got an exception: ' + repr(e))
 

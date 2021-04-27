@@ -34,6 +34,7 @@ parser.add_argument('--config', type=str, help="Use the config file at the given
 
 # disable defaults
 parser.add_argument('--disablebullonly', action="store_true", help="disable only buying in bull market")
+parser.add_argument('--disablebuymacd', action="store_true", help="disable macd buy signal")
 parser.add_argument('--disablebuyobv', action="store_true", help="disable obv buy signal")
 parser.add_argument('--disablebuyelderray', action="store_true", help="disable elder ray buy signal")
 parser.add_argument('--disablecryptorecession', action="store_true", help="disable crypto recession check")
@@ -42,6 +43,7 @@ parser.add_argument('--disablefailsafelowerpcnt', action="store_true", help="dis
 parser.add_argument('--disableprofitbankupperpcnt', action="store_true", help="disable profit bank on 'sellupperpcnt'")
 parser.add_argument('--disableprofitbankfibonaccihigh', action="store_true", help="disable profit bank on fibonacci upper band")
 parser.add_argument('--disableprofitbankreversal', action="store_true", help="disable profit bank on strong candlestick reversal")
+parser.add_argument('--disabletelegram', action="store_true", help="disable telegram messages")
 
 # parse arguments
 args = parser.parse_args()
@@ -81,6 +83,7 @@ class PyCryptoBot():
         self.telegram = False
 
         self.disablebullonly = False
+        self.disablebuymacd = False
         self.disablebuyobv = False
         self.disablebuyelderray = False
         self.disablecryptorecession = False
@@ -89,6 +92,7 @@ class PyCryptoBot():
         self.disableprofitbankupperpcnt = False
         self.disableprofitbankfibonaccihigh = False
         self.disableprofitbankreversal = False
+        self.disabletelegram = False
 
         self._telegram_token = None
         self._telegram_client_id = None
@@ -216,6 +220,11 @@ class PyCryptoBot():
                                 if config['disablebullonly'] in [ 0, 1 ]:
                                     self.disablebullonly = bool(config['disablebullonly'])
 
+                        if 'disablebuymacd' in config:
+                            if isinstance(config['disablebuymacd'], int):
+                                if config['disablebuymacd'] in [ 0, 1 ]:
+                                    self.disablebuymacd = bool(config['disablebuymacd'])
+
                         if 'disablebuyobv' in config:
                             if isinstance(config['disablebuyobv'], int):
                                 if config['disablebuyobv'] in [ 0, 1 ]:
@@ -255,6 +264,11 @@ class PyCryptoBot():
                             if isinstance(config['disableprofitbankreversal'], int):
                                 if config['disableprofitbankreversal'] in [ 0, 1 ]:
                                     self.disableprofitbankreversal = bool(config['disableprofitbankreversal'])
+
+                        if 'disabletelegram' in config:
+                            if isinstance(config['disabletelegram'], int):
+                                if config['disabletelegram'] in [ 0, 1 ]:
+                                    self.disabletelegram = bool(config['disabletelegram'])
 
                         # backward compatibility
                         if 'nosellatloss' in config:
@@ -364,6 +378,11 @@ class PyCryptoBot():
                                 if config['disablebullonly'] in [ 0, 1 ]:
                                     self.disablebullonly = bool(config['disablebullonly'])
 
+                        if 'disablebuymacd' in config:
+                            if isinstance(config['disablebuymacd'], int):
+                                if config['disablebuymacd'] in [ 0, 1 ]:
+                                    self.disablebuymacd = bool(config['disablebuymacd'])
+
                         if 'disablebuyobv' in config:
                             if isinstance(config['disablebuyobv'], int):
                                 if config['disablebuyobv'] in [ 0, 1 ]:
@@ -403,6 +422,11 @@ class PyCryptoBot():
                             if isinstance(config['disableprofitbankreversal'], int):
                                 if config['disableprofitbankreversal'] in [ 0, 1 ]:
                                     self.disableprofitbankreversal = bool(config['disableprofitbankreversal'])
+
+                        if 'disabletelegram' in config:
+                            if isinstance(config['disabletelegram'], int):
+                                if config['disabletelegram'] in [ 0, 1 ]:
+                                    self.disabletelegram = bool(config['disabletelegram'])
 
                         # backward compatibility
                         if 'nosellatloss' in config:
@@ -518,6 +542,11 @@ class PyCryptoBot():
                                     if config['disablebullonly'] in [ 0, 1 ]:
                                         self.disablebullonly = bool(config['disablebullonly'])
 
+                            if 'disablebuymacd' in config:
+                                if isinstance(config['disablebuymacd'], int):
+                                    if config['disablebuymacd'] in [ 0, 1 ]:
+                                        self.disablebuymacd = bool(config['disablebuymacd'])
+
                             if 'disablebuyobv' in config:
                                 if isinstance(config['disablebuyobv'], int):
                                     if config['disablebuyobv'] in [ 0, 1 ]:
@@ -557,6 +586,11 @@ class PyCryptoBot():
                                 if isinstance(config['disableprofitbankreversal'], int):
                                     if config['disableprofitbankreversal'] in [ 0, 1 ]:
                                         self.disableprofitbankreversal = bool(config['disableprofitbankreversal'])
+
+                            if 'disabletelegram' in config:
+                                if isinstance(config['disabletelegram'], int):
+                                    if config['disabletelegram'] in [ 0, 1 ]:
+                                        self.disabletelegram = bool(config['disabletelegram'])
 
                             # backward compatibility
                             if 'nosellatloss' in config:
@@ -666,6 +700,11 @@ class PyCryptoBot():
                                     if config['disablebullonly'] in [ 0, 1 ]:
                                         self.disablebullonly = bool(config['disablebullonly'])
 
+                            if 'disablebuymacd' in config:
+                                if isinstance(config['disablebuymacd'], int):
+                                    if config['disablebuymacd'] in [ 0, 1 ]:
+                                        self.disablebuymacd = bool(config['disablebuymacd'])
+
                             if 'disablebuyobv' in config:
                                 if isinstance(config['disablebuyobv'], int):
                                     if config['disablebuyobv'] in [ 0, 1 ]:
@@ -705,6 +744,11 @@ class PyCryptoBot():
                                 if isinstance(config['disableprofitbankreversal'], int):
                                     if config['disableprofitbankreversal'] in [ 0, 1 ]:
                                         self.disableprofitbankreversal = bool(config['disableprofitbankreversal'])
+
+                            if 'disabletelegram' in config:
+                                if isinstance(config['disabletelegram'], int):
+                                    if config['disabletelegram'] in [ 0, 1 ]:
+                                        self.disabletelegram = bool(config['disabletelegram'])
 
                             # backward compatibility
                             if 'nosellatloss' in config:
@@ -923,6 +967,9 @@ class PyCryptoBot():
         if args.disablebullonly == True:
             self.disablebullonly = True
 
+        if args.disablebuymacd == True:
+            self.disablebuymacd = True
+
         if args.disablebuyobv == True:
             self.disablebuyobv = True
     
@@ -946,6 +993,9 @@ class PyCryptoBot():
         
         if args.disableprofitbankreversal == True:
             self.disableprofitbankreversal = True
+
+        if args.disabletelegram == True:
+            self.disabletelegram = True
         
         if self.exchange == 'binance':
             if len(self.api_url) > 1 and self.api_url[-1] != '/':
@@ -1222,6 +1272,9 @@ class PyCryptoBot():
     def disableBullOnly(self):
         return self.disablebullonly
 
+    def disableBuyMACD(self):
+        return self.disablebuymacd
+
     def disableBuyOBV(self):
         return self.disablebuyobv
 
@@ -1245,6 +1298,9 @@ class PyCryptoBot():
 
     def disableProfitbankReversal(self):
         return self.disableprofitbankreversal
+
+    def disableTelegram(self):
+        return self.disabletelegram
 
     def setGranularity(self, granularity):
         if self.exchange == 'binance' and isinstance(granularity, str) and granularity in [ '1m', '5m', '15m', '1h', '6h', '1d' ]:
@@ -1442,6 +1498,9 @@ class PyCryptoBot():
         txt = '      Trade Bull Only : ' + str(not self.disableBullOnly()) + '  --disablebullonly'
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
+        txt = '         Use Buy MACD : ' + str(not self.disableBuyMACD()) + '  --disablebuymacd'
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+
         txt = '          Use Buy OBV : ' + str(not self.disableBuyOBV()) + '  --disablebuyobv'
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
@@ -1466,6 +1525,9 @@ class PyCryptoBot():
             print('|', txt, (' ' * (75 - len(txt))), '|')   
 
         txt = ' Candlestick Reversal : ' + str(not self.disableProfitbankReversal()) + '  --disableprofitbankreversal'
+        print('|', txt, (' ' * (75 - len(txt))), '|')   
+
+        txt = '             Telegram : ' + str(not self.disableProfitbankReversal()) + '  --disabletelegram'
         print('|', txt, (' ' * (75 - len(txt))), '|')   
 
         if self.sellUpperPcnt() != None or self.sellLowerPcnt() != None or self.allowSellAtLoss() == False:

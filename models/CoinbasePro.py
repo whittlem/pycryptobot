@@ -379,6 +379,20 @@ class AuthAPI(AuthAPIBase):
                     print ('Timeout: ' + self.api_url)
                     return pd.DataFrame()
 
+        except json.decoder.JSONDecodeError as err:
+            if self.debug:
+                if self.die_on_api_error:
+                    raise SystemExit(err)
+                else:
+                    print (err)
+                    return pd.DataFrame()
+            else:
+                if self.die_on_api_error:
+                    raise SystemExit('JSONDecodeError: ' + self.api_url)
+                else:
+                    print ('JSONDecodeError: ' + self.api_url)
+                    return pd.DataFrame()          
+
 class PublicAPI(AuthAPIBase):
     def __init__(self):
         # options
@@ -557,4 +571,18 @@ class PublicAPI(AuthAPIBase):
                     raise SystemExit('Timeout: ' + self.api_url)
                 else:
                     print('Timeout: ' + self.api_url)
+                    return pd.DataFrame()
+
+        except json.decoder.JSONDecodeError as err:
+            if self.debug:
+                if self.die_on_api_error:
+                    raise SystemExit(err)
+                else:
+                    print (err)
+                    return pd.DataFrame()
+            else:
+                if self.die_on_api_error:
+                    raise SystemExit('JSONDecodeError: ' + self.api_url)
+                else:
+                    print ('JSONDecodeError: ' + self.api_url)
                     return pd.DataFrame()
