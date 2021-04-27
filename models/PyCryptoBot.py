@@ -25,6 +25,7 @@ parser.add_argument('--market', type=str, help='coinbasepro: BTC-GBP, binance: B
 parser.add_argument('--sellatloss', type=int, help='toggle if bot should sell at a loss')
 parser.add_argument('--sellupperpcnt', type=int, help='optionally set sell upper percent limit')
 parser.add_argument('--selllowerpcnt', type=int, help='optionally set sell lower percent limit')
+parser.add_argument('--trailingstoploss', type=int, help='optionally set a trailing stop percent loss below last buy high')
 parser.add_argument('--sim', type=str, help='simulation modes: fast, fast-sample, slow-sample')
 parser.add_argument('--simstartdate', type=str, help="start date for sample simulation e.g '2021-01-15'")
 parser.add_argument('--smartswitch', type=int, help='optionally smart switch between 1 hour and 15 minute intervals')
@@ -74,6 +75,7 @@ class PyCryptoBot():
         self.sim_speed = 'fast'
         self.sell_upper_pcnt = None
         self.sell_lower_pcnt = None
+        self.trailing_stop_loss = None
         self.sell_at_loss = 1
         self.smart_switch = 1
         self.telegram = False
@@ -196,12 +198,18 @@ class PyCryptoBot():
                                 if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
                                     self.sell_lower_pcnt = int(config['selllowerpcnt'])
 
+                        if 'trailingstoploss' in config:
+                            if isinstance(config['trailingstoploss'], int):
+                                if config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
+                                    self.tailing_stop_loss = int(config['trailingstoploss'])
+
                         if 'sellatloss' in config:
                             if isinstance(config['sellatloss'], int):
                                 if config['sellatloss'] in [ 0, 1 ]:
                                     self.sell_at_loss = config['sellatloss']
                                     if self.sell_at_loss == 0:
                                         self.sell_lower_pcnt = None
+                                        self.trailing_stop_loss = None
 
                         if 'disablebullonly' in config:
                             if isinstance(config['disablebullonly'], int):
@@ -255,6 +263,7 @@ class PyCryptoBot():
                                     self.sell_at_loss = int(not config['nosellatloss'])
                                     if self.sell_at_loss == 0:
                                         self.sell_lower_pcnt = None
+                                        self.trailing_stop_loss = None
 
                         if 'smartswitch' in config:
                             if isinstance(config['smartswitch'], int):
@@ -337,12 +346,18 @@ class PyCryptoBot():
                                 if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
                                     self.sell_lower_pcnt = int(config['selllowerpcnt'])
 
+                        if 'trailingstoploss' in config:
+                            if isinstance(config['trailingstoploss'], int):
+                                if config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
+                                    self.tailing_stop_loss = int(config['trailingstoploss'])
+
                         if 'sellatloss' in config:
                             if isinstance(config['sellatloss'], int):
                                 if config['sellatloss'] in [ 0, 1 ]:
                                     self.sell_at_loss = config['sellatloss']
                                     if self.sell_at_loss == 0:
                                         self.sell_lower_pcnt = None
+                                        self.trailing_stop_loss = None
 
                         if 'disablebullonly' in config:
                             if isinstance(config['disablebullonly'], int):
@@ -396,6 +411,7 @@ class PyCryptoBot():
                                     self.sell_at_loss = int(not config['nosellatloss'])
                                     if self.sell_at_loss == 0:
                                         self.sell_lower_pcnt = None
+                                        self.tailing_stop_loss = None
 
                         if 'smartswitch' in config:
                             if isinstance(config['smartswitch'], int):
@@ -484,12 +500,18 @@ class PyCryptoBot():
                                     if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
                                         self.sell_lower_pcnt = int(config['selllowerpcnt'])
 
+                            if 'trailingstoploss' in config:
+                                if isinstance(config['trailingstoploss'], int):
+                                    if config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
+                                        self.trailing_stop_loss = int(config['trailingstoploss'])
+
                             if 'sellatloss' in config:
                                 if isinstance(config['sellatloss'], int):
                                     if config['sellatloss'] in [ 0, 1 ]:
                                         self.sell_at_loss = config['sellatloss']
                                         if self.sell_at_loss == 0:
                                             self.sell_lower_pcnt = None
+                                            self.trailing_stop_loss = None
 
                             if 'disablebullonly' in config:
                                 if isinstance(config['disablebullonly'], int):
@@ -543,6 +565,7 @@ class PyCryptoBot():
                                         self.sell_at_loss = int(not config['nosellatloss'])
                                         if self.sell_at_loss == 0:
                                             self.sell_lower_pcnt = None
+                                            self.tailing_stop_loss = None
 
                             if 'smartswitch' in config:
                                 if isinstance(config['smartswitch'], int):
@@ -626,6 +649,11 @@ class PyCryptoBot():
                                     if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
                                         self.sell_lower_pcnt = int(config['selllowerpcnt'])
 
+                            if 'trailingstoploss' in config:
+                                if isinstance(config['trailingstoploss'], int):
+                                    if config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
+                                        self.trailing_stop_loss = int(config['trailingstoploss'])
+
                             if 'sellatloss' in config:
                                 if isinstance(config['sellatloss'], int):
                                     if config['sellatloss'] in [ 0, 1 ]:
@@ -685,6 +713,7 @@ class PyCryptoBot():
                                         self.sell_at_loss = int(not config['nosellatloss'])
                                         if self.sell_at_loss == 0:
                                             self.sell_lower_pcnt = None
+                                            self.trailing_stop_loss = None
 
                             if 'smartswitch' in config:
                                 if isinstance(config['smartswitch'], int):
@@ -879,11 +908,17 @@ class PyCryptoBot():
                 if args.selllowerpcnt >= -100 and args.selllowerpcnt < 0:
                     self.sell_lower_pcnt = float(args.selllowerpcnt)
 
+        if args.trailingstoploss != None:
+            if isinstance(args.trailingstoploss, int):
+                if args.trailingstoploss >= -100 and args.trailingstoploss < 0:
+                    self.trailing_stop_loss = float(args.trailingstoploss)
+
         if args.sellatloss != None:
             if not args.sellatloss in [ '0', '1' ]:
                 self.sell_at_loss = args.sellatloss
                 if self.sell_at_loss == 0:
                     self.sell_lower_pcnt = None
+                    self.trailing_stop_loss = None
 
         if args.disablebullonly == True:
             self.disablebullonly = True
@@ -1177,6 +1212,9 @@ class PyCryptoBot():
 
     def sellLowerPcnt(self):
         return self.sell_lower_pcnt
+
+    def trailingStopLoss(self):
+        return self.trailing_stop_loss
 
     def allowSellAtLoss(self):
         return self.sell_at_loss
