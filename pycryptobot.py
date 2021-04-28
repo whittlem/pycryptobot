@@ -236,6 +236,15 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 and (is_crypto_recession == False or app.disableCryptoRecession()) \
                 and last_action != 'BUY':
             action = 'BUY'
+        
+        elif ema12gtema26 == True \
+                and macdgtsignalco == True \
+                and (goldencross == True or app.disableBullOnly()) \
+                and (obv_pc > -5 or app.disableBuyOBV()) \
+                and (elder_ray_buy == True or app.disableBuyElderRay()) \
+                and (is_crypto_recession == False or app.disableCryptoRecession()) \
+                and last_action != 'BUY':
+            action = 'BUY'
 
         # criteria for a sell signal
         elif ema12ltema26co == True \
