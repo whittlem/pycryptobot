@@ -560,7 +560,40 @@ class TechnicalAnalysis():
                 elif float(df_last[0]) > price:
                     print (' Resistance level of ' + str(df_last[0]) + ' formed at ' + str(df_last.index[0]), "\n")
                 else:
-                    print (' Support/Resistance level of ' + str(df_last[0]) + ' formed at ' + str(df_last.index[0]), "\n")       
+                    print (' Support/Resistance level of ' + str(df_last[0]) + ' formed at ' + str(df_last.index[0]), "\n")
+
+    def printSupportResistanceFibonacciLevels(self, price=0):
+        if isinstance(price, int) or isinstance(price, float):
+            if price > 0:
+                sr = self.getSupportResistanceLevels()
+
+                s = price
+                for r in sr:
+                    if r > price:
+                        fb = self.getFibonacciRetracementLevels()
+
+                        l = price
+                        for b in fb.values():
+                            if b > price:
+                                return 'support: ' + str(s) + ', resistance: ' + str(r) + ', fibonacci (l): ' + str(l) + ', fibonacci (u): ' + str(b)
+                            else:
+                                l = b
+
+                        break
+                    else:
+                        s = r
+
+                if len(sr) > 1 and sr.iloc[-1] < price:
+                    fb = self.getFibonacciRetracementLevels()
+
+                    l = price
+                    for b in fb.values():
+                        if b > price:
+                            return 'support: ' + str(sr.iloc[-1]) + ', fibonacci (l): ' + str(l) + ', fibonacci (u): ' + str(b)
+                        else:
+                            l = b
+
+        return ''
 
     def addEMABuySignals(self):
         """Adds the EMA12/EMA26 buy and sell signals to the DataFrame"""
