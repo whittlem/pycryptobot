@@ -705,7 +705,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     print (app.getQuoteCurrency(), 'balance before order:', account.getBalance(app.getQuoteCurrency()))
 
                     # execute a live market buy
-                    resp = app.marketBuy(app.getMarket(), float(account.getBalance(app.getQuoteCurrency())))
+                    resp = app.marketBuy(app.getMarket(), float(account.getBalance(app.getQuoteCurrency())), app.getBuyPercent())
                     logging.info(resp)
 
                     # display balances
@@ -802,7 +802,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     print (app.getQuoteCurrency(), 'balance before order:', account.getBalance(app.getQuoteCurrency()))
 
                     # execute a live market sell
-                    resp = app.marketSell(app.getMarket(), float(account.getBalance(app.getBaseCurrency())))
+                    resp = app.marketSell(app.getMarket(), float(account.getBalance(app.getBaseCurrency())), app.getSellPercent())
                     logging.info(resp)
 
                     # display balances

@@ -143,3 +143,5 @@ graphs/
 .DS_Store
 
 .vs/
+
+*.log
