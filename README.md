@@ -77,11 +77,11 @@ The "requirements.txt" was created with `python3 -m pip freeze`
 
 ## Run it
 
-###Manual:
+### Manual:
 
     % python3 pycryptobot.py <arguments>
 
-###Docker (Option 1):
+### Docker (Option 1):
 
     Example Local Absolute Path: /home/example/config.json
     Example Market: BTC-GBP
@@ -118,7 +118,7 @@ Typically I would save all my settings in the config.json but running from the c
 
     % python3 pycryptobot.py --market BTC-GBP --granularity 3600 --live 1 --verbose 0 --selllowerpcnt -2
 
-###docker-compose (Option 2):
+### docker-compose (Option 2):
 
 To run using the config.json in template folder,
 
