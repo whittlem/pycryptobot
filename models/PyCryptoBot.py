@@ -32,6 +32,8 @@ parser.add_argument('--smartswitch', type=int, help='optionally smart switch bet
 parser.add_argument('--verbose', type=int, help='verbose output=1, minimal output=0')
 parser.add_argument('--config', type=str, help="Use the config file at the given location. e.g 'myconfig.json'")
 parser.add_argument('--logfile', type=str, help="Use the log file at the given location. e.g 'mymarket.log'")
+parser.add_argument('--buypercent', type=str, help="percentage of quote currency to buy")
+parser.add_argument('--sellpercent', type=str, help="percentage of base currency to sell")
 
 # disable defaults
 parser.add_argument('--disablebullonly', action="store_true", help="disable only buying in bull market")
@@ -84,6 +86,8 @@ class PyCryptoBot():
         self.sell_at_loss = 1
         self.smart_switch = 1
         self.telegram = False
+        self.buypercent = 100
+        self.sellpercent = 100
 
         self.disablebullonly = False
         self.disablebuymacd = False
@@ -311,6 +315,16 @@ class PyCryptoBot():
                                     self.granularity = config['granularity']
                                     self.smart_switch = 0
 
+                        if 'buypercent' in config:
+                            if isinstance(config['buypercent'], int):
+                                if config['buypercent'] > 0 and config['buypercent'] <= 100:
+                                    self.buypercent = config['buypercent']
+
+                        if 'sellpercent' in config:
+                            if isinstance(config['sellpercent'], int):
+                                if config['sellpercent'] > 0 and config['sellpercent'] <= 100:
+                                    self.sellpercent = config['sellpercent']
+
                 elif self.exchange == 'binance' and 'api_key' in config and 'api_secret' in config and 'api_url' in config:
                     self.api_key = config['api_key']
                     self.api_secret = config['api_secret']
@@ -478,6 +492,16 @@ class PyCryptoBot():
                                 if config['granularity'] in [ '1m', '5m', '15m', '1h', '6h', '1d' ]:
                                     self.granularity = config['granularity']
                                     self.smart_switch = 0
+
+                        if 'buypercent' in config:
+                            if isinstance(config['buypercent'], int):
+                                if config['buypercent'] > 0 and config['buypercent'] <= 100:
+                                    self.buypercent = config['buypercent']
+
+                        if 'sellpercent' in config:
+                            if isinstance(config['sellpercent'], int):
+                                if config['sellpercent'] > 0 and config['sellpercent'] <= 100:
+                                    self.sellpercent = config['sellpercent']
 
                 elif self.exchange == 'coinbasepro' and 'coinbasepro' in config:
                     if 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
@@ -653,6 +677,16 @@ class PyCryptoBot():
                                         self.granularity = config['granularity']
                                         self.smart_switch = 0
 
+                            if 'buypercent' in config:
+                                if isinstance(config['buypercent'], int):
+                                    if config['buypercent'] > 0 and config['buypercent'] <= 100:
+                                        self.buypercent = config['buypercent']
+
+                            if 'sellpercent' in config:
+                                if isinstance(config['sellpercent'], int):
+                                    if config['sellpercent'] > 0 and config['sellpercent'] <= 100:
+                                        self.sellpercent = config['sellpercent']
+
                     else:
                         raise Exception('There is an error in your config.json')
 
@@ -821,6 +855,16 @@ class PyCryptoBot():
                                         self.granularity = config['granularity']
                                         self.smart_switch = 0
 
+                            if 'buypercent' in config:
+                                if isinstance(config['buypercent'], int):
+                                    if config['buypercent'] > 0 and config['buypercent'] <= 100:
+                                        self.buypercent = config['buypercent']
+
+                            if 'sellpercent' in config:
+                                if isinstance(config['sellpercent'], int):
+                                    if config['sellpercent'] > 0 and config['sellpercent'] <= 100:
+                                        self.sellpercent = config['sellpercent']
+
                     else:
                         raise Exception('There is an error in your config.json')
 
@@ -943,6 +987,24 @@ class PyCryptoBot():
 
             self.granularity = args.granularity
             self.smart_switch = 0
+
+        if args.buypercent != None:
+            if not isinstance(int(args.buypercent), int):
+                raise TypeError('Invalid buy percent.')
+
+            if int(args.buypercent) < 1 or int(args.buypercent) > 100:
+                raise ValueError('Invalid buy percent.')
+
+            self.buypercent = args.buypercent
+
+        if args.sellpercent != None:
+            if not isinstance(int(args.sellpercent), int):
+                raise TypeError('Invalid sell percent.')
+
+            if int(args.sellpercent) < 1 or int(args.sellpercent) > 100:
+                raise ValueError('Invalid sell percent.')
+
+            self.sellpercent = args.sellpercent
 
         if self.smart_switch == 1 and self.granularity == None:
             if self.exchange == 'coinbasepro':
@@ -1149,6 +1211,18 @@ class PyCryptoBot():
             return str(self.granularity)
         elif self.exchange == 'coinbasepro':
             return int(self.granularity)
+
+    def getBuyPercent(self):
+        try:
+            return int(self.buypercent)
+        except Exception:
+            return 100
+
+    def getSellPercent(self):
+        try:
+            return int(self.sellpercent)
+        except Exception:
+            return 100       
 
     def getHistoricalData(self, market, granularity, iso8601start='', iso8601end=''):
         if self.exchange == 'coinbasepro':
@@ -1399,28 +1473,38 @@ class PyCryptoBot():
             else:
                 return label + ': ' + str(self.truncate(val1, precision)) + ' = ' + str(self.truncate(val2, precision))
 
-    def marketBuy(self, market, quote_currency):
-        if self.exchange == 'coinbasepro':
-            api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
-            return api.marketBuy(market, self.truncate(quote_currency, 2))
-        elif self.exchange == 'binance':
-            api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
-            return api.marketBuy(market, quote_currency)
-        else:
-            return None
+    def marketBuy(self, market, quote_currency, buy_percent=100):
+        if self.is_live == 1:
+            if isinstance(buy_percent, int):
+                if buy_percent > 0 and buy_percent < 100:
+                    quote_currency = (buy_percent / 100) * quote_currency
 
-    def marketSell(self, market, base_currency):
-        if self.exchange == 'coinbasepro':
-            if market.startswith('XLM-'):
-                base_currency = int(base_currency)
+            if self.exchange == 'coinbasepro':
+                api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
+                return api.marketBuy(market, self.truncate(quote_currency, 2))
+            elif self.exchange == 'binance':
+                api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
+                return api.marketBuy(market, quote_currency)
+            else:
+                return None
 
-            api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
-            return api.marketSell(market, base_currency)
-        elif self.exchange == 'binance':
-            api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
-            return api.marketSell(market, base_currency)
-        else:
-            return None
+    def marketSell(self, market, base_currency, sell_percent=100):
+        if self.is_live == 1:
+            if isinstance(sell_percent, int):
+                if sell_percent > 0 and sell_percent < 100:
+                    base_currency = (sell_percent / 100) * base_currency
+
+            if self.exchange == 'coinbasepro':
+                if market.startswith('XLM-'):
+                    base_currency = int(base_currency)
+
+                api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
+                return api.marketSell(market, base_currency)
+            elif self.exchange == 'binance':
+                api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
+                return api.marketSell(market, base_currency)
+            else:
+                return None
 
     def setMarket(self, market):
         if self.exchange == 'binance':
