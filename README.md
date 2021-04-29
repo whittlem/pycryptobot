@@ -53,6 +53,8 @@ if running multiple bots and keeping track of their progress.
     Install Docker Desktop
     https://docs.docker.com/desktop
 
+From Github image repo
+
     % docker pull ghcr.io/whittlem/pycryptobot/pycryptobot:latest
     latest: Pulling from whittlem/pycryptobot/pycryptobot
     8f403cb21126: Pull complete 
@@ -64,17 +66,22 @@ if running multiple bots and keeping track of their progress.
     Status: Downloaded newer image for ghcr.io/whittlem/pycryptobot/pycryptobot:latest
     ghcr.io/whittlem/pycryptobot/pycryptobot:latest
 
+Local repo
+
+    % docker build -t pycryptobot .
+
+
 ## Additional Information
 
 The "requirements.txt" was created with `python3 -m pip freeze`
 
 ## Run it
 
-Manual:
+###Manual:
 
     % python3 pycryptobot.py <arguments>
 
-Container:
+###Docker (Option 1):
 
     Example Local Absolute Path: /home/example/config.json
     Example Market: BTC-GBP
@@ -110,6 +117,67 @@ Container:
 Typically I would save all my settings in the config.json but running from the command line I would usually run it like this.
 
     % python3 pycryptobot.py --market BTC-GBP --granularity 3600 --live 1 --verbose 0 --selllowerpcnt -2
+
+###docker-compose (Option 2):
+
+To run using the config.json in template folder,
+
+    % docker-compose up -d
+
+
+By default, docker-compose will use the config inside `./market/template`. We provide this as a template for any market config. 
+
+For each market you want to trade, create a copy of this folder under market
+For example, if you are trading `BTCEUR` and `ETHEUR` your market folder should look like this:
+```
+├── market
+│ ├── BTCEUR
+│ │ ├── config.json
+│ │ └── graphs
+│ └── ETHEUR
+│     ├── config.json
+│     └── graphs
+```
+
+modify docker-compose.yaml
+    
+    version: "3.9"
+
+    services:
+      btceur:
+        build:
+          context: .
+        container_name: btceur
+        volumes:
+          - ./market/BTCEUR/config.json:/app/config.json
+          - ./market/BTCEUR/pycryptobot.log:/app/pycryptobot.log
+          - ./market/BTCEUR/graphs:/app/graphs
+          - /etc/localtime:/etc/localtime:ro
+        environment:
+          - PYTHONUNBUFFERED=1
+        deploy:
+          restart_policy:
+            condition: on-failure
+    
+      etheur:
+        build:
+          context: .
+        container_name: etheur
+        volumes:
+          - ./market/ETHEUR/config.json:/app/config.json
+          - ./market/ETHEUR/pycryptobot.log:/app/pycryptobot.log
+          - ./market/ETHEUR/graphs:/app/graphs
+          - /etc/localtime:/etc/localtime:ro
+        environment:
+          - PYTHONUNBUFFERED=1
+        deploy:
+          restart_policy:
+            condition: on-failure
+
+Run all your bots. Note that each market should have it's own config. Graphs will be saved on each market's folder.
+    
+    % docker-compose up -d
+
 
 ## Bot mechanics
 
