@@ -133,7 +133,7 @@ dmypy.json
 
 .vscode
 
-config.json
+./config.json
 config-coinbasepro.json
 config-binance.json
 
