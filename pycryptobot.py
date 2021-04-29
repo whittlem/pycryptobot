@@ -911,9 +911,6 @@ try:
     # initialise logging
     logging.basicConfig(filename='pycryptobot.log', format='%(asctime)s - %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filemode='a', level=logging.DEBUG)
 
-    if app.disableLog():
-        logging.disable('DEBUG')
-
     # telegram
     if not app.disableTelegram() and app.isTelegramEnabled():
         telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
