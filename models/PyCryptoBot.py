@@ -31,6 +31,7 @@ parser.add_argument('--simstartdate', type=str, help="start date for sample simu
 parser.add_argument('--smartswitch', type=int, help='optionally smart switch between 1 hour and 15 minute intervals')
 parser.add_argument('--verbose', type=int, help='verbose output=1, minimal output=0')
 parser.add_argument('--config', type=str, help="Use the config file at the given location. e.g 'myconfig.json'")
+parser.add_argument('--logfile', type=str, help="Use the log file at the given location. e.g 'mymarket.log'")
 
 # disable defaults
 parser.add_argument('--disablebullonly', action="store_true", help="disable only buying in bull market")
@@ -100,6 +101,8 @@ class PyCryptoBot():
 
         self._telegram_token = None
         self._telegram_client_id = None
+
+        self.logfile = args.logfile if args.logfile else "pycryptobot.log"
 
         try:
             with open(filename) as config_file:
@@ -1113,6 +1116,9 @@ class PyCryptoBot():
             return p.match(market)
 
         return False
+
+    def getLogFile(self):
+        return self.logfile
 
     def getExchange(self):
         return self.exchange
