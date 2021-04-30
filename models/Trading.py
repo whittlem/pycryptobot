@@ -568,7 +568,7 @@ class TechnicalAnalysis():
                 sr = self.getSupportResistanceLevels()
 
                 s = price
-                for r in sr:
+                for r in sr.sort_values():                    
                     if r > price:
                         fb = self.getFibonacciRetracementLevels()
 
