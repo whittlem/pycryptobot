@@ -1,32 +1,49 @@
 version: "3.9"
 
 services:
-  btceur:
-    build:
-      context: .
-    container_name: btceur
-    volumes:
-      - ./market/btceur/config.json:/app/config.json
-      - ./market/btceur/pycryptobot.log:/app/pycryptobot.log
-      - ./market/btceur/graphs:/app/graphs
-      - /etc/localtime:/etc/localtime:ro
-    environment:
-      - PYTHONUNBUFFERED=1
-    deploy:
-      restart_policy:
-        condition: on-failure
+  pycrypto:
+      build:
+        context: .
+      container_name: pycrypto
+      volumes:
+        - ./market/template/config.json:/app/config.json
+        - ./market/template/pycryptobot.log:/app/pycryptobot.log
+        - ./market/template/graphs:/app/graphs
+        - /etc/localtime:/etc/localtime:ro
+      environment:
+        - PYTHONUNBUFFERED=1
+      deploy:
+        restart_policy:
+          condition: on-failure
 
-  etheur:
-    build:
-      context: .
-    container_name: etheur
-    volumes:
-      - ./market/ETHEUR/config.json:/app/config.json
-      - ./market/ETHEUR/pycryptobot.log:/app/pycryptobot.log
-      - ./market/ETHEUR/graphs:/app/graphs
-      - /etc/localtime:/etc/localtime:ro
-    environment:
-      - PYTHONUNBUFFERED=1
-    deploy:
-      restart_policy:
-        condition: on-failure
+#  Different markets can be specified as below
+#
+#  BTCEUR:
+#    build:
+#      context: .
+#    container_name: BTCEUR
+#    volumes:
+#      - ./market/BTCEUR/config.json:/app/config.json
+#      - ./market/BTCEUR/pycryptobot.log:/app/pycryptobot.log
+#      - ./market/BTCEUR/graphs:/app/graphs
+#      - /etc/localtime:/etc/localtime:ro
+#    environment:
+#      - PYTHONUNBUFFERED=1
+#    deploy:
+#      restart_policy:
+#        condition: on-failure
+#
+#  ETHEUR:
+#    build:
+#      context: .
+#    container_name: ETHEUR
+#    volumes:
+#      - ./market/ETHEUR/config.json:/app/config.json
+#      - ./market/ETHEUR/pycryptobot.log:/app/pycryptobot.log
+#      - ./market/ETHEUR/graphs:/app/graphs
+#      - /etc/localtime:/etc/localtime:ro
+#    environment:
+#      - PYTHONUNBUFFERED=1
+#    deploy:
+#      restart_policy:
+#        condition: on-failure

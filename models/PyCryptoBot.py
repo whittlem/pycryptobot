@@ -31,6 +31,7 @@ parser.add_argument('--simstartdate', type=str, help="start date for sample simu
 parser.add_argument('--smartswitch', type=int, help='optionally smart switch between 1 hour and 15 minute intervals')
 parser.add_argument('--verbose', type=int, help='verbose output=1, minimal output=0')
 parser.add_argument('--config', type=str, help="Use the config file at the given location. e.g 'myconfig.json'")
+parser.add_argument('--logfile', type=str, help="Use the log file at the given location. e.g 'mymarket.log'")
 
 # disable defaults
 parser.add_argument('--disablebullonly', action="store_true", help="disable only buying in bull market")
@@ -44,6 +45,8 @@ parser.add_argument('--disableprofitbankupperpcnt', action="store_true", help="d
 parser.add_argument('--disableprofitbankfibonaccihigh', action="store_true", help="disable profit bank on fibonacci upper band")
 parser.add_argument('--disableprofitbankreversal', action="store_true", help="disable profit bank on strong candlestick reversal")
 parser.add_argument('--disabletelegram', action="store_true", help="disable telegram messages")
+parser.add_argument('--disablelog', action="store_true", help="disable pycryptobot.log")
+parser.add_argument('--disabletracker', action="store_true", help="disable tracker.csv")
 
 # parse arguments
 args = parser.parse_args()
@@ -93,9 +96,13 @@ class PyCryptoBot():
         self.disableprofitbankfibonaccihigh = False
         self.disableprofitbankreversal = False
         self.disabletelegram = False
+        self.disablelog = False
+        self.disabletracker = False
 
         self._telegram_token = None
         self._telegram_client_id = None
+
+        self.logfile = args.logfile if args.logfile else "pycryptobot.log"
 
         try:
             with open(filename) as config_file:
@@ -270,6 +277,16 @@ class PyCryptoBot():
                                 if config['disabletelegram'] in [ 0, 1 ]:
                                     self.disabletelegram = bool(config['disabletelegram'])
 
+                        if 'disablelog' in config:
+                            if isinstance(config['disablelog'], int):
+                                if config['disablelog'] in [ 0, 1 ]:
+                                    self.disablelog = bool(config['disablelog'])
+
+                        if 'disabletracker' in config:
+                            if isinstance(config['disabletracker'], int):
+                                if config['disabletracker'] in [ 0, 1 ]:
+                                    self.disabletracker = bool(config['disabletracker'])
+
                         # backward compatibility
                         if 'nosellatloss' in config:
                             if isinstance(config['nosellatloss'], int):
@@ -427,6 +444,16 @@ class PyCryptoBot():
                             if isinstance(config['disabletelegram'], int):
                                 if config['disabletelegram'] in [ 0, 1 ]:
                                     self.disabletelegram = bool(config['disabletelegram'])
+
+                        if 'disablelog' in config:
+                            if isinstance(config['disablelog'], int):
+                                if config['disablelog'] in [ 0, 1 ]:
+                                    self.disablelog = bool(config['disablelog'])
+
+                        if 'disabletracker' in config:
+                            if isinstance(config['disabletracker'], int):
+                                if config['disabletracker'] in [ 0, 1 ]:
+                                    self.disabletracker = bool(config['disabletracker'])
 
                         # backward compatibility
                         if 'nosellatloss' in config:
@@ -592,6 +619,16 @@ class PyCryptoBot():
                                     if config['disabletelegram'] in [ 0, 1 ]:
                                         self.disabletelegram = bool(config['disabletelegram'])
 
+                            if 'disablelog' in config:
+                                if isinstance(config['disablelog'], int):
+                                    if config['disablelog'] in [ 0, 1 ]:
+                                        self.disablelog = bool(config['disablelog'])
+
+                            if 'disabletracker' in config:
+                                if isinstance(config['disabletracker'], int):
+                                    if config['disabletracker'] in [ 0, 1 ]:
+                                        self.disabletracker = bool(config['disabletracker'])
+
                             # backward compatibility
                             if 'nosellatloss' in config:
                                 if isinstance(config['nosellatloss'], int):
@@ -749,6 +786,16 @@ class PyCryptoBot():
                                 if isinstance(config['disabletelegram'], int):
                                     if config['disabletelegram'] in [ 0, 1 ]:
                                         self.disabletelegram = bool(config['disabletelegram'])
+
+                            if 'disablelog' in config:
+                                if isinstance(config['disablelog'], int):
+                                    if config['disablelog'] in [ 0, 1 ]:
+                                        self.disablelog = bool(config['disablelog'])
+
+                            if 'disabletracker' in config:
+                                if isinstance(config['disabletracker'], int):
+                                    if config['disabletracker'] in [ 0, 1 ]:
+                                        self.disabletracker = bool(config['disabletracker'])
 
                             # backward compatibility
                             if 'nosellatloss' in config:
@@ -996,6 +1043,12 @@ class PyCryptoBot():
 
         if args.disabletelegram == True:
             self.disabletelegram = True
+
+        if args.disablelog == True:
+            self.disablelog = True
+
+        if args.disabletracker == True:
+            self.disabletracker = True
         
         if self.exchange == 'binance':
             if len(self.api_url) > 1 and self.api_url[-1] != '/':
@@ -1063,6 +1116,9 @@ class PyCryptoBot():
             return p.match(market)
 
         return False
+
+    def getLogFile(self):
+        return self.logfile
 
     def getExchange(self):
         return self.exchange
@@ -1302,6 +1358,12 @@ class PyCryptoBot():
     def disableTelegram(self):
         return self.disabletelegram
 
+    def disableLog(self):
+        return self.disablelog
+
+    def disableTracker(self):
+        return self.disabletracker
+
     def setGranularity(self, granularity):
         if self.exchange == 'binance' and isinstance(granularity, str) and granularity in [ '1m', '5m', '15m', '1h', '6h', '1d' ]:
             self.granularity = granularity
@@ -1528,7 +1590,13 @@ class PyCryptoBot():
         print('|', txt, (' ' * (75 - len(txt))), '|')   
 
         txt = '             Telegram : ' + str(not self.disableProfitbankReversal()) + '  --disabletelegram'
-        print('|', txt, (' ' * (75 - len(txt))), '|')   
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+
+        txt = '                  Log : ' + str(not self.disableLog()) + '  --disablelog'
+        print('|', txt, (' ' * (75 - len(txt))), '|')     
+
+        txt = '              Tracker : ' + str(not self.disableTracker()) + '  --disabletracker'
+        print('|', txt, (' ' * (75 - len(txt))), '|')     
 
         if self.sellUpperPcnt() != None or self.sellLowerPcnt() != None or self.allowSellAtLoss() == False:
             print('================================================================================')
