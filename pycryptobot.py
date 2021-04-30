@@ -65,8 +65,10 @@ if app.isLive() == 1:
         df = orders[-1:]
 
         if str(df.action.values[0]) == 'buy':
+            last_action = 'BUY'
             last_buy = float(df[df.action == 'buy']['price'])
         else:
+            last_action = 'SELL'
             last_buy = 0.0
 
 def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
