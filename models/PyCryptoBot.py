@@ -204,19 +204,19 @@ class PyCryptoBot():
                                         self.simstartdate = config['simstartdate']
 
                         if 'sellupperpcnt' in config:
-                            if isinstance(config['sellupperpcnt'], int):
-                                if config['sellupperpcnt'] > 0 and config['sellupperpcnt'] <= 100:
-                                    self.sell_upper_pcnt = int(config['sellupperpcnt'])
+                            if isinstance(config['sellupperpcnt'], (int,str)):
+                                if float(config['sellupperpcnt']) > 0 and float(config['sellupperpcnt'] <= 100):
+                                    self.sell_upper_pcnt = float(config['sellupperpcnt'])
 
                         if 'selllowerpcnt' in config:
-                            if isinstance(config['selllowerpcnt'], int):
-                                if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
-                                    self.sell_lower_pcnt = int(config['selllowerpcnt'])
+                            if isinstance(config['selllowerpcnt'], (int,str)):
+                                if float(config['selllowerpcnt']) >= -100 and float(config['selllowerpcnt']) < 0:
+                                    self.sell_lower_pcnt = float(config['selllowerpcnt'])
 
                         if 'trailingstoploss' in config:
-                            if isinstance(config['trailingstoploss'], int):
-                                if config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
-                                    self.tailing_stop_loss = int(config['trailingstoploss'])
+                            if isinstance(config['trailingstoploss'], (int,str)):
+                                if float(config['trailingstoploss']) >= -100 and float(config['trailingstoploss']) < 0:
+                                    self.tailing_stop_loss = float(config['trailingstoploss'])
 
                         if 'sellatloss' in config:
                             if isinstance(config['sellatloss'], int):
@@ -382,19 +382,19 @@ class PyCryptoBot():
                                         self.simstartdate = config['simstartdate']
 
                         if 'sellupperpcnt' in config:
-                            if isinstance(config['sellupperpcnt'], int):
-                                if config['sellupperpcnt'] > 0 and config['sellupperpcnt'] <= 100:
-                                    self.sell_upper_pcnt = int(config['sellupperpcnt'])
+                            if isinstance(config['sellupperpcnt'], (int,str)):
+                                if float(config['sellupperpcnt']) > 0 and float(config['sellupperpcnt']) <= 100:
+                                    self.sell_upper_pcnt = float(config['sellupperpcnt'])
 
                         if 'selllowerpcnt' in config:
-                            if isinstance(config['selllowerpcnt'], int):
-                                if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
-                                    self.sell_lower_pcnt = int(config['selllowerpcnt'])
+                            if isinstance(config['selllowerpcnt'], (int,str)):
+                                if float(config['selllowerpcnt']) >= -100 and float(config['selllowerpcnt']) < 0:
+                                    self.sell_lower_pcnt = float(config['selllowerpcnt'])
 
                         if 'trailingstoploss' in config:
-                            if isinstance(config['trailingstoploss'], int):
-                                if config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
-                                    self.tailing_stop_loss = int(config['trailingstoploss'])
+                            if isinstance(config['trailingstoploss'], (int,str)):
+                                if float(config['trailingstoploss']) >= -100 and float(config['trailingstoploss']) < 0:
+                                    self.tailing_stop_loss = float(config['trailingstoploss'])
 
                         if 'sellatloss' in config:
                             if isinstance(config['sellatloss'], int):
@@ -566,18 +566,18 @@ class PyCryptoBot():
                                             self.simstartdate = config['simstartdate']
 
                             if 'sellupperpcnt' in config:
-                                if isinstance(config['sellupperpcnt'], int):
-                                    if config['sellupperpcnt'] > 0 and config['sellupperpcnt'] <= 100:
-                                        self.sell_upper_pcnt = int(config['sellupperpcnt'])
+                                if isinstance(config['sellupperpcnt'], (int,str)):
+                                    if float(config['sellupperpcnt']) > 0 and float(config['sellupperpcnt']) <= 100:
+                                        self.sell_upper_pcnt = float(config['sellupperpcnt'])
 
                             if 'selllowerpcnt' in config:
-                                if isinstance(config['selllowerpcnt'], int):
-                                    if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
-                                        self.sell_lower_pcnt = int(config['selllowerpcnt'])
+                                if isinstance(config['selllowerpcnt'], (int,str)):
+                                    if float(config['selllowerpcnt']) >= -100 and float(config['selllowerpcnt']) < 0:
+                                        self.sell_lower_pcnt = float(config['selllowerpcnt'])
 
                             if 'trailingstoploss' in config:
-                                if isinstance(config['trailingstoploss'], int):
-                                    if config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
+                                if isinstance(config['trailingstoploss'], (int,str)):
+                                    if float(config['trailingstoploss']) >= -100 and float(config['trailingstoploss']) < 0:
                                         self.trailing_stop_loss = int(config['trailingstoploss'])
 
                             if 'sellatloss' in config:
@@ -745,19 +745,19 @@ class PyCryptoBot():
                                             self.simstartdate = config['simstartdate']
 
                             if 'sellupperpcnt' in config:
-                                if isinstance(config['sellupperpcnt'], int):
-                                    if config['sellupperpcnt'] > 0 and config['sellupperpcnt'] <= 100:
-                                        self.sell_upper_pcnt = int(config['sellupperpcnt'])
+                                if isinstance(config['sellupperpcnt'], (int,str)):
+                                    if float(config['sellupperpcnt']) > 0 and float(config['sellupperpcnt']) <= 100:
+                                        self.sell_upper_pcnt = float(config['sellupperpcnt'])
 
                             if 'selllowerpcnt' in config:
-                                if isinstance(config['selllowerpcnt'], int):
-                                    if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
-                                        self.sell_lower_pcnt = int(config['selllowerpcnt'])
+                                if isinstance(config['selllowerpcnt'], (int,str)):
+                                    if float(config['selllowerpcnt']) >= -100 and float(config['selllowerpcnt']) < 0:
+                                        self.sell_lower_pcnt = float(config['selllowerpcnt'])
 
                             if 'trailingstoploss' in config:
-                                if isinstance(config['trailingstoploss'], int):
-                                    if config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
-                                        self.trailing_stop_loss = int(config['trailingstoploss'])
+                                if isinstance(config['trailingstoploss'], (int,str)):
+                                    if float(config['trailingstoploss']) >= -100 and float(config['trailingstoploss']) < 0:
+                                        self.trailing_stop_loss = float(config['trailingstoploss'])
 
                             if 'sellatloss' in config:
                                 if isinstance(config['sellatloss'], int):
@@ -1052,18 +1052,18 @@ class PyCryptoBot():
                 self.simstartdate = None
 
         if args.sellupperpcnt != None:
-            if isinstance(args.sellupperpcnt, int):
-                if args.sellupperpcnt > 0 and args.sellupperpcnt <= 100:
+            if isinstance(args.sellupperpcnt, (int,str)):
+                if float(args.sellupperpcnt) > 0 and float(args.sellupperpcnt) <= 100:
                     self.sell_upper_pcnt = float(args.sellupperpcnt)
 
         if args.selllowerpcnt != None:
-            if isinstance(args.selllowerpcnt, int):
-                if args.selllowerpcnt >= -100 and args.selllowerpcnt < 0:
+            if isinstance(args.selllowerpcnt, (int,str)):
+                if float(args.selllowerpcnt) >= -100 and float(args.selllowerpcnt) < 0:
                     self.sell_lower_pcnt = float(args.selllowerpcnt)
 
         if args.trailingstoploss != None:
-            if isinstance(args.trailingstoploss, int):
-                if args.trailingstoploss >= -100 and args.trailingstoploss < 0:
+            if isinstance(args.trailingstoploss, (int,str)):
+                if float(args.trailingstoploss) >= -100 and float(args.trailingstoploss) < 0:
                     self.trailing_stop_loss = float(args.trailingstoploss)
 
         if args.sellatloss != None:
