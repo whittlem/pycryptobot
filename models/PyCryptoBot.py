@@ -1473,6 +1473,26 @@ class PyCryptoBot():
             else:
                 return label + ': ' + str(self.truncate(val1, precision)) + ' = ' + str(self.truncate(val2, precision))
 
+    def getTakerFee(self):
+        if self.exchange == 'coinbasepro':
+            api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
+            return api.getTakerFee()
+        elif self.exchange == 'binance':
+            api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
+            return api.getTakerFee()
+        else:
+            return 0.005
+
+    def getMakerFee(self):
+        if self.exchange == 'coinbasepro':
+            api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
+            return api.getMakerFee()
+        elif self.exchange == 'binance':
+            api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
+            return api.getMakerFee()
+        else:
+            return 0.005
+
     def marketBuy(self, market, quote_currency, buy_percent=100):
         if self.is_live == 1:
             if isinstance(buy_percent, int):

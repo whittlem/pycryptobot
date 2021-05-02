@@ -271,9 +271,10 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 last_buy_high = price
 
             # calculate last buy minus fees
-            fee = last_buy * 0.005
-            last_buy_minus_fees = last_buy + fee
-            margin = ((price - last_buy_minus_fees) / price) * 100
+            buy_fee = last_buy * app.getTakerFee()
+            last_buy_minus_fees = last_buy + buy_fee
+            sell_fee = price * app.getTakerFee()
+            margin = ((price - last_buy_minus_fees - sell_fee) / price) * 100
 
              # crypto recession
             if app.disableCryptoRecession() == False and app.allowSellAtLoss() and is_crypto_recession == True:
@@ -683,7 +684,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 last_buy_high = last_buy
 
                 buy_count = buy_count + 1
-                fee = float(price) * 0.005
+                fee = float(price) * app.getTakerFee()
                 price_incl_fees = float(price) + fee
                 buy_sum = buy_sum + price_incl_fees
 
@@ -758,7 +759,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 last_buy_high = 0
 
                 sell_count = sell_count + 1
-                fee = float(price) * 0.005
+                fee = float(price) * app.getTakerFee()
                 price_incl_fees = float(price) - fee
                 sell_sum = sell_sum + price_incl_fees
 
@@ -824,7 +825,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                             buy_sell_margin_no_fees = '0%'
 
                         # calculate last buy minus fees
-                        buy_fee = last_buy_price * 0.005
+                        buy_fee = last_buy_price * app.getTakerFee()
                         last_buy_price_minus_fees = last_buy_price + buy_fee
 
                         if (sell_price != 0):
@@ -858,7 +859,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 print ("\nSimulation Summary\n")
 
                 if buy_count > sell_count and app.allowSellAtLoss() == 1:
-                    fee = price * 0.005
+                    fee = price * app.getTakerFee()
                     last_price_minus_fees = price - fee
                     sell_sum = sell_sum + last_price_minus_fees
                     sell_count = sell_count + 1

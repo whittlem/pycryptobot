@@ -11,7 +11,7 @@ class AuthAPIBase():
         return p.match(market)
 
 class AuthAPI(AuthAPIBase):
-    def __init__(self, api_key='', api_secret='', api_pass='', api_url='https://api.pro.coinbase.com'):
+    def __init__(self, api_key='', api_secret='', api_passphrase='', api_url='https://api.pro.coinbase.com'):
         """Coinbase Pro API object model
     
         Parameters
@@ -20,7 +20,7 @@ class AuthAPI(AuthAPIBase):
             Your Coinbase Pro account portfolio API key
         api_secret : str
             Your Coinbase Pro account portfolio API secret
-        api_pass : str
+        api_passphrase : str
             Your Coinbase Pro account portfolio API passphrase
         api_url
             Coinbase Pro API URL
@@ -62,32 +62,32 @@ class AuthAPI(AuthAPIBase):
 
         # validates the api passphase is syntactically correct
         p = re.compile(r"^[a-z0-9]{10,11}$")
-        if not p.match(api_pass):
+        if not p.match(api_passphrase):
             err = 'Coinbase Pro API passphrase is invalid'
             if self.debug:
                 raise TypeError(err)
             else:
                 raise SystemExit(err)
 
-        self.api_key = api_key
-        self.api_secret = api_secret
-        self.api_pass = api_pass
-        self.api_url = api_url
+        self._api_key = api_key
+        self._api_secret = api_secret
+        self._api_passphrase = api_passphrase
+        self._api_url = api_url
 
     def __call__(self, request):
         """Signs the request"""
 
         timestamp = str(time.time())
         message = timestamp + request.method + request.path_url + (request.body or b'').decode()
-        hmac_key = base64.b64decode(self.api_secret)
+        hmac_key = base64.b64decode(self._api_secret)
         signature = hmac.new(hmac_key, message.encode(), hashlib.sha256)
         signature_b64 = base64.b64encode(signature.digest()).decode()
 
         request.headers.update({
             'CB-ACCESS-SIGN': signature_b64,
             'CB-ACCESS-TIMESTAMP': timestamp,
-            'CB-ACCESS-KEY': self.api_key,
-            'CB-ACCESS-PASSPHRASE': self.api_pass,
+            'CB-ACCESS-KEY': self._api_key,
+            'CB-ACCESS-PASSPHRASE': self._api_passphrase,
             'Content-Type': 'application/json'
         })
 
@@ -123,15 +123,30 @@ class AuthAPI(AuthAPIBase):
     
         return self.authAPI('GET', 'accounts/' + account)
 
-    def getFees(self):
-        return self.authAPI('GET', 'fees')
+    def getFees(self, market=None):
+        df = self.authAPI('GET', 'fees')
 
-    def getMakerFee(self):
-        fees = self.getFees()
+        if market != None:
+            df['market'] = market
+        else:
+            df['market'] = ''
+        
+        return df
+
+    def getMakerFee(self, market=None):
+        if market != None:
+            fees = self.getFees(market)
+        else:
+            fees = self.getFees()
+        
         return float(fees['maker_fee_rate'].to_string(index=False).strip())
 
-    def getTakerFee(self):
-        fees = self.getFees()
+    def getTakerFee(self, market=None):
+        if market != None:
+            fees = self.getFees(market)
+        else:
+            fees = self.getFees()
+            
         return float(fees['taker_fee_rate'].to_string(index=False).strip())
 
     def getUSDVolume(self):
@@ -248,7 +263,7 @@ class AuthAPI(AuthAPIBase):
             print (order)
 
         # connect to authenticated coinbase pro api
-        model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+        model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
 
         # place order and return result
         return model.authAPI('POST', 'orders', order)
@@ -269,7 +284,7 @@ class AuthAPI(AuthAPIBase):
 
         print (order)
 
-        model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+        model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
         return model.authAPI('POST', 'orders', order)
 
     def limitSell(self, market='', base_quantity=0, futurePrice=0):
@@ -292,14 +307,14 @@ class AuthAPI(AuthAPIBase):
 
         print (order)
 
-        model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+        model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
         return model.authAPI('POST', 'orders', order)
 
     def cancelOrders(self, market=''):
         if not self._isMarketValid(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
-        model = AuthAPI(self.api_key, self.api_secret, self.api_pass, self.api_url)
+        model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
         return model.authAPI('DELETE', 'orders')
 
     def authAPI(self, method, uri, payload=''):
@@ -314,17 +329,17 @@ class AuthAPI(AuthAPIBase):
 
         try:
             if method == 'DELETE':
-                resp = requests.delete(self.api_url + uri, auth=self)
+                resp = requests.delete(self._api_url + uri, auth=self)
             elif method == 'GET':
-                resp = requests.get(self.api_url + uri, auth=self)
+                resp = requests.get(self._api_url + uri, auth=self)
             elif method == 'POST':
-                resp = requests.post(self.api_url + uri, json=payload, auth=self)
+                resp = requests.post(self._api_url + uri, json=payload, auth=self)
 
             if resp.status_code != 200:
                 if self.die_on_api_error:
-                    raise Exception(method.upper() + 'GET (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
+                    raise Exception(method.upper() + 'GET (' + '{}'.format(resp.status_code) + ') ' + self._api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
                 else:
-                    print ('error:', method.upper() + ' (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
+                    print ('error:', method.upper() + ' (' + '{}'.format(resp.status_code) + ') ' + self._api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
                     return pd.DataFrame()
 
             resp.raise_for_status()
@@ -346,9 +361,9 @@ class AuthAPI(AuthAPIBase):
                     return pd.DataFrame()
             else:
                 if self.die_on_api_error:
-                    raise SystemExit('ConnectionError: ' + self.api_url)
+                    raise SystemExit('ConnectionError: ' + self._api_url)
                 else:
-                    print ('ConnectionError: ' + self.api_url)
+                    print ('ConnectionError: ' + self._api_url)
                     return pd.DataFrame()
 
         except requests.exceptions.HTTPError as err:
@@ -360,9 +375,9 @@ class AuthAPI(AuthAPIBase):
                     return pd.DataFrame()
             else:
                 if self.die_on_api_error:
-                    raise SystemExit('HTTPError: ' + self.api_url)
+                    raise SystemExit('HTTPError: ' + self._api_url)
                 else:
-                    print ('HTTPError: ' + self.api_url)
+                    print ('HTTPError: ' + self._api_url)
                     return pd.DataFrame()
 
         except requests.Timeout as err:
@@ -374,9 +389,9 @@ class AuthAPI(AuthAPIBase):
                     return pd.DataFrame()
             else:
                 if self.die_on_api_error:
-                    raise SystemExit('Timeout: ' + self.api_url)
+                    raise SystemExit('Timeout: ' + self._api_url)
                 else:
-                    print ('Timeout: ' + self.api_url)
+                    print ('Timeout: ' + self._api_url)
                     return pd.DataFrame()
 
         except json.decoder.JSONDecodeError as err:
@@ -388,9 +403,9 @@ class AuthAPI(AuthAPIBase):
                     return pd.DataFrame()
             else:
                 if self.die_on_api_error:
-                    raise SystemExit('JSONDecodeError: ' + self.api_url)
+                    raise SystemExit('JSONDecodeError: ' + self._api_url)
                 else:
-                    print ('JSONDecodeError: ' + self.api_url)
+                    print ('JSONDecodeError: ' + self._api_url)
                     return pd.DataFrame()          
 
 class PublicAPI(AuthAPIBase):
@@ -399,7 +414,7 @@ class PublicAPI(AuthAPIBase):
         self.debug = False
         self.die_on_api_error = False
 
-        self.api_url = 'https://api.pro.coinbase.com/'
+        self._api_url = 'https://api.pro.coinbase.com/'
 
     def getHistoricalData(self, market='BTC-GBP', granularity=86400, iso8601start='', iso8601end=''):
         # validates the market is syntactically correct
@@ -516,15 +531,15 @@ class PublicAPI(AuthAPIBase):
 
         try:
             if method == 'GET':
-                resp = requests.get(self.api_url + uri)
+                resp = requests.get(self._api_url + uri)
             elif method == 'POST':
-                resp = requests.post(self.api_url + uri, json=payload)
+                resp = requests.post(self._api_url + uri, json=payload)
 
             if resp.status_code != 200:
                 if self.die_on_api_error:
-                    raise Exception(method.upper() + 'GET (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
+                    raise Exception(method.upper() + 'GET (' + '{}'.format(resp.status_code) + ') ' + self._api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
                 else:
-                    print('error:', method.upper() + ' (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
+                    print('error:', method.upper() + ' (' + '{}'.format(resp.status_code) + ') ' + self._api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
                     return pd.DataFrame()
 
             resp.raise_for_status()
@@ -540,9 +555,9 @@ class PublicAPI(AuthAPIBase):
                     return pd.DataFrame()
             else:
                 if self.die_on_api_error:
-                    raise SystemExit('ConnectionError: ' + self.api_url)
+                    raise SystemExit('ConnectionError: ' + self._api_url)
                 else:
-                    print('ConnectionError: ' + self.api_url)
+                    print('ConnectionError: ' + self._api_url)
                     return pd.DataFrame()
 
         except requests.exceptions.HTTPError as err:
@@ -554,9 +569,9 @@ class PublicAPI(AuthAPIBase):
                     return pd.DataFrame()
             else:
                 if self.die_on_api_error:
-                    raise SystemExit('HTTPError: ' + self.api_url)
+                    raise SystemExit('HTTPError: ' + self._api_url)
                 else:
-                    print('HTTPError: ' + self.api_url)
+                    print('HTTPError: ' + self._api_url)
                     return pd.DataFrame()
 
         except requests.Timeout as err:
@@ -568,9 +583,9 @@ class PublicAPI(AuthAPIBase):
                     return pd.DataFrame()
             else:
                 if self.die_on_api_error:
-                    raise SystemExit('Timeout: ' + self.api_url)
+                    raise SystemExit('Timeout: ' + self._api_url)
                 else:
-                    print('Timeout: ' + self.api_url)
+                    print('Timeout: ' + self._api_url)
                     return pd.DataFrame()
 
         except json.decoder.JSONDecodeError as err:
@@ -582,7 +597,7 @@ class PublicAPI(AuthAPIBase):
                     return pd.DataFrame()
             else:
                 if self.die_on_api_error:
-                    raise SystemExit('JSONDecodeError: ' + self.api_url)
+                    raise SystemExit('JSONDecodeError: ' + self._api_url)
                 else:
-                    print ('JSONDecodeError: ' + self.api_url)
+                    print ('JSONDecodeError: ' + self._api_url)
                     return pd.DataFrame()
