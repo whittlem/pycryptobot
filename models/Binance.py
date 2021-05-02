@@ -80,12 +80,17 @@ class AuthAPI(AuthAPIBase):
             current_price = self.getTicker(market)
 
             base_quantity = np.divide(quote_quantity, current_price)
+
+            # insufficient funds to buy
+            if (quote_quantity < current_price):
+                return []
+
             df_filters = self.getMarketInfoFilters(market)
             step_size = float(df_filters.loc[df_filters['filterType'] == 'LOT_SIZE']['stepSize'])
             precision = int(round(-math.log(step_size, 10), 0))
 
             # remove fees
-            base_quantity = base_quantity * 0.9995
+            base_quantity = base_quantity - (base_quantity * self.getTradeFee(market))
 
             # execute market buy
             stepper = 10.0 ** precision
@@ -113,7 +118,7 @@ class AuthAPI(AuthAPIBase):
             precision = int(round(-math.log(step_size, 10), 0))
 
             # remove fees
-            base_quantity = base_quantity * 0.9995
+            base_quantity = base_quantity - (base_quantity * self.getTradeFee(market))
 
             # execute market sell
             stepper = 10.0 ** precision
@@ -124,6 +129,16 @@ class AuthAPI(AuthAPIBase):
             ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
             print (ts, 'Binance', 'marketSell',  str(err))
             return []
+
+    def getTradeFee(self, market):
+        resp = self.client.get_trade_fee(symbol=market, timestamp=self.getTime())
+        if resp['success']:
+            return resp['tradeFee'][0]['taker']
+        else:
+            return 0.001
+
+
+
 
     def getMarketInfo(self, market):
         # validates the market is syntactically correct
@@ -304,3 +319,4 @@ class PublicAPI(AuthAPIBase):
             return datetime.fromtimestamp(epoch)
         except:
             return None
+
