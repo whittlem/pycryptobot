@@ -65,6 +65,46 @@ class AuthAPI(AuthAPIBase):
     def getClient(self):
         return self.client
 
+    def getFees(self, market=None):
+        if market != None:
+            resp = self.client.get_trade_fee(symbol=market)
+            if 'tradeFee' in resp:
+                df = pd.DataFrame(resp['tradeFee'][0], index=[0])
+                df['usd_volume'] = None
+                df.columns = [ 'maker_fee_rate', 'market', 'taker_fee_rate', 'usd_volume' ]
+                return df[[ 'maker_fee_rate', 'taker_fee_rate', 'usd_volume', 'market' ]]
+            return pd.DataFrame(columns=[ 'maker_fee_rate', 'taker_fee_rate', 'market' ])
+        else:
+            resp = self.client.get_trade_fee()
+            if 'tradeFee' in resp:
+                df = pd.DataFrame(resp['tradeFee'])
+                df['usd_volume'] = None
+                df.columns = [ 'maker_fee_rate', 'market', 'taker_fee_rate', 'usd_volume' ]
+                return df[[ 'maker_fee_rate', 'taker_fee_rate', 'usd_volume', 'market' ]]
+            return pd.DataFrame(columns=[ 'maker_fee_rate', 'taker_fee_rate', 'market' ])
+
+    def getMakerFee(self, market=None):
+        if market != None:
+            fees = self.getFees(market)
+        else:
+            fees = self.getFees()
+        
+        if len(fees) == 0:
+            return float(fees['maker_fee_rate'].to_string(index=False).strip())
+        else:
+            return float(fees['maker_fee_rate'].max())
+
+    def getTakerFee(self, market=None):
+        if market != None:
+            fees = self.getFees(market)
+        else:
+            fees = self.getFees()
+
+        if len(fees) == 0:
+            return float(fees['taker_fee_rate'].to_string(index=False).strip())
+        else:
+            return float(fees['taker_fee_rate'].max())
+
     def marketBuy(self, market='', quote_quantity=0):
         """Executes a market buy providing a funding amount"""
 
