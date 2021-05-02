@@ -23,9 +23,9 @@ parser.add_argument('--graphs', type=int, help='save graphs=1, do not save graph
 parser.add_argument('--live', type=int, help='live=1, test=0')
 parser.add_argument('--market', type=str, help='coinbasepro: BTC-GBP, binance: BTCGBP etc.')
 parser.add_argument('--sellatloss', type=int, help='toggle if bot should sell at a loss')
-parser.add_argument('--sellupperpcnt', type=int, help='optionally set sell upper percent limit')
-parser.add_argument('--selllowerpcnt', type=int, help='optionally set sell lower percent limit')
-parser.add_argument('--trailingstoploss', type=int, help='optionally set a trailing stop percent loss below last buy high')
+parser.add_argument('--sellupperpcnt', type=str, help='optionally set sell upper percent limit')
+parser.add_argument('--selllowerpcnt', type=str, help='optionally set sell lower percent limit')
+parser.add_argument('--trailingstoploss', type=str, help='optionally set a trailing stop percent loss below last buy high')
 parser.add_argument('--sim', type=str, help='simulation modes: fast, fast-sample, slow-sample')
 parser.add_argument('--simstartdate', type=str, help="start date for sample simulation e.g '2021-01-15'")
 parser.add_argument('--smartswitch', type=int, help='optionally smart switch between 1 hour and 15 minute intervals')
@@ -205,18 +205,30 @@ class PyCryptoBot():
 
                         if 'sellupperpcnt' in config:
                             if isinstance(config['sellupperpcnt'], (int,str)):
-                                if float(config['sellupperpcnt']) > 0 and float(config['sellupperpcnt'] <= 100):
-                                    self.sell_upper_pcnt = float(config['sellupperpcnt'])
+                                try:
+                                    if float(config['sellupperpcnt']) > 0 and float(config['sellupperpcnt']) <= 100:
+                                        self.sell_upper_pcnt = float(config['sellupperpcnt'])
+                                except ValueError:
+                                    print("\nInvalid (sellupperpcnt) value in configuration file. Use Integers or Float numbers ONLY","\n")
+                                    sys.exit()
 
                         if 'selllowerpcnt' in config:
                             if isinstance(config['selllowerpcnt'], (int,str)):
-                                if float(config['selllowerpcnt']) >= -100 and float(config['selllowerpcnt']) < 0:
-                                    self.sell_lower_pcnt = float(config['selllowerpcnt'])
-
+                                try:
+                                    if float(config['selllowerpcnt']) >= -100 and float(config['selllowerpcnt']) < 0:
+                                        self.sell_lower_pcnt = float(config['selllowerpcnt'])
+                                except ValueError:
+                                    print("\nInvalid (selllowerpcnt) value in configuration file. Use Integers or Float numbers ONLY","\n")
+                                    sys.exit()
+                                        
                         if 'trailingstoploss' in config:
                             if isinstance(config['trailingstoploss'], (int,str)):
-                                if float(config['trailingstoploss']) >= -100 and float(config['trailingstoploss']) < 0:
-                                    self.tailing_stop_loss = float(config['trailingstoploss'])
+                                try:
+                                    if float(config['trailingstoploss']) >= -100 and float(config['trailingstoploss']) < 0:
+                                        self.tailing_stop_loss = float(config['trailingstoploss'])
+                                except ValueError:
+                                    print("Invalid (trailingstoploss) value in configuration file. Use Integers or Float numbers ONLY","\n")
+                                    sys.exit()
 
                         if 'sellatloss' in config:
                             if isinstance(config['sellatloss'], int):
@@ -383,18 +395,30 @@ class PyCryptoBot():
 
                         if 'sellupperpcnt' in config:
                             if isinstance(config['sellupperpcnt'], (int,str)):
-                                if float(config['sellupperpcnt']) > 0 and float(config['sellupperpcnt']) <= 100:
-                                    self.sell_upper_pcnt = float(config['sellupperpcnt'])
+                                try:
+                                    if float(config['sellupperpcnt']) > 0 and float(config['sellupperpcnt']) <= 100:
+                                        self.sell_upper_pcnt = float(config['sellupperpcnt'])
+                                except ValueError:
+                                    print("\nInvalid (sellupperpcnt) value in configuration file. Use Integers or Float numbers ONLY","\n")
+                                    sys.exit()
 
                         if 'selllowerpcnt' in config:
                             if isinstance(config['selllowerpcnt'], (int,str)):
-                                if float(config['selllowerpcnt']) >= -100 and float(config['selllowerpcnt']) < 0:
-                                    self.sell_lower_pcnt = float(config['selllowerpcnt'])
+                                try:
+                                    if float(config['selllowerpcnt']) >= -100 and float(config['selllowerpcnt']) < 0:
+                                        self.sell_lower_pcnt = float(config['selllowerpcnt'])
+                                except ValueError:
+                                    print("\nInvalid (selllowerpcnt) value in configuration file. Use Integers or Float numbers ONLY","\n")
+                                    sys.exit()
 
                         if 'trailingstoploss' in config:
                             if isinstance(config['trailingstoploss'], (int,str)):
-                                if float(config['trailingstoploss']) >= -100 and float(config['trailingstoploss']) < 0:
-                                    self.tailing_stop_loss = float(config['trailingstoploss'])
+                                try:
+                                    if float(config['trailingstoploss']) >= -100 and float(config['trailingstoploss']) < 0:
+                                        self.tailing_stop_loss = float(config['trailingstoploss'])
+                                except ValueError:
+                                    print("\nInvalid (trailingstoploss) value in configuration file. Use Integers or Float numbers ONLY","\n")
+                                    sys.exit()
 
                         if 'sellatloss' in config:
                             if isinstance(config['sellatloss'], int):
@@ -567,18 +591,30 @@ class PyCryptoBot():
 
                             if 'sellupperpcnt' in config:
                                 if isinstance(config['sellupperpcnt'], (int,str)):
-                                    if float(config['sellupperpcnt']) > 0 and float(config['sellupperpcnt']) <= 100:
-                                        self.sell_upper_pcnt = float(config['sellupperpcnt'])
+                                    try:
+                                        if float(config['sellupperpcnt']) > 0 and float(config['sellupperpcnt']) <= 100:
+                                            self.sell_upper_pcnt = float(config['sellupperpcnt'])
+                                    except ValueError:
+                                        print("\nInvalid (sellupperpcnt) value in configuration file. Use Integers or Float numbers ONLY","\n")
+                                        sys.exit()
 
                             if 'selllowerpcnt' in config:
                                 if isinstance(config['selllowerpcnt'], (int,str)):
-                                    if float(config['selllowerpcnt']) >= -100 and float(config['selllowerpcnt']) < 0:
-                                        self.sell_lower_pcnt = float(config['selllowerpcnt'])
+                                    try:
+                                        if float(config['selllowerpcnt']) >= -100 and float(config['selllowerpcnt']) < 0:
+                                            self.sell_lower_pcnt = float(config['selllowerpcnt'])
+                                    except ValueError:
+                                        print("\nInvalid (selllowerpcnt) value in configuration file. Use Integers or Float numbers ONLY","\n")
+                                        sys.exit()
 
                             if 'trailingstoploss' in config:
                                 if isinstance(config['trailingstoploss'], (int,str)):
-                                    if float(config['trailingstoploss']) >= -100 and float(config['trailingstoploss']) < 0:
-                                        self.trailing_stop_loss = int(config['trailingstoploss'])
+                                    try:
+                                        if float(config['trailingstoploss']) >= -100 and float(config['trailingstoploss']) < 0:
+                                            self.trailing_stop_loss = float(config['trailingstoploss'])
+                                    except ValueError:
+                                        print("\nInvalid (trailingstoploss) value in configuraiton file. Use Integers or Float numbers ONLY","\n")
+                                        sys.exit()
 
                             if 'sellatloss' in config:
                                 if isinstance(config['sellatloss'], int):
@@ -746,18 +782,30 @@ class PyCryptoBot():
 
                             if 'sellupperpcnt' in config:
                                 if isinstance(config['sellupperpcnt'], (int,str)):
-                                    if float(config['sellupperpcnt']) > 0 and float(config['sellupperpcnt']) <= 100:
-                                        self.sell_upper_pcnt = float(config['sellupperpcnt'])
+                                    try:
+                                        if float(config['sellupperpcnt']) > 0 and float(config['sellupperpcnt']) <= 100:
+                                            self.sell_upper_pcnt = float(config['sellupperpcnt'])
+                                    except ValueError:
+                                        print("\nInvalid (sellupperpcnt) value in configuration file. Use Integers or Float numbers ONLY","\n")
+                                        sys.exit()
 
                             if 'selllowerpcnt' in config:
                                 if isinstance(config['selllowerpcnt'], (int,str)):
-                                    if float(config['selllowerpcnt']) >= -100 and float(config['selllowerpcnt']) < 0:
-                                        self.sell_lower_pcnt = float(config['selllowerpcnt'])
+                                    try:
+                                        if float(config['selllowerpcnt']) >= -100 and float(config['selllowerpcnt']) < 0:
+                                            self.sell_lower_pcnt = float(config['selllowerpcnt'])
+                                    except ValueError:
+                                        print("\nInvalid (selllowerpcnt) value in configuration file. Use Integers or Float numbers ONLY","\n")
+                                        sys.exit()
 
                             if 'trailingstoploss' in config:
                                 if isinstance(config['trailingstoploss'], (int,str)):
-                                    if float(config['trailingstoploss']) >= -100 and float(config['trailingstoploss']) < 0:
-                                        self.trailing_stop_loss = float(config['trailingstoploss'])
+                                    try:
+                                        if float(config['trailingstoploss']) >= -100 and float(config['trailingstoploss']) < 0:
+                                            self.trailing_stop_loss = float(config['trailingstoploss'])
+                                    except ValueError:
+                                        print("\nInvalid (trailingstoploss) value in configuration file. Use Integers or Float numbers ONLY","\n")
+                                        sys.exit()
 
                             if 'sellatloss' in config:
                                 if isinstance(config['sellatloss'], int):
@@ -1053,18 +1101,30 @@ class PyCryptoBot():
 
         if args.sellupperpcnt != None:
             if isinstance(args.sellupperpcnt, (int,str)):
-                if float(args.sellupperpcnt) > 0 and float(args.sellupperpcnt) <= 100:
-                    self.sell_upper_pcnt = float(args.sellupperpcnt)
+                try:
+                    if float(args.sellupperpcnt) > 0 and float(args.sellupperpcnt) <= 100:
+                        self.sell_upper_pcnt = float(args.sellupperpcnt)
+                except ValueError:
+                    print("\nInvalid (sellupperpcnt) value in command-line argument. Use Integers or Float numbers ONLY","\n")
+                    sys.exit()
 
         if args.selllowerpcnt != None:
             if isinstance(args.selllowerpcnt, (int,str)):
-                if float(args.selllowerpcnt) >= -100 and float(args.selllowerpcnt) < 0:
-                    self.sell_lower_pcnt = float(args.selllowerpcnt)
+                try:
+                    if float(args.selllowerpcnt) >= -100 and float(args.selllowerpcnt) < 0:
+                        self.sell_lower_pcnt = float(args.selllowerpcnt)
+                except ValueError:
+                    print("\nInvalid (selllowerpcnt) value in command-line arugment. Use Integers or Float numbers ONLY","\n")
+                    sys.exit()
 
         if args.trailingstoploss != None:
             if isinstance(args.trailingstoploss, (int,str)):
-                if float(args.trailingstoploss) >= -100 and float(args.trailingstoploss) < 0:
-                    self.trailing_stop_loss = float(args.trailingstoploss)
+                try:
+                    if float(args.trailingstoploss) >= -100 and float(args.trailingstoploss) < 0:
+                        self.trailing_stop_loss = float(args.trailingstoploss)
+                except ValueError:
+                    print("\nInvalid (trailingstoploss) value in command-line argument . Use Integers or Float numbers ONLY","\n")
+                    sys.exit()
 
         if args.sellatloss != None:
             if not args.sellatloss in [ '0', '1' ]:
