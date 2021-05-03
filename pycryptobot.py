@@ -49,15 +49,15 @@ if app.isLive() == 1:
         last_action = 'BUY'
 
     if app.getExchange() == 'binance':
-        if last_action == 'SELL'and account.getBalance(app.getQuoteCurrency()) < 0.001:
+        if last_action == 'SELL' and account.getBalance(app.getQuoteCurrency()) < 0.001:
             raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(app.getQuoteCurrency())) + ' < 0.1 ' + app.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
-        elif last_action == 'BUY'and account.getBalance(app.getBaseCurrency()) < 0.001:
+        elif last_action == 'BUY' and account.getBalance(app.getBaseCurrency()) < 0.001:
             raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(app.getBaseCurrency())) + ' < 0.1 ' + app.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
  
     elif app.getExchange() == 'coinbasepro':
-        if last_action == 'SELL'and account.getBalance(app.getQuoteCurrency()) < 50:
+        if last_action == 'SELL' and account.getBalance(app.getQuoteCurrency()) < 50:
             raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(app.getQuoteCurrency())) + ' < 50 ' + app.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
-        elif last_action == 'BUY'and account.getBalance(app.getBaseCurrency()) < 0.001:
+        elif last_action == 'BUY' and account.getBalance(app.getBaseCurrency()) < 0.001:
             raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(app.getBaseCurrency())) + ' < 0.1 ' + app.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
 
     orders = account.getOrders(app.getMarket(), '', 'done')
@@ -221,21 +221,12 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         evening_doji_star = bool(df_last['evening_doji_star'].values[0])
         two_black_gapping = bool(df_last['two_black_gapping'].values[0])
 
-        # is crypto recession?
-        is_crypto_recession = False
-        if app.disableCryptoRecession() == False:
-             is_crypto_recession = app.isCryptoRecession()
-
-        if is_crypto_recession == True:
-            print ('Crypto Recession Warning - Time to get out!', "\n")
-
         # criteria for a buy signal
         if ema12gtema26co == True \
                 and (macdgtsignal == True or app.disableBuyMACD()) \
                 and (goldencross == True or app.disableBullOnly()) \
                 and (obv_pc > -5 or app.disableBuyOBV()) \
                 and (elder_ray_buy == True or app.disableBuyElderRay()) \
-                and (is_crypto_recession == False or app.disableCryptoRecession()) \
                 and last_action != 'BUY':
             action = 'BUY'
         
@@ -244,7 +235,6 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 and (goldencross == True or app.disableBullOnly()) \
                 and (obv_pc > -5 or app.disableBuyOBV()) \
                 and (elder_ray_buy == True or app.disableBuyElderRay()) \
-                and (is_crypto_recession == False or app.disableCryptoRecession()) \
                 and last_action != 'BUY':
             action = 'BUY'
 
@@ -257,10 +247,22 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         else:
             action = 'WAIT'
 
+        # if disabled, do not buy within 5% of the dataframe close high
+        if action == 'BUY' and app.disableBuyNearHigh() and (price > (df['close'].max() * 0.95)):
+            action = 'WAIT'
+
+            now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+            log_text = now + ' | ' + app.getMarket() + ' | ' + str(app.getGranularity()) + ' | Ignoring Buy Signal (price ' + str(price) + ' within 5% of high ' + str(df['close'].max()) + ')'
+            print (log_text, "\n")
+            logging.warning(log_text)
+
+            # telegram
+            if not app.disableTelegram() and app.isTelegramEnabled():
+                telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
+                telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
+
         last_buy_minus_fees = 0
         if last_buy > 0 and last_action == 'BUY':
-            change_pcnt = ((price / last_buy) - 1) * 100
-
             if last_buy_high > 1:
                 change_pcnt_high = ((price / last_buy_high) - 1) * 100
             else:
@@ -275,19 +277,6 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             last_buy_minus_fees = last_buy + buy_fee
             sell_fee = price * app.getTakerFee()
             margin = ((price - last_buy_minus_fees - sell_fee) / price) * 100
-
-             # crypto recession
-            if app.disableCryptoRecession() == False and app.allowSellAtLoss() and is_crypto_recession == True:
-                action = 'SELL'
-                last_action = 'BUY'
-                log_text = '! Loss Failsafe Triggered (Crypto Recession! - SMA50 < SMA200 on day charts)'
-                print (log_text, "\n")
-                logging.warning(log_text)
-
-                # telegram
-                if not app.disableTelegram() and app.isTelegramEnabled():
-                    telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
-                    telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)      
 
             # loss failsafe sell at fibonacci band
             if app.disableFailsafeFibonacciLow() == False and app.allowSellAtLoss() and app.sellLowerPcnt() == None and fib_low > 0 and fib_low >= float(price):
@@ -316,7 +305,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
             # loss failsafe sell at sell_lower_pcnt
-            elif app.disableFailsafeLowerPcnt() == False and app.allowSellAtLoss() and app.sellLowerPcnt() != None and change_pcnt < app.sellLowerPcnt():
+            elif app.disableFailsafeLowerPcnt() == False and app.allowSellAtLoss() and app.sellLowerPcnt() != None and margin < app.sellLowerPcnt():
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Loss Failsafe Triggered (< ' + str(app.sellLowerPcnt()) + '%)'
@@ -329,7 +318,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
             # profit bank at sell_upper_pcnt
-            if app.disableProfitbankUpperPcnt() == False and app.sellUpperPcnt() != None and change_pcnt > app.sellUpperPcnt():
+            if app.disableProfitbankUpperPcnt() == False and app.sellUpperPcnt() != None and margin > app.sellUpperPcnt():
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Profit Bank Triggered (> ' + str(app.sellUpperPcnt()) + '%)'
@@ -359,6 +348,19 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Profit Bank Triggered (Strong Reversal Detected)'
+                print (log_text, "\n")
+                logging.warning(log_text)
+
+                # telegram
+                if not app.disableTelegram() and app.isTelegramEnabled():
+                    telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
+                    telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
+
+            # profit bank when strong reversal detected
+            if app.sellAtResistance() == True and price > 0 and price != ta.getTradeExit(price):
+                action = 'SELL'
+                last_action = 'BUY'
+                log_text = '! Profit Bank Triggered (Selling At Resistance)'
                 print (log_text, "\n")
                 logging.warning(log_text)
 

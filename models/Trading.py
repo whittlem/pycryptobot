@@ -562,6 +562,46 @@ class TechnicalAnalysis():
                 else:
                     print (' Support/Resistance level of ' + str(df_last[0]) + ' formed at ' + str(df_last.index[0]), "\n")
 
+    def getResistance(self, price=0):
+        if isinstance(price, int) or isinstance(price, float):
+            if price > 0:
+                sr = self.getSupportResistanceLevels()
+                for r in sr.sort_values():                    
+                    if r > price:
+                        return r
+
+        return price
+
+    def getFibonacciUpper(self, price=0):
+        if isinstance(price, int) or isinstance(price, float):
+            if price > 0:
+                fb = self.getFibonacciRetracementLevels()
+                for f in fb.values():
+                    if f > price:
+                        return f
+        
+        return price
+
+    def getTradeExit(self, price=0):
+        if isinstance(price, int) or isinstance(price, float):
+            if price > 0:
+                r = self.getResistance(price)
+                f = self.getFibonacciUpper(price)
+                if price < r and price < f:
+                    r_margin = ((r - price) / price) * 100
+                    f_margin = ((f - price) / price) * 100
+
+                    if r_margin > 1 and f_margin > 1 and r <= f:
+                        return r
+                    elif r_margin > 1 and f_margin > 1 and f <= r:
+                        return f
+                    elif r_margin > 1 and f_margin < 1:
+                        return r
+                    elif f_margin > 1 and r_margin < 1:
+                        return f
+                
+        return price
+
     def printSupportResistanceFibonacciLevels(self, price=0):
         if isinstance(price, int) or isinstance(price, float):
             if price > 0:
