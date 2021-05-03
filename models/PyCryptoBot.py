@@ -23,9 +23,9 @@ parser.add_argument('--graphs', type=int, help='save graphs=1, do not save graph
 parser.add_argument('--live', type=int, help='live=1, test=0')
 parser.add_argument('--market', type=str, help='coinbasepro: BTC-GBP, binance: BTCGBP etc.')
 parser.add_argument('--sellatloss', type=int, help='toggle if bot should sell at a loss')
-parser.add_argument('--sellupperpcnt', type=int, help='optionally set sell upper percent limit')
-parser.add_argument('--selllowerpcnt', type=int, help='optionally set sell lower percent limit')
-parser.add_argument('--trailingstoploss', type=int, help='optionally set a trailing stop percent loss below last buy high')
+parser.add_argument('--sellupperpcnt', type=float, help='optionally set sell upper percent limit')
+parser.add_argument('--selllowerpcnt', type=float, help='optionally set sell lower percent limit')
+parser.add_argument('--trailingstoploss', type=float, help='optionally set a trailing stop percent loss below last buy high')
 parser.add_argument('--sim', type=str, help='simulation modes: fast, fast-sample, slow-sample')
 parser.add_argument('--simstartdate', type=str, help="start date for sample simulation e.g '2021-01-15'")
 parser.add_argument('--smartswitch', type=int, help='optionally smart switch between 1 hour and 15 minute intervals')
@@ -35,12 +35,15 @@ parser.add_argument('--logfile', type=str, help="Use the log file at the given l
 parser.add_argument('--buypercent', type=str, help="percentage of quote currency to buy")
 parser.add_argument('--sellpercent', type=str, help="percentage of base currency to sell")
 
+# optional options
+parser.add_argument('--sellatresistance', action="store_true", help="sell at resistance or upper fibonacci band")
+
 # disable defaults
 parser.add_argument('--disablebullonly', action="store_true", help="disable only buying in bull market")
+parser.add_argument('--disablebuynearhigh', action="store_true", help="disable buy within 5 percent of high")
 parser.add_argument('--disablebuymacd', action="store_true", help="disable macd buy signal")
 parser.add_argument('--disablebuyobv', action="store_true", help="disable obv buy signal")
 parser.add_argument('--disablebuyelderray', action="store_true", help="disable elder ray buy signal")
-parser.add_argument('--disablecryptorecession', action="store_true", help="disable crypto recession check")
 parser.add_argument('--disablefailsafefibonaccilow', action="store_true", help="disable failsafe sell on fibonacci lower band")
 parser.add_argument('--disablefailsafelowerpcnt', action="store_true", help="disable failsafe sell on 'selllowerpcnt'")
 parser.add_argument('--disableprofitbankupperpcnt', action="store_true", help="disable profit bank on 'sellupperpcnt'")
@@ -51,7 +54,8 @@ parser.add_argument('--disablelog', action="store_true", help="disable pycryptob
 parser.add_argument('--disabletracker', action="store_true", help="disable tracker.csv")
 
 # parse arguments
-args = parser.parse_args()
+#args = parser.parse_args()
+args, unknown = parser.parse_known_args()
 
 class PyCryptoBot():
     def __init__(self, exchange='coinbasepro', filename='config.json'):
@@ -89,11 +93,13 @@ class PyCryptoBot():
         self.buypercent = 100
         self.sellpercent = 100
 
+        self.sellatresistance = False
+
         self.disablebullonly = False
+        self.disablebuynearhigh = False
         self.disablebuymacd = False
         self.disablebuyobv = False
         self.disablebuyelderray = False
-        self.disablecryptorecession = False
         self.disablefailsafefibonaccilow = False
         self.disablefailsafelowerpcnt = False
         self.disableprofitbankupperpcnt = False
@@ -204,19 +210,28 @@ class PyCryptoBot():
                                         self.simstartdate = config['simstartdate']
 
                         if 'sellupperpcnt' in config:
-                            if isinstance(config['sellupperpcnt'], int):
-                                if config['sellupperpcnt'] > 0 and config['sellupperpcnt'] <= 100:
-                                    self.sell_upper_pcnt = int(config['sellupperpcnt'])
+                            if isinstance(config['sellupperpcnt'], (int, str)):
+                                p = re.compile(r"^[0-9\.]{1,5}$")
+                                if isinstance(config['sellupperpcnt'], str) and p.match(config['sellupperpcnt']):
+                                    self.sell_upper_pcnt = float(config['sellupperpcnt'])
+                                elif isinstance(config['sellupperpcnt'], int) and config['sellupperpcnt'] > 0 and config['sellupperpcnt'] <= 100:
+                                    self.sell_upper_pcnt = float(config['sellupperpcnt'])
 
                         if 'selllowerpcnt' in config:
-                            if isinstance(config['selllowerpcnt'], int):
-                                if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
-                                    self.sell_lower_pcnt = int(config['selllowerpcnt'])
+                            if isinstance(config['selllowerpcnt'], (int, str)):
+                                p = re.compile(r"^\-[0-9\.]{1,5}$")
+                                if isinstance(config['selllowerpcnt'], str) and p.match(config['selllowerpcnt']):
+                                    self.sell_lower_pcnt = float(config['selllowerpcnt'])
+                                elif isinstance(config['selllowerpcnt'], int) and config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
+                                    self.sell_lower_pcnt = float(config['selllowerpcnt'])
 
                         if 'trailingstoploss' in config:
-                            if isinstance(config['trailingstoploss'], int):
-                                if config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
-                                    self.tailing_stop_loss = int(config['trailingstoploss'])
+                            if isinstance(config['trailingstoploss'], (int, str)):
+                                p = re.compile(r"^\-[0-9\.]{1,5}$")
+                                if isinstance(config['trailingstoploss'], str) and p.match(config['trailingstoploss']):
+                                    self.tailing_stop_loss = float(config['trailingstoploss'])
+                                elif isinstance(config['trailingstoploss'], int) and config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
+                                    self.tailing_stop_loss = float(config['trailingstoploss'])
 
                         if 'sellatloss' in config:
                             if isinstance(config['sellatloss'], int):
@@ -226,10 +241,20 @@ class PyCryptoBot():
                                         self.sell_lower_pcnt = None
                                         self.trailing_stop_loss = None
 
+                        if 'sellatresistance' in config:
+                            if isinstance(config['sellatresistance'], int):
+                                if config['sellatresistance'] in [ 0, 1 ]:
+                                    self.sellatresistance= bool(config['sellatresistance'])
+
                         if 'disablebullonly' in config:
                             if isinstance(config['disablebullonly'], int):
                                 if config['disablebullonly'] in [ 0, 1 ]:
                                     self.disablebullonly = bool(config['disablebullonly'])
+
+                        if 'disablebuynearhigh' in config:
+                            if isinstance(config['disablebuynearhigh'], int):
+                                if config['disablebuynearhigh'] in [ 0, 1 ]:
+                                    self.disablebuynearhigh = bool(config['disablebuynearhigh'])
 
                         if 'disablebuymacd' in config:
                             if isinstance(config['disablebuymacd'], int):
@@ -245,11 +270,6 @@ class PyCryptoBot():
                             if isinstance(config['disablebuyelderray'], int):
                                 if config['disablebuyelderray'] in [ 0, 1 ]:
                                     self.disablebuyelderray = bool(config['disablebuyelderray'])
-
-                        if 'disablecryptorecession' in config:
-                            if isinstance(config['disablecryptorecession'], int):
-                                if config['disablecryptorecession'] in [ 0, 1 ]:
-                                    self.disablecryptorecession = bool(config['disablecryptorecession'])
 
                         if 'disablefailsafefibonaccilow' in config:
                             if isinstance(config['disablefailsafefibonaccilow'], int):
@@ -382,19 +402,28 @@ class PyCryptoBot():
                                         self.simstartdate = config['simstartdate']
 
                         if 'sellupperpcnt' in config:
-                            if isinstance(config['sellupperpcnt'], int):
-                                if config['sellupperpcnt'] > 0 and config['sellupperpcnt'] <= 100:
-                                    self.sell_upper_pcnt = int(config['sellupperpcnt'])
+                            if isinstance(config['sellupperpcnt'], (int, str)):
+                                p = re.compile(r"^[0-9\.]{1,5}$")
+                                if isinstance(config['sellupperpcnt'], str) and p.match(config['sellupperpcnt']):
+                                    self.sell_upper_pcnt = float(config['sellupperpcnt'])
+                                elif isinstance(config['sellupperpcnt'], int) and config['sellupperpcnt'] > 0 and config['sellupperpcnt'] <= 100:
+                                    self.sell_upper_pcnt = float(config['sellupperpcnt'])
 
                         if 'selllowerpcnt' in config:
-                            if isinstance(config['selllowerpcnt'], int):
-                                if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
-                                    self.sell_lower_pcnt = int(config['selllowerpcnt'])
+                            if isinstance(config['selllowerpcnt'], (int, str)):
+                                p = re.compile(r"^\-[0-9\.]{1,5}$")
+                                if isinstance(config['selllowerpcnt'], str) and p.match(config['selllowerpcnt']):
+                                    self.sell_lower_pcnt = float(config['selllowerpcnt'])
+                                elif isinstance(config['selllowerpcnt'], int) and config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
+                                    self.sell_lower_pcnt = float(config['selllowerpcnt'])
 
                         if 'trailingstoploss' in config:
-                            if isinstance(config['trailingstoploss'], int):
-                                if config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
-                                    self.tailing_stop_loss = int(config['trailingstoploss'])
+                            if isinstance(config['trailingstoploss'], (int, str)):
+                                p = re.compile(r"^\-[0-9\.]{1,5}$")
+                                if isinstance(config['trailingstoploss'], str) and p.match(config['trailingstoploss']):
+                                    self.tailing_stop_loss = float(config['trailingstoploss'])
+                                elif isinstance(config['trailingstoploss'], int) and config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
+                                    self.tailing_stop_loss = float(config['trailingstoploss'])
 
                         if 'sellatloss' in config:
                             if isinstance(config['sellatloss'], int):
@@ -404,10 +433,20 @@ class PyCryptoBot():
                                         self.sell_lower_pcnt = None
                                         self.trailing_stop_loss = None
 
+                        if 'sellatresistance' in config:
+                            if isinstance(config['sellatresistance'], int):
+                                if config['sellatresistance'] in [ 0, 1 ]:
+                                    self.sellatresistance= bool(config['sellatresistance'])
+
                         if 'disablebullonly' in config:
                             if isinstance(config['disablebullonly'], int):
                                 if config['disablebullonly'] in [ 0, 1 ]:
                                     self.disablebullonly = bool(config['disablebullonly'])
+
+                        if 'disablebuynearhigh' in config:
+                            if isinstance(config['disablebuynearhigh'], int):
+                                if config['disablebuynearhigh'] in [ 0, 1 ]:
+                                    self.disablebuynearhigh = bool(config['disablebuynearhigh'])
 
                         if 'disablebuymacd' in config:
                             if isinstance(config['disablebuymacd'], int):
@@ -423,11 +462,6 @@ class PyCryptoBot():
                             if isinstance(config['disablebuyelderray'], int):
                                 if config['disablebuyelderray'] in [ 0, 1 ]:
                                     self.disablebuyelderray = bool(config['disablebuyelderray'])
-
-                        if 'disablecryptorecession' in config:
-                            if isinstance(config['disablecryptorecession'], int):
-                                if config['disablecryptorecession'] in [ 0, 1 ]:
-                                    self.disablecryptorecession = bool(config['disablecryptorecession'])
 
                         if 'disablefailsafefibonaccilow' in config:
                             if isinstance(config['disablefailsafefibonaccilow'], int):
@@ -566,19 +600,28 @@ class PyCryptoBot():
                                             self.simstartdate = config['simstartdate']
 
                             if 'sellupperpcnt' in config:
-                                if isinstance(config['sellupperpcnt'], int):
-                                    if config['sellupperpcnt'] > 0 and config['sellupperpcnt'] <= 100:
-                                        self.sell_upper_pcnt = int(config['sellupperpcnt'])
+                                if isinstance(config['sellupperpcnt'], (int, str)):
+                                    p = re.compile(r"^[0-9\.]{1,5}$")
+                                    if isinstance(config['sellupperpcnt'], str) and p.match(config['sellupperpcnt']):
+                                        self.sell_upper_pcnt = float(config['sellupperpcnt'])
+                                    elif isinstance(config['sellupperpcnt'], int) and config['sellupperpcnt'] > 0 and config['sellupperpcnt'] <= 100:
+                                        self.sell_upper_pcnt = float(config['sellupperpcnt'])
 
                             if 'selllowerpcnt' in config:
-                                if isinstance(config['selllowerpcnt'], int):
-                                    if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
-                                        self.sell_lower_pcnt = int(config['selllowerpcnt'])
+                                if isinstance(config['selllowerpcnt'], (int, str)):
+                                    p = re.compile(r"\-[0-9\.]{1,5}$")
+                                    if isinstance(config['selllowerpcnt'], str) and p.match(config['selllowerpcnt']):
+                                        self.sell_lower_pcnt = float(config['selllowerpcnt'])
+                                    elif isinstance(config['selllowerpcnt'], int) and config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:     
+                                        self.sell_lower_pcnt = float(config['selllowerpcnt'])
 
                             if 'trailingstoploss' in config:
-                                if isinstance(config['trailingstoploss'], int):
-                                    if config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
-                                        self.trailing_stop_loss = int(config['trailingstoploss'])
+                                if isinstance(config['trailingstoploss'], (int, str)):
+                                    p = re.compile(r"^\-[0-9\.]{1,5}$")
+                                    if isinstance(config['trailingstoploss'], str) and p.match(config['trailingstoploss']):
+                                        self.tailing_stop_loss = float(config['trailingstoploss'])
+                                    elif isinstance(config['trailingstoploss'], int) and config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
+                                        self.tailing_stop_loss = float(config['trailingstoploss'])
 
                             if 'sellatloss' in config:
                                 if isinstance(config['sellatloss'], int):
@@ -588,10 +631,20 @@ class PyCryptoBot():
                                             self.sell_lower_pcnt = None
                                             self.trailing_stop_loss = None
 
+                            if 'sellatresistance' in config:
+                                if isinstance(config['sellatresistance'], int):
+                                    if config['sellatresistance'] in [ 0, 1 ]:
+                                        self.sellatresistance= bool(config['sellatresistance'])
+
                             if 'disablebullonly' in config:
                                 if isinstance(config['disablebullonly'], int):
                                     if config['disablebullonly'] in [ 0, 1 ]:
                                         self.disablebullonly = bool(config['disablebullonly'])
+
+                            if 'disablebuynearhigh' in config:
+                                if isinstance(config['disablebuynearhigh'], int):
+                                    if config['disablebuynearhigh'] in [ 0, 1 ]:
+                                        self.disablebuynearhigh = bool(config['disablebuynearhigh'])
 
                             if 'disablebuymacd' in config:
                                 if isinstance(config['disablebuymacd'], int):
@@ -607,11 +660,6 @@ class PyCryptoBot():
                                 if isinstance(config['disablebuyelderray'], int):
                                     if config['disablebuyelderray'] in [ 0, 1 ]:
                                         self.disablebuyelderray = bool(config['disablebuyelderray'])
-
-                            if 'disablecryptorecession' in config:
-                                if isinstance(config['disablecryptorecession'], int):
-                                    if config['disablecryptorecession'] in [ 0, 1 ]:
-                                        self.disablecryptorecession = bool(config['disablecryptorecession'])
 
                             if 'disablefailsafefibonaccilow' in config:
                                 if isinstance(config['disablefailsafefibonaccilow'], int):
@@ -745,19 +793,28 @@ class PyCryptoBot():
                                             self.simstartdate = config['simstartdate']
 
                             if 'sellupperpcnt' in config:
-                                if isinstance(config['sellupperpcnt'], int):
-                                    if config['sellupperpcnt'] > 0 and config['sellupperpcnt'] <= 100:
-                                        self.sell_upper_pcnt = int(config['sellupperpcnt'])
+                                if isinstance(config['sellupperpcnt'], (int, str)):
+                                    p = re.compile(r"^[0-9\.]{1,5}$")
+                                    if isinstance(config['sellupperpcnt'], str) and p.match(config['sellupperpcnt']):
+                                        self.sell_upper_pcnt = float(config['sellupperpcnt'])
+                                    elif isinstance(config['sellupperpcnt'], int) and config['sellupperpcnt'] > 0 and config['sellupperpcnt'] <= 100:
+                                        self.sell_upper_pcnt = float(config['sellupperpcnt'])
 
                             if 'selllowerpcnt' in config:
-                                if isinstance(config['selllowerpcnt'], int):
-                                    if config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
-                                        self.sell_lower_pcnt = int(config['selllowerpcnt'])
+                                if isinstance(config['selllowerpcnt'], (int, str)):
+                                    p = re.compile(r"^\-[0-9\.]{1,5}$")
+                                    if isinstance(config['selllowerpcnt'], str) and p.match(config['selllowerpcnt']):
+                                        self.sell_lower_pcnt = float(config['selllowerpcnt'])
+                                    elif isinstance(config['selllowerpcnt'], int) and config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
+                                        self.sell_lower_pcnt = float(config['selllowerpcnt'])
 
                             if 'trailingstoploss' in config:
-                                if isinstance(config['trailingstoploss'], int):
-                                    if config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
-                                        self.trailing_stop_loss = int(config['trailingstoploss'])
+                                if isinstance(config['trailingstoploss'], (int, str)):
+                                    p = re.compile(r"^\-[0-9\.]{1,5}$")
+                                    if isinstance(config['trailingstoploss'], str) and p.match(config['trailingstoploss']):
+                                        self.tailing_stop_loss = float(config['trailingstoploss'])
+                                    elif isinstance(config['trailingstoploss'], int) and config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
+                                        self.tailing_stop_loss = float(config['trailingstoploss'])
 
                             if 'sellatloss' in config:
                                 if isinstance(config['sellatloss'], int):
@@ -766,10 +823,20 @@ class PyCryptoBot():
                                         if self.sell_at_loss == 0:
                                             self.sell_lower_pcnt = None
 
+                            if 'sellatresistance' in config:
+                                if isinstance(config['sellatresistance'], int):
+                                    if config['sellatresistance'] in [ 0, 1 ]:
+                                        self.sellatresistance= bool(config['sellatresistance'])
+
                             if 'disablebullonly' in config:
                                 if isinstance(config['disablebullonly'], int):
                                     if config['disablebullonly'] in [ 0, 1 ]:
                                         self.disablebullonly = bool(config['disablebullonly'])
+
+                            if 'disablebuynearhigh' in config:
+                                if isinstance(config['disablebuynearhigh'], int):
+                                    if config['disablebuynearhigh'] in [ 0, 1 ]:
+                                        self.disablebuynearhigh = bool(config['disablebuynearhigh'])
 
                             if 'disablebuymacd' in config:
                                 if isinstance(config['disablebuymacd'], int):
@@ -785,11 +852,6 @@ class PyCryptoBot():
                                 if isinstance(config['disablebuyelderray'], int):
                                     if config['disablebuyelderray'] in [ 0, 1 ]:
                                         self.disablebuyelderray = bool(config['disablebuyelderray'])
-
-                            if 'disablecryptorecession' in config:
-                                if isinstance(config['disablecryptorecession'], int):
-                                    if config['disablecryptorecession'] in [ 0, 1 ]:
-                                        self.disablecryptorecession = bool(config['disablecryptorecession'])
 
                             if 'disablefailsafefibonaccilow' in config:
                                 if isinstance(config['disablefailsafefibonaccilow'], int):
@@ -1052,17 +1114,17 @@ class PyCryptoBot():
                 self.simstartdate = None
 
         if args.sellupperpcnt != None:
-            if isinstance(args.sellupperpcnt, int):
+            if isinstance(args.sellupperpcnt, (int, float)):
                 if args.sellupperpcnt > 0 and args.sellupperpcnt <= 100:
                     self.sell_upper_pcnt = float(args.sellupperpcnt)
 
         if args.selllowerpcnt != None:
-            if isinstance(args.selllowerpcnt, int):
+            if isinstance(args.selllowerpcnt, (int, float)):
                 if args.selllowerpcnt >= -100 and args.selllowerpcnt < 0:
                     self.sell_lower_pcnt = float(args.selllowerpcnt)
 
         if args.trailingstoploss != None:
-            if isinstance(args.trailingstoploss, int):
+            if isinstance(args.trailingstoploss, (int, float)):
                 if args.trailingstoploss >= -100 and args.trailingstoploss < 0:
                     self.trailing_stop_loss = float(args.trailingstoploss)
 
@@ -1073,8 +1135,14 @@ class PyCryptoBot():
                     self.sell_lower_pcnt = None
                     self.trailing_stop_loss = None
 
+        if args.sellatresistance == True:
+            self.sellatresistance = True
+
         if args.disablebullonly == True:
             self.disablebullonly = True
+
+        if args.disablebuynearhigh == True:
+            self.disablebuynearhigh = True
 
         if args.disablebuymacd == True:
             self.disablebuymacd = True
@@ -1084,9 +1152,6 @@ class PyCryptoBot():
     
         if args.disablebuyelderray == True:
             self.disablebuyelderray = True
-
-        if args.disablecryptorecession == True:
-            self.disablecryptorecession = True
 
         if args.disablefailsafefibonaccilow == True:
             self.disablefailsafefibonaccilow = True
@@ -1399,8 +1464,14 @@ class PyCryptoBot():
     def allowSellAtLoss(self):
         return self.sell_at_loss
 
+    def sellAtResistance(self):
+        return self.sellatresistance
+
     def disableBullOnly(self):
         return self.disablebullonly
+
+    def disableBuyNearHigh(self):
+        return self.disablebuynearhigh
 
     def disableBuyMACD(self):
         return self.disablebuymacd
@@ -1410,9 +1481,6 @@ class PyCryptoBot():
 
     def disableBuyElderRay(self):
         return self.disablebuyelderray
-
-    def disableCryptoRecession(self):
-        return self.disablecryptorecession
 
     def disableFailsafeFibonacciLow(self):
         return self.disablefailsafefibonaccilow
@@ -1659,9 +1727,15 @@ class PyCryptoBot():
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
         txt = '         Sell At Loss : ' + str(self.allowSellAtLoss()) + '  --sellatloss ' + str(self.allowSellAtLoss())
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+
+        txt = '    Sell At Resistance : ' + str(not self.sellAtResistance()) + '  --sellatresistance'
         print('|', txt, (' ' * (75 - len(txt))), '|')   
 
         txt = '      Trade Bull Only : ' + str(not self.disableBullOnly()) + '  --disablebullonly'
+        print('|', txt, (' ' * (75 - len(txt))), '|')
+
+        txt = '        Buy Near High : ' + str(not self.disableBuyNearHigh()) + '  --disablebuynearhigh'
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
         txt = '         Use Buy MACD : ' + str(not self.disableBuyMACD()) + '  --disablebuymacd'
@@ -1671,10 +1745,7 @@ class PyCryptoBot():
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
         txt = '    Use Buy Elder-Ray : ' + str(not self.disableBuyElderRay()) + '  --disablebuyelderray'
-        print('|', txt, (' ' * (75 - len(txt))), '|')            
-
-        txt = '     Crypto Recession : ' + str(not self.disableCryptoRecession()) + '  --disablecryptorecession'
-        print('|', txt, (' ' * (75 - len(txt))), '|')            
+        print('|', txt, (' ' * (75 - len(txt))), '|')             
 
         txt = '   Sell Fibonacci Low : ' + str(not self.disableFailsafeFibonacciLow()) + '  --disablefailsafefibonaccilow'
         print('|', txt, (' ' * (75 - len(txt))), '|')   
