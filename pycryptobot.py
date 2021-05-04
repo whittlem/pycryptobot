@@ -330,19 +330,6 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
-            # profit bank at sell at fibonacci band
-            if app.disableProfitbankFibonacciHigh() == False and margin > 3 and app.sellUpperPcnt() != None and fib_high > fib_low and fib_high <= float(price):
-                action = 'SELL'
-                last_action = 'BUY'
-                log_text = '! Profit Bank Triggered (Fibonacci Band: ' + str(fib_high) + ')'
-                print (log_text, "\n")
-                logging.warning(log_text)
-
-                # telegram
-                if not app.disableTelegram() and app.isTelegramEnabled():
-                    telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
-                    telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
-
             # profit bank when strong reversal detected
             if app.disableProfitbankReversal() == False and margin > 3 and obv_pc < 0 and macdltsignal == True:
                 action = 'SELL'

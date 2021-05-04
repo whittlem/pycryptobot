@@ -47,7 +47,6 @@ parser.add_argument('--disablebuyelderray', action="store_true", help="disable e
 parser.add_argument('--disablefailsafefibonaccilow', action="store_true", help="disable failsafe sell on fibonacci lower band")
 parser.add_argument('--disablefailsafelowerpcnt', action="store_true", help="disable failsafe sell on 'selllowerpcnt'")
 parser.add_argument('--disableprofitbankupperpcnt', action="store_true", help="disable profit bank on 'sellupperpcnt'")
-parser.add_argument('--disableprofitbankfibonaccihigh', action="store_true", help="disable profit bank on fibonacci upper band")
 parser.add_argument('--disableprofitbankreversal', action="store_true", help="disable profit bank on strong candlestick reversal")
 parser.add_argument('--disabletelegram', action="store_true", help="disable telegram messages")
 parser.add_argument('--disablelog', action="store_true", help="disable pycryptobot.log")
@@ -103,7 +102,6 @@ class PyCryptoBot():
         self.disablefailsafefibonaccilow = False
         self.disablefailsafelowerpcnt = False
         self.disableprofitbankupperpcnt = False
-        self.disableprofitbankfibonaccihigh = False
         self.disableprofitbankreversal = False
         self.disabletelegram = False
         self.disablelog = False
@@ -285,11 +283,6 @@ class PyCryptoBot():
                             if isinstance(config['disableprofitbankupperpcnt'], int):
                                 if config['disableprofitbankupperpcnt'] in [ 0, 1 ]:
                                     self.disableprofitbankupperpcnt = bool(config['disableprofitbankupperpcnt'])
-
-                        if 'disableprofitbankfibonaccihigh' in config:
-                            if isinstance(config['disableprofitbankfibonaccihigh'], int):
-                                if config['disableprofitbankfibonaccihigh'] in [ 0, 1 ]:
-                                    self.disableprofitbankfibonaccihigh = bool(config['disableprofitbankfibonaccihigh'])
 
                         if 'disableprofitbankreversal' in config:
                             if isinstance(config['disableprofitbankreversal'], int):
@@ -477,11 +470,6 @@ class PyCryptoBot():
                             if isinstance(config['disableprofitbankupperpcnt'], int):
                                 if config['disableprofitbankupperpcnt'] in [ 0, 1 ]:
                                     self.disableprofitbankupperpcnt = bool(config['disableprofitbankupperpcnt'])
-
-                        if 'disableprofitbankfibonaccihigh' in config:
-                            if isinstance(config['disableprofitbankfibonaccihigh'], int):
-                                if config['disableprofitbankfibonaccihigh'] in [ 0, 1 ]:
-                                    self.disableprofitbankfibonaccihigh = bool(config['disableprofitbankfibonaccihigh'])
 
                         if 'disableprofitbankreversal' in config:
                             if isinstance(config['disableprofitbankreversal'], int):
@@ -676,11 +664,6 @@ class PyCryptoBot():
                                     if config['disableprofitbankupperpcnt'] in [ 0, 1 ]:
                                         self.disableprofitbankupperpcnt = bool(config['disableprofitbankupperpcnt'])
 
-                            if 'disableprofitbankfibonaccihigh' in config:
-                                if isinstance(config['disableprofitbankfibonaccihigh'], int):
-                                    if config['disableprofitbankfibonaccihigh'] in [ 0, 1 ]:
-                                        self.disableprofitbankfibonaccihigh = bool(config['disableprofitbankfibonaccihigh'])
-
                             if 'disableprofitbankreversal' in config:
                                 if isinstance(config['disableprofitbankreversal'], int):
                                     if config['disableprofitbankreversal'] in [ 0, 1 ]:
@@ -867,11 +850,6 @@ class PyCryptoBot():
                                 if isinstance(config['disableprofitbankupperpcnt'], int):
                                     if config['disableprofitbankupperpcnt'] in [ 0, 1 ]:
                                         self.disableprofitbankupperpcnt = bool(config['disableprofitbankupperpcnt'])
-
-                            if 'disableprofitbankfibonaccihigh' in config:
-                                if isinstance(config['disableprofitbankfibonaccihigh'], int):
-                                    if config['disableprofitbankfibonaccihigh'] in [ 0, 1 ]:
-                                        self.disableprofitbankfibonaccihigh = bool(config['disableprofitbankfibonaccihigh'])
 
                             if 'disableprofitbankreversal' in config:
                                 if isinstance(config['disableprofitbankreversal'], int):
@@ -1161,10 +1139,7 @@ class PyCryptoBot():
 
         if args.disableprofitbankupperpcnt == True:
             self.disableprofitbankupperpcnt = True
-        
-        if args.disableprofitbankfibonaccihigh == True:
-            self.disableprofitbankfibonaccihigh = True
-        
+               
         if args.disableprofitbankreversal == True:
             self.disableprofitbankreversal = True
 
@@ -1491,9 +1466,6 @@ class PyCryptoBot():
     def disableProfitbankUpperPcnt(self):
         return self.disableprofitbankupperpcnt
 
-    def disableProfitbankFibonacciHigh(self):
-        return self.disableprofitbankfibonaccihigh
-
     def disableProfitbankReversal(self):
         return self.disableprofitbankreversal
 
@@ -1728,10 +1700,10 @@ class PyCryptoBot():
             txt = '       Sell Lower : ' + str(self.sellLowerPcnt()) + '%'
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
-        txt = '         Sell At Loss : ' + str(self.allowSellAtLoss()) + '  --sellatloss ' + str(self.allowSellAtLoss())
+        txt = '         Sell At Loss : ' + str(bool(self.allowSellAtLoss())) + '  --sellatloss ' + str(self.allowSellAtLoss())
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
-        txt = '    Sell At Resistance : ' + str(not self.sellAtResistance()) + '  --sellatresistance'
+        txt = '   Sell At Resistance : ' + str(self.sellAtResistance()) + '  --sellatresistance'
         print('|', txt, (' ' * (75 - len(txt))), '|')   
 
         txt = '      Trade Bull Only : ' + str(not self.disableBullOnly()) + '  --disablebullonly'
@@ -1751,9 +1723,6 @@ class PyCryptoBot():
 
         txt = '   Sell Fibonacci Low : ' + str(not self.disableFailsafeFibonacciLow()) + '  --disablefailsafefibonaccilow'
         print('|', txt, (' ' * (75 - len(txt))), '|')   
-
-        txt = '  Sell Fibonacci High : ' + str(not self.disableProfitbankFibonacciHigh()) + '  --disableprofitbankfibonaccihigh'
-        print('|', txt, (' ' * (75 - len(txt))), '|')      
 
         if self.sellLowerPcnt() != None:
             txt = '      Sell Lower Pcnt : ' + str(not self.disableFailsafeLowerPcnt()) + '  --disablefailsafelowerpcnt'
