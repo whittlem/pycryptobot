@@ -2,19 +2,30 @@
 
 # Python Crypto Bot v2.0.0 (pycryptobot)
 
-## What's New?
+##  Supporting The Project
 
-* The bot can now use both Binance and Coinbase Pro exchanges
-* Optimised the bot mechanics for buy and sell signals
-* Added "smart switching" between 15 minute and 1 hour graphs
-* Added additional technical indicators and candlesticks
-* Improved visual graphs for analysis
-* The bot is now also packaged in a container image
-
-## Introduction
+I get paid to write on Medium. Readers following me, applauding and commenting on my articles, all helps with my earnings. I provided this bot to all of you for free and actively developing it. One way you can support my efforts is to follow me on Medium and read my articles. The Medium subscription is $5 a month (roughly £3) so basically nothing in terms of the value you are getting from the bot. Your efforts here would be greatly appreciated!
 
 Follow me on Medium for updates!
 https://whittle.medium.com
+
+Python Crypto Bot (PyCryptoBot)
+https://medium.com/coinmonks/python-crypto-bot-pycryptobot-b54f4b3dbb75
+
+What’s new in PyCryptoBot 2?
+https://medium.com/coinmonks/whats-new-in-pycryptobot-2-a4bbb1b0c90e
+
+PyCryptoBot with Telegram
+https://medium.com/coinmonks/pycryptobot-with-telegram-83eed5f230c2
+
+PyCryptoBot Results and Config
+https://medium.com/coinmonks/pycryptobot-results-and-config-57fb6625a6d9
+
+Coinbase Pro Portfolio Tracker
+https://medium.com/coinmonks/coinbase-pro-portfolio-tracker-a6e4a1c6b8f8
+
+TradingView.com Charts ❤
+https://levelup.gitconnected.com/tradingview-com-charts-36a49c9f77ea
 
 ## Optional Add-on
 
@@ -178,7 +189,6 @@ Run all your bots. Note that each market should have it's own config. Graphs wil
     
     % docker-compose up -d
 
-
 ## Bot mechanics
 
 Smart switching:
@@ -190,12 +200,12 @@ Smart switching:
 
 Buy signal:
 
-* EMA12 is currently crossing above the EMA26
-* MACD is above the Signal
+* EMA12 is currently crossing above the EMA26 and MACD is above the Signal *OR* MACD is currently crossing above the Signal and EMA12 is above the EMA26
 * Golden Cross (SMA50 is above the SMA200) <-- bull market detection
+* On-Balance Volume Percent > -5 <-- suitable momentum required
 * Elder Ray Buy is True <-- bull market detection
 
-The bot will only trade in a bull market to minimise losses!
+The bot will only trade in a bull market to minimise losses! (you can disable this)
 
 Sell signal:
 
@@ -206,14 +216,20 @@ Special sell cases:
 
 * If "sellatloss" is on, bot will sell if price drops below the lower Fibonacci band
 * If "sellatloss" is on and "selllowerpcnt" is specified the bot will sell at the specified amount E.g. -2 for -2% margin
+* If "sellatloss" is on and "trailingstoploss" is specified the bot will sell at the specified amount below the buy high
 * If "sellupperpcnt" is specified the bot will sell at the specified amount E.g. 10 for 10% margin (Depending on the conditions I lock in profit at 3%)
 * If the margin exceeds 3% and the price reaches a Fibonacci band it will sell to lock in profit
 * If the margin exceeds 3% but a strong reversal is detected with negative OBV and MACD < Signal it will sell
 * "sellatloss" set to 0 prevents selling at a loss
 
+## Optional Options
+
+    --sellatresistance                  Sells if the price reaches either resistance or Fibonacci band
+
 ## Disabling Default Functionality
 
     --disablebullonly                   Disable only buying in bull market
+    --disablebuynearhigh                Disable buying within 3% of the dataframe high
     --disablebuyobv                     Disable obv buy signal
     --disablebuyelderray                Disable elder ray buy signal
     --disablecryptorecession            Disable crypto recession check
@@ -225,7 +241,7 @@ Special sell cases:
 
 ## "Sell At Loss" explained
 
-The "sellatloss" option disabled has it's benefits and disadvantages. It does prevent any losses but also prevents you from exiting a market before a crash or bear market. Sometimes it's better to make an occasional small loss and make it up with several buys than be conservative and potentially lock a trade for weeks if not months. It happened to me while testing this with the last crash (after Elon's tweet!). Three of my bots did not sell while the profit dropped to -10 to -20%. It did bounce back and I made over 3% a trade with any losses but I also lost out of loads of trading opportunities. It's really a matter of preference. Maybe some markets would be more appropriate than others for this.
+The "sellatloss" option disabled has it's advantages and disadvantages. It does prevent any losses but also prevents you from exiting a market before a crash or bear market. Sometimes it's better to make an occasional small loss and make it up with several buys than be conservative and potentially lock a trade for weeks if not months. It happened to me while testing this with the last crash (after Elon's tweet!). Three of my bots did not sell while the profit dropped to -10 to -20%. It did bounce back and I made over 3% a trade with any losses but I also lost out of loads of trading opportunities. It's really a matter of preference. Maybe some markets would be more appropriate than others for this.
 
 ## Live Trading
 
