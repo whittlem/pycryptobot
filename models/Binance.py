@@ -121,10 +121,6 @@ class AuthAPI(AuthAPIBase):
 
             base_quantity = np.divide(quote_quantity, current_price)
 
-            # insufficient funds to buy
-            if (quote_quantity < current_price):
-                return []
-
             df_filters = self.getMarketInfoFilters(market)
             step_size = float(df_filters.loc[df_filters['filterType'] == 'LOT_SIZE']['stepSize'])
             precision = int(round(-math.log(step_size, 10), 0))
