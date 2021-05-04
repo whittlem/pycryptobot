@@ -37,6 +37,7 @@ https://levelup.gitconnected.com/tradingview-com-charts-36a49c9f77ea
 ## Optional Add-on
 
 Coinbase Pro Portfolio Tracker
+
 https://github.com/whittlem/coinbaseprotracker
 
 An all-in-one view of all your Coinbase Pro portfolios. Highly recommended
