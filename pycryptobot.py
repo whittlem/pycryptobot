@@ -247,19 +247,14 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         else:
             action = 'WAIT'
 
-        # if disabled, do not buy within 5% of the dataframe close high
-        if action == 'BUY' and app.disableBuyNearHigh() and (price > (df['close'].max() * 0.95)):
+        # if disabled, do not buy within 3% of the dataframe close high
+        if action == 'BUY' and app.disableBuyNearHigh() and (price > (df['close'].max() * 0.97)):
             action = 'WAIT'
 
             now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
-            log_text = now + ' | ' + app.getMarket() + ' | ' + str(app.getGranularity()) + ' | Ignoring Buy Signal (price ' + str(price) + ' within 5% of high ' + str(df['close'].max()) + ')'
+            log_text = now + ' | ' + app.getMarket() + ' | ' + str(app.getGranularity()) + ' | Ignoring Buy Signal (price ' + str(price) + ' within 3% of high ' + str(df['close'].max()) + ')'
             print (log_text, "\n")
             logging.warning(log_text)
-
-            # telegram
-            if not app.disableTelegram() and app.isTelegramEnabled():
-                telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
-                telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
         last_buy_minus_fees = 0
         if last_buy > 0 and last_action == 'BUY':
