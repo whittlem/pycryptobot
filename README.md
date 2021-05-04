@@ -7,24 +7,31 @@
 I get paid to write on Medium. Readers following me, applauding and commenting on my articles, all helps with my earnings. I provided this bot to all of you for free and actively developing it. One way you can support my efforts is to follow me on Medium and read my articles. The Medium subscription is $5 a month (roughly £3) so basically nothing in terms of the value you are getting from the bot. Your efforts here would be greatly appreciated!
 
 Follow me on Medium for updates!
+
 https://whittle.medium.com
 
 Python Crypto Bot (PyCryptoBot)
+
 https://medium.com/coinmonks/python-crypto-bot-pycryptobot-b54f4b3dbb75
 
 What’s new in PyCryptoBot 2?
+
 https://medium.com/coinmonks/whats-new-in-pycryptobot-2-a4bbb1b0c90e
 
 PyCryptoBot with Telegram
+
 https://medium.com/coinmonks/pycryptobot-with-telegram-83eed5f230c2
 
 PyCryptoBot Results and Config
+
 https://medium.com/coinmonks/pycryptobot-results-and-config-57fb6625a6d9
 
 Coinbase Pro Portfolio Tracker
+
 https://medium.com/coinmonks/coinbase-pro-portfolio-tracker-a6e4a1c6b8f8
 
 TradingView.com Charts ❤
+
 https://levelup.gitconnected.com/tradingview-com-charts-36a49c9f77ea
 
 ## Optional Add-on
