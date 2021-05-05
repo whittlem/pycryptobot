@@ -23,7 +23,8 @@ last_action = ''
 last_df_index = ''
 buy_state = ''
 eri_text = ''
-last_buy = 0
+last_buy_price = 0
+last_buy_amount = 0
 last_buy_high = 0
 iterations = 0
 buy_count = 0
@@ -44,9 +45,9 @@ if app.getLastAction() != None:
         df = orders[orders.action == 'buy']
         df = df[-1:]
 
-        last_buy = 0.0
+        last_buy_price = 0.0
         if str(df.action.values[0]) == 'buy':
-            last_buy = float(df[df.action == 'buy']['price'])
+            last_buy_price = float(df[df.action == 'buy']['price'])
 
 # if live trading is enabled
 elif app.isLive() == 1:
@@ -79,14 +80,14 @@ elif app.isLive() == 1:
 
         if str(df.action.values[0]) == 'buy':
             last_action = 'BUY'
-            last_buy = float(df[df.action == 'buy']['price'])
+            last_buy_price = float(df[df.action == 'buy']['price'])
         else:
             last_action = 'SELL'
-            last_buy = 0.0
+            last_buy_price = 0.0
 
 def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
     """Trading bot job which runs at a scheduled interval"""
-    global action, buy_count, buy_sum, iterations, last_action, last_buy, last_buy_high, eri_text, last_df_index, sell_count, sell_sum, buy_state, fib_high, fib_low
+    global action, buy_count, buy_sum, iterations, last_action, last_buy_price, last_buy_amount, last_buy_high, eri_text, last_df_index, sell_count, sell_sum, buy_state, fib_high, fib_low
 
     # connectivity check (only when running live)
     if app.isLive() and app.getTime() == None:
@@ -269,8 +270,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             print (log_text, "\n")
             logging.warning(log_text)
 
-        last_buy_minus_fees = 0
-        if last_buy > 0 and last_action == 'BUY':
+        if last_buy_amount > 0 and last_buy_price > 0 and price > 0 and last_action == 'BUY':
             if last_buy_high > 1:
                 change_pcnt_high = ((price / last_buy_high) - 1) * 100
             else:
@@ -280,11 +280,34 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             if price > last_buy_high:
                 last_buy_high = price
 
-            # calculate last buy minus fees
-            buy_fee = last_buy * app.getTakerFee()
-            last_buy_minus_fees = last_buy + buy_fee
-            sell_fee = price * app.getTakerFee()
-            margin = ((price - last_buy_minus_fees - sell_fee) / price) * 100
+            #  buy and sell calculations
+            buy_percent = app.getBuyPercent()
+            buy_amount_quote = (buy_percent / 100) * last_buy_amount
+            buy_fee = buy_amount_quote * app.getTakerFee()
+            buy_filled = buy_amount_quote - buy_fee
+            buy_amount_base = buy_filled / last_buy_price
+
+            print ('last_buy_price:', last_buy_price)
+            print ('last_buy_amount', last_buy_amount)
+            print ('buy_buy_percent:', buy_percent)
+            print ('buy_amount_quote:', buy_amount_quote)
+            print ('buy_fee:', buy_fee)
+            print ('buy_filled:', buy_filled)
+            print ('buy_amount_base:', buy_amount_base)
+
+            sell_amount_quote = price * buy_amount_base
+            sell_fee = sell_amount_quote * app.getTakerFee()
+            sell_filled = sell_amount_quote - sell_fee
+
+            print ('price', price)
+            print ('sell_amount_quote:', sell_amount_quote)
+            print ('sell_fee:', sell_fee)
+            print ('sell_filled:', sell_filled)
+
+            #margin = round((((sell_filled - last_buy_amount) / last_buy_amount) * 100), 2)
+            margin = (((sell_filled - last_buy_amount) / last_buy_amount) * 100)
+
+            print ('margin:', margin)
 
             # loss failsafe sell at fibonacci band
             if app.disableFailsafeFibonacciLow() == False and app.allowSellAtLoss() and app.sellLowerPcnt() == None and fib_low > 0 and fib_low >= float(price):
@@ -352,7 +375,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
             # profit bank when strong reversal detected
-            if app.sellAtResistance() == True and price > 0 and price != ta.getTradeExit(price):
+            if app.sellAtResistance() == True and margin > 1 and price > 0 and price != ta.getTradeExit(price):
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Profit Bank Triggered (Selling At Resistance)'
@@ -565,12 +588,12 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     output_text = current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + obv_prefix + obv_text + obv_suffix + eri_text + action + ' '
 
                 if last_action == 'BUY':
-                    if last_buy_minus_fees > 0:
-                        margin = str(app.truncate((((price - last_buy_minus_fees) / price) * 100), 2)) + '%'
+                    if last_buy_amount > 0:
+                        margin_text = str(app.truncate(margin, 2)) + '%'
                     else:
-                        margin = '0%'
+                        margin_text = '0%'
 
-                    output_text += ' | ' +  margin + ' (delta: ' + str(round(price - last_buy, 2)) + ')'
+                    output_text += ' | ' +  margin_text + ' (delta: ' + str(round(price - last_buy_price, 2)) + ')'
 
                 logging.debug(output_text)
                 print (output_text)
@@ -584,8 +607,12 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.debug('-- Iteration: ' + str(iterations) + ' --' + bullbeartext)
 
                 if last_action == 'BUY':
-                    margin = str(app.truncate((((price - last_buy) / price) * 100), 2)) + '%'
-                    logging.debug('-- Margin: ' + margin + '% --')            
+                    if last_buy_amount > 0:
+                        margin_text = str(app.truncate(margin, 2)) + '%'
+                    else:
+                        margin_text = '0%'
+
+                    logging.debug('-- Margin: ' + margin_text + ' --')            
                 
                 logging.debug('price: ' + str(app.truncate(price, precision)))
                 logging.debug('ema12: ' + str(app.truncate(float(df_last['ema12'].values[0]), precision)))
@@ -671,14 +698,14 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 print('================================================================================')
                 if last_action == 'BUY':
-                    txt = '           Margin : ' + margin + '%'
+                    txt = '           Margin : ' + margin_text
                     print('|', txt, (' ' * (75 - len(txt))), '|')
                     print('================================================================================')
 
             # if a buy signal
             if action == 'BUY':               
-                last_buy = price
-                last_buy_high = last_buy
+                last_buy_price = price
+                last_buy_high = last_buy_price
 
                 buy_count = buy_count + 1
                 fee = float(price) * app.getTakerFee()
@@ -705,7 +732,8 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     print (app.getQuoteCurrency(), 'balance before order:', account.getBalance(app.getQuoteCurrency()))
 
                     # execute a live market buy
-                    resp = app.marketBuy(app.getMarket(), float(account.getBalance(app.getQuoteCurrency())), app.getBuyPercent())
+                    last_buy_amount = float(account.getBalance(app.getQuoteCurrency()))
+                    resp = app.marketBuy(app.getMarket(), last_buy_amount, app.getBuyPercent())
                     logging.info(resp)
 
                     # display balances
@@ -739,6 +767,9 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                                 second_key = list(bands.keys())[1]
                                 fib_low = bands[first_key] 
                                 fib_high = bands[second_key]
+
+                        # TODO: calculate buy amount from dummy account
+                        last_buy_amount = 1000
                             
                     else:
                         print('--------------------------------------------------------------------------------')
@@ -753,6 +784,8 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
 
             # if a sell signal
             elif action == 'SELL':
+                last_buy_amount = 0
+                last_buy_price = 0
                 last_buy_high = 0
 
                 sell_count = sell_count + 1
@@ -811,7 +844,11 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
 
                 # if not live
                 else:
+                    print ('TEST')
+                    sys.exit()
+
                     if app.isVerbose() == 0:
+                        '''
                         sell_price = float(str(app.truncate(price, precision)))
                         last_buy_price = float(str(app.truncate(float(last_buy), precision)))
                         buy_sell_diff = round(np.subtract(sell_price, last_buy_price), precision)
@@ -832,6 +869,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
 
                         logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + str(app.getGranularity()) + ' | SELL | ' + str(sell_price) + ' | BUY | ' + str(last_buy_price) + ' | DIFF | ' + str(buy_sell_diff) + ' | MARGIN NO FEES | ' + str(buy_sell_margin_no_fees) + ' | MARGIN FEES | ' + str(buy_sell_margin_fees))
                         print ("\n", current_df_index, '|', app.getMarket(), str(app.getGranularity()), '| SELL |', str(sell_price), '| BUY |', str(last_buy_price), '| DIFF |', str(buy_sell_diff) , '| MARGIN NO FEES |', str(buy_sell_margin_no_fees), '| MARGIN FEES |', str(buy_sell_margin_fees), "\n")                    
+                        '''
                     else:
                         print('--------------------------------------------------------------------------------')
                         print('|                      *** Executing TEST Sell Order ***                        |')
@@ -844,7 +882,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     tradinggraphs.renderEMAandMACD(len(trading_data), 'graphs/' + filename, True)
 
                 # reset last buy
-                last_buy = 0
+                last_buy_price = 0
 
             # last significant action
             if action in [ 'BUY', 'SELL' ]:
