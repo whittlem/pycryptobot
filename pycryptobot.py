@@ -35,8 +35,21 @@ fib_low = 0
 
 config = {}
 account = None
+if app.getLastAction() != None:
+    last_action = app.getLastAction()
+
+    account = TradingAccount(app)
+    orders = account.getOrders(app.getMarket(), '', 'done')
+    if len(orders) > 0:
+        df = orders[orders.action == 'buy']
+        df = df[-1:]
+
+        last_buy = 0.0
+        if str(df.action.values[0]) == 'buy':
+            last_buy = float(df[df.action == 'buy']['price'])
+
 # if live trading is enabled
-if app.isLive() == 1:
+elif app.isLive() == 1:
     # connectivity check
     if app.getTime() == None:
         raise ConnectionError('Unable to start the bot as your connection to the exchange is down. Please check your Internet connectivity!')
