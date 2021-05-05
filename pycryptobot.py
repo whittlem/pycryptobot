@@ -352,7 +352,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
             # profit bank when strong reversal detected
-            if app.sellAtResistance() == True and price > 0 and price != ta.getTradeExit(price):
+            if app.sellAtResistance() == True and margin > 1 and price > 0 and price != ta.getTradeExit(price):
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Profit Bank Triggered (Selling At Resistance)'
