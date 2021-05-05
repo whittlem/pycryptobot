@@ -34,6 +34,7 @@ parser.add_argument('--config', type=str, help="Use the config file at the given
 parser.add_argument('--logfile', type=str, help="Use the log file at the given location. e.g 'mymarket.log'")
 parser.add_argument('--buypercent', type=str, help="percentage of quote currency to buy")
 parser.add_argument('--sellpercent', type=str, help="percentage of base currency to sell")
+parser.add_argument('--lastaction', type=str, help="optionally set the last action (BUY, SELL)")
 
 # optional options
 parser.add_argument('--sellatresistance', action="store_true", help="sell at resistance or upper fibonacci band")
@@ -91,6 +92,7 @@ class PyCryptoBot():
         self.telegram = False
         self.buypercent = 100
         self.sellpercent = 100
+        self.last_action = None
 
         self.sellatresistance = False
 
@@ -338,6 +340,11 @@ class PyCryptoBot():
                                 if config['sellpercent'] > 0 and config['sellpercent'] <= 100:
                                     self.sellpercent = config['sellpercent']
 
+                        if 'lastaction' in config:
+                            if isinstance(config['lastaction'], str):
+                                if config['lastaction'] in [ 'BUY', 'SELL' ]:
+                                    self.last_action = bool(config['lastaction'])
+
                 elif self.exchange == 'binance' and 'api_key' in config and 'api_secret' in config and 'api_url' in config:
                     self.api_key = config['api_key']
                     self.api_secret = config['api_secret']
@@ -524,6 +531,11 @@ class PyCryptoBot():
                             if isinstance(config['sellpercent'], int):
                                 if config['sellpercent'] > 0 and config['sellpercent'] <= 100:
                                     self.sellpercent = config['sellpercent']
+
+                        if 'lastaction' in config:
+                            if isinstance(config['lastaction'], str):
+                                if config['lastaction'] in [ 'BUY', 'SELL' ]:
+                                    self.last_action = bool(config['lastaction'])
 
                 elif self.exchange == 'coinbasepro' and 'coinbasepro' in config:
                     if 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
@@ -718,6 +730,11 @@ class PyCryptoBot():
                                     if config['sellpercent'] > 0 and config['sellpercent'] <= 100:
                                         self.sellpercent = config['sellpercent']
 
+                            if 'lastaction' in config:
+                                if isinstance(config['lastaction'], str):
+                                    if config['lastaction'] in [ 'BUY', 'SELL' ]:
+                                        self.last_action = bool(config['lastaction'])
+
                     else:
                         raise Exception('There is an error in your config.json')
 
@@ -904,6 +921,11 @@ class PyCryptoBot():
                                 if isinstance(config['sellpercent'], int):
                                     if config['sellpercent'] > 0 and config['sellpercent'] <= 100:
                                         self.sellpercent = config['sellpercent']
+
+                            if 'lastaction' in config:
+                                if isinstance(config['lastaction'], str):
+                                    if config['lastaction'] in [ 'BUY', 'SELL' ]:
+                                        self.last_action = bool(config['lastaction'])
 
                     else:
                         raise Exception('There is an error in your config.json')
@@ -1112,6 +1134,11 @@ class PyCryptoBot():
                 if self.sell_at_loss == 0:
                     self.sell_lower_pcnt = None
                     self.trailing_stop_loss = None
+
+        if args.lastaction != None:
+            if isinstance(args.lastaction, str):
+                if args.lastaction in [ 'BUY', 'SELL' ]:
+                    self.last_action = args.lastaction
 
         if args.sellatresistance == True:
             self.sellatresistance = True
@@ -1441,6 +1468,9 @@ class PyCryptoBot():
 
     def sellAtResistance(self):
         return self.sellatresistance
+
+    def getLastAction(self):
+        return self.last_action
 
     def disableBullOnly(self):
         return self.disablebullonly
