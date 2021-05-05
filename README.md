@@ -1,4 +1,4 @@
-[![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/docker-publish.yml)
+[![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)
 
 # Python Crypto Bot v2.0.0 (pycryptobot)
 
