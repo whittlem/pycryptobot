@@ -1735,7 +1735,7 @@ class PyCryptoBot():
         txt = ' Candlestick Reversal : ' + str(not self.disableProfitbankReversal()) + '  --disableprofitbankreversal'
         print('|', txt, (' ' * (75 - len(txt))), '|')   
 
-        txt = '             Telegram : ' + str(not self.disableProfitbankReversal()) + '  --disabletelegram'
+        txt = '             Telegram : ' + str(not self.disableTelegram()) + '  --disabletelegram'
         print('|', txt, (' ' * (75 - len(txt))), '|')
 
         txt = '                  Log : ' + str(not self.disableLog()) + '  --disablelog'
