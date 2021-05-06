@@ -45,8 +45,8 @@ if app.getLastAction() != None:
         df = orders[orders.action == 'buy']
         df = df[-1:]
 
-        last_buy_price = 0.0
         if str(df.action.values[0]) == 'buy':
+            last_buy_amount = float(df[df.action == 'buy']['size'])
             last_buy_price = float(df[df.action == 'buy']['price'])
 
 # if live trading is enabled
@@ -80,6 +80,7 @@ elif app.isLive() == 1:
 
         if str(df.action.values[0]) == 'buy':
             last_action = 'BUY'
+            last_buy_amount = float(df[df.action == 'buy']['size'])
             last_buy_price = float(df[df.action == 'buy']['price'])
         else:
             last_action = 'SELL'
@@ -271,14 +272,14 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             logging.warning(log_text)
 
         if last_buy_amount > 0 and last_buy_price > 0 and price > 0 and last_action == 'BUY':
+            # update last buy high
+            if price > last_buy_high:
+                last_buy_high = price
+
             if last_buy_high > 1:
                 change_pcnt_high = ((price / last_buy_high) - 1) * 100
             else:
                 change_pcnt_high = 0
-
-            # update last buy high
-            if price > last_buy_high:
-                last_buy_high = price
 
             #  buy and sell calculations
             buy_percent = app.getBuyPercent()
@@ -287,27 +288,27 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             buy_filled = buy_amount_quote - buy_fee
             buy_amount_base = buy_filled / last_buy_price
 
-            print ('last_buy_price:', last_buy_price)
-            print ('last_buy_amount', last_buy_amount)
-            print ('buy_buy_percent:', buy_percent)
-            print ('buy_amount_quote:', buy_amount_quote)
-            print ('buy_fee:', buy_fee)
-            print ('buy_filled:', buy_filled)
-            print ('buy_amount_base:', buy_amount_base)
+            #print ('last_buy_price:', last_buy_price)
+            #print ('last_buy_amount', last_buy_amount)
+            #print ('buy_buy_percent:', buy_percent)
+            #print ('buy_amount_quote:', buy_amount_quote)
+            #print ('buy_fee:', buy_fee)
+            #print ('buy_filled:', buy_filled)
+            #print ('buy_amount_base:', buy_amount_base)
 
             sell_amount_quote = price * buy_amount_base
             sell_fee = sell_amount_quote * app.getTakerFee()
             sell_filled = sell_amount_quote - sell_fee
 
-            print ('price', price)
-            print ('sell_amount_quote:', sell_amount_quote)
-            print ('sell_fee:', sell_fee)
-            print ('sell_filled:', sell_filled)
+            #print ('price', price)
+            #print ('sell_amount_quote:', sell_amount_quote)
+            #print ('sell_fee:', sell_fee)
+            #print ('sell_filled:', sell_filled)
 
             #margin = round((((sell_filled - last_buy_amount) / last_buy_amount) * 100), 2)
             margin = (((sell_filled - last_buy_amount) / last_buy_amount) * 100)
 
-            print ('margin:', margin)
+            #print ('margin:', margin)
 
             # loss failsafe sell at fibonacci band
             if app.disableFailsafeFibonacciLow() == False and app.allowSellAtLoss() and app.sellLowerPcnt() == None and fib_low > 0 and fib_low >= float(price):
