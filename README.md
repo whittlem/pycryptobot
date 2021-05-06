@@ -2,6 +2,10 @@
 
 # Python Crypto Bot v2.0.1 (pycryptobot)
 
+## Join our chat on Telegram
+
+https://t.me/joinchat/09hYKfelbRY2MDNk
+
 ##  Supporting The Project
 
 I get paid to write on Medium. Readers following me, applauding and commenting on my articles, all helps with my earnings. I provided this bot to all of you for free and actively developing it. One way you can support my efforts is to follow me on Medium and read my articles. The Medium subscription is $5 a month (roughly £3) so basically nothing in terms of the value you are getting from the bot. Your efforts here would be greatly appreciated!
