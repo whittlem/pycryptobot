@@ -743,6 +743,11 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
 
                 # if not live
                 else:
+                     # TODO: calculate buy amount from dummy account
+                    last_buy_amount = 1000
+
+                    last_buy_price = price
+
                     if app.isVerbose() == 0:
                         logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + str(app.getGranularity()) + ' | ' + price_text + ' | BUY')
                         print ("\n", current_df_index, '|', app.getMarket(), str(app.getGranularity()), '|', price_text, '| BUY')
@@ -768,10 +773,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                                 second_key = list(bands.keys())[1]
                                 fib_low = bands[first_key] 
                                 fib_high = bands[second_key]
-
-                        # TODO: calculate buy amount from dummy account
-                        last_buy_amount = 1000
-                            
+                           
                     else:
                         print('--------------------------------------------------------------------------------')
                         print('|                      *** Executing TEST Buy Order ***                        |')
@@ -785,10 +787,6 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
 
             # if a sell signal
             elif action == 'SELL':
-                last_buy_amount = 0
-                last_buy_price = 0
-                last_buy_high = 0
-
                 sell_count = sell_count + 1
                 fee = float(price) * app.getTakerFee()
                 price_incl_fees = float(price) - fee
@@ -845,32 +843,32 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
 
                 # if not live
                 else:
-                    print ('TEST')
-                    sys.exit()
-
                     if app.isVerbose() == 0:
-                        '''
-                        sell_price = float(str(app.truncate(price, precision)))
-                        last_buy_price = float(str(app.truncate(float(last_buy), precision)))
-                        buy_sell_diff = round(np.subtract(sell_price, last_buy_price), precision)
+                        buy_sell_diff = round(np.subtract(price, last_buy_price), precision)
 
-                        if (sell_price != 0):
-                            buy_sell_margin_no_fees = str(app.truncate((((sell_price - last_buy_price) / sell_price) * 100), 2)) + '%'
+                        sell_percent = app.getSellPercent()
+                        sell_amount_quote = (sell_percent / 100) * (buy_amount_base * price)
+                        sell_fee = sell_amount_quote * app.getTakerFee()
+                        sell_filled = sell_amount_quote - sell_fee
+
+                        #print ('sell_percent:', sell_percent)
+                        #print ('sell_amount_quote:', sell_amount_quote)
+                        #print ('sell_fee:', sell_fee)
+                        #print ('sell_filled:', sell_filled)
+                        #print ('sell_amount_base:', sell_amount_base)
+
+                        margin = (((sell_filled - buy_amount_quote) / buy_amount_quote) * 100)
+
+                        #print ('margin:', margin)
+
+                        if price > 0:
+                            margin_text = str(app.truncate(margin, 2)) + '%'
                         else:
-                            buy_sell_margin_no_fees = '0%'
+                            margin_text = '0%'
 
-                        # calculate last buy minus fees
-                        buy_fee = last_buy_price * app.getTakerFee()
-                        last_buy_price_minus_fees = last_buy_price + buy_fee
+                        logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + str(app.getGranularity()) + ' | SELL | ' + str(price) + ' | BUY | ' + str(last_buy_price) + ' | DIFF | ' + str(buy_sell_diff) + ' | MARGIN NO FEES | ' + margin_text + ' | MARGIN FEES | ' + str(sell_fee))
+                        print ("\n", current_df_index, '|', app.getMarket(), str(app.getGranularity()), '| SELL |', str(price), '| BUY |', str(last_buy_price), '| DIFF |', str(buy_sell_diff) , '| MARGIN NO FEES |', margin_text, '| MARGIN FEES |', str(round(sell_fee, 2)), "\n")                    
 
-                        if (sell_price != 0):
-                            buy_sell_margin_fees = str(app.truncate((((sell_price - last_buy_price_minus_fees) / sell_price) * 100), 2)) + '%'
-                        else:
-                            buy_sell_margin_fees = '0%'
-
-                        logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + str(app.getGranularity()) + ' | SELL | ' + str(sell_price) + ' | BUY | ' + str(last_buy_price) + ' | DIFF | ' + str(buy_sell_diff) + ' | MARGIN NO FEES | ' + str(buy_sell_margin_no_fees) + ' | MARGIN FEES | ' + str(buy_sell_margin_fees))
-                        print ("\n", current_df_index, '|', app.getMarket(), str(app.getGranularity()), '| SELL |', str(sell_price), '| BUY |', str(last_buy_price), '| DIFF |', str(buy_sell_diff) , '| MARGIN NO FEES |', str(buy_sell_margin_no_fees), '| MARGIN FEES |', str(buy_sell_margin_fees), "\n")                    
-                        '''
                     else:
                         print('--------------------------------------------------------------------------------')
                         print('|                      *** Executing TEST Sell Order ***                        |')
@@ -882,8 +880,11 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     filename = app.getMarket() + '_' + str(app.getGranularity()) + '_sell_' + str(ts) + '.png'
                     tradinggraphs.renderEMAandMACD(len(trading_data), 'graphs/' + filename, True)
 
-                # reset last buy
+                # reset values after buy
                 last_buy_price = 0
+                last_buy_amount = 0
+                last_buy_price = 0
+                last_buy_high = 0
 
             # last significant action
             if action in [ 'BUY', 'SELL' ]:
