@@ -650,6 +650,29 @@ def test_configjson_islive():
     app.setLive(0)
     assert app.isLive() == 0
 
+    config = {
+        "api_url" : "https://api.pro.coinbase.com",
+        "api_key" : "00000000000000000000000000000000",
+        "api_secret" : "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+        "api_passphrase" : "00000000000",
+        "config" : {
+            "live" : 1
+        }
+    }
+
+    try:
+        config_json = json.dumps(config)
+        fh = open('/tmp/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'coinbasepro'
+    assert app.isLive() == 1
+
     if os.path.exists('/tmp/pycryptobot_pytest_config.json'):
         os.remove('/tmp/pycryptobot_pytest_config.json')
 
@@ -691,6 +714,29 @@ def test_configjson_graphs():
     assert app.getExchange() == 'coinbasepro'
     assert app.shouldSaveGraphs() == 0
 
+    config = {
+        "api_url" : "https://api.pro.coinbase.com",
+        "api_key" : "00000000000000000000000000000000",
+        "api_secret" : "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+        "api_passphrase" : "00000000000",
+        "config" : {
+            "graphs" : 1
+        }
+    }
+
+    try:
+        config_json = json.dumps(config)
+        fh = open('/tmp/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'coinbasepro'
+    assert app.shouldSaveGraphs() == 1
+
     if os.path.exists('/tmp/pycryptobot_pytest_config.json'):
         os.remove('/tmp/pycryptobot_pytest_config.json')
 
@@ -720,6 +766,29 @@ def test_configjson_isverbose():
 
     try:
         config['coinbasepro']['config']['verbose'] = 1
+        config_json = json.dumps(config)
+        fh = open('/tmp/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'coinbasepro'
+    assert app.isVerbose() == 1
+
+    config = {
+        "api_url" : "https://api.pro.coinbase.com",
+        "api_key" : "00000000000000000000000000000000",
+        "api_secret" : "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+        "api_passphrase" : "00000000000",
+        "config" : {
+            "verbose" : 1
+        }
+    }
+
+    try:
         config_json = json.dumps(config)
         fh = open('/tmp/pycryptobot_pytest_config.json', 'w')
         fh.write(config_json)
