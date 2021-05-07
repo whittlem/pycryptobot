@@ -513,10 +513,12 @@ class PublicAPI(AuthAPIBase):
             raise TypeError('Coinbase Pro market required.')
 
         resp = self.authAPI('GET','products/' + market + '/ticker')
-        if 'price' in resp:
-            return float(resp['price'])
 
-        return 0.0
+        if 'time' in resp and 'price' in resp:
+            return (datetime.strptime(resp['time'], '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%Y-%m-%d %H:%M:%S'), float(resp['price']))
+
+        now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+        return (now, 0.0)
 
     def getTime(self):
         """Retrieves the exchange time"""

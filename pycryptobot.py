@@ -192,8 +192,12 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 s.enter(300, 1, executeJob, (sc, app))
                 
     if len(df_last) > 0:
+        now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+
         if app.isSimulation() == 0:
-            price = app.getTicker(app.getMarket())
+            ticker = app.getTicker(app.getMarket())
+            now = ticker[0] 
+            price = ticker[1]
             if price < df_last['low'].values[0] or price == 0:
                 price = float(df_last['close'].values[0])
         else:
@@ -266,7 +270,6 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         if action == 'BUY' and app.disableBuyNearHigh() and (price > (df['close'].max() * 0.97)):
             action = 'WAIT'
 
-            now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
             log_text = now + ' | ' + app.getMarket() + ' | ' + str(app.getGranularity()) + ' | Ignoring Buy Signal (price ' + str(price) + ' within 3% of high ' + str(df['close'].max()) + ')'
             print (log_text, "\n")
             logging.warning(log_text)
@@ -914,10 +917,6 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     print ('  ** non-live simulation, assuming highest fees', "\n")
 
         else:
-            # causing crashes, removing while investigating
-            #print (str(app.getTime()), '|', app.getMarket() + bullbeartext, '|', str(app.getGranularity()), '| Current Price:', price)
-
-            now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
             print (now, '|', app.getMarket() + bullbeartext, '|', str(app.getGranularity()), '| Current Price:', price)
 
             # decrement ignored iteration
@@ -942,13 +941,12 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     s.enter(1, 1, executeJob, (sc, app, trading_data))
 
         else:
-            # poll every 5 minute
+            # poll every 2 minutes
             list(map(s.cancel, s.queue))
-            s.enter(300, 1, executeJob, (sc, app))
+            s.enter(120, 1, executeJob, (sc, app))
 
 try:
     # initialise logging
-
     logging.basicConfig(filename=app.getLogFile(), format='%(asctime)s - %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filemode='a', level=logging.DEBUG)
 
     # telegram
