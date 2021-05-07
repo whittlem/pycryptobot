@@ -146,7 +146,11 @@ class AuthAPI(AuthAPIBase):
             fees = self.getFees(market)
         else:
             fees = self.getFees()
-            
+
+        if len(fees) == 0 or 'taker_fee_rate' not in fees:
+            print ("error: 'taker_fee_rate' not in fees (using 0.05 as a fallback)")
+            return 0.05
+
         return float(fees['taker_fee_rate'].to_string(index=False).strip())
 
     def getUSDVolume(self):
