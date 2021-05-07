@@ -438,7 +438,7 @@ class TradingAccount():
                 if manualPrice <= 0:
                     if self.app.getExchange() == 'binance':
                         api = BPublicAPI()
-                        price = api.getTicker(market)
+                        price = api.getTicker(market)[1]
                     else:
                         resp = requests.get('https://api-public.sandbox.pro.coinbase.com/products/' + market + '/ticker')
                         if resp.status_code != 200:
