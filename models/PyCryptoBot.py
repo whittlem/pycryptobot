@@ -1696,92 +1696,93 @@ class PyCryptoBot():
         if isinstance(flag, int) and flag in [0, 1]:
             self.sell_at_loss = flag
 
-    def startApp(self, account, last_action=''):
+    def startApp(self, account, last_action='', banner=True):
         github = Github()
 
-        print('--------------------------------------------------------------------------------')
-        print('|                             Python Crypto Bot                                |')
-        print('--------------------------------------------------------------------------------')
-        txt = '              Release : ' + github.getLatestReleaseName() + ' (commit: ' + str(github.getMainBranchCommitTotal()) + ')'
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-
-        print('--------------------------------------------------------------------------------')
-
-        if self.isVerbose() == 1:
-            txt = '               Market : ' + self.getMarket()
+        if banner:
+            print('--------------------------------------------------------------------------------')
+            print('|                             Python Crypto Bot                                |')
+            print('--------------------------------------------------------------------------------')
+            txt = '              Release : ' + github.getLatestReleaseName() + ' (commit: ' + str(github.getMainBranchCommitTotal()) + ')'
             print('|', txt, (' ' * (75 - len(txt))), '|')
-            if self.exchange == 'coinbasepro':
-                txt = '          Granularity : ' + str(self.getGranularity()) + ' seconds'
-            elif self.exchange == 'binance':
-                txt = '          Granularity : ' + str(self.getGranularity())
-            print('|', txt, (' ' * (75 - len(txt))), '|')
+
             print('--------------------------------------------------------------------------------')
 
-        if self.isLive() == 1:
-            txt = '             Bot Mode : LIVE - live trades using your funds!'
-        else:
-            txt = '             Bot Mode : TEST - test trades using dummy funds :)'
+            if self.isVerbose() == 1:
+                txt = '               Market : ' + self.getMarket()
+                print('|', txt, (' ' * (75 - len(txt))), '|')
+                if self.exchange == 'coinbasepro':
+                    txt = '          Granularity : ' + str(self.getGranularity()) + ' seconds'
+                elif self.exchange == 'binance':
+                    txt = '          Granularity : ' + str(self.getGranularity())
+                print('|', txt, (' ' * (75 - len(txt))), '|')
+                print('--------------------------------------------------------------------------------')
 
-        print('|', txt, (' ' * (75 - len(txt))), '|')
+            if self.isLive() == 1:
+                txt = '             Bot Mode : LIVE - live trades using your funds!'
+            else:
+                txt = '             Bot Mode : TEST - test trades using dummy funds :)'
 
-        txt = '          Bot Started : ' + str(datetime.now())
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-        print('================================================================================')
-
-        if self.sellUpperPcnt() != None:
-            txt = '       Sell Upper : ' + str(self.sellUpperPcnt()) + '%'
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
-        if self.sellLowerPcnt() != None:
-            txt = '       Sell Lower : ' + str(self.sellLowerPcnt()) + '%'
+            txt = '          Bot Started : ' + str(datetime.now())
             print('|', txt, (' ' * (75 - len(txt))), '|')
-
-        txt = '         Sell At Loss : ' + str(bool(self.allowSellAtLoss())) + '  --sellatloss ' + str(self.allowSellAtLoss())
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-
-        txt = '   Sell At Resistance : ' + str(self.sellAtResistance()) + '  --sellatresistance'
-        print('|', txt, (' ' * (75 - len(txt))), '|')   
-
-        txt = '      Trade Bull Only : ' + str(not self.disableBullOnly()) + '  --disablebullonly'
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-
-        txt = '        Buy Near High : ' + str(not self.disableBuyNearHigh()) + '  --disablebuynearhigh'
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-
-        txt = '         Use Buy MACD : ' + str(not self.disableBuyMACD()) + '  --disablebuymacd'
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-
-        txt = '          Use Buy OBV : ' + str(not self.disableBuyOBV()) + '  --disablebuyobv'
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-
-        txt = '    Use Buy Elder-Ray : ' + str(not self.disableBuyElderRay()) + '  --disablebuyelderray'
-        print('|', txt, (' ' * (75 - len(txt))), '|')             
-
-        txt = '   Sell Fibonacci Low : ' + str(not self.disableFailsafeFibonacciLow()) + '  --disablefailsafefibonaccilow'
-        print('|', txt, (' ' * (75 - len(txt))), '|')   
-
-        if self.sellLowerPcnt() != None:
-            txt = '      Sell Lower Pcnt : ' + str(not self.disableFailsafeLowerPcnt()) + '  --disablefailsafelowerpcnt'
-            print('|', txt, (' ' * (75 - len(txt))), '|')   
-
-        if self.sellUpperPcnt() != None:
-            txt = '      Sell Upper Pcnt : ' + str(not self.disableFailsafeLowerPcnt()) + '  --disableprofitbankupperpcnt'
-            print('|', txt, (' ' * (75 - len(txt))), '|')   
-
-        txt = ' Candlestick Reversal : ' + str(not self.disableProfitbankReversal()) + '  --disableprofitbankreversal'
-        print('|', txt, (' ' * (75 - len(txt))), '|')   
-
-        txt = '             Telegram : ' + str(not self.disableTelegram()) + '  --disabletelegram'
-        print('|', txt, (' ' * (75 - len(txt))), '|')
-
-        txt = '                  Log : ' + str(not self.disableLog()) + '  --disablelog'
-        print('|', txt, (' ' * (75 - len(txt))), '|')     
-
-        txt = '              Tracker : ' + str(not self.disableTracker()) + '  --disabletracker'
-        print('|', txt, (' ' * (75 - len(txt))), '|')     
-
-        if self.sellUpperPcnt() != None or self.sellLowerPcnt() != None or self.allowSellAtLoss() == False:
             print('================================================================================')
+
+            if self.sellUpperPcnt() != None:
+                txt = '       Sell Upper : ' + str(self.sellUpperPcnt()) + '%'
+                print('|', txt, (' ' * (75 - len(txt))), '|')
+
+            if self.sellLowerPcnt() != None:
+                txt = '       Sell Lower : ' + str(self.sellLowerPcnt()) + '%'
+                print('|', txt, (' ' * (75 - len(txt))), '|')
+
+            txt = '         Sell At Loss : ' + str(bool(self.allowSellAtLoss())) + '  --sellatloss ' + str(self.allowSellAtLoss())
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+
+            txt = '   Sell At Resistance : ' + str(self.sellAtResistance()) + '  --sellatresistance'
+            print('|', txt, (' ' * (75 - len(txt))), '|')   
+
+            txt = '      Trade Bull Only : ' + str(not self.disableBullOnly()) + '  --disablebullonly'
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+
+            txt = '        Buy Near High : ' + str(not self.disableBuyNearHigh()) + '  --disablebuynearhigh'
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+
+            txt = '         Use Buy MACD : ' + str(not self.disableBuyMACD()) + '  --disablebuymacd'
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+
+            txt = '          Use Buy OBV : ' + str(not self.disableBuyOBV()) + '  --disablebuyobv'
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+
+            txt = '    Use Buy Elder-Ray : ' + str(not self.disableBuyElderRay()) + '  --disablebuyelderray'
+            print('|', txt, (' ' * (75 - len(txt))), '|')             
+
+            txt = '   Sell Fibonacci Low : ' + str(not self.disableFailsafeFibonacciLow()) + '  --disablefailsafefibonaccilow'
+            print('|', txt, (' ' * (75 - len(txt))), '|')   
+
+            if self.sellLowerPcnt() != None:
+                txt = '      Sell Lower Pcnt : ' + str(not self.disableFailsafeLowerPcnt()) + '  --disablefailsafelowerpcnt'
+                print('|', txt, (' ' * (75 - len(txt))), '|')   
+
+            if self.sellUpperPcnt() != None:
+                txt = '      Sell Upper Pcnt : ' + str(not self.disableFailsafeLowerPcnt()) + '  --disableprofitbankupperpcnt'
+                print('|', txt, (' ' * (75 - len(txt))), '|')   
+
+            txt = ' Candlestick Reversal : ' + str(not self.disableProfitbankReversal()) + '  --disableprofitbankreversal'
+            print('|', txt, (' ' * (75 - len(txt))), '|')   
+
+            txt = '             Telegram : ' + str(not self.disableTelegram()) + '  --disabletelegram'
+            print('|', txt, (' ' * (75 - len(txt))), '|')
+
+            txt = '                  Log : ' + str(not self.disableLog()) + '  --disablelog'
+            print('|', txt, (' ' * (75 - len(txt))), '|')     
+
+            txt = '              Tracker : ' + str(not self.disableTracker()) + '  --disabletracker'
+            print('|', txt, (' ' * (75 - len(txt))), '|')     
+
+            if self.sellUpperPcnt() != None or self.sellLowerPcnt() != None or self.allowSellAtLoss() == False:
+                print('================================================================================')
 
         # if live
         if self.isLive() == 1:
@@ -1820,19 +1821,19 @@ class PyCryptoBot():
                     if len(tradingData) != 300:
                         raise Exception('Unable to retrieve 300 random sets of data between ' + str(startDate) + ' and ' + str(endDate) + ' in ' + str(attempts) + ' attempts.')
 
-                startDate = str(startDate.isoformat())
-                endDate = str(endDate.isoformat())
-                txt = '   Sampling start : ' + str(startDate)
-                print('|', txt, (' ' * (75 - len(txt))), '|')
-                txt = '     Sampling end : ' + str(endDate)
-                print('|', txt, (' ' * (75 - len(txt))), '|')
-                if self.simstartdate != None:
-                    txt = '    WARNING: Using less than 300 intervals'
+                if banner:
+                    startDate = str(startDate.isoformat())
+                    endDate = str(endDate.isoformat())
+                    txt = '   Sampling start : ' + str(startDate)
                     print('|', txt, (' ' * (75 - len(txt))), '|')
-                    txt = '    Interval size : ' + str(len(tradingData))
+                    txt = '     Sampling end : ' + str(endDate)
                     print('|', txt, (' ' * (75 - len(txt))), '|')
-                print('================================================================================')
-
+                    if self.simstartdate != None:
+                        txt = '    WARNING: Using less than 300 intervals'
+                        print('|', txt, (' ' * (75 - len(txt))), '|')
+                        txt = '    Interval size : ' + str(len(tradingData))
+                        print('|', txt, (' ' * (75 - len(txt))), '|')
+                    print('================================================================================')
 
             else:
                 tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity())
