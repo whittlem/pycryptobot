@@ -121,7 +121,7 @@ class AuthAPI(AuthAPIBase):
         try:
             current_price = self.getTicker(market)
 
-            base_quantity = np.divide(quote_quantity, current_price)
+            base_quantity = quote_quantity / current_price
 
             df_filters = self.getMarketInfoFilters(market)
             step_size = float(df_filters.loc[df_filters['filterType'] == 'LOT_SIZE']['stepSize'])
