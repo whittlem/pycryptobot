@@ -988,13 +988,16 @@ def main(init=True):
 
         print(repr(e))
 
-        # Wait 1 second and try to relaunch application
-        time.sleep(1)
-        print('Restarting application after exception...')
+        if app.autoRestart():
+            # Wait 30 second and try to relaunch application
+            time.sleep(30)
+            print('Restarting application after exception...')
 
-        if telegram:
-            telegram.send('Auto restarting bot for ' + app.getMarket() + ' after exception')
+            if telegram:
+                telegram.send('Auto restarting bot for ' + app.getMarket() + ' after exception')
 
-        main(init=False)
+            main(init=False)
+        else:
+            raise
 
 main()
