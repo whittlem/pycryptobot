@@ -3,5 +3,5 @@ pandas
 requests
 statsmodels
 matplotlib
-binance
-python-binance
+binance==0.3
+python-binance==0.7.9
