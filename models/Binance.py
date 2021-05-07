@@ -89,10 +89,11 @@ class AuthAPI(AuthAPIBase):
         else:
             fees = self.getFees()
         
-        if len(fees) == 0:
-            return float(fees['maker_fee_rate'].to_string(index=False).strip())
-        else:
-            return float(fees['maker_fee_rate'].max())
+        if len(fees) == 0 or 'maker_fee_rate' not in fees:
+            print ("error: 'maker_fee_rate' not in fees (using 0.001 as a fallback)")
+            return 0.001
+
+        return float(fees['maker_fee_rate'].to_string(index=False).strip())
 
     def getTakerFee(self, market=None):
         if market != None:
@@ -100,10 +101,11 @@ class AuthAPI(AuthAPIBase):
         else:
             fees = self.getFees()
 
-        if len(fees) == 0:
-            return float(fees['taker_fee_rate'].to_string(index=False).strip())
-        else:
-            return float(fees['taker_fee_rate'].max())
+        if len(fees) == 0 or 'taker_fee_rate' not in fees:
+            print ("error: 'taker_fee_rate' not in fees (using 0.001 as a fallback)")
+            return 0.001
+
+        return float(fees['taker_fee_rate'].to_string(index=False).strip())
 
     def marketBuy(self, market='', quote_quantity=0):
         """Executes a market buy providing a funding amount"""
