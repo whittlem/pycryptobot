@@ -255,7 +255,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
 
         # criteria for a sell signal
         elif ema12ltema26co == True \
-                and (macdgtsignal == True or app.disableBuyMACD()) \
+                and (macdltsignal == True or app.disableBuyMACD()) \
                 and last_action not in ['', 'SELL']:
             action = 'SELL'
         # anything other than a buy or sell, just wait
@@ -305,7 +305,6 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             #print ('sell_fee:', sell_fee)
             #print ('sell_filled:', sell_filled)
 
-            #margin = round((((sell_filled - last_buy_amount) / last_buy_amount) * 100), 2)
             margin = (((sell_filled - last_buy_amount) / last_buy_amount) * 100)
 
             #print ('margin:', margin)
