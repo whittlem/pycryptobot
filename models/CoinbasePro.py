@@ -139,6 +139,10 @@ class AuthAPI(AuthAPIBase):
         else:
             fees = self.getFees()
         
+        if len(fees) == 0 or 'maker_fee_rate' not in fees:
+            print ("error: 'maker_fee_rate' not in fees (using 0.005 as a fallback)")
+            return 0.005
+
         return float(fees['maker_fee_rate'].to_string(index=False).strip())
 
     def getTakerFee(self, market=None):
@@ -148,8 +152,8 @@ class AuthAPI(AuthAPIBase):
             fees = self.getFees()
 
         if len(fees) == 0 or 'taker_fee_rate' not in fees:
-            print ("error: 'taker_fee_rate' not in fees (using 0.05 as a fallback)")
-            return 0.05
+            print ("error: 'taker_fee_rate' not in fees (using 0.005 as a fallback)")
+            return 0.005
 
         return float(fees['taker_fee_rate'].to_string(index=False).strip())
 
