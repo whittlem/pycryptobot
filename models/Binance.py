@@ -173,9 +173,6 @@ class AuthAPI(AuthAPIBase):
         else:
             return 0.001
 
-
-
-
     def getMarketInfo(self, market):
         # validates the market is syntactically correct
         if not self._isMarketValid(market):
@@ -194,9 +191,10 @@ class AuthAPI(AuthAPIBase):
         resp = self.client.get_symbol_ticker(symbol=market)
 
         if 'price' in resp:
-            return float('{:.8f}'.format(float(resp['price'])))
+            return (self.getTime().strftime('%Y-%m-%d %H:%M:%S'), float('{:.8f}'.format(float(resp['price']))))
 
-        return 0.0
+        now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+        return (now, 0.0)
 
     def getTime(self):
         """Retrieves the exchange time"""
@@ -342,9 +340,10 @@ class PublicAPI(AuthAPIBase):
         resp = self.client.get_symbol_ticker(symbol=market)
 
         if 'price' in resp:
-            return float('{:.8f}'.format(float(resp['price'])))
+            return (self.getTime().strftime('%Y-%m-%d %H:%M:%S'), float('{:.8f}'.format(float(resp['price']))))
 
-        return 0.0
+        now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+        return (now, 0.0)
 
     def getTime(self):
         """Retrieves the exchange time"""
