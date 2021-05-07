@@ -168,6 +168,25 @@ class AuthAPI(AuthAPIBase):
 
     def getTradeFee(self, market):
         resp = self.client.get_trade_fee(symbol=market, timestamp=self.getTime())
+
+        ### DEBUG ###
+        if 'success' not in resp:
+            print ('*** getTradeFee(' + market + ') - missing "success" ***')
+            print (resp)
+        
+        if 'tradeFee' not in resp:
+            print ('*** getTradeFee(' + market + ') - missing "tradeFee" ***')
+            print (resp)
+        else:
+            if len(resp['tradeFee']) == 0:
+                print ('*** getTradeFee(' + market + ') - "tradeFee" empty ***') 
+                print (resp)
+            else:
+                if 'taker' not in resp['tradeFee'][0]:
+                    print ('*** getTradeFee(' + market + ') - missing "trader" ***')
+                    print (resp)                    
+        ###
+
         if resp['success']:
             return resp['tradeFee'][0]['taker']
         else:
