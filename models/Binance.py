@@ -119,9 +119,9 @@ class AuthAPI(AuthAPIBase):
             raise TypeError('The funding amount is not numeric.')
 
         try:
-            current_price = self.getTicker(market)
+            current_price = self.getTicker(market)[1]
 
-            base_quantity = quote_quantity / current_price
+            base_quantity = np.divide(quote_quantity, current_price)
 
             df_filters = self.getMarketInfoFilters(market)
             step_size = float(df_filters.loc[df_filters['filterType'] == 'LOT_SIZE']['stepSize'])
