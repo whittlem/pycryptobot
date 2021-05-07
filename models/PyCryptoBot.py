@@ -930,12 +930,18 @@ class PyCryptoBot():
                     else:
                         raise Exception('There is an error in your config.json')
 
+        except json.decoder.JSONDecodeError as err:
+            sys.tracebacklimit = 0
+            print ('Invalid config.json: ' + str(err) + "\n")
+            sys.exit()
         except IOError as err:
-            now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
-            print (now, err)
+            sys.tracebacklimit = 0
+            print ('Invalid config.json: ' + str(err) + "\n")
+            sys.exit()
         except ValueError as err:
-            now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
-            print (now, err)
+            sys.tracebacklimit = 0
+            print ('Invalid config.json: ' + str(err) + "\n")
+            sys.exit()
 
         if args.market != None:
             if self.exchange == 'coinbasepro':
