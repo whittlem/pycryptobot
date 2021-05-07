@@ -122,10 +122,6 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         # df_last contains the most recent entry
         df_last = df.tail(1)
     
-    print(f'iterations: {iterations}')
-    if iterations == 2 or iterations == 4:
-        raise Exception("Test error auto relaunch app !")
-
     if len(df_last.index.format()) > 0:
         current_df_index = str(df_last.index.format()[0])
     else:
