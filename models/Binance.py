@@ -190,7 +190,7 @@ class AuthAPI(AuthAPIBase):
         if resp['success']:
             return resp['tradeFee'][0]['taker']
         else:
-            return 0.001
+            return 0.005
 
     def getMarketInfo(self, market):
         # validates the market is syntactically correct
