@@ -256,6 +256,11 @@ class AuthAPI(AuthAPIBase):
         if quote_quantity < 10:
             raise ValueError('Trade amount is too small (>= 10).')
 
+        # handling: size is too accurate
+        if market.startswith('ADA-'):
+            # ADA: Smallest unit is 0.01000000
+            quote_quantity = round(quote_quantity, 2)
+
         order = {
             'product_id': market,
             'type': 'market',
