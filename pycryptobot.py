@@ -945,40 +945,56 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             list(map(s.cancel, s.queue))
             s.enter(120, 1, executeJob, (sc, app))
 
-try:
-    # initialise logging
-    logging.basicConfig(filename=app.getLogFile(), format='%(asctime)s - %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filemode='a', level=logging.DEBUG)
-
-    # telegram
-    if not app.disableTelegram() and app.isTelegramEnabled():
-        telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
-        if app.getExchange() == 'coinbasepro':
-            telegram.send('Starting Coinbase Pro bot for ' + app.getMarket() + ' using granularity ' + str(app.getGranularity()))
-        elif app.getExchange() == 'binance':
-            telegram.send('Starting Binance bot for ' + app.getMarket() + ' using granularity ' + str(app.getGranularity()))
-
-    # initialise and start application
-    trading_data = app.startApp(account, last_action)
-
-    # run the first job immediately after starting
-    if app.isSimulation() == 1:
-        executeJob(s, app, trading_data)
-    else:
-        executeJob(s, app)
-
-    s.run()
-
-# catches a keyboard break of app, exits gracefully
-except KeyboardInterrupt:
-    print(datetime.now(), 'closed')
+def main(init=True):
     try:
-        sys.exit(0)
-    except SystemExit:
-        os._exit(0)
-except(BaseException, Exception) as e:
-    # catch all not managed exceptions and send a Telegram message if configured
-    if not app.disableTelegram() and app.isTelegramEnabled():
-        telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
-        telegram.send('Bot for ' + app.getMarket() + ' got an exception: ' + repr(e))
+        # initialise logging
+        logging.basicConfig(filename=app.getLogFile(), format='%(asctime)s - %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filemode='a', level=logging.DEBUG)
 
-    raise
+        if init:
+            # telegram
+            if not app.disableTelegram() and app.isTelegramEnabled():
+                telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
+                if app.getExchange() == 'coinbasepro':
+                    telegram.send('Starting Coinbase Pro bot for ' + app.getMarket() + ' using granularity ' + str(app.getGranularity()))
+                elif app.getExchange() == 'binance':
+                    telegram.send('Starting Binance bot for ' + app.getMarket() + ' using granularity ' + str(app.getGranularity()))
+
+        if init or app.isSimulation() == 1:
+            # initialise and start application
+            trading_data = app.startApp(account, last_action, banner=init)
+
+        # run the first job immediately after starting
+        if app.isSimulation() == 1:
+            executeJob(s, app, trading_data)
+        else:
+            executeJob(s, app)
+
+        s.run()
+
+    # catches a keyboard break of app, exits gracefully
+    except KeyboardInterrupt:
+        print(datetime.now(), 'closed')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)
+    except(BaseException, Exception) as e:
+        # catch all not managed exceptions and send a Telegram message if configured
+        telegram = None
+
+        if not app.disableTelegram() and app.isTelegramEnabled():
+            telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
+            telegram.send('Bot for ' + app.getMarket() + ' got an exception: ' + repr(e))
+
+        print(repr(e))
+
+        # Wait 1 second and try to relaunch application
+        time.sleep(1)
+        print('Restarting application after exception...')
+
+        if telegram:
+            telegram.send('Auto restarting bot for ' + app.getMarket() + ' after exception')
+
+        main(init=False)
+
+main()
