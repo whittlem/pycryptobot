@@ -57,7 +57,7 @@ def test_instantiate_publicapi_without_error():
 
 def test_config_json_exists_and_valid():
     filename = 'config.json'
-    assert os.path.exists(filename) is True
+    assert os.path.exists(filename) == True
     with open(filename) as config_file:
         config = json.load(config_file)
 
