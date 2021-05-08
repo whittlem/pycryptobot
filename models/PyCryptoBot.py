@@ -1074,7 +1074,7 @@ class PyCryptoBot():
 
             self.sellpercent = args.sellpercent
 
-        if self.smart_switch == 1 and self.granularity == None:
+        if self.smart_switch == 1 and self.granularity is None:
             if self.exchange == 'coinbasepro':
                 self.granularity = 3600
             elif self.exchange == 'binance':
@@ -1146,43 +1146,43 @@ class PyCryptoBot():
                 if args.lastaction in [ 'BUY', 'SELL' ]:
                     self.last_action = args.lastaction
 
-        if args.sellatresistance == True:
+        if args.sellatresistance is True:
             self.sellatresistance = True
 
-        if args.disablebullonly == True:
+        if args.disablebullonly is True:
             self.disablebullonly = True
 
-        if args.disablebuynearhigh == True:
+        if args.disablebuynearhigh is True:
             self.disablebuynearhigh = True
 
-        if args.disablebuymacd == True:
+        if args.disablebuymacd is True:
             self.disablebuymacd = True
 
-        if args.disablebuyobv == True:
+        if args.disablebuyobv is True:
             self.disablebuyobv = True
     
-        if args.disablebuyelderray == True:
+        if args.disablebuyelderray is True:
             self.disablebuyelderray = True
 
-        if args.disablefailsafefibonaccilow == True:
+        if args.disablefailsafefibonaccilow is True:
             self.disablefailsafefibonaccilow = True
 
-        if args.disablefailsafelowerpcnt == True:
+        if args.disablefailsafelowerpcnt is True:
             self.disablefailsafelowerpcnt = True
 
-        if args.disableprofitbankupperpcnt == True:
+        if args.disableprofitbankupperpcnt is True:
             self.disableprofitbankupperpcnt = True
                
-        if args.disableprofitbankreversal == True:
+        if args.disableprofitbankreversal is True:
             self.disableprofitbankreversal = True
 
-        if args.disabletelegram == True:
+        if args.disabletelegram is True:
             self.disabletelegram = True
 
-        if args.disablelog == True:
+        if args.disablelog is True:
             self.disablelog = True
 
-        if args.disabletracker == True:
+        if args.disabletracker is True:
             self.disabletracker = True
         
         if self.exchange == 'binance':
@@ -1781,7 +1781,7 @@ class PyCryptoBot():
             txt = '              Tracker : ' + str(not self.disableTracker()) + '  --disabletracker'
             print('|', txt, (' ' * (75 - len(txt))), '|')     
 
-            if self.sellUpperPcnt() != None or self.sellLowerPcnt() != None or self.allowSellAtLoss() == False:
+            if self.sellUpperPcnt() != None or self.sellLowerPcnt() != None or self.allowSellAtLoss() is False:
                 print('================================================================================')
 
         # if live

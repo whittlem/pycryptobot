@@ -20,7 +20,7 @@ class TradingAccount():
         """
 
         # config needs to be a dictionary, empty or otherwise
-        if app == None:
+        if app is None:
             raise TypeError('App is not a PyCryptoBot object.')
 
         if app.getExchange() == 'binance':
