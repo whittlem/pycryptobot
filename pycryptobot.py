@@ -377,6 +377,14 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
+            # configuration specifies to not sell at a loss
+            if action == 'SELL' and not app.allowSellAtLoss() and margin <= 0:
+                action = 'WAIT'
+                last_action = 'BUY'
+                log_text = '! Ignore Sell Signal (No Sell At Loss)'
+                print (log_text, "\n")
+                logging.warning(log_text)
+
             # profit bank when strong reversal detected
             if app.sellAtResistance() == True and margin > 1 and price > 0 and price != ta.getTradeExit(price):
                 action = 'SELL'
@@ -389,14 +397,6 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 if not app.disableTelegram() and app.isTelegramEnabled() and not (not app.allowSellAtLoss() and margin <= 0):
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
-
-            # configuration specifies to not sell at a loss
-            if action == 'SELL' and not app.allowSellAtLoss() and margin <= 0:
-                action = 'WAIT'
-                last_action = 'BUY'
-                log_text = '! Ignore Sell Signal (No Sell At Loss)'
-                print (log_text, "\n")
-                logging.warning(log_text)
 
         bullbeartext = ''
         if app.disableBullOnly() == True or (df_last['sma50'].values[0] == df_last['sma200'].values[0]):
@@ -799,7 +799,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     # telegram
                     if not app.disableTelegram() and app.isTelegramEnabled():
                         telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
-                        telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') SELL at ' + price_text)
+                        telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') SELL at ' + price_text + ' (margin: ' + margin_text + ', (delta: ' + str(round(price - last_buy_price, 2)) + ')')
 
                     if app.isVerbose() == 0:
                         logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + str(app.getGranularity()) + ' | ' + price_text + ' | SELL')
