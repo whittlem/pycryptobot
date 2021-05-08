@@ -52,7 +52,7 @@ if app.getLastAction() != None:
 # if live trading is enabled
 elif app.isLive() == 1:
     # connectivity check
-    if app.getTime() == None:
+    if app.getTime() is None:
         raise ConnectionError('Unable to start the bot as your connection to the exchange is down. Please check your Internet connectivity!')
 
     account = TradingAccount(app)
@@ -91,7 +91,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
     global action, buy_count, buy_sum, iterations, last_action, last_buy_price, last_buy_amount, last_buy_high, eri_text, last_df_index, sell_count, sell_sum, buy_state, fib_high, fib_low
 
     # connectivity check (only when running live)
-    if app.isLive() and app.getTime() == None:
+    if app.isLive() and app.getTime() is None:
         print ('Your connection to the exchange has gone down, will retry in 1 minute!')
     
         # poll every 5 minute
