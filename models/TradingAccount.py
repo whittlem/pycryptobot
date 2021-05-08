@@ -202,7 +202,7 @@ class TradingAccount():
                         else:
                             self.balance = self.balance.replace('BASE', currency)
 
-                    if self.balance.currency[self.balance.currency.isin([currency])].empty == True:
+                    if self.balance.currency[self.balance.currency.isin([currency])].empty is True:
                         self.balance.loc[len(self.balance)] = [currency,0,0,0]
 
                     # retrieve balance of specified currency
@@ -253,7 +253,7 @@ class TradingAccount():
                     elif currency in ['BCH','BTC','ETH','LTC','XLM']:
                         self.balance = self.balance.replace('BASE', currency)
 
-                    if self.balance.currency[self.balance.currency.isin([currency])].empty == True:
+                    if self.balance.currency[self.balance.currency.isin([currency])].empty is True:
                         self.balance.loc[len(self.balance)] = [currency,0,0,0]
 
                     # retrieve balance of specified currency
