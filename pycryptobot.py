@@ -127,7 +127,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
     else:
         current_df_index = last_df_index
 
-    if app.getSmartSwitch() == 1 and app.getExchange() == 'binance' and app.getGranularity() == '1h' and app.is1hEMA1226Bull() == True and app.is6hEMA1226Bull() == True:
+    if app.getSmartSwitch() == 1 and app.getExchange() == 'binance' and app.getGranularity() == '1h' and app.is1hEMA1226Bull() is True and app.is6hEMA1226Bull() is True:
         print ("*** smart switch from granularity '1h' (1 hour) to '15m' (15 min) ***")
 
         # telegram
@@ -139,7 +139,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, app))
 
-    elif app.getSmartSwitch() == 1 and app.getExchange() == 'coinbasepro' and app.getGranularity() == 3600 and app.is1hEMA1226Bull() == True and app.is6hEMA1226Bull() == True:
+    elif app.getSmartSwitch() == 1 and app.getExchange() == 'coinbasepro' and app.getGranularity() == 3600 and app.is1hEMA1226Bull() is True and app.is6hEMA1226Bull() is True:
         print ('*** smart switch from granularity 3600 (1 hour) to 900 (15 min) ***')
 
         # telegram
@@ -151,7 +151,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, app))
 
-    if app.getSmartSwitch() == 1 and app.getExchange() == 'binance' and app.getGranularity() == '15m' and app.is1hEMA1226Bull() == False and app.is6hEMA1226Bull() == False:
+    if app.getSmartSwitch() == 1 and app.getExchange() == 'binance' and app.getGranularity() == '15m' and app.is1hEMA1226Bull() is False and app.is6hEMA1226Bull() is False:
         print ("*** smart switch from granularity '15m' (15 min) to '1h' (1 hour) ***")
 
         # telegram
@@ -163,7 +163,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, app))
 
-    elif app.getSmartSwitch() == 1 and app.getExchange() == 'coinbasepro' and app.getGranularity() == 900 and app.is1hEMA1226Bull() == False and app.is6hEMA1226Bull() == False:
+    elif app.getSmartSwitch() == 1 and app.getExchange() == 'coinbasepro' and app.getGranularity() == 900 and app.is1hEMA1226Bull() is False and app.is6hEMA1226Bull() is False:
         print ("*** smart switch from granularity 900 (15 min) to 3600 (1 hour) ***")
 
         # telegram
@@ -241,25 +241,25 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
         two_black_gapping = bool(df_last['two_black_gapping'].values[0])
 
         # criteria for a buy signal
-        if ema12gtema26co == True \
-                and (macdgtsignal == True or app.disableBuyMACD()) \
-                and (goldencross == True or app.disableBullOnly()) \
+        if ema12gtema26co is True \
+                and (macdgtsignal is True or app.disableBuyMACD()) \
+                and (goldencross is True or app.disableBullOnly()) \
                 and (obv_pc > -5 or app.disableBuyOBV()) \
-                and (elder_ray_buy == True or app.disableBuyElderRay()) \
+                and (elder_ray_buy is True or app.disableBuyElderRay()) \
                 and last_action != 'BUY':
             action = 'BUY'
         
-        elif ema12gtema26 == True \
-                and macdgtsignalco == True \
-                and (goldencross == True or app.disableBullOnly()) \
+        elif ema12gtema26 is True \
+                and macdgtsignalco is True \
+                and (goldencross is True or app.disableBullOnly()) \
                 and (obv_pc > -5 or app.disableBuyOBV()) \
-                and (elder_ray_buy == True or app.disableBuyElderRay()) \
+                and (elder_ray_buy is True or app.disableBuyElderRay()) \
                 and last_action != 'BUY':
             action = 'BUY'
 
         # criteria for a sell signal
-        elif ema12ltema26co == True \
-                and (macdltsignal == True or app.disableBuyMACD()) \
+        elif ema12ltema26co is True \
+                and (macdltsignal is True or app.disableBuyMACD()) \
                 and last_action not in ['', 'SELL']:
             action = 'SELL'
         # anything other than a buy or sell, just wait
@@ -313,7 +313,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             #print ('margin:', margin)
 
             # loss failsafe sell at fibonacci band
-            if app.disableFailsafeFibonacciLow() == False and app.allowSellAtLoss() and app.sellLowerPcnt() == None and fib_low > 0 and fib_low >= float(price):
+            if app.disableFailsafeFibonacciLow() is False and app.allowSellAtLoss() and app.sellLowerPcnt() is None and fib_low > 0 and fib_low >= float(price):
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Loss Failsafe Triggered (Fibonacci Band: ' + str(fib_low) + ')'
@@ -339,7 +339,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
             # loss failsafe sell at sell_lower_pcnt
-            elif app.disableFailsafeLowerPcnt() == False and app.allowSellAtLoss() and app.sellLowerPcnt() != None and margin < app.sellLowerPcnt():
+            elif app.disableFailsafeLowerPcnt() is False and app.allowSellAtLoss() and app.sellLowerPcnt() != None and margin < app.sellLowerPcnt():
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Loss Failsafe Triggered (< ' + str(app.sellLowerPcnt()) + '%)'
@@ -352,7 +352,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
             # profit bank at sell_upper_pcnt
-            if app.disableProfitbankUpperPcnt() == False and app.sellUpperPcnt() != None and margin > app.sellUpperPcnt():
+            if app.disableProfitbankUpperPcnt() is False and app.sellUpperPcnt() != None and margin > app.sellUpperPcnt():
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Profit Bank Triggered (> ' + str(app.sellUpperPcnt()) + '%)'
@@ -365,7 +365,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
             # profit bank when strong reversal detected
-            if app.disableProfitbankReversal() == False and margin > 3 and obv_pc < 0 and macdltsignal == True:
+            if app.disableProfitbankReversal() is False and margin > 3 and obv_pc < 0 and macdltsignal is True:
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Profit Bank Triggered (Strong Reversal Detected)'
@@ -386,7 +386,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 logging.warning(log_text)
 
             # profit bank when strong reversal detected
-            if app.sellAtResistance() == True and margin > 1 and price > 0 and price != ta.getTradeExit(price):
+            if app.sellAtResistance() is True and margin > 1 and price > 0 and price != ta.getTradeExit(price):
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Profit Bank Triggered (Selling At Resistance)'
@@ -399,11 +399,11 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
         bullbeartext = ''
-        if app.disableBullOnly() == True or (df_last['sma50'].values[0] == df_last['sma200'].values[0]):
+        if app.disableBullOnly() is True or (df_last['sma50'].values[0] == df_last['sma200'].values[0]):
             bullbeartext = ''
-        elif goldencross == True:
+        elif goldencross is True:
             bullbeartext = ' (BULL)'
-        elif goldencross == False:
+        elif goldencross is False:
             bullbeartext = ' (BEAR)'
 
         # polling is every 5 minutes (even for hourly intervals), but only process once per interval
@@ -417,43 +417,43 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
             ema_text = app.compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26', precision)
 
             macd_text = ''
-            if app.disableBuyMACD() == False:
+            if app.disableBuyMACD() is False:
                 macd_text = app.compare(df_last['macd'].values[0], df_last['signal'].values[0], 'MACD', precision)
 
             obv_text = ''
-            if app.disableBuyOBV() == False:
+            if app.disableBuyOBV() is False:
                 obv_text = 'OBV: ' + str(app.truncate(df_last['obv'].values[0], 4)) + ' (' + str(app.truncate(df_last['obv_pc'].values[0], 2)) + '%)'
 
             eri_text = ''
-            if app.disableBuyElderRay() == False:
-                if elder_ray_buy == True:
+            if app.disableBuyElderRay() is False:
+                if elder_ray_buy is True:
                     eri_text = 'ERI: buy | '
-                elif elder_ray_sell == True:
+                elif elder_ray_sell is True:
                     eri_text = 'ERI: sell | '
                 else:
                     eri_text = 'ERI: | '
 
-            if hammer == True:
+            if hammer is True:
                 log_text = '* Candlestick Detected: Hammer ("Weak - Reversal - Bullish Signal - Up")'
                 print (log_text, "\n")
                 logging.debug(log_text)
 
-            if shooting_star == True:
+            if shooting_star is True:
                 log_text = '* Candlestick Detected: Shooting Star ("Weak - Reversal - Bearish Pattern - Down")'
                 print (log_text, "\n")
                 logging.debug(log_text)
 
-            if hanging_man == True:
+            if hanging_man is True:
                 log_text = '* Candlestick Detected: Hanging Man ("Weak - Continuation - Bearish Pattern - Down")'
                 print (log_text, "\n")
                 logging.debug(log_text)
 
-            if inverted_hammer == True:
+            if inverted_hammer is True:
                 log_text = '* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Pattern - Up")'
                 print (log_text, "\n")
                 logging.debug(log_text)
    
-            if three_white_soldiers == True:
+            if three_white_soldiers is True:
                 log_text = '*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Bullish Pattern - Up")'
                 print (log_text, "\n")
                 logging.debug(log_text)
@@ -463,7 +463,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
-            if three_black_crows == True:
+            if three_black_crows is True:
                 log_text = '* Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Pattern - Down")'
                 print (log_text, "\n")
                 logging.debug(log_text)
@@ -473,7 +473,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
-            if morning_star == True:
+            if morning_star is True:
                 log_text = '*** Candlestick Detected: Morning Star ("Strong - Reversal - Bullish Pattern - Up")'
                 print (log_text, "\n")
                 logging.debug(log_text)
@@ -483,7 +483,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
-            if evening_star == True:
+            if evening_star is True:
                 log_text = '*** Candlestick Detected: Evening Star ("Strong - Reversal - Bearish Pattern - Down")'
                 print (log_text, "\n")
                 logging.debug(log_text)
@@ -493,7 +493,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
-            if three_line_strike == True:
+            if three_line_strike is True:
                 log_text = '** Candlestick Detected: Three Line Strike ("Reliable - Reversal - Bullish Pattern - Up")'
                 print (log_text, "\n")
                 logging.debug(log_text)
@@ -503,7 +503,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
-            if abandoned_baby == True:
+            if abandoned_baby is True:
                 log_text = '** Candlestick Detected: Abandoned Baby ("Reliable - Reversal - Bullish Pattern - Up")'
                 print (log_text, "\n")
                 logging.debug(log_text)
@@ -513,7 +513,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
-            if morning_doji_star == True:
+            if morning_doji_star is True:
                 log_text = '** Candlestick Detected: Morning Doji Star ("Reliable - Reversal - Bullish Pattern - Up")'
                 print (log_text, "\n")
                 logging.debug(log_text)
@@ -523,7 +523,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
-            if evening_doji_star == True:
+            if evening_doji_star is True:
                 log_text = '** Candlestick Detected: Evening Doji Star ("Reliable - Reversal - Bearish Pattern - Down")'
                 print (log_text, "\n")
                 logging.debug(log_text)
@@ -533,7 +533,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram = Telegram(app.getTelegramToken(), app.getTelegramClientId())
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
-            if two_black_gapping == True:
+            if two_black_gapping is True:
                 log_text = '*** Candlestick Detected: Two Black Gapping ("Reliable - Reversal - Bearish Pattern - Down")'
                 print (log_text, "\n")
                 logging.debug(log_text)
@@ -545,38 +545,38 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
 
             ema_co_prefix = ''
             ema_co_suffix = ''
-            if ema12gtema26co == True:
+            if ema12gtema26co is True:
                 ema_co_prefix = '*^ '
                 ema_co_suffix = ' ^*'
-            elif ema12ltema26co == True:
+            elif ema12ltema26co is True:
                 ema_co_prefix = '*v '
                 ema_co_suffix = ' v*'   
-            elif ema12gtema26 == True:
+            elif ema12gtema26 is True:
                 ema_co_prefix = '^ '
                 ema_co_suffix = ' ^'
-            elif ema12ltema26 == True:
+            elif ema12ltema26 is True:
                 ema_co_prefix = 'v '
                 ema_co_suffix = ' v'
 
             macd_co_prefix = ''
             macd_co_suffix = ''
-            if app.disableBuyMACD() == False:
-                if macdgtsignalco == True:
+            if app.disableBuyMACD() is False:
+                if macdgtsignalco is True:
                     macd_co_prefix = '*^ '
                     macd_co_suffix = ' ^* | '
-                elif macdltsignalco == True:
+                elif macdltsignalco is True:
                     macd_co_prefix = '*v '
                     macd_co_suffix = ' v* | '
-                elif macdgtsignal == True:
+                elif macdgtsignal is True:
                     macd_co_prefix = '^ '
                     macd_co_suffix = ' ^ | '
-                elif macdltsignal == True:
+                elif macdltsignal is True:
                     macd_co_prefix = 'v '
                     macd_co_suffix = ' v | '
 
             obv_prefix = ''
             obv_suffix = ''
-            if app.disableBuyOBV() == False:
+            if app.disableBuyOBV() is False:
                 if float(obv_pc) > 0:
                     obv_prefix = '^ '
                     obv_suffix = ' ^ | '
@@ -657,13 +657,13 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 txt = '  Currently Below : ' + str(ema12ltema26)
                 print('|', txt, (' ' * (75 - len(txt))), '|')
 
-                if (ema12gtema26 == True and ema12gtema26co == True):
+                if (ema12gtema26 is True and ema12gtema26co is True):
                     txt = '        Condition : EMA12 is currently crossing above EMA26'
-                elif (ema12gtema26 == True and ema12gtema26co == False):
+                elif (ema12gtema26 is True and ema12gtema26co is False):
                     txt = '        Condition : EMA12 is currently above EMA26 and has crossed over'
-                elif (ema12ltema26 == True and ema12ltema26co == True):
+                elif (ema12ltema26 is True and ema12ltema26co is True):
                     txt = '        Condition : EMA12 is currently crossing below EMA26'
-                elif (ema12ltema26 == True and ema12ltema26co == False):
+                elif (ema12ltema26 is True and ema12ltema26co is False):
                     txt = '        Condition : EMA12 is currently below EMA26 and has crossed over'
                 else:
                     txt = '        Condition : -'
@@ -684,13 +684,13 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                 txt = '  Currently Below : ' + str(macdltsignal)
                 print('|', txt, (' ' * (75 - len(txt))), '|')
 
-                if (macdgtsignal == True and macdgtsignalco == True):
+                if (macdgtsignal is True and macdgtsignalco is True):
                     txt = '        Condition : MACD is currently crossing above Signal'
-                elif (macdgtsignal == True and macdgtsignalco == False):
+                elif (macdgtsignal is True and macdgtsignalco is False):
                     txt = '        Condition : MACD is currently above Signal and has crossed over'
-                elif (macdltsignal == True and macdltsignalco == True):
+                elif (macdltsignal is True and macdltsignalco is True):
                     txt = '        Condition : MACD is currently crossing below Signal'
-                elif (macdltsignal == True and macdltsignalco == False):
+                elif (macdltsignal is True and macdltsignalco is False):
                     txt = '        Condition : MACD is currently below Signal and has crossed over'
                 else:
                     txt = '        Condition : -'

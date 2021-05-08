@@ -272,7 +272,7 @@ class AuthAPI(AuthAPIBase):
             'funds': quote_quantity
         }
 
-        if self.debug == True:
+        if self.debug is True:
             print (order)
 
         # connect to authenticated coinbase pro api
