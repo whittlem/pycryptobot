@@ -126,7 +126,7 @@ class AuthAPI(AuthAPIBase):
     def getFees(self, market=None):
         df = self.authAPI('GET', 'fees')
 
-        if market is not None:
+        if market != None:
             df['market'] = market
         else:
             df['market'] = ''
@@ -134,7 +134,7 @@ class AuthAPI(AuthAPIBase):
         return df
 
     def getMakerFee(self, market=None):
-        if market is not None:
+        if market != None:
             fees = self.getFees(market)
         else:
             fees = self.getFees()
@@ -146,7 +146,7 @@ class AuthAPI(AuthAPIBase):
         return float(fees['maker_fee_rate'].to_string(index=False).strip())
 
     def getTakerFee(self, market=None):
-        if market is not None:
+        if market != None:
             fees = self.getFees(market)
         else:
             fees = self.getFees()

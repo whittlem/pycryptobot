@@ -64,9 +64,9 @@ class PyCryptoBot():
         self.api_passphrase = ''
         self.api_url = ''
 
-        if args.config is not None:
+        if args.config != None:
             filename = args.config
-        if args.exchange is not None:
+        if args.exchange != None:
             if args.exchange not in [ 'coinbasepro', 'binance', 'dummy' ]:
                 raise TypeError('Invalid exchange: coinbasepro, binance')
             else:
@@ -943,7 +943,7 @@ class PyCryptoBot():
             print ('Invalid config.json: ' + str(err) + "\n")
             sys.exit()
 
-        if args.market is not None:
+        if args.market != None:
             if self.exchange == 'coinbasepro':
                 if not self._isMarketValid(args.market):
                     raise ValueError('Coinbase Pro market required.')
@@ -1031,7 +1031,7 @@ class PyCryptoBot():
                     self.base_currency = 'BTC'
                     self.quote_currency = 'GBP'
 
-        if args.smartswitch is not None:
+        if args.smartswitch != None:
             if not args.smartswitch in [ '0', '1' ]:
                 self.smart_switch = args.smartswitch
                 if self.smart_switch == 1:
@@ -1039,7 +1039,7 @@ class PyCryptoBot():
                 else:
                     self.smart_switch = 0
 
-        if args.granularity is not None:
+        if args.granularity != None:
             if self.exchange == 'coinbasepro':
                 if not isinstance(int(args.granularity), int):
                     raise TypeError('Invalid granularity.')
@@ -1056,7 +1056,7 @@ class PyCryptoBot():
             self.granularity = args.granularity
             self.smart_switch = 0
 
-        if args.buypercent is not None:
+        if args.buypercent != None:
             if not isinstance(int(args.buypercent), int):
                 raise TypeError('Invalid buy percent.')
 
@@ -1065,7 +1065,7 @@ class PyCryptoBot():
 
             self.buypercent = args.buypercent
 
-        if args.sellpercent is not None:
+        if args.sellpercent != None:
             if not isinstance(int(args.sellpercent), int):
                 raise TypeError('Invalid sell percent.')
 
@@ -1080,19 +1080,19 @@ class PyCryptoBot():
             elif self.exchange == 'binance':
                 self.granularity = '1h'
 
-        if args.graphs is not None:
+        if args.graphs != None:
             if not args.graphs in [ '0', '1' ]:
                 self.save_graphs = args.graphs
 
-        if args.verbose is not None:
+        if args.verbose != None:
             if not args.verbose in [ '0', '1' ]:
                 self.is_verbose = args.verbose
 
-        if args.live is not None:
+        if args.live != None:
             if not args.live in [ '0', '1' ]:
                 self.is_live = args.live
 
-        if args.sim is not None:
+        if args.sim != None:
             if args.sim == 'slow':
                 self.is_sim = 1
                 self.sim_speed = 'slow'
@@ -1101,7 +1101,7 @@ class PyCryptoBot():
                 self.is_sim = 1
                 self.sim_speed = 'slow-sample'
                 self.is_live = 0
-                if args.simstartdate is not None:
+                if args.simstartdate != None:
                     self.simstartdate = args.simstartdate
             elif args.sim == 'fast':
                 self.is_sim = 1
@@ -1111,37 +1111,37 @@ class PyCryptoBot():
                 self.is_sim = 1
                 self.sim_speed = 'fast-sample'
                 self.is_live = 0
-                if args.simstartdate is not None:
+                if args.simstartdate != None:
                     self.simstartdate = args.simstartdate
         
-        if self.simstartdate is not None:
+        if self.simstartdate != None:
             p = re.compile(r"^\d{4,4}-\d{2,2}-\d{2,2}$")
             if not p.match(self.simstartdate):
                 self.simstartdate = None
 
-        if args.sellupperpcnt is not None:
+        if args.sellupperpcnt != None:
             if isinstance(args.sellupperpcnt, (int, float)):
                 if args.sellupperpcnt > 0 and args.sellupperpcnt <= 100:
                     self.sell_upper_pcnt = float(args.sellupperpcnt)
 
-        if args.selllowerpcnt is not None:
+        if args.selllowerpcnt != None:
             if isinstance(args.selllowerpcnt, (int, float)):
                 if args.selllowerpcnt >= -100 and args.selllowerpcnt < 0:
                     self.sell_lower_pcnt = float(args.selllowerpcnt)
 
-        if args.trailingstoploss is not None:
+        if args.trailingstoploss != None:
             if isinstance(args.trailingstoploss, (int, float)):
                 if args.trailingstoploss >= -100 and args.trailingstoploss < 0:
                     self.trailing_stop_loss = float(args.trailingstoploss)
 
-        if args.sellatloss is not None:
+        if args.sellatloss != None:
             if not args.sellatloss in [ '0', '1' ]:
                 self.sell_at_loss = args.sellatloss
                 if self.sell_at_loss == 0:
                     self.sell_lower_pcnt = None
                     self.trailing_stop_loss = None
 
-        if args.lastaction is not None:
+        if args.lastaction != None:
             if isinstance(args.lastaction, str):
                 if args.lastaction in [ 'BUY', 'SELL' ]:
                     self.last_action = args.lastaction
@@ -1729,11 +1729,11 @@ class PyCryptoBot():
             print('|', txt, (' ' * (75 - len(txt))), '|')
             print('================================================================================')
 
-            if self.sellUpperPcnt() is not None:
+            if self.sellUpperPcnt() != None:
                 txt = '       Sell Upper : ' + str(self.sellUpperPcnt()) + '%'
                 print('|', txt, (' ' * (75 - len(txt))), '|')
 
-            if self.sellLowerPcnt() is not None:
+            if self.sellLowerPcnt() != None:
                 txt = '       Sell Lower : ' + str(self.sellLowerPcnt()) + '%'
                 print('|', txt, (' ' * (75 - len(txt))), '|')
 
@@ -1761,11 +1761,11 @@ class PyCryptoBot():
             txt = '   Sell Fibonacci Low : ' + str(not self.disableFailsafeFibonacciLow()) + '  --disablefailsafefibonaccilow'
             print('|', txt, (' ' * (75 - len(txt))), '|')   
 
-            if self.sellLowerPcnt() is not None:
+            if self.sellLowerPcnt() != None:
                 txt = '      Sell Lower Pcnt : ' + str(not self.disableFailsafeLowerPcnt()) + '  --disablefailsafelowerpcnt'
                 print('|', txt, (' ' * (75 - len(txt))), '|')   
 
-            if self.sellUpperPcnt() is not None:
+            if self.sellUpperPcnt() != None:
                 txt = '      Sell Upper Pcnt : ' + str(not self.disableFailsafeLowerPcnt()) + '  --disableprofitbankupperpcnt'
                 print('|', txt, (' ' * (75 - len(txt))), '|')   
 
@@ -1781,7 +1781,7 @@ class PyCryptoBot():
             txt = '              Tracker : ' + str(not self.disableTracker()) + '  --disabletracker'
             print('|', txt, (' ' * (75 - len(txt))), '|')     
 
-            if self.sellUpperPcnt() is not None or self.sellLowerPcnt() is not None or self.allowSellAtLoss() is False:
+            if self.sellUpperPcnt() != None or self.sellLowerPcnt() != None or self.allowSellAtLoss() is False:
                 print('================================================================================')
 
         # if live
@@ -1805,7 +1805,7 @@ class PyCryptoBot():
 
                 attempts = 0
 
-                if self.simstartdate is not None:
+                if self.simstartdate != None:
                     date = self.simstartdate.split('-')
                     startDate = datetime(int(date[0]),int(date[1]),int(date[2]))
                     endDate = startDate + timedelta(hours=300)
@@ -1828,7 +1828,7 @@ class PyCryptoBot():
                     print('|', txt, (' ' * (75 - len(txt))), '|')
                     txt = '     Sampling end : ' + str(endDate)
                     print('|', txt, (' ' * (75 - len(txt))), '|')
-                    if self.simstartdate is not None:
+                    if self.simstartdate != None:
                         txt = '    WARNING: Using less than 300 intervals'
                         print('|', txt, (' ' * (75 - len(txt))), '|')
                         txt = '    Interval size : ' + str(len(tradingData))

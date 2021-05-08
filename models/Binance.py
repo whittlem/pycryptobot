@@ -66,7 +66,7 @@ class AuthAPI(AuthAPIBase):
         return self.client
 
     def getFees(self, market=None):
-        if market is not None:
+        if market != None:
             resp = self.client.get_trade_fee(symbol=market)
             if 'tradeFee' in resp:
                 df = pd.DataFrame(resp['tradeFee'][0], index=[0])
@@ -84,7 +84,7 @@ class AuthAPI(AuthAPIBase):
             return pd.DataFrame(columns=[ 'maker_fee_rate', 'taker_fee_rate', 'market' ])
 
     def getMakerFee(self, market=None):
-        if market is not None:
+        if market != None:
             fees = self.getFees(market)
         else:
             fees = self.getFees()
@@ -96,7 +96,7 @@ class AuthAPI(AuthAPIBase):
         return float(fees['maker_fee_rate'].to_string(index=False).strip())
 
     def getTakerFee(self, market=None):
-        if market is not None:
+        if market != None:
             fees = self.getFees(market)
         else:
             fees = self.getFees()
