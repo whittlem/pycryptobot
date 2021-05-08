@@ -36,7 +36,7 @@ fib_low = 0
 
 config = {}
 account = None
-if app.getLastAction() != None:
+if app.getLastAction() is not None:
     last_action = app.getLastAction()
 
     account = TradingAccount(app)
@@ -326,7 +326,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
             # loss failsafe sell at trailing_stop_loss
-            if app.allowSellAtLoss() and app.trailingStopLoss() != None and change_pcnt_high < app.trailingStopLoss():
+            if app.allowSellAtLoss() and app.trailingStopLoss() is not None and change_pcnt_high < app.trailingStopLoss():
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Trailing Stop Loss Triggered (< ' + str(app.trailingStopLoss()) + '%)'
@@ -339,7 +339,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
             # loss failsafe sell at sell_lower_pcnt
-            elif app.disableFailsafeLowerPcnt() is False and app.allowSellAtLoss() and app.sellLowerPcnt() != None and margin < app.sellLowerPcnt():
+            elif app.disableFailsafeLowerPcnt() is False and app.allowSellAtLoss() and app.sellLowerPcnt() is not None and margin < app.sellLowerPcnt():
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Loss Failsafe Triggered (< ' + str(app.sellLowerPcnt()) + '%)'
@@ -352,7 +352,7 @@ def executeJob(sc, app=PyCryptoBot(), trading_data=pd.DataFrame()):
                     telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') ' + log_text)
 
             # profit bank at sell_upper_pcnt
-            if app.disableProfitbankUpperPcnt() is False and app.sellUpperPcnt() != None and margin > app.sellUpperPcnt():
+            if app.disableProfitbankUpperPcnt() is False and app.sellUpperPcnt() is not None and margin > app.sellUpperPcnt():
                 action = 'SELL'
                 last_action = 'BUY'
                 log_text = '! Profit Bank Triggered (> ' + str(app.sellUpperPcnt()) + '%)'

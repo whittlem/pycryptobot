@@ -656,13 +656,13 @@ class TechnicalAnalysis():
         self.df['ema12gtema26'] = self.df.ema12 > self.df.ema26
         # true if the current frame is where EMA12 crosses over above
         self.df['ema12gtema26co'] = self.df.ema12gtema26.ne(self.df.ema12gtema26.shift())
-        self.df.loc[self.df['ema12gtema26'] == False, 'ema12gtema26co'] = False
+        self.df.loc[self.df['ema12gtema26'] is False, 'ema12gtema26co'] = False
 
         # true if the EMA12 is below the EMA26
         self.df['ema12ltema26'] = self.df.ema12 < self.df.ema26
         # true if the current frame is where EMA12 crosses over below
         self.df['ema12ltema26co'] = self.df.ema12ltema26.ne(self.df.ema12ltema26.shift())
-        self.df.loc[self.df['ema12ltema26'] == False, 'ema12ltema26co'] = False
+        self.df.loc[self.df['ema12ltema26'] is False, 'ema12ltema26co'] = False
 
     def addSMABuySignals(self):
         """Adds the SMA50/SMA200 buy and sell signals to the DataFrame"""
@@ -685,13 +685,13 @@ class TechnicalAnalysis():
         self.df['sma50gtsma200'] = self.df.sma50 > self.df.sma200
         # true if the current frame is where SMA50 crosses over above
         self.df['sma50gtsma200co'] = self.df.sma50gtsma200.ne(self.df.sma50gtsma200.shift())
-        self.df.loc[self.df['sma50gtsma200'] == False, 'sma50gtsma200co'] = False
+        self.df.loc[self.df['sma50gtsma200'] is False, 'sma50gtsma200co'] = False
 
         # true if the SMA50 is below the SMA200
         self.df['sma50ltsma200'] = self.df.sma50 < self.df.sma200
         # true if the current frame is where SMA50 crosses over below
         self.df['sma50ltsma200co'] = self.df.sma50ltsma200.ne(self.df.sma50ltsma200.shift())
-        self.df.loc[self.df['sma50ltsma200'] == False, 'sma50ltsma200co'] = False
+        self.df.loc[self.df['sma50ltsma200'] is False, 'sma50ltsma200co'] = False
 
     def addMACDBuySignals(self):
         """Adds the MACD/Signal buy and sell signals to the DataFrame"""
@@ -713,13 +713,13 @@ class TechnicalAnalysis():
         self.df['macdgtsignal'] = self.df.macd > self.df.signal
         # true if the current frame is where MACD crosses over above
         self.df['macdgtsignalco'] = self.df.macdgtsignal.ne(self.df.macdgtsignal.shift())
-        self.df.loc[self.df['macdgtsignal'] == False, 'macdgtsignalco'] = False
+        self.df.loc[self.df['macdgtsignal'] is False, 'macdgtsignalco'] = False
 
         # true if the MACD is below the Signal
         self.df['macdltsignal'] = self.df.macd < self.df.signal
         # true if the current frame is where MACD crosses over below
         self.df['macdltsignalco'] = self.df.macdltsignal.ne(self.df.macdltsignal.shift())
-        self.df.loc[self.df['macdltsignal'] == False, 'macdltsignalco'] = False
+        self.df.loc[self.df['macdltsignal'] is False, 'macdltsignalco'] = False
 
     def getFibonacciRetracementLevels(self, price=0):
         # validates price is numeric
