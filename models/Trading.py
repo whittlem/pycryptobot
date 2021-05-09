@@ -823,7 +823,7 @@ class TechnicalAnalysis():
         return self.levels
 
     def __isSupport(self, df, i):
-        """Is support level? (privte function)"""
+        """Is support level? (private function)"""
 
         c1 = df['low'][i] < df['low'][i - 1]
         c2 = df['low'][i] < df['low'][i + 1]
