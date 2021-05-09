@@ -68,6 +68,7 @@ elif app.isLive() == 1:
             state.last_action = 'BUY'
             state.last_buy_amount = float(df[df.action == 'buy']['size'])
             state.last_buy_price = float(df[df.action == 'buy']['price'])
+            state.last_buy_value = float(df[df.action == 'buy']['value'])
         else:
             state.last_action = 'SELL'
             state.last_buy_price = 0.0
@@ -279,7 +280,6 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             buy_amount_base = buy_filled / state.last_buy_price
 
             #print ('last_buy_price:', state.last_buy_price)
-            #print ('last_buy_amount', state.last_buy_amount)
             #print ('buy_buy_percent:', buy_percent)
             #print ('buy_amount_quote:', buy_amount_quote)
             #print ('buy_fee:', buy_fee)
@@ -287,7 +287,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             #print ('buy_amount_base:', buy_amount_base)
 
             sell_amount_quote = price * buy_amount_base
-            sell_fee = sell_amount_quote * app.getTakerFee()
+            sell_fee = round(sell_amount_quote * app.getTakerFee(), 2)
             sell_filled = sell_amount_quote - sell_fee
 
             #print ('price', price)
