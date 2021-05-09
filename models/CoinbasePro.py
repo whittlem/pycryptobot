@@ -201,6 +201,7 @@ class AuthAPI(AuthAPIBase):
         else:
             df.columns = [ 'created_at', 'market', 'action', 'type', 'value', 'size', 'filled', 'fees', 'status', 'price' ]
             df = df[[ 'created_at', 'market', 'action', 'type', 'size', 'value', 'fees', 'price', 'status' ]]
+            df['value'] = df['value'].astype(float).round(8)
             df['size'] = df['size'].astype(float).round(8)
             df['fees'] = df['fees'].astype(float).round(2)
 
