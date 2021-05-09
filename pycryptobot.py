@@ -301,7 +301,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             if app.disableFailsafeFibonacciLow() is False and app.allowSellAtLoss() and app.sellLowerPcnt() is None and state.fib_low > 0 and state.fib_low >= float(price):
                 state.action = 'SELL'
                 state.last_action = 'BUY'
-                log_text = '! Loss Failsafe Triggered (Fibonacci Band: ' + str(fib_low) + ')'
+                log_text = '! Loss Failsafe Triggered (Fibonacci Band: ' + str(state.fib_low) + ')'
                 print (log_text, "\n")
                 logging.warning(log_text)
 
