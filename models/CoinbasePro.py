@@ -7,12 +7,13 @@ from requests.auth import AuthBase
 
 # Constants
 
-COINBASE_PRO_FEE = 0.0025
+MARGIN_ADJUSTMENT = 0.0025
 DEFAULT_FEE_RATE = 0.005
 MINIMUM_TRADE_AMOUNT = 10
 SUPPORTED_GRANULARITY = [60, 300, 900, 3600, 21600, 86400]
 FREQUENCY_EQUIVALENTS = ["T", "5T", "15T", "H", "6H", "D"]
 MAX_GRANULARITY = max(SUPPORTED_GRANULARITY)
+DEFAULT_MARKET = "BTC-GBP"
 
 class AuthAPIBase():
     def _isMarketValid(self, market: str):
@@ -123,7 +124,7 @@ class AuthAPI(AuthAPIBase):
     
         return self.authAPI('GET', f"accounts/{account}")
 
-    def getFees(self, market='': str):
+    def getFees(self, market: str=''):
         df = self.authAPI('GET', 'fees')
 
         if len(market):
@@ -133,8 +134,8 @@ class AuthAPI(AuthAPIBase):
         
         return df
 
-    def getMakerFee(self, market=None: str):
-        if market != None:
+    def getMakerFee(self, market: str=''):
+        if len(market):
             fees = self.getFees(market)
         else:
             fees = self.getFees()
@@ -145,8 +146,8 @@ class AuthAPI(AuthAPIBase):
 
         return float(fees['maker_fee_rate'].to_string(index=False).strip())
 
-    def getTakerFee(self, market=None: str):
-        if market != None:
+    def getTakerFee(self, market: str=''):
+        if len(market) != None:
             fees = self.getFees(market)
         else:
             fees = self.getFees()
@@ -161,7 +162,7 @@ class AuthAPI(AuthAPIBase):
         fees = self.getFees()
         return float(fees['usd_volume'].to_string(index=False).strip())
 
-    def getOrders(self, market='': str, action='': str, status='all': str):
+    def getOrders(self, market: str='', action: str='', status: str='all'):
         """Retrieves your list of orders with optional filtering"""
 
         # if market provided
@@ -185,7 +186,7 @@ class AuthAPI(AuthAPIBase):
         if len(resp) > 0:
             if status == 'open':
                 df = resp.copy()[[ 'created_at', 'product_id', 'side', 'type', 'size', 'price', 'status' ]]
-                df['value'] = float(df['price']) * float(df['size']) - (float(df['price']) * COINBASE_PRO_FEE)
+                df['value'] = float(df['price']) * float(df['size']) - (float(df['price']) * MARGIN_ADJUSTMENT)
             else:
                 df = resp.copy()[[ 'created_at', 'product_id', 'side', 'type', 'filled_size', 'specified_funds', 'executed_value', 'fill_fees', 'status' ]]
         else:
@@ -243,7 +244,7 @@ class AuthAPI(AuthAPIBase):
         except:
             return None
 
-    def marketBuy(self, market='': str, quote_quantity=0: float):
+    def marketBuy(self, market: str='', quote_quantity: float=0):
         """Executes a market buy providing a funding amount"""
 
         # validates the market is syntactically correct
@@ -279,7 +280,7 @@ class AuthAPI(AuthAPIBase):
         # place order and return result
         return model.authAPI('POST', 'orders', order)
 
-    def marketSell(self, market='': str, base_quantity=0: float):
+    def marketSell(self, market: str='', base_quantity: float=0):
         if not self._isMarketValid(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
@@ -298,7 +299,7 @@ class AuthAPI(AuthAPIBase):
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
         return model.authAPI('POST', 'orders', order)
 
-    def limitSell(self, market='': str, base_quantity=0: float, futurePrice=0: float):
+    def limitSell(self, market: str='', base_quantity: float=0, futurePrice: float=0):
         if not self._isMarketValid(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
@@ -321,14 +322,14 @@ class AuthAPI(AuthAPIBase):
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
         return model.authAPI('POST', 'orders', order)
 
-    def cancelOrders(self, market='': str):
+    def cancelOrders(self, market: str=''):
         if not self._isMarketValid(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
         return model.authAPI('DELETE', 'orders')
 
-    def authAPI(self, method: str, uri: str, payload='': str):
+    def authAPI(self, method: str, uri: str, payload: str=''):
         if not isinstance(method, str):
             raise TypeError('Method is not a string.')
 
@@ -408,7 +409,7 @@ class PublicAPI(AuthAPIBase):
 
         self._api_url = 'https://api.pro.coinbase.com/'
 
-    def getHistoricalData(self, market='BTC-GBP': str, granularity=MAX_GRANULARITY: int, iso8601start='': str, iso8601end='': str):
+    def getHistoricalData(self, market: str=DEFAULT_MARKET, granularity: int=MAX_GRANULARITY, iso8601start: str='', iso8601end: str=''):
         # validates the market is syntactically correct
         if not self._isMarketValid(market):
             raise TypeError('Coinbase Pro market required.')
@@ -470,7 +471,7 @@ class PublicAPI(AuthAPIBase):
 
         return df
 
-    def getTicker(self, market='BTC-GBP': str):
+    def getTicker(self, market: str=DEFAULT_MARKET):
        # validates the market is syntactically correct
         if not self._isMarketValid(market):
             raise TypeError('Coinbase Pro market required.')
@@ -493,7 +494,7 @@ class PublicAPI(AuthAPIBase):
         except:
             return None
 
-    def authAPI(self, method: str, uri: str, payload='': str):
+    def authAPI(self, method: str, uri: str, payload: str=''):
         if not isinstance(method, str):
             raise TypeError('Method is not a string.')
 
