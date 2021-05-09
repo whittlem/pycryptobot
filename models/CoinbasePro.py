@@ -123,10 +123,10 @@ class AuthAPI(AuthAPIBase):
     
         return self.authAPI('GET', f"accounts/{account}")
 
-    def getFees(self, market=None: str):
+    def getFees(self, market='': str):
         df = self.authAPI('GET', 'fees')
 
-        if market != None:
+        if len(market):
             df['market'] = market
         else:
             df['market'] = ''
