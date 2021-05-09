@@ -259,6 +259,8 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             print (log_text, "\n")
             logging.warning(log_text)
 
+        immediate_action = False
+
         if state.last_buy_amount > 0 and state.last_buy_price > 0 and price > 0 and state.last_action == 'BUY':
             # update last buy high
             if price > state.last_buy_high:
@@ -301,6 +303,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             if app.disableFailsafeFibonacciLow() is False and app.allowSellAtLoss() and app.sellLowerPcnt() is None and state.fib_low > 0 and state.fib_low >= float(price):
                 state.action = 'SELL'
                 state.last_action = 'BUY'
+                immediate_action = True
                 log_text = '! Loss Failsafe Triggered (Fibonacci Band: ' + str(state.fib_low) + ')'
                 print (log_text, "\n")
                 logging.warning(log_text)
@@ -314,6 +317,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             if app.allowSellAtLoss() and app.trailingStopLoss() != None and change_pcnt_high < app.trailingStopLoss():
                 state.action = 'SELL'
                 state.last_action = 'BUY'
+                immediate_action = True
                 log_text = '! Trailing Stop Loss Triggered (< ' + str(app.trailingStopLoss()) + '%)'
                 print (log_text, "\n")
                 logging.warning(log_text)
@@ -327,6 +331,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             elif app.disableFailsafeLowerPcnt() is False and app.allowSellAtLoss() and app.sellLowerPcnt() != None and margin < app.sellLowerPcnt():
                 state.action = 'SELL'
                 state.last_action = 'BUY'
+                immediate_action = True
                 log_text = '! Loss Failsafe Triggered (< ' + str(app.sellLowerPcnt()) + '%)'
                 print (log_text, "\n")
                 logging.warning(log_text)
@@ -340,6 +345,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             if app.disableProfitbankUpperPcnt() is False and app.sellUpperPcnt() != None and margin > app.sellUpperPcnt():
                 state.action = 'SELL'
                 state.last_action = 'BUY'
+                immediate_action = True
                 log_text = '! Profit Bank Triggered (> ' + str(app.sellUpperPcnt()) + '%)'
                 print (log_text, "\n")
                 logging.warning(log_text)
@@ -353,6 +359,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             if app.disableProfitbankReversal() is False and margin > 3 and obv_pc < 0 and macdltsignal is True:
                 state.action = 'SELL'
                 state.last_action = 'BUY'
+                immediate_action = True
                 log_text = '! Profit Bank Triggered (Strong Reversal Detected)'
                 print (log_text, "\n")
                 logging.warning(log_text)
@@ -366,6 +373,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             if state.action == 'SELL' and not app.allowSellAtLoss() and margin <= 0:
                 state.action = 'WAIT'
                 state.last_action = 'BUY'
+                immediate_action = False
                 log_text = '! Ignore Sell Signal (No Sell At Loss)'
                 print (log_text, "\n")
                 logging.warning(log_text)
@@ -374,6 +382,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             if app.sellAtResistance() is True and margin > 1 and price > 0 and price != ta.getTradeExit(price):
                 state.action = 'SELL'
                 state.last_action = 'BUY'
+                immediate_action = True
                 log_text = '! Profit Bank Triggered (Selling At Resistance)'
                 print (log_text, "\n")
                 logging.warning(log_text)
@@ -392,7 +401,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             bullbeartext = ' (BEAR)'
 
         # polling is every 5 minutes (even for hourly intervals), but only process once per interval
-        if (state.last_df_index != current_df_index):
+        if (immediate_action is True or state.last_df_index != current_df_index):
             precision = 2
 
             if (price < 0.01):
