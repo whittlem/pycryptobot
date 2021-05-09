@@ -200,12 +200,15 @@ class AuthAPI(AuthAPIBase):
         if status == 'open':
             df.columns = [ 'created_at', 'market', 'action', 'type', 'size', 'price', 'status', 'value' ]
             df = df[[ 'created_at', 'market', 'action', 'type', 'size', 'value', 'status', 'price' ]]
+            df['size'] = df['size'].astype(float).round(8)
         else:
             df.columns = [ 'created_at', 'market', 'action', 'type', 'value', 'size', 'filled', 'fees', 'status', 'price' ]
             df = df[[ 'created_at', 'market', 'action', 'type', 'size', 'value', 'fees', 'price', 'status' ]]
-            df['value'] = df['value'].astype(float).round(8)
+            df.columns = [ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'price', 'status' ]
+            df['filled'] = df['filled'].astype(float).round(8)
             df['size'] = df['size'].astype(float).round(8)
             df['fees'] = df['fees'].astype(float).round(2)
+            df['price'] = df['price'].astype(float).round(8)
 
         # convert dataframe to a time series
         tsidx = pd.DatetimeIndex(pd.to_datetime(df['created_at']).dt.strftime('%Y-%m-%dT%H:%M:%S.%Z'))
@@ -230,8 +233,6 @@ class AuthAPI(AuthAPIBase):
         # reverse orders and reset index
         df = df.iloc[::-1].reset_index()
 
-        # converts size and value to numeric type
-        df[['size', 'price']] = df[['size', 'price']].apply(pd.to_numeric)
         return df
 
     def getTime(self):

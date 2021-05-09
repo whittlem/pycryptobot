@@ -11,9 +11,10 @@ class AppState():
         self.fib_low = 0
         self.iterations = 0
         self.last_action = ''
+        self.last_buy_size = 0
         self.last_buy_price = 0
-        self.last_buy_amount = 0
-        self.last_buy_value = 0
+        self.last_buy_filled = 0
+        self.last_buy_fee = 0
         self.last_buy_high = 0 
         self.last_df_index = ''
         self.sell_count = 0

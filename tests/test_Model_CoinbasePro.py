@@ -399,7 +399,7 @@ def test_getOrders():
     assert len(df) > 0
 
     actual = df.columns.to_list()
-    expected = [ 'created_at', 'market', 'action', 'type', 'size', 'value', 'fees', 'price', 'status' ]
+    expected = [ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'price', 'status' ]
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
@@ -462,7 +462,7 @@ def test_getOrdersValidMarket():
     assert len(df) > 0
 
     actual = df.columns.to_list()
-    expected = [ 'created_at', 'market', 'action', 'type', 'size', 'value', 'fees', 'price', 'status' ]
+    expected = [ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'price', 'status' ]
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
@@ -525,7 +525,7 @@ def test_getOrdersValidActionBuy():
     assert len(df) >= 0
 
     actual = df.columns.to_list()
-    expected = [ 'created_at', 'market', 'action', 'type', 'size', 'value', 'fees', 'price', 'status' ]
+    expected = [ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'price', 'status' ]
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
@@ -559,7 +559,7 @@ def test_getOrdersValidActionSell():
     assert len(df) >= 0
 
     actual = df.columns.to_list()
-    expected = [ 'created_at', 'market', 'action', 'type', 'size', 'value', 'fees', 'price', 'status' ]
+    expected = [ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'price', 'status' ]
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
@@ -623,7 +623,7 @@ def test_getOrdersValidStatusAll():
         pass
     else:
         actual = df.columns.to_list()
-        expected = [ 'created_at', 'market', 'action', 'type', 'size', 'value', 'fees', 'price', 'status' ]
+        expected = [ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'price', 'status' ]
         assert len(actual) == len(expected)
         assert all([a == b for a, b in zip(actual, expected)])
 
@@ -728,7 +728,7 @@ def test_getOrdersValidStatusDone():
         pass
     else:
         actual = df.columns.to_list()
-        expected = [ 'created_at', 'market', 'action', 'type', 'size', 'value', 'fees', 'price', 'status' ]
+        expected = [ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'price', 'status' ]
         assert len(actual) == len(expected)
         assert all([a == b for a, b in zip(actual, expected)])
 
