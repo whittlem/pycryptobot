@@ -1703,7 +1703,7 @@ class PyCryptoBot():
             print('--------------------------------------------------------------------------------')
             print('|                             Python Crypto Bot                                |')
             print('--------------------------------------------------------------------------------')
-            txt = '              Release : ' + github.getLatestReleaseName() + ' (commit: ' + str(github.getMainBranchCommitTotal()) + ')'
+            txt = '              Release : ' + github.getLatestReleaseName()
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
             print('--------------------------------------------------------------------------------')
