@@ -138,6 +138,66 @@ class AuthAPI(AuthAPIBase):
         else:
             return float(fees['maker_fee_rate'].to_string(index=False).strip())
 
+    def __convertStatus(self, val):
+        if val == 'filled':
+            return 'done'
+        else:
+            return val
+
+    def getOrders(self, market: str='', action: str='', status: str='all') -> pd.DataFrame:
+        """Retrieves your list of orders with optional filtering"""
+
+        # if market provided
+        if market != '':
+            # validates the market is syntactically correct
+            if not self._isMarketValid(market):
+                raise ValueError('Binance market is invalid.')
+
+        # if action provided
+        if action != '':
+            # validates action is either a buy or sell
+            if not action in ['buy', 'sell']:
+                raise ValueError('Invalid order action.')
+
+        # validates status is either open, pending, done, active, or all
+        if not status in ['open', 'pending', 'done', 'active', 'all']:
+            raise ValueError('Invalid order status.')
+
+        resp = self.client.get_all_orders(symbol=market)
+        if len(resp) > 0:
+            df = pd.DataFrame(resp)
+        else:
+            df = pd.DataFrame()
+
+        if len(df) == 0:
+            return pd.DataFrame()
+
+        df = df[[ 'time', 'symbol', 'side', 'type', 'executedQty', 'cummulativeQuoteQty', 'status' ]]
+        df.columns = [ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'status' ]
+        df['created_at'] = df['created_at'].apply(lambda x: int(str(x)[:10]))
+        df['created_at'] = df['created_at'].astype("datetime64[s]")
+        df['size'] = df['size'].astype(float)
+        df['filled'] = df['filled'].astype(float)
+        df['action'] = df['action'].str.lower()
+        df['type'] = df['type'].str.lower()
+        df['status'] = df['status'].str.lower()
+        df['price'] = df['filled'] / df['size']
+
+        # pylint: disable=unused-variable
+        for k, v in df.items():
+            if k == 'status':
+                df[k] = df[k].map(self.__convertStatus)
+
+        if action != '':
+            df = df[df['action'] == action]
+            df = df.reset_index(drop=True)
+
+        if status != 'all' and status != '':
+            df = df[df['status'] == status]
+            df = df.reset_index(drop=True)
+
+        return df
+
     def getTakerFee(self, market=None):
         if market is None:
             fees = self.getFees()

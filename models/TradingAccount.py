@@ -91,49 +91,17 @@ class TradingAccount():
 
         if self.app.getExchange() == 'binance':
             if self.mode == 'live':
-                resp = self.client.get_all_orders(symbol=market)
-                if len(resp) > 0:
-                    df = pd.DataFrame(resp)
-                else:
-                    df = pd.DataFrame()
-
-                if len(df) == 0:
-                    return pd.DataFrame()
-
-                df = df[[ 'time', 'symbol', 'side', 'type', 'executedQty', 'cummulativeQuoteQty', 'status' ]]
-                df.columns = [ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'status' ]
-                df['created_at'] = df['created_at'].apply(lambda x: int(str(x)[:10]))
-                df['created_at'] = df['created_at'].astype("datetime64[s]")
-                df['size'] = df['size'].astype(float)
-                df['filled'] = df['filled'].astype(float)
-                df['action'] = df['action'].str.lower()
-                df['type'] = df['type'].str.lower()
-                df['status'] = df['status'].str.lower()
-                df['price'] = df['filled'] / df['size']
-
-                # pylint: disable=unused-variable
-                for k, v in df.items():
-                    if k == 'status':
-                        df[k] = df[k].map(self.__convertStatus)
-
-                if action != '':
-                    df = df[df['action'] == action]
-                    df = df.reset_index(drop=True)
-
-                if status != 'all' and status != '':
-                    df = df[df['status'] == status]
-                    df = df.reset_index(drop=True)
-
-                return df
+                # if config is provided and live connect to Coinbase Pro account portfolio
+                model = BAuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIURL())
+                # retrieve orders from live Binance account portfolio
+                self.orders = model.getOrders(market, action, status)
+                return self.orders
             else:
-               # return dummy orders
+                # return dummy orders
                 if market == '':
                     return self.orders
                 else:
-                    if (len(self.orders) > 0):
-                        return self.orders[self.orders['market'] == market]
-                    else:
-                        return pd.DataFrame()                
+                    return self.orders[self.orders['market'] == market]             
         if self.app.getExchange() == 'coinbasepro':
             if self.mode == 'live':
                 # if config is provided and live connect to Coinbase Pro account portfolio

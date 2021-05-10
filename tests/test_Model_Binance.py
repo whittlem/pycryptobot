@@ -8,7 +8,7 @@ sys.path.append('.')
 # pylint: disable=import-error
 from models.Binance import AuthAPI, PublicAPI
 
-VALID_ORDER_MARKET = 'BTCGBP'
+VALID_ORDER_MARKET = 'DOGEBTC'
 
 def test_instantiate_authapi_without_error():
     api_key = "0000000000000000000000000000000000000000000000000000000000000000"
@@ -311,7 +311,6 @@ def test_getMakerFeeWithMarket():
     assert type(fee) is float
     assert fee > 0
 
-@pytest.mark.skip(reason="TODO: convert Coinbase Pro test for Binance")
 def test_getOrders():
     filename = 'config.json'
 
@@ -335,12 +334,12 @@ def test_getOrders():
     exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders()
+    df = exchange.getOrders(VALID_ORDER_MARKET)
 
     assert len(df) > 0
 
     actual = df.columns.to_list()
-    expected = [ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'price', 'status' ]
+    expected = [ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'status', 'price' ]
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
@@ -401,7 +400,7 @@ def test_getOrdersValidMarket():
     assert len(df) > 0
 
     actual = df.columns.to_list()
-    expected = [ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'price', 'status' ]
+    expected = [ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'status', 'price' ]
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
