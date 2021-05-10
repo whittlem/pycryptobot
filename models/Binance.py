@@ -108,7 +108,7 @@ class AuthAPI(AuthAPIBase):
     def getFees(self, market=None):
         if market != None:
             resp = self.client.get_trade_fee(symbol=market)
-            if 'tradeFee' in resp:
+            if 'tradeFee' in resp and len(resp['tradeFee']) > 0:
                 df = pd.DataFrame(resp['tradeFee'][0], index=[0])
                 df['usd_volume'] = None
                 df.columns = [ 'maker_fee_rate', 'market', 'taker_fee_rate', 'usd_volume' ]
@@ -124,28 +124,34 @@ class AuthAPI(AuthAPIBase):
             return pd.DataFrame(columns=[ 'maker_fee_rate', 'taker_fee_rate', 'market' ])
 
     def getMakerFee(self, market=None):
-        if market != None:
-            fees = self.getFees(market)
-        else:
+        if market is None:
             fees = self.getFees()
+        else:
+            fees = self.getFees(market)
         
         if len(fees) == 0 or 'maker_fee_rate' not in fees:
             print ("error: 'maker_fee_rate' not in fees (using 0.001 as a fallback)")
             return 0.001
 
-        return float(fees['maker_fee_rate'].to_string(index=False).strip())
+        if market is None:
+            return fees
+        else:
+            return float(fees['maker_fee_rate'].to_string(index=False).strip())
 
     def getTakerFee(self, market=None):
-        if market != None:
-            fees = self.getFees(market)
-        else:
+        if market is None:
             fees = self.getFees()
+        else:
+            fees = self.getFees(market)
 
         if len(fees) == 0 or 'taker_fee_rate' not in fees:
             print ("error: 'taker_fee_rate' not in fees (using 0.001 as a fallback)")
             return 0.001
 
-        return float(fees['taker_fee_rate'].to_string(index=False).strip())
+        if market is None:
+            return fees
+        else:
+            return float(fees['taker_fee_rate'].to_string(index=False).strip())
 
     def marketBuy(self, market='', quote_quantity=0):
         """Executes a market buy providing a funding amount"""
