@@ -8,7 +8,7 @@ sys.path.append('.')
 # pylint: disable=import-error
 from models.Binance import AuthAPI, PublicAPI
 
-VALID_ORDER_MARKET = 'BTC-GBP'
+VALID_ORDER_MARKET = 'BTCGBP'
 
 def test_instantiate_authapi_without_error():
     api_key = "0000000000000000000000000000000000000000000000000000000000000000"
@@ -137,7 +137,6 @@ def test_getAccount():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-@pytest.mark.skip(reason="TODO: convert Coinbase Pro test for Binance")
 def test_getFeesWithoutMarket():
     filename = 'config.json'
 
@@ -146,34 +145,31 @@ def test_getFeesWithoutMarket():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
     df = exchange.getFees()
     assert type(df) is pandas.core.frame.DataFrame
 
-    assert len(df) == 1
+    assert len(df) > 1
 
     actual = df.columns.to_list()
     expected = [ 'maker_fee_rate', 'taker_fee_rate', 'usd_volume', 'market' ]
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-@pytest.mark.skip(reason="TODO: convert Coinbase Pro test for Binance")
 def test_getFeesWithMarket():
     filename = 'config.json'
 
@@ -182,24 +178,22 @@ def test_getFeesWithMarket():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getFees('BTC-GBP')
+    df = exchange.getFees(VALID_ORDER_MARKET)
     assert type(df) is pandas.core.frame.DataFrame
 
     assert len(df) == 1
@@ -209,7 +203,6 @@ def test_getFeesWithMarket():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-@pytest.mark.skip(reason="TODO: convert Coinbase Pro test for Binance")
 def test_getTakerFeeWithoutMarket():
     filename = 'config.json'
 
@@ -218,28 +211,25 @@ def test_getTakerFeeWithoutMarket():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getTakerFee()
-    assert type(fee) is float
-    assert fee > 0
+    fees = exchange.getTakerFee()
+    assert type(fees) is pandas.core.frame.DataFrame
+    assert len(fees) > 0
 
-@pytest.mark.skip(reason="TODO: convert Coinbase Pro test for Binance")
 def test_getTakerFeeWithMarket():
     filename = 'config.json'
 
@@ -248,28 +238,25 @@ def test_getTakerFeeWithMarket():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getTakerFee('BTC-GBP')
+    fee = exchange.getTakerFee(VALID_ORDER_MARKET)
     assert type(fee) is float
     assert fee > 0
 
-@pytest.mark.skip(reason="TODO: convert Coinbase Pro test for Binance")
 def test_getMakerFeeWithoutMarket():
     filename = 'config.json'
 
@@ -278,28 +265,25 @@ def test_getMakerFeeWithoutMarket():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getMakerFee()
-    assert type(fee) is float
-    assert fee > 0
+    fees = exchange.getMakerFee()
+    assert type(fees) is pandas.core.frame.DataFrame
+    assert len(fees) > 0
 
-@pytest.mark.skip(reason="TODO: convert Coinbase Pro test for Binance")
 def test_getMakerFeeWithMarket():
     filename = 'config.json'
 
@@ -308,54 +292,22 @@ def test_getMakerFeeWithMarket():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getMakerFee('BTC-GBP')
-    assert type(fee) is float
-    assert fee > 0
-
-@pytest.mark.skip(reason="TODO: convert Coinbase Pro test for Binance")
-def test_getUSDVolume():
-    filename = 'config.json'
-
-    with open(filename) as config_file:
-        config = json.load(config_file)
-
-        api_key = ''
-        api_secret = ''
-        api_passphrase = ''
-        api_url = ''
-        if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
-            api_key = config['api_key']
-            api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
-            api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
-
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
-    assert type(exchange) is AuthAPI
-
-    fee = exchange.getUSDVolume()
+    fee = exchange.getMakerFee(VALID_ORDER_MARKET)
     assert type(fee) is float
     assert fee > 0
 
@@ -368,21 +320,19 @@ def test_getOrders():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
     df = exchange.getOrders()
@@ -403,21 +353,19 @@ def test_getOrdersInvalidMarket():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
     with pytest.raises(ValueError) as execinfo:
@@ -433,21 +381,19 @@ def test_getOrdersValidMarket():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
     df = exchange.getOrders(market=VALID_ORDER_MARKET)
@@ -468,21 +414,19 @@ def test_getOrdersInvalidAction():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
     with pytest.raises(ValueError) as execinfo:
@@ -498,21 +442,19 @@ def test_getOrdersValidActionBuy():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
     df = exchange.getOrders(action='buy')
@@ -533,21 +475,19 @@ def test_getOrdersValidActionSell():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
     df = exchange.getOrders(action='sell')
@@ -568,21 +508,19 @@ def test_getOrdersInvalidStatus():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
     with pytest.raises(ValueError) as execinfo:
@@ -598,21 +536,19 @@ def test_getOrdersValidStatusAll():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
     df = exchange.getOrders(status='all')
@@ -634,21 +570,19 @@ def test_getOrdersValidStatusOpen():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
     df = exchange.getOrders(status='open')
@@ -670,21 +604,19 @@ def test_getOrdersValidStatusPending():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
     df = exchange.getOrders(status='pending')
@@ -706,21 +638,19 @@ def test_getOrdersValidStatusDone():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
     df = exchange.getOrders(status='done')
@@ -742,21 +672,19 @@ def test_getOrdersValidStatusActive():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
     df = exchange.getOrders(status='active')
@@ -778,21 +706,19 @@ def test_getTime():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
     
     resp = exchange.getTime()
@@ -807,21 +733,19 @@ def test_marketBuyInvalidMarket():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
     with pytest.raises(ValueError) as execinfo:
@@ -837,21 +761,19 @@ def test_marketBuyInvalidAmount():
 
         api_key = ''
         api_secret = ''
-        api_passphrase = ''
         api_url = ''
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
             api_key = config['api_key']
             api_secret = config['api_secret']
-            api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
-        elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
-            api_key = config['coinbasepro']['api_key']
-            api_secret = config['coinbasepro']['api_secret']
-            api_passphrase = config['coinbasepro']['api_passphrase']
-            api_url = config['coinbasepro']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
+        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
+            api_key = config['binance']['api_key']
+            api_secret = config['binance']['api_secret']
+            api_url = config['binance']['api_url']
+            AuthAPI(api_key, api_secret, api_url)
 
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
     with pytest.raises(ValueError) as execinfo:
