@@ -507,7 +507,7 @@ class PublicAPI(AuthAPIBase):
                     raise Exception(message)
                 else:
                     print(f"Error: {message}")
-                    return pd.DataFrame()
+                    return {}
 
             resp.raise_for_status()
             json = resp.json()
@@ -525,16 +525,16 @@ class PublicAPI(AuthAPIBase):
         except json.decoder.JSONDecodeError as err:
             return self.handle_api_error(err, "JSONDecodeError")
 
-    def handle_api_error(self, err: str, reason: str) -> pd.DataFrame:
+    def handle_api_error(self, err: str, reason: str) -> dict:
         if self.debug:
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
                 print (err)
-                return pd.DataFrame()
+                return {}
         else:
             if self.die_on_api_error:
                 raise SystemExit(f"{reason}: {self._api_url}")
             else:
                 print(f"{reason}: {self._api_url}")
-                return pd.DataFrame()
+                return {}
