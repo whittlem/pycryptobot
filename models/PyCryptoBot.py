@@ -1621,7 +1621,9 @@ class PyCryptoBot():
                     base_currency = (sell_percent / 100) * base_currency
 
             if self.exchange == 'coinbasepro':
-                if market.startswith('XLM-'):
+                if market.startswith('ADA-'):
+                    base_currency = round(base_currency, 2)
+                elif market.startswith('XLM-'):
                     base_currency = int(base_currency)
 
                 api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
