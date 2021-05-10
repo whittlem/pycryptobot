@@ -286,7 +286,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             #print ('buy_price:', state.last_buy_price)
             #print ('buy_fee:', state.last_buy_fee, "\n")
 
-            sell_size = (app.getSellPercent() / 100) * ((price - state.last_buy_price + 1) * state.last_buy_size)
+            sell_size = (app.getSellPercent() / 100) * ((price / state.last_buy_price) * state.last_buy_size)
             sell_fee = round(sell_size * app.getTakerFee(), 2)
             sell_filled = sell_size - sell_fee
 
@@ -296,9 +296,9 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             #print ('sell_fee:', sell_fee)
             #print ('sell_filled:', sell_filled, "\n")
 
-            buy_value = state.last_buy_size - state.last_buy_fee
-            sell_value = sell_filled - sell_fee
-            profit = (sell_value - buy_value)
+            buy_value = state.last_buy_size + state.last_buy_fee
+            sell_value = sell_size - sell_fee
+            profit = sell_value - buy_value
 
             #print ('buy_value:', buy_value)
             #print ('sell_value:', sell_value)
@@ -854,7 +854,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                         #print ('buy_price:', state.last_buy_price)
                         #print ('buy_fee:', state.last_buy_fee, "\n")
 
-                        sell_size = (app.getSellPercent() / 100) * ((price - state.last_buy_price + 1) * state.last_buy_size)
+                        sell_size = (app.getSellPercent() / 100) * ((price / state.last_buy_price) * state.last_buy_size)
                         sell_fee = round(sell_size * app.getTakerFee(), 2)
                         sell_filled = sell_size - sell_fee
 
@@ -864,9 +864,9 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                         #print ('sell_fee:', sell_fee)
                         #print ('sell_filled:', sell_filled, "\n")
 
-                        buy_value = state.last_buy_size - state.last_buy_fee
-                        sell_value = sell_filled - sell_fee
-                        profit = (sell_value - buy_value)
+                        buy_value = state.last_buy_size + state.last_buy_fee
+                        sell_value = sell_size - sell_fee
+                        profit = sell_value - buy_value
 
                         #print ('buy_value:', buy_value)
                         #print ('sell_value:', sell_value)
