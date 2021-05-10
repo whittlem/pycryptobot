@@ -4,6 +4,7 @@ import pandas as pd
 import re, json, hmac, hashlib, time, requests, base64, sys
 from datetime import datetime, timedelta
 from requests.auth import AuthBase
+from requests import Request
 
 # Constants
 
@@ -21,7 +22,7 @@ class AuthAPIBase():
         return p.match(market)
 
 class AuthAPI(AuthAPIBase):
-    def __init__(self, api_key='', api_secret='', api_passphrase='', api_url='https://api.pro.coinbase.com'):
+    def __init__(self, api_key='', api_secret='', api_passphrase='', api_url='https://api.pro.coinbase.com') -> None:
         """Coinbase Pro API object model
     
         Parameters
@@ -72,13 +73,13 @@ class AuthAPI(AuthAPIBase):
         self._api_passphrase = api_passphrase
         self._api_url = api_url
     
-    def handle_init_error(self, err: str):
+    def handle_init_error(self, err: str) -> None:
         if self.debug:
             raise TypeError(err)
         else:
             raise SystemExit(err)
 
-    def __call__(self, request):
+    def __call__(self, request) -> Request:
         """Signs the request"""
 
         timestamp = str(time.time())
@@ -98,7 +99,7 @@ class AuthAPI(AuthAPIBase):
 
         return request
 
-    def getAccounts(self):
+    def getAccounts(self) -> pd.DataFrame:
         """Retrieves your list of accounts"""
 
         # GET /accounts
@@ -114,7 +115,7 @@ class AuthAPI(AuthAPIBase):
         df = df.reset_index()
         return df
     
-    def getAccount(self, account: str):
+    def getAccount(self, account: str) -> pd.DataFrame:
         """Retrieves a specific account"""
 
         # validates the account is syntactically correct
@@ -124,7 +125,7 @@ class AuthAPI(AuthAPIBase):
     
         return self.authAPI('GET', f"accounts/{account}")
 
-    def getFees(self, market: str=''):
+    def getFees(self, market: str='') -> pd.DataFrame:
         df = self.authAPI('GET', 'fees')
 
         if len(market):
@@ -134,7 +135,7 @@ class AuthAPI(AuthAPIBase):
         
         return df
 
-    def getMakerFee(self, market: str=''):
+    def getMakerFee(self, market: str='') -> float:
         if len(market):
             fees = self.getFees(market)
         else:
@@ -146,7 +147,7 @@ class AuthAPI(AuthAPIBase):
 
         return float(fees['maker_fee_rate'].to_string(index=False).strip())
 
-    def getTakerFee(self, market: str=''):
+    def getTakerFee(self, market: str='') -> float:
         if len(market) != None:
             fees = self.getFees(market)
         else:
@@ -158,11 +159,11 @@ class AuthAPI(AuthAPIBase):
 
         return float(fees['taker_fee_rate'].to_string(index=False).strip())
 
-    def getUSDVolume(self):
+    def getUSDVolume(self) -> float:
         fees = self.getFees()
         return float(fees['usd_volume'].to_string(index=False).strip())
 
-    def getOrders(self, market: str='', action: str='', status: str='all'):
+    def getOrders(self, market: str='', action: str='', status: str='all') -> pd.DataFrame:
         """Retrieves your list of orders with optional filtering"""
 
         # if market provided
@@ -235,7 +236,7 @@ class AuthAPI(AuthAPIBase):
 
         return df
 
-    def getTime(self):
+    def getTime(self) -> datetime:
         """Retrieves the exchange time"""
     
         try:
@@ -245,7 +246,7 @@ class AuthAPI(AuthAPIBase):
         except:
             return None
 
-    def marketBuy(self, market: str='', quote_quantity: float=0):
+    def marketBuy(self, market: str='', quote_quantity: float=0) -> pd.DataFrame:
         """Executes a market buy providing a funding amount"""
 
         # validates the market is syntactically correct
@@ -281,7 +282,7 @@ class AuthAPI(AuthAPIBase):
         # place order and return result
         return model.authAPI('POST', 'orders', order)
 
-    def marketSell(self, market: str='', base_quantity: float=0):
+    def marketSell(self, market: str='', base_quantity: float=0) -> pd.DataFrame:
         if not self._isMarketValid(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
@@ -300,7 +301,7 @@ class AuthAPI(AuthAPIBase):
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
         return model.authAPI('POST', 'orders', order)
 
-    def limitSell(self, market: str='', base_quantity: float=0, futurePrice: float=0):
+    def limitSell(self, market: str='', base_quantity: float=0, futurePrice: float=0) -> pd.DataFrame:
         if not self._isMarketValid(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
@@ -323,14 +324,14 @@ class AuthAPI(AuthAPIBase):
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
         return model.authAPI('POST', 'orders', order)
 
-    def cancelOrders(self, market: str=''):
+    def cancelOrders(self, market: str='') -> pd.DataFrame:
         if not self._isMarketValid(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
         return model.authAPI('DELETE', 'orders')
 
-    def authAPI(self, method: str, uri: str, payload: str=''):
+    def authAPI(self, method: str, uri: str, payload: str='') -> pd.DataFrame:
         if not isinstance(method, str):
             raise TypeError('Method is not a string.')
 
@@ -366,18 +367,7 @@ class AuthAPI(AuthAPIBase):
                 return df
 
         except requests.ConnectionError as err:
-            if self.debug:
-                if self.die_on_api_error:
-                    raise SystemExit(err)
-                else:
-                    print (err)
-                    return pd.DataFrame()
-            else:
-                if self.die_on_api_error:
-                    raise SystemExit('ConnectionError: ' + self._api_url)
-                else:
-                    print ('ConnectionError: ' + self._api_url)
-                    return pd.DataFrame()
+             return self.handle_api_error(err, 'ConnectionError')
 
         except requests.exceptions.HTTPError as err:
              return self.handle_api_error(err, 'HTTPError')
@@ -388,7 +378,7 @@ class AuthAPI(AuthAPIBase):
         except json.decoder.JSONDecodeError as err:
             return self.handle_api_error(err, 'JSONDecodeError')        
     
-    def handle_api_error(self, err: str, reason: str):
+    def handle_api_error(self, err: str, reason: str) -> pd.DataFrame:
         if self.debug:
             if self.die_on_api_error:
                 raise SystemExit(err)
@@ -403,14 +393,13 @@ class AuthAPI(AuthAPIBase):
                 return pd.DataFrame()
 
 class PublicAPI(AuthAPIBase):
-    def __init__(self):
+    def __init__(self) -> None:
         # options
         self.debug = False
         self.die_on_api_error = False
-
         self._api_url = 'https://api.pro.coinbase.com/'
 
-    def getHistoricalData(self, market: str=DEFAULT_MARKET, granularity: int=MAX_GRANULARITY, iso8601start: str='', iso8601end: str=''):
+    def getHistoricalData(self, market: str=DEFAULT_MARKET, granularity: int=MAX_GRANULARITY, iso8601start: str='', iso8601end: str='') -> pd.DataFrame:
         # validates the market is syntactically correct
         if not self._isMarketValid(market):
             raise TypeError('Coinbase Pro market required.')
@@ -472,7 +461,7 @@ class PublicAPI(AuthAPIBase):
 
         return df
 
-    def getTicker(self, market: str=DEFAULT_MARKET):
+    def getTicker(self, market: str=DEFAULT_MARKET) -> tuple:
        # validates the market is syntactically correct
         if not self._isMarketValid(market):
             raise TypeError('Coinbase Pro market required.')
@@ -485,7 +474,7 @@ class PublicAPI(AuthAPIBase):
         now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
         return (now, 0.0)
 
-    def getTime(self):
+    def getTime(self) -> datetime:
         """Retrieves the exchange time"""
     
         try:
@@ -495,7 +484,7 @@ class PublicAPI(AuthAPIBase):
         except:
             return None
 
-    def authAPI(self, method: str, uri: str, payload: str=''):
+    def authAPI(self, method: str, uri: str, payload: str='') -> dict:
         if not isinstance(method, str):
             raise TypeError('Method is not a string.')
 
@@ -518,25 +507,14 @@ class PublicAPI(AuthAPIBase):
                     raise Exception(message)
                 else:
                     print(f"Error: {message}")
-                    return pd.DataFrame()
+                    return {}
 
             resp.raise_for_status()
             json = resp.json()
             return json
 
         except requests.ConnectionError as err:
-            if self.debug:
-                if self.die_on_api_error:
-                    raise SystemExit(err)
-                else:
-                    print(err)
-                    return pd.DataFrame()
-            else:
-                if self.die_on_api_error:
-                    raise SystemExit('ConnectionError: ' + self._api_url)
-                else:
-                    print('ConnectionError: ' + self._api_url)
-                    return pd.DataFrame()
+            return self.handle_api_error(err, "ConnectionError")
 
         except requests.exceptions.HTTPError as err:
             return self.handle_api_error(err, "HTTPError")
@@ -547,16 +525,16 @@ class PublicAPI(AuthAPIBase):
         except json.decoder.JSONDecodeError as err:
             return self.handle_api_error(err, "JSONDecodeError")
 
-    def handle_api_error(self, err: str, reason: str):
+    def handle_api_error(self, err: str, reason: str) -> dict:
         if self.debug:
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
                 print (err)
-                return pd.DataFrame()
+                return {}
         else:
             if self.die_on_api_error:
                 raise SystemExit(f"{reason}: {self._api_url}")
             else:
                 print(f"{reason}: {self._api_url}")
-                return pd.DataFrame()
+                return {}
