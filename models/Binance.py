@@ -62,8 +62,48 @@ class AuthAPI(AuthAPIBase):
         self.api_secret = api_secret
         self.client = Client(self.api_key, self.api_secret, { 'verify': False, 'timeout': 20 })
 
+    def handle_init_error(self, err: str):
+        if self.debug:
+            raise TypeError(err)
+        else:
+            raise SystemExit(err)
+
     def getClient(self):
         return self.client
+
+    def getAccounts(self):
+        """Retrieves your list of accounts"""
+        accounts = self.client.get_account()
+
+        if 'balances' not in accounts:
+            return pd.DataFrame(columns=[ 'index', 'id', 'currency', 'balance', 'hold', 'available', 'profile_id', 'trading_enabled' ])
+
+        df = pd.DataFrame(self.client.get_account()['balances'])
+        df.columns = [ 'currency', 'available', 'hold' ]
+        df['index'] = df.index
+        df['id'] = df.index
+        df['balance'] = df['available']
+        df['profile_id'] = ''
+        df['trading_enabled'] = True
+
+        return df[[ 'index', 'id', 'currency', 'balance', 'hold', 'available', 'profile_id', 'trading_enabled' ]]
+
+    def getAccount(self, account: int):
+        """Retrieves a specific account"""
+        accounts = self.client.get_account()
+
+        if 'balances' not in accounts:
+            return pd.DataFrame(columns=[ 'index', 'id', 'currency', 'balance', 'hold', 'available', 'profile_id', 'trading_enabled' ])
+
+        df = pd.DataFrame(self.client.get_account()['balances'])
+        df.columns = [ 'currency', 'available', 'hold' ]
+        df['index'] = df.index
+        df['id'] = df.index
+        df['balance'] = df['available']
+        df['profile_id'] = ''
+        df['trading_enabled'] = True
+
+        return df[df['id'] == account][[ 'index', 'id', 'currency', 'balance', 'hold', 'available', 'profile_id', 'trading_enabled' ]]
 
     def getFees(self, market=None):
         if market != None:
