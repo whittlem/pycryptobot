@@ -236,7 +236,7 @@ class AuthAPI(AuthAPIBase):
 
         return df
 
-    def getTime(self) -> datetime.datetime:
+    def getTime(self) -> datetime:
         """Retrieves the exchange time"""
     
         try:
@@ -474,7 +474,7 @@ class PublicAPI(AuthAPIBase):
         now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
         return (now, 0.0)
 
-    def getTime(self) -> datetime.datetime:
+    def getTime(self) -> datetime:
         """Retrieves the exchange time"""
     
         try:
