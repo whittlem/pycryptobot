@@ -261,16 +261,11 @@ class AuthAPI(AuthAPIBase):
         if quote_quantity < MINIMUM_TRADE_AMOUNT:
             raise ValueError(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).")
 
-        # handling: size is too accurate
-        if market.startswith('ADA-'):
-            # ADA: Smallest unit is 0.01000000
-            quote_quantity = round(quote_quantity, 2)
-
         order = {
             'product_id': market,
             'type': 'market',
             'side': 'buy',
-            'funds': quote_quantity
+            'funds': self.marketBaseIncrement(market, quote_quantity)
         }
 
         if self.debug is True:
@@ -330,6 +325,19 @@ class AuthAPI(AuthAPIBase):
 
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
         return model.authAPI('DELETE', 'orders')
+
+    def marketBaseIncrement(self, market, amount) -> float:
+        product = self.authAPI('GET', f'products/{market}')
+
+        if 'base_increment' not in product:
+            return amount
+
+        base_increment = str(product['base_increment'].values[0])
+
+        if '.' in str(base_increment):
+            return round(amount, len(str(base_increment).split('.')[1]))
+        else:
+            return amount
 
     def authAPI(self, method: str, uri: str, payload: str='') -> pd.DataFrame:
         if not isinstance(method, str):
