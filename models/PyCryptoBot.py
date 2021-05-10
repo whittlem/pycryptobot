@@ -231,9 +231,9 @@ class PyCryptoBot():
                             if isinstance(config['trailingstoploss'], (int, str)):
                                 p = re.compile(r"^\-[0-9\.]{1,5}$")
                                 if isinstance(config['trailingstoploss'], str) and p.match(config['trailingstoploss']):
-                                    self.tailing_stop_loss = float(config['trailingstoploss'])
+                                    self.trailing_stop_loss = float(config['trailingstoploss'])
                                 elif isinstance(config['trailingstoploss'], int) and config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
-                                    self.tailing_stop_loss = float(config['trailingstoploss'])
+                                    self.trailing_stop_loss = float(config['trailingstoploss'])
 
                         if 'sellatloss' in config:
                             if isinstance(config['sellatloss'], int):
@@ -428,9 +428,9 @@ class PyCryptoBot():
                             if isinstance(config['trailingstoploss'], (int, str)):
                                 p = re.compile(r"^\-[0-9\.]{1,5}$")
                                 if isinstance(config['trailingstoploss'], str) and p.match(config['trailingstoploss']):
-                                    self.tailing_stop_loss = float(config['trailingstoploss'])
+                                    self.trailing_stop_loss = float(config['trailingstoploss'])
                                 elif isinstance(config['trailingstoploss'], int) and config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
-                                    self.tailing_stop_loss = float(config['trailingstoploss'])
+                                    self.trailing_stop_loss = float(config['trailingstoploss'])
 
                         if 'sellatloss' in config:
                             if isinstance(config['sellatloss'], int):
@@ -517,7 +517,7 @@ class PyCryptoBot():
                                     self.sell_at_loss = int(not config['nosellatloss'])
                                     if self.sell_at_loss == 0:
                                         self.sell_lower_pcnt = None
-                                        self.tailing_stop_loss = None
+                                        self.trailing_stop_loss = None
 
                         if 'smartswitch' in config:
                             if isinstance(config['smartswitch'], int):
@@ -631,9 +631,9 @@ class PyCryptoBot():
                                 if isinstance(config['trailingstoploss'], (int, str)):
                                     p = re.compile(r"^\-[0-9\.]{1,5}$")
                                     if isinstance(config['trailingstoploss'], str) and p.match(config['trailingstoploss']):
-                                        self.tailing_stop_loss = float(config['trailingstoploss'])
+                                        self.trailing_stop_loss = float(config['trailingstoploss'])
                                     elif isinstance(config['trailingstoploss'], int) and config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
-                                        self.tailing_stop_loss = float(config['trailingstoploss'])
+                                        self.trailing_stop_loss = float(config['trailingstoploss'])
 
                             if 'sellatloss' in config:
                                 if isinstance(config['sellatloss'], int):
@@ -720,7 +720,7 @@ class PyCryptoBot():
                                         self.sell_at_loss = int(not config['nosellatloss'])
                                         if self.sell_at_loss == 0:
                                             self.sell_lower_pcnt = None
-                                            self.tailing_stop_loss = None
+                                            self.trailing_stop_loss = None
 
                             if 'smartswitch' in config:
                                 if isinstance(config['smartswitch'], int):
@@ -829,9 +829,9 @@ class PyCryptoBot():
                                 if isinstance(config['trailingstoploss'], (int, str)):
                                     p = re.compile(r"^\-[0-9\.]{1,5}$")
                                     if isinstance(config['trailingstoploss'], str) and p.match(config['trailingstoploss']):
-                                        self.tailing_stop_loss = float(config['trailingstoploss'])
+                                        self.trailing_stop_loss = float(config['trailingstoploss'])
                                     elif isinstance(config['trailingstoploss'], int) and config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
-                                        self.tailing_stop_loss = float(config['trailingstoploss'])
+                                        self.trailing_stop_loss = float(config['trailingstoploss'])
 
                             if 'sellatloss' in config:
                                 if isinstance(config['sellatloss'], int):
