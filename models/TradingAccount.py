@@ -101,15 +101,15 @@ class TradingAccount():
                     return pd.DataFrame()
 
                 df = df[[ 'time', 'symbol', 'side', 'type', 'executedQty', 'cummulativeQuoteQty', 'status' ]]
-                df.columns = [ 'created_at', 'market', 'action', 'type', 'size', 'value', 'status' ]
+                df.columns = [ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'status' ]
                 df['created_at'] = df['created_at'].apply(lambda x: int(str(x)[:10]))
                 df['created_at'] = df['created_at'].astype("datetime64[s]")
                 df['size'] = df['size'].astype(float)
-                df['value'] = df['value'].astype(float)
+                df['filled'] = df['filled'].astype(float)
                 df['action'] = df['action'].str.lower()
                 df['type'] = df['type'].str.lower()
                 df['status'] = df['status'].str.lower()
-                df['price'] = df['value'] / df['size']
+                df['price'] = df['filled'] / df['size']
 
                 # pylint: disable=unused-variable
                 for k, v in df.items():
