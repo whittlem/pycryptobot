@@ -156,10 +156,12 @@ For example, if you are trading `BTCEUR` and `ETHEUR` your market folder should 
 ├── market
 │ ├── BTCEUR
 │ │ ├── config.json
+│ │ ├── pycryptobot.log
 │ │ └── graphs
 │ └── ETHEUR
-│     ├── config.json
-│     └── graphs
+│   ├── config.json
+│   ├── pycryptobot.log
+│   └── graphs
 ```
 
 modify docker-compose.yaml
