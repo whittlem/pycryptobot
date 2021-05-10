@@ -849,32 +849,32 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 # if not live
                 else:
                     if app.isVerbose() == 0:
-                        #print ('buy_size:', state.last_buy_size)
-                        #print ('buy_filled:', state.last_buy_filled)
-                        #print ('buy_price:', state.last_buy_price)
-                        #print ('buy_fee:', state.last_buy_fee, "\n")
+                        print ('buy_size:', state.last_buy_size)
+                        print ('buy_filled:', state.last_buy_filled)
+                        print ('buy_price:', state.last_buy_price)
+                        print ('buy_fee:', state.last_buy_fee, "\n")
 
                         sell_size = (app.getSellPercent() / 100) * ((price - state.last_buy_price + 1) * state.last_buy_size)
                         sell_fee = round(sell_size * app.getTakerFee(), 2)
                         sell_filled = sell_size - sell_fee
 
-                        #print ('sell_percent:', app.getSellPercent())
-                        #print ('sell_size:', sell_size)
-                        #print ('sell_price:', price)
-                        #print ('sell_fee:', sell_fee)
-                        #print ('sell_filled:', sell_filled, "\n")
+                        print ('sell_percent:', app.getSellPercent())
+                        print ('sell_size:', sell_size)
+                        print ('sell_price:', price)
+                        print ('sell_fee:', sell_fee)
+                        print ('sell_filled:', sell_filled, "\n")
 
                         buy_value = state.last_buy_size - state.last_buy_fee
                         sell_value = sell_filled - sell_fee
                         profit = (sell_value - buy_value)
 
-                        #print ('buy_value:', buy_value)
-                        #print ('sell_value:', sell_value)
-                        #print ('profit:', profit, "\n")
+                        print ('buy_value:', buy_value)
+                        print ('sell_value:', sell_value)
+                        print ('profit:', profit, "\n")
 
                         margin = (profit / state.last_buy_size) * 100
 
-                        #print ('margin:', margin)
+                        print ('margin:', margin)
 
                         if price > 0:
                             margin_text = str(app.truncate(margin, 2)) + '%'
