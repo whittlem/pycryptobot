@@ -1,10 +1,22 @@
-import pandas as pd
-import argparse, json, logging, math, random, re, sys, urllib3
+import argparse
+import json
+import logging
+import math
+import random
+import re
+import sys
 from datetime import datetime, timedelta
-from models.Trading import TechnicalAnalysis
-from models.Binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
-from models.CoinbasePro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
+
+import pandas as pd
+import urllib3
+from urllib3.exceptions import ReadTimeoutError
+
+from models.Binance import AuthAPI as BAuthAPI
+from models.Binance import PublicAPI as BPublicAPI
+from models.CoinbasePro import AuthAPI as CBAuthAPI
+from models.CoinbasePro import PublicAPI as CBPublicAPI
 from models.Github import Github
+from models.Trading import TechnicalAnalysis
 
 # disable insecure ssl warning
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -624,7 +636,7 @@ class PyCryptoBot():
                                     p = re.compile(r"\-[0-9\.]{1,5}$")
                                     if isinstance(config['selllowerpcnt'], str) and p.match(config['selllowerpcnt']):
                                         self.sell_lower_pcnt = float(config['selllowerpcnt'])
-                                    elif isinstance(config['selllowerpcnt'], int) and config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:     
+                                    elif isinstance(config['selllowerpcnt'], int) and config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
                                         self.sell_lower_pcnt = float(config['selllowerpcnt'])
 
                             if 'trailingstoploss' in config:
@@ -1135,7 +1147,7 @@ class PyCryptoBot():
                 self.is_live = 0
                 if args.simstartdate != None:
                     self.simstartdate = args.simstartdate
-        
+
         if self.simstartdate != None:
             p = re.compile(r"^\d{4,4}-\d{2,2}-\d{2,2}$")
             if not p.match(self.simstartdate):
@@ -1185,7 +1197,7 @@ class PyCryptoBot():
 
         if args.disablebuyobv is True:
             self.disablebuyobv = True
-    
+
         if args.disablebuyelderray is True:
             self.disablebuyelderray = True
 
@@ -1197,7 +1209,7 @@ class PyCryptoBot():
 
         if args.disableprofitbankupperpcnt is True:
             self.disableprofitbankupperpcnt = True
-               
+
         if args.disableprofitbankreversal is True:
             self.disableprofitbankreversal = True
 
@@ -1209,7 +1221,7 @@ class PyCryptoBot():
 
         if args.disabletracker is True:
             self.disabletracker = True
-        
+
         if self.exchange == 'binance':
             if len(self.api_url) > 1 and self.api_url[-1] != '/':
                 self.api_url = self.api_url + '/'
@@ -1320,7 +1332,7 @@ class PyCryptoBot():
         try:
             return int(self.sellpercent)
         except Exception:
-            return 100       
+            return 100
 
     def getHistoricalData(self, market, granularity, iso8601start='', iso8601end=''):
         if self.exchange == 'coinbasepro':
@@ -1457,7 +1469,10 @@ class PyCryptoBot():
         if self.exchange == 'coinbasepro':
             return CBPublicAPI().getTime()
         elif self.exchange == 'binance':
-            return BPublicAPI().getTime()
+            try:
+                return BPublicAPI().getTime()
+            except ReadTimeoutError:
+                return ''
         else:
             return ''
 
@@ -1526,7 +1541,7 @@ class PyCryptoBot():
 
     def disableFailsafeLowerPcnt(self):
         return self.disablefailsafelowerpcnt
-    
+
     def disableProfitbankUpperPcnt(self):
         return self.disableprofitbankupperpcnt
 
@@ -1770,7 +1785,7 @@ class PyCryptoBot():
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
             txt = '   Sell At Resistance : ' + str(self.sellAtResistance()) + '  --sellatresistance'
-            print('|', txt, (' ' * (75 - len(txt))), '|')   
+            print('|', txt, (' ' * (75 - len(txt))), '|')
 
             txt = '      Trade Bull Only : ' + str(not self.disableBullOnly()) + '  --disablebullonly'
             print('|', txt, (' ' * (75 - len(txt))), '|')
@@ -1785,30 +1800,30 @@ class PyCryptoBot():
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
             txt = '    Use Buy Elder-Ray : ' + str(not self.disableBuyElderRay()) + '  --disablebuyelderray'
-            print('|', txt, (' ' * (75 - len(txt))), '|')             
+            print('|', txt, (' ' * (75 - len(txt))), '|')
 
             txt = '   Sell Fibonacci Low : ' + str(not self.disableFailsafeFibonacciLow()) + '  --disablefailsafefibonaccilow'
-            print('|', txt, (' ' * (75 - len(txt))), '|')   
+            print('|', txt, (' ' * (75 - len(txt))), '|')
 
             if self.sellLowerPcnt() != None:
                 txt = '      Sell Lower Pcnt : ' + str(not self.disableFailsafeLowerPcnt()) + '  --disablefailsafelowerpcnt'
-                print('|', txt, (' ' * (75 - len(txt))), '|')   
+                print('|', txt, (' ' * (75 - len(txt))), '|')
 
             if self.sellUpperPcnt() != None:
                 txt = '      Sell Upper Pcnt : ' + str(not self.disableFailsafeLowerPcnt()) + '  --disableprofitbankupperpcnt'
-                print('|', txt, (' ' * (75 - len(txt))), '|')   
+                print('|', txt, (' ' * (75 - len(txt))), '|')
 
             txt = ' Candlestick Reversal : ' + str(not self.disableProfitbankReversal()) + '  --disableprofitbankreversal'
-            print('|', txt, (' ' * (75 - len(txt))), '|')   
+            print('|', txt, (' ' * (75 - len(txt))), '|')
 
             txt = '             Telegram : ' + str(not self.disableTelegram()) + '  --disabletelegram'
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
             txt = '                  Log : ' + str(not self.disableLog()) + '  --disablelog'
-            print('|', txt, (' ' * (75 - len(txt))), '|')     
+            print('|', txt, (' ' * (75 - len(txt))), '|')
 
             txt = '              Tracker : ' + str(not self.disableTracker()) + '  --disabletracker'
-            print('|', txt, (' ' * (75 - len(txt))), '|') 
+            print('|', txt, (' ' * (75 - len(txt))), '|')
 
             txt = '     Auto restart Bot : ' + str(self.autoRestart()) + '  --autorestart'
             print('|', txt, (' ' * (75 - len(txt))), '|')
