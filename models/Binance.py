@@ -1,9 +1,12 @@
+import math
+import re
 import sys
-import math, re
+from datetime import datetime, timedelta
+
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
 from binance.client import Client
+
 
 class AuthAPIBase():
     def _isMarketValid(self, market):
@@ -13,7 +16,7 @@ class AuthAPIBase():
 class AuthAPI(AuthAPIBase):
     def __init__(self, api_key='', api_secret='', api_url='https://api.binance.com'):
         """Binance API object model
-    
+
         Parameters
         ----------
         api_key : str
@@ -21,7 +24,7 @@ class AuthAPI(AuthAPIBase):
         api_secret : str
             Your Binance account portfolio API secret
         """
-    
+
         # options
         self.debug = False
         self.die_on_api_error = False
@@ -46,7 +49,7 @@ class AuthAPI(AuthAPIBase):
                 raise TypeError(err)
             else:
                 raise SystemExit(err)
- 
+
         # validates the api secret is syntactically correct
         p = re.compile(r"^[A-z0-9]{64,64}$")
         if not p.match(api_secret):
@@ -128,7 +131,7 @@ class AuthAPI(AuthAPIBase):
             fees = self.getFees()
         else:
             fees = self.getFees(market)
-        
+
         if len(fees) == 0 or 'maker_fee_rate' not in fees:
             print ("error: 'maker_fee_rate' not in fees (using 0.001 as a fallback)")
             return 0.001
@@ -244,7 +247,7 @@ class AuthAPI(AuthAPIBase):
         except Exception as err:
             ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
             print (ts, 'Binance', 'marketBuy', str(err))
-            return []       
+            return []
 
     def marketSell(self, market='', base_quantity=0):
         """Executes a market sell providing a crypto amount"""
@@ -281,18 +284,18 @@ class AuthAPI(AuthAPIBase):
         if 'success' not in resp:
             print ('*** getTradeFee(' + market + ') - missing "success" ***')
             print (resp)
-        
+
         if 'tradeFee' not in resp:
             print ('*** getTradeFee(' + market + ') - missing "tradeFee" ***')
             print (resp)
         else:
             if len(resp['tradeFee']) == 0:
-                print ('*** getTradeFee(' + market + ') - "tradeFee" empty ***') 
+                print ('*** getTradeFee(' + market + ') - "tradeFee" empty ***')
                 print (resp)
             else:
                 if 'taker' not in resp['tradeFee'][0]:
                     print ('*** getTradeFee(' + market + ') - missing "trader" ***')
-                    print (resp)                    
+                    print (resp)
         ###
 
         if resp['success']:
@@ -325,7 +328,7 @@ class AuthAPI(AuthAPIBase):
 
     def getTime(self):
         """Retrieves the exchange time"""
-    
+
         try:
             resp = self.client.get_server_time()
             epoch = int(str(resp['serverTime'])[0:10])
@@ -390,7 +393,10 @@ class PublicAPI(AuthAPIBase):
             if len(resp) > 300:
                 resp = resp[:300]
         else:
-            if granularity == '5m':
+            if granularity == '1m':
+                resp = self.client.get_historical_klines(market, granularity, '12 hours ago UTC')
+                resp = resp[-300:]
+            elif granularity == '5m':
                 resp = self.client.get_historical_klines(market, granularity, '2 days ago UTC')
                 resp = resp[-300:]
             elif granularity == '15m':
@@ -406,7 +412,7 @@ class PublicAPI(AuthAPIBase):
                 resp = self.client.get_historical_klines(market, granularity, '251 days ago UTC')
             else:
                 raise Exception('Something went wrong!')
-                   
+
         # convert the API response into a Pandas DataFrame
         df = pd.DataFrame(resp, columns=[ 'open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_asset_volume', 'number_of_trades', 'taker_buy_base_asset_volume', 'traker_buy_quote_asset_volume', 'ignore' ])
         df['market'] = market
@@ -415,7 +421,7 @@ class PublicAPI(AuthAPIBase):
         # binance epoch is too long
         df['open_time'] = df['open_time'] + 1
         df['open_time'] = df['open_time'].astype(str)
-        df['open_time'] = df['open_time'].str.replace(r'\d{3}$', '', regex=True)   
+        df['open_time'] = df['open_time'].str.replace(r'\d{3}$', '', regex=True)
 
         if(granularity == '1m'):
             freq = 'T'
@@ -441,7 +447,7 @@ class PublicAPI(AuthAPIBase):
             tsidx = pd.DatetimeIndex(pd.to_datetime(df['open_time'], unit='s'), dtype='datetime64[ns]')
             df.set_index(tsidx, inplace=True)
             df = df.drop(columns=['open_time'])
-            df.index.names = ['ts']           
+            df.index.names = ['ts']
             df['date'] = tsidx
 
         # re-order columns
@@ -449,10 +455,10 @@ class PublicAPI(AuthAPIBase):
 
         # correct column types
         df['low'] = df['low'].astype(float)
-        df['high'] = df['high'].astype(float)   
-        df['open'] = df['open'].astype(float)   
-        df['close'] = df['close'].astype(float)   
-        df['volume'] = df['volume'].astype(float)      
+        df['high'] = df['high'].astype(float)
+        df['open'] = df['open'].astype(float)
+        df['close'] = df['close'].astype(float)
+        df['volume'] = df['volume'].astype(float)
 
         # reset pandas dataframe index
         df.reset_index()
@@ -474,7 +480,7 @@ class PublicAPI(AuthAPIBase):
 
     def getTime(self):
         """Retrieves the exchange time"""
-    
+
         try:
             resp = self.client.get_server_time()
             epoch = int(str(resp['serverTime'])[0:10])
