@@ -335,9 +335,11 @@ class AuthAPI(AuthAPIBase):
         base_increment = str(product['base_increment'].values[0])
 
         if '.' in str(base_increment):
-            return round(amount, len(str(base_increment).split('.')[1]))
+            nb_digits = len(str(base_increment).split('.')[1])
         else:
-            return amount
+            nb_digits = 0
+
+        return float(f'%.{nb_digits}f'%(amount))
 
     def authAPI(self, method: str, uri: str, payload: str='') -> pd.DataFrame:
         if not isinstance(method, str):
