@@ -1619,12 +1619,12 @@ class PyCryptoBot():
             if isinstance(sell_percent, int):
                 if sell_percent > 0 and sell_percent < 100:
                     base_currency = (sell_percent / 100) * base_currency
-
-                api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
-                return api.marketSell(market, base_currency)
-            elif self.exchange == 'binance':
-                api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
-                return api.marketSell(market, base_currency)
+                if self.exchange == 'coinbasepro':
+                    api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
+                    return api.marketSell(market, base_currency)
+                elif self.exchange == 'binance':
+                    api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
+                    return api.marketSell(market, base_currency)
             else:
                 return None
 
