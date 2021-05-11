@@ -288,7 +288,6 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
             sell_size = (app.getSellPercent() / 100) * ((price / state.last_buy_price) * state.last_buy_size)
             sell_fee = round(sell_size * app.getTakerFee(), 2)
-            sell_filled = sell_size - sell_fee
 
             #print ('sell_percent:', app.getSellPercent())
             #print ('sell_size:', sell_size)
@@ -304,7 +303,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             #print ('sell_value:', sell_value)
             #print ('profit:', profit, "\n")
 
-            margin = (profit / state.last_buy_size) * 100
+            margin = (profit / buy_value) * 100
 
             #print ('margin:', margin)
 
@@ -856,7 +855,6 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
                         sell_size = (app.getSellPercent() / 100) * ((price / state.last_buy_price) * state.last_buy_size)
                         sell_fee = round(sell_size * app.getTakerFee(), 2)
-                        sell_filled = sell_size - sell_fee
 
                         #print ('sell_percent:', app.getSellPercent())
                         #print ('sell_size:', sell_size)
@@ -872,7 +870,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                         #print ('sell_value:', sell_value)
                         #print ('profit:', profit, "\n")
 
-                        margin = (profit / state.last_buy_size) * 100
+                        margin = (profit / buy_value) * 100
 
                         #print ('margin:', margin)
 

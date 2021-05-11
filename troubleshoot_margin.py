@@ -19,20 +19,18 @@ print ('buy_fee:', last_buy_fee, "\n")
 price = 0.48001
 sell_size = (app.getSellPercent() / 100) * ((price / last_buy_price) * last_buy_size)
 sell_fee = round(sell_size * app.getTakerFee(), 2)
-sell_filled = sell_size - sell_fee
 
 print ('sell_percent:', app.getSellPercent(), "\n")
 
 print ('sell_size:', sell_size)
 print ('sell_price:', price)
 print ('sell_fee:', sell_fee)
-print ('sell_filled:', sell_filled, "\n")
 
 buy_value = last_buy_size + last_buy_fee
 sell_value = sell_size - sell_fee
 profit = sell_value - buy_value
 
-margin = (profit / last_buy_size) * 100
+margin = (profit / buy_value) * 100
 
 print ('margin:', margin, "\n")
 
@@ -53,19 +51,17 @@ print ('buy_fee:', last_buy_fee, "\n")
 price = 987.89
 sell_size = (app.getSellPercent() / 100) * ((price / last_buy_price) * last_buy_size)
 sell_fee = round(sell_size * app.getTakerFee(), 2)
-sell_filled = sell_size - sell_fee
 
 print ('sell_percent:', app.getSellPercent(), "\n")
 
 print ('sell_size:', sell_size)
 print ('sell_price:', price)
 print ('sell_fee:', sell_fee)
-print ('sell_filled:', sell_filled, "\n")
 
 buy_value = last_buy_size + last_buy_fee
 sell_value = sell_size - sell_fee
 profit = sell_value - buy_value
 
-margin = (profit / last_buy_size) * 100
+margin = (profit / buy_value) * 100
 
 print ('margin:', margin, "\n")
