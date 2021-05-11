@@ -342,7 +342,7 @@ class PublicAPI(AuthAPIBase):
         try:
             self.client = Client()
         except:
-            pass
+            raise Exception('Could not connect to client')
 
     def __truncate(self, f, n):
         return math.floor(f * 10 ** n) / 10 ** n
@@ -491,4 +491,3 @@ class PublicAPI(AuthAPIBase):
             return datetime.fromtimestamp(epoch)
         except:
             return None
-
