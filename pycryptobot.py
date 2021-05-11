@@ -77,6 +77,136 @@ elif app.isLive() == 1:
             state.last_action = 'SELL'
             state.last_buy_price = 0.0
 
+def calculateMargin(buy_size: float=0.0, buy_filled: int=0.0, buy_price: int=0.0, buy_fee: float=0.0, sell_percent: float=100, sell_price: float=0.0, sell_fee: float=0.0, sell_taker_fee: float=0.0, debug: bool=False) -> float:
+    if debug is True:
+        print (f'buy_size: {buy_size}')
+        print (f'buy_filled: {buy_filled}')
+        print (f'buy_price: {buy_price}')
+        print (f'buy_fee: {buy_fee}', "\n")
+
+    sell_size = (sell_percent / 100) * ((sell_price / buy_price) * buy_size)
+
+    if sell_fee == 0.0 and sell_taker_fee > 0.0:
+        sell_fee = sell_size * sell_taker_fee
+
+    if debug is True:
+        print (f'sell_size: {sell_size}')
+        print (f'sell_price: {sell_price}')
+        print (f'sell_fee: {sell_fee}', "\n")
+
+    buy_value = buy_size + buy_fee
+    sell_value = sell_size - sell_fee
+    profit = sell_value - buy_value
+
+    if debug is True:
+        print (f'buy_value: {buy_value}')
+        print (f'sell_value: {sell_value}')
+        print (f'profit: {profit}', "\n")
+
+    margin = (profit / buy_value) * 100
+
+    if debug is True:
+        print (f'margin: {margin}', "\n")
+
+    return margin, profit, sell_fee
+
+def getAction(now: datetime=datetime.today().strftime('%Y-%m-%d %H:%M:%S'), app: PyCryptoBot=None, price: float=0, df: pd.DataFrame=pd.DataFrame(), df_last: pd.DataFrame=pd.DataFrame(), last_action: str='WAIT', debug: bool=False) -> str:
+    ema12gtema26co = bool(df_last['ema12gtema26co'].values[0])
+    macdgtsignal = bool(df_last['macdgtsignal'].values[0])
+    goldencross = bool(df_last['goldencross'].values[0])
+    obv_pc = float(df_last['obv_pc'].values[0])
+    elder_ray_buy = bool(df_last['eri_buy'].values[0])
+    ema12gtema26 = bool(df_last['ema12gtema26'].values[0])
+    macdgtsignalco = bool(df_last['macdgtsignalco'].values[0])
+    ema12ltema26co = bool(df_last['ema12ltema26co'].values[0])
+    macdltsignal = bool(df_last['macdltsignal'].values[0])
+
+    # criteria for a buy signal
+    if ema12gtema26co is True \
+            and (macdgtsignal is True or app.disableBuyMACD()) \
+            and (goldencross is True or app.disableBullOnly()) \
+            and (obv_pc > -5 or app.disableBuyOBV()) \
+            and (elder_ray_buy is True or app.disableBuyElderRay()) \
+            and last_action != 'BUY':
+
+        if debug is True:
+            print ('*** Buy Signal ***')
+            print (f'ema12gtema26co: {ema12gtema26co}')
+            if not app.disableBuyMACD():
+                print (f'macdgtsignal: {macdgtsignal}')
+            if not app.disableBullOnly():
+                print (f'goldencross: {goldencross}')
+            if not app.disableBuyOBV():
+                print (f'obv_pc: {obv_pc} > -5')
+            if not app.disableBuyElderRay():
+                print (f'elder_ray_buy: {elder_ray_buy}')
+            print (f'last_action: {last_action}')
+
+        # if disabled, do not buy within 3% of the dataframe close high
+        if app.disableBuyNearHigh() is True and (price > (df['close'].max() * 0.97)):
+            state.action = 'WAIT'
+
+            log_text = now + ' | ' + app.getMarket() + ' | ' + str(app.getGranularity()) + ' | Ignoring Buy Signal (price ' + str(price) + ' within 3% of high ' + str(df['close'].max()) + ')'
+            print (log_text, "\n")
+            logging.warning(log_text)
+
+        return 'BUY'
+    
+    elif ema12gtema26 is True \
+            and macdgtsignalco is True \
+            and (goldencross is True or app.disableBullOnly()) \
+            and (obv_pc > -5 or app.disableBuyOBV()) \
+            and (elder_ray_buy is True or app.disableBuyElderRay()) \
+            and last_action != 'BUY':
+
+        if debug is True:
+            print ('*** Buy Signal ***')
+            print (f'ema12gtema26: {ema12gtema26}')
+            print (f'macdgtsignalco: {macdgtsignalco}')
+            if not app.disableBullOnly():
+                print (f'goldencross: {goldencross}')
+            if not app.disableBuyOBV():
+                print (f'obv_pc: {obv_pc} > -5')
+            if not app.disableBuyElderRay():
+                print (f'elder_ray_buy: {elder_ray_buy}')
+            print (f'last_action: {last_action}')
+
+        # if disabled, do not buy within 3% of the dataframe close high
+        if app.disableBuyNearHigh() is True and (price > (df['close'].max() * 0.97)):
+            state.action = 'WAIT'
+
+            log_text = now + ' | ' + app.getMarket() + ' | ' + str(app.getGranularity()) + ' | Ignoring Buy Signal (price ' + str(price) + ' within 3% of high ' + str(df['close'].max()) + ')'
+            print (log_text, "\n")
+            logging.warning(log_text)
+
+        return 'BUY'
+
+    # criteria for a sell signal
+    elif ema12ltema26co is True \
+            and (macdltsignal is True or app.disableBuyMACD()) \
+            and last_action not in ['', 'SELL']:
+
+        if debug is True:
+            print ('*** Sell Signal ***')
+            print (f'ema12ltema26co: {ema12ltema26co}')
+            print (f'macdltsignal: {macdltsignal}')
+            print (f'last_action: {last_action}')
+
+        return 'SELL'
+
+    return 'WAIT'
+
+def getInterval(df: pd.DataFrame=pd.DataFrame(), app: PyCryptoBot=None, iterations: int=0) -> pd.DataFrame:
+    if len(df) == 0:
+        return df
+
+    if app.isSimulation() == 1 and iterations > 0:
+        # with a simulation iterate through data
+        return df.iloc[iterations-1:iterations]
+    else:
+        # most recent entry
+        return df.tail(1)
+
 def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFrame()):
     """Trading bot job which runs at a scheduled interval"""
 
@@ -105,13 +235,8 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
     ta.addAll()
     df = ta.getDataFrame()
 
-    if app.isSimulation() == 1:
-        # with a simulation df_last will iterate through data
-        df_last = df.iloc[state.iterations-1:state.iterations]
-    else:
-        # df_last contains the most recent entry
-        df_last = df.tail(1)
-    
+    df_last = getInterval(df, app)
+
     if len(df_last.index.format()) > 0:
         current_df_index = str(df_last.index.format()[0])
     else:
@@ -230,39 +355,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
         evening_doji_star = bool(df_last['evening_doji_star'].values[0])
         two_black_gapping = bool(df_last['two_black_gapping'].values[0])
 
-        # criteria for a buy signal
-        if ema12gtema26co is True \
-                and (macdgtsignal is True or app.disableBuyMACD()) \
-                and (goldencross is True or app.disableBullOnly()) \
-                and (obv_pc > -5 or app.disableBuyOBV()) \
-                and (elder_ray_buy is True or app.disableBuyElderRay()) \
-                and state.last_action != 'BUY':
-            state.action = 'BUY'
-        
-        elif ema12gtema26 is True \
-                and macdgtsignalco is True \
-                and (goldencross is True or app.disableBullOnly()) \
-                and (obv_pc > -5 or app.disableBuyOBV()) \
-                and (elder_ray_buy is True or app.disableBuyElderRay()) \
-                and state.last_action != 'BUY':
-            state.action = 'BUY'
-
-        # criteria for a sell signal
-        elif ema12ltema26co is True \
-                and (macdltsignal is True or app.disableBuyMACD()) \
-                and state.last_action not in ['', 'SELL']:
-            state.action = 'SELL'
-        # anything other than a buy or sell, just wait
-        else:
-            state.action = 'WAIT'
-
-        # if disabled, do not buy within 3% of the dataframe close high
-        if state.action == 'BUY' and app.disableBuyNearHigh() and (price > (df['close'].max() * 0.97)):
-            state.action = 'WAIT'
-
-            log_text = now + ' | ' + app.getMarket() + ' | ' + str(app.getGranularity()) + ' | Ignoring Buy Signal (price ' + str(price) + ' within 3% of high ' + str(df['close'].max()) + ')'
-            print (log_text, "\n")
-            logging.warning(log_text)
+        state.action = getAction(now, app, price, df, df_last, state.last_action, True)
 
         immediate_action = False
 
@@ -281,31 +374,15 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 state.last_buy_filled = state.last_buy_size / state.last_buy_price
                 state.last_buy_fee = round((state.last_buy_filled * state.last_buy_price) * 0.005, 2)
 
-            #print ('buy_size:', state.last_buy_size)
-            #print ('buy_filled:', state.last_buy_filled)
-            #print ('buy_price:', state.last_buy_price)
-            #print ('buy_fee:', state.last_buy_fee, "\n")
-
-            sell_size = (app.getSellPercent() / 100) * ((price / state.last_buy_price) * state.last_buy_size)
-            sell_fee = round(sell_size * app.getTakerFee(), 2)
-
-            #print ('sell_percent:', app.getSellPercent())
-            #print ('sell_size:', sell_size)
-            #print ('sell_price:', price)
-            #print ('sell_fee:', sell_fee)
-            #print ('sell_filled:', sell_filled, "\n")
-
-            buy_value = state.last_buy_size + state.last_buy_fee
-            sell_value = sell_size - sell_fee
-            profit = sell_value - buy_value
-
-            #print ('buy_value:', buy_value)
-            #print ('sell_value:', sell_value)
-            #print ('profit:', profit, "\n")
-
-            margin = (profit / buy_value) * 100
-
-            #print ('margin:', margin)
+            margin, profit, sell_fee = calculateMargin(
+                buy_size=state.last_buy_size, 
+                buy_filled=state.last_buy_filled, 
+                buy_price=state.last_buy_price, 
+                buy_fee=state.last_buy_fee,
+                sell_percent=app.getSellPercent(), 
+                sell_price=price, 
+                sell_taker_fee=app.getTakerFee(), 
+                debug=False)
 
             # loss failsafe sell at fibonacci band
             if app.disableFailsafeFibonacciLow() is False and app.allowSellAtLoss() and app.sellLowerPcnt() is None and state.fib_low > 0 and state.fib_low >= float(price):
@@ -387,7 +464,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 logging.warning(log_text)
 
             # profit bank when strong reversal detected
-            if app.sellAtResistance() is True and margin > 1 and price > 0 and price != ta.getTradeExit(price):
+            if app.sellAtResistance() is True and margin >= 2 and price > 0 and price != ta.getTradeExit(price):
                 state.action = 'SELL'
                 state.last_action = 'BUY'
                 immediate_action = True
@@ -848,31 +925,15 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 # if not live
                 else:
                     if app.isVerbose() == 0:
-                        #print ('buy_size:', state.last_buy_size)
-                        #print ('buy_filled:', state.last_buy_filled)
-                        #print ('buy_price:', state.last_buy_price)
-                        #print ('buy_fee:', state.last_buy_fee, "\n")
-
-                        sell_size = (app.getSellPercent() / 100) * ((price / state.last_buy_price) * state.last_buy_size)
-                        sell_fee = round(sell_size * app.getTakerFee(), 2)
-
-                        #print ('sell_percent:', app.getSellPercent())
-                        #print ('sell_size:', sell_size)
-                        #print ('sell_price:', price)
-                        #print ('sell_fee:', sell_fee)
-                        #print ('sell_filled:', sell_filled, "\n")
-
-                        buy_value = state.last_buy_size + state.last_buy_fee
-                        sell_value = sell_size - sell_fee
-                        profit = sell_value - buy_value
-
-                        #print ('buy_value:', buy_value)
-                        #print ('sell_value:', sell_value)
-                        #print ('profit:', profit, "\n")
-
-                        margin = (profit / buy_value) * 100
-
-                        #print ('margin:', margin)
+                        margin, profit, sell_fee = calculateMargin(
+                            buy_size=state.last_buy_size, 
+                            buy_filled=state.last_buy_filled, 
+                            buy_price=state.last_buy_price, 
+                            buy_fee=state.last_buy_fee, 
+                            sell_percent=app.getSellPercent(), 
+                            sell_price=price, 
+                            sell_taker_fee=app.getTakerFee(), 
+                            debug=False)                       
 
                         if price > 0:
                             margin_text = str(app.truncate(margin, 2)) + '%'
