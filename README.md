@@ -80,11 +80,11 @@ From Github image repo
 
     % docker pull ghcr.io/whittlem/pycryptobot/pycryptobot:latest
     latest: Pulling from whittlem/pycryptobot/pycryptobot
-    8f403cb21126: Pull complete 
-    65c0f2178ac8: Pull complete 
-    1091bd628216: Pull complete 
-    cb1eb04426a4: Pull complete 
-    ec065b94ad1c: Pull complete 
+    8f403cb21126: Pull complete
+    65c0f2178ac8: Pull complete
+    1091bd628216: Pull complete
+    cb1eb04426a4: Pull complete
+    ec065b94ad1c: Pull complete
     Digest: sha256:031fd6c7b7b2d08a743127e5850bc3d9c97a46e02ed0878f4445012eaf0619d3
     Status: Downloaded newer image for ghcr.io/whittlem/pycryptobot/pycryptobot:latest
     ghcr.io/whittlem/pycryptobot/pycryptobot:latest
@@ -111,14 +111,14 @@ The "requirements.txt" was created with `python3 -m pip freeze`
 
     Daemon:
     % docker run --name BTC-GBP -v /home/example/config.json:/app/config.json -d ghcr.io/whittlem/pycryptobot/pycryptobot:latest <arguments>
-    
+
     Example:
     % docker run --name BTC-GBP -v /Users/whittlem/Documents/Repos/Docker/config.json:/app/config.json -d ghcr.io/whittlem/pycryptobot/pycryptobot:latest --live 0
     e491ae4fdba28aa9e74802895adf5e856006c3c63cf854c657482a6562a1e15
-    
+
     Interactive:
     % docker run --name BTC-GBP -v /home/example/config.json:/app/config.json -it ghcr.io/whittlem/pycryptobot/pycryptobot:latest <arguments>
-    
+
     List Processes:
     % docker ps
 
@@ -126,11 +126,11 @@ The "requirements.txt" was created with `python3 -m pip freeze`
     % docker ps
     CONTAINER ID   IMAGE                                             COMMAND                  CREATED          STATUS          PORTS     NAMES
     e491ae4fdba2   ghcr.io/whittlem/pycryptobot/pycryptobot:latest   "python3 pycryptobot…"   46 seconds ago   Up 44 seconds             BTC-GBP
-    
+
     Container Shell:
-    % docker exec -it BTC-GBP /bin/bash                                                                                                                           
+    % docker exec -it BTC-GBP /bin/bash
     [root@e491ae4fdba2 app]#
-    
+
     Build your own image (if necessary):
     docker build -t pycryptobot_BTC-GBP .
 
@@ -148,7 +148,7 @@ To run using the config.json in template folder,
     % docker-compose up -d
 
 
-By default, docker-compose will use the config inside `./market/template`. We provide this as a template for any market config. 
+By default, docker-compose will use the config inside `./market/template`. We provide this as a template for any market config.
 
 For each market you want to trade, create a copy of this folder under market
 For example, if you are trading `BTCEUR` and `ETHEUR` your market folder should look like this:
@@ -165,7 +165,7 @@ For example, if you are trading `BTCEUR` and `ETHEUR` your market folder should 
 ```
 
 modify docker-compose.yaml
-    
+
     version: "3.9"
 
     services:
@@ -183,7 +183,7 @@ modify docker-compose.yaml
         deploy:
           restart_policy:
             condition: on-failure
-    
+
       etheur:
         build:
           context: .
@@ -200,7 +200,7 @@ modify docker-compose.yaml
             condition: on-failure
 
 Run all your bots. Note that each market should have it's own config. Graphs will be saved on each market's folder.
-    
+
     % docker-compose up -d
 
 ## Bot mechanics
@@ -374,7 +374,7 @@ You can use @botfather and @myidbot in telegram to create a bot with token and g
 
 ## Multi-Market Trading
 
-The bot can trade mutiple markets at once. This is also documented in my Medium articles. The bot will execute buys using the full "quote currency" balance it has access too and it will sell the full "base currency" balance it has access too. In order to ring-fence your non-bot funds you should create another "Portfolio" in Coinbase Pro and assign API keys to it. That way you limit exposure. You can so something similar with Binance using sub-accounts but I believe you need to be a certain level to do this.
+The bot can trade multiple markets at once. This is also documented in my Medium articles. The bot will execute buys using the full "quote currency" balance it has access too and it will sell the full "base currency" balance it has access too. In order to ring-fence your non-bot funds you should create another "Portfolio" in Coinbase Pro and assign API keys to it. That way you limit exposure. You can so something similar with Binance using sub-accounts but I believe you need to be a certain level to do this.
 
 The way you trade multiple markets at once is create multiple Coinbase Pro portfolios for each each bot instance. You will then clone this project for additional bots with the relevant Portfolio keys (config.json).
 
