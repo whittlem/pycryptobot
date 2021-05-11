@@ -46,6 +46,7 @@ elif app.isLive() == 1:
 
     account = TradingAccount(app)
 
+    print(account.getBalance(app.getBaseCurrency()), account.getBalance(app.getBaseCurrency()))
     if account.getBalance(app.getBaseCurrency()) < account.getBalance(app.getQuoteCurrency()):
         state.last_action = 'SELL'
     elif account.getBalance(app.getBaseCurrency()) > account.getBalance(app.getQuoteCurrency()):
@@ -81,7 +82,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
     """Trading bot job which runs at a scheduled interval"""
 
     # connectivity check (only when running live)
-    if app.isLive() and app.getTime() is None:
+    if app.isLive() and (app.getTime() is None or app.client is None):
         print ('Your connection to the exchange has gone down, will retry in 1 minute!')
 
         # poll every 5 minute
