@@ -44,12 +44,12 @@ class AuthAPI(AuthAPIBase):
             'https://testnet.binance.vision/api/'
         ]
 
+        if len(api_url) > 1 and api_url[-1] != '/':
+            api_url = api_url + '/'
+
         # validate Binance API
         if api_url not in valid_urls:
             raise ValueError('Binance API URL is invalid')
-
-        if len(api_url) > 1 and api_url[-1] != '/':
-            api_url = api_url + '/'
 
         # validates the api key is syntactically correct
         p = re.compile(r"^[A-z0-9]{64,64}$")
