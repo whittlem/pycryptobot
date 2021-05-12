@@ -88,7 +88,8 @@ def calculateMargin(buy_size: float=0.0, buy_filled: int=0.0, buy_price: int=0.0
     sell_size = (sell_percent / 100) * ((sell_price / buy_price) * buy_size)
 
     if sell_fee == 0.0 and sell_taker_fee > 0.0:
-        sell_fee = sell_size * sell_taker_fee
+        #sell_fee = sell_size * sell_taker_fee
+        sell_fee = sell_price * sell_taker_fee
 
     if debug is True:
         print (f'sell_size: {sell_size}')
