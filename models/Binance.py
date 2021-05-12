@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 from binance.client import Client
-from requests.models import ReadTimeoutError
 
 
 class AuthAPIBase():
@@ -339,10 +338,7 @@ class AuthAPI(AuthAPIBase):
 
 class PublicAPI(AuthAPIBase):
     def __init__(self):
-        try:
-            self.client = Client()
-        except:
-            raise Exception('Could not connect to client')
+        self.client = Client()
 
     def __truncate(self, f, n):
         return math.floor(f * 10 ** n) / 10 ** n
