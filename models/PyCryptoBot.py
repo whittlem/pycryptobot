@@ -45,6 +45,7 @@ parser.add_argument('--verbose', type=int, help='verbose output=1, minimal outpu
 parser.add_argument('--config', type=str, help="Use the config file at the given location. e.g 'myconfig.json'")
 parser.add_argument('--logfile', type=str, help="Use the log file at the given location. e.g 'mymarket.log'")
 parser.add_argument('--buypercent', type=str, help="percentage of quote currency to buy")
+parser.add_argument('--maxbuyamount', type=str, help="maximum of quote currency to buy")
 parser.add_argument('--sellpercent', type=str, help="percentage of base currency to sell")
 parser.add_argument('--lastaction', type=str, help="optionally set the last action (BUY, SELL)")
 
@@ -105,6 +106,7 @@ class PyCryptoBot():
         self.telegram = False
         self.buypercent = 100
         self.sellpercent = 100
+        self.maxbuyamount = math.inf
         self.last_action = None
 
         self.sellatresistance = False
@@ -354,6 +356,11 @@ class PyCryptoBot():
                                 if config['buypercent'] > 0 and config['buypercent'] <= 100:
                                     self.buypercent = config['buypercent']
 
+                        if 'maxbuyamount' in config:
+                            if isinstance(config['maxbuyamount'], int):
+                                if config['maxbuyamount'] > 0:
+                                    self.maxbuyamount = config['maxbuyamount']
+
                         if 'sellpercent' in config:
                             if isinstance(config['sellpercent'], int):
                                 if config['sellpercent'] > 0 and config['sellpercent'] <= 100:
@@ -550,6 +557,11 @@ class PyCryptoBot():
                             if isinstance(config['buypercent'], int):
                                 if config['buypercent'] > 0 and config['buypercent'] <= 100:
                                     self.buypercent = config['buypercent']
+
+                        if 'maxbuyamount' in config:
+                            if isinstance(config['maxbuyamount'], int):
+                                if config['maxbuyamount'] > 0:
+                                    self.maxbuyamount = config['maxbuyamount']
 
                         if 'sellpercent' in config:
                             if isinstance(config['sellpercent'], int):
@@ -754,6 +766,11 @@ class PyCryptoBot():
                                     if config['buypercent'] > 0 and config['buypercent'] <= 100:
                                         self.buypercent = config['buypercent']
 
+                            if 'maxbuyamount' in config:
+                                if isinstance(config['maxbuyamount'], int):
+                                    if config['maxbuyamount'] > 0:
+                                        self.maxbuyamount = config['maxbuyamount']
+
                             if 'sellpercent' in config:
                                 if isinstance(config['sellpercent'], int):
                                     if config['sellpercent'] > 0 and config['sellpercent'] <= 100:
@@ -951,6 +968,11 @@ class PyCryptoBot():
                                     if config['buypercent'] > 0 and config['buypercent'] <= 100:
                                         self.buypercent = config['buypercent']
 
+                            if 'maxbuyamount' in config:
+                                if isinstance(config['maxbuyamount'], int):
+                                    if config['maxbuyamount'] > 0:
+                                        self.maxbuyamount = config['maxbuyamount']
+
                             if 'sellpercent' in config:
                                 if isinstance(config['sellpercent'], int):
                                     if config['sellpercent'] > 0 and config['sellpercent'] <= 100:
@@ -1098,6 +1120,15 @@ class PyCryptoBot():
                 raise ValueError('Invalid buy percent.')
 
             self.buypercent = args.buypercent
+
+        if args.maxbuyamount != None:
+            if not isinstance(int(args.maxbuyamount), int):
+                raise TypeError('Invalid max buy amount.')
+
+            if int(args.maxbuyamount) < 1:
+                raise ValueError('Invalid max buy amount.')
+
+            self.maxbuyamount = args.maxbuyamount
 
         if args.sellpercent != None:
             if not isinstance(int(args.sellpercent), int):
@@ -1327,6 +1358,12 @@ class PyCryptoBot():
             return int(self.buypercent)
         except Exception:
             return 100
+
+    def getMaxBuyAmount(self):
+        try:
+            return int(self.maxbuyamount)
+        except Exception:
+            return math.inf
 
     def getSellPercent(self):
         try:
