@@ -71,7 +71,7 @@ elif app.isLive() == 1:
             state.last_buy_size = float(df[df.action == 'buy']['size'])
             state.last_buy_filled = float(df[df.action == 'buy']['filled'])
             state.last_buy_price = float(df[df.action == 'buy']['price'])
-            state.last_buy_fee = float(df[df.action == 'buy']['fees'])
+            state.last_buy_fee = round(float(df[df.action == 'buy']['filled']) * float(df[df.action == 'buy']['price']) * app.getTakerFee(), 2)
         else:
             state.last_action = 'SELL'
             state.last_buy_price = 0.0
