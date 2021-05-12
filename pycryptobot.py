@@ -35,7 +35,7 @@ if app.getLastAction() != None:
             state.last_buy_size = float(df[df.action == 'buy']['size'])
             state.last_buy_filled = float(df[df.action == 'buy']['filled'])
             state.last_buy_price = float(df[df.action == 'buy']['price'])
-            state.last_buy_fee = float(df[df.action == 'buy']['fee'])
+            state.last_buy_fee = float(df[df.action == 'buy']['fees'])
 
 # if live trading is enabled
 elif app.isLive() == 1:
