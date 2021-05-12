@@ -1364,10 +1364,7 @@ class PyCryptoBot():
             api = CBPublicAPI()
             return api.getHistoricalData(market, granularity, iso8601start, iso8601end)
         elif self.exchange == 'binance':
-            try:
-                api = BPublicAPI()
-            except Exception as e:
-                raise e
+            api = BPublicAPI()
 
             if iso8601start != '' and iso8601end != '':
                 return api.getHistoricalData(market, granularity, str(datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S.%f').strftime('%d %b, %Y')), str(datetime.strptime(iso8601end, '%Y-%m-%dT%H:%M:%S.%f').strftime('%d %b, %Y')))
@@ -1497,7 +1494,10 @@ class PyCryptoBot():
         if self.exchange == 'coinbasepro':
             return CBPublicAPI().getTime()
         elif self.exchange == 'binance':
-            return BPublicAPI().getTime()
+            try:
+                return BPublicAPI().getTime()
+            except ReadTimeoutError:
+                return ''
         else:
             return ''
 
