@@ -10,8 +10,8 @@ import urllib3
 from datetime import datetime, timedelta
 from urllib3.exceptions import ReadTimeoutError
 from models.Trading import TechnicalAnalysis
-from models.Binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
-from models.CoinbasePro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
+from models.exchange.binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
+from models.exchange.coinbase_pro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
 from models.Github import Github
 from models.chat import Telegram
 from models.config import binanceConfigParser, binanceParseMarket, coinbaseProConfigParser, coinbaseProParseMarket

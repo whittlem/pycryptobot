@@ -7,8 +7,8 @@ import numpy as np
 import pandas as pd
 from binance.client import Client
 
-from models.Binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI, AuthAPI
-from models.CoinbasePro import AuthAPI as CBAuthAPI
+from models.exchange.binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
+from models.exchange.coinbase_pro import AuthAPI as CBAuthAPI
 
 
 class TradingAccount():
@@ -129,7 +129,7 @@ class TradingAccount():
 
         if self.app.getExchange() == 'binance':
             if self.mode == 'live':
-                model = AuthAPI(self.app.getAPIKey(), self.app.getAPISecret())
+                model = BAuthAPI(self.app.getAPIKey(), self.app.getAPISecret())
                 df = model.getAccount()
                 if isinstance(df, pd.DataFrame):
                     if currency == '':
