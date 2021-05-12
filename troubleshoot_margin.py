@@ -12,21 +12,21 @@ def calculateMargin(buy_size: float=0.0, buy_filled: int=0.0, buy_price: int=0.0
     sell_size = (sell_percent / 100) * ((sell_price / buy_price) * buy_size)
 
     if sell_fee == 0.0 and sell_taker_fee > 0.0:
-        #sell_fee = sell_size * sell_taker_fee
-        sell_fee = sell_price * sell_taker_fee
+        sell_fee = sell_size * sell_taker_fee
 
     if debug is True:
         print (f'sell_size: {sell_size}')
         print (f'sell_price: {sell_price}')
         print (f'sell_fee: {sell_fee}', "\n")
-
-    #buy_value = buy_size + buy_fee
-    #sell_value = sell_size - sell_fee
-    #profit = sell_value - buy_value
-
-    buy_value = buy_price + buy_fee
-    sell_value = sell_price - sell_fee
-    profit = sell_value - buy_value
+    
+    if app.getExchange() == 'coinbasepro' : 
+        buy_value = buy_size + buy_fee
+        sell_value = sell_size - sell_fee
+        profit = sell_value - buy_value
+    else :
+        buy_value = buy_price + buy_fee
+        sell_value = sell_price - sell_fee
+        profit = sell_value - buy_value
 
     if debug is True:
         print (f'buy_value: {buy_value}')
