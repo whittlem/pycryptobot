@@ -61,7 +61,7 @@ elif app.isLive() == 1:
             raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(app.getQuoteCurrency())) + ' < 50 ' + app.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
         elif state.last_action == 'BUY' and account.getBalance(app.getBaseCurrency()) < 0.001:
             raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(app.getBaseCurrency())) + ' < 0.1 ' + app.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
-    print (state.last_action, account.getBalance(app.getQuoteCurrency()))
+
     orders = account.getOrders(app.getMarket(), '', 'done')
     if len(orders) > 0:
         df = orders[-1:]
@@ -75,11 +75,6 @@ elif app.isLive() == 1:
         else:
             #state.last_action = 'SELL'
             state.last_buy_price = 0.0
-
-        print (df)
-
-print (state.last_action)
-sys.exit()
 
 def calculateMargin(buy_size: float=0.0, buy_filled: int=0.0, buy_price: int=0.0, buy_fee: float=0.0, sell_percent: float=100, sell_price: float=0.0, sell_fee: float=0.0, sell_taker_fee: float=0.0, debug: bool=False) -> float:
     if debug is True:
