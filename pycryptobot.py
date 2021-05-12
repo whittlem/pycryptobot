@@ -35,8 +35,7 @@ if app.getLastAction() != None:
             state.last_buy_size = float(df[df.action == 'buy']['size'])
             state.last_buy_filled = float(df[df.action == 'buy']['filled'])
             state.last_buy_price = float(df[df.action == 'buy']['price'])
-            state.last_buy_fee = float(df[df.action == 'buy']['fee'])
-            #state.last_buy_value = round(float(df[df.action == 'buy']['filled']) * float(df[df.action == 'buy']['price']) * app.getTakerFee(), 2)
+            state.last_buy_fee = float(df[df.action == 'buy']['fees'])
 
 # if live trading is enabled
 elif app.isLive() == 1:
@@ -72,8 +71,7 @@ elif app.isLive() == 1:
             state.last_buy_size = float(df[df.action == 'buy']['size'])
             state.last_buy_filled = float(df[df.action == 'buy']['filled'])
             state.last_buy_price = float(df[df.action == 'buy']['price'])
-            #state.last_buy_fee = round(float(df[df.action == 'buy']['filled']) * float(df[df.action == 'buy']['price']) * app.getTakerFee(), 2)
-            state.last_buy_fee = round(float(df[df.action == 'buy']['price']) * app.getTakerFee(), 2)
+            state.last_buy_fee = float(df[df.action == 'buy']['fees'])
         else:
             state.last_action = 'SELL'
             state.last_buy_price = 0.0
@@ -378,7 +376,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             #  buy and sell calculations
             if app.isLive() == 0 and state.last_buy_filled == 0:
                 state.last_buy_filled = state.last_buy_size / state.last_buy_price
-                state.last_buy_fee = round((state.last_buy_filled * state.last_buy_price) * 0.005, 2)
+                state.last_buy_fee = round(state.last_buy_size  * app.getTakerFee(), 2)
 
             margin, profit, sell_fee = calculateMargin(
                 buy_size=state.last_buy_size, 
