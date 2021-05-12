@@ -376,7 +376,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             #  buy and sell calculations
             if app.isLive() == 0 and state.last_buy_filled == 0:
                 state.last_buy_filled = state.last_buy_size / state.last_buy_price
-                state.last_buy_fee = state.last_buy_size  * app.getTakerFee()
+                state.last_buy_fee = round(state.last_buy_size  * app.getTakerFee(), 2)
 
             margin, profit, sell_fee = calculateMargin(
                 buy_size=state.last_buy_size, 
