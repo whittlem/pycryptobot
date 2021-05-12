@@ -1,22 +1,10 @@
-import argparse
-import json
-import logging
-import math
-import random
-import re
-import sys
-from datetime import datetime, timedelta
-
 import pandas as pd
-import urllib3
-from urllib3.exceptions import ReadTimeoutError
-
-from models.Binance import AuthAPI as BAuthAPI
-from models.Binance import PublicAPI as BPublicAPI
-from models.CoinbasePro import AuthAPI as CBAuthAPI
-from models.CoinbasePro import PublicAPI as CBPublicAPI
-from models.Github import Github
+import argparse, json, logging, math, random, re, sys, urllib3
+from datetime import datetime, timedelta
 from models.Trading import TechnicalAnalysis
+from models.Binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
+from models.CoinbasePro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
+from models.Github import Github
 
 # disable insecure ssl warning
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -1509,10 +1497,7 @@ class PyCryptoBot():
         if self.exchange == 'coinbasepro':
             return CBPublicAPI().getTime()
         elif self.exchange == 'binance':
-            try:
-                return BPublicAPI().getTime()
-            except ReadTimeoutError:
-                return None
+            return BPublicAPI().getTime()
         else:
             return ''
 
