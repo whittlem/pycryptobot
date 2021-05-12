@@ -5,12 +5,14 @@ from models.TradingAccount import TradingAccount
 app = PyCryptoBot(exchange='coinbasepro')
 app.setLive(1)
 account = TradingAccount(app)
-orders = account.getOrders()
+#orders = account.getOrders()
+orders = account.getOrders(app.getMarket(), '', 'done')
 print (orders)
 
 # Binance Live orders
 app = PyCryptoBot(exchange='binance')
 app.setLive(1)
 account = TradingAccount(app)
-orders = account.getOrders('DOGEBTC')
+#orders = account.getOrders('DOGEBTC')
+orders = account.getOrders('DOGEBTC', '', 'done')
 print (orders)

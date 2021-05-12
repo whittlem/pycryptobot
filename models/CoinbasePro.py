@@ -192,6 +192,17 @@ class AuthAPI(AuthAPIBase):
                 df = resp.copy()[[ 'created_at', 'product_id', 'side', 'type', 'size', 'price', 'status' ]]
                 df['value'] = float(df['price']) * float(df['size']) - (float(df['price']) * MARGIN_ADJUSTMENT)
             else:
+                ### DEBUG CODE ###
+                if 'specified_funds' not in resp:
+                    print ('If you see this message please include this output in the issue: https://github.com/whittlem/pycryptobot/issues/156')
+                    print ('---')
+                    print (f'uri: orders?status={status}')
+                    print (f'size: {len(resp)}')
+                    print (resp)
+                    print ('---')
+                    return pd.DataFrame()
+                ###
+
                 df = resp.copy()[[ 'created_at', 'product_id', 'side', 'type', 'filled_size', 'specified_funds', 'executed_value', 'fill_fees', 'status' ]]
         else:
             return pd.DataFrame()
@@ -206,6 +217,7 @@ class AuthAPI(AuthAPIBase):
             df = df[[ 'created_at', 'market', 'action', 'type', 'size', 'value', 'status', 'price' ]]
             df['size'] = df['size'].astype(float).round(8)
         else:
+            print ('TEST')
             df.columns = [ 'created_at', 'market', 'action', 'type', 'value', 'size', 'filled', 'fees', 'status', 'price' ]
             df = df[[ 'created_at', 'market', 'action', 'type', 'size', 'value', 'fees', 'price', 'status' ]]
             df.columns = [ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'price', 'status' ]
