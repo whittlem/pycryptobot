@@ -1272,7 +1272,7 @@ class PyCryptoBot():
             p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
             return p.match(market)
         elif self.exchange == 'binance':
-            p = re.compile(r"^[A-Z]{6,12}$")
+            p = re.compile(r"^[A-Z0-9]{6,12}$")
             return p.match(market)
 
         return False

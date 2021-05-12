@@ -18,7 +18,7 @@ FREQUENCY_EQUIVALENTS = ["T", "5T", "15T", "H", "6H", "D"]
 DEFAULT_MARKET = "BTCGBP"
 class AuthAPIBase():
     def _isMarketValid(self, market: str) -> bool:
-        p = re.compile(r"^[A-Z]{6,12}$")
+        p = re.compile(r"^[A-Z0-9]{6,12}$")
         if p.match(market):
             return True
         return False
