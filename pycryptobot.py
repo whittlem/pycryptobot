@@ -72,7 +72,8 @@ elif app.isLive() == 1:
             state.last_buy_size = float(df[df.action == 'buy']['size'])
             state.last_buy_filled = float(df[df.action == 'buy']['filled'])
             state.last_buy_price = float(df[df.action == 'buy']['price'])
-            state.last_buy_fee = round(float(df[df.action == 'buy']['filled']) * float(df[df.action == 'buy']['price']) * app.getTakerFee(), 2)
+            #state.last_buy_fee = round(float(df[df.action == 'buy']['filled']) * float(df[df.action == 'buy']['price']) * app.getTakerFee(), 2)
+            state.last_buy_fee = round(float(df[df.action == 'buy']['price']) * app.getTakerFee(), 2)
         else:
             state.last_action = 'SELL'
             state.last_buy_price = 0.0
@@ -94,8 +95,12 @@ def calculateMargin(buy_size: float=0.0, buy_filled: int=0.0, buy_price: int=0.0
         print (f'sell_price: {sell_price}')
         print (f'sell_fee: {sell_fee}', "\n")
 
-    buy_value = buy_size + buy_fee
-    sell_value = sell_size - sell_fee
+    #buy_value = buy_size + buy_fee
+    #sell_value = sell_size - sell_fee
+    #profit = sell_value - buy_value
+
+    buy_value = buy_price + buy_fee
+    sell_value = sell_price - sell_fee
     profit = sell_value - buy_value
 
     if debug is True:
