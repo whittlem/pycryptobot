@@ -95,8 +95,12 @@ def calculateMargin(buy_size: float=0.0, buy_filled: int=0.0, buy_price: int=0.0
         print (f'sell_price: {sell_price}')
         print (f'sell_fee: {sell_fee}', "\n")
 
-    buy_value = buy_size + buy_fee
-    sell_value = sell_size - sell_fee
+    #buy_value = buy_size + buy_fee
+    #sell_value = sell_size - sell_fee
+    #profit = sell_value - buy_value
+
+    buy_value = buy_price + buy_fee
+    sell_value = sell_price - sell_fee
     profit = sell_value - buy_value
 
     if debug is True:
