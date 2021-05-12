@@ -1,12 +1,12 @@
 import json, pandas, pytest, os, sys, urllib3
 from datetime import datetime
+from models.exchange.binance import AuthAPI, PublicAPI
 
 # disable insecure ssl warning
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 sys.path.append('.')
 # pylint: disable=import-error
-from models.exchange.binance import AuthAPI, PublicAPI
 
 # there is no dynamic way of retrieving a valid order market
 VALID_ORDER_MARKET = 'DOGEBTC'
@@ -48,7 +48,7 @@ def test_instantiate_publicapi_without_error():
 
 def test_config_json_exists_and_valid():
     filename = 'config.json'
-    assert os.path.exists(filename) == True
+    assert os.path.exists(filename) is True
     with open(filename) as config_file:
         config = json.load(config_file)
 
