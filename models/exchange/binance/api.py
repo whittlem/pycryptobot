@@ -1,5 +1,4 @@
-from models.CoinbasePro import FREQUENCY_EQUIVALENTS, SUPPORTED_GRANULARITY
-import sys
+from models.exchange.coinbase_pro.api import FREQUENCY_EQUIVALENTS, SUPPORTED_GRANULARITY
 import math, re
 import numpy as np
 import pandas as pd

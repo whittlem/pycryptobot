@@ -1,11 +1,11 @@
 """Technical analysis on a trading Pandas DataFrame"""
 
-import json, math
+import math
 import numpy as np
 import pandas as pd
-import re, sys
+import re
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-from models.CoinbasePro import AuthAPI
+
 
 class TechnicalAnalysis():
     def __init__(self, data=pd.DataFrame()):
