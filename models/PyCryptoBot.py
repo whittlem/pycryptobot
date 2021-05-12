@@ -13,6 +13,7 @@ from models.Trading import TechnicalAnalysis
 from models.Binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
 from models.CoinbasePro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
 from models.Github import Github
+from models.chat import Telegram
 
 # disable insecure ssl warning
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -102,6 +103,7 @@ class PyCryptoBot():
         self.buypercent = 100
         self.sellpercent = 100
         self.last_action = None
+        self._chat_client = None
 
         self.sellatresistance = False
         self.autorestart = False
@@ -128,20 +130,11 @@ class PyCryptoBot():
             with open(filename) as config_file:
                 config = json.load(config_file)
 
-                if 'telegram' in config and 'token' in config['telegram'] and 'client_id' in config['telegram']:
+                if not self.disabletelegram and 'telegram' in config and 'token' in config['telegram'] and 'client_id' in config['telegram']:
                     telegram = config['telegram']
 
-                    p1 = re.compile(r"^\d{1,10}:[A-z0-9-_]{35,35}$")
-                    p2 = re.compile(r"^\-*\d{7,10}$")
-
-                    if not p1.match(telegram['token']):
-                        print ('Error: Telegram token is invalid')
-                    elif not p2.match(telegram['client_id']):
-                        print ('Error: Telegram client_id is invalid')
-                    else:
-                        self.telegram = True
-                        self._telegram_token = telegram['token']
-                        self._telegram_client_id = telegram['client_id']
+                    self._chat_client = Telegram(telegram['token'], telegram['client_id'])
+                    self.telegram = True
 
                 if exchange not in config and 'binance' in config:
                     self.exchange = 'binance'
@@ -1290,6 +1283,9 @@ class PyCryptoBot():
 
     def getExchange(self):
         return self.exchange
+
+    def getChatClient(self):
+        return self._chat_client
 
     def getAPIKey(self):
         return self.api_key
