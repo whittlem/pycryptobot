@@ -1,6 +1,6 @@
 import re, logging
 
-from .default_parser import isCurrencyValid, defaultConfigParse
+from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
 
 def isMarketValid(market):
     if market == None:
@@ -9,6 +9,9 @@ def isMarketValid(market):
     return p.match(market)
 
 def parseMarket(market):
+    base_currency = 'BTC'
+    quote_currency = 'GBP'
+
     if not isMarketValid(market):
         raise ValueError('Binance market invalid: ' + market)
 
@@ -87,6 +90,8 @@ def parseMarket(market):
 def parser(app, binance_config, args = {}):
     logging.info('CoinbasePro Configuration parse')
 
+    app.granularity = '1h'
+
     if not binance_config:
         raise Exception('There is an error in your config dictionnary')
     
@@ -110,22 +115,21 @@ def parser(app, binance_config, args = {}):
 
         valid_urls = [
             'https://api.binance.com/',
-            'https://testnet.binance.vision/api/'
+            'https://testnet.binance.vision/api/',
+            'https://api.binance.com',
+            'https://testnet.binance.vision/api'
         ]
 
         # validate Binance API
         if binance_config['api_url'] not in valid_urls:
-            raise ValueError('Binance API URL is invalid, Should be: ' + ', '.join(valid_urls))
+            raise ValueError('Binance API URL is invalid')
 
         app.api_url = binance_config['api_url']
         app.base_currency = 'BTC'
         app.quote_currency = 'GBP'
         app.granularity = '1h'
 
-        if 'config' in binance_config:
-            config = {**binance_config['config'], **args}
-        else:
-            config = args
+        config = merge_config_and_args(binance_config, args)
 
         defaultConfigParse(app, config)
 

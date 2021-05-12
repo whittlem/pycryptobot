@@ -1,6 +1,6 @@
 import re, logging
 
-from .default_parser import isCurrencyValid, defaultConfigParse
+from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
 
 def isMarketValid(market):
     p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
@@ -16,6 +16,8 @@ def parseMarket(market):
 def parser(app, coinbase_config, args = {}):
     logging.info('CoinbasePro Configuration parse')
 
+    app.granularity = 3600
+
     if not coinbase_config:
         raise Exception('There is an error in your config dictionnary')
     
@@ -25,7 +27,7 @@ def parser(app, coinbase_config, args = {}):
     if 'api_key' in coinbase_config and 'api_secret' in coinbase_config and 'api_passphrase' in coinbase_config and 'api_url' in coinbase_config:
         
         # validates the api key is syntactically correct
-        p = re.compile(r"^[a-f0-9]{32,32}$")
+        p = re.compile(r"^[a-f0-9]{32}$")
         if not p.match(coinbase_config['api_key']):
             raise TypeError('Coinbase Pro API key is invalid')
 
@@ -46,19 +48,17 @@ def parser(app, coinbase_config, args = {}):
         app.api_passphrase = coinbase_config['api_passphrase']
 
         valid_urls = [
-            'https://api.pro.coinbase.com/'
+            'https://api.pro.coinbase.com/',
+            'https://api.pro.coinbase.com'
         ]
 
         # validate Coinbase Pro API
         if coinbase_config['api_url'] not in valid_urls:
-            raise ValueError('Coinbase Pro API URL is invalid, Should be: ' + ', '.join(valid_urls))
+            raise ValueError('Coinbase Pro API URL is invalid')
 
         app.api_url = coinbase_config['api_url']
 
-        if 'config' in coinbase_config:
-            config = {**coinbase_config['config'], **args}
-        else:
-            config = args
+        config = merge_config_and_args(coinbase_config, args)
 
         defaultConfigParse(app, config)
 

@@ -1,5 +1,14 @@
 import re
 
+def merge_config_and_args(exchange_config, args):
+    new_config = {}
+    if 'config' in exchange_config and exchange_config['config'] is not None:
+        new_config = {**exchange_config['config']}
+    for (key, value) in args.items():
+        if value is not None:
+            new_config[key] = value
+    return new_config
+
 def isCurrencyValid(currency):
     p = re.compile(r"^[1-9A-Z]{2,5}$")
     return p.match(currency)
