@@ -67,9 +67,11 @@ class AuthAPI(AuthAPIBase):
             self.handle_init_error('Coinbase Pro API secret is invalid')
 
         # validates the api passphase is syntactically correct
-        p = re.compile(r"^[a-z0-9]{10,11}$")
+        p = re.compile(r"^[A-z0-9!£$%\^&\*;:,<\.>/\?]{10,24}$")
         if not p.match(api_passphrase):
-            self.handle_init_error('Coinbase Pro API passphrase is invalid')
+            self.handle_init_error('Coinbase Pro API passphrase is invalid. \
+            PyCryptoBot requires 10 - 24 characters with only alphanumerics \
+            and the special characters !£$%^&*;:,.<>/? allowed.')
 
         self._api_key = api_key
         self._api_secret = api_secret
