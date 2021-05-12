@@ -6,7 +6,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 sys.path.append('.')
 # pylint: disable=import-error
-from models.exchange.binance import AuthAPI, PublicAPI
+from models.Binance import AuthAPI, PublicAPI
 
 VALID_ORDER_MARKET = 'DOGEBTC'
 

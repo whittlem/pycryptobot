@@ -1,6 +1,6 @@
 from models.PyCryptoBot import PyCryptoBot
-from models.exchange.binance import PublicAPI as BPublicAPI
-from models.exchange.coinbase_pro import PublicAPI as CBPublicAPI
+from models.Binance import PublicAPI as BPublicAPI
+from models.CoinbasePro import PublicAPI as CBPublicAPI
 
 # Coinbase Pro time
 api = CBPublicAPI()
