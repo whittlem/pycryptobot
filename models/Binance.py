@@ -338,7 +338,10 @@ class AuthAPI(AuthAPIBase):
 
 class PublicAPI(AuthAPIBase):
     def __init__(self):
-        self.client = Client()
+        try:
+            self.client = Client()
+        except:
+            pass
 
     def __truncate(self, f, n):
         return math.floor(f * 10 ** n) / 10 ** n
