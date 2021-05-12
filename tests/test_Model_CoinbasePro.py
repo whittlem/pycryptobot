@@ -1,11 +1,45 @@
-import json, pandas, pytest, os, sys
+import json, pandas, pytest, os, sys, time
 from datetime import datetime
 
 sys.path.append('.')
 # pylint: disable=import-error
 from models.CoinbasePro import AuthAPI, PublicAPI
 
-VALID_ORDER_MARKET = 'BTC-GBP'
+DEFAULT_ORDER_MARKET = 'BTC-GBP'
+
+def getValidOrderMarket() -> str:
+    filename = 'config.json'
+    assert os.path.exists(filename) == True
+    with open(filename) as config_file:
+        config = json.load(config_file)
+
+        if 'api_key' in config and 'api_secret' in config and ('api_pass' in config or 'api_passphrase' in config) and 'api_url' in config:
+            api_key = config['api_key']
+            api_secret = config['api_secret']
+            if 'api_pass' in config:
+                api_passphrase = config['api_pass']
+            else:
+                api_passphrase = config['api_passphrase']
+            api_url = config['api_url']
+        elif 'coinbasepro' in config:
+            if 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
+                api_key = config['coinbasepro']['api_key']
+                api_secret = config['coinbasepro']['api_secret']
+                api_passphrase = config['coinbasepro']['api_passphrase']
+                api_url = config['coinbasepro']['api_url']
+            else:
+                return DEFAULT_ORDER_MARKET
+        else:
+            return DEFAULT_ORDER_MARKET
+
+        time.sleep(0.5)
+        exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+        df = exchange.getOrders()
+        if len(df) == 0:
+            return DEFAULT_ORDER_MARKET
+
+        return df['market'].tail(1).values[0]
+    return DEFAULT_ORDER_MARKET
 
 def test_instantiate_authapi_without_error():
     api_key = "00000000000000000000000000000000"
@@ -214,7 +248,7 @@ def test_getFeesWithMarket():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getFees(VALID_ORDER_MARKET)
+    df = exchange.getFees(getValidOrderMarket())
     assert type(df) is pandas.core.frame.DataFrame
 
     assert len(df) == 1
@@ -278,7 +312,7 @@ def test_getTakerFeeWithMarket():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getTakerFee(VALID_ORDER_MARKET)
+    fee = exchange.getTakerFee(getValidOrderMarket())
     assert type(fee) is float
     assert fee > 0
 
@@ -336,7 +370,7 @@ def test_getMakerFeeWithMarket():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getMakerFee(VALID_ORDER_MARKET)
+    fee = exchange.getMakerFee(getValidOrderMarket())
     assert type(fee) is float
     assert fee > 0
 
@@ -457,7 +491,7 @@ def test_getOrdersValidMarket():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders(market=VALID_ORDER_MARKET)
+    df = exchange.getOrders(market=getValidOrderMarket())
 
     assert len(df) > 0
 

@@ -245,6 +245,7 @@ class AuthAPI(AuthAPIBase):
             stepper = 10.0 ** precision
             truncated = math.trunc(stepper * base_quantity) / stepper
             print ('Order quantity after rounding and fees:', truncated)
+
             return self.client.order_market_buy(symbol=market, quantity=truncated)
         except Exception as err:
             ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
