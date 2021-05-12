@@ -67,13 +67,11 @@ elif app.isLive() == 1:
         df = orders[-1:]
 
         if str(df.action.values[0]) == 'buy':
-            #state.last_action = 'BUY'
             state.last_buy_size = float(df[df.action == 'buy']['size'])
             state.last_buy_filled = float(df[df.action == 'buy']['filled'])
             state.last_buy_price = float(df[df.action == 'buy']['price'])
             state.last_buy_fee = round(state.last_buy_filled * state.last_buy_price * app.getTakerFee(), 2)
         else:
-            #state.last_action = 'SELL'
             state.last_buy_price = 0.0
 
 def calculateMargin(buy_size: float=0.0, buy_filled: int=0.0, buy_price: int=0.0, buy_fee: float=0.0, sell_percent: float=100, sell_price: float=0.0, sell_fee: float=0.0, sell_taker_fee: float=0.0, debug: bool=False) -> float:
@@ -239,7 +237,10 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
     ta.addAll()
     df = ta.getDataFrame()
 
-    df_last = getInterval(df, app)
+    if app.isSimulation() == 1:
+        df_last = getInterval(df, app, state.iterations)
+    else:
+        df_last = getInterval(df, app)
 
     if len(df_last.index.format()) > 0:
         current_df_index = str(df_last.index.format()[0])
@@ -359,7 +360,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
         evening_doji_star = bool(df_last['evening_doji_star'].values[0])
         two_black_gapping = bool(df_last['two_black_gapping'].values[0])
 
-        state.action = getAction(now, app, price, df, df_last, state.last_action, True)
+        state.action = getAction(now, app, price, df, df_last, state.last_action, False)
 
         immediate_action = False
 
