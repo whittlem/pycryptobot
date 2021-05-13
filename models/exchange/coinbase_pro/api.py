@@ -199,18 +199,13 @@ class AuthAPI(AuthAPIBase):
                 df = resp.copy()[[ 'created_at', 'product_id', 'side', 'type', 'size', 'price', 'status' ]]
                 df['value'] = float(df['price']) * float(df['size']) - (float(df['price']) * MARGIN_ADJUSTMENT)
             else:
-                ### DEBUG CODE ###
-                if 'specified_funds' not in resp:
-                    print ('If you see this message please include this output in the issue: https://github.com/whittlem/pycryptobot/issues/156')
-                    print ('---')
-                    print (f'uri: orders?status={status}')
-                    print (f'size: {len(resp)}')
-                    print (resp)
-                    print ('---')
-                    return pd.DataFrame()
-                ###
-
-                df = resp.copy()[[ 'created_at', 'product_id', 'side', 'type', 'filled_size', 'specified_funds', 'executed_value', 'fill_fees', 'status' ]]
+                if 'specified_funds' in resp:
+                    df = resp.copy()[[ 'created_at', 'product_id', 'side', 'type', 'filled_size', 'specified_funds', 'executed_value', 'fill_fees', 'status' ]]
+                else:
+                    # manual limit orders do not contain 'specified_funds'
+                    df_tmp = resp.copy()
+                    df_tmp['specified_funds'] = None
+                    df = df_tmp[[ 'created_at', 'product_id', 'side', 'type', 'filled_size', 'specified_funds', 'executed_value', 'fill_fees', 'status' ]]
         else:
             return pd.DataFrame()
 
