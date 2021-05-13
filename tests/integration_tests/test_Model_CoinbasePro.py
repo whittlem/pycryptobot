@@ -8,7 +8,7 @@ from datetime import datetime
 
 sys.path.append('.')
 # pylint: disable=import-error
-from models.CoinbasePro import AuthAPI, PublicAPI
+from models.exchange.coinbase_pro import AuthAPI, PublicAPI
 
 DEFAULT_ORDER_MARKET = 'BTC-GBP'
 

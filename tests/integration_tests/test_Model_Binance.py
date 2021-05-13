@@ -11,7 +11,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 sys.path.append('.')
 # pylint: disable=import-error
-from models.Binance import AuthAPI, PublicAPI
+from models.exchange.binance import AuthAPI, PublicAPI
 
 # there is no dynamic way of retrieving a valid order market
 VALID_ORDER_MARKET = 'DOGEBTC'
