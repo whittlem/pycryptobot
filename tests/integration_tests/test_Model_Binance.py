@@ -14,7 +14,7 @@ sys.path.append('.')
 from models.Binance import AuthAPI, PublicAPI
 
 # there is no dynamic way of retrieving a valid order market
-VALID_ORDER_MARKET = 'CHZUSDT'
+VALID_ORDER_MARKET = 'DOGEBTC'
 
 def test_instantiate_authapi_without_error():
     api_key = "0000000000000000000000000000000000000000000000000000000000000000"
