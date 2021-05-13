@@ -1,6 +1,6 @@
 from models.PyCryptoBot import PyCryptoBot
-from models.Binance import AuthAPI as BAuthAPI
-from models.CoinbasePro import AuthAPI as CAuthAPI
+from models.exchange.binance import AuthAPI as BAuthAPI
+from models.exchange.coinbase_pro import AuthAPI as CAuthAPI
 
 # Coinbase Pro fees
 app = PyCryptoBot(exchange='coinbasepro')
