@@ -3,7 +3,7 @@ import os
 import pytest
 import sys
 
-sys.path.append('..')
+sys.path.append('.')
 # pylint: disable=import-error
 from models.PyCryptoBot import PyCryptoBot
 
