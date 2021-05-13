@@ -378,7 +378,7 @@ The bot can trade multiple markets at once. This is also documented in my Medium
 
 The way you trade multiple markets at once is create multiple Coinbase Pro portfolios for each each bot instance. You will then clone this project for additional bots with the relevant Portfolio keys (config.json).
 
-I have 5 bots running at once for my Portfolios: "Bot - BTC-GBP", "Bot - BCH-GBP", "Bot - ETH-GBP", "Bot - ETH-GBP", and "Bot - XLM-EUR".
+I have 5 bots running at once for my Portfolios: "Bot - BTC-GBP", "Bot - BCH-GBP", "Bot - ETH-GBP", "Bot - LTC-GBP", and "Bot - XLM-EUR".
 
 Assuming each bot has a config.json that looks similar to this (update the "cryptoMarket" and "fiatMarket" appropriately):
 
