@@ -1,6 +1,6 @@
 [![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)
 
-# Python Crypto Bot v2.0.6 (pycryptobot)
+# Python Crypto Bot v2.0.7 (pycryptobot)
 
 ## Join our chat on Telegram
 
