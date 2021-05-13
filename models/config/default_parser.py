@@ -68,6 +68,11 @@ def defaultConfigParse(app, config):
             elif isinstance(config['trailingstoploss'], int) and config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
                 app.tailing_stop_loss = float(config['trailingstoploss'])
 
+    if 'autorestart' in config:
+        if isinstance(config['autorestart'], int):
+            if config['autorestart'] in [ 0, 1 ]:
+                app.autorestart = bool(config['autorestart'])
+
     if 'sellatloss' in config:
         if isinstance(config['sellatloss'], int):
             if config['sellatloss'] in [ 0, 1 ]:
@@ -78,7 +83,7 @@ def defaultConfigParse(app, config):
     if 'sellatresistance' in config:
         if isinstance(config['sellatresistance'], int):
             if config['sellatresistance'] in [ 0, 1 ]:
-                app.sellatresistance= bool(config['sellatresistance'])
+                app.sellatresistance = bool(config['sellatresistance'])
 
     if 'disablebullonly' in config:
         if isinstance(config['disablebullonly'], int) and bool(config['disablebullonly']):
