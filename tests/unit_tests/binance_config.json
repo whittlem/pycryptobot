@@ -1,0 +1,23 @@
+{
+  "binance": {
+    "api_url": "https://api.binance.com",
+    "api_key": "0000000000000000000000000000000000000000000000000000000000000000",
+    "api_secret": "0000000000000000000000000000000000000000000000000000000000000000",
+    "config": {
+      "base_currency": "BNB",
+      "quote_currency": "BTC",
+      "live": 1,
+      "sellatloss" : 0,
+      "sellatresistance" : 1,
+      "disablebullonly" : 1,
+      "disablebuynearhigh" : 1,
+      "disablebuyobv" : 1,
+      "disablebuyelderray" : 1,
+      "disabletracker" : 1
+    }
+  },
+  "telegram": {
+    "token" : "",
+    "client_id" : ""
+  }
+}

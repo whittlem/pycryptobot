@@ -1,4 +1,9 @@
-import json, pandas, pytest, os, sys, urllib3
+import json
+import os
+import pandas
+import pytest
+import sys
+import urllib3
 from datetime import datetime
 
 # disable insecure ssl warning
@@ -9,7 +14,7 @@ sys.path.append('.')
 from models.Binance import AuthAPI, PublicAPI
 
 # there is no dynamic way of retrieving a valid order market
-VALID_ORDER_MARKET = 'DOGEBTC'
+VALID_ORDER_MARKET = 'CHZUSDT'
 
 def test_instantiate_authapi_without_error():
     api_key = "0000000000000000000000000000000000000000000000000000000000000000"
