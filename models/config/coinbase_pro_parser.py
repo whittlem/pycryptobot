@@ -1,5 +1,4 @@
 import re, logging
-import sys
 
 from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
 

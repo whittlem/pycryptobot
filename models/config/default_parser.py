@@ -1,11 +1,12 @@
 import re
+import sys
 
 def merge_config_and_args(exchange_config, args):
     new_config = {}
     if 'config' in exchange_config and exchange_config['config'] is not None:
         new_config = {**exchange_config['config']}
     for (key, value) in args.items():
-        if value is not None:
+        if value is not None and value is True:
             new_config[key] = value
     return new_config
 
@@ -75,56 +76,56 @@ def defaultConfigParse(app, config):
                     app.sell_lower_pcnt = None
 
     if 'sellatresistance' in config:
-        if isinstance(config['sellatresistance'], bool):
+        if isinstance(config['sellatresistance'], int):
             if config['sellatresistance'] in [ 0, 1 ]:
                 app.sellatresistance= bool(config['sellatresistance'])
 
     if 'disablebullonly' in config:
-        if isinstance(config['disablebullonly'], bool) and bool(config['disablebullonly']):
+        if isinstance(config['disablebullonly'], int) and bool(config['disablebullonly']):
             app.disablebullonly = True
 
     if 'disablebuynearhigh' in config:
-        if isinstance(config['disablebuynearhigh'], bool) and bool(config['disablebuynearhigh']):
+        if isinstance(config['disablebuynearhigh'], int) and bool(config['disablebuynearhigh']):
             app.disablebuynearhigh = True
 
     if 'disablebuymacd' in config:
-        if isinstance(config['disablebuymacd'], bool) and bool(config['disablebuymacd']):
+        if isinstance(config['disablebuymacd'], int) and bool(config['disablebuymacd']):
             app.disablebuymacd = True
 
     if 'disablebuyobv' in config:
-        if isinstance(config['disablebuyobv'], bool) and bool(config['disablebuyobv']):
+        if isinstance(config['disablebuyobv'], int) and bool(config['disablebuyobv']):
             app.disablebuyobv = True
 
     if 'disablebuyelderray' in config:
-        if isinstance(config['disablebuyelderray'], bool) and bool(config['disablebuyelderray']):
+        if isinstance(config['disablebuyelderray'], int) and bool(config['disablebuyelderray']):
             app.disablebuyelderray = True
 
     if 'disablefailsafefibonaccilow' in config:
-        if isinstance(config['disablefailsafefibonaccilow'], bool) and bool(config['disablefailsafefibonaccilow']):
+        if isinstance(config['disablefailsafefibonaccilow'], int) and bool(config['disablefailsafefibonaccilow']):
             app.disablefailsafefibonaccilow = True
 
     if 'disablefailsafelowerpcnt' in config:
-        if isinstance(config['disablefailsafelowerpcnt'], bool) and bool(config['disablefailsafelowerpcnt']):
+        if isinstance(config['disablefailsafelowerpcnt'], int) and bool(config['disablefailsafelowerpcnt']):
             app.disablefailsafelowerpcnt = True
 
     if 'disableprofitbankupperpcnt' in config:
-        if isinstance(config['disableprofitbankupperpcnt'], bool) and bool(config['disableprofitbankupperpcnt']):
+        if isinstance(config['disableprofitbankupperpcnt'], int) and bool(config['disableprofitbankupperpcnt']):
             app.disableprofitbankupperpcnt = True
 
     if 'disableprofitbankreversal' in config:
-        if isinstance(config['disableprofitbankreversal'], bool) and bool(config['disableprofitbankreversal']):
+        if isinstance(config['disableprofitbankreversal'], int) and bool(config['disableprofitbankreversal']):
             app.disableprofitbankreversal = True
 
     if 'disabletelegram' in config:
-        if isinstance(config['disabletelegram'], bool) and bool(config['disabletelegram']):
+        if isinstance(config['disabletelegram'], int) and bool(config['disabletelegram']):
             app.disabletelegram = True
 
     if 'disablelog' in config:
-        if isinstance(config['disablelog'], bool) and bool(config['disablelog']):
+        if isinstance(config['disablelog'], int) and bool(config['disablelog']):
             app.disablelog = True
 
     if 'disabletracker' in config:
-        if isinstance(config['disabletracker'], bool) and bool(config['disabletracker']):
+        if isinstance(config['disabletracker'], int) and bool(config['disabletracker']):
             app.disabletracker = True
 
     # backward compatibility
