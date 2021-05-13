@@ -1,7 +1,14 @@
 """Remotely control your Coinbase Pro account via their API"""
 
+import re
+import json
+import hmac
+import hashlib
+import time
+import requests
+import base64
+import sys
 import pandas as pd
-import re, json, hmac, hashlib, time, requests, base64, sys
 from datetime import datetime, timedelta
 from requests.auth import AuthBase
 from requests import Request
@@ -381,23 +388,22 @@ class AuthAPI(AuthAPIBase):
                     return pd.DataFrame()
 
             resp.raise_for_status()
-            json = resp.json()
 
-            if isinstance(json, list):
-                df = pd.DataFrame.from_dict(json)
+            if isinstance(resp.json(), list):
+                df = pd.DataFrame.from_dict(resp.json())
                 return df
             else: 
-                df = pd.DataFrame(json, index=[0])
+                df = pd.DataFrame(resp.json(), index=[0])
                 return df
 
         except requests.ConnectionError as err:
-             return self.handle_api_error(err, 'ConnectionError')
+            return self.handle_api_error(err, 'ConnectionError')
 
         except requests.exceptions.HTTPError as err:
-             return self.handle_api_error(err, 'HTTPError')
+            return self.handle_api_error(err, 'HTTPError')
 
         except requests.Timeout as err:
-             return self.handle_api_error(err, 'Timeout')
+            return self.handle_api_error(err, 'Timeout')
 
         except json.decoder.JSONDecodeError as err:
             return self.handle_api_error(err, 'JSONDecodeError')        
@@ -534,8 +540,7 @@ class PublicAPI(AuthAPIBase):
                     return {}
 
             resp.raise_for_status()
-            json = resp.json()
-            return json
+            return resp.json()
 
         except requests.ConnectionError as err:
             return self.handle_api_error(err, "ConnectionError")
