@@ -42,8 +42,8 @@ parser.add_argument('--smartswitch', type=int, help='optionally smart switch bet
 parser.add_argument('--verbose', type=int, help='verbose output=1, minimal output=0')
 parser.add_argument('--config', type=str, help="Use the config file at the given location. e.g 'myconfig.json'")
 parser.add_argument('--logfile', type=str, help="Use the log file at the given location. e.g 'mymarket.log'")
-parser.add_argument('--buypercent', type=str, help="percentage of quote currency to buy")
-parser.add_argument('--sellpercent', type=str, help="percentage of base currency to sell")
+parser.add_argument('--buypercent', type=int, help="percentage of quote currency to buy")
+parser.add_argument('--sellpercent', type=int, help="percentage of base currency to sell")
 parser.add_argument('--lastaction', type=str, help="optionally set the last action (BUY, SELL)")
 
 # optional options
