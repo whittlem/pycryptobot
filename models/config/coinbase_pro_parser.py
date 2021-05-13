@@ -1,4 +1,5 @@
 import re, logging
+import sys
 
 from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
 
@@ -25,7 +26,7 @@ def parser(app, coinbase_config, args = {}):
         raise Exception('No app is passed')
 
     if 'api_key' in coinbase_config and 'api_secret' in coinbase_config and 'api_passphrase' in coinbase_config and 'api_url' in coinbase_config:
-        
+
         # validates the api key is syntactically correct
         p = re.compile(r"^[a-f0-9]{32}$")
         if not p.match(coinbase_config['api_key']):
@@ -79,6 +80,11 @@ def parser(app, coinbase_config, args = {}):
             app.market = app.base_currency + '-' + app.quote_currency
 
         if 'granularity' in config and config['granularity'] != None:
+            if config['granularity'].isnumeric() is True:
+                config['granularity'] = int(config['granularity'].isnumeric())
+            print (type(config['granularity']))
+            sys.exit()
+
             if isinstance(config['granularity'], int):
                 if config['granularity'] in [60, 300, 900, 3600, 21600, 86400]:
                     app.granularity = config['granularity']
