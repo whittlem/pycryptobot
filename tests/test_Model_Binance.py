@@ -65,38 +65,6 @@ def test_config_json_exists_and_valid():
             api_secret = config['binance']['api_secret']
             api_url = config['binance']['api_url']
             AuthAPI(api_key, api_secret, api_url)
-    pass
-
-def test_getAccounts():
-    filename = 'config.json'
-
-    with open(filename) as config_file:
-        config = json.load(config_file)
-
-        api_key = ''
-        api_secret = ''
-        api_url = ''
-        if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
-            api_key = config['api_key']
-            api_secret = config['api_secret']
-            api_url = config['api_url']
-            AuthAPI(api_key, api_secret, api_url)
-        elif 'api_key' in config['binance'] and 'api_secret' in config['binance'] and 'api_url' in config['binance']:
-            api_key = config['binance']['api_key']
-            api_secret = config['binance']['api_secret']
-            api_url = config['binance']['api_url']
-            AuthAPI(api_key, api_secret, api_url)
-
-    exchange = AuthAPI(api_key, api_secret, api_url)
-    assert type(exchange) is AuthAPI
-
-    df = exchange.getAccounts()
-    assert type(df) is pandas.core.frame.DataFrame
-
-    actual = df.columns.to_list()
-    expected = [ 'index', 'id', 'currency', 'balance', 'hold', 'available', 'profile_id', 'trading_enabled' ]
-    assert len(actual) == len(expected)
-    assert all([a == b for a, b in zip(actual, expected)])
 
 def test_getAccount():
     filename = 'config.json'
@@ -121,20 +89,11 @@ def test_getAccount():
     exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getAccounts()
-
-    account = df.head(1)['id'].values[0]
-    assert account >= 0
-
-    df = exchange.getAccount(account)
+    df = exchange.getAccount()
     assert type(df) is pandas.core.frame.DataFrame
 
-    assert len(df) == 1
-
-    df.drop(['index'], axis=1, inplace=True)
-
     actual = df.columns.to_list()
-    expected = [ 'id', 'currency', 'balance', 'hold', 'available', 'profile_id', 'trading_enabled' ]
+    expected = ['currency', 'balance', 'hold', 'available']
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
