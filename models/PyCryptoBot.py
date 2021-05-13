@@ -1,6 +1,14 @@
 import pandas as pd
-import argparse, json, logging, math, random, re, sys, urllib3
+import argparse
+import json
+import logging
+import math
+import random
+import re
+import sys
+import urllib3
 from datetime import datetime, timedelta
+from urllib3.exceptions import ReadTimeoutError
 from models.Trading import TechnicalAnalysis
 from models.Binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
 from models.CoinbasePro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
@@ -1457,7 +1465,10 @@ class PyCryptoBot():
         if self.exchange == 'coinbasepro':
             return CBPublicAPI().getTime()
         elif self.exchange == 'binance':
-            return BPublicAPI().getTime()
+            try:
+                return BPublicAPI().getTime()
+            except ReadTimeoutError:
+                return ''
         else:
             return ''
 
@@ -1814,9 +1825,9 @@ class PyCryptoBot():
         if self.isLive() == 1:
             if self.getExchange() == 'binance':
                 if last_action == 'SELL'and account.getBalance(self.getQuoteCurrency()) < 0.001:
-                    raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(self.getQuoteCurrency())) + ' < 0.1 ' + self.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
+                    raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(self.getQuoteCurrency())) + ' < 0.1 ' + self.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
                 elif last_action == 'BUY'and account.getBalance(self.getBaseCurrency()) < 0.001:
-                    raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(self.getBaseCurrency())) + ' < 0.1 ' + self.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
+                    raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(self.getBaseCurrency())) + ' < 0.1 ' + self.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
 
             elif self.getExchange() == 'coinbasepro':
                 if last_action == 'SELL'and account.getBalance(self.getQuoteCurrency()) < 50:

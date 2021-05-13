@@ -1,5 +1,6 @@
 from models.CoinbasePro import FREQUENCY_EQUIVALENTS, SUPPORTED_GRANULARITY
-import math, re
+import math
+import re
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
@@ -321,7 +322,10 @@ class AuthAPI(AuthAPIBase):
 
 class PublicAPI(AuthAPIBase):
     def __init__(self) -> None:
-        self.client = Client()
+        try:
+            self.client = Client()
+        except:
+            pass
 
     def __truncate(self, f, n) -> int:
         return math.floor(f * 10 ** n) / 10 ** n
@@ -367,7 +371,10 @@ class PublicAPI(AuthAPIBase):
             if len(resp) > 300:
                 resp = resp[:300]
         else: # TODO: replace with a KLINE_MESSAGE_FOO equivalent
-            if granularity == '5m':
+            if granularity == '1m':
+                resp = self.client.get_historical_klines(market, granularity, '12 hours ago UTC')
+                resp = resp[-300:]
+            elif granularity == '5m':
                 resp = self.client.get_historical_klines(market, granularity, '2 days ago UTC')
                 resp = resp[-300:]
             elif granularity == '15m':

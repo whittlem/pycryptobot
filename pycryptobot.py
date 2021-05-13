@@ -1,10 +1,14 @@
 """Python Crypto Bot consuming Coinbase Pro or Binance APIs"""
 
+import logging
+import os
+import random
+import sched
+import sys
+import time
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-import logging, os, random, sched, sys, time
-
 from models.PyCryptoBot import PyCryptoBot
 from models.AppState import AppState
 from models.Trading import TechnicalAnalysis
@@ -52,9 +56,9 @@ elif app.isLive() == 1:
 
     if app.getExchange() == 'binance':
         if state.last_action == 'SELL' and account.getBalance(app.getQuoteCurrency()) < 0.001:
-            raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(app.getQuoteCurrency())) + ' < 0.1 ' + app.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
+            raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(app.getQuoteCurrency())) + ' < 0.1 ' + app.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
         elif state.last_action == 'BUY' and account.getBalance(app.getBaseCurrency()) < 0.001:
-            raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(app.getBaseCurrency())) + ' < 0.1 ' + app.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
+            raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(app.getBaseCurrency())) + ' < 0.1 ' + app.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
  
     elif app.getExchange() == 'coinbasepro':
         if state.last_action == 'SELL' and account.getBalance(app.getQuoteCurrency()) < 50:
