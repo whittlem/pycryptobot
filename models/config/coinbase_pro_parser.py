@@ -82,8 +82,6 @@ def parser(app, coinbase_config, args = {}):
         if 'granularity' in config and config['granularity'] != None:
             if config['granularity'].isnumeric() is True:
                 config['granularity'] = int(config['granularity'].isnumeric())
-            print (type(config['granularity']))
-            sys.exit()
 
             if isinstance(config['granularity'], int):
                 if config['granularity'] in [60, 300, 900, 3600, 21600, 86400]:
