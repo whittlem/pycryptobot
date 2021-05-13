@@ -1,4 +1,9 @@
-import json, pandas, pytest, os, sys, urllib3
+import json
+import os
+import pandas
+import pytest
+import sys
+import urllib3
 from datetime import datetime
 
 # disable insecure ssl warning

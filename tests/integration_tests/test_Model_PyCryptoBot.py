@@ -1,4 +1,7 @@
-import json, os, pytest, sys
+import json
+import os
+import pytest
+import sys
 
 sys.path.append('.')
 # pylint: disable=import-error
