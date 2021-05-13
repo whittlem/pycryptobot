@@ -1,7 +1,4 @@
-import json
-import os
-import pytest
-import sys
+import json, os, pytest, sys
 
 sys.path.append('.')
 # pylint: disable=import-error
@@ -29,11 +26,11 @@ def test_instantiate_model_without_error():
 
 def test_configjson_binance():
     config = {
-        "binance" : {
-            "api_url" : "https://api.binance.com",
-            "api_key" : "0000000000000000000000000000000000000000000000000000000000000000",
-            "api_secret" : "0000000000000000000000000000000000000000000000000000000000000000",
-        } 
+        "binance": {
+            "api_url": "https://api.binance.com",
+            "api_key": "0000000000000000000000000000000000000000000000000000000000000000",
+            "api_secret": "0000000000000000000000000000000000000000000000000000000000000000",
+        }
     }
 
     try:
@@ -50,11 +47,11 @@ def test_configjson_binance():
 
 def test_configjson_binance_invalid_api_url():
     config = {
-        "binance" : {
-            "api_url" : "ERROR",
-            "api_key" : "0000000000000000000000000000000000000000000000000000000000000000",
-            "api_secret" : "0000000000000000000000000000000000000000000000000000000000000000",
-        } 
+        "binance": {
+            "api_url": "ERROR",
+            "api_key": "0000000000000000000000000000000000000000000000000000000000000000",
+            "api_secret": "0000000000000000000000000000000000000000000000000000000000000000",
+        }
     }
 
     try:
@@ -71,11 +68,11 @@ def test_configjson_binance_invalid_api_url():
 
 def test_configjson_binance_invalid_api_key():
     config = {
-        "binance" : {
-            "api_url" : "https://api.binance.com",
-            "api_key" : "ERROR",
-            "api_secret" : "0000000000000000000000000000000000000000000000000000000000000000",
-        } 
+        "binance": {
+            "api_url": "https://api.binance.com",
+            "api_key": "ERROR",
+            "api_secret": "0000000000000000000000000000000000000000000000000000000000000000",
+        }
     }
 
     try:
@@ -92,11 +89,11 @@ def test_configjson_binance_invalid_api_key():
 
 def test_configjson_binance_invalid_api_secret():
     config = {
-        "binance" : {
-            "api_url" : "https://api.binance.com",
-            "api_key" : "0000000000000000000000000000000000000000000000000000000000000000",
-            "api_secret" : "ERROR",
-        } 
+        "binance": {
+            "api_url": "https://api.binance.com",
+            "api_key": "0000000000000000000000000000000000000000000000000000000000000000",
+            "api_secret": "ERROR",
+        }
     }
 
     try:
@@ -113,12 +110,12 @@ def test_configjson_binance_invalid_api_secret():
 
 def test_configjson_coinbasepro():
     config = {
-        "coinbasepro" : {
-            "api_url" : "https://api.pro.coinbase.com",
-            "api_key" : "00000000000000000000000000000000",
-            "api_secret" : "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
-            "api_passphrase" : "00000000000"
-        } 
+        "coinbasepro": {
+            "api_url": "https://api.pro.coinbase.com",
+            "api_key": "00000000000000000000000000000000",
+            "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+            "api_passphrase": "00000000000"
+        }
     }
 
     try:
@@ -135,10 +132,10 @@ def test_configjson_coinbasepro():
 
 def test_configjson_coinbasepro_legacy():
     config = {
-        "api_url" : "https://api.pro.coinbase.com",
-        "api_key" : "00000000000000000000000000000000",
-        "api_secret" : "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
-        "api_passphrase" : "00000000000"
+        "api_url": "https://api.pro.coinbase.com",
+        "api_key": "00000000000000000000000000000000",
+        "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+        "api_passphrase": "00000000000"
     }
 
     try:
@@ -155,32 +152,12 @@ def test_configjson_coinbasepro_legacy():
 
 def test_configjson_coinbasepro_invalid_api_url():
     config = {
-        "coinbasepro" : {
-            "api_url" : "ERROR",
-            "api_key" : "00000000000000000000000000000000",
-            "api_secret" : "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
-            "api_passphrase" : "00000000000"
-        } 
-    }
-
-    try:
-        config_json = json.dumps(config)
-        fh = open('/tmp/pycryptobot_pytest_config.json', 'w')
-        fh.write(config_json)
-        fh.close()
-    except Exception as err:
-        print (err)
-
-    with pytest.raises(ValueError) as execinfo:
-        PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
-    assert str(execinfo.value) == 'Coinbase Pro API URL is invalid'
-
-def test_configjson_coinbasepro_legacy_invalid_api_url():
-    config = {
-        "api_url" : "ERROR",
-        "api_key" : "00000000000000000000000000000000",
-        "api_secret" : "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
-        "api_passphrase" : "00000000000"
+        "coinbasepro": {
+            "api_url": "ERROR",
+            "api_key": "00000000000000000000000000000000",
+            "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+            "api_passphrase": "00000000000"
+        }
     }
 
     try:
@@ -197,32 +174,12 @@ def test_configjson_coinbasepro_legacy_invalid_api_url():
 
 def test_configjson_coinbasepro_invalid_api_key():
     config = {
-        "coinbasepro" : {
-            "api_url" : "https://api.pro.coinbase.com",
-            "api_key" : "ERROR",
-            "api_secret" : "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
-            "api_passphrase" : "00000000000"
-        } 
-    }
-
-    try:
-        config_json = json.dumps(config)
-        fh = open('/tmp/pycryptobot_pytest_config.json', 'w')
-        fh.write(config_json)
-        fh.close()
-    except Exception as err:
-        print (err)
-
-    with pytest.raises(TypeError) as execinfo:
-        PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
-    assert str(execinfo.value) == 'Coinbase Pro API key is invalid'
-
-def test_configjson_coinbasepro_legacy_invalid_api_key():
-    config = {
-        "api_url" : "https://api.pro.coinbase.com",
-        "api_key" : "ERROR",
-        "api_secret" : "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
-        "api_passphrase" : "00000000000"
+        "coinbasepro": {
+            "api_url": "https://api.pro.coinbase.com",
+            "api_key": "ERROR",
+            "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+            "api_passphrase": "00000000000"
+        }
     }
 
     try:
@@ -239,32 +196,12 @@ def test_configjson_coinbasepro_legacy_invalid_api_key():
 
 def test_configjson_coinbasepro_invalid_api_secret():
     config = {
-        "coinbasepro" : {
-            "api_url" : "https://api.pro.coinbase.com",
-            "api_key" : "00000000000000000000000000000000",
-            "api_secret" : "ERROR",
-            "api_passphrase" : "00000000000"
-        } 
-    }
-
-    try:
-        config_json = json.dumps(config)
-        fh = open('/tmp/pycryptobot_pytest_config.json', 'w')
-        fh.write(config_json)
-        fh.close()
-    except Exception as err:
-        print (err)
-
-    with pytest.raises(TypeError) as execinfo:
-        PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
-    assert str(execinfo.value) == 'Coinbase Pro API secret is invalid'
-
-def test_configjson_coinbasepro_legacy_invalid_api_secret():
-    config = {
-        "api_url" : "https://api.pro.coinbase.com",
-        "api_key" : "00000000000000000000000000000000",
-        "api_secret" : "ERROR",
-        "api_passphrase" : "00000000000"
+        "coinbasepro": {
+            "api_url": "https://api.pro.coinbase.com",
+            "api_key": "00000000000000000000000000000000",
+            "api_secret": "ERROR",
+            "api_passphrase": "00000000000"
+        }
     }
 
     try:
@@ -281,32 +218,12 @@ def test_configjson_coinbasepro_legacy_invalid_api_secret():
 
 def test_configjson_coinbasepro_invalid_api_passphrase():
     config = {
-        "coinbasepro" : {
-            "api_url" : "https://api.pro.coinbase.com",
-            "api_key" : "00000000000000000000000000000000",
-            "api_secret" : "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
-            "api_passphrase" : "ERROR"
-        } 
-    }
-
-    try:
-        config_json = json.dumps(config)
-        fh = open('/tmp/pycryptobot_pytest_config.json', 'w')
-        fh.write(config_json)
-        fh.close()
-    except Exception as err:
-        print (err)
-
-    with pytest.raises(TypeError) as execinfo:
-        PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
-    assert str(execinfo.value) == 'Coinbase Pro API passphrase is invalid'
-
-def test_configjson_coinbasepro_legacy_invalid_api_passphrase():
-    config = {
-        "api_url" : "https://api.pro.coinbase.com",
-        "api_key" : "00000000000000000000000000000000",
-        "api_secret" : "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
-        "api_passphrase" : "ERROR"
+        "coinbasepro": {
+            "api_url": "https://api.pro.coinbase.com",
+            "api_key": "00000000000000000000000000000000",
+            "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+            "api_passphrase": "ERROR"
+        }
     }
 
     try:
@@ -323,12 +240,12 @@ def test_configjson_coinbasepro_legacy_invalid_api_passphrase():
 
 def test_configjson_binance_granularity():
     config = {
-       "binance" : {
-            "api_url" : "https://api.binance.com",
-            "api_key" : "0000000000000000000000000000000000000000000000000000000000000000",
-            "api_secret" : "0000000000000000000000000000000000000000000000000000000000000000",
-            "config" : {}
-        } 
+       "binance": {
+            "api_url": "https://api.binance.com",
+            "api_key": "0000000000000000000000000000000000000000000000000000000000000000",
+            "api_secret": "0000000000000000000000000000000000000000000000000000000000000000",
+            "config": {}
+        }
     }
 
     try:
@@ -441,12 +358,12 @@ def test_configjson_binance_granularity():
 
 def test_configjson_binance_invalid_granularity():
     config = {
-       "binance" : {
-            "api_url" : "https://api.binance.com",
-            "api_key" : "0000000000000000000000000000000000000000000000000000000000000000",
-            "api_secret" : "0000000000000000000000000000000000000000000000000000000000000000",
-            "config" : {}
-        } 
+       "binance": {
+            "api_url": "https://api.binance.com",
+            "api_key": "0000000000000000000000000000000000000000000000000000000000000000",
+            "api_secret": "0000000000000000000000000000000000000000000000000000000000000000",
+            "config": {}
+        }
     }
 
     try:
@@ -468,13 +385,13 @@ def test_configjson_binance_invalid_granularity():
 
 def test_configjson_coinbasepro_granularity():
     config = {
-        "coinbasepro" : {
-            "api_url" : "https://api.pro.coinbase.com",
-            "api_key" : "00000000000000000000000000000000",
-            "api_secret" : "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
-            "api_passphrase" : "00000000000",
-            "config" : {}
-        } 
+        "coinbasepro": {
+            "api_url": "https://api.pro.coinbase.com",
+            "api_key": "00000000000000000000000000000000",
+            "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+            "api_passphrase": "00000000000",
+            "config": {}
+        }
     }
 
     try:
@@ -587,13 +504,13 @@ def test_configjson_coinbasepro_granularity():
 
 def test_configjson_coinbasepro_invalid_granularity():
     config = {
-        "coinbasepro" : {
-            "api_url" : "https://api.pro.coinbase.com",
-            "api_key" : "00000000000000000000000000000000",
-            "api_secret" : "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
-            "api_passphrase" : "00000000000",
-            "config" : {}
-        } 
+        "coinbasepro": {
+            "api_url": "https://api.pro.coinbase.com",
+            "api_key": "00000000000000000000000000000000",
+            "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+            "api_passphrase": "00000000000",
+            "config": {}
+        }
     }
 
     try:
@@ -615,13 +532,13 @@ def test_configjson_coinbasepro_invalid_granularity():
 
 def test_configjson_islive():
     config = {
-        "coinbasepro" : {
-            "api_url" : "https://api.pro.coinbase.com",
-            "api_key" : "00000000000000000000000000000000",
-            "api_secret" : "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
-            "api_passphrase" : "00000000000",
-            "config" : {}
-        } 
+        "coinbasepro": {
+            "api_url": "https://api.pro.coinbase.com",
+            "api_key": "00000000000000000000000000000000",
+            "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+            "api_passphrase": "00000000000",
+            "config": {}
+        }
     }
 
     try:
@@ -653,81 +570,35 @@ def test_configjson_islive():
     app.setLive(0)
     assert app.isLive() == 0
 
-    config = {
-        "api_url" : "https://api.pro.coinbase.com",
-        "api_key" : "00000000000000000000000000000000",
-        "api_secret" : "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
-        "api_passphrase" : "00000000000",
-        "config" : {
-            "live" : 1
-        }
-    }
-
-    try:
-        config_json = json.dumps(config)
-        fh = open('/tmp/pycryptobot_pytest_config.json', 'w')
-        fh.write(config_json)
-        fh.close()
-    except Exception as err:
-        print (err)
-
-    app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
-    assert type(app) is PyCryptoBot
-    assert app.getExchange() == 'coinbasepro'
-    assert app.isLive() == 1
-
     if os.path.exists('/tmp/pycryptobot_pytest_config.json'):
         os.remove('/tmp/pycryptobot_pytest_config.json')
 
 def test_configjson_graphs():
     config = {
-        "coinbasepro" : {
-            "api_url" : "https://api.pro.coinbase.com",
-            "api_key" : "00000000000000000000000000000000",
-            "api_secret" : "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
-            "api_passphrase" : "00000000000",
-            "config" : {}
-        } 
-    }
-
-    try:
-        config_json = json.dumps(config)
-        fh = open('/tmp/pycryptobot_pytest_config.json', 'w')
-        fh.write(config_json)
-        fh.close()
-    except Exception as err:
-        print (err)
-
-    app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
-    assert type(app) is PyCryptoBot
-    assert app.getExchange() == 'coinbasepro'
-    assert app.shouldSaveGraphs() == 0
-
-    try:
-        config['coinbasepro']['config']['graphs'] = 0
-        config_json = json.dumps(config)
-        fh = open('/tmp/pycryptobot_pytest_config.json', 'w')
-        fh.write(config_json)
-        fh.close()
-    except Exception as err:
-        print (err)
-
-    app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
-    assert type(app) is PyCryptoBot
-    assert app.getExchange() == 'coinbasepro'
-    assert app.shouldSaveGraphs() == 0
-
-    config = {
-        "api_url" : "https://api.pro.coinbase.com",
-        "api_key" : "00000000000000000000000000000000",
-        "api_secret" : "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
-        "api_passphrase" : "00000000000",
-        "config" : {
-            "graphs" : 1
+        "coinbasepro": {
+            "api_url": "https://api.pro.coinbase.com",
+            "api_key": "00000000000000000000000000000000",
+            "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+            "api_passphrase": "00000000000",
+            "config": {}
         }
     }
 
     try:
+        config_json = json.dumps(config)
+        fh = open('/tmp/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'coinbasepro'
+    assert app.shouldSaveGraphs() == 0
+
+    try:
+        config['coinbasepro']['config']['graphs'] = 1
         config_json = json.dumps(config)
         fh = open('/tmp/pycryptobot_pytest_config.json', 'w')
         fh.write(config_json)
@@ -745,13 +616,13 @@ def test_configjson_graphs():
 
 def test_configjson_isverbose():
     config = {
-        "coinbasepro" : {
-            "api_url" : "https://api.pro.coinbase.com",
-            "api_key" : "00000000000000000000000000000000",
-            "api_secret" : "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
-            "api_passphrase" : "00000000000",
-            "config" : {}
-        } 
+        "coinbasepro": {
+            "api_url": "https://api.pro.coinbase.com",
+            "api_key": "00000000000000000000000000000000",
+            "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+            "api_passphrase": "00000000000",
+            "config": {}
+        }
     }
 
     try:
@@ -769,29 +640,6 @@ def test_configjson_isverbose():
 
     try:
         config['coinbasepro']['config']['verbose'] = 1
-        config_json = json.dumps(config)
-        fh = open('/tmp/pycryptobot_pytest_config.json', 'w')
-        fh.write(config_json)
-        fh.close()
-    except Exception as err:
-        print (err)
-
-    app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
-    assert type(app) is PyCryptoBot
-    assert app.getExchange() == 'coinbasepro'
-    assert app.isVerbose() == 1
-
-    config = {
-        "api_url" : "https://api.pro.coinbase.com",
-        "api_key" : "00000000000000000000000000000000",
-        "api_secret" : "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
-        "api_passphrase" : "00000000000",
-        "config" : {
-            "verbose" : 1
-        }
-    }
-
-    try:
         config_json = json.dumps(config)
         fh = open('/tmp/pycryptobot_pytest_config.json', 'w')
         fh.write(config_json)
