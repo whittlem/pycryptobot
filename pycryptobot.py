@@ -48,10 +48,25 @@ elif app.isLive() == 1:
 
     account = TradingAccount(app)
 
-    if account.getBalance(app.getBaseCurrency()) < account.getBalance(app.getQuoteCurrency()):
-        state.last_action = 'SELL'
-    elif account.getBalance(app.getBaseCurrency()) > account.getBalance(app.getQuoteCurrency()):
-        state.last_action = 'BUY'
+    orders = account.getOrders(app.getMarket(), '', 'done')
+    if len(orders) > 0:
+        df = orders[-1:]
+
+        if str(df.action.values[0]) == 'buy':
+            state.last_action = 'BUY'
+            state.last_buy_size = float(df[df.action == 'buy']['size'])
+            state.last_buy_filled = float(df[df.action == 'buy']['filled'])
+            state.last_buy_price = float(df[df.action == 'buy']['price'])
+            state.last_buy_fee = round(state.last_buy_filled * state.last_buy_price * app.getTakerFee(), 2)
+        else:
+            state.last_action = 'SELL'
+            state.last_buy_price = 0.0
+    else:
+        # If we do not have any orders, pick last action based on balance
+        if account.getBalance(app.getBaseCurrency()) < account.getBalance(app.getQuoteCurrency()):
+            state.last_action = 'SELL'
+        elif account.getBalance(app.getBaseCurrency()) > account.getBalance(app.getQuoteCurrency()):
+            state.last_action = 'BUY'
 
     if app.getExchange() == 'binance':
         if state.last_action == 'SELL' and account.getBalance(app.getQuoteCurrency()) < 0.001:
@@ -65,17 +80,6 @@ elif app.isLive() == 1:
         elif state.last_action == 'BUY' and account.getBalance(app.getBaseCurrency()) < 0.001:
             raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(app.getBaseCurrency())) + ' < 0.1 ' + app.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
 
-    orders = account.getOrders(app.getMarket(), '', 'done')
-    if len(orders) > 0:
-        df = orders[-1:]
-
-        if str(df.action.values[0]) == 'buy':
-            state.last_buy_size = float(df[df.action == 'buy']['size'])
-            state.last_buy_filled = float(df[df.action == 'buy']['filled'])
-            state.last_buy_price = float(df[df.action == 'buy']['price'])
-            state.last_buy_fee = round(state.last_buy_filled * state.last_buy_price * app.getTakerFee(), 2)
-        else:
-            state.last_buy_price = 0.0
 
 def calculateMargin(buy_size: float=0.0, buy_filled: int=0.0, buy_price: int=0.0, buy_fee: float=0.0, sell_percent: float=100, sell_price: float=0.0, sell_fee: float=0.0, sell_taker_fee: float=0.0, debug: bool=False) -> float:
     if debug is True:
