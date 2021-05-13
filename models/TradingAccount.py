@@ -1,13 +1,15 @@
 """Live or test trading account"""
 
-import sys
+import re
+import requests
+
 import numpy as np
 import pandas as pd
-import json, math, re, requests, sys
-from datetime import datetime
 from binance.client import Client
-from models.Binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
-from models.CoinbasePro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
+
+from models.Binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI, AuthAPI
+from models.CoinbasePro import AuthAPI as CBAuthAPI
+
 
 class TradingAccount():
     def __init__(self, app=None):
@@ -127,17 +129,9 @@ class TradingAccount():
 
         if self.app.getExchange() == 'binance':
             if self.mode == 'live':
-                resp = self.client.get_account()
-                if 'balances' in resp:
-                    df = pd.DataFrame(resp['balances'])
-                    df = df[(df['free'] != '0.00000000') & (df['free'] != '0.00')]
-                    df['free'] = df['free'].astype(float)
-                    df['locked'] = df['locked'].astype(float)
-                    df['balance'] = df['free'] - df['locked']
-                    df.columns = [ 'currency', 'available', 'hold', 'balance' ]
-                    df = df[[ 'currency', 'balance', 'hold', 'available' ]]
-                    df = df.reset_index(drop=True)
-
+                model = AuthAPI(self.app.getAPIKey(), self.app.getAPISecret())
+                df = model.getAccount()
+                if isinstance(df, pd.DataFrame):
                     if currency == '':
                         # retrieve all balances
                         return df
@@ -149,7 +143,7 @@ class TradingAccount():
                             return 0.0
                         else:
                             # return balance of specified currency (if positive)
-                            if currency in ['EUR','GBP','USD']:
+                            if currency in ['EUR', 'GBP', 'USD']:
                                 return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2))
                             else:
                                 return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
@@ -170,8 +164,8 @@ class TradingAccount():
                         else:
                             self.balance = self.balance.replace('BASE', currency)
 
-                    if self.balance.currency[self.balance.currency.isin([currency])].empty == True:
-                        self.balance.loc[len(self.balance)] = [currency,0,0,0]
+                    if self.balance.currency[self.balance.currency.isin([currency])].empty:
+                        self.balance.loc[len(self.balance)] = [currency, 0, 0, 0]
 
                     # retrieve balance of specified currency
                     df = self.balance
@@ -182,7 +176,7 @@ class TradingAccount():
                         return 0.0
                     else:
                         # return balance of specified currency (if positive)
-                        if currency in ['EUR','GBP','USD']:
+                        if currency in ['EUR', 'GBP', 'USD']:
                             return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2))
                         else:
                             return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))

@@ -1,5 +1,4 @@
 from models.CoinbasePro import FREQUENCY_EQUIVALENTS, SUPPORTED_GRANULARITY
-import sys
 import math, re
 import numpy as np
 import pandas as pd
@@ -76,39 +75,21 @@ class AuthAPI(AuthAPIBase):
     def getClient(self) -> Client:
         return self.client
 
-    def getAccounts(self) -> pd.DataFrame:
-        """Retrieves your list of accounts"""
-        accounts = self.client.get_account()
-
-        if 'balances' not in accounts:
-            return pd.DataFrame(columns=[ 'index', 'id', 'currency', 'balance', 'hold', 'available', 'profile_id', 'trading_enabled' ])
-
-        df = pd.DataFrame(self.client.get_account()['balances'])
-        df.columns = [ 'currency', 'available', 'hold' ]
-        df['index'] = df.index
-        df['id'] = df.index
-        df['balance'] = df['available']
-        df['profile_id'] = ''
-        df['trading_enabled'] = True
-
-        return df[[ 'index', 'id', 'currency', 'balance', 'hold', 'available', 'profile_id', 'trading_enabled' ]]
-
-    def getAccount(self, account: int) -> pd.DataFrame:
+    def getAccount(self):
         """Retrieves a specific account"""
-        accounts = self.client.get_account()
-
-        if 'balances' not in accounts:
-            return pd.DataFrame(columns=[ 'index', 'id', 'currency', 'balance', 'hold', 'available', 'profile_id', 'trading_enabled' ])
-
-        df = pd.DataFrame(self.client.get_account()['balances'])
-        df.columns = [ 'currency', 'available', 'hold' ]
-        df['index'] = df.index
-        df['id'] = df.index
-        df['balance'] = df['available']
-        df['profile_id'] = ''
-        df['trading_enabled'] = True
-
-        return df[df['id'] == account][[ 'index', 'id', 'currency', 'balance', 'hold', 'available', 'profile_id', 'trading_enabled' ]]
+        account = self.client.get_account()
+        if 'balances' in account:
+            df = pd.DataFrame(account['balances'])
+            df = df[(df['free'] != '0.00000000') & (df['free'] != '0.00')]
+            df['free'] = df['free'].astype(float)
+            df['locked'] = df['locked'].astype(float)
+            df['balance'] = df['free'] - df['locked']
+            df.columns = ['currency', 'available', 'hold', 'balance']
+            df = df[['currency', 'balance', 'hold', 'available']]
+            df = df.reset_index(drop=True)
+            return df
+        else:
+            return 0.0
 
     def getFees(self, market: str='') -> pd.DataFrame:
         if market != '':
