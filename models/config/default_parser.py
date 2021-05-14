@@ -165,3 +165,8 @@ def defaultConfigParse(app, config):
         if isinstance(config['lastaction'], str):
             if config['lastaction'] in [ 'BUY', 'SELL' ]:
                 app.last_action = config['lastaction']
+
+    if 'buymaxsize' in config:
+        if isinstance(config['buymaxsize'], int):
+            if config['buymaxsize'] > 0:
+                app.buymaxsize = config['buymaxsize']
