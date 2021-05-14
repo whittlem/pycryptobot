@@ -88,7 +88,7 @@ def parseMarket(market):
     return market, base_currency, quote_currency
 
 def parser(app, binance_config, args = {}):
-    logging.info('CoinbasePro Configuration parse')
+    logging.info('Binance Configuration parse')
 
     app.granularity = '1h'
 
