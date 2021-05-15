@@ -1,8 +1,11 @@
 """Technical analysis on a trading Pandas DataFrame"""
 
 from math import floor
-from numpy import maximum, mean, minimum, nan, ndarray, round, where
+from re import compile
+
+from numpy import maximum, mean, minimum, nan, ndarray, round
 from numpy import sum as np_sum
+from numpy import where
 from pandas import DataFrame, Series
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
@@ -796,7 +799,7 @@ class TechnicalAnalysis():
     def saveCSV(self, filename: str='tradingdata.csv') -> None:
         """Saves the DataFrame to an uncompressed CSV."""
 
-        p = re.compile(r"^[\w\-. ]+$")
+        p = compile(r"^[\w\-. ]+$")
         if not p.match(filename):
             raise TypeError('Filename required.')
 
