@@ -638,7 +638,7 @@ class TechnicalAnalysis():
     def addEMABuySignals(self) -> None:
         """Adds the EMA12/EMA26 buy and sell signals to the DataFrame"""
 
-        if not isinstance(self.df, pd.DataFrame):
+        if not isinstance(self.df, DataFrame):
             raise TypeError('Pandas DataFrame required.')
 
         if not 'close' in self.df.columns:
@@ -667,7 +667,7 @@ class TechnicalAnalysis():
     def addSMABuySignals(self) -> None:
         """Adds the SMA50/SMA200 buy and sell signals to the DataFrame"""
 
-        if not isinstance(self.df, pd.DataFrame):
+        if not isinstance(self.df, DataFrame):
             raise TypeError('Pandas DataFrame required.')
 
         if not 'close' in self.df.columns:
@@ -696,7 +696,7 @@ class TechnicalAnalysis():
     def addMACDBuySignals(self) -> None:
         """Adds the MACD/Signal buy and sell signals to the DataFrame"""
 
-        if not isinstance(self.df, pd.DataFrame):
+        if not isinstance(self.df, DataFrame):
             raise TypeError('Pandas DataFrame required.')
 
         if not 'close' in self.df.columns:
@@ -800,7 +800,7 @@ class TechnicalAnalysis():
         if not p.match(filename):
             raise TypeError('Filename required.')
 
-        if not isinstance(self.df, pd.DataFrame):
+        if not isinstance(self.df, DataFrame):
             raise TypeError('Pandas DataFrame required.')
 
         try:
