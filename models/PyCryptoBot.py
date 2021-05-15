@@ -481,8 +481,7 @@ class PyCryptoBot():
             return api.getTakerFee()
         elif self.exchange == 'binance':
             api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
-            #return api.getTakerFee()
-            return 0.005
+            return api.getTakerFee(self.getMarket())
         else:
             return 0.005
 

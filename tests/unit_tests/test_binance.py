@@ -181,7 +181,7 @@ def test_get_taker_fee_with_market(mocker):
     mocker.patch("models.exchange.binance.Client.get_trade_fee", return_value=client_response)
     fee = exchange.getTakerFee(MOCK_MARKET)
     assert type(fee) is float
-    assert fee == 0.001
+    assert fee == 0.1
 
 
 def test_get_maker_fee_with_market(mocker):

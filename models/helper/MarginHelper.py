@@ -9,9 +9,12 @@ def calculate_margin(buy_size: float = 0.0, buy_filled: int = 0.0, buy_price: in
 
     sell_size = (sell_percent / 100) * ((sell_price / buy_price) * buy_size)
 
-    if sell_fee == 0.0 and sell_taker_fee > 0.0:
-        sell_fee = sell_size * sell_taker_fee
-
+    if exchange == 'binance':
+        if sell_fee == 0.0 and sell_taker_fee > 0.0:
+            sell_fee = ((sell_size * sell_price) / 100) * sell_taker_fee
+    else:
+        if sell_fee == 0.0 and sell_taker_fee > 0.0:
+            sell_fee = sell_size * sell_taker_fee
     if debug is True:
         print(f'sell_size: {sell_size}')
         print(f'sell_price: {sell_price}')
@@ -22,8 +25,12 @@ def calculate_margin(buy_size: float = 0.0, buy_filled: int = 0.0, buy_price: in
         sell_value = sell_size - sell_fee
         profit = sell_value - buy_value
     else:
-        buy_value = buy_price + buy_fee
-        sell_value = sell_price - sell_fee
+        if buy_price > 1.0:
+            buy_value = buy_price + buy_fee
+            sell_value = sell_price - sell_fee
+        else:
+            buy_value = buy_size + buy_fee
+            sell_value = sell_size - sell_fee
         profit = sell_value - buy_value
 
     if debug is True:
