@@ -12,6 +12,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from requests.auth import AuthBase
 from requests import Request
+from math import floor
 
 # Constants
 
@@ -355,7 +356,7 @@ class AuthAPI(AuthAPIBase):
         else:
             nb_digits = 0
 
-        return float(f'%.{nb_digits}f'%(amount))
+        return floor(amount * 10 ** nb_digits) / 10 ** nb_digits
 
     def authAPI(self, method: str, uri: str, payload: str='') -> pd.DataFrame:
         if not isinstance(method, str):
