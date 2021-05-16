@@ -19,9 +19,9 @@ def test_calculate_negative_margin_on_binance_when_coin_price_over_1():
     actual_margin, actual_profit, actual_sell_fee = calculate_margin(buy_size, buy_filled, buy_price, buy_fee,
                                                                      sell_percent, sell_price, sell_fee, sell_taker_fee,
                                                                      debug, exchange)
-    assert round(actual_margin, 2) == round(-11.538287612503474, 2)
-    assert round(actual_profit, 2) == round(-76.99499323823568, 2)
-    assert round(actual_sell_fee, 2) == round(0.03499323823577017, 2)
+    assert actual_margin, 2 == round(-11.538287612503474, 2)
+    assert actual_profit, 2 == round(-76.99499323823568, 2)
+    assert actual_sell_fee, 2 == round(0.03499323823577017, 2)
 
 
 def test_calculate_negative_margin_on_binance_when_coin_price_under_1():
@@ -45,6 +45,6 @@ def test_calculate_negative_margin_on_binance_when_coin_price_under_1():
     # buy_value = buy_price + buy_fee == 0.71686
     # sell_value = sell_price - sell_fee == -0.3432602326611115  ::: Note: sell_fee == 0.7815402326611115
     # margin = (profit / buy_value) * 100 ::: (-1.0601202326611117 / 0.71686) * 100 == -147.88385914419993
-    assert round(actual_margin, 2) == round(-11.702624173421468, 2)
-    assert round(actual_profit, 2) == round(-20.74758239705892, 2)
-    assert round(actual_sell_fee, 2) == round(0.0687726719854285, 2)
+    assert actual_margin, 2 == round(-11.702624173421468, 2)
+    assert actual_profit, 2 == round(-20.74758239705892, 2)
+    assert actual_sell_fee, 2 == round(0.0687726719854285, 2)
