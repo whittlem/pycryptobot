@@ -13,14 +13,14 @@ def calculate_margin(buy_size: float = 0.0, buy_filled: int = 0.0, buy_price: in
 
     if exchange == 'coinbasepro':
         #sell_size in quote currency by multiplying current price by buy_filled in base currency
-        sell_size = round((sell_percent / 100) * (sell_price  * buy_filled), 2)
+        sell_size = round((sell_percent / 100) * (sell_price  * buy_filled), 8)
 
         #calculate sell_fee in quote currency
         if sell_fee == 0.0 and sell_taker_fee > 0.0:
-            sell_fee = round((sell_size * sell_taker_fee), 2)
+            sell_fee = round((sell_size * sell_taker_fee), 8)
         
         #calculate sell_value after fees in quote currency
-        sell_value = round(sell_size - sell_fee, 2)
+        sell_value = round(sell_size - sell_fee, 8)
 
         #profit is difference between sell_value without fees and buy_size including fees in quote currency
         profit = round(sell_value - buy_size, 2)
@@ -30,14 +30,14 @@ def calculate_margin(buy_size: float = 0.0, buy_filled: int = 0.0, buy_price: in
 
     else:
         #sell size in quote currency by multiplying current price by buy_size in base currency
-        sell_size = (sell_percent / 100) * (sell_price  * buy_size)
+        sell_size = round((sell_percent / 100) * (sell_price  * buy_size), 8)
 
         #calculate sell fee in quote currency
         if sell_fee == 0.0 and sell_taker_fee > 0.0:
-            sell_fee = (sell_size /100) * sell_taker_fee
+            sell_fee = round((sell_size /100) * sell_taker_fee, 8)
         
         #calculate sell_value after fees in quote currency
-        sell_value = sell_size - sell_fee
+        sell_value = round(sell_size - sell_fee, 8)
         
         #profit is difference between sell_value and buy_filled in quote currency
         profit = round(sell_value - buy_filled, 2)
