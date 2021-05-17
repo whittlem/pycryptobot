@@ -800,6 +800,21 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                     print (app.getBaseCurrency(), 'balance after order:', account.getBalance(app.getBaseCurrency()))
                     print (app.getQuoteCurrency(), 'balance after order:', account.getBalance(app.getQuoteCurrency()))
 
+                    orders = account.getOrders(app.getMarket(), '', 'done')
+                    if len(orders) > 0:
+                        df = orders[-1:]
+
+                        if str(df.action.values[0]) == 'buy':
+                            state.last_action = 'BUY'
+                            state.last_buy_size = float(df[df.action == 'buy']['size'])
+                            state.last_buy_filled = float(df[df.action == 'buy']['filled'])
+                            state.last_buy_price = float(df[df.action == 'buy']['price'])
+                            if app.getExchange() == 'binance':
+                                state.last_buy_fee = state.last_buy_filled * app.getTakerFee()
+                            else:
+                                state.last_buy_fee = state.last_buy_price * state.last_buy_filled * app.getTakerFee()
+
+
                 # if not live
                 else:
                      # TODO: calculate buy amount from dummy account
