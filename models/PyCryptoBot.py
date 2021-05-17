@@ -77,6 +77,15 @@ parser.add_argument('--disabletracker', action="store_true", help="disable track
 # args = parser.parse_args()
 args = vars(parser.parse_args())
 
+
+def to_coinbase_pro_granularity(granularity) -> int:
+    return int(granularity)
+
+
+def to_binance_granularity(granularity) -> str:
+    return {60: '1m', 300: '5m', 900: '15m', 3600: '1h', 21600: '6h', 86400: '1d'}[granularity]
+
+
 class PyCryptoBot():
     def __init__(self, exchange='coinbasepro', filename='config.json'):
         self.api_key = ''
@@ -100,7 +109,7 @@ class PyCryptoBot():
         self.market = 'BTC-GBP'
         self.base_currency = 'BTC'
         self.quote_currency = 'GBP'
-        self.granularity = None
+        self.granularity = 3600
         self.is_live = 0
         self.is_verbose = 0
         self.save_graphs = 0
@@ -234,11 +243,8 @@ class PyCryptoBot():
     def getMarket(self):
         return self.market
 
-    def getGranularity(self):
-        if self.exchange == 'binance':
-            return str(self.granularity)
-        elif self.exchange == 'coinbasepro':
-            return int(self.granularity)
+    def getGranularity(self) -> int:
+        return self.granularity
 
     def getBuyPercent(self):
         try:
@@ -258,24 +264,29 @@ class PyCryptoBot():
         except Exception:
             return None
 
-    def getHistoricalData(self, market, granularity, iso8601start='', iso8601end=''):
+    def getHistoricalData(self, market, granularity: int, iso8601start='', iso8601end=''):
         if self.exchange == 'coinbasepro':
             api = CBPublicAPI()
 
             if iso8601start != '' and iso8601end == '':
-                return api.getHistoricalData(market, granularity, iso8601start)
+                return api.getHistoricalData(market, to_coinbase_pro_granularity(granularity), iso8601start)
             elif iso8601start != '' and iso8601end != '':
-                return api.getHistoricalData(market, granularity, iso8601start, iso8601end)
+                return api.getHistoricalData(market, to_coinbase_pro_granularity(granularity), iso8601start, iso8601end)
             else:
-                return api.getHistoricalData(market, granularity)
+                return api.getHistoricalData(market, to_coinbase_pro_granularity(granularity))
 
         elif self.exchange == 'binance':
             api = BPublicAPI()
 
             if iso8601start != '' and iso8601end != '':
-                return api.getHistoricalData(market, granularity, str(datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S.%f').strftime('%d %b, %Y')), str(datetime.strptime(iso8601end, '%Y-%m-%dT%H:%M:%S.%f').strftime('%d %b, %Y')))
+                return api.getHistoricalData(
+                    market,
+                    to_binance_granularity(granularity),
+                    str(datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S.%f').strftime('%d %b, %Y')),
+                    str(datetime.strptime(iso8601end, '%Y-%m-%dT%H:%M:%S.%f').strftime('%d %b, %Y'))
+                )
             else:
-                return api.getHistoricalData(market, granularity)
+                return api.getHistoricalData(market, to_binance_granularity(granularity))
         else:
             return pd.DataFrame()
 
@@ -469,7 +480,7 @@ class PyCryptoBot():
 
     def disableFailsafeLowerPcnt(self) -> bool:
         return self.disablefailsafelowerpcnt
-    
+
     def disableProfitbankUpperPcnt(self) -> bool:
         return self.disableprofitbankupperpcnt
 
@@ -485,10 +496,8 @@ class PyCryptoBot():
     def disableTracker(self) -> bool:
         return self.disabletracker
 
-    def setGranularity(self, granularity):
-        if self.exchange == 'binance' and isinstance(granularity, str) and granularity in [ '1m', '5m', '15m', '1h', '6h', '1d' ]:
-            self.granularity = granularity
-        elif self.exchange == 'coinbasepro' and isinstance(granularity, int) and granularity in [ 60, 300, 900, 3600, 21600, 86400 ]:
+    def setGranularity(self, granularity: int):
+        if granularity in [60, 300, 900, 3600, 21600, 86400]:
             self.granularity = granularity
 
     def truncate(self, f, n):
@@ -602,10 +611,7 @@ class PyCryptoBot():
             if self.isVerbose():
                 txt = '               Market : ' + self.getMarket()
                 print('|', txt, (' ' * (75 - len(txt))), '|')
-                if self.exchange == 'coinbasepro':
-                    txt = '          Granularity : ' + str(self.getGranularity()) + ' seconds'
-                elif self.exchange == 'binance':
-                    txt = '          Granularity : ' + str(self.getGranularity())
+                txt = '          Granularity : ' + str(self.getGranularity()) + ' seconds'
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 print('--------------------------------------------------------------------------------')
 
