@@ -19,8 +19,6 @@ def parseMarket(market):
 def parser(app, coinbase_config, args={}):
     logging.info('CoinbasePro Configuration parse')
 
-    app.granularity = 3600
-
     if not coinbase_config:
         raise Exception('There is an error in your config dictionary')
 

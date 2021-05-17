@@ -9,6 +9,11 @@ def isMarketValid(market) -> bool:
     p = re.compile(r"^[0-9A-Z]{6,12}$")
     return p.match(market) is not None
 
+
+def to_internal_granularity(granularity: str) -> int:
+    return {'1m': 60, '5m': 300, '15m': 900, '1h': 3600, '6h': 21600, '1d': 86400}[granularity]
+
+
 def parseMarket(market):
     base_currency = 'BTC'
     quote_currency = 'GBP'
@@ -92,8 +97,6 @@ def parseMarket(market):
 def parser(app, binance_config, args={}):
     logging.info('Binance Configuration parse')
 
-    app.granularity = '1h'
-
     if not binance_config:
         raise Exception('There is an error in your config dictionnary')
 
@@ -129,7 +132,6 @@ def parser(app, binance_config, args={}):
         app.api_url = binance_config['api_url']
         app.base_currency = 'BTC'
         app.quote_currency = 'GBP'
-        app.granularity = '1h'
 
         config = merge_config_and_args(binance_config, args)
 
@@ -154,8 +156,8 @@ def parser(app, binance_config, args={}):
         if 'granularity' in config and config['granularity'] is not None:
             if isinstance(config['granularity'], str):
                 if config['granularity'] in ['1m', '5m', '15m', '1h', '6h', '1d']:
-                    app.granularity = config['granularity']
+                    app.granularity = to_internal_granularity(config['granularity'])
                     app.smart_switch = 0
 
     else:
-        raise Exception('There is an error in your config dictionnary')
+        raise Exception('There is an error in your config dictionary')
