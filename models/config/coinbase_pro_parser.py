@@ -78,11 +78,16 @@ def parser(app, coinbase_config, args = {}):
         if app.base_currency != '' and app.quote_currency != '':
             app.market = app.base_currency + '-' + app.quote_currency
 
-        if 'granularity' in config and config['granularity'] != None:
-            if config['granularity'].isnumeric() is True:
-                config['granularity'] = int(config['granularity'])
+        if 'granularity' in config and config['granularity'] != None:        
+            if isinstance(config['granularity'], str):
+                if config['granularity'].isnumeric() is True:
+                    config['granularity'] = int(config['granularity'])
 
-            if isinstance(config['granularity'], int):
+                if config['granularity'] in [60, 300, 900, 3600, 21600, 86400]:
+                    app.granularity = config['granularity']
+                    app.smart_switch = 0
+
+            elif isinstance(config['granularity'], int):
                 if config['granularity'] in [60, 300, 900, 3600, 21600, 86400]:
                     app.granularity = config['granularity']
                     app.smart_switch = 0
