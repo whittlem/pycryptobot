@@ -359,7 +359,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 sell_percent=app.getSellPercent(), 
                 sell_price=price, 
                 sell_taker_fee=app.getTakerFee(), 
-                debug=True,
+                debug=False,
                 exchange=app.getExchange())
 
             # loss failsafe sell at fibonacci band
@@ -911,7 +911,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                             sell_percent=app.getSellPercent(), 
                             sell_price=price, 
                             sell_taker_fee=app.getTakerFee(), 
-                            debug=True,
+                            debug=False,
                             exchange=app.getExchange())
 
                         if price > 0:
