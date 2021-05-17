@@ -1032,8 +1032,14 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 def main():
     try:
         # initialise logging
-        logging.basicConfig(filename=app.getLogFile(), format='%(asctime)s - %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filemode='a', level=logging.DEBUG)
-
+        logging.basicConfig(
+            filename=app.getLogFile(),
+            format='%(asctime)s - %(levelname)s: %(message)s',
+            datefmt='%m/%d/%Y %I:%M:%S %p',
+            filemode='a',
+            level=logging.DEBUG,
+            force=True
+        )
         telegram = None
 
         if not app.disableTelegram() and app.isTelegramEnabled():
