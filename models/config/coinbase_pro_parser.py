@@ -93,6 +93,5 @@ def parser(app, coinbase_config, args={}):
                 app.granularity = granularity
                 app.smart_switch = 0
 
-
     else:
         raise Exception('There is an error in your config dictionary')
