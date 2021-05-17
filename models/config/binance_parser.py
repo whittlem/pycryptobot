@@ -2,11 +2,12 @@ import re, logging
 
 from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
 
-def isMarketValid(market):
+
+def isMarketValid(market) -> bool:
     if market == None:
         return False
     p = re.compile(r"^[0-9A-Z]{6,12}$")
-    return p.match(market)
+    return p.match(market) is not None
 
 def parseMarket(market):
     base_currency = 'BTC'
@@ -87,14 +88,15 @@ def parseMarket(market):
 
     return market, base_currency, quote_currency
 
-def parser(app, binance_config, args = {}):
+
+def parser(app, binance_config, args={}):
     logging.info('Binance Configuration parse')
 
     app.granularity = '1h'
 
     if not binance_config:
         raise Exception('There is an error in your config dictionnary')
-    
+
     if not app:
         raise Exception('No app is passed')
 
@@ -106,11 +108,11 @@ def parser(app, binance_config, args = {}):
 
         app.api_key = binance_config['api_key']
 
-                # validates the api secret is syntactically correct
+        # validates the api secret is syntactically correct
         p = re.compile(r"^[A-z0-9]{64,64}$")
         if not p.match(binance_config['api_secret']):
             raise TypeError('Binance API secret is invalid')
-            
+
         app.api_secret = binance_config['api_secret']
 
         valid_urls = [
@@ -133,23 +135,23 @@ def parser(app, binance_config, args = {}):
 
         defaultConfigParse(app, config)
 
-        if 'base_currency' in config and config['base_currency'] != None:
+        if 'base_currency' in config and config['base_currency'] is not None:
             if not isCurrencyValid(config['base_currency']):
                 raise TypeError('Base currency is invalid.')
             app.base_currency = config['base_currency']
 
-        if 'quote_currency' in config and config['quote_currency'] != None:
+        if 'quote_currency' in config and config['quote_currency'] is not None:
             if not isCurrencyValid(config['quote_currency']):
                 raise TypeError('Quote currency is invalid.')
             app.quote_currency = config['quote_currency']
 
-        if 'market' in config and config['market'] != None:
+        if 'market' in config and config['market'] is not None:
             app.market, app.base_currency, app.quote_currency = parseMarket(config['market'])
 
         if app.base_currency != '' and app.quote_currency != '':
             app.market = app.base_currency + app.quote_currency
 
-        if 'granularity' in config and config['granularity'] != None:
+        if 'granularity' in config and config['granularity'] is not None:
             if isinstance(config['granularity'], str):
                 if config['granularity'] in ['1m', '5m', '15m', '1h', '6h', '1d']:
                     app.granularity = config['granularity']
