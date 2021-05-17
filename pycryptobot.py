@@ -59,7 +59,7 @@ elif app.isLive() == 1:
             state.last_buy_filled = float(df[df.action == 'buy']['filled'])
             state.last_buy_price = float(df[df.action == 'buy']['price'])
             if app.getExchange() == 'binance':
-                state.last_buy_fee = (state.last_buy_filled / 100) * app.getTakerFee()
+                state.last_buy_fee = state.last_buy_filled * app.getTakerFee()
             else:
                 state.last_buy_fee = state.last_buy_price * state.last_buy_filled * app.getTakerFee()
         else:
@@ -359,7 +359,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 sell_percent=app.getSellPercent(), 
                 sell_price=price, 
                 sell_taker_fee=app.getTakerFee(), 
-                debug=False,
+                debug=True,
                 exchange=app.getExchange())
 
             # loss failsafe sell at fibonacci band
@@ -911,7 +911,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                             sell_percent=app.getSellPercent(), 
                             sell_price=price, 
                             sell_taker_fee=app.getTakerFee(), 
-                            debug=False,
+                            debug=True,
                             exchange=app.getExchange())
 
                         if price > 0:

@@ -34,7 +34,7 @@ def calculate_margin(buy_size: float = 0.0, buy_filled: int = 0.0, buy_price: in
 
         #calculate sell fee in quote currency
         if sell_fee == 0.0 and sell_taker_fee > 0.0:
-            sell_fee = round((sell_size /100) * sell_taker_fee, 8)
+            sell_fee = round(sell_size * sell_taker_fee, 8)
         
         #calculate sell_value after fees in quote currency
         sell_value = round(sell_size - sell_fee, 8)
