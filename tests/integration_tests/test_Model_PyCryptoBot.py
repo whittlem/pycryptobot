@@ -259,7 +259,7 @@ def test_configjson_binance_granularity():
         app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
         assert type(app) is PyCryptoBot
         assert app.getExchange() == 'binance'
-        assert app.getGranularity() == granularity
+        assert app.getGranularity() == 60
 
         if os.path.exists('/tmp/pycryptobot_pytest_config.json'):
             os.remove('/tmp/pycryptobot_pytest_config.json')
@@ -277,7 +277,7 @@ def test_configjson_binance_granularity():
         app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
         assert type(app) is PyCryptoBot
         assert app.getExchange() == 'binance'
-        assert app.getGranularity() == granularity
+        assert app.getGranularity() == 300
 
         if os.path.exists('/tmp/pycryptobot_pytest_config.json'):
             os.remove('/tmp/pycryptobot_pytest_config.json')
@@ -295,7 +295,7 @@ def test_configjson_binance_granularity():
         app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
         assert type(app) is PyCryptoBot
         assert app.getExchange() == 'binance'
-        assert app.getGranularity() == granularity
+        assert app.getGranularity() == 900
 
         if os.path.exists('/tmp/pycryptobot_pytest_config.json'):
             os.remove('/tmp/pycryptobot_pytest_config.json')
@@ -313,7 +313,7 @@ def test_configjson_binance_granularity():
         app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
         assert type(app) is PyCryptoBot
         assert app.getExchange() == 'binance'
-        assert app.getGranularity() == granularity
+        assert app.getGranularity() == 3600
 
         if os.path.exists('/tmp/pycryptobot_pytest_config.json'):
             os.remove('/tmp/pycryptobot_pytest_config.json')
@@ -331,7 +331,7 @@ def test_configjson_binance_granularity():
         app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
         assert type(app) is PyCryptoBot
         assert app.getExchange() == 'binance'
-        assert app.getGranularity() == granularity
+        assert app.getGranularity() == 21600
 
         if os.path.exists('/tmp/pycryptobot_pytest_config.json'):
             os.remove('/tmp/pycryptobot_pytest_config.json')
@@ -349,7 +349,7 @@ def test_configjson_binance_granularity():
         app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
         assert type(app) is PyCryptoBot
         assert app.getExchange() == 'binance'
-        assert app.getGranularity() == granularity
+        assert app.getGranularity() == 86400
 
         if os.path.exists('/tmp/pycryptobot_pytest_config.json'):
             os.remove('/tmp/pycryptobot_pytest_config.json')
@@ -378,7 +378,7 @@ def test_configjson_binance_invalid_granularity():
     app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
     assert app.getExchange() == 'binance'
-    assert app.getGranularity() == '1h' # default if invalid
+    assert app.getGranularity() == 3600 # default if invalid
 
     if os.path.exists('/tmp/pycryptobot_pytest_config.json'):
         os.remove('/tmp/pycryptobot_pytest_config.json')
