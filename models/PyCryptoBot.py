@@ -78,11 +78,11 @@ parser.add_argument('--disabletracker', action="store_true", help="disable track
 args = vars(parser.parse_args())
 
 
-def to_coinbase_pro_granularity(granularity) -> int:
-    return int(granularity)
+def to_coinbase_pro_granularity(granularity: int) -> int:
+    return granularity
 
 
-def to_binance_granularity(granularity) -> str:
+def to_binance_granularity(granularity: int) -> str:
     return {60: '1m', 300: '5m', 900: '15m', 3600: '1h', 21600: '6h', 86400: '1d'}[granularity]
 
 
@@ -245,6 +245,15 @@ class PyCryptoBot():
 
     def getGranularity(self) -> int:
         return self.granularity
+
+    def printGranularity(self) -> str:
+        if self.exchange == 'binance':
+            return to_binance_granularity(self.granularity)
+        if self.exchange == 'coinbasepro':
+            return str(self.granularity) + 's'
+        if self.exchange == 'dummy':
+            return str(self.granularity) + 's'
+        raise TypeError('Unknown exchange "' + self.exchange + '"')
 
     def getBuyPercent(self):
         try:
