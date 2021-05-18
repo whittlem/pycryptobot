@@ -349,14 +349,14 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             #  buy and sell calculations
             if app.isLive() == 0 and state.last_buy_filled == 0:
                 state.last_buy_filled = state.last_buy_size / state.last_buy_price
-                state.last_buy_fee = round(state.last_buy_size  * app.getTakerFee(), 2)
+                state.last_buy_fee = round(state.last_buy_size  * app.getTakerFee(), 8)
 
-            if app.getExchange() == 'coinbasepro':
-                state.last_buy_filled = ((state.last_buy_size - state.last_buy_fee) / state.last_buy_price)
-                state.last_buy_fee = state.last_buy_size * app.getTakerFee()
-            else:
-                state.last_buy_filled = state.last_buy_size * state.last_buy_price
-                state.last_buy_fee = state.last_buy_filled * app.getTakerFee()
+            if app.getExchange() == 'coinbasepro' and state.last_buy_filled == 0:
+                state.last_buy_filled = round(((state.last_buy_size - state.last_buy_fee) / state.last_buy_price), 8)
+                state.last_buy_fee = round(state.last_buy_size * app.getTakerFee(), 8)
+            elif app.getExchange() == 'binance' and state.last_buy_filled == 0:
+                state.last_buy_filled = round(state.last_buy_size * state.last_buy_price, 8)
+                state.last_buy_fee = round(state.last_buy_filled * app.getTakerFee(), 8)
 
             margin, profit, sell_fee = calculate_margin(
                 buy_size=state.last_buy_size, 
