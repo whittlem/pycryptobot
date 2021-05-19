@@ -844,7 +844,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                         print('|                      *** Executing TEST Buy Order ***                        |')
                         print('--------------------------------------------------------------------------------')
 
-                if app.shouldSaveGraphs() == 1:
+                if app.shouldSaveGraphs():
                     tradinggraphs = TradingGraphs(ta)
                     ts = datetime.now().timestamp()
                     filename = app.getMarket() + '_' + str(app.getGranularity()) + '_buy_' + str(ts) + '.png'
@@ -933,7 +933,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                         print('|                      *** Executing TEST Sell Order ***                        |')
                         print('--------------------------------------------------------------------------------')
 
-                if app.shouldSaveGraphs() == 1:
+                if app.shouldSaveGraphs():
                     tradinggraphs = TradingGraphs(ta)
                     ts = datetime.now().timestamp()
                     filename = app.getMarket() + '_' + str(app.getGranularity()) + '_sell_' + str(ts) + '.png'

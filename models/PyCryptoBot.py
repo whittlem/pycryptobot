@@ -372,7 +372,7 @@ class PyCryptoBot():
         return self.is_verbose == 1
 
     def shouldSaveGraphs(self):
-        return self.save_graphs
+        return self.save_graphs == 1
 
     def isSimulation(self):
         return self.is_sim
