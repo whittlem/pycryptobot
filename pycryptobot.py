@@ -347,10 +347,6 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 change_pcnt_high = 0
 
             #  buy and sell calculations
-            if app.isLive() == 0 and state.last_buy_filled == 0:
-                state.last_buy_filled = state.last_buy_size / state.last_buy_price
-                state.last_buy_fee = round(state.last_buy_size  * app.getTakerFee(), 8)
-
             if app.getExchange() == 'coinbasepro' and state.last_buy_filled == 0:
                 state.last_buy_filled = round(((state.last_buy_size - state.last_buy_fee) / state.last_buy_price), 8)
                 state.last_buy_fee = round(state.last_buy_size * app.getTakerFee(), 8)
@@ -367,7 +363,8 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 sell_price=price, 
                 sell_taker_fee=app.getTakerFee(), 
                 debug=False,
-                exchange=app.getExchange())
+                exchange=app.getExchange(),
+                simulation=app.isSimulation())
 
             # loss failsafe sell at fibonacci band
             if app.disableFailsafeFibonacciLow() is False and app.allowSellAtLoss() and app.sellLowerPcnt() is None and state.fib_low > 0 and state.fib_low >= float(price):
@@ -472,7 +469,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
         # polling is every 5 minutes (even for hourly intervals), but only process once per interval
         if (immediate_action is True or state.last_df_index != current_df_index):
-            precision = 2
+            precision = 4
 
             if (price < 0.01):
                 precision = 8
@@ -660,7 +657,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                     else:
                         margin_text = '0%'
 
-                    output_text += ' | ' +  margin_text + ' (delta: ' + str(round(price - state.last_buy_price, 2)) + ')'
+                    output_text += ' | ' +  margin_text + ' (delta: ' + str(round(price - state.last_buy_price, 4)) + ')'
 
                 logging.debug(output_text)
                 print (output_text)
@@ -771,13 +768,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
             # if a buy signal
             if state.action == 'BUY':               
-                state.last_buy_price = price
-                state.last_buy_high = state.last_buy_price
-
                 state.buy_count = state.buy_count + 1
-                fee = float(price) * app.getTakerFee()
-                price_incl_fees = float(price) + fee
-                state.buy_sum = state.buy_sum + price_incl_fees
 
                 # if live
                 if app.isLive() == 1:
@@ -806,12 +797,17 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                     # display balances
                     print (app.getBaseCurrency(), 'balance after order:', account.getBalance(app.getBaseCurrency()))
                     print (app.getQuoteCurrency(), 'balance after order:', account.getBalance(app.getQuoteCurrency()))
+
                 # if not live
                 else:
-                     # TODO: calculate buy amount from dummy account
-                    state.last_buy_size = 1000
+                     # TODO: Improve simulator calculations by including calculations for buy and sell limits. 
+                    if state.last_buy_size == 0 and state.last_buy_filled == 0:
+                        state.last_buy_size = 1000
+                        state.first_buy_size = 1000
 
+                    state.buy_sum = state.buy_sum + state.last_buy_size
                     state.last_buy_price = price
+                    state.last_buy_high = price
 
                     if app.isVerbose() == 0:
                         logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + str(app.getGranularity()) + ' | ' + price_text + ' | BUY')
@@ -853,16 +849,13 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             # if a sell signal
             elif state.action == 'SELL':
                 state.sell_count = state.sell_count + 1
-                fee = float(price) * app.getTakerFee()
-                price_incl_fees = float(price) - fee
-                state.sell_sum = state.sell_sum + price_incl_fees
 
                 # if live
                 if app.isLive() == 1:
                     # telegram
                     if not app.disableTelegram() and app.isTelegramEnabled():
                         telegram = app.getChatClient()
-                        telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') SELL at ' + price_text + ' (margin: ' + margin_text + ', (delta: ' + str(round(price - state.last_buy_price, 2)) + ')')
+                        telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') SELL at ' + price_text + ' (margin: ' + margin_text + ', (delta: ' + str(round(price - state.last_buy_price, 4)) + ')')
 
                     if app.isVerbose() == 0:
                         logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + str(app.getGranularity()) + ' | ' + price_text + ' | SELL')
@@ -908,8 +901,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
                 # if not live
                 else:
-                    if app.isVerbose() == 0:
-                        margin, profit, sell_fee = calculate_margin(
+                    margin, profit, sell_fee = calculate_margin(
                             buy_size=state.last_buy_size, 
                             buy_filled=state.last_buy_filled, 
                             buy_price=state.last_buy_price, 
@@ -918,7 +910,14 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                             sell_price=price, 
                             sell_taker_fee=app.getTakerFee(), 
                             debug=False,
-                            exchange=app.getExchange())
+                            exchange=app.getExchange(),
+                            simulation=app.isSimulation())
+
+                    # Preserve next buy values for simulator
+                    state.last_buy_size = ((app.getSellPercent() / 100) * ((price / state.last_buy_price) * (state.last_buy_size - state.last_buy_fee))) - sell_fee
+                    state.sell_sum = state.sell_sum + state.last_buy_size
+                    
+                    if app.isVerbose() == 0:
 
                         if price > 0:
                             margin_text = str(app.truncate(margin, 2)) + '%'
@@ -926,7 +925,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                             margin_text = '0%'
 
                         logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + str(app.getGranularity()) + ' | SELL | ' + str(price) + ' | BUY | ' + str(state.last_buy_price) + ' | DIFF | ' + str(profit) + ' | MARGIN NO FEES | ' + margin_text + ' | MARGIN FEES | ' + str(sell_fee))
-                        print ("\n", current_df_index, '|', app.getMarket(), str(app.getGranularity()), '| SELL |', str(price), '| BUY |', str(state.last_buy_price), '| DIFF |', str(profit) , '| MARGIN NO FEES |', margin_text, '| MARGIN FEES |', str(round(sell_fee, 2)), "\n")                    
+                        print ("\n", current_df_index, '|', app.getMarket(), str(app.getGranularity()), '| SELL |', str(price), '| BUY |', str(state.last_buy_price), '| DIFF |', str(profit) , '| MARGIN NO FEES |', margin_text, '| MARGIN FEES |', str(round(sell_fee, 4)), "\n")                    
 
                     else:
                         print('--------------------------------------------------------------------------------')
@@ -939,11 +938,6 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                     filename = app.getMarket() + '_' + str(app.getGranularity()) + '_sell_' + str(ts) + '.png'
                     tradinggraphs.renderEMAandMACD(len(trading_data), 'graphs/' + filename, True)
 
-                # reset values after buy
-                state.last_buy_price = 0
-                state.last_buy_size = 0
-                state.last_buy_price = 0
-                state.last_buy_high = 0
 
             # last significant action
             if state.action in [ 'BUY', 'SELL' ]:
@@ -955,9 +949,9 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 print ("\nSimulation Summary\n")
 
                 if state.buy_count > state.sell_count and app.allowSellAtLoss() == 1:
-                    fee = price * app.getTakerFee()
-                    last_price_minus_fees = price - fee
-                    state.sell_sum = state.sell_sum + last_price_minus_fees
+                    state.last_buy_price = ((app.getSellPercent() / 100) * ((price / state.last_buy_price) * (state.last_buy_size - state.last_buy_fee)))
+                    state.last_buy_price = state.last_buy_price - state.last_buy_price * app.getTakerFee()
+                    state.sell_sum = state.sell_sum + state.last_buy_price
                     state.sell_count = state.sell_count + 1
 
                 elif state.buy_count > state.sell_count and app.allowSellAtLoss() == 0:
@@ -966,11 +960,12 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                     print ('               simulation which may not be ideal. Try setting --sellatloss 1', "\n")
 
                 print ('   Buy Count :', state.buy_count)
-                print ('  Sell Count :', state.sell_count, "\n")
-
+                print ('  Sell Count :', state.sell_count)
+                print ('   First Buy :', state.first_buy_size)
+                print ('   Last Sell :', state.last_buy_size)
+                
                 if state.sell_count > 0:
-                    print ('      Margin :', str(app.truncate((((state.sell_sum - state.buy_sum) /state.sell_sum) * 100), 2)) + '%', "\n")
-
+                    print ('      Margin :',  str(app.truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4)) + '%', "\n")
                     print ('  ** non-live simulation, assuming highest fees', "\n")
 
         else:

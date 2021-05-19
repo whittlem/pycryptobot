@@ -1,6 +1,6 @@
 def calculate_margin(buy_size: float = 0.0, buy_filled: int = 0.0, buy_price: int = 0.0, buy_fee: float = 0.0,
                      sell_percent: float = 100, sell_price: float = 0.0, sell_fee: float = 0.0,
-                     sell_taker_fee: float = 0.0, debug: bool = False, exchange: str = 'coinbasepro') -> float:
+                     sell_taker_fee: float = 0.0, debug: bool = False, exchange: str = 'coinbasepro', simulation: bool = False) -> float:
     
     if debug is True:
         print(f'buy_size: {buy_size}') #buy_size for CB is quote currency, for binance is base currency
@@ -11,7 +11,7 @@ def calculate_margin(buy_size: float = 0.0, buy_filled: int = 0.0, buy_price: in
     #for CB buy_size represents the quote currency value of the buy including fees and buy_filled represents the base currency size of the buy
     #for Binance buy_filled represents the quote currency value of the buy including fees and buy_size represents the base currency size of the buy
 
-    if exchange == 'coinbasepro':
+    if exchange == 'coinbasepro' or simulation:
         #sell_size in quote currency by multiplying current price by buy_filled in base currency
         sell_size = round((sell_percent / 100) * (sell_price  * buy_filled), 8)
 
@@ -40,10 +40,10 @@ def calculate_margin(buy_size: float = 0.0, buy_filled: int = 0.0, buy_price: in
         sell_value = round(sell_size - sell_fee, 8)
         
         #profit is difference between sell_value and buy_filled in quote currency
-        profit = round(sell_value - buy_filled, 2)
+        profit = round(sell_value - buy_filled, 8)
         
         #calculate margin
-        margin = round((profit / buy_filled) * 100, 2)
+        margin = round((profit / buy_filled) * 100, 8)
          
     if debug is True:
        
@@ -53,9 +53,9 @@ def calculate_margin(buy_size: float = 0.0, buy_filled: int = 0.0, buy_price: in
 
         print(f'buy_with_fees: {buy_size}')
         print(f'sell_with_fees: {sell_size}')
-        print(f'sell_minus_fees: {sell_value}')
+        print(f'sell_minus_fees: {sell_value}', "\n")
 
-        print(f'profit: {profit}', "\n")
+        print(f'profit: {profit}')
         print(f'margin: {margin}', "\n")
 
     return margin, profit, sell_fee
