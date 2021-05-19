@@ -491,8 +491,13 @@ class PyCryptoBot():
             return api.getMakerFee()
         elif self.exchange == 'binance':
             api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
-            #return api.getMakerFee()
-            return 0.005
+            # Looks like getMakerFee never called through the app so never tested.
+            # BE CAREFUL !!!
+            # fee = api.getMakerFee(self.getMarket())
+            fee = api.getMakerFee()
+            print ('NEVER TESTED BE CAREFUL Binance Maker Fee: ', fee)
+            return fee
+            #return 0.001
         else:
             return 0.005
 
