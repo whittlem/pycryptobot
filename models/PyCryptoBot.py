@@ -366,10 +366,10 @@ class PyCryptoBot():
             return ''
 
     def isLive(self):
-        return self.is_live
+        return self.is_live == 1
 
     def isVerbose(self):
-        return self.is_verbose
+        return self.is_verbose == 1
 
     def shouldSaveGraphs(self):
         return self.save_graphs
@@ -554,7 +554,7 @@ class PyCryptoBot():
 
             print('--------------------------------------------------------------------------------')
 
-            if self.isVerbose() == 1:
+            if self.isVerbose():
                 txt = '               Market : ' + self.getMarket()
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 if self.exchange == 'coinbasepro':
@@ -564,7 +564,7 @@ class PyCryptoBot():
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 print('--------------------------------------------------------------------------------')
 
-            if self.isLive() == 1:
+            if self.isLive():
                 txt = '             Bot Mode : LIVE - live trades using your funds!'
             else:
                 txt = '             Bot Mode : TEST - test trades using dummy funds :)'
@@ -633,7 +633,7 @@ class PyCryptoBot():
             print('================================================================================')
 
         # if live
-        if self.isLive() == 1:
+        if self.isLive():
             if self.getExchange() == 'binance':
                 if last_action == 'SELL'and account.getBalance(self.getQuoteCurrency()) < 0.001:
                     raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(self.getQuoteCurrency())) + ' < 0.1 ' + self.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")

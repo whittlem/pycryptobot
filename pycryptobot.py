@@ -42,7 +42,7 @@ if app.getLastAction() != None:
             state.last_buy_fee = float(df[df.action == 'buy']['fees'])
 
 # if live trading is enabled
-elif app.isLive() == 1:
+elif app.isLive():
     # connectivity check
     if app.getTime() is None:
         raise ConnectionError('Unable to start the bot as your connection to the exchange is down. Please check your Internet connectivity!')
@@ -347,7 +347,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 change_pcnt_high = 0
 
             #  buy and sell calculations
-            if app.isLive() == 0 and state.last_buy_filled == 0:
+            if not app.isLive() and state.last_buy_filled == 0:
                 state.last_buy_filled = state.last_buy_size / state.last_buy_price
                 state.last_buy_fee = round(state.last_buy_size  * app.getTakerFee(), 8)
 
@@ -648,7 +648,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                     obv_prefix = 'v '
                     obv_suffix = ' v | '
 
-            if app.isVerbose() == 0:
+            if app.isVerbose():
                 if state.last_action != '':
                     output_text = current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + str(app.getGranularity()) + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + obv_prefix + obv_text + obv_suffix + state.eri_text + state.action + ' | Last Action: ' + state.last_action
                 else:
@@ -780,13 +780,13 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 state.buy_sum = state.buy_sum + price_incl_fees
 
                 # if live
-                if app.isLive() == 1:
+                if app.isLive():
                     # telegram
                     if not app.disableTelegram() and app.isTelegramEnabled():
                         telegram = app.getChatClient()
                         telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') BUY at ' + price_text)
 
-                    if app.isVerbose() == 0:
+                    if app.isVerbose():
                         logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + str(app.getGranularity()) + ' | ' + price_text + ' | BUY')
                         print ("\n", current_df_index, '|', app.getMarket(), str(app.getGranularity()), '|', price_text, '| BUY', "\n")                    
                     else:
@@ -813,7 +813,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
                     state.last_buy_price = price
 
-                    if app.isVerbose() == 0:
+                    if app.isVerbose():
                         logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + str(app.getGranularity()) + ' | ' + price_text + ' | BUY')
                         print ("\n", current_df_index, '|', app.getMarket(), str(app.getGranularity()), '|', price_text, '| BUY')
 
@@ -858,13 +858,13 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 state.sell_sum = state.sell_sum + price_incl_fees
 
                 # if live
-                if app.isLive() == 1:
+                if app.isLive():
                     # telegram
                     if not app.disableTelegram() and app.isTelegramEnabled():
                         telegram = app.getChatClient()
                         telegram.send(app.getMarket() + ' (' + str(app.getGranularity()) + ') SELL at ' + price_text + ' (margin: ' + margin_text + ', (delta: ' + str(round(price - state.last_buy_price, 2)) + ')')
 
-                    if app.isVerbose() == 0:
+                    if app.isVerbose():
                         logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + str(app.getGranularity()) + ' | ' + price_text + ' | SELL')
                         print ("\n", current_df_index, '|', app.getMarket(), str(app.getGranularity()), '|', price_text, '| SELL')
 
@@ -908,7 +908,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
                 # if not live
                 else:
-                    if app.isVerbose() == 0:
+                    if app.isVerbose():
                         margin, profit, sell_fee = calculate_margin(
                             buy_size=state.last_buy_size, 
                             buy_filled=state.last_buy_filled, 
@@ -980,7 +980,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             state.iterations = state.iterations - 1
 
         # if live
-        if not app.disableTracker() and app.isLive() == 1:
+        if not app.disableTracker() and app.isLive():
             # update order tracker csv
             if app.getExchange() == 'binance':
                 account.saveTrackerCSV(app.getMarket())
