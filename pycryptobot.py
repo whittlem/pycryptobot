@@ -775,7 +775,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                         telegram.send(app.getMarket() + ' (' + app.printGranularity() + ') BUY at ' + price_text)
 
                     if not app.isVerbose():
-                        logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + app.printGranularity() +
+                        logging.info(current_df_index + ' | ' + app.getMarket() + ' | ' + app.printGranularity() +
                                      ' | ' + price_text + ' | BUY')
                         print("\n", current_df_index, '|', app.getMarket(), app.printGranularity(), '|', price_text,
                               '| BUY', "\n")
@@ -807,7 +807,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                     state.last_buy_price = price
 
                     if not app.isVerbose():
-                        logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + app.printGranularity() +
+                        logging.info(current_df_index + ' | ' + app.getMarket() + ' | ' + app.printGranularity() +
                                      ' | ' + price_text + ' | BUY')
                         print("\n", current_df_index, '|', app.getMarket(), app.printGranularity(), '|', price_text, '| BUY')
 
@@ -861,7 +861,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                                       str(round(price - state.last_buy_price, precision)) + ')')
 
                     if not app.isVerbose():
-                        logging.info(current_df_index + ' | ' + app.getMarket() + ' ' + app.printGranularity() +
+                        logging.info(current_df_index + ' | ' + app.getMarket() + ' | ' + app.printGranularity() +
                                      ' | ' + price_text + ' | SELL')
                         print("\n", current_df_index, '|', app.getMarket(), app.printGranularity(), '|', price_text, '| SELL')
 
