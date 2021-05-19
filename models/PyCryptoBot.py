@@ -370,16 +370,16 @@ class PyCryptoBot():
         else:
             return ''
 
-    def isLive(self):
+    def isLive(self) -> bool:
         return self.is_live == 1
 
-    def isVerbose(self):
+    def isVerbose(self) -> bool:
         return self.is_verbose == 1
 
-    def shouldSaveGraphs(self):
+    def shouldSaveGraphs(self) -> bool:
         return self.save_graphs == 1
 
-    def isSimulation(self):
+    def isSimulation(self) -> bool:
         return self.is_sim == 1
 
     def isTelegramEnabled(self):
@@ -397,7 +397,7 @@ class PyCryptoBot():
     def trailingStopLoss(self):
         return self.trailing_stop_loss
 
-    def allowSellAtLoss(self):
+    def allowSellAtLoss(self) -> bool:
         return self.sell_at_loss == 1
 
     def sellAtResistance(self):
