@@ -305,7 +305,7 @@ class AuthAPI(AuthAPIBase):
             'product_id': market,
             'type': 'market',
             'side': 'sell',
-            'size': base_quantity
+            'size': self.marketBaseIncrement(market, base_quantity)
         }
 
         print (order)
@@ -327,7 +327,7 @@ class AuthAPI(AuthAPIBase):
             'product_id': market,
             'type': 'limit',
             'side': 'sell',
-            'size': base_quantity,
+            'size': self.marketBaseIncrement(market, base_quantity),
             'price': futurePrice
         }
 
