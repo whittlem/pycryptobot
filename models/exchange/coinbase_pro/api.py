@@ -12,6 +12,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from requests.auth import AuthBase
 from requests import Request
+from math import floor
 
 # Constants
 
@@ -211,7 +212,7 @@ class AuthAPI(AuthAPIBase):
 
         # calculates the price at the time of purchase
         if status != 'open':
-            df['price'] = df.apply(lambda row: round((float(row.executed_value) * 100) / (float(row.filled_size) * 100), 2) if float(row.filled_size) > 0 else 0, axis=1)
+            df['price'] = df.apply(lambda row: (float(row.executed_value) * 100) / (float(row.filled_size) * 100) if float(row.filled_size) > 0 else 0, axis=1)
 
         # rename the columns
         if status == 'open':
@@ -224,7 +225,7 @@ class AuthAPI(AuthAPIBase):
             df.columns = [ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'price', 'status' ]
             df['filled'] = df['filled'].astype(float).round(8)
             df['size'] = df['size'].astype(float).round(8)
-            df['fees'] = df['fees'].astype(float).round(2)
+            df['fees'] = df['fees'].astype(float).round(8)
             df['price'] = df['price'].astype(float).round(8)
 
         # convert dataframe to a time series
@@ -355,7 +356,7 @@ class AuthAPI(AuthAPIBase):
         else:
             nb_digits = 0
 
-        return float(f'%.{nb_digits}f'%(amount))
+        return floor(amount * 10 ** nb_digits) / 10 ** nb_digits
 
     def authAPI(self, method: str, uri: str, payload: str='') -> pd.DataFrame:
         if not isinstance(method, str):

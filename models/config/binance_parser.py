@@ -5,7 +5,7 @@ from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_an
 def isMarketValid(market):
     if market == None:
         return False
-    p = re.compile(r"^[A-Z]{6,12}$")
+    p = re.compile(r"^[0-9A-Z]{6,12}$")
     return p.match(market)
 
 def parseMarket(market):
@@ -88,7 +88,7 @@ def parseMarket(market):
     return market, base_currency, quote_currency
 
 def parser(app, binance_config, args = {}):
-    logging.info('CoinbasePro Configuration parse')
+    logging.info('Binance Configuration parse')
 
     app.granularity = '1h'
 

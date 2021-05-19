@@ -1,14 +1,17 @@
 """Technical analysis on a trading Pandas DataFrame"""
 
-import math
-import numpy as np
-import pandas as pd
-import re
+from math import floor
+from re import compile
+
+from numpy import maximum, mean, minimum, nan, ndarray, round
+from numpy import sum as np_sum
+from numpy import where
+from pandas import DataFrame, Series
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 
 class TechnicalAnalysis():
-    def __init__(self, data=pd.DataFrame()):
+    def __init__(self, data=DataFrame()) -> None:
         """Technical Analysis object model
     
         Parameters
@@ -17,7 +20,7 @@ class TechnicalAnalysis():
             data[ts] = [ 'date', 'market', 'granularity', 'low', 'high', 'open', 'close', 'volume' ]
         """
 
-        if not isinstance(data, pd.DataFrame):
+        if not isinstance(data, DataFrame):
             raise TypeError('Data is not a Pandas dataframe.')
 
         if list(data.keys()) != [ 'date', 'market', 'granularity', 'low', 'high', 'open', 'close', 'volume' ]:
@@ -32,12 +35,12 @@ class TechnicalAnalysis():
         self.df = data
         self.levels = []
 
-    def getDataFrame(self):
+    def getDataFrame(self) -> DataFrame:
         """Returns the Pandas DataFrame"""
 
         return self.df
 
-    def addAll(self):
+    def addAll(self) -> None:
         """Adds analysis to the DataFrame"""
 
         self.addChangePct()
@@ -85,27 +88,27 @@ class TechnicalAnalysis():
     https://www.incrediblecharts.com/candlestick_patterns/candlestick-patterns-strongest.php
     """
 
-    def candleHammer(self):
+    def candleHammer(self) -> Series:
         """* Candlestick Detected: Hammer ("Weak - Reversal - Bullish Signal - Up"""
 
         return ((self.df['high'] - self.df['low']) > 3 * (self.df['open'] - self.df['close'])) \
             & (((self.df['close'] - self.df['low']) / (.001 + self.df['high'] - self.df['low'])) > 0.6) \
             & (((self.df['open'] - self.df['low']) / (.001 + self.df['high'] - self.df['low'])) > 0.6)
 
-    def addCandleHammer(self):
+    def addCandleHammer(self) -> None:
         self.df['hammer'] = self.candleHammer()
 
-    def candleShootingStar(self):
+    def candleShootingStar(self) -> Series:
         """* Candlestick Detected: Shooting Star ("Weak - Reversal - Bearish Pattern - Down")"""
 
         return ((self.df['open'].shift(1) < self.df['close'].shift(1)) & (self.df['close'].shift(1) < self.df['open'])) \
-            & (self.df['high'] - np.maximum(self.df['open'], self.df['close']) >= (abs(self.df['open'] - self.df['close']) * 3)) \
-            & ((np.minimum(self.df['close'], self.df['open']) - self.df['low']) <= abs(self.df['open'] - self.df['close']))
+            & (self.df['high'] - maximum(self.df['open'], self.df['close']) >= (abs(self.df['open'] - self.df['close']) * 3)) \
+            & ((minimum(self.df['close'], self.df['open']) - self.df['low']) <= abs(self.df['open'] - self.df['close']))
 
-    def addCandleShootingStar(self):
+    def addCandleShootingStar(self) -> None:
         self.df['shooting_star'] = self.candleShootingStar()
 
-    def candleHangingMan(self):
+    def candleHangingMan(self) -> Series:
         """* Candlestick Detected: Hanging Man ("Weak - Continuation - Bearish Pattern - Down")"""
 
         return ((self.df['high'] - self.df['low']) > (4 * (self.df['open'] - self.df['close']))) \
@@ -114,96 +117,96 @@ class TechnicalAnalysis():
             & (self.df['high'].shift(1) < self.df['open']) \
             & (self.df['high'].shift(2) < self.df['open'])
 
-    def addCandleHangingMan(self):
+    def addCandleHangingMan(self) -> None:
         self.df['hanging_man'] = self.candleHangingMan()
 
-    def candleInvertedHammer(self):
+    def candleInvertedHammer(self) -> Series:
         """* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Pattern - Up")"""
 
         return (((self.df['high'] - self.df['low']) > 3 * (self.df['open'] - self.df['close'])) \
             & ((self.df['high'] - self.df['close']) / (.001 + self.df['high'] - self.df['low']) > 0.6) \
             & ((self.df['high'] - self.df['open']) / (.001 + self.df['high'] - self.df['low']) > 0.6))
 
-    def addCandleInvertedHammer(self):
+    def addCandleInvertedHammer(self) -> None:
         self.df['inverted_hammer'] = self.candleInvertedHammer()
 
-    def candleThreeWhiteSoldiers(self):
+    def candleThreeWhiteSoldiers(self) -> Series:
         """*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Bullish Pattern - Up")"""
 
         return ((self.df['open'] > self.df['open'].shift(1)) & (self.df['open'] < self.df['close'].shift(1))) \
             & (self.df['close'] > self.df['high'].shift(1)) \
-            & (self.df['high'] - np.maximum(self.df['open'], self.df['close']) < (abs(self.df['open'] - self.df['close']))) \
+            & (self.df['high'] - maximum(self.df['open'], self.df['close']) < (abs(self.df['open'] - self.df['close']))) \
             & ((self.df['open'].shift(1) > self.df['open'].shift(2)) & (self.df['open'].shift(1) < self.df['close'].shift(2))) \
             & (self.df['close'].shift(1) > self.df['high'].shift(2)) \
-            & (self.df['high'].shift(1) - np.maximum(self.df['open'].shift(1), self.df['close'].shift(1)) < (abs(self.df['open'].shift(1) - self.df['close'].shift(1))))
+            & (self.df['high'].shift(1) - maximum(self.df['open'].shift(1), self.df['close'].shift(1)) < (abs(self.df['open'].shift(1) - self.df['close'].shift(1))))
 
-    def addCandleThreeWhiteSoldiers(self):
+    def addCandleThreeWhiteSoldiers(self) -> None:
         self.df['three_white_soldiers'] = self.candleThreeWhiteSoldiers()
 
-    def candleThreeBlackCrows(self):
+    def candleThreeBlackCrows(self) -> Series:
         """* Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Pattern - Down")"""
 
         return ((self.df['open'] < self.df['open'].shift(1)) & (self.df['open'] > self.df['close'].shift(1))) \
             & (self.df['close'] < self.df['low'].shift(1)) \
-            & (self.df['low'] - np.maximum(self.df['open'], self.df['close']) < (abs(self.df['open'] - self.df['close']))) \
+            & (self.df['low'] - maximum(self.df['open'], self.df['close']) < (abs(self.df['open'] - self.df['close']))) \
             & ((self.df['open'].shift(1) < self.df['open'].shift(2)) & (self.df['open'].shift(1) > self.df['close'].shift(2))) \
             & (self.df['close'].shift(1) < self.df['low'].shift(2)) \
-            & (self.df['low'].shift(1) - np.maximum(self.df['open'].shift(1), self.df['close'].shift(1)) < (abs(self.df['open'].shift(1) - self.df['close'].shift(1))))
+            & (self.df['low'].shift(1) - maximum(self.df['open'].shift(1), self.df['close'].shift(1)) < (abs(self.df['open'].shift(1) - self.df['close'].shift(1))))
 
-    def addCandleThreeBlackCrows(self):
+    def addCandleThreeBlackCrows(self) -> None:
         self.df['three_black_crows'] = self.candleThreeBlackCrows()
 
-    def candleDoji(self):
+    def candleDoji(self) -> Series:
         """! Candlestick Detected: Doji ("Indecision")"""
 
         return ((abs(self.df['close'] - self.df['open']) / (self.df['high'] - self.df['low'])) < 0.1) \
-            & ((self.df['high'] - np.maximum(self.df['close'], self.df['open'])) > (3 * abs(self.df['close'] - self.df['open']))) \
-            & ((np.minimum(self.df['close'], self.df['open']) - self.df['low']) > (3 * abs(self.df['close'] - self.df['open'])))
+            & ((self.df['high'] - maximum(self.df['close'], self.df['open'])) > (3 * abs(self.df['close'] - self.df['open']))) \
+            & ((minimum(self.df['close'], self.df['open']) - self.df['low']) > (3 * abs(self.df['close'] - self.df['open'])))
 
-    def addCandleDoji(self):
+    def addCandleDoji(self) -> None:
         self.df['doji'] = self.candleDoji()
 
-    def candleThreeLineStrike(self):
+    def candleThreeLineStrike(self) -> Series:
         """** Candlestick Detected: Three Line Strike ("Reliable - Reversal - Bullish Pattern - Up")"""
 
         return ((self.df['open'].shift(1) < self.df['open'].shift(2)) & (self.df['open'].shift(1) > self.df['close'].shift(2))) \
             & (self.df['close'].shift(1) < self.df['low'].shift(2)) \
-            & (self.df['low'].shift(1) - np.maximum(self.df['open'].shift(1), self.df['close'].shift(1)) < (abs(self.df['open'].shift(1) - self.df['close'].shift(1)))) \
+            & (self.df['low'].shift(1) - maximum(self.df['open'].shift(1), self.df['close'].shift(1)) < (abs(self.df['open'].shift(1) - self.df['close'].shift(1)))) \
             & ((self.df['open'].shift(2) < self.df['open'].shift(3)) & (self.df['open'].shift(2) > self.df['close'].shift(3))) \
             & (self.df['close'].shift(2) < self.df['low'].shift(3)) \
-            & (self.df['low'].shift(2) - np.maximum(self.df['open'].shift(2), self.df['close'].shift(2)) < (abs(self.df['open'].shift(2) - self.df['close'].shift(2)))) \
+            & (self.df['low'].shift(2) - maximum(self.df['open'].shift(2), self.df['close'].shift(2)) < (abs(self.df['open'].shift(2) - self.df['close'].shift(2)))) \
             & ((self.df['open'] < self.df['low'].shift(1)) & (self.df['close'] > self.df['high'].shift(3)))
 
-    def addCandleThreeLineStrike(self):
+    def addCandleThreeLineStrike(self) -> None:
         self.df['three_line_strike'] = self.candleThreeLineStrike()
 
-    def candleTwoBlackGapping(self):
+    def candleTwoBlackGapping(self) -> Series:
         """*** Candlestick Detected: Two Black Gapping ("Reliable - Reversal - Bearish Pattern - Down")"""
 
         return ((self.df['open'] < self.df['open'].shift(1)) & (self.df['open'] > self.df['close'].shift(1))) \
             & (self.df['close'] < self.df['low'].shift(1)) \
-            & (self.df['low'] - np.maximum(self.df['open'], self.df['close']) < (abs(self.df['open'] - self.df['close']))) \
+            & (self.df['low'] - maximum(self.df['open'], self.df['close']) < (abs(self.df['open'] - self.df['close']))) \
             & (self.df['high'].shift(1) < self.df['low'].shift(2))
 
-    def addCandleTwoBlackGapping(self):
+    def addCandleTwoBlackGapping(self) -> None:
         self.df['two_black_gapping'] = self.candleTwoBlackGapping()
 
-    def candleMorningStar(self):
+    def candleMorningStar(self) -> Series:
         """*** Candlestick Detected: Morning Star ("Strong - Reversal - Bullish Pattern - Up")"""
 
-        return ((np.maximum(self.df['open'].shift(1), self.df['close'].shift(1)) < self.df['close'].shift(2)) & (self.df['close'].shift(2) < self.df['open'].shift(2))) \
-            & ((self.df['close'] > self.df['open']) & (self.df['open'] > np.maximum(self.df['open'].shift(1), self.df['close'].shift(1))))
+        return ((maximum(self.df['open'].shift(1), self.df['close'].shift(1)) < self.df['close'].shift(2)) & (self.df['close'].shift(2) < self.df['open'].shift(2))) \
+            & ((self.df['close'] > self.df['open']) & (self.df['open'] > maximum(self.df['open'].shift(1), self.df['close'].shift(1))))
 
-    def addCandleMorningStar(self):
+    def addCandleMorningStar(self) -> None:
         self.df['morning_star'] = self.candleMorningStar()
 
-    def candleEveningStar(self):
+    def candleEveningStar(self) -> ndarray:
         """*** Candlestick Detected: Evening Star ("Strong - Reversal - Bearish Pattern - Down")"""
 
-        return ((np.minimum(self.df['open'].shift(1), self.df['close'].shift(1)) > self.df['close'].shift(2)) & (self.df['close'].shift(2) > self.df['open'].shift(2))) \
-            & ((self.df['close'] < self.df['open']) & (self.df['open'] < np.minimum(self.df['open'].shift(1), self.df['close'].shift(1))))
+        return ((minimum(self.df['open'].shift(1), self.df['close'].shift(1)) > self.df['close'].shift(2)) & (self.df['close'].shift(2) > self.df['open'].shift(2))) \
+            & ((self.df['close'] < self.df['open']) & (self.df['open'] < minimum(self.df['open'].shift(1), self.df['close'].shift(1))))
 
-    def addCandleEveningStar(self):
+    def addCandleEveningStar(self) -> None:
         self.df['evening_star'] = self.candleEveningStar()
 
     def candleAbandonedBaby(self):
@@ -214,10 +217,10 @@ class TechnicalAnalysis():
             & (self.df['open'].shift(2) > self.df['close'].shift(2)) \
             & (self.df['high'].shift(1) < self.df['low'].shift(2))
 
-    def addCandleAbandonedBaby(self):
+    def addCandleAbandonedBaby(self) -> None:
         self.df['abandoned_baby'] = self.candleAbandonedBaby()
 
-    def candleMorningDojiStar(self):
+    def candleMorningDojiStar(self) -> Series:
         """** Candlestick Detected: Morning Doji Star ("Reliable - Reversal - Bullish Pattern - Up")"""
 
         return (self.df['close'].shift(2) < self.df['open'].shift(2)) \
@@ -230,13 +233,13 @@ class TechnicalAnalysis():
             & (self.df['close'].shift(1) < self.df['open']) \
             & (self.df['open'].shift(1) < self.df['open']) \
             & (self.df['close'] > self.df['close'].shift(2)) \
-            & ((self.df['high'].shift(1) - np.maximum(self.df['close'].shift(1), self.df['open'].shift(1))) > (3 * abs(self.df['close'].shift(1) - self.df['open'].shift(1)))) \
-            & (np.minimum(self.df['close'].shift(1), self.df['open'].shift(1)) - self.df['low'].shift(1)) > (3 * abs(self.df['close'].shift(1) - self.df['open'].shift(1)))
+            & ((self.df['high'].shift(1) - maximum(self.df['close'].shift(1), self.df['open'].shift(1))) > (3 * abs(self.df['close'].shift(1) - self.df['open'].shift(1)))) \
+            & (minimum(self.df['close'].shift(1), self.df['open'].shift(1)) - self.df['low'].shift(1)) > (3 * abs(self.df['close'].shift(1) - self.df['open'].shift(1)))
 
-    def addCandleMorningDojiStar(self):
+    def addCandleMorningDojiStar(self) -> None:
         self.df['morning_doji_star'] = self.candleMorningDojiStar()
 
-    def candleEveningDojiStar(self):
+    def candleEveningDojiStar(self) -> Series:
         """** Candlestick Detected: Evening Doji Star ("Reliable - Reversal - Bearish Pattern - Down")"""
 
         return (self.df['close'].shift(2) > self.df['open'].shift(2)) \
@@ -249,13 +252,13 @@ class TechnicalAnalysis():
             & (self.df['close'].shift(1) > self.df['open']) \
             & (self.df['open'].shift(1) > self.df['open']) \
             & (self.df['close'] < self.df['close'].shift(2)) \
-            & ((self.df['high'].shift(1) - np.maximum(self.df['close'].shift(1), self.df['open'].shift(1))) > (3 * abs(self.df['close'].shift(1) - self.df['open'].shift(1)))) \
-            & (np.minimum(self.df['close'].shift(1), self.df['open'].shift(1)) - self.df['low'].shift(1)) > (3 * abs(self.df['close'].shift(1) - self.df['open'].shift(1)))
+            & ((self.df['high'].shift(1) - maximum(self.df['close'].shift(1), self.df['open'].shift(1))) > (3 * abs(self.df['close'].shift(1) - self.df['open'].shift(1)))) \
+            & (minimum(self.df['close'].shift(1), self.df['open'].shift(1)) - self.df['low'].shift(1)) > (3 * abs(self.df['close'].shift(1) - self.df['open'].shift(1)))
 
-    def addCandleEveningDojiStar(self):
+    def addCandleEveningDojiStar(self) -> None:
         self.df['evening_doji_star'] = self.candleEveningDojiStar()
 
-    def candleAstralBuy(self):
+    def candleAstralBuy(self) -> Series:
         """*** Candlestick Detected: Astral Buy (Fibonacci 3, 5, 8)"""
 
         return (self.df['close'] < self.df['close'].shift(3)) & (self.df['low'] < self.df['low'].shift(5)) \
@@ -267,10 +270,10 @@ class TechnicalAnalysis():
             & (self.df['close'].shift(6) < self.df['close'].shift(9)) & (self.df['low'].shift(6) < self.df['low'].shift(11)) \
             & (self.df['close'].shift(7) < self.df['close'].shift(10)) & (self.df['low'].shift(7) < self.df['low'].shift(12))
   
-    def addCandleAstralBuy(self):
+    def addCandleAstralBuy(self) -> None:
         self.df['astral_buy'] = self.candleAstralBuy()
 
-    def candleAstralSell(self):
+    def candleAstralSell(self) -> Series:
         """*** Candlestick Detected: Astral Sell (Fibonacci 3, 5, 8)"""
 
         return (self.df['close'] > self.df['close'].shift(3)) & (self.df['high'] > self.df['high'].shift(5)) \
@@ -282,17 +285,17 @@ class TechnicalAnalysis():
             & (self.df['close'].shift(6) > self.df['close'].shift(9)) & (self.df['high'].shift(6) > self.df['high'].shift(11)) \
             & (self.df['close'].shift(7) > self.df['close'].shift(10)) & (self.df['high'].shift(7) > self.df['high'].shift(12))
   
-    def addCandleAstralSell(self):
+    def addCandleAstralSell(self) -> None:
         self.df['astral_sell'] = self.candleAstralSell()
 
-    def changePct(self):
+    def changePct(self) -> DataFrame:
         """Close change percentage"""
 
         close_pc = self.df['close'] / self.df['close'].shift(1) - 1
         close_pc = close_pc.fillna(0)
         return close_pc
     
-    def addChangePct(self):
+    def addChangePct(self) -> None:
         """Adds the close percentage to the DataFrame"""
 
         self.df['close_pc'] = self.changePct()
@@ -300,17 +303,17 @@ class TechnicalAnalysis():
         # cumulative returns
         self.df['close_cpc'] = (1 + self.df['close_pc']).cumprod()
 
-    def cumulativeMovingAverage(self):
+    def cumulativeMovingAverage(self) -> float:
         """Calculates the Cumulative Moving Average (CMA)"""
 
         return self.df.close.expanding().mean()
 
-    def addCMA(self):
+    def addCMA(self) -> None:
         """Adds the Cumulative Moving Average (CMA) to the DataFrame"""
 
         self.df['cma'] = self.cumulativeMovingAverage()
 
-    def exponentialMovingAverage(self, period):
+    def exponentialMovingAverage(self, period: int) -> float:
         """Calculates the Exponential Moving Average (EMA)"""
 
         if not isinstance(period, int):
@@ -324,7 +327,7 @@ class TechnicalAnalysis():
 
         return self.df.close.ewm(span=period, adjust=False).mean()
 
-    def addEMA(self, period):
+    def addEMA(self, period: int) -> None:
         """Adds the Exponential Moving Average (EMA) the DateFrame"""
 
         if not isinstance(period, int):
@@ -338,10 +341,10 @@ class TechnicalAnalysis():
 
         self.df['ema' + str(period)] = self.exponentialMovingAverage(period)
 
-    def calculateRelativeStrengthIndex(self, series, interval=14):
+    def calculateRelativeStrengthIndex(self, series: int, interval: int=14) -> float:
         """Calculates the RSI on a Pandas series of closing prices."""
 
-        if not isinstance(series, pd.Series):
+        if not isinstance(series, Series):
             raise TypeError('Pandas Series required.')
 
         if not isinstance(interval, int):
@@ -365,7 +368,7 @@ class TechnicalAnalysis():
 
         return rsi
 
-    def addFibonacciBollingerBands(self, interval=20, multiplier=3):
+    def addFibonacciBollingerBands(self, interval: int=20, multiplier: int=3) -> None:
         """Adds Fibonacci Bollinger Bands."""
 
         if not isinstance(interval, int):
@@ -395,7 +398,7 @@ class TechnicalAnalysis():
         self.df['fbb_lower0_764'] = sma - (0.764 * sd)
         self.df['fbb_lower1'] = sma - (1 * sd)
 
-    def movingAverageConvergenceDivergence(self):
+    def movingAverageConvergenceDivergence(self) -> DataFrame:
         """Calculates the Moving Average Convergence Divergence (MACD)"""
 
         if len(self.df) < 26:
@@ -407,32 +410,32 @@ class TechnicalAnalysis():
         if not self.df['ema26'].dtype == 'float64' and not self.df['ema26'].dtype == 'int64':
             raise AttributeError("Pandas DataFrame 'ema26' column not int64 or float64.")
 
-        df = pd.DataFrame()
+        df = DataFrame()
         df['macd'] = self.df['ema12'] - self.df['ema26']
         df['signal'] = df['macd'].ewm(span=9, adjust=False).mean()        
         return df
 
-    def addMACD(self):
+    def addMACD(self) -> None:
         """Adds the Moving Average Convergence Divergence (MACD) to the DataFrame"""
 
         df = self.movingAverageConvergenceDivergence()
         self.df['macd'] = df['macd']
         self.df['signal'] = df['signal']
 
-    def onBalanceVolume(self):
+    def onBalanceVolume(self) -> ndarray:
         """Calculate On-Balance Volume (OBV)"""
 
-        return np.where(self.df['close'] == self.df['close'].shift(1), 0, np.where(self.df['close'] > self.df['close'].shift(1), self.df['volume'], 
-        np.where(self.df['close'] < self.df['close'].shift(1), -self.df['volume'], self.df.iloc[0]['volume']))).cumsum()
+        return where(self.df['close'] == self.df['close'].shift(1), 0, where(self.df['close'] > self.df['close'].shift(1), self.df['volume'], 
+        where(self.df['close'] < self.df['close'].shift(1), -self.df['volume'], self.df.iloc[0]['volume']))).cumsum()
 
-    def addOBV(self):
+    def addOBV(self) -> None:
         """Add the On-Balance Volume (OBV) to the DataFrame"""
 
         self.df['obv'] = self.onBalanceVolume()
         self.df['obv_pc'] = self.df['obv'].pct_change() * 100
-        self.df['obv_pc'] = np.round(self.df['obv_pc'].fillna(0), 2)  
+        self.df['obv_pc'] = round(self.df['obv_pc'].fillna(0), 2)  
 
-    def relativeStrengthIndex(self, period):
+    def relativeStrengthIndex(self, period) -> DataFrame:
         """Calculate the Relative Strength Index (RSI)"""
 
         if not isinstance(period, int):
@@ -447,7 +450,7 @@ class TechnicalAnalysis():
         rsi = rsi.fillna(50)
         return rsi
 
-    def addRSI(self, period):
+    def addRSI(self, period: int) -> None:
         """Adds the Relative Strength Index (RSI) to the DataFrame"""
 
         if not isinstance(period, int):
@@ -457,21 +460,21 @@ class TechnicalAnalysis():
             raise ValueError('Period is out of range')
 
         self.df['rsi' + str(period)] = self.relativeStrengthIndex(period)   
-        self.df['rsi' + str(period)] = self.df['rsi' + str(period)].replace(np.nan, 50)
+        self.df['rsi' + str(period)] = self.df['rsi' + str(period)].replace(nan, 50)
 
-    def seasonalARIMAModel(self):
+    def seasonalARIMAModel(self): # TODO: annotate return type
         """Returns the Seasonal ARIMA Model for price predictions"""
 
         # parameters for SARIMAX
         model = SARIMAX(self.df['close'], trend='n', order=(0,1,0), seasonal_order=(1,1,1,12))
         return model.fit(disp=-1)
 
-    def seasonalARIMAModelFittedValues(self):
+    def seasonalARIMAModelFittedValues(self): # TODO: annotate return type
         """Returns the Seasonal ARIMA Model for price predictions"""
 
         return self.seasonalARIMAModel().fittedvalues
 
-    def simpleMovingAverage(self, period):
+    def simpleMovingAverage(self, period: int) -> float:
         """Calculates the Simple Moving Average (SMA)"""
 
         if not isinstance(period, int):
@@ -485,7 +488,7 @@ class TechnicalAnalysis():
 
         return self.df.close.rolling(period, min_periods=1).mean()
 
-    def addSMA(self, period):
+    def addSMA(self, period: int) -> None:
         """Add the Simple Moving Average (SMA) to the DataFrame"""
 
         if not isinstance(period, int):
@@ -499,7 +502,7 @@ class TechnicalAnalysis():
 
         self.df['sma' + str(period)] = self.simpleMovingAverage(period)
 
-    def addGoldenCross(self):
+    def addGoldenCross(self) -> None:
         """Add Golden Cross SMA50 over SMA200"""
 
         if 'sma50' not in self.df:
@@ -510,7 +513,7 @@ class TechnicalAnalysis():
 
         self.df['goldencross'] = self.df['sma50'] > self.df['sma200']
 
-    def addDeathCross(self):
+    def addDeathCross(self) -> None:
         """Add Death Cross SMA50 over SMA200"""
 
         if 'sma50' not in self.df:
@@ -521,7 +524,7 @@ class TechnicalAnalysis():
 
         self.df['deathcross'] = self.df['sma50'] < self.df['sma200']
 
-    def addElderRayIndex(self):
+    def addElderRayIndex(self) -> None:
         """Add Elder Ray Index"""
 
         if 'ema13' not in self.df:
@@ -538,7 +541,7 @@ class TechnicalAnalysis():
         # bear power’s value is decreasing (i.e., becoming more bearish)
         self.df['eri_sell'] = ((self.df['elder_ray_bull'] > 0) & (self.df['elder_ray_bull'] < self.df['elder_ray_bull'].shift(1))) | ((self.df['elder_ray_bear'] < self.df['elder_ray_bear'].shift(1)))
 
-    def getSupportResistanceLevels(self):
+    def getSupportResistanceLevels(self) -> Series:
         """Calculate the Support and Resistance Levels"""
 
         self.levels = [] 
@@ -547,9 +550,9 @@ class TechnicalAnalysis():
         for level in self.levels:
             levels_ts[self.df.index[level[0]]] = level[1]
         # add the support levels to the DataFrame
-        return pd.Series(levels_ts)
+        return Series(levels_ts)
 
-    def printSupportResistanceLevel(self, price=0):
+    def printSupportResistanceLevel(self, price: float=0) -> None:
         if isinstance(price, int) or isinstance(price, float):
             df = self.getSupportResistanceLevels()
 
@@ -562,7 +565,7 @@ class TechnicalAnalysis():
                 else:
                     print (' Support/Resistance level of ' + str(df_last[0]) + ' formed at ' + str(df_last.index[0]), "\n")
 
-    def getResistance(self, price=0):
+    def getResistance(self, price: float=0) -> float:
         if isinstance(price, int) or isinstance(price, float):
             if price > 0:
                 sr = self.getSupportResistanceLevels()
@@ -572,7 +575,7 @@ class TechnicalAnalysis():
 
         return price
 
-    def getFibonacciUpper(self, price=0):
+    def getFibonacciUpper(self, price: float=0) -> float:
         if isinstance(price, int) or isinstance(price, float):
             if price > 0:
                 fb = self.getFibonacciRetracementLevels()
@@ -582,7 +585,7 @@ class TechnicalAnalysis():
         
         return price
 
-    def getTradeExit(self, price=0):
+    def getTradeExit(self, price: float=0) -> float:
         if isinstance(price, int) or isinstance(price, float):
             if price > 0:
                 r = self.getResistance(price)
@@ -602,7 +605,7 @@ class TechnicalAnalysis():
                 
         return price
 
-    def printSupportResistanceFibonacciLevels(self, price=0):
+    def printSupportResistanceFibonacciLevels(self, price: float=0) -> str:
         if isinstance(price, int) or isinstance(price, float):
             if price > 0:
                 sr = self.getSupportResistanceLevels()
@@ -635,10 +638,10 @@ class TechnicalAnalysis():
 
         return ''
 
-    def addEMABuySignals(self):
+    def addEMABuySignals(self) -> None:
         """Adds the EMA12/EMA26 buy and sell signals to the DataFrame"""
 
-        if not isinstance(self.df, pd.DataFrame):
+        if not isinstance(self.df, DataFrame):
             raise TypeError('Pandas DataFrame required.')
 
         if not 'close' in self.df.columns:
@@ -664,10 +667,10 @@ class TechnicalAnalysis():
         self.df['ema12ltema26co'] = self.df.ema12ltema26.ne(self.df.ema12ltema26.shift())
         self.df.loc[self.df['ema12ltema26'] == False, 'ema12ltema26co'] = False
 
-    def addSMABuySignals(self):
+    def addSMABuySignals(self) -> None:
         """Adds the SMA50/SMA200 buy and sell signals to the DataFrame"""
 
-        if not isinstance(self.df, pd.DataFrame):
+        if not isinstance(self.df, DataFrame):
             raise TypeError('Pandas DataFrame required.')
 
         if not 'close' in self.df.columns:
@@ -693,10 +696,10 @@ class TechnicalAnalysis():
         self.df['sma50ltsma200co'] = self.df.sma50ltsma200.ne(self.df.sma50ltsma200.shift())
         self.df.loc[self.df['sma50ltsma200'] == False, 'sma50ltsma200co'] = False
 
-    def addMACDBuySignals(self):
+    def addMACDBuySignals(self) -> None:
         """Adds the MACD/Signal buy and sell signals to the DataFrame"""
 
-        if not isinstance(self.df, pd.DataFrame):
+        if not isinstance(self.df, DataFrame):
             raise TypeError('Pandas DataFrame required.')
 
         if not 'close' in self.df.columns:
@@ -721,7 +724,7 @@ class TechnicalAnalysis():
         self.df['macdltsignalco'] = self.df.macdltsignal.ne(self.df.macdltsignal.shift())
         self.df.loc[self.df['macdltsignal'] == False, 'macdltsignalco'] = False
 
-    def getFibonacciRetracementLevels(self, price=0):
+    def getFibonacciRetracementLevels(self, price: float=0) -> dict:
         # validates price is numeric
         if not isinstance(price, int) and not isinstance(price, float):
             raise TypeError('Optional price is not numeric.')
@@ -793,14 +796,14 @@ class TechnicalAnalysis():
 
         return data
 
-    def saveCSV(self, filename='tradingdata.csv'):
+    def saveCSV(self, filename: str='tradingdata.csv') -> None:
         """Saves the DataFrame to an uncompressed CSV."""
 
-        p = re.compile(r"^[\w\-. ]+$")
+        p = compile(r"^[\w\-. ]+$")
         if not p.match(filename):
             raise TypeError('Filename required.')
 
-        if not isinstance(self.df, pd.DataFrame):
+        if not isinstance(self.df, DataFrame):
             raise TypeError('Pandas DataFrame required.')
 
         try:
@@ -822,7 +825,7 @@ class TechnicalAnalysis():
                     self.levels.append((i, l))
         return self.levels
 
-    def __isSupport(self, df, i):
+    def __isSupport(self, df, i) -> bool:
         """Is support level? (private function)"""
 
         c1 = df['low'][i] < df['low'][i - 1]
@@ -832,7 +835,7 @@ class TechnicalAnalysis():
         support = c1 and c2 and c3 and c4
         return support
 
-    def __isResistance(self, df, i):
+    def __isResistance(self, df, i) -> bool:
         """Is resistance level? (private function)"""
 
         c1 = df['high'][i] > df['high'][i - 1]
@@ -842,11 +845,11 @@ class TechnicalAnalysis():
         resistance = c1 and c2 and c3 and c4
         return resistance
 
-    def __isFarFromLevel(self, l):
+    def __isFarFromLevel(self, l) -> float:
         """Is far from support level? (private function)"""
 
-        s = np.mean(self.df['high'] - self.df['low'])
-        return np.sum([abs(l-x) < s for x in self.levels]) == 0
+        s = mean(self.df['high'] - self.df['low'])
+        return np_sum([abs(l-x) < s for x in self.levels]) == 0
 
-    def __truncate(self, f, n):
-        return math.floor(f * 10 ** n) / 10 ** n
+    def __truncate(self, f, n) -> float:
+        return floor(f * 10 ** n) / 10 ** n
