@@ -127,7 +127,7 @@ class AuthAPI(AuthAPIBase):
 
     def getTakerFee(self, market: str='') -> float:
         if market == '':
-            fees = self.getFees()
+            return DEFAULT_TAKER_FEE_RATE
         else:
             fees = self.getFees(market)
 
@@ -135,10 +135,7 @@ class AuthAPI(AuthAPIBase):
             print (f"error: 'taker_fee_rate' not in fees (using {DEFAULT_TAKER_FEE_RATE} as a fallback)")
             return DEFAULT_TAKER_FEE_RATE
 
-        if market == '':
-            return fees
-        else:
-            return float(fees['taker_fee_rate'].to_string(index=False).strip())
+        return float(fees['taker_fee_rate'].to_string(index=False).strip())
 
     def __convertStatus(self, val: str) -> str:
         if val == 'filled':
