@@ -129,6 +129,10 @@ def defaultConfigParse(app, config):
         if isinstance(config['disablelog'], int) and bool(config['disablelog']):
             app.disablelog = True
 
+    if 'logDateFormat' in config:
+        if isinstance(config['logDateFormat'], str):
+            app.logDateFormat = config['logDateFormat']
+
     if 'disabletracker' in config:
         if isinstance(config['disabletracker'], int) and bool(config['disabletracker']):
             app.disabletracker = True

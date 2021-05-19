@@ -42,6 +42,7 @@ parser.add_argument('--smartswitch', type=int, help='optionally smart switch bet
 parser.add_argument('--verbose', type=int, help='verbose output=1, minimal output=0')
 parser.add_argument('--config', type=str, help="Use the config file at the given location. e.g 'myconfig.json'")
 parser.add_argument('--logfile', type=str, help="Use the log file at the given location. e.g 'mymarket.log'")
+parser.add_argument('--logDateFormat', type=str, help="Date format used in log. e.g '%m/%d/%Y %I:%M:%S %p'")
 parser.add_argument('--buypercent', type=int, help="percentage of quote currency to buy")
 parser.add_argument('--sellpercent', type=int, help="percentage of base currency to sell")
 parser.add_argument('--lastaction', type=str, help="optionally set the last action (BUY, SELL)")
@@ -123,6 +124,7 @@ class PyCryptoBot():
         self.disabletracker = False
 
         self.logfile = args['logfile'] if args['logfile'] else "pycryptobot.log"
+        self.logDateFormat = "%m/%d/%Y %I:%M:%S %p"
 
         try:
             with open(filename) as config_file:
@@ -177,6 +179,9 @@ class PyCryptoBot():
 
     def getLogFile(self):
         return self.logfile
+
+    def getLogDateFormat(self):
+        return self.logDateFormat
 
     def getExchange(self):
         return self.exchange

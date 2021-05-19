@@ -1008,7 +1008,7 @@ def main():
         logging.basicConfig(
             filename=app.getLogFile(),
             format='%(asctime)s - %(levelname)s: %(message)s',
-            datefmt='%m/%d/%Y %I:%M:%S %p',
+            datefmt=app.getLogDateFormat(),
             filemode='a',
             level=logging.DEBUG,
             force=True
