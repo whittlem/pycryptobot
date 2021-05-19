@@ -411,7 +411,7 @@ class TradingAccount():
                         price = float(json['price'])
 
                 # calculate purchase fees
-                fee = fiatAmount * 0.005
+                fee = fiatAmount * getTakerFee()
                 fiatAmountMinusFee = fiatAmount - fee
                 total = float(fiatAmountMinusFee / float(price))
 
@@ -549,7 +549,7 @@ class TradingAccount():
                     raise TypeError('Optional manual price not numeric.')
 
                 # calculate purchase fees
-                fee = cryptoAmount * 0.005
+                fee = cryptoAmount * getTakerFee()
                 cryptoAmountMinusFee = cryptoAmount - fee
 
                 price = manualPrice
