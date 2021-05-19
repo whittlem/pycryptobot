@@ -25,9 +25,9 @@ class TradingAccount():
 
         # if trading account is for testing it will be instantiated with a balance of 1000
         self.balance = pd.DataFrame([
-            ['QUOTE', 1000, 0, 1000],
-            ['BASE', 0, 0, 0]],
-            columns=['currency', 'balance', 'hold', 'available'])
+            [ 'QUOTE', 1000, 0, 1000 ],
+            [ 'BASE', 0, 0, 0 ]],
+            columns=['currency','balance','hold','available'])
 
         self.app = app
 
@@ -102,8 +102,7 @@ class TradingAccount():
         if self.app.getExchange() == 'coinbasepro':
             if self.mode == 'live':
                 # if config is provided and live connect to Coinbase Pro account portfolio
-                model = CBAuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(),
-                                  self.app.getAPIURL())
+                model = CBAuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
                 # retrieve orders from live Coinbase Pro account portfolio
                 self.orders = model.getOrders(market, action, status)
                 return self.orders
@@ -140,11 +139,9 @@ class TradingAccount():
                         else:
                             # return balance of specified currency (if positive)
                             if currency in ['EUR', 'GBP', 'USD']:
-                                return float(
-                                    self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2))
+                                return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2))
                             else:
-                                return float(
-                                    self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
+                                return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
                 else:
                     return 0.0
             else:
@@ -157,7 +154,7 @@ class TradingAccount():
                         self.balance = self.balance.replace('QUOTE', currency)
                     else:
                         # replace QUOTE and BASE placeholders
-                        if currency in ['EUR', 'GBP', 'USD']:
+                        if currency in ['EUR','GBP','USD']:
                             self.balance = self.balance.replace('QUOTE', currency)
                         else:
                             self.balance = self.balance.replace('BASE', currency)
@@ -175,17 +172,14 @@ class TradingAccount():
                     else:
                         # return balance of specified currency (if positive)
                         if currency in ['EUR', 'GBP', 'USD']:
-                            return float(
-                                self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2))
+                            return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2))
                         else:
-                            return float(
-                                self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
+                            return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
 
         else:
             if self.mode == 'live':
                 # if config is provided and live connect to Coinbase Pro account portfolio
-                model = CBAuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(),
-                                  self.app.getAPIURL())
+                model = CBAuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
                 if currency == '':
                     # retrieve all balances
                     return model.getAccounts()[['currency', 'balance', 'hold', 'available']]
@@ -198,12 +192,10 @@ class TradingAccount():
                         return 0.0
                     else:
                         # return balance of specified currency (if positive)
-                        if currency in ['EUR', 'GBP', 'USD']:
-                            return float(
-                                self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2))
+                        if currency in ['EUR','GBP','USD']:
+                            return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2))
                         else:
-                            return float(
-                                self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
+                            return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
 
             else:
                 # return dummy balances
@@ -213,13 +205,13 @@ class TradingAccount():
                     return self.balance
                 else:
                     # replace QUOTE and BASE placeholders
-                    if currency in ['EUR', 'GBP', 'USD']:
+                    if currency in ['EUR','GBP','USD']:
                         self.balance = self.balance.replace('QUOTE', currency)
-                    elif currency in ['BCH', 'BTC', 'ETH', 'LTC', 'XLM']:
+                    elif currency in ['BCH','BTC','ETH','LTC','XLM']:
                         self.balance = self.balance.replace('BASE', currency)
 
                     if self.balance.currency[self.balance.currency.isin([currency])].empty == True:
-                        self.balance.loc[len(self.balance)] = [currency, 0, 0, 0]
+                        self.balance.loc[len(self.balance)] = [currency,0,0,0]
 
                     # retrieve balance of specified currency
                     df = self.balance
@@ -230,12 +222,10 @@ class TradingAccount():
                         return 0.0
                     else:
                         # return balance of specified currency (if positive)
-                        if currency in ['EUR', 'GBP', 'USD']:
-                            return float(
-                                self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2))
+                        if currency in ['EUR','GBP','USD']:
+                            return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 2))
                         else:
-                            return float(
-                                self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
+                            return float(self.app.truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
 
     def saveTrackerCSV(self, market='', save_file='tracker.csv'):
         """Saves order tracker to CSV
@@ -270,7 +260,7 @@ class TradingAccount():
                 else:
                     df = pd.DataFrame()
 
-        if list(df.keys()) != ['created_at', 'market', 'action', 'type', 'size', 'value', 'fees', 'price', 'status']:
+        if list(df.keys()) != [ 'created_at', 'market', 'action', 'type', 'size', 'value', 'fees', 'price', 'status' ]:
             # no data, return early
             return False
 
@@ -312,23 +302,22 @@ class TradingAccount():
                             df_sell['value'],
                             df_sell['fees'],
                             df_sell['price']
-                        ]], columns=['status', 'market',
-                                     'buy_at', 'buy_type', 'buy_size', 'buy_value', 'buy_fees', 'buy_price',
-                                     'sell_at', 'sell_type', 'sell_size', 'sell_value', 'sell_fees', 'sell_price'
-                                     ])
+                        ]], columns=[ 'status', 'market',
+                            'buy_at', 'buy_type', 'buy_size', 'buy_value', 'buy_fees', 'buy_price',
+                            'sell_at', 'sell_type', 'sell_size', 'sell_value', 'sell_fees', 'sell_price'
+                        ])
                     df_tracker = df_tracker.append(df_pair, ignore_index=True)
                     pair = 0
 
                 last_action = row['action']
 
-        if list(df_tracker.keys()) != ['status', 'market',
-                                       'buy_at', 'buy_type', 'buy_size', 'buy_value', 'buy_fees', 'buy_price',
-                                       'sell_at', 'sell_type', 'sell_size', 'sell_value', 'sell_fees', 'sell_price']:
+        if list(df_tracker.keys()) != [ 'status', 'market',
+                            'buy_at', 'buy_type', 'buy_size', 'buy_value', 'buy_fees', 'buy_price',
+                            'sell_at', 'sell_type', 'sell_size', 'sell_value', 'sell_fees', 'sell_price' ]:
             # no data, return early
             return False
 
-        df_tracker['profit'] = np.subtract(np.subtract(df_tracker['sell_value'], df_tracker['buy_value']),
-                                           np.add(df_tracker['buy_fees'], df_tracker['sell_fees']))
+        df_tracker['profit'] = np.subtract(np.subtract(df_tracker['sell_value'], df_tracker['buy_value']), np.add(df_tracker['buy_fees'], df_tracker['sell_fees']))
         df_tracker['margin'] = np.multiply(np.true_divide(df_tracker['profit'], df_tracker['buy_value']), 100)
         df_sincebot = df_tracker[df_tracker['buy_at'] > '2021-02-1']
 
