@@ -21,4 +21,3 @@ class AppState():
         self.sell_count = 0
         self.sell_sum = 0
         self.first_buy_size = 0
-        
