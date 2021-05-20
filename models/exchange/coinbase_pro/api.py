@@ -320,7 +320,7 @@ class AuthAPI(AuthAPIBase):
         if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
             raise TypeError('The crypto amount is not numeric.')
 
-        if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
+        if not isinstance(futurePrice, int) and not isinstance(futurePrice, float):
             raise TypeError('The future crypto price is not numeric.')
 
         order = {
@@ -366,7 +366,7 @@ class AuthAPI(AuthAPIBase):
              raise TypeError('Method not DELETE, GET or POST.') 
 
         if not isinstance(uri, str):
-            raise TypeError('Method is not a string.')
+            raise TypeError('URI is not a string.')
 
         try:
             if method == 'DELETE':
@@ -518,7 +518,7 @@ class PublicAPI(AuthAPIBase):
             raise TypeError('Method not GET or POST.')
 
         if not isinstance(uri, str):
-            raise TypeError('Method is not a string.')
+            raise TypeError('URI is not a string.')
 
         try:
             if method == 'GET':
