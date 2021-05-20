@@ -347,7 +347,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 change_pcnt_high = 0
 
             #  buy and sell calculations
-            if (app.getExchange() == 'coinbasepro' and state.last_buyfilled == 0) or app.isSimulation():
+            if (app.getExchange() == 'coinbasepro' and state.last_buy_filled == 0) or app.isSimulation():
                 state.last_buy_filled = round(((state.last_buy_size - state.last_buy_fee) / state.last_buy_price), 8)
                 state.last_buy_fee = round(state.last_buy_size * app.getTakerFee(), 8)
             elif app.getExchange() == 'binance' and state.last_buy_filled == 0:
