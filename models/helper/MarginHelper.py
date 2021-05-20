@@ -1,7 +1,7 @@
 def calculate_margin(buy_size: float = 0.0, buy_filled: int = 0.0, buy_price: int = 0.0, buy_fee: float = 0.0,
                      sell_percent: float = 100, sell_price: float = 0.0, sell_fee: float = 0.0,
-                     sell_taker_fee: float = 0.0, debug: bool = False, exchange: str = 'coinbasepro', simulation: bool = False) -> float:
-    
+                     sell_taker_fee: float = 0.0, debug: bool = False, exchange: str = 'coinbasepro', simulation: int = 0) -> [float, float, float]:
+
     if debug is True:
         print(f'buy_size: {buy_size}') #buy_size for CB is quote currency, for binance is base currency
         print(f'buy_filled: {buy_filled}') #buy_filled for CB is base currency, for binance is quote currency
@@ -11,7 +11,7 @@ def calculate_margin(buy_size: float = 0.0, buy_filled: int = 0.0, buy_price: in
     #for CB buy_size represents the quote currency value of the buy including fees and buy_filled represents the base currency size of the buy
     #for Binance buy_filled represents the quote currency value of the buy including fees and buy_size represents the base currency size of the buy
 
-    if exchange == 'coinbasepro' or simulation:
+    if exchange == 'coinbasepro' or simulation == 1:
         #sell_size in quote currency by multiplying current price by buy_filled in base currency
         sell_size = round((sell_percent / 100) * (sell_price  * buy_filled), 8)
 
