@@ -395,49 +395,49 @@ class PyCryptoBot():
     def allowSellAtLoss(self) -> bool:
         return self.sell_at_loss == 1
 
-    def sellAtResistance(self):
+    def sellAtResistance(self) -> bool:
         return self.sellatresistance
 
-    def autoRestart(self):
+    def autoRestart(self) -> bool:
         return self.autorestart
 
     def getLastAction(self):
         return self.last_action
 
-    def disableBullOnly(self):
+    def disableBullOnly(self) -> bool:
         return self.disablebullonly
 
-    def disableBuyNearHigh(self):
+    def disableBuyNearHigh(self) -> bool:
         return self.disablebuynearhigh
 
-    def disableBuyMACD(self):
+    def disableBuyMACD(self) -> bool:
         return self.disablebuymacd
 
-    def disableBuyOBV(self):
+    def disableBuyOBV(self) -> bool:
         return self.disablebuyobv
 
-    def disableBuyElderRay(self):
+    def disableBuyElderRay(self) -> bool:
         return self.disablebuyelderray
 
-    def disableFailsafeFibonacciLow(self):
+    def disableFailsafeFibonacciLow(self) -> bool:
         return self.disablefailsafefibonaccilow
 
-    def disableFailsafeLowerPcnt(self):
+    def disableFailsafeLowerPcnt(self) -> bool:
         return self.disablefailsafelowerpcnt
     
-    def disableProfitbankUpperPcnt(self):
+    def disableProfitbankUpperPcnt(self) -> bool:
         return self.disableprofitbankupperpcnt
 
-    def disableProfitbankReversal(self):
+    def disableProfitbankReversal(self) -> bool:
         return self.disableprofitbankreversal
 
-    def disableTelegram(self):
+    def disableTelegram(self) -> bool:
         return self.disabletelegram
 
-    def disableLog(self):
+    def disableLog(self) -> bool:
         return self.disablelog
 
-    def disableTracker(self):
+    def disableTracker(self) -> bool:
         return self.disabletracker
 
     def setGranularity(self, granularity):
