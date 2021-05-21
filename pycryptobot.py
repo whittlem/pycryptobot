@@ -954,13 +954,13 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             if state.iterations == len(df):
                 print ("\nSimulation Summary\n")
 
-                if state.buy_count > state.sell_count and app.allowSellAtLoss() == 1:
+                if state.buy_count > state.sell_count and app.allowSellAtLoss():
                     fee = price * app.getTakerFee()
                     last_price_minus_fees = price - fee
                     state.sell_sum = state.sell_sum + last_price_minus_fees
                     state.sell_count = state.sell_count + 1
 
-                elif state.buy_count > state.sell_count and app.allowSellAtLoss() == 0:
+                elif state.buy_count > state.sell_count and not app.allowSellAtLoss():
                     print ('        Note : "sell at loss" is disabled and you have an open trade, if the margin')
                     print ('               result below is negative it will assume you sold at the end of the')
                     print ('               simulation which may not be ideal. Try setting --sellatloss 1', "\n")

@@ -392,8 +392,8 @@ class PyCryptoBot():
     def trailingStopLoss(self):
         return self.trailing_stop_loss
 
-    def allowSellAtLoss(self):
-        return self.sell_at_loss
+    def allowSellAtLoss(self) -> bool:
+        return self.sell_at_loss == 1
 
     def sellAtResistance(self):
         return self.sellatresistance
@@ -583,7 +583,7 @@ class PyCryptoBot():
                 txt = '       Sell Lower : ' + str(self.sellLowerPcnt()) + '%'
                 print('|', txt, (' ' * (75 - len(txt))), '|')
 
-            txt = '         Sell At Loss : ' + str(bool(self.allowSellAtLoss())) + '  --sellatloss ' + str(self.allowSellAtLoss())
+            txt = '         Sell At Loss : ' + str(self.allowSellAtLoss()) + '  --sellatloss ' + str(self.allowSellAtLoss())
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
             txt = '   Sell At Resistance : ' + str(self.sellAtResistance()) + '  --sellatresistance'
