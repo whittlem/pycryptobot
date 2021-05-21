@@ -174,7 +174,7 @@ def getInterval(df: pd.DataFrame=pd.DataFrame(), app: PyCryptoBot=None, iteratio
     if len(df) == 0:
         return df
 
-    if app.isSimulation() == 1 and iterations > 0:
+    if app.isSimulation() and iterations > 0:
         # with a simulation iterate through data
         return df.iloc[iterations-1:iterations]
     else:
@@ -196,7 +196,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
     # increment state.iterations
     state.iterations = state.iterations + 1
 
-    if app.isSimulation() == 0:
+    if not app.isSimulation():
         # retrieve the app.getMarket() data
         trading_data = app.getHistoricalData(app.getMarket(), app.getGranularity())
     else:
@@ -209,7 +209,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
     ta.addAll()
     df = ta.getDataFrame()
 
-    if app.isSimulation() == 1:
+    if app.isSimulation():
         df_last = getInterval(df, app, state.iterations)
     else:
         df_last = getInterval(df, app)
@@ -276,7 +276,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             s.enter(300, 1, executeJob, (sc, app, state))
     else:
         if len(df) < 300:
-            if app.isSimulation() == 0:
+            if not app.isSimulation():
                 # data frame should have 300 rows, if not retry
                 print('error: data frame length is < 300 (' + str(len(df)) + ')')
                 logging.error('error: data frame length is < 300 (' + str(len(df)) + ')')
@@ -286,7 +286,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
     if len(df_last) > 0:
         now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
 
-        if app.isSimulation() == 0:
+        if not app.isSimulation():
             ticker = app.getTicker(app.getMarket())
             now = ticker[0] 
             price = ticker[1]
@@ -314,7 +314,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
         elder_ray_sell = bool(df_last['eri_sell'].values[0])
 
         # if simulation interations < 200 set goldencross to true
-        if app.isSimulation() == 1 and state.iterations < 200:
+        if app.isSimulation() and state.iterations < 200:
             goldencross = True
 
         # candlestick detection
@@ -987,7 +987,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             elif app.getExchange() == 'coinbasepro':
                 account.saveTrackerCSV()
 
-        if app.isSimulation() == 1:
+        if app.isSimulation():
             if state.iterations < 300:
                 if app.simuluationSpeed() in [ 'fast', 'fast-sample' ]:
                     # fast processing
@@ -1030,7 +1030,7 @@ def main():
 
         def runApp():
             # run the first job immediately after starting
-            if app.isSimulation() == 1:
+            if app.isSimulation():
                 executeJob(s, app, state, trading_data)
             else:
                 executeJob(s, app, state)

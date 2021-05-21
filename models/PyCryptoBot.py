@@ -374,8 +374,8 @@ class PyCryptoBot():
     def shouldSaveGraphs(self) -> bool:
         return self.save_graphs == 1
 
-    def isSimulation(self):
-        return self.is_sim
+    def isSimulation(self) -> bool:
+        return self.is_sim == 1
 
     def isTelegramEnabled(self):
         return self.telegram
@@ -647,7 +647,7 @@ class PyCryptoBot():
                     raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(self.getBaseCurrency())) + ' < 0.1 ' + self.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
 
         # run the first job immediately after starting
-        if self.isSimulation() == 1:
+        if self.isSimulation():
             if self.simuluationSpeed() in [ 'fast-sample', 'slow-sample' ]:
                 tradingData = pd.DataFrame()
 
