@@ -377,7 +377,7 @@ class PyCryptoBot():
     def isSimulation(self) -> bool:
         return self.is_sim == 1
 
-    def isTelegramEnabled(self):
+    def isTelegramEnabled(self) -> bool:
         return self.telegram
 
     def simuluationSpeed(self):
