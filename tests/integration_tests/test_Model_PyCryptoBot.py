@@ -552,7 +552,7 @@ def test_configjson_islive():
     app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
     assert app.getExchange() == 'coinbasepro'
-    assert app.isLive() == 0
+    assert not app.isLive()
 
     try:
         config['coinbasepro']['config']['live'] = 1
@@ -565,10 +565,10 @@ def test_configjson_islive():
 
     app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
-    assert app.isLive() == 1
+    assert app.isLive()
 
     app.setLive(0)
-    assert app.isLive() == 0
+    assert not app.isLive()
 
     if os.path.exists('/tmp/pycryptobot_pytest_config.json'):
         os.remove('/tmp/pycryptobot_pytest_config.json')

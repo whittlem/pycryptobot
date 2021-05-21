@@ -42,7 +42,7 @@ if app.getLastAction() != None:
             state.last_buy_fee = float(df[df.action == 'buy']['fees'])
 
 # if live trading is enabled
-elif app.isLive() == 1:
+elif app.isLive():
     # connectivity check
     if app.getTime() is None:
         raise ConnectionError('Unable to start the bot as your connection to the exchange is down. Please check your Internet connectivity!')
@@ -347,7 +347,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 change_pcnt_high = 0
 
             #  buy and sell calculations
-            if app.isLive() == 0 and state.last_buy_filled == 0:
+            if not app.isLive() and state.last_buy_filled == 0:
                 state.last_buy_filled = state.last_buy_size / state.last_buy_price
                 state.last_buy_fee = round(state.last_buy_size  * app.getTakerFee(), 8)
 
@@ -780,7 +780,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 state.buy_sum = state.buy_sum + price_incl_fees
 
                 # if live
-                if app.isLive() == 1:
+                if app.isLive():
                     # telegram
                     if not app.disableTelegram() and app.isTelegramEnabled():
                         telegram = app.getChatClient()
@@ -858,7 +858,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 state.sell_sum = state.sell_sum + price_incl_fees
 
                 # if live
-                if app.isLive() == 1:
+                if app.isLive():
                     # telegram
                     if not app.disableTelegram() and app.isTelegramEnabled():
                         telegram = app.getChatClient()
@@ -980,7 +980,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             state.iterations = state.iterations - 1
 
         # if live
-        if not app.disableTracker() and app.isLive() == 1:
+        if not app.disableTracker() and app.isLive():
             # update order tracker csv
             if app.getExchange() == 'binance':
                 account.saveTrackerCSV(app.getMarket())

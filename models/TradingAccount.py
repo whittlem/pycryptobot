@@ -36,7 +36,7 @@ class TradingAccount():
         
         self.app = app
 
-        if app.isLive() == 1:
+        if app.isLive():
             self.mode = 'live'
         else:
             self.mode = 'test'
