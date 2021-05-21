@@ -595,7 +595,7 @@ def test_configjson_graphs():
     app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
     assert app.getExchange() == 'coinbasepro'
-    assert app.shouldSaveGraphs() == 0
+    assert not app.shouldSaveGraphs()
 
     try:
         config['coinbasepro']['config']['graphs'] = 1
@@ -609,7 +609,7 @@ def test_configjson_graphs():
     app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
     assert app.getExchange() == 'coinbasepro'
-    assert app.shouldSaveGraphs() == 1
+    assert app.shouldSaveGraphs()
 
     if os.path.exists('/tmp/pycryptobot_pytest_config.json'):
         os.remove('/tmp/pycryptobot_pytest_config.json')
