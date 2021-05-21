@@ -636,7 +636,7 @@ def test_configjson_isverbose():
     app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
     assert app.getExchange() == 'coinbasepro'
-    assert app.isVerbose() == 0
+    assert app.isVerbose()
 
     try:
         config['coinbasepro']['config']['verbose'] = 1
@@ -650,7 +650,7 @@ def test_configjson_isverbose():
     app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
     assert app.getExchange() == 'coinbasepro'
-    assert app.isVerbose() == 1
+    assert not app.isVerbose()
 
     if os.path.exists('/tmp/pycryptobot_pytest_config.json'):
         os.remove('/tmp/pycryptobot_pytest_config.json')

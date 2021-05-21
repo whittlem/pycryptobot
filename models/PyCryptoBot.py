@@ -368,8 +368,8 @@ class PyCryptoBot():
     def isLive(self):
         return self.is_live
 
-    def isVerbose(self):
-        return self.is_verbose
+    def isVerbose(self) -> bool:
+        return self.is_verbose == 1
 
     def shouldSaveGraphs(self):
         return self.save_graphs
@@ -554,7 +554,7 @@ class PyCryptoBot():
 
             print('--------------------------------------------------------------------------------')
 
-            if self.isVerbose() == 1:
+            if self.isVerbose():
                 txt = '               Market : ' + self.getMarket()
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 if self.exchange == 'coinbasepro':
