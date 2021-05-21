@@ -282,7 +282,7 @@ class AuthAPI(AuthAPIBase):
             'product_id': market,
             'type': 'market',
             'side': 'buy',
-            'funds': self.marketBaseIncrement(market, quote_quantity)
+            'funds': self.marketQuoteIncrement(market, quote_quantity)
         }
 
         if self.debug is True:
@@ -353,6 +353,21 @@ class AuthAPI(AuthAPIBase):
 
         if '.' in str(base_increment):
             nb_digits = len(str(base_increment).split('.')[1])
+        else:
+            nb_digits = 0
+
+        return floor(amount * 10 ** nb_digits) / 10 ** nb_digits
+
+    def marketQuoteIncrement(self, market, amount) -> float:
+        product = self.authAPI('GET', f'products/{market}')
+
+        if 'quote_increment' not in product:
+            return amount
+
+        quote_increment = str(product['quote_increment'].values[0])
+
+        if '.' in str(quote_increment):
+            nb_digits = len(str(quote_increment).split('.')[1])
         else:
             nb_digits = 0
 
