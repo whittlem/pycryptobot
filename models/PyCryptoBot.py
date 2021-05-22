@@ -15,6 +15,7 @@ from models.exchange.coinbase_pro import AuthAPI as CBAuthAPI, PublicAPI as CBPu
 from models.Github import Github
 from models.chat import Telegram
 from models.config import binanceConfigParser, binanceParseMarket, coinbaseProConfigParser, coinbaseProParseMarket
+from models.ConfigBuilder import ConfigBuilder
 
 # disable insecure ssl warning
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -25,6 +26,9 @@ logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 # instantiate the arguments parser
 parser = argparse.ArgumentParser(description='Python Crypto Bot using the Coinbase Pro or Binanace API')
+
+# config builder
+parser.add_argument('--init', action="store_true", help="config.json configuration builder")
 
 # optional arguments
 parser.add_argument('--exchange', type=str, help="'coinbasepro', 'binance', 'dummy'")
@@ -108,6 +112,8 @@ class PyCryptoBot():
         self._chat_client = None
         self.buymaxsize = None
 
+        self.configbuilder = False
+
         self.sellatresistance = False
         self.autorestart = False
 
@@ -125,6 +131,12 @@ class PyCryptoBot():
         self.disabletracker = False
 
         self.logfile = args['logfile'] if args['logfile'] else "pycryptobot.log"
+
+        if args['init']:
+            # config builder
+            cb = ConfigBuilder()
+            cb.init()
+            sys.exit()
 
         try:
             with open(filename) as config_file:
@@ -402,6 +414,9 @@ class PyCryptoBot():
 
     def allowSellAtLoss(self) -> bool:
         return self.sell_at_loss == 1
+
+    def showConfigBuilder(self) -> bool:
+        return self.configbuilder
 
     def sellAtResistance(self) -> bool:
         return self.sellatresistance
