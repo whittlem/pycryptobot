@@ -373,19 +373,19 @@ class PyCryptoBot():
         else:
             return ''
 
-    def isLive(self):
-        return self.is_live
+    def isLive(self) -> bool:
+        return self.is_live == 1
 
-    def isVerbose(self):
-        return self.is_verbose
+    def isVerbose(self) -> bool:
+        return self.is_verbose == 1
 
-    def shouldSaveGraphs(self):
-        return self.save_graphs
+    def shouldSaveGraphs(self) -> bool:
+        return self.save_graphs == 1
 
-    def isSimulation(self):
-        return self.is_sim
+    def isSimulation(self) -> bool:
+        return self.is_sim == 1
 
-    def isTelegramEnabled(self):
+    def isTelegramEnabled(self) -> bool:
         return self.telegram
 
     def simuluationSpeed(self):
@@ -400,52 +400,52 @@ class PyCryptoBot():
     def trailingStopLoss(self):
         return self.trailing_stop_loss
 
-    def allowSellAtLoss(self):
-        return self.sell_at_loss
+    def allowSellAtLoss(self) -> bool:
+        return self.sell_at_loss == 1
 
-    def sellAtResistance(self):
+    def sellAtResistance(self) -> bool:
         return self.sellatresistance
 
-    def autoRestart(self):
+    def autoRestart(self) -> bool:
         return self.autorestart
 
     def getLastAction(self):
         return self.last_action
 
-    def disableBullOnly(self):
+    def disableBullOnly(self) -> bool:
         return self.disablebullonly
 
-    def disableBuyNearHigh(self):
+    def disableBuyNearHigh(self) -> bool:
         return self.disablebuynearhigh
 
-    def disableBuyMACD(self):
+    def disableBuyMACD(self) -> bool:
         return self.disablebuymacd
 
-    def disableBuyOBV(self):
+    def disableBuyOBV(self) -> bool:
         return self.disablebuyobv
 
-    def disableBuyElderRay(self):
+    def disableBuyElderRay(self) -> bool:
         return self.disablebuyelderray
 
-    def disableFailsafeFibonacciLow(self):
+    def disableFailsafeFibonacciLow(self) -> bool:
         return self.disablefailsafefibonaccilow
 
-    def disableFailsafeLowerPcnt(self):
+    def disableFailsafeLowerPcnt(self) -> bool:
         return self.disablefailsafelowerpcnt
     
-    def disableProfitbankUpperPcnt(self):
+    def disableProfitbankUpperPcnt(self) -> bool:
         return self.disableprofitbankupperpcnt
 
-    def disableProfitbankReversal(self):
+    def disableProfitbankReversal(self) -> bool:
         return self.disableprofitbankreversal
 
-    def disableTelegram(self):
+    def disableTelegram(self) -> bool:
         return self.disabletelegram
 
-    def disableLog(self):
+    def disableLog(self) -> bool:
         return self.disablelog
 
-    def disableTracker(self):
+    def disableTracker(self) -> bool:
         return self.disabletracker
 
     def setGranularity(self, granularity):
@@ -562,7 +562,7 @@ class PyCryptoBot():
 
             print('--------------------------------------------------------------------------------')
 
-            if self.isVerbose() == 1:
+            if self.isVerbose():
                 txt = '               Market : ' + self.getMarket()
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 if self.exchange == 'coinbasepro':
@@ -572,7 +572,7 @@ class PyCryptoBot():
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 print('--------------------------------------------------------------------------------')
 
-            if self.isLive() == 1:
+            if self.isLive():
                 txt = '             Bot Mode : LIVE - live trades using your funds!'
             else:
                 txt = '             Bot Mode : TEST - test trades using dummy funds :)'
@@ -591,7 +591,7 @@ class PyCryptoBot():
                 txt = '       Sell Lower : ' + str(self.sellLowerPcnt()) + '%'
                 print('|', txt, (' ' * (75 - len(txt))), '|')
 
-            txt = '         Sell At Loss : ' + str(bool(self.allowSellAtLoss())) + '  --sellatloss ' + str(self.allowSellAtLoss())
+            txt = '         Sell At Loss : ' + str(self.allowSellAtLoss()) + '  --sellatloss ' + str(self.allowSellAtLoss())
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
             txt = '   Sell At Resistance : ' + str(self.sellAtResistance()) + '  --sellatresistance'
@@ -645,7 +645,7 @@ class PyCryptoBot():
             print('================================================================================')
 
         # if live
-        if self.isLive() == 1:
+        if self.isLive():
             if self.getExchange() == 'binance':
                 if last_action == 'SELL'and account.getBalance(self.getQuoteCurrency()) < 0.001:
                     raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(self.getQuoteCurrency())) + ' < 0.1 ' + self.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
@@ -659,7 +659,7 @@ class PyCryptoBot():
                     raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(self.getBaseCurrency())) + ' < 0.1 ' + self.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
 
         # run the first job immediately after starting
-        if self.isSimulation() == 1:
+        if self.isSimulation():
             if self.simuluationSpeed() in [ 'fast-sample', 'slow-sample' ]:
                 tradingData = pd.DataFrame()
 

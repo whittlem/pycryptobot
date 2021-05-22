@@ -552,7 +552,7 @@ def test_configjson_islive():
     app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
     assert app.getExchange() == 'coinbasepro'
-    assert app.isLive() == 0
+    assert not app.isLive()
 
     try:
         config['coinbasepro']['config']['live'] = 1
@@ -565,10 +565,10 @@ def test_configjson_islive():
 
     app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
-    assert app.isLive() == 1
+    assert app.isLive()
 
     app.setLive(0)
-    assert app.isLive() == 0
+    assert not app.isLive()
 
     if os.path.exists('/tmp/pycryptobot_pytest_config.json'):
         os.remove('/tmp/pycryptobot_pytest_config.json')
@@ -595,7 +595,7 @@ def test_configjson_graphs():
     app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
     assert app.getExchange() == 'coinbasepro'
-    assert app.shouldSaveGraphs() == 0
+    assert not app.shouldSaveGraphs()
 
     try:
         config['coinbasepro']['config']['graphs'] = 1
@@ -609,7 +609,7 @@ def test_configjson_graphs():
     app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
     assert app.getExchange() == 'coinbasepro'
-    assert app.shouldSaveGraphs() == 1
+    assert app.shouldSaveGraphs()
 
     if os.path.exists('/tmp/pycryptobot_pytest_config.json'):
         os.remove('/tmp/pycryptobot_pytest_config.json')
@@ -636,7 +636,7 @@ def test_configjson_isverbose():
     app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
     assert app.getExchange() == 'coinbasepro'
-    assert app.isVerbose() == 0
+    assert app.isVerbose()
 
     try:
         config['coinbasepro']['config']['verbose'] = 1
@@ -650,7 +650,7 @@ def test_configjson_isverbose():
     app = PyCryptoBot(filename='/tmp/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
     assert app.getExchange() == 'coinbasepro'
-    assert app.isVerbose() == 1
+    assert not app.isVerbose()
 
     if os.path.exists('/tmp/pycryptobot_pytest_config.json'):
         os.remove('/tmp/pycryptobot_pytest_config.json')
