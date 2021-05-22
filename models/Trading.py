@@ -1,6 +1,6 @@
 """Technical analysis on a trading Pandas DataFrame"""
 
-from math import floor
+from numpy import floor
 from re import compile
 
 from numpy import maximum, mean, minimum, nan, ndarray, round
