@@ -228,6 +228,7 @@ Sell signal:
 
 Special sell cases:
 
+* "buymaxsize" specify a fixed max amount of the quote currency to buy with
 * If "sellatloss" is on, bot will sell if price drops below the lower Fibonacci band
 * If "sellatloss" is on and "selllowerpcnt" is specified the bot will sell at the specified amount E.g. -2 for -2% margin
 * If "sellatloss" is on and "trailingstoploss" is specified the bot will sell at the specified amount below the buy high
@@ -238,20 +239,24 @@ Special sell cases:
 
 ## Optional Options
 
+    --autorestart                       Automatically restart the bot on error
     --sellatresistance                  Sells if the price reaches either resistance or Fibonacci band
 
 ## Disabling Default Functionality
 
     --disablebullonly                   Disable only buying in bull market
     --disablebuynearhigh                Disable buying within 3% of the dataframe high
+    --disablebuymacd                    Disable macd buy signal
     --disablebuyobv                     Disable obv buy signal
     --disablebuyelderray                Disable elder ray buy signal
-    --disablecryptorecession            Disable crypto recession check
     --disablefailsafefibonaccilow       Disable failsafe sell on fibonacci lower band
     --disablefailsafelowerpcnt          Disable failsafe sell on 'selllowerpcnt'
     --disableprofitbankupperpcnt        Disable profit bank on 'sellupperpcnt'
     --disableprofitbankfibonaccihigh    Disable profit bank on fibonacci upper band
     --disableprofitbankreversal         Disable profit bank on strong candlestick reversal
+    --disabletelegram                   Disable sending telegram messages
+    --disablelog                        Disable writing log entries
+    --disabletracker                    Disable saving CSV on buy and sell events
 
 ## "Sell At Loss" explained
 
