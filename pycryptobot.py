@@ -800,6 +800,9 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
                     # execute a live market buy
                     state.last_buy_size = float(account.getBalance(app.getQuoteCurrency()))
+                    if app.getBuyMaxSize() and state.last_buy_size > app.getBuyMaxSize():
+                        state.last_buy_size = app.getBuyMaxSize()
+
                     resp = app.marketBuy(app.getMarket(), state.last_buy_size, app.getBuyPercent())
                     logging.info(resp)
 

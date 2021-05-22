@@ -45,6 +45,7 @@ parser.add_argument('--logfile', type=str, help="Use the log file at the given l
 parser.add_argument('--buypercent', type=int, help="percentage of quote currency to buy")
 parser.add_argument('--sellpercent', type=int, help="percentage of base currency to sell")
 parser.add_argument('--lastaction', type=str, help="optionally set the last action (BUY, SELL)")
+parser.add_argument('--buymaxsize', type=int, help="maximum size on buy")
 
 # optional options
 parser.add_argument('--sellatresistance', action="store_true", help="sell at resistance or upper fibonacci band")
@@ -105,6 +106,7 @@ class PyCryptoBot():
         self.sellpercent = 100
         self.last_action = None
         self._chat_client = None
+        self.buymaxsize = None
 
         self.sellatresistance = False
         self.autorestart = False
@@ -222,6 +224,12 @@ class PyCryptoBot():
             return int(self.sellpercent)
         except Exception:
             return 100       
+
+    def getBuyMaxSize(self):
+        try:
+            return int(self.buymaxsize)
+        except Exception:
+            return None
 
     def getHistoricalData(self, market, granularity, iso8601start='', iso8601end=''):
         if self.exchange == 'coinbasepro':
@@ -629,6 +637,10 @@ class PyCryptoBot():
 
             txt = '     Auto restart Bot : ' + str(self.autoRestart()) + '  --autorestart'
             print('|', txt, (' ' * (75 - len(txt))), '|')
+
+            if self.getBuyMaxSize():
+                txt = '         Max Buy Size : ' + str(self.getBuyMaxSize()) + '  --maxbuysize <size>'
+                print('|', txt, (' ' * (75 - len(txt))), '|')
 
             print('================================================================================')
 
