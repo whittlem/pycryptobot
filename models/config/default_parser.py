@@ -64,9 +64,9 @@ def defaultConfigParse(app, config):
         if isinstance(config['trailingstoploss'], (int, str)):
             p = re.compile(r"^\-[0-9\.]{1,5}$")
             if isinstance(config['trailingstoploss'], str) and p.match(config['trailingstoploss']):
-                app.tailing_stop_loss = float(config['trailingstoploss'])
+                app.trailing_stop_loss = float(config['trailingstoploss'])
             elif isinstance(config['trailingstoploss'], int) and config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
-                app.tailing_stop_loss = float(config['trailingstoploss'])
+                app.trailing_stop_loss = float(config['trailingstoploss'])
 
     if 'autorestart' in config:
         if isinstance(config['autorestart'], int):
