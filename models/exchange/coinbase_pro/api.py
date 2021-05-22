@@ -9,10 +9,10 @@ import requests
 import base64
 import sys
 import pandas as pd
+from numpy import floor
 from datetime import datetime, timedelta
 from requests.auth import AuthBase
 from requests import Request
-from math import floor
 
 # Constants
 
@@ -377,8 +377,11 @@ class AuthAPI(AuthAPIBase):
                 resp = requests.post(self._api_url + uri, json=payload, auth=self)
 
             if resp.status_code != 200:
-                if self.die_on_api_error:
-                    raise Exception(method.upper() + 'GET (' + '{}'.format(resp.status_code) + ') ' + self._api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
+                if self.die_on_api_error or resp.status_code == 401:
+                    # disable traceback
+                    sys.tracebacklimit = 0
+
+                    raise Exception(method.upper() + ' (' + '{}'.format(resp.status_code) + ') ' + self._api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
                 else:
                     print ('error:', method.upper() + ' (' + '{}'.format(resp.status_code) + ') ' + self._api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
                     return pd.DataFrame()
