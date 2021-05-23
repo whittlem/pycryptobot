@@ -464,15 +464,13 @@ class PublicAPI(AuthAPIBase):
         if not isinstance(iso8601end, str):
             raise TypeError('ISO8601 end integer as string required.')
 
-        # if only a start date is provided
         if iso8601start != '' and iso8601end == '':
-            multiplier = int(granularity/60)
-
-            # calculate the end date using the granularity
-            iso8601end = str((datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S.%f') + timedelta(minutes=granularity * multiplier)).isoformat()) 
-
-        resp = self.authAPI('GET', f"products/{market}/candles?granularity={granularity}&start={iso8601start}&end={iso8601end}")
-        
+            resp = self.authAPI('GET', f"products/{market}/candles?granularity={granularity}&start={iso8601start}")    
+        elif iso8601start != '' and iso8601end != '':
+            resp = self.authAPI('GET', f"products/{market}/candles?granularity={granularity}&start={iso8601start}&end={iso8601end}")
+        else:
+            resp = self.authAPI('GET', f"products/{market}/candles?granularity={granularity}")
+       
         # convert the API response into a Pandas DataFrame
         df = pd.DataFrame(resp, columns=[ 'epoch', 'low', 'high', 'open', 'close', 'volume' ])
         # reverse the order of the response with earliest last
