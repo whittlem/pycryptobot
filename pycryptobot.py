@@ -57,11 +57,8 @@ elif app.isLive():
             state.last_action = 'BUY'
             state.last_buy_size = float(df[df.action == 'buy']['size'])
             state.last_buy_filled = float(df[df.action == 'buy']['filled'])
-            state.last_buy_price = float(df[df.action == 'buy']['price'])
-            if app.getExchange() == 'binance':
-                state.last_buy_fee = state.last_buy_filled * app.getTakerFee()
-            else:
-                state.last_buy_fee = state.last_buy_price * state.last_buy_filled * app.getTakerFee()
+            state.last_buy_price = float(df[df.action == 'buy']['price'])               
+            state.last_buy_fee = state.last_buy_size * app.getTakerFee()
         else:
             state.last_action = 'SELL'
             state.last_buy_price = 0.0
@@ -347,16 +344,10 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 change_pcnt_high = 0
 
             #  buy and sell calculations
-            if not app.isLive() and state.last_buy_filled == 0:
-                state.last_buy_filled = state.last_buy_size / state.last_buy_price
-                state.last_buy_fee = round(state.last_buy_size  * app.getTakerFee(), 8)
 
-            if app.getExchange() == 'coinbasepro' and state.last_buy_filled == 0:
+            if  state.last_buy_filled == 0:
                 state.last_buy_filled = round(((state.last_buy_size - state.last_buy_fee) / state.last_buy_price), 8)
                 state.last_buy_fee = round(state.last_buy_size * app.getTakerFee(), 8)
-            elif app.getExchange() == 'binance' and state.last_buy_filled == 0:
-                state.last_buy_filled = round(state.last_buy_size * state.last_buy_price, 8)
-                state.last_buy_fee = round(state.last_buy_filled * app.getTakerFee(), 8)
 
             margin, profit, sell_fee = calculate_margin(
                 buy_size=state.last_buy_size, 
@@ -366,8 +357,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 sell_percent=app.getSellPercent(), 
                 sell_price=price, 
                 sell_taker_fee=app.getTakerFee(), 
-                debug=False,
-                exchange=app.getExchange())
+                debug=False)
 
             # loss failsafe sell at fibonacci band
             if app.disableFailsafeFibonacciLow() is False and app.allowSellAtLoss() and app.sellLowerPcnt() is None and state.fib_low > 0 and state.fib_low >= float(price):
@@ -920,8 +910,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                             sell_percent=app.getSellPercent(), 
                             sell_price=price, 
                             sell_taker_fee=app.getTakerFee(), 
-                            debug=False,
-                            exchange=app.getExchange())
+                            debug=False)
 
                         if price > 0:
                             margin_text = str(app.truncate(margin, 2)) + '%'
