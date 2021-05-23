@@ -246,7 +246,14 @@ class PyCryptoBot():
     def getHistoricalData(self, market, granularity, iso8601start='', iso8601end=''):
         if self.exchange == 'coinbasepro':
             api = CBPublicAPI()
-            return api.getHistoricalData(market, granularity, iso8601start, iso8601end)
+
+            if iso8601start != '' and iso8601end == '':
+                return api.getHistoricalData(market, granularity, iso8601start)
+            elif iso8601start != '' and iso8601end != '':
+                return api.getHistoricalData(market, granularity, iso8601start, iso8601end)
+            else:
+                return api.getHistoricalData(market, granularity)
+
         elif self.exchange == 'binance':
             api = BPublicAPI()
 
@@ -683,15 +690,15 @@ class PyCryptoBot():
                 if self.simstartdate != None:
                     date = self.simstartdate.split('-')
                     startDate = datetime(int(date[0]),int(date[1]),int(date[2]))
-                    endDate = startDate + timedelta(hours=300)
+                    endDate = startDate + timedelta(minutes=(self.getGranularity()/60)*300)
                     while len(tradingData) != 300 and attempts < 10:
-                        tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(), startDate.isoformat(timespec='milliseconds'), endDate.isoformat(timespec='milliseconds'))
+                        tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(), startDate.isoformat(timespec='milliseconds'))
                         attempts += 1
                 else:
                     while len(tradingData) != 300 and attempts < 10:
                         endDate = datetime.now() - timedelta(hours=random.randint(0,8760 * 3)) # 3 years in hours
-                        startDate = endDate - timedelta(hours=300)
-                        tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(), startDate.isoformat(timespec='milliseconds'), endDate.isoformat(timespec='milliseconds'))
+                        startDate = endDate - timedelta(minutes=(self.getGranularity()/60)*300)
+                        tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(), startDate.isoformat(timespec='milliseconds'))
                         attempts += 1
                     if len(tradingData) != 300:
                         raise Exception('Unable to retrieve 300 random sets of data between ' + str(startDate) + ' and ' + str(endDate) + ' in ' + str(attempts) + ' attempts.')
