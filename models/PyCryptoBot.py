@@ -93,9 +93,6 @@ class PyCryptoBot():
         self.api_passphrase = ''
         self.api_url = ''
 
-        self.telegram_token = ''
-        self.telegram_client_id = ''
-
         if args['config'] is not None:
             filename = args['config']
         if args['exchange'] is not None:
@@ -169,10 +166,7 @@ class PyCryptoBot():
 
                 if not self.disabletelegram and 'telegram' in config and 'token' in config['telegram'] and 'client_id' in config['telegram']:
                     telegram = config['telegram']
-
-                    self.telegram_token = telegram['token']
-                    self.telegram_client_id = telegram['client_id']
-                    self._chat_client = Telegram(self.telegram_token, self.telegram_client_id)
+                    self._chat_client = Telegram(telegram['token'], telegram['client_id'])
                     self.telegram = True
 
         except json.decoder.JSONDecodeError as err:
@@ -224,12 +218,6 @@ class PyCryptoBot():
 
     def getAPIPassphrase(self):
         return self.api_passphrase
-
-    def getTelegramToken(self):
-        return self.telegram_token
-
-    def getTelegramClientID(self):
-        return self.telegram_client_id
 
     def getAPIURL(self):
         return self.api_url
