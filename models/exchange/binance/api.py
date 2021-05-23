@@ -172,7 +172,7 @@ class AuthAPI(AuthAPIBase):
             return pd.DataFrame()
 
         df = df[[ 'time', 'symbol', 'side', 'type', 'executedQty', 'cummulativeQuoteQty', 'status' ]]
-        df.columns = [ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'status' ]
+        df.columns = [ 'created_at', 'market', 'action', 'type', 'filled', 'size', 'status' ]
         df['created_at'] = df['created_at'].apply(lambda x: int(str(x)[:10]))
         df['created_at'] = df['created_at'].astype("datetime64[s]")
         df['size'] = df['size'].astype(float)
@@ -180,7 +180,7 @@ class AuthAPI(AuthAPIBase):
         df['action'] = df['action'].str.lower()
         df['type'] = df['type'].str.lower()
         df['status'] = df['status'].str.lower()
-        df['price'] = df['filled'] / df['size']
+        df['price'] = df['size'] / df['filled']
 
         # pylint: disable=unused-variable
         for k, v in df.items():
