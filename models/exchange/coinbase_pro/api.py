@@ -9,10 +9,10 @@ import requests
 import base64
 import sys
 import pandas as pd
+from numpy import floor
 from datetime import datetime, timedelta
 from requests.auth import AuthBase
 from requests import Request
-from math import floor
 
 # Constants
 
@@ -282,7 +282,7 @@ class AuthAPI(AuthAPIBase):
             'product_id': market,
             'type': 'market',
             'side': 'buy',
-            'funds': self.marketBaseIncrement(market, quote_quantity)
+            'funds': self.marketQuoteIncrement(market, quote_quantity)
         }
 
         if self.debug is True:
@@ -305,7 +305,7 @@ class AuthAPI(AuthAPIBase):
             'product_id': market,
             'type': 'market',
             'side': 'sell',
-            'size': base_quantity
+            'size': self.marketBaseIncrement(market, base_quantity)
         }
 
         print (order)
@@ -327,7 +327,7 @@ class AuthAPI(AuthAPIBase):
             'product_id': market,
             'type': 'limit',
             'side': 'sell',
-            'size': base_quantity,
+            'size': self.marketBaseIncrement(market, base_quantity),
             'price': future_price
         }
 
@@ -358,6 +358,21 @@ class AuthAPI(AuthAPIBase):
 
         return floor(amount * 10 ** nb_digits) / 10 ** nb_digits
 
+    def marketQuoteIncrement(self, market, amount) -> float:
+        product = self.authAPI('GET', f'products/{market}')
+
+        if 'quote_increment' not in product:
+            return amount
+
+        quote_increment = str(product['quote_increment'].values[0])
+
+        if '.' in str(quote_increment):
+            nb_digits = len(str(quote_increment).split('.')[1])
+        else:
+            nb_digits = 0
+
+        return floor(amount * 10 ** nb_digits) / 10 ** nb_digits
+
     def authAPI(self, method: str, uri: str, payload: str='') -> pd.DataFrame:
         if not isinstance(method, str):
             raise TypeError('Method is not a string.')
@@ -377,8 +392,11 @@ class AuthAPI(AuthAPIBase):
                 resp = requests.post(self._api_url + uri, json=payload, auth=self)
 
             if resp.status_code != 200:
-                if self.die_on_api_error:
-                    raise Exception(method.upper() + 'GET (' + '{}'.format(resp.status_code) + ') ' + self._api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
+                if self.die_on_api_error or resp.status_code == 401:
+                    # disable traceback
+                    sys.tracebacklimit = 0
+
+                    raise Exception(method.upper() + ' (' + '{}'.format(resp.status_code) + ') ' + self._api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
                 else:
                     print ('error:', method.upper() + ' (' + '{}'.format(resp.status_code) + ') ' + self._api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
                     return pd.DataFrame()
@@ -446,15 +464,13 @@ class PublicAPI(AuthAPIBase):
         if not isinstance(iso8601end, str):
             raise TypeError('ISO8601 end integer as string required.')
 
-        # if only a start date is provided
         if iso8601start != '' and iso8601end == '':
-            multiplier = int(granularity/60)
-
-            # calculate the end date using the granularity
-            iso8601end = str((datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S.%f') + timedelta(minutes=granularity * multiplier)).isoformat()) 
-
-        resp = self.authAPI('GET', f"products/{market}/candles?granularity={granularity}&start={iso8601start}&end={iso8601end}")
-        
+            resp = self.authAPI('GET', f"products/{market}/candles?granularity={granularity}&start={iso8601start}")    
+        elif iso8601start != '' and iso8601end != '':
+            resp = self.authAPI('GET', f"products/{market}/candles?granularity={granularity}&start={iso8601start}&end={iso8601end}")
+        else:
+            resp = self.authAPI('GET', f"products/{market}/candles?granularity={granularity}")
+       
         # convert the API response into a Pandas DataFrame
         df = pd.DataFrame(resp, columns=[ 'epoch', 'low', 'high', 'open', 'close', 'volume' ])
         # reverse the order of the response with earliest last

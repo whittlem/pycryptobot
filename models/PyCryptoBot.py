@@ -15,6 +15,7 @@ from models.exchange.coinbase_pro import AuthAPI as CBAuthAPI, PublicAPI as CBPu
 from models.Github import Github
 from models.chat import Telegram
 from models.config import binanceConfigParser, binanceParseMarket, coinbaseProConfigParser, coinbaseProParseMarket
+from models.ConfigBuilder import ConfigBuilder
 
 # disable insecure ssl warning
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -26,16 +27,21 @@ logging.getLogger("urllib3").setLevel(logging.WARNING)
 # instantiate the arguments parser
 parser = argparse.ArgumentParser(description='Python Crypto Bot using the Coinbase Pro or Binanace API')
 
+# config builder
+parser.add_argument('--init', action="store_true", help="config.json configuration builder")
+
 # optional arguments
 parser.add_argument('--exchange', type=str, help="'coinbasepro', 'binance', 'dummy'")
-parser.add_argument('--granularity', type=str, help="coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6h,1d)")
+parser.add_argument('--granularity', type=str,
+                    help="coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6h,1d)")
 parser.add_argument('--graphs', type=int, help='save graphs=1, do not save graphs=0')
 parser.add_argument('--live', type=int, help='live=1, test=0')
 parser.add_argument('--market', type=str, help='coinbasepro: BTC-GBP, binance: BTCGBP etc.')
 parser.add_argument('--sellatloss', type=int, help='toggle if bot should sell at a loss')
 parser.add_argument('--sellupperpcnt', type=float, help='optionally set sell upper percent limit')
 parser.add_argument('--selllowerpcnt', type=float, help='optionally set sell lower percent limit')
-parser.add_argument('--trailingstoploss', type=float, help='optionally set a trailing stop percent loss below last buy high')
+parser.add_argument('--trailingstoploss',
+                    type=float, help='optionally set a trailing stop percent loss below last buy high')
 parser.add_argument('--sim', type=str, help='simulation modes: fast, fast-sample, slow-sample')
 parser.add_argument('--simstartdate', type=str, help="start date for sample simulation e.g '2021-01-15'")
 parser.add_argument('--smartswitch', type=int, help='optionally smart switch between 1 hour and 15 minute intervals')
@@ -45,6 +51,7 @@ parser.add_argument('--logfile', type=str, help="Use the log file at the given l
 parser.add_argument('--buypercent', type=int, help="percentage of quote currency to buy")
 parser.add_argument('--sellpercent', type=int, help="percentage of base currency to sell")
 parser.add_argument('--lastaction', type=str, help="optionally set the last action (BUY, SELL)")
+parser.add_argument('--buymaxsize', type=int, help="maximum size on buy")
 
 # optional options
 parser.add_argument('--sellatresistance', action="store_true", help="sell at resistance or upper fibonacci band")
@@ -56,17 +63,28 @@ parser.add_argument('--disablebuynearhigh', action="store_true", help="disable b
 parser.add_argument('--disablebuymacd', action="store_true", help="disable macd buy signal")
 parser.add_argument('--disablebuyobv', action="store_true", help="disable obv buy signal")
 parser.add_argument('--disablebuyelderray', action="store_true", help="disable elder ray buy signal")
-parser.add_argument('--disablefailsafefibonaccilow', action="store_true", help="disable failsafe sell on fibonacci lower band")
+parser.add_argument(
+    '--disablefailsafefibonaccilow', action="store_true", help="disable failsafe sell on fibonacci lower band")
 parser.add_argument('--disablefailsafelowerpcnt', action="store_true", help="disable failsafe sell on 'selllowerpcnt'")
 parser.add_argument('--disableprofitbankupperpcnt', action="store_true", help="disable profit bank on 'sellupperpcnt'")
-parser.add_argument('--disableprofitbankreversal', action="store_true", help="disable profit bank on strong candlestick reversal")
+parser.add_argument(
+    '--disableprofitbankreversal', action="store_true", help="disable profit bank on strong candlestick reversal")
 parser.add_argument('--disabletelegram', action="store_true", help="disable telegram messages")
 parser.add_argument('--disablelog', action="store_true", help="disable pycryptobot.log")
 parser.add_argument('--disabletracker', action="store_true", help="disable tracker.csv")
 
 # parse arguments
-#args = parser.parse_args()
+# args = parser.parse_args()
 args = vars(parser.parse_args())
+
+
+def to_coinbase_pro_granularity(granularity: int) -> int:
+    return granularity
+
+
+def to_binance_granularity(granularity: int) -> str:
+    return {60: '1m', 300: '5m', 900: '15m', 3600: '1h', 21600: '6h', 86400: '1d'}[granularity]
+
 
 class PyCryptoBot():
     def __init__(self, exchange='coinbasepro', filename='config.json'):
@@ -78,7 +96,7 @@ class PyCryptoBot():
         if args['config'] is not None:
             filename = args['config']
         if args['exchange'] is not None:
-            if args['exchange'] not in [ 'coinbasepro', 'binance', 'dummy' ]:
+            if args['exchange'] not in ['coinbasepro', 'binance', 'dummy']:
                 raise TypeError('Invalid exchange: coinbasepro, binance')
             else:
                 self.exchange = args['exchange']
@@ -88,7 +106,7 @@ class PyCryptoBot():
         self.market = 'BTC-GBP'
         self.base_currency = 'BTC'
         self.quote_currency = 'GBP'
-        self.granularity = None
+        self.granularity = 3600
         self.is_live = 0
         self.is_verbose = 0
         self.save_graphs = 0
@@ -105,6 +123,9 @@ class PyCryptoBot():
         self.sellpercent = 100
         self.last_action = None
         self._chat_client = None
+        self.buymaxsize = None
+
+        self.configbuilder = False
 
         self.sellatresistance = False
         self.autorestart = False
@@ -124,6 +145,12 @@ class PyCryptoBot():
 
         self.logfile = args['logfile'] if args['logfile'] else "pycryptobot.log"
 
+        if args['init']:
+            # config builder
+            cb = ConfigBuilder()
+            cb.init()
+            sys.exit()
+
         try:
             with open(filename) as config_file:
                 config = json.load(config_file)
@@ -139,7 +166,6 @@ class PyCryptoBot():
 
                 if not self.disabletelegram and 'telegram' in config and 'token' in config['telegram'] and 'client_id' in config['telegram']:
                     telegram = config['telegram']
-
                     self._chat_client = Telegram(telegram['token'], telegram['client_id'])
                     self.telegram = True
 
@@ -205,11 +231,17 @@ class PyCryptoBot():
     def getMarket(self):
         return self.market
 
-    def getGranularity(self):
+    def getGranularity(self) -> int:
+        return self.granularity
+
+    def printGranularity(self) -> str:
         if self.exchange == 'binance':
-            return str(self.granularity)
-        elif self.exchange == 'coinbasepro':
-            return int(self.granularity)
+            return to_binance_granularity(self.granularity)
+        if self.exchange == 'coinbasepro':
+            return str(self.granularity) + 's'
+        if self.exchange == 'dummy':
+            return str(self.granularity) + 's'
+        raise TypeError('Unknown exchange "' + self.exchange + '"')
 
     def getBuyPercent(self):
         try:
@@ -221,19 +253,37 @@ class PyCryptoBot():
         try:
             return int(self.sellpercent)
         except Exception:
-            return 100       
+            return 100
 
-    def getHistoricalData(self, market, granularity, iso8601start='', iso8601end=''):
+    def getBuyMaxSize(self):
+        try:
+            return int(self.buymaxsize)
+        except Exception:
+            return None
+
+    def getHistoricalData(self, market, granularity: int, iso8601start='', iso8601end=''):
         if self.exchange == 'coinbasepro':
             api = CBPublicAPI()
-            return api.getHistoricalData(market, granularity, iso8601start, iso8601end)
+
+            if iso8601start != '' and iso8601end == '':
+                return api.getHistoricalData(market, to_coinbase_pro_granularity(granularity), iso8601start)
+            elif iso8601start != '' and iso8601end != '':
+                return api.getHistoricalData(market, to_coinbase_pro_granularity(granularity), iso8601start, iso8601end)
+            else:
+                return api.getHistoricalData(market, to_coinbase_pro_granularity(granularity))
+
         elif self.exchange == 'binance':
             api = BPublicAPI()
 
             if iso8601start != '' and iso8601end != '':
-                return api.getHistoricalData(market, granularity, str(datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S.%f').strftime('%d %b, %Y')), str(datetime.strptime(iso8601end, '%Y-%m-%dT%H:%M:%S.%f').strftime('%d %b, %Y')))
+                return api.getHistoricalData(
+                    market,
+                    to_binance_granularity(granularity),
+                    str(datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S.%f').strftime('%d %b, %Y')),
+                    str(datetime.strptime(iso8601end, '%Y-%m-%dT%H:%M:%S.%f').strftime('%d %b, %Y'))
+                )
             else:
-                return api.getHistoricalData(market, granularity)
+                return api.getHistoricalData(market, to_binance_granularity(granularity))
         else:
             return pd.DataFrame()
 
@@ -289,15 +339,15 @@ class PyCryptoBot():
                 api = BPublicAPI()
                 df_data = api.getHistoricalData(self.market, '1d')
             else:
-                return False # if there is an API issue, default to False to avoid hard sells
+                return False  # if there is an API issue, default to False to avoid hard sells
 
             if len(df_data) <= 200:
-                return False # if there is unsufficient data, default to False to avoid hard sells
+                return False  # if there is insufficient data, default to False to avoid hard sells
 
             ta = TechnicalAnalysis(df_data)
             ta.addSMA(50)
             ta.addSMA(200)
-            df_last = ta.getDataFrame().copy().iloc[-1,:]
+            df_last = ta.getDataFrame().copy().iloc[-1, :]
             df_last['crypto_recession'] = df_last['sma50'] < df_last['sma200']
 
             return bool(df_last['crypto_recession'])
@@ -318,7 +368,7 @@ class PyCryptoBot():
             ta = TechnicalAnalysis(df_data)
             ta.addEMA(12)
             ta.addEMA(26)
-            df_last = ta.getDataFrame().copy().iloc[-1,:]
+            df_last = ta.getDataFrame().copy().iloc[-1, :]
             df_last['bull'] = df_last['ema12'] > df_last['ema26']
             return bool(df_last['bull'])
         except Exception:
@@ -338,7 +388,7 @@ class PyCryptoBot():
             ta = TechnicalAnalysis(df_data)
             ta.addSMA(50)
             ta.addSMA(200)
-            df_last = ta.getDataFrame().copy().iloc[-1,:]
+            df_last = ta.getDataFrame().copy().iloc[-1, :]
             df_last['bull'] = df_last['sma50'] > df_last['sma200']
             return bool(df_last['bull'])
         except Exception:
@@ -365,19 +415,19 @@ class PyCryptoBot():
         else:
             return ''
 
-    def isLive(self):
-        return self.is_live
+    def isLive(self) -> bool:
+        return self.is_live == 1
 
-    def isVerbose(self):
-        return self.is_verbose
+    def isVerbose(self) -> bool:
+        return self.is_verbose == 1
 
-    def shouldSaveGraphs(self):
-        return self.save_graphs
+    def shouldSaveGraphs(self) -> bool:
+        return self.save_graphs == 1
 
-    def isSimulation(self):
-        return self.is_sim
+    def isSimulation(self) -> bool:
+        return self.is_sim == 1
 
-    def isTelegramEnabled(self):
+    def isTelegramEnabled(self) -> bool:
         return self.telegram
 
     def simuluationSpeed(self):
@@ -392,58 +442,59 @@ class PyCryptoBot():
     def trailingStopLoss(self):
         return self.trailing_stop_loss
 
-    def allowSellAtLoss(self):
-        return self.sell_at_loss
+    def allowSellAtLoss(self) -> bool:
+        return self.sell_at_loss == 1
 
-    def sellAtResistance(self):
+    def showConfigBuilder(self) -> bool:
+        return self.configbuilder
+
+    def sellAtResistance(self) -> bool:
         return self.sellatresistance
 
-    def autoRestart(self):
+    def autoRestart(self) -> bool:
         return self.autorestart
 
     def getLastAction(self):
         return self.last_action
 
-    def disableBullOnly(self):
+    def disableBullOnly(self) -> bool:
         return self.disablebullonly
 
-    def disableBuyNearHigh(self):
+    def disableBuyNearHigh(self) -> bool:
         return self.disablebuynearhigh
 
-    def disableBuyMACD(self):
+    def disableBuyMACD(self) -> bool:
         return self.disablebuymacd
 
-    def disableBuyOBV(self):
+    def disableBuyOBV(self) -> bool:
         return self.disablebuyobv
 
-    def disableBuyElderRay(self):
+    def disableBuyElderRay(self) -> bool:
         return self.disablebuyelderray
 
-    def disableFailsafeFibonacciLow(self):
+    def disableFailsafeFibonacciLow(self) -> bool:
         return self.disablefailsafefibonaccilow
 
-    def disableFailsafeLowerPcnt(self):
+    def disableFailsafeLowerPcnt(self) -> bool:
         return self.disablefailsafelowerpcnt
-    
-    def disableProfitbankUpperPcnt(self):
+
+    def disableProfitbankUpperPcnt(self) -> bool:
         return self.disableprofitbankupperpcnt
 
-    def disableProfitbankReversal(self):
+    def disableProfitbankReversal(self) -> bool:
         return self.disableprofitbankreversal
 
-    def disableTelegram(self):
+    def disableTelegram(self) -> bool:
         return self.disabletelegram
 
-    def disableLog(self):
+    def disableLog(self) -> bool:
         return self.disablelog
 
-    def disableTracker(self):
+    def disableTracker(self) -> bool:
         return self.disabletracker
 
-    def setGranularity(self, granularity):
-        if self.exchange == 'binance' and isinstance(granularity, str) and granularity in [ '1m', '5m', '15m', '1h', '6h', '1d' ]:
-            self.granularity = granularity
-        elif self.exchange == 'coinbasepro' and isinstance(granularity, int) and granularity in [ 60, 300, 900, 3600, 21600, 86400 ]:
+    def setGranularity(self, granularity: int):
+        if granularity in [60, 300, 900, 3600, 21600, 86400]:
             self.granularity = granularity
 
     def truncate(self, f, n):
@@ -491,7 +542,7 @@ class PyCryptoBot():
             return api.getMakerFee()
         elif self.exchange == 'binance':
             api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
-            #return api.getMakerFee()
+            # return api.getMakerFee()
             return 0.005
         else:
             return 0.005
@@ -554,17 +605,14 @@ class PyCryptoBot():
 
             print('--------------------------------------------------------------------------------')
 
-            if self.isVerbose() == 1:
+            if self.isVerbose():
                 txt = '               Market : ' + self.getMarket()
                 print('|', txt, (' ' * (75 - len(txt))), '|')
-                if self.exchange == 'coinbasepro':
-                    txt = '          Granularity : ' + str(self.getGranularity()) + ' seconds'
-                elif self.exchange == 'binance':
-                    txt = '          Granularity : ' + str(self.getGranularity())
+                txt = '          Granularity : ' + str(self.getGranularity()) + ' seconds'
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 print('--------------------------------------------------------------------------------')
 
-            if self.isLive() == 1:
+            if self.isLive():
                 txt = '             Bot Mode : LIVE - live trades using your funds!'
             else:
                 txt = '             Bot Mode : TEST - test trades using dummy funds :)'
@@ -583,11 +631,11 @@ class PyCryptoBot():
                 txt = '       Sell Lower : ' + str(self.sellLowerPcnt()) + '%'
                 print('|', txt, (' ' * (75 - len(txt))), '|')
 
-            txt = '         Sell At Loss : ' + str(bool(self.allowSellAtLoss())) + '  --sellatloss ' + str(self.allowSellAtLoss())
+            txt = '         Sell At Loss : ' + str(self.allowSellAtLoss()) + '  --sellatloss ' + str(self.allowSellAtLoss())
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
             txt = '   Sell At Resistance : ' + str(self.sellAtResistance()) + '  --sellatresistance'
-            print('|', txt, (' ' * (75 - len(txt))), '|')   
+            print('|', txt, (' ' * (75 - len(txt))), '|')
 
             txt = '      Trade Bull Only : ' + str(not self.disableBullOnly()) + '  --disablebullonly'
             print('|', txt, (' ' * (75 - len(txt))), '|')
@@ -602,72 +650,88 @@ class PyCryptoBot():
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
             txt = '    Use Buy Elder-Ray : ' + str(not self.disableBuyElderRay()) + '  --disablebuyelderray'
-            print('|', txt, (' ' * (75 - len(txt))), '|')             
+            print('|', txt, (' ' * (75 - len(txt))), '|')
 
-            txt = '   Sell Fibonacci Low : ' + str(not self.disableFailsafeFibonacciLow()) + '  --disablefailsafefibonaccilow'
-            print('|', txt, (' ' * (75 - len(txt))), '|')   
+            txt = '   Sell Fibonacci Low : ' + str(
+                not self.disableFailsafeFibonacciLow()) + '  --disablefailsafefibonaccilow'
+            print('|', txt, (' ' * (75 - len(txt))), '|')
 
             if self.sellLowerPcnt() != None:
-                txt = '      Sell Lower Pcnt : ' + str(not self.disableFailsafeLowerPcnt()) + '  --disablefailsafelowerpcnt'
-                print('|', txt, (' ' * (75 - len(txt))), '|')   
+                txt = '      Sell Lower Pcnt : ' + str(
+                    not self.disableFailsafeLowerPcnt()) + '  --disablefailsafelowerpcnt'
+                print('|', txt, (' ' * (75 - len(txt))), '|')
 
             if self.sellUpperPcnt() != None:
-                txt = '      Sell Upper Pcnt : ' + str(not self.disableFailsafeLowerPcnt()) + '  --disableprofitbankupperpcnt'
-                print('|', txt, (' ' * (75 - len(txt))), '|')   
+                txt = '      Sell Upper Pcnt : ' + str(
+                    not self.disableFailsafeLowerPcnt()) + '  --disableprofitbankupperpcnt'
+                print('|', txt, (' ' * (75 - len(txt))), '|')
 
-            txt = ' Candlestick Reversal : ' + str(not self.disableProfitbankReversal()) + '  --disableprofitbankreversal'
-            print('|', txt, (' ' * (75 - len(txt))), '|')   
+            txt = ' Candlestick Reversal : ' + str(
+                not self.disableProfitbankReversal()) + '  --disableprofitbankreversal'
+            print('|', txt, (' ' * (75 - len(txt))), '|')
 
             txt = '             Telegram : ' + str(not self.disableTelegram()) + '  --disabletelegram'
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
             txt = '                  Log : ' + str(not self.disableLog()) + '  --disablelog'
-            print('|', txt, (' ' * (75 - len(txt))), '|')     
+            print('|', txt, (' ' * (75 - len(txt))), '|')
 
             txt = '              Tracker : ' + str(not self.disableTracker()) + '  --disabletracker'
-            print('|', txt, (' ' * (75 - len(txt))), '|') 
+            print('|', txt, (' ' * (75 - len(txt))), '|')
 
             txt = '     Auto restart Bot : ' + str(self.autoRestart()) + '  --autorestart'
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
+            if self.getBuyMaxSize():
+                txt = '         Max Buy Size : ' + str(self.getBuyMaxSize()) + '  --maxbuysize <size>'
+                print('|', txt, (' ' * (75 - len(txt))), '|')
+
             print('================================================================================')
 
         # if live
-        if self.isLive() == 1:
+        if self.isLive():
             if self.getExchange() == 'binance':
-                if last_action == 'SELL'and account.getBalance(self.getQuoteCurrency()) < 0.001:
-                    raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(self.getQuoteCurrency())) + ' < 0.1 ' + self.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
-                elif last_action == 'BUY'and account.getBalance(self.getBaseCurrency()) < 0.001:
-                    raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(self.getBaseCurrency())) + ' < 0.1 ' + self.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
+                if last_action == 'SELL' and account.getBalance(self.getQuoteCurrency()) < 0.001:
+                    raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(
+                        self.getQuoteCurrency())) + ' < 0.1 ' + self.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
+                elif last_action == 'BUY' and account.getBalance(self.getBaseCurrency()) < 0.001:
+                    raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(
+                        self.getBaseCurrency())) + ' < 0.1 ' + self.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
 
             elif self.getExchange() == 'coinbasepro':
-                if last_action == 'SELL'and account.getBalance(self.getQuoteCurrency()) < 50:
-                    raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(self.getQuoteCurrency())) + ' < 50 ' + self.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
-                elif last_action == 'BUY'and account.getBalance(self.getBaseCurrency()) < 0.001:
-                    raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(self.getBaseCurrency())) + ' < 0.1 ' + self.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
+                if last_action == 'SELL' and account.getBalance(self.getQuoteCurrency()) < 50:
+                    raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(
+                        self.getQuoteCurrency())) + ' < 50 ' + self.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
+                elif last_action == 'BUY' and account.getBalance(self.getBaseCurrency()) < 0.001:
+                    raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(
+                        self.getBaseCurrency())) + ' < 0.1 ' + self.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
 
         # run the first job immediately after starting
-        if self.isSimulation() == 1:
-            if self.simuluationSpeed() in [ 'fast-sample', 'slow-sample' ]:
+        if self.isSimulation():
+            if self.simuluationSpeed() in ['fast-sample', 'slow-sample']:
                 tradingData = pd.DataFrame()
 
                 attempts = 0
 
-                if self.simstartdate != None:
+                if self.simstartdate is not None:
                     date = self.simstartdate.split('-')
-                    startDate = datetime(int(date[0]),int(date[1]),int(date[2]))
-                    endDate = startDate + timedelta(hours=300)
+                    startDate = datetime(int(date[0]), int(date[1]), int(date[2]))
+                    endDate = startDate + timedelta(minutes=(self.getGranularity()/60)*300)
                     while len(tradingData) != 300 and attempts < 10:
-                        tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(), startDate.isoformat(timespec='milliseconds'), endDate.isoformat(timespec='milliseconds'))
+                        tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(),
+                                                             startDate.isoformat(timespec='milliseconds'))
                         attempts += 1
                 else:
                     while len(tradingData) != 300 and attempts < 10:
-                        endDate = datetime.now() - timedelta(hours=random.randint(0,8760 * 3)) # 3 years in hours
-                        startDate = endDate - timedelta(hours=300)
-                        tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(), startDate.isoformat(timespec='milliseconds'), endDate.isoformat(timespec='milliseconds'))
+                        endDate = datetime.now() - timedelta(hours=random.randint(0, 8760 * 3))  # 3 years in hours
+                        startDate = endDate - timedelta(minutes=(self.getGranularity()/60)*300)
+                        tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(),
+                                                             startDate.isoformat(timespec='milliseconds'))
                         attempts += 1
                     if len(tradingData) != 300:
-                        raise Exception('Unable to retrieve 300 random sets of data between ' + str(startDate) + ' and ' + str(endDate) + ' in ' + str(attempts) + ' attempts.')
+                        raise Exception(
+                            'Unable to retrieve 300 random sets of data between ' + str(startDate) + ' and ' + str(
+                                endDate) + ' in ' + str(attempts) + ' attempts.')
 
                 if banner:
                     startDate = str(startDate.isoformat())
