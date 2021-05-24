@@ -9,7 +9,7 @@ def test_margin_binance():
     buy_filled= 595.23
     buy_fee = 0.59523  # round(buy_filled * 0.001, 8)
     buy_price = 0.1249
-    buy_size  = 74.344227 # round(buy_filled * buy_price, 8)
+    buy_size = 74.344227 # round(buy_filled * buy_price, 8)
     debug = True
     sell_percent = 100
     sell_price = 0.1335
