@@ -427,9 +427,6 @@ class PyCryptoBot():
     def isSimulation(self) -> bool:
         return self.is_sim == 1
 
-    def isTelegramEnabled(self) -> bool:
-        return self.telegram
-
     def simuluationSpeed(self):
         return self.sim_speed
 
@@ -483,9 +480,6 @@ class PyCryptoBot():
 
     def disableProfitbankReversal(self) -> bool:
         return self.disableprofitbankreversal
-
-    def disableTelegram(self) -> bool:
-        return self.disabletelegram
 
     def disableLog(self) -> bool:
         return self.disablelog
@@ -670,7 +664,7 @@ class PyCryptoBot():
                 not self.disableProfitbankReversal()) + '  --disableprofitbankreversal'
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
-            txt = '             Telegram : ' + str(not self.disableTelegram()) + '  --disabletelegram'
+            txt = '             Telegram : ' + str(not self.disabletelegram) + '  --disabletelegram'
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
             txt = '                  Log : ' + str(not self.disableLog()) + '  --disablelog'
@@ -751,3 +745,16 @@ class PyCryptoBot():
                 tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity())
 
             return tradingData
+
+    def notifyTelegram(self, msg: str) -> None:
+        """
+        Send a given message to preconfigured Telegram. If the telegram isn't enabled, e.g. via `--disabletelegram`,
+        this method does nothing and returns immediately.
+        """
+
+        if self.disabletelegram or not self.telegram:
+            return
+
+        assert self._chat_client is not None
+
+        self._chat_client.send(msg)
