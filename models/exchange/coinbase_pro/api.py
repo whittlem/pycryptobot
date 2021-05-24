@@ -313,14 +313,14 @@ class AuthAPI(AuthAPIBase):
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
         return model.authAPI('POST', 'orders', order)
 
-    def limitSell(self, market: str='', base_quantity: float=0, futurePrice: float=0) -> pd.DataFrame:
+    def limitSell(self, market: str='', base_quantity: float=0, future_price: float=0) -> pd.DataFrame:
         if not self._isMarketValid(market):
             raise ValueError('Coinbase Pro market is invalid.')
 
         if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
             raise TypeError('The crypto amount is not numeric.')
 
-        if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
+        if not isinstance(future_price, int) and not isinstance(future_price, float):
             raise TypeError('The future crypto price is not numeric.')
 
         order = {
@@ -328,7 +328,7 @@ class AuthAPI(AuthAPIBase):
             'type': 'limit',
             'side': 'sell',
             'size': self.marketBaseIncrement(market, base_quantity),
-            'price': futurePrice
+            'price': future_price
         }
 
         print (order)
@@ -381,7 +381,7 @@ class AuthAPI(AuthAPIBase):
              raise TypeError('Method not DELETE, GET or POST.') 
 
         if not isinstance(uri, str):
-            raise TypeError('Method is not a string.')
+            raise TypeError('URI is not a string.')
 
         try:
             if method == 'DELETE':
@@ -534,7 +534,7 @@ class PublicAPI(AuthAPIBase):
             raise TypeError('Method not GET or POST.')
 
         if not isinstance(uri, str):
-            raise TypeError('Method is not a string.')
+            raise TypeError('URI is not a string.')
 
         try:
             if method == 'GET':
