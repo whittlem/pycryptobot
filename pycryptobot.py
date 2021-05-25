@@ -543,8 +543,10 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
-            ema_co_prefix = ''
-            ema_co_suffix = ''
+
+            # EMA12 prefix/suffix are aligned to 3 characters
+            ema_co_prefix = '   '
+            ema_co_suffix = '   '
             if ema12gtema26co is True:
                 ema_co_prefix = '*^ '
                 ema_co_suffix = ' ^*'
@@ -552,11 +554,11 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 ema_co_prefix = '*v '
                 ema_co_suffix = ' v*'
             elif ema12gtema26 is True:
-                ema_co_prefix = '^ '
-                ema_co_suffix = ' ^'
+                ema_co_prefix = ' ^ '
+                ema_co_suffix = ' ^ '
             elif ema12ltema26 is True:
-                ema_co_prefix = 'v '
-                ema_co_suffix = ' v'
+                ema_co_prefix = ' v '
+                ema_co_suffix = ' v '
 
             macd_co_prefix = ''
             macd_co_suffix = ''
