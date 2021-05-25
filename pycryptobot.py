@@ -867,10 +867,6 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                     state.sell_sum = state.sell_sum + state.last_buy_size
 
                     if not app.isVerbose():
-                        if price > 0:
-                            margin_text = str(app.truncate(margin, precision)) + '%'
-                        else:
-                            margin_text = '0%'
 
                         logging.info(current_df_index + ' | ' + app.getMarket() + ' ' +
                                      app.printGranularity() + ' | SELL | ' + str(price) + ' | BUY | ' +
