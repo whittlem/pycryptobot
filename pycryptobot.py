@@ -230,10 +230,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
     if app.getSmartSwitch() == 1 and app.getGranularity() == 3600 and app.is1hEMA1226Bull() is True and app.is6hEMA1226Bull() is True:
         print('*** smart switch from granularity 3600 (1 hour) to 900 (15 min) ***')
 
-        # telegram
-        if not app.disableTelegram() and app.isTelegramEnabled():
-            telegram = app.getChatClient()
-            telegram.send(app.getMarket() + " smart switch from granularity 3600 (1 hour) to 900 (15 min)")
+        app.notifyTelegram(app.getMarket() + " smart switch from granularity 3600 (1 hour) to 900 (15 min)")
 
         app.setGranularity(900)
         list(map(s.cancel, s.queue))
@@ -242,10 +239,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
     if app.getSmartSwitch() == 1 and app.getGranularity() == 900 and app.is1hEMA1226Bull() is False and app.is6hEMA1226Bull() is False:
         print("*** smart switch from granularity 900 (15 min) to 3600 (1 hour) ***")
 
-        # telegram
-        if not app.disableTelegram() and app.isTelegramEnabled():
-            telegram = app.getChatClient()
-            telegram.send(app.getMarket() + " smart switch from granularity 900 (15 min) to 3600 (1 hour)")
+        app.notifyTelegram(app.getMarket() + " smart switch from granularity 900 (15 min) to 3600 (1 hour)")
 
         app.setGranularity(3600)
         list(map(s.cancel, s.queue))
@@ -356,10 +350,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 print(log_text, "\n")
                 logging.warning(log_text)
 
-                # telegram
-                if not app.disableTelegram() and app.isTelegramEnabled():
-                    telegram = app.getChatClient()
-                    telegram.send(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             # loss failsafe sell at trailing_stop_loss
             if app.allowSellAtLoss() and app.trailingStopLoss() != None and change_pcnt_high < app.trailingStopLoss():
@@ -370,10 +361,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 print(log_text, "\n")
                 logging.warning(log_text)
 
-                # telegram
-                if not app.disableTelegram() and app.isTelegramEnabled():
-                    telegram = app.getChatClient()
-                    telegram.send(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             # loss failsafe sell at sell_lower_pcnt
             elif app.disableFailsafeLowerPcnt() is False and app.allowSellAtLoss() and app.sellLowerPcnt() != None and margin < app.sellLowerPcnt():
@@ -384,10 +372,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 print(log_text, "\n")
                 logging.warning(log_text)
 
-                # telegram
-                if not app.disableTelegram() and app.isTelegramEnabled():
-                    telegram = app.getChatClient()
-                    telegram.send(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             # profit bank at sell_upper_pcnt
             if app.disableProfitbankUpperPcnt() is False and app.sellUpperPcnt() != None and margin > app.sellUpperPcnt():
@@ -398,10 +383,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 print(log_text, "\n")
                 logging.warning(log_text)
 
-                # telegram
-                if not app.disableTelegram() and app.isTelegramEnabled():
-                    telegram = app.getChatClient()
-                    telegram.send(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             # profit bank when strong reversal detected
             if app.disableProfitbankReversal() is False and margin > 3 and obv_pc < 0 and macdltsignal is True:
@@ -412,10 +394,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 print(log_text, "\n")
                 logging.warning(log_text)
 
-                # telegram
-                if not app.disableTelegram() and app.isTelegramEnabled():
-                    telegram = app.getChatClient()
-                    telegram.send(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             # configuration specifies to not sell at a loss
             if state.action == 'SELL' and not app.allowSellAtLoss() and margin <= 0:
@@ -435,11 +414,8 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 print(log_text, "\n")
                 logging.warning(log_text)
 
-                # telegram
-                if not app.disableTelegram() and app.isTelegramEnabled() and not (
-                        not app.allowSellAtLoss() and margin <= 0):
-                    telegram = app.getChatClient()
-                    telegram.send(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                if not (not app.allowSellAtLoss() and margin <= 0):
+                    app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
         bullbeartext = ''
         if app.disableBullOnly() is True or (df_last['sma50'].values[0] == df_last['sma200'].values[0]):
@@ -502,90 +478,63 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 print(log_text, "\n")
                 logging.debug(log_text)
 
-                # telegram
-                if not app.disableTelegram() and app.isTelegramEnabled():
-                    telegram = app.getChatClient()
-                    telegram.send(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if three_black_crows is True:
                 log_text = '* Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Pattern - Down")'
                 print(log_text, "\n")
                 logging.debug(log_text)
 
-                # telegram
-                if not app.disableTelegram() and app.isTelegramEnabled():
-                    telegram = app.getChatClient()
-                    telegram.send(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if morning_star is True:
                 log_text = '*** Candlestick Detected: Morning Star ("Strong - Reversal - Bullish Pattern - Up")'
                 print(log_text, "\n")
                 logging.debug(log_text)
 
-                # telegram
-                if not app.disableTelegram() and app.isTelegramEnabled():
-                    telegram = app.getChatClient()
-                    telegram.send(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if evening_star is True:
                 log_text = '*** Candlestick Detected: Evening Star ("Strong - Reversal - Bearish Pattern - Down")'
                 print(log_text, "\n")
                 logging.debug(log_text)
 
-                # telegram
-                if not app.disableTelegram() and app.isTelegramEnabled():
-                    telegram = app.getChatClient()
-                    telegram.send(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if three_line_strike is True:
                 log_text = '** Candlestick Detected: Three Line Strike ("Reliable - Reversal - Bullish Pattern - Up")'
                 print(log_text, "\n")
                 logging.debug(log_text)
 
-                # telegram
-                if not app.disableTelegram() and app.isTelegramEnabled():
-                    telegram = app.getChatClient()
-                    telegram.send(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if abandoned_baby is True:
                 log_text = '** Candlestick Detected: Abandoned Baby ("Reliable - Reversal - Bullish Pattern - Up")'
                 print(log_text, "\n")
                 logging.debug(log_text)
 
-                # telegram
-                if not app.disableTelegram() and app.isTelegramEnabled():
-                    telegram = app.getChatClient()
-                    telegram.send(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if morning_doji_star is True:
                 log_text = '** Candlestick Detected: Morning Doji Star ("Reliable - Reversal - Bullish Pattern - Up")'
                 print(log_text, "\n")
                 logging.debug(log_text)
 
-                # telegram
-                if not app.disableTelegram() and app.isTelegramEnabled():
-                    telegram = app.getChatClient()
-                    telegram.send(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if evening_doji_star is True:
                 log_text = '** Candlestick Detected: Evening Doji Star ("Reliable - Reversal - Bearish Pattern - Down")'
                 print(log_text, "\n")
                 logging.debug(log_text)
 
-                # telegram
-                if not app.disableTelegram() and app.isTelegramEnabled():
-                    telegram = app.getChatClient()
-                    telegram.send(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if two_black_gapping is True:
                 log_text = '*** Candlestick Detected: Two Black Gapping ("Reliable - Reversal - Bearish Pattern - Down")'
                 print(log_text, "\n")
                 logging.debug(log_text)
 
-                # telegram
-                if not app.disableTelegram() and app.isTelegramEnabled():
-                    telegram = app.getChatClient()
-                    telegram.send(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             ema_co_prefix = ''
             ema_co_suffix = ''
@@ -763,10 +712,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
                 # if live
                 if app.isLive():
-                    # telegram
-                    if not app.disableTelegram() and app.isTelegramEnabled():
-                        telegram = app.getChatClient()
-                        telegram.send(app.getMarket() + ' (' + app.printGranularity() + ') BUY at ' + price_text)
+                    app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') BUY at ' + price_text)
 
                     if not app.isVerbose():
                         logging.info(current_df_index + ' | ' + app.getMarket() + ' | ' + app.printGranularity() +
@@ -845,10 +791,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             elif state.action == 'SELL':
                 # if live
                 if app.isLive():
-                    # telegram
-                    if not app.disableTelegram() and app.isTelegramEnabled():
-                        telegram = app.getChatClient()
-                        telegram.send(app.getMarket() + ' (' + app.printGranularity() + ') SELL at ' +
+                    app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') SELL at ' +
                                       price_text + ' (margin: ' + margin_text + ', (delta: ' +
                                       str(round(price - state.last_buy_price, precision)) + ')')
 
@@ -1006,28 +949,22 @@ def main():
     try:
         # initialise logging
         logging.basicConfig(
-            filename=app.getLogFile(),
+            # filename=app.getLogFile(),
             format='%(asctime)s - %(levelname)s: %(message)s',
             datefmt='%m/%d/%Y %I:%M:%S %p',
             filemode='a',
             level=logging.DEBUG,
             force=True
         )
-        telegram = None
 
-        if not app.disableTelegram() and app.isTelegramEnabled():
-            telegram = app.getChatClient()
+        message = 'Starting '
+        if app.getExchange() == 'coinbasepro':
+            message += 'Coinbase Pro bot'
+        elif app.getExchange() == 'binance':
+            message += 'Binance bot'
 
-        # telegram
-        if telegram:
-            message = 'Starting '
-            if app.getExchange() == 'coinbasepro':
-                message += 'Coinbase Pro bot'
-            elif app.getExchange() == 'binance':
-                message += 'Binance bot'
-
-            message += ' for ' + app.getMarket() + ' using granularity ' + app.printGranularity()
-            telegram.send(message)
+        message += ' for ' + app.getMarket() + ' using granularity ' + app.printGranularity()
+        app.notifyTelegram(message)
 
         # initialise and start application
         trading_data = app.startApp(account, state.last_action)
@@ -1051,8 +988,7 @@ def main():
                 time.sleep(30)
                 print('Restarting application after exception...')
 
-                if telegram:
-                    telegram.send('Auto restarting bot for ' + app.getMarket() + ' after exception')
+                app.notifyTelegram('Auto restarting bot for ' + app.getMarket() + ' after exception')
 
                 # Cancel the events queue
                 map(s.cancel, s.queue)
@@ -1071,9 +1007,7 @@ def main():
             os._exit(0)
     except(BaseException, Exception) as e:
         # catch all not managed exceptions and send a Telegram message if configured
-        if not app.disableTelegram() and app.isTelegramEnabled():
-            telegram = app.getChatClient()
-            telegram.send('Bot for ' + app.getMarket() + ' got an exception: ' + repr(e))
+        app.notifyTelegram('Bot for ' + app.getMarket() + ' got an exception: ' + repr(e))
 
         print(repr(e))
 
