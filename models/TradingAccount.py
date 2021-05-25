@@ -58,7 +58,7 @@ class TradingAccount():
             if not p.match(market):
                 raise TypeError('Coinbase Pro market is invalid.')
         elif self.app.getExchange() == 'binance':
-            p = re.compile(r"^[A-Z]{6,12}$")
+            p = re.compile(r"^[A-Z]{5,12}$")
             if not p.match(market):
                 raise TypeError('Binance market is invalid.')
 
