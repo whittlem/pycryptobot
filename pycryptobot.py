@@ -855,7 +855,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                         debug=False)
 
                     if state.last_buy_size > 0:
-                        margin_text = str(app.truncate(margin, precision)) + '%'
+                        margin_text = truncate(margin, precision) + '%'
                     else:
                         margin_text = '0%'
                     app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') TEST SELL at ' +
@@ -928,7 +928,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                     print ('      Margin :', truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4) + '%', "\n")
 
                     print('  ** non-live simulation, assuming highest fees', "\n")
-                    app.notifyTelegram(f"      Margin: {str(app.truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4))}%\n  ** non-live simulation, assuming highest fees\n")
+                    app.notifyTelegram(f"      Margin: {truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4)}%\n  ** non-live simulation, assuming highest fees\n")
 
 
         else:
