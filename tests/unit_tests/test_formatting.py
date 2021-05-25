@@ -1,3 +1,4 @@
+import functools
 import sys
 import pytest
 
@@ -18,3 +19,6 @@ from models.PyCryptoBot import truncate
 ])
 def test_truncate(f, n, expected):
     assert truncate(f, n) == expected
+
+    # make sure nothing breaks compatibility with partial()
+    assert functools.partial(truncate, n=n)(f) == expected

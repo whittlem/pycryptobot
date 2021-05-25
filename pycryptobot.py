@@ -1,5 +1,6 @@
 """Python Crypto Bot consuming Coinbase Pro or Binance APIs"""
 
+import functools
 import logging
 import os
 import sched
@@ -7,7 +8,7 @@ import sys
 import time
 import pandas as pd
 from datetime import datetime
-from models.PyCryptoBot import PyCryptoBot, truncate
+from models.PyCryptoBot import PyCryptoBot, truncate as _truncate
 from models.AppState import AppState
 from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
@@ -434,7 +435,11 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             if (price < 0.01):
                 precision = 8
 
-            price_text = 'Close: ' + truncate(price, precision)
+            # Since precision does not change after this point, it is safe to prepare a tailored `truncate()` that would
+            # work with this precision. It should save a couple of `precision` uses, one for each `truncate()` call.
+            truncate = functools.partial(_truncate, n=precision)
+
+            price_text = 'Close: ' + truncate(price)
             ema_text = app.compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26', precision)
 
             macd_text = ''
@@ -443,8 +448,8 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
             obv_text = ''
             if app.disableBuyOBV() is False:
-                obv_text = 'OBV: ' + truncate(df_last['obv'].values[0], precision) + ' (' + str(
-                    truncate(df_last['obv_pc'].values[0], precision)) + '%)'
+                obv_text = 'OBV: ' + truncate(df_last['obv'].values[0]) + ' (' + str(
+                    truncate(df_last['obv_pc'].values[0])) + '%)'
 
             state.eri_text = ''
             if app.disableBuyElderRay() is False:
@@ -594,7 +599,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
                 if state.last_action == 'BUY':
                     if state.last_buy_size > 0:
-                        margin_text = truncate(margin, precision) + '%'
+                        margin_text = truncate(margin) + '%'
                     else:
                         margin_text = '0%'
 
@@ -613,23 +618,23 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
                 if state.last_action == 'BUY':
                     if state.last_buy_size > 0:
-                        margin_text = truncate(margin, precision) + '%'
+                        margin_text = truncate(margin) + '%'
                     else:
                         margin_text = '0%'
 
                     logging.debug('-- Margin: ' + margin_text + ' --')
 
-                logging.debug('price: ' + truncate(price, precision))
-                logging.debug('ema12: ' + truncate(float(df_last['ema12'].values[0]), precision))
-                logging.debug('ema26: ' + truncate(float(df_last['ema26'].values[0]), precision))
+                logging.debug('price: ' + truncate(price))
+                logging.debug('ema12: ' + truncate(float(df_last['ema12'].values[0])))
+                logging.debug('ema26: ' + truncate(float(df_last['ema26'].values[0])))
                 logging.debug('ema12gtema26co: ' + str(ema12gtema26co))
                 logging.debug('ema12gtema26: ' + str(ema12gtema26))
                 logging.debug('ema12ltema26co: ' + str(ema12ltema26co))
                 logging.debug('ema12ltema26: ' + str(ema12ltema26))
-                logging.debug('sma50: ' + truncate(float(df_last['sma50'].values[0]), precision))
-                logging.debug('sma200: ' + truncate(float(df_last['sma200'].values[0]), precision))
-                logging.debug('macd: ' + truncate(float(df_last['macd'].values[0]), precision))
-                logging.debug('signal: ' + truncate(float(df_last['signal'].values[0]), precision))
+                logging.debug('sma50: ' + truncate(float(df_last['sma50'].values[0])))
+                logging.debug('sma200: ' + truncate(float(df_last['sma200'].values[0])))
+                logging.debug('macd: ' + truncate(float(df_last['macd'].values[0])))
+                logging.debug('signal: ' + truncate(float(df_last['signal'].values[0])))
                 logging.debug('macdgtsignal: ' + str(macdgtsignal))
                 logging.debug('macdltsignal: ' + str(macdltsignal))
                 logging.debug('obv: ' + str(obv))
@@ -644,11 +649,11 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 txt = '        Timestamp : ' + str(df_last.index.format()[0])
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 print('--------------------------------------------------------------------------------')
-                txt = '            Close : ' + truncate(price, precision)
+                txt = '            Close : ' + truncate(price)
                 print('|', txt, (' ' * (75 - len(txt))), '|')
-                txt = '            EMA12 : ' + truncate(float(df_last['ema12'].values[0]), precision)
+                txt = '            EMA12 : ' + truncate(float(df_last['ema12'].values[0]))
                 print('|', txt, (' ' * (75 - len(txt))), '|')
-                txt = '            EMA26 : ' + truncate(float(df_last['ema26'].values[0]), precision)
+                txt = '            EMA26 : ' + truncate(float(df_last['ema26'].values[0]))
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 txt = '   Crossing Above : ' + str(ema12gtema26co)
                 print('|', txt, (' ' * (75 - len(txt))), '|')
@@ -671,15 +676,15 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                     txt = '        Condition : -'
                 print('|', txt, (' ' * (75 - len(txt))), '|')
 
-                txt = '            SMA20 : ' + truncate(float(df_last['sma20'].values[0]), precision)
+                txt = '            SMA20 : ' + truncate(float(df_last['sma20'].values[0]))
                 print('|', txt, (' ' * (75 - len(txt))), '|')
-                txt = '           SMA200 : ' + truncate(float(df_last['sma200'].values[0]), precision)
+                txt = '           SMA200 : ' + truncate(float(df_last['sma200'].values[0]))
                 print('|', txt, (' ' * (75 - len(txt))), '|')
 
                 print('--------------------------------------------------------------------------------')
-                txt = '             MACD : ' + truncate(float(df_last['macd'].values[0]), precision)
+                txt = '             MACD : ' + truncate(float(df_last['macd'].values[0]))
                 print('|', txt, (' ' * (75 - len(txt))), '|')
-                txt = '           Signal : ' + truncate(float(df_last['signal'].values[0]), precision)
+                txt = '           Signal : ' + truncate(float(df_last['signal'].values[0]))
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 txt = '  Currently Above : ' + str(macdgtsignal)
                 print('|', txt, (' ' * (75 - len(txt))), '|')
@@ -855,7 +860,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                         debug=False)
 
                     if state.last_buy_size > 0:
-                        margin_text = truncate(margin, precision) + '%'
+                        margin_text = truncate(margin) + '%'
                     else:
                         margin_text = '0%'
                     app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') TEST SELL at ' +
@@ -870,7 +875,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
                     if not app.isVerbose():
                         if price > 0:
-                            margin_text = truncate(margin, precision) + '%'
+                            margin_text = truncate(margin) + '%'
                         else:
                             margin_text = '0%'
 
@@ -925,10 +930,10 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 app.notifyTelegram(f"Simulation Summary\n   Buy Count: {state.buy_count}\n   Sell Count: {state.sell_count}\n   First Buy: {state.first_buy_size}\n   Last Sell: {state.last_buy_size}\n")
 
                 if state.sell_count > 0:
-                    print ('      Margin :', truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4) + '%', "\n")
+                    print ('      Margin :', _truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4) + '%', "\n")
 
                     print('  ** non-live simulation, assuming highest fees', "\n")
-                    app.notifyTelegram(f"      Margin: {truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4)}%\n  ** non-live simulation, assuming highest fees\n")
+                    app.notifyTelegram(f"      Margin: {_truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4)}%\n  ** non-live simulation, assuming highest fees\n")
 
 
         else:
