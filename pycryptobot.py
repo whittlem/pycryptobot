@@ -463,83 +463,83 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             if hammer is True:
                 log_text = '* Candlestick Detected: Hammer ("Weak - Reversal - Bullish Signal - Up")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
             if shooting_star is True:
                 log_text = '* Candlestick Detected: Shooting Star ("Weak - Reversal - Bearish Pattern - Down")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
             if hanging_man is True:
                 log_text = '* Candlestick Detected: Hanging Man ("Weak - Continuation - Bearish Pattern - Down")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
             if inverted_hammer is True:
                 log_text = '* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Pattern - Up")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
             if three_white_soldiers is True:
                 log_text = '*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Bullish Pattern - Up")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if three_black_crows is True:
                 log_text = '* Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Pattern - Down")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if morning_star is True:
                 log_text = '*** Candlestick Detected: Morning Star ("Strong - Reversal - Bullish Pattern - Up")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if evening_star is True:
                 log_text = '*** Candlestick Detected: Evening Star ("Strong - Reversal - Bearish Pattern - Down")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if three_line_strike is True:
                 log_text = '** Candlestick Detected: Three Line Strike ("Reliable - Reversal - Bullish Pattern - Up")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if abandoned_baby is True:
                 log_text = '** Candlestick Detected: Abandoned Baby ("Reliable - Reversal - Bullish Pattern - Up")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if morning_doji_star is True:
                 log_text = '** Candlestick Detected: Morning Doji Star ("Reliable - Reversal - Bullish Pattern - Up")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if evening_doji_star is True:
                 log_text = '** Candlestick Detected: Evening Doji Star ("Reliable - Reversal - Bearish Pattern - Down")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if two_black_gapping is True:
                 log_text = '*** Candlestick Detected: Two Black Gapping ("Reliable - Reversal - Bearish Pattern - Down")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
@@ -607,16 +607,14 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
                     output_text += ' | ' + margin_text + ' (delta: ' + str(round(price - state.last_buy_price, precision)) + ')'
 
-                logging.debug(output_text)
-                print(output_text)
+                logging.info(output_text)
 
                 if state.last_action == 'BUY':
                     # display support, resistance and fibonacci levels
-                    logging.debug(output_text)
                     print(ta.printSupportResistanceFibonacciLevels(price))
 
             else:
-                logging.debug('-- Iteration: ' + str(state.iterations) + ' --' + bullbeartext)
+                logging.info('-- Iteration: ' + str(state.iterations) + ' --' + bullbeartext)
 
                 if state.last_action == 'BUY':
                     if state.last_buy_size > 0:
@@ -624,24 +622,24 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                     else:
                         margin_text = '0%'
 
-                    logging.debug('-- Margin: ' + margin_text + ' --')
+                    logging.info('-- Margin: ' + margin_text + ' --')
 
-                logging.debug('price: ' + truncate(price))
-                logging.debug('ema12: ' + truncate(float(df_last['ema12'].values[0])))
-                logging.debug('ema26: ' + truncate(float(df_last['ema26'].values[0])))
-                logging.debug('ema12gtema26co: ' + str(ema12gtema26co))
-                logging.debug('ema12gtema26: ' + str(ema12gtema26))
-                logging.debug('ema12ltema26co: ' + str(ema12ltema26co))
-                logging.debug('ema12ltema26: ' + str(ema12ltema26))
-                logging.debug('sma50: ' + truncate(float(df_last['sma50'].values[0])))
-                logging.debug('sma200: ' + truncate(float(df_last['sma200'].values[0])))
-                logging.debug('macd: ' + truncate(float(df_last['macd'].values[0])))
-                logging.debug('signal: ' + truncate(float(df_last['signal'].values[0])))
-                logging.debug('macdgtsignal: ' + str(macdgtsignal))
-                logging.debug('macdltsignal: ' + str(macdltsignal))
-                logging.debug('obv: ' + str(obv))
-                logging.debug('obv_pc: ' + str(obv_pc))
-                logging.debug('action: ' + state.action)
+                logging.info('price: ' + truncate(price))
+                logging.info('ema12: ' + truncate(float(df_last['ema12'].values[0])))
+                logging.info('ema26: ' + truncate(float(df_last['ema26'].values[0])))
+                logging.info('ema12gtema26co: ' + str(ema12gtema26co))
+                logging.info('ema12gtema26: ' + str(ema12gtema26))
+                logging.info('ema12ltema26co: ' + str(ema12ltema26co))
+                logging.info('ema12ltema26: ' + str(ema12ltema26))
+                logging.info('sma50: ' + truncate(float(df_last['sma50'].values[0])))
+                logging.info('sma200: ' + truncate(float(df_last['sma200'].values[0])))
+                logging.info('macd: ' + truncate(float(df_last['macd'].values[0])))
+                logging.info('signal: ' + truncate(float(df_last['signal'].values[0])))
+                logging.info('macdgtsignal: ' + str(macdgtsignal))
+                logging.info('macdltsignal: ' + str(macdltsignal))
+                logging.info('obv: ' + str(obv))
+                logging.info('obv_pc: ' + str(obv_pc))
+                logging.info('action: ' + state.action)
 
                 # informational output on the most recent entry  
                 print('')
@@ -974,7 +972,8 @@ def main():
         # initialise logging
         logging.basicConfig(
             # filename=app.getLogFile(),
-            format='%(asctime)s - %(levelname)s: %(message)s',
+            #format='%(asctime)s - %(levelname)s: %(message)s',
+            format='%(message)s',
             datefmt='%m/%d/%Y %I:%M:%S %p',
             filemode='a',
             level=logging.DEBUG,
