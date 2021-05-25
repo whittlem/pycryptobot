@@ -842,9 +842,6 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
                 # if not live
                 else:
-                    app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') TEST SELL at ' +
-                                      price_text + ' (margin: ' + margin_text + ', (delta: ' +
-                                      str(round(price - state.last_buy_price, precision)) + ')')
                     margin, profit, sell_fee = calculate_margin(
                         buy_size=state.last_buy_size, 
                         buy_filled=state.last_buy_filled, 
@@ -854,6 +851,14 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                         sell_price=price, 
                         sell_taker_fee=app.getTakerFee(), 
                         debug=False)
+
+                    if state.last_buy_size > 0:
+                        margin_text = str(app.truncate(margin, precision)) + '%'
+                    else:
+                        margin_text = '0%'
+                    app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') TEST SELL at ' +
+                                      price_text + ' (margin: ' + margin_text + ', (delta: ' +
+                                      str(round(price - state.last_buy_price, precision)) + ')')
 
                     # Preserve next buy values for simulator
                     state.sell_count = state.sell_count + 1
