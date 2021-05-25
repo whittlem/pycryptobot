@@ -227,6 +227,8 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
     else:
         current_df_index = state.last_df_index
 
+    formatted_current_df_index = f'{current_df_index} 00:00:00' if len(current_df_index) == 10 else current_df_index
+
     if app.getSmartSwitch() == 1 and app.getGranularity() == 3600 and app.is1hEMA1226Bull() is True and app.is6hEMA1226Bull() is True:
         print('*** smart switch from granularity 3600 (1 hour) to 900 (15 min) ***')
 
@@ -579,13 +581,13 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
             if not app.isVerbose():
                 if state.last_action != '':
-                    output_text = current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + \
+                    output_text = formatted_current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + \
                                   app.printGranularity() + ' | ' + price_text + ' | ' + ema_co_prefix + \
                                   ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + \
                                   obv_prefix + obv_text + obv_suffix + state.eri_text + state.action + \
                                   ' | Last Action: ' + state.last_action
                 else:
-                    output_text = current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + \
+                    output_text = formatted_current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + \
                                   app.printGranularity() + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + \
                                   ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + obv_prefix + \
                                   obv_text + obv_suffix + state.eri_text + state.action + ' '
@@ -715,9 +717,9 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                     app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') BUY at ' + price_text)
 
                     if not app.isVerbose():
-                        logging.info(current_df_index + ' | ' + app.getMarket() + ' | ' + app.printGranularity() +
+                        logging.info(formatted_current_df_index + ' | ' + app.getMarket() + ' | ' + app.printGranularity() +
                                      ' | ' + price_text + ' | BUY')
-                        print("\n", current_df_index, '|', app.getMarket(), app.printGranularity(), '|', price_text,
+                        print("\n", formatted_current_df_index, '|', app.getMarket(), app.printGranularity(), '|', price_text,
                               '| BUY', "\n")
                     else:
                         print('--------------------------------------------------------------------------------')
@@ -750,9 +752,9 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                     state.buy_sum = state.buy_sum + state.last_buy_size    
 
                     if not app.isVerbose():
-                        logging.info(current_df_index + ' | ' + app.getMarket() + ' | ' + app.printGranularity() +
+                        logging.info(formatted_current_df_index + ' | ' + app.getMarket() + ' | ' + app.printGranularity() +
                                      ' | ' + price_text + ' | BUY')
-                        print("\n", current_df_index, '|', app.getMarket(), app.printGranularity(), '|', price_text, '| BUY')
+                        print("\n", formatted_current_df_index, '|', app.getMarket(), app.printGranularity(), '|', price_text, '| BUY')
 
                         bands = ta.getFibonacciRetracementLevels(float(price))
                         print(' Fibonacci Retracement Levels:', str(bands))
@@ -796,9 +798,9 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                                       str(round(price - state.last_buy_price, precision)) + ')')
 
                     if not app.isVerbose():
-                        logging.info(current_df_index + ' | ' + app.getMarket() + ' | ' + app.printGranularity() +
+                        logging.info(formatted_current_df_index + ' | ' + app.getMarket() + ' | ' + app.printGranularity() +
                                      ' | ' + price_text + ' | SELL')
-                        print("\n", current_df_index, '|', app.getMarket(), app.printGranularity(), '|', price_text, '| SELL')
+                        print("\n", formatted_current_df_index, '|', app.getMarket(), app.printGranularity(), '|', price_text, '| SELL')
 
                         bands = ta.getFibonacciRetracementLevels(float(price))
                         print(' Fibonacci Retracement Levels:', str(bands), "\n")
@@ -863,12 +865,13 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                         else:
                             margin_text = '0%'
 
-                        logging.info(current_df_index + ' | ' + app.getMarket() + ' ' +
+                        logging.info(formatted_current_df_index + ' | ' + app.getMarket() + ' ' +
                                      app.printGranularity() + ' | SELL | ' + str(price) + ' | BUY | ' +
-                                     str(state.last_buy_price) + ' | DIFF | ' + str(profit) + ' | MARGIN NO FEES | ' +
+                                     str(state.last_buy_price) + ' | DIFF | ' + str(price - state.last_buy_price) +
+                                     ' | DIFF | ' + str(profit) + ' | MARGIN NO FEES | ' +
                                      margin_text + ' | MARGIN FEES | ' + str(sell_fee))
-                        print("\n", current_df_index, '|', app.getMarket(), app.printGranularity(), '| SELL |',
-                              str(price), '| BUY |', str(state.last_buy_price), '| DIFF |', str(profit),
+                        print("\n", formatted_current_df_index, '|', app.getMarket(), app.printGranularity(), '| SELL |',
+                              str(price), '| BUY |', str(state.last_buy_price), '| DIFF |', str(price - state.last_buy_price), '| DIFF |', str(profit),
                               '| MARGIN NO FEES |', margin_text, '| MARGIN FEES |', str(round(sell_fee, precision)), "\n")
 
                     else:
