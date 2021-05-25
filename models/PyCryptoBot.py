@@ -13,7 +13,6 @@ from urllib3.exceptions import ReadTimeoutError
 from models.Trading import TechnicalAnalysis
 from models.exchange.binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
 from models.exchange.coinbase_pro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
-from models.Github import Github
 from models.chat import Telegram
 from models.config import binanceConfigParser, binanceParseMarket, coinbaseProConfigParser, coinbaseProParseMarket
 from models.ConfigBuilder import ConfigBuilder
@@ -89,6 +88,7 @@ def to_binance_granularity(granularity: int) -> str:
     return {60: '1m', 300: '5m', 900: '15m', 3600: '1h', 21600: '6h', 86400: '1d'}[granularity]
 
 
+#  pylint: disable=unsubscriptable-object
 def truncate(f: Union[int, float], n: Union[int, float]) -> str:
     """
     Format a given number ``f`` with a given precision ``n``.
@@ -256,6 +256,25 @@ class PyCryptoBot():
 
     def getGranularity(self) -> int:
         return self.granularity
+
+    def getVersionFromREADME(self) -> str:
+        try:
+            count = 0
+            with open('README.md', 'r') as reader:
+                line = reader.readline()
+                while count < 5:
+                    line = reader.readline()
+
+                    if '# Python Crypto Bot' in line:
+                        line = line.replace('# Python Crypto Bot ', '')
+                        line = line.replace(' (pycryptobot)', '')
+                        return line.strip()
+
+                    count = count + 1
+
+            return 'v0.0.0'
+        except Exception:
+            return 'v0.0.0'
 
     def printGranularity(self) -> str:
         if self.exchange == 'binance':
@@ -600,13 +619,11 @@ class PyCryptoBot():
             self.sell_at_loss = flag
 
     def startApp(self, account, last_action='', banner=True):
-        github = Github()
-
         if banner:
             print('--------------------------------------------------------------------------------')
             print('|                             Python Crypto Bot                                |')
             print('--------------------------------------------------------------------------------')
-            txt = '              Release : ' + github.getLatestReleaseName()
+            txt = '              Release : ' + self.getVersionFromREADME()
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
             print('--------------------------------------------------------------------------------')

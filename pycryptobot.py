@@ -969,7 +969,7 @@ def main():
     try:
         # initialise logging
         logging.basicConfig(
-            # filename=app.getLogFile(),
+            #filename=app.getLogFile(),
             #format='%(asctime)s - %(levelname)s: %(message)s',
             format='%(message)s',
             datefmt='%m/%d/%Y %I:%M:%S %p',
