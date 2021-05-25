@@ -949,7 +949,8 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             if state.iterations < 300:
                 if app.simuluationSpeed() in ['fast', 'fast-sample']:
                     # fast processing
-                    executeJob(sc, app, state, trading_data)
+                    list(map(s.cancel, s.queue))
+                    s.enter(0, 1, executeJob, (sc, app, state, trading_data))
                 else:
                     # slow processing
                     list(map(s.cancel, s.queue))
