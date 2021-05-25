@@ -8,6 +8,7 @@ import re
 import sys
 import urllib3
 from datetime import datetime, timedelta
+from typing import Union
 from urllib3.exceptions import ReadTimeoutError
 from models.Trading import TechnicalAnalysis
 from models.exchange.binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
@@ -86,6 +87,24 @@ def to_coinbase_pro_granularity(granularity: int) -> int:
 
 def to_binance_granularity(granularity: int) -> str:
     return {60: '1m', 300: '5m', 900: '15m', 3600: '1h', 21600: '6h', 86400: '1d'}[granularity]
+
+
+def truncate(f: Union[int, float], n: Union[int, float]) -> str:
+    """
+    Format a given number ``f`` with a given precision ``n``.
+    """
+
+    if not isinstance(f, int) and not isinstance(f, float):
+        return '0.0'
+
+    if not isinstance(n, int) and not isinstance(n, float):
+        return '0.0'
+
+    if (f < 0.001) and n >= 4:
+        return f'{f:.4f}'
+
+    # `{n}` inside the actual format honors the precision
+    return f'{math.floor(f * 10 ** n) / 10 ** n:.{n}f}'
 
 
 class PyCryptoBot():
@@ -495,34 +514,23 @@ class PyCryptoBot():
         if granularity in [60, 300, 900, 3600, 21600, 86400]:
             self.granularity = granularity
 
-    def truncate(self, f, n):
-        if not isinstance(f, int) and not isinstance(f, float):
-            return 0.0
-
-        if not isinstance(n, int) and not isinstance(n, float):
-            return 0.0
-
-        if (f < 0.001) and n >= 4:
-            return '{:.4f}'.format(f)
-
-        return math.floor(f * 10 ** n) / 10 ** n
 
     def compare(self, val1, val2, label='', precision=2):
         if val1 > val2:
             if label == '':
-                return str(self.truncate(val1, precision)) + ' > ' + str(self.truncate(val2, precision))
+                return truncate(val1, precision) + ' > ' + truncate(val2, precision)
             else:
-                return label + ': ' + str(self.truncate(val1, precision)) + ' > ' + str(self.truncate(val2, precision))
+                return label + ': ' + truncate(val1, precision) + ' > ' + truncate(val2, precision)
         if val1 < val2:
             if label == '':
-                return str(self.truncate(val1, precision)) + ' < ' + str(self.truncate(val2, precision))
+                return truncate(val1, precision) + ' < ' + truncate(val2, precision)
             else:
-                return label + ': ' + str(self.truncate(val1, precision)) + ' < ' + str(self.truncate(val2, precision))
+                return label + ': ' + truncate(val1, precision) + ' < ' + truncate(val2, precision)
         else:
             if label == '':
-                return str(self.truncate(val1, precision)) + ' = ' + str(self.truncate(val2, precision))
+                return truncate(val1, precision) + ' = ' + truncate(val2, precision)
             else:
-                return label + ': ' + str(self.truncate(val1, precision)) + ' = ' + str(self.truncate(val2, precision))
+                return label + ': ' + truncate(val1, precision) + ' = ' + truncate(val2, precision)
 
     def getTakerFee(self):
         if self.exchange == 'coinbasepro':
@@ -553,7 +561,7 @@ class PyCryptoBot():
 
             if self.exchange == 'coinbasepro':
                 api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
-                return api.marketBuy(market, self.truncate(quote_currency, 2))
+                return api.marketBuy(market, truncate(quote_currency, 2))
             elif self.exchange == 'binance':
                 api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
                 return api.marketBuy(market, quote_currency)
