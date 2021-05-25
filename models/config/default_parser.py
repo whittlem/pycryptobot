@@ -53,19 +53,19 @@ def defaultConfigParse(app, config):
                 app.sell_upper_pcnt = float(config['sellupperpcnt'])
 
     if 'selllowerpcnt' in config:
-        if isinstance(config['selllowerpcnt'], (int, str)):
+        if isinstance(config['selllowerpcnt'], (int, float, str)):
             p = re.compile(r"^\-[0-9\.]{1,5}$")
             if isinstance(config['selllowerpcnt'], str) and p.match(config['selllowerpcnt']):
                 app.sell_lower_pcnt = float(config['selllowerpcnt'])
-            elif isinstance(config['selllowerpcnt'], int) and config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
+            elif isinstance(config['selllowerpcnt'], (int, float)) and config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
                 app.sell_lower_pcnt = float(config['selllowerpcnt'])
 
     if 'trailingstoploss' in config:
-        if isinstance(config['trailingstoploss'], (int, str)):
+        if isinstance(config['trailingstoploss'], (int, float, str)):
             p = re.compile(r"^\-[0-9\.]{1,5}$")
             if isinstance(config['trailingstoploss'], str) and p.match(config['trailingstoploss']):
                 app.trailing_stop_loss = float(config['trailingstoploss'])
-            elif isinstance(config['trailingstoploss'], int) and config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
+            elif isinstance(config['trailingstoploss'], (int, float)) and config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
                 app.trailing_stop_loss = float(config['trailingstoploss'])
 
     if 'autorestart' in config:

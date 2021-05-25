@@ -354,7 +354,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             # loss failsafe sell at trailing_stop_loss
-            if app.allowSellAtLoss() and app.trailingStopLoss() != None and change_pcnt_high < app.trailingStopLoss():
+            if margin > 0 and app.trailingStopLoss() != None and change_pcnt_high < app.trailingStopLoss():
                 state.action = 'SELL'
                 state.last_action = 'BUY'
                 immediate_action = True
