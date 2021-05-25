@@ -47,8 +47,8 @@ In general, we follow the ["fork-and-pull" Git workflow](https://github.com/susa
 1. Fork the repository to your own Github account
 2. Clone the project to your machine
 3. Create a branch locally with a succinct but descriptive name
-3.1 feature_<name> for feature branches
-3.2 hotfix_<name> for hotfix branches
+ * feature_<name> for feature branches
+ * hotfix_<name> for hotfix branches
 4. Commit changes to the branch
 5. Following any formatting and testing guidelines specific to this repo
 6. Push changes to your fork
