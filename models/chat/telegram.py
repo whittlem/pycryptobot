@@ -25,8 +25,6 @@ class Telegram():
             payload = self.api + self._token + '/sendMessage?chat_id=' + self._client_id + '&parse_mode=Markdown&text=' + escaped_message
             resp = get(payload)
 
-            self.logger.debug('Telegram send:' + payload)
-
             if resp.status_code != 200:
                 return ''
 
