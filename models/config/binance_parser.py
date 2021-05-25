@@ -6,7 +6,7 @@ from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_an
 def isMarketValid(market) -> bool:
     if market == None:
         return False
-    p = re.compile(r"^[0-9A-Z]{6,12}$")
+    p = re.compile(r"^[0-9A-Z]{5,12}$")
     return p.match(market) is not None
 
 
