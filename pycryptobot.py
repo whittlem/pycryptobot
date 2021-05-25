@@ -741,6 +741,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                     print(app.getQuoteCurrency(), 'balance after order:', account.getBalance(app.getQuoteCurrency()))
                 # if not live
                 else:
+                    app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') TEST BUY at ' + price_text)
                     # TODO: Improve simulator calculations by including calculations for buy and sell limit configurations. 
                     if state.last_buy_size == 0 and state.last_buy_filled == 0: 
                         state.last_buy_size = 1000
@@ -841,6 +842,9 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
                 # if not live
                 else:
+                    app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') TEST SELL at ' +
+                                      price_text + ' (margin: ' + margin_text + ', (delta: ' +
+                                      str(round(price - state.last_buy_price, precision)) + ')')
                     margin, profit, sell_fee = calculate_margin(
                         buy_size=state.last_buy_size, 
                         buy_filled=state.last_buy_filled, 
@@ -910,10 +914,14 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 print ('   First Buy :', state.first_buy_size)
                 print ('   Last Sell :', state.last_buy_size)
 
+                app.notifyTelegram(f"Simulation Summary\n   Buy Count: {state.buy_count}\n   Sell Count: {state.sell_count}\n   First Buy: {state.first_buy_size}\n   Last Sell: {state.last_buy_size}\n")
+
                 if state.sell_count > 0:
                     print ('      Margin :', str(app.truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4)) + '%', "\n")
 
                     print('  ** non-live simulation, assuming highest fees', "\n")
+                    app.notifyTelegram(f"      Margin: {str(app.truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4))}%\n  ** non-live simulation, assuming highest fees\n")
+
 
         else:
             print(now, '|', app.getMarket() + bullbeartext, '|', app.printGranularity(), '| Current Price:', price)
