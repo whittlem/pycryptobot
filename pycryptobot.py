@@ -327,9 +327,24 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             else:
                 change_pcnt_high = 0
 
-            #  buy and sell calculations
+            # buy and sell calculations
             state.last_buy_fee = round(state.last_buy_size * app.getTakerFee(), 8)
             state.last_buy_filled = round(((state.last_buy_size - state.last_buy_fee) / state.last_buy_price), 8)
+
+            # if not a simulation, sync with exchange orders
+            if not app.isSimulation():
+                exchange_last_buy = app.getLastBuy()
+                if exchange_last_buy is not None:
+                    if state.last_buy_size != exchange_last_buy['size']:
+                        state.last_buy_size = exchange_last_buy['size']
+                    if state.last_buy_filled != exchange_last_buy['filled']:
+                        state.last_buy_filled = exchange_last_buy['filled']
+                    if state.last_buy_price != exchange_last_buy['price']:
+                        state.last_buy_price = exchange_last_buy['price']
+
+                    if app.getExchange() == 'coinbasepro':
+                        if state.last_buy_fee != exchange_last_buy['fee']:
+                            state.last_buy_fee = exchange_last_buy['fee']
 
             margin, profit, sell_fee = calculate_margin(
                 buy_size=state.last_buy_size,
