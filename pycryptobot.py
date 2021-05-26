@@ -903,7 +903,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
             state.last_df_index = str(df_last.index.format()[0])
 
-            if state.iterations == len(df):
+            if not app.isLive() and state.iterations == len(df):
                 print("\nSimulation Summary\n")
 
                 if state.buy_count > state.sell_count and app.allowSellAtLoss():
