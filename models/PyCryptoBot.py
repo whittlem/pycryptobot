@@ -34,16 +34,14 @@ def parse_arguments():
 
     # optional arguments
     parser.add_argument('--exchange', type=str, help="'coinbasepro', 'binance', 'dummy'")
-    parser.add_argument('--granularity', type=str,
-                        help="coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6h,1d)")
+    parser.add_argument('--granularity', type=str, help="coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6h,1d)")
     parser.add_argument('--graphs', type=int, help='save graphs=1, do not save graphs=0')
     parser.add_argument('--live', type=int, help='live=1, test=0')
     parser.add_argument('--market', type=str, help='coinbasepro: BTC-GBP, binance: BTCGBP etc.')
     parser.add_argument('--sellatloss', type=int, help='toggle if bot should sell at a loss')
     parser.add_argument('--sellupperpcnt', type=float, help='optionally set sell upper percent limit')
     parser.add_argument('--selllowerpcnt', type=float, help='optionally set sell lower percent limit')
-    parser.add_argument('--trailingstoploss',
-                        type=float, help='optionally set a trailing stop percent loss below last buy high')
+    parser.add_argument('--trailingstoploss', type=float, help='optionally set a trailing stop percent loss below last buy high')
     parser.add_argument('--sim', type=str, help='simulation modes: fast, fast-sample, slow-sample')
     parser.add_argument('--simstartdate', type=str, help="start date for sample simulation e.g '2021-01-15'")
     parser.add_argument('--smartswitch', type=int, help='optionally smart switch between 1 hour and 15 minute intervals')
@@ -53,7 +51,7 @@ def parse_arguments():
     parser.add_argument('--buypercent', type=int, help="percentage of quote currency to buy")
     parser.add_argument('--sellpercent', type=int, help="percentage of base currency to sell")
     parser.add_argument('--lastaction', type=str, help="optionally set the last action (BUY, SELL)")
-    parser.add_argument('--buymaxsize', type=int, help="maximum size on buy")
+    parser.add_argument('--buymaxsize', type=float, help="maximum size on buy")
 
     # optional options
     parser.add_argument('--sellatresistance', action="store_true", help="sell at resistance or upper fibonacci band")
@@ -65,12 +63,10 @@ def parse_arguments():
     parser.add_argument('--disablebuymacd', action="store_true", help="disable macd buy signal")
     parser.add_argument('--disablebuyobv', action="store_true", help="disable obv buy signal")
     parser.add_argument('--disablebuyelderray', action="store_true", help="disable elder ray buy signal")
-    parser.add_argument(
-        '--disablefailsafefibonaccilow', action="store_true", help="disable failsafe sell on fibonacci lower band")
+    parser.add_argument('--disablefailsafefibonaccilow', action="store_true", help="disable failsafe sell on fibonacci lower band")
     parser.add_argument('--disablefailsafelowerpcnt', action="store_true", help="disable failsafe sell on 'selllowerpcnt'")
     parser.add_argument('--disableprofitbankupperpcnt', action="store_true", help="disable profit bank on 'sellupperpcnt'")
-    parser.add_argument(
-        '--disableprofitbankreversal', action="store_true", help="disable profit bank on strong candlestick reversal")
+    parser.add_argument('--disableprofitbankreversal', action="store_true", help="disable profit bank on strong candlestick reversal")
     parser.add_argument('--disabletelegram', action="store_true", help="disable telegram messages")
     parser.add_argument('--disablelog', action="store_true", help="disable pycryptobot.log")
     parser.add_argument('--disabletracker', action="store_true", help="disable tracker.csv")
@@ -299,7 +295,7 @@ class PyCryptoBot():
 
     def getBuyMaxSize(self):
         try:
-            return int(self.buymaxsize)
+            return float(self.buymaxsize)
         except Exception:
             return None
 
