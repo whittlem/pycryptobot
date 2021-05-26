@@ -650,6 +650,10 @@ class PyCryptoBot():
                 txt = '       Sell Lower : ' + str(self.sellLowerPcnt()) + '%'
                 print('|', txt, (' ' * (75 - len(txt))), '|')
 
+            if self.trailingStopLoss() != None:
+                txt = '       Trailing Stop Loss : ' + str(self.trailingStopLoss()) + '%'
+                print('|', txt, (' ' * (75 - len(txt))), '|')
+
             txt = '         Sell At Loss : ' + str(self.allowSellAtLoss()) + '  --sellatloss ' + str(self.allowSellAtLoss())
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
