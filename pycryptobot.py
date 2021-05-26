@@ -1,5 +1,6 @@
 """Python Crypto Bot consuming Coinbase Pro or Binance APIs"""
 
+import functools
 import logging
 import os
 import sched
@@ -7,7 +8,7 @@ import sys
 import time
 import pandas as pd
 from datetime import datetime
-from models.PyCryptoBot import PyCryptoBot, truncate
+from models.PyCryptoBot import PyCryptoBot, truncate as _truncate
 from models.AppState import AppState
 from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
@@ -327,10 +328,8 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 change_pcnt_high = 0
 
             #  buy and sell calculations
-
-            if  state.last_buy_filled == 0:
-                state.last_buy_filled = round(((state.last_buy_size - state.last_buy_fee) / state.last_buy_price), 8)
-                state.last_buy_fee = round(state.last_buy_size * app.getTakerFee(), 8)
+            state.last_buy_fee = round(state.last_buy_size * app.getTakerFee(), 8)
+            state.last_buy_filled = round(((state.last_buy_size - state.last_buy_fee) / state.last_buy_price), 8)
 
             margin, profit, sell_fee = calculate_margin(
                 buy_size=state.last_buy_size,
@@ -355,7 +354,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             # loss failsafe sell at trailing_stop_loss
-            if app.allowSellAtLoss() and app.trailingStopLoss() != None and change_pcnt_high < app.trailingStopLoss():
+            if margin > 0 and app.trailingStopLoss() != None and change_pcnt_high < app.trailingStopLoss():
                 state.action = 'SELL'
                 state.last_action = 'BUY'
                 immediate_action = True
@@ -434,7 +433,11 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             if (price < 0.01):
                 precision = 8
 
-            price_text = 'Close: ' + truncate(price, precision)
+            # Since precision does not change after this point, it is safe to prepare a tailored `truncate()` that would
+            # work with this precision. It should save a couple of `precision` uses, one for each `truncate()` call.
+            truncate = functools.partial(_truncate, n=precision)
+
+            price_text = 'Close: ' + truncate(price)
             ema_text = app.compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26', precision)
 
             macd_text = ''
@@ -443,8 +446,8 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
             obv_text = ''
             if app.disableBuyOBV() is False:
-                obv_text = 'OBV: ' + truncate(df_last['obv'].values[0], precision) + ' (' + str(
-                    truncate(df_last['obv_pc'].values[0], precision)) + '%)'
+                obv_text = 'OBV: ' + truncate(df_last['obv'].values[0]) + ' (' + str(
+                    truncate(df_last['obv_pc'].values[0])) + '%)'
 
             state.eri_text = ''
             if app.disableBuyElderRay() is False:
@@ -458,88 +461,90 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             if hammer is True:
                 log_text = '* Candlestick Detected: Hammer ("Weak - Reversal - Bullish Signal - Up")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
             if shooting_star is True:
                 log_text = '* Candlestick Detected: Shooting Star ("Weak - Reversal - Bearish Pattern - Down")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
             if hanging_man is True:
                 log_text = '* Candlestick Detected: Hanging Man ("Weak - Continuation - Bearish Pattern - Down")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
             if inverted_hammer is True:
                 log_text = '* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Pattern - Up")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
             if three_white_soldiers is True:
                 log_text = '*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Bullish Pattern - Up")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if three_black_crows is True:
                 log_text = '* Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Pattern - Down")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if morning_star is True:
                 log_text = '*** Candlestick Detected: Morning Star ("Strong - Reversal - Bullish Pattern - Up")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if evening_star is True:
                 log_text = '*** Candlestick Detected: Evening Star ("Strong - Reversal - Bearish Pattern - Down")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if three_line_strike is True:
                 log_text = '** Candlestick Detected: Three Line Strike ("Reliable - Reversal - Bullish Pattern - Up")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if abandoned_baby is True:
                 log_text = '** Candlestick Detected: Abandoned Baby ("Reliable - Reversal - Bullish Pattern - Up")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if morning_doji_star is True:
                 log_text = '** Candlestick Detected: Morning Doji Star ("Reliable - Reversal - Bullish Pattern - Up")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if evening_doji_star is True:
                 log_text = '** Candlestick Detected: Evening Doji Star ("Reliable - Reversal - Bearish Pattern - Down")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if two_black_gapping is True:
                 log_text = '*** Candlestick Detected: Two Black Gapping ("Reliable - Reversal - Bearish Pattern - Down")'
                 print(log_text, "\n")
-                logging.debug(log_text)
+                logging.info(log_text)
 
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
-            ema_co_prefix = ''
-            ema_co_suffix = ''
+
+            # EMA12 prefix/suffix are aligned to 3 characters
+            ema_co_prefix = '   '
+            ema_co_suffix = '   '
             if ema12gtema26co is True:
                 ema_co_prefix = '*^ '
                 ema_co_suffix = ' ^*'
@@ -547,11 +552,11 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 ema_co_prefix = '*v '
                 ema_co_suffix = ' v*'
             elif ema12gtema26 is True:
-                ema_co_prefix = '^ '
-                ema_co_suffix = ' ^'
+                ema_co_prefix = ' ^ '
+                ema_co_suffix = ' ^ '
             elif ema12ltema26 is True:
-                ema_co_prefix = 'v '
-                ema_co_suffix = ' v'
+                ema_co_prefix = ' v '
+                ema_co_suffix = ' v '
 
             macd_co_prefix = ''
             macd_co_suffix = ''
@@ -594,47 +599,45 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
                 if state.last_action == 'BUY':
                     if state.last_buy_size > 0:
-                        margin_text = truncate(margin, precision) + '%'
+                        margin_text = truncate(margin) + '%'
                     else:
                         margin_text = '0%'
 
                     output_text += ' | ' + margin_text + ' (delta: ' + str(round(price - state.last_buy_price, precision)) + ')'
 
-                logging.debug(output_text)
-                print(output_text)
+                logging.info(output_text)
 
                 if state.last_action == 'BUY':
                     # display support, resistance and fibonacci levels
-                    logging.debug(output_text)
                     print(ta.printSupportResistanceFibonacciLevels(price))
 
             else:
-                logging.debug('-- Iteration: ' + str(state.iterations) + ' --' + bullbeartext)
+                logging.info('-- Iteration: ' + str(state.iterations) + ' --' + bullbeartext)
 
                 if state.last_action == 'BUY':
                     if state.last_buy_size > 0:
-                        margin_text = truncate(margin, precision) + '%'
+                        margin_text = truncate(margin) + '%'
                     else:
                         margin_text = '0%'
 
-                    logging.debug('-- Margin: ' + margin_text + ' --')
+                    logging.info('-- Margin: ' + margin_text + ' --')
 
-                logging.debug('price: ' + truncate(price, precision))
-                logging.debug('ema12: ' + truncate(float(df_last['ema12'].values[0]), precision))
-                logging.debug('ema26: ' + truncate(float(df_last['ema26'].values[0]), precision))
-                logging.debug('ema12gtema26co: ' + str(ema12gtema26co))
-                logging.debug('ema12gtema26: ' + str(ema12gtema26))
-                logging.debug('ema12ltema26co: ' + str(ema12ltema26co))
-                logging.debug('ema12ltema26: ' + str(ema12ltema26))
-                logging.debug('sma50: ' + truncate(float(df_last['sma50'].values[0]), precision))
-                logging.debug('sma200: ' + truncate(float(df_last['sma200'].values[0]), precision))
-                logging.debug('macd: ' + truncate(float(df_last['macd'].values[0]), precision))
-                logging.debug('signal: ' + truncate(float(df_last['signal'].values[0]), precision))
-                logging.debug('macdgtsignal: ' + str(macdgtsignal))
-                logging.debug('macdltsignal: ' + str(macdltsignal))
-                logging.debug('obv: ' + str(obv))
-                logging.debug('obv_pc: ' + str(obv_pc))
-                logging.debug('action: ' + state.action)
+                logging.info('price: ' + truncate(price))
+                logging.info('ema12: ' + truncate(float(df_last['ema12'].values[0])))
+                logging.info('ema26: ' + truncate(float(df_last['ema26'].values[0])))
+                logging.info('ema12gtema26co: ' + str(ema12gtema26co))
+                logging.info('ema12gtema26: ' + str(ema12gtema26))
+                logging.info('ema12ltema26co: ' + str(ema12ltema26co))
+                logging.info('ema12ltema26: ' + str(ema12ltema26))
+                logging.info('sma50: ' + truncate(float(df_last['sma50'].values[0])))
+                logging.info('sma200: ' + truncate(float(df_last['sma200'].values[0])))
+                logging.info('macd: ' + truncate(float(df_last['macd'].values[0])))
+                logging.info('signal: ' + truncate(float(df_last['signal'].values[0])))
+                logging.info('macdgtsignal: ' + str(macdgtsignal))
+                logging.info('macdltsignal: ' + str(macdltsignal))
+                logging.info('obv: ' + str(obv))
+                logging.info('obv_pc: ' + str(obv_pc))
+                logging.info('action: ' + state.action)
 
                 # informational output on the most recent entry  
                 print('')
@@ -644,11 +647,11 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 txt = '        Timestamp : ' + str(df_last.index.format()[0])
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 print('--------------------------------------------------------------------------------')
-                txt = '            Close : ' + truncate(price, precision)
+                txt = '            Close : ' + truncate(price)
                 print('|', txt, (' ' * (75 - len(txt))), '|')
-                txt = '            EMA12 : ' + truncate(float(df_last['ema12'].values[0]), precision)
+                txt = '            EMA12 : ' + truncate(float(df_last['ema12'].values[0]))
                 print('|', txt, (' ' * (75 - len(txt))), '|')
-                txt = '            EMA26 : ' + truncate(float(df_last['ema26'].values[0]), precision)
+                txt = '            EMA26 : ' + truncate(float(df_last['ema26'].values[0]))
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 txt = '   Crossing Above : ' + str(ema12gtema26co)
                 print('|', txt, (' ' * (75 - len(txt))), '|')
@@ -671,15 +674,15 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                     txt = '        Condition : -'
                 print('|', txt, (' ' * (75 - len(txt))), '|')
 
-                txt = '            SMA20 : ' + truncate(float(df_last['sma20'].values[0]), precision)
+                txt = '            SMA20 : ' + truncate(float(df_last['sma20'].values[0]))
                 print('|', txt, (' ' * (75 - len(txt))), '|')
-                txt = '           SMA200 : ' + truncate(float(df_last['sma200'].values[0]), precision)
+                txt = '           SMA200 : ' + truncate(float(df_last['sma200'].values[0]))
                 print('|', txt, (' ' * (75 - len(txt))), '|')
 
                 print('--------------------------------------------------------------------------------')
-                txt = '             MACD : ' + truncate(float(df_last['macd'].values[0]), precision)
+                txt = '             MACD : ' + truncate(float(df_last['macd'].values[0]))
                 print('|', txt, (' ' * (75 - len(txt))), '|')
-                txt = '           Signal : ' + truncate(float(df_last['signal'].values[0]), precision)
+                txt = '           Signal : ' + truncate(float(df_last['signal'].values[0]))
                 print('|', txt, (' ' * (75 - len(txt))), '|')
                 txt = '  Currently Above : ' + str(macdgtsignal)
                 print('|', txt, (' ' * (75 - len(txt))), '|')
@@ -855,7 +858,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                         debug=False)
 
                     if state.last_buy_size > 0:
-                        margin_text = str(app.truncate(margin, precision)) + '%'
+                        margin_text = truncate(margin) + '%'
                     else:
                         margin_text = '0%'
                     app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') TEST SELL at ' +
@@ -870,7 +873,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
                     if not app.isVerbose():
                         if price > 0:
-                            margin_text = truncate(margin, precision) + '%'
+                            margin_text = truncate(margin) + '%'
                         else:
                             margin_text = '0%'
 
@@ -925,10 +928,10 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 app.notifyTelegram(f"Simulation Summary\n   Buy Count: {state.buy_count}\n   Sell Count: {state.sell_count}\n   First Buy: {state.first_buy_size}\n   Last Sell: {state.last_buy_size}\n")
 
                 if state.sell_count > 0:
-                    print ('      Margin :', truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4) + '%', "\n")
+                    print ('      Margin :', _truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4) + '%', "\n")
 
                     print('  ** non-live simulation, assuming highest fees', "\n")
-                    app.notifyTelegram(f"      Margin: {str(app.truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4))}%\n  ** non-live simulation, assuming highest fees\n")
+                    app.notifyTelegram(f"      Margin: {_truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4)}%\n  ** non-live simulation, assuming highest fees\n")
 
 
         else:
@@ -949,7 +952,8 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             if state.iterations < 300:
                 if app.simuluationSpeed() in ['fast', 'fast-sample']:
                     # fast processing
-                    executeJob(sc, app, state, trading_data)
+                    list(map(s.cancel, s.queue))
+                    s.enter(0, 1, executeJob, (sc, app, state, trading_data))
                 else:
                     # slow processing
                     list(map(s.cancel, s.queue))
@@ -965,8 +969,9 @@ def main():
     try:
         # initialise logging
         logging.basicConfig(
-            # filename=app.getLogFile(),
-            format='%(asctime)s - %(levelname)s: %(message)s',
+            #filename=app.getLogFile(),
+            #format='%(asctime)s - %(levelname)s: %(message)s',
+            format='%(message)s',
             datefmt='%m/%d/%Y %I:%M:%S %p',
             filemode='a',
             level=logging.DEBUG,
