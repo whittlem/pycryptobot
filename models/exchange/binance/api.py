@@ -274,9 +274,7 @@ class AuthAPI(AuthAPIBase):
                     print ('*** getTradeFee(' + market + ') - missing "trader" ***')
                     print (resp)                    
 
-        if 'success' not in resp:
-            return DEFAULT_TRADE_FEE_RATE
-        elif resp['success']:
+        if 'success' in resp:
             return resp['tradeFee'][0]['taker']
         else:
             return DEFAULT_TRADE_FEE_RATE
