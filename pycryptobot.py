@@ -228,7 +228,8 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
     else:
         current_df_index = state.last_df_index
 
-    formatted_current_df_index = f'{current_df_index} 00:00:00' if len(current_df_index) == 10 else current_df_index
+    candle_time = f'{current_df_index} 00:00:00' if len(current_df_index) == 10 else current_df_index
+    formatted_current_df_index = str(datetime.utcfromtimestamp(float(datetime.strptime(candle_time, '%Y-%m-%d %H:%M:%S').strftime("%s"))))
 
     if app.getSmartSwitch() == 1 and app.getGranularity() == 3600 and app.is1hEMA1226Bull() is True and app.is6hEMA1226Bull() is True:
         print('*** smart switch from granularity 3600 (1 hour) to 900 (15 min) ***')
