@@ -580,7 +580,7 @@ class PyCryptoBot():
 
             if self.exchange == 'coinbasepro':
                 api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
-                return api.marketBuy(market, truncate(quote_currency, 2))
+                return api.marketBuy(market, float(truncate(quote_currency, 2)))
             elif self.exchange == 'binance':
                 api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
                 return api.marketBuy(market, quote_currency)
