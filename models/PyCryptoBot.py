@@ -756,7 +756,7 @@ class PyCryptoBot():
             print('|', txt, (' ' * (75 - len(txt))), '|')
 
             if self.getBuyMaxSize():
-                txt = '         Max Buy Size : ' + str(self.getBuyMaxSize()) + '  --maxbuysize <size>'
+                txt = '         Max Buy Size : ' + str(self.getBuyMaxSize()) + '  --buymaxsize <size>'
                 print('|', txt, (' ' * (75 - len(txt))), '|')
 
             print('================================================================================')
