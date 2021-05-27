@@ -256,7 +256,7 @@ class PyCryptoBot():
     def getVersionFromREADME(self) -> str:
         try:
             count = 0
-            with open('README.md', 'r') as reader:
+            with open('README.md', 'r', encoding="utf8") as reader:
                 line = reader.readline()
                 while count < 5:
                     line = reader.readline()

@@ -3,8 +3,10 @@ import math
 import re
 import numpy as np
 import pandas as pd
+import sys
 from datetime import datetime, timedelta
 from binance.client import Client
+from time import sleep
 
 # Constants
 
@@ -65,7 +67,17 @@ class AuthAPI(AuthAPIBase):
         self.api_url = api_url
         self.api_key = api_key
         self.api_secret = api_secret
-        self.client = Client(self.api_key, self.api_secret, { 'verify': False, 'timeout': 20 })
+        
+        for i in range(10):
+            try:
+                self.client = Client(self.api_key, self.api_secret, { 'verify': False, 'timeout': 20 })
+                break
+            except:
+                if i == 9:
+                    raise SystemExit("Can not create instance of AuthAPI client.")
+                print('Exception: ', sys.exc_info()[0]) 
+                print('Error on creating instance of AuthAPI Client. Trying again... Attempt: ', i)
+                sleep(0.1)
 
     def handle_init_error(self, err: str) -> None:
         if self.debug:
@@ -261,12 +273,7 @@ class AuthAPI(AuthAPIBase):
 
     def getTradeFee(self, market: str) -> float:
         resp = self.client.get_trade_fee(symbol=market, timestamp=self.getTime())
-
-        ### DEBUG ###
-        if 'success' not in resp:
-            print ('*** getTradeFee(' + market + ') - missing "success" ***')
-            print (resp)
-        
+      
         if 'tradeFee' not in resp:
             print ('*** getTradeFee(' + market + ') - missing "tradeFee" ***')
             print (resp)
@@ -279,7 +286,7 @@ class AuthAPI(AuthAPIBase):
                     print ('*** getTradeFee(' + market + ') - missing "trader" ***')
                     print (resp)                    
 
-        if resp['success']:
+        if 'success' in resp:
             return resp['tradeFee'][0]['taker']
         else:
             return DEFAULT_TRADE_FEE_RATE
@@ -319,10 +326,18 @@ class AuthAPI(AuthAPIBase):
 
 class PublicAPI(AuthAPIBase):
     def __init__(self) -> None:
-        try:
-            self.client = Client()
-        except:
-            pass
+        for i in range(10):
+            try:
+                self.client = Client()
+                break
+            except:
+                if i == 9:
+                    raise SystemExit("Can not create instance of Binance client.")
+                print('Exception: ', sys.exc_info()[0]) 
+                print('Error on creating instance of Binance Client. Trying again... Attempt: ', i)
+                sleep(0.1)
+        
+            
 
     def __truncate(self, f, n) -> int:
         return math.floor(f * 10 ** n) / 10 ** n
