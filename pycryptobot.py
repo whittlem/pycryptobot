@@ -370,7 +370,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             # loss failsafe sell at trailing_stop_loss
-            if margin > 0 and app.trailingStopLoss() != None and app.truncate(change_pcnt_high, 2) < app.trailingStopLoss():
+            if margin > 0 and app.trailingStopLoss() != None and _truncate(change_pcnt_high, 2) < app.trailingStopLoss():
                 state.action = 'SELL'
                 state.last_action = 'BUY'
                 immediate_action = True
@@ -602,7 +602,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
             change_pcnt_high_text = ''
             if app.allowSellAtLoss() and app.trailingStopLoss() != None and change_pcnt_high != None:
-                change_pcnt_high_text = 'Buy High: ' + str(state.last_buy_high) + ' (' + str(app.truncate(change_pcnt_high, 2)) + '%) | '      
+                change_pcnt_high_text = 'Buy High: ' + str(state.last_buy_high) + ' (' + str(_truncate(change_pcnt_high, 2)) + '%) | '      
 
             if not app.isVerbose():
                 if state.last_action != '':
