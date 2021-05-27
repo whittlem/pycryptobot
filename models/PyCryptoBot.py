@@ -256,7 +256,7 @@ class PyCryptoBot():
     def getVersionFromREADME(self) -> str:
         try:
             count = 0
-            with open('README.md', 'r', encoding="utf8") as reader:
+            with open('README.md', 'r', encoding='utf8') as reader:
                 line = reader.readline()
                 while count < 5:
                     line = reader.readline()
@@ -546,6 +546,55 @@ class PyCryptoBot():
                 return truncate(val1, precision) + ' = ' + truncate(val2, precision)
             else:
                 return label + ': ' + truncate(val1, precision) + ' = ' + truncate(val2, precision)
+
+    def getLastBuy(self) -> dict:
+        """Retrieves the last exchange buy order and returns a dictionary"""
+
+        try:
+            if self.exchange == 'coinbasepro':
+                api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
+                orders = api.getOrders(self.getMarket(), '', 'done')
+
+                if len(orders) == 0:
+                    return None
+
+                last_order = orders.tail(1)
+                if last_order['action'].values[0] != 'buy':
+                    return None
+
+                return {
+                    'side' : 'buy',
+                    'market' : self.getMarket(),
+                    'size' : float(last_order['size']),
+                    'filled' : float(last_order['filled']),
+                    'price' : float(last_order['price']),
+                    'fee' : float(last_order['fees']),
+                    'date' : str(pd.DatetimeIndex(pd.to_datetime(last_order['created_at']).dt.strftime('%Y-%m-%dT%H:%M:%S.%Z'))[0])
+                }
+            elif self.exchange == 'binance':
+                api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
+                orders = api.getOrders(self.getMarket())
+
+                if len(orders) == 0:
+                    return None
+
+                last_order = orders.tail(1)
+                if last_order['action'].values[0] != 'buy':
+                    return None
+
+                return {
+                    'side' : 'buy',
+                    'market' : self.getMarket(),
+                    'size' : float(last_order['size']),
+                    'filled' : float(last_order['filled']),
+                    'price' : float(last_order['price']),
+                    'fees' : float(last_order['size'] * 0.001),
+                    'date' : str(pd.DatetimeIndex(pd.to_datetime(last_order['created_at']).dt.strftime('%Y-%m-%dT%H:%M:%S.%Z'))[0])
+                }
+            else:
+                return None
+        except Exception:
+            return None      
 
     def getTakerFee(self):
         if self.exchange == 'coinbasepro':

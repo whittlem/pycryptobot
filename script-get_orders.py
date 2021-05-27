@@ -16,3 +16,15 @@ account = TradingAccount(app)
 #orders = account.getOrders('DOGEBTC')
 orders = account.getOrders('DOGEBTC', '', 'done')
 print (orders)
+
+# Coinbase Pro last buy
+app = PyCryptoBot(exchange='coinbasepro')
+app.setLive(1)
+result = app.getLastBuy()
+print (result)
+
+# Binance last buy
+app = PyCryptoBot(exchange='binance')
+app.setLive(1)
+result = app.getLastBuy()
+print (result)
