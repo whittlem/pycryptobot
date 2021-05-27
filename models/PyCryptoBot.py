@@ -72,8 +72,10 @@ def parse_arguments():
     parser.add_argument('--disabletracker', action="store_true", help="disable tracker.csv")
 
     # parse arguments
-    # args = parser.parse_args()
-    return vars(parser.parse_args())
+
+    # pylint: disable=unused-variable
+    args, unknown = parser.parse_known_args()
+    return vars(args)
 
 
 def to_coinbase_pro_granularity(granularity: int) -> int:
@@ -190,18 +192,15 @@ class PyCryptoBot():
 
         except json.decoder.JSONDecodeError as err:
             sys.tracebacklimit = 0
-            print ('Invalid config.json: ' + str(err) + "\n")
-            sys.exit()
+            raise ValueError('Invalid config.json: ' + str(err))
 
         except IOError as err:
             sys.tracebacklimit = 0
-            print ('Invalid config.json: ' + str(err) + "\n")
-            sys.exit()
+            raise ValueError('Invalid config.json: ' + str(err))
 
         except ValueError as err:
             sys.tracebacklimit = 0
-            print ('Invalid config.json: ' + str(err) + "\n")
-            sys.exit()
+            raise ValueError('Invalid config.json: ' + str(err))
 
     def _isCurrencyValid(self, currency):
         if self.exchange == 'coinbasepro' or self.exchange == 'binance':
