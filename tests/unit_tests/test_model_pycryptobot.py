@@ -5,22 +5,55 @@ sys.path.append('.')
 from models.PyCryptoBot import PyCryptoBot
 
 def test_instantiate_model_without_error():
+    if not os.path.exists('config.json'):
+        with pytest.raises(ValueError) as execinfo:
+            PyCryptoBot()
+        assert str(execinfo.value) == "Invalid config.json: [Errno 2] No such file or directory: 'config.json'"
+
+        config = {
+            "binance": {
+                "api_url": "https://api.binance.com",
+                "api_key": "0000000000000000000000000000000000000000000000000000000000000000",
+                "api_secret": "0000000000000000000000000000000000000000000000000000000000000000",
+            },
+            "coinbasepro": {
+                "api_url": "https://api.pro.coinbase.com",
+                "api_key": "00000000000000000000000000000000",
+                "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+                "api_passphrase": "00000000000"
+            }
+        }
+
+        try:
+            config_json = json.dumps(config, indent=4)
+            fh = open('config.json', 'w')
+            fh.write(config_json)
+            fh.close()
+        except Exception as err:
+            print (err)
+
     app = PyCryptoBot()
     assert type(app) is PyCryptoBot
 
-    app = PyCryptoBot(exchange='coinbasepro')
-    assert type(app) is PyCryptoBot
-    assert app.getExchange() == 'coinbasepro'
+    with open('config.json', 'r') as fh:
+        config = fh.read()
+        config_json = json.loads(config)
 
-    app = PyCryptoBot(exchange='binance')
-    assert type(app) is PyCryptoBot
-    assert app.getExchange() == 'binance'
+        if 'binance' in config_json:
+            app = PyCryptoBot(exchange='binance')
+            assert type(app) is PyCryptoBot
+            assert app.getExchange() == 'binance'
 
-    #app = PyCryptoBot(exchange='dummy')
-    #assert type(app) is PyCryptoBot
-    #assert app.getExchange() == 'dummy'
+        if 'coinbasepro' in config_json:
+            app = PyCryptoBot(exchange='coinbasepro')
+            assert type(app) is PyCryptoBot
+            assert app.getExchange() == 'coinbasepro'
 
-    # TODO: validate file exists
+        if 'dummy' in config_json:
+            app = PyCryptoBot(exchange='dummy')
+            assert type(app) is PyCryptoBot
+            assert app.getExchange() == 'dummy'
+
     app = PyCryptoBot(filename='config.json')
     assert type(app) is PyCryptoBot
 
