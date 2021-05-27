@@ -315,6 +315,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
         state.action = getAction(now, app, price, df, df_last, state.last_action, False)
 
+        change_pcnt_high = None
         immediate_action = False
 
         if state.last_buy_size > 0 and state.last_buy_price > 0 and price > 0 and state.last_action == 'BUY':
@@ -322,7 +323,7 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
             if price > state.last_buy_high:
                 state.last_buy_high = price
 
-            if state.last_buy_high > 1:
+            if state.last_buy_high > 0:
                 change_pcnt_high = ((price / state.last_buy_high) - 1) * 100
             else:
                 change_pcnt_high = 0
@@ -369,11 +370,11 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             # loss failsafe sell at trailing_stop_loss
-            if margin > 0 and app.trailingStopLoss() != None and change_pcnt_high < app.trailingStopLoss():
+            if margin > 0 and app.trailingStopLoss() != None and app.truncate(change_pcnt_high, 2) < app.trailingStopLoss():
                 state.action = 'SELL'
                 state.last_action = 'BUY'
                 immediate_action = True
-                log_text = '! Trailing Stop Loss Triggered (< ' + str(app.trailingStopLoss()) + '%)'
+                log_text = '! Trailing Stop Loss Triggered (' + str(change_pcnt_high) + '% < ' + str(app.trailingStopLoss()) + '%)'
                 print(log_text, "\n")
                 logging.warning(log_text)
 
@@ -599,18 +600,23 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                     obv_prefix = 'v '
                     obv_suffix = ' v | '
 
+            change_pcnt_high_text = ''
+            if app.allowSellAtLoss() and app.trailingStopLoss() != None and change_pcnt_high != None:
+                change_pcnt_high_text = 'Buy High: ' + str(state.last_buy_high) + ' (' + str(app.truncate(change_pcnt_high, 2)) + '%) | '      
+
             if not app.isVerbose():
                 if state.last_action != '':
                     output_text = formatted_current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + \
                                   app.printGranularity() + ' | ' + price_text + ' | ' + ema_co_prefix + \
                                   ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + \
-                                  obv_prefix + obv_text + obv_suffix + state.eri_text + state.action + \
-                                  ' | Last Action: ' + state.last_action
+                                  obv_prefix + obv_text + obv_suffix + state.eri_text + change_pcnt_high_text + \
+                                  state.action + ' | Last Action: ' + state.last_action
                 else:
                     output_text = formatted_current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + \
                                   app.printGranularity() + ' | ' + price_text + ' | ' + ema_co_prefix + ema_text + \
                                   ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + obv_prefix + \
-                                  obv_text + obv_suffix + state.eri_text + state.action + ' '
+                                  obv_text + obv_suffix + state.eri_text + change_pcnt_high_text + \
+                                  state.action + ' '
 
                 if state.last_action == 'BUY':
                     if state.last_buy_size > 0:
