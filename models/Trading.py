@@ -49,6 +49,7 @@ class TechnicalAnalysis():
         self.addSMA(20)
         self.addSMA(50)
         self.addSMA(200)
+        self.addEMA(8)
         self.addEMA(12)
         self.addEMA(26)
         self.addGoldenCross()
@@ -651,9 +652,26 @@ class TechnicalAnalysis():
             raise AttributeError(
                 "Pandas DataFrame 'close' column not int64 or float64.")
 
-        if not 'ema12' or not 'ema26' in self.df.columns:
+        if not 'ema8' in self.df.columns:
+            self.addEMA(8)
+
+        if not 'ema12' in self.df.columns:
             self.addEMA(12)
+        
+        if not 'ema26' in self.df.columns:
             self.addEMA(26)
+
+        # true if EMA8 is above the EMA12
+        self.df['ema8gtema12'] = self.df.ema8 > self.df.ema12
+        # true if the current frame is where EMA8 crosses over above
+        self.df['ema8gtema12co'] = self.df.ema8gtema12.ne(self.df.ema8gtema12.shift())
+        self.df.loc[self.df['ema8gtema12'] == False, 'ema8gtema12co'] = False
+
+        # true if the EMA8 is below the EMA12
+        self.df['ema8ltema12'] = self.df.ema8 < self.df.ema12
+        # true if the current frame is where EMA8 crosses over below
+        self.df['ema8ltema12co'] = self.df.ema8ltema12.ne(self.df.ema8ltema12.shift())
+        self.df.loc[self.df['ema8ltema12'] == False, 'ema8ltema12co'] = False
 
         # true if EMA12 is above the EMA26
         self.df['ema12gtema26'] = self.df.ema12 > self.df.ema26
