@@ -316,13 +316,14 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
         state.action = getAction(now, app, price, df, df_last, state.last_action, False)
 
         immediate_action = False
+        margin, profit, sell_fee = 0, 0, 0
 
         if state.last_buy_size > 0 and state.last_buy_price > 0 and price > 0 and state.last_action == 'BUY':
             # update last buy high
             if price > state.last_buy_high:
                 state.last_buy_high = price
 
-            if state.last_buy_high > 1:
+            if state.last_buy_high > 0:
                 change_pcnt_high = ((price / state.last_buy_high) - 1) * 100
             else:
                 change_pcnt_high = 0
@@ -369,7 +370,8 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
                 app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             # loss failsafe sell at trailing_stop_loss
-            if margin > 0 and app.trailingStopLoss() != None and change_pcnt_high < app.trailingStopLoss():
+            if app.trailingStopLoss() != None and change_pcnt_high < app.trailingStopLoss() and (
+                    app.allowSellAtLoss() or margin > 0):
                 state.action = 'SELL'
                 state.last_action = 'BUY'
                 immediate_action = True
@@ -950,7 +952,11 @@ def executeJob(sc, app=PyCryptoBot(), state=AppState(), trading_data=pd.DataFram
 
 
         else:
-            print(now, '|', app.getMarket() + bullbeartext, '|', app.printGranularity(), '| Current Price:', price)
+            if state.last_buy_size > 0 and state.last_buy_price > 0 and price > 0 and state.last_action == 'BUY':
+                # show profit and margin if already bought
+                print(now, '|', app.getMarket() + bullbeartext, '|', app.printGranularity(), '| Current Price:', price, '| Margin:', margin, '| Profit:', profit)
+            else:
+                print(now, '|', app.getMarket() + bullbeartext, '|', app.printGranularity(), '| Current Price:', price)
 
             # decrement ignored iteration
             state.iterations = state.iterations - 1
