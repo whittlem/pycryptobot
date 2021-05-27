@@ -44,7 +44,7 @@ def parse_arguments():
     parser.add_argument('--trailingstoploss', type=float, help='optionally set a trailing stop percent loss below last buy high')
     parser.add_argument('--sim', type=str, help='simulation modes: fast, fast-sample, slow-sample')
     parser.add_argument('--simstartdate', type=str, help="start date for sample simulation e.g '2021-01-15'")
-    parser.add_argument('--simenddate', type=str, help="start date for sample simulation e.g '2021-01-15' or 'now'")
+    parser.add_argument('--simenddate', type=str, help="end date for sample simulation e.g '2021-01-15' or 'now'")
     parser.add_argument('--smartswitch', type=int, help='optionally smart switch between 1 hour and 15 minute intervals')
     parser.add_argument('--verbose', type=int, help='verbose output=1, minimal output=0')
     parser.add_argument('--config', type=str, help="Use the config file at the given location. e.g 'myconfig.json'")
