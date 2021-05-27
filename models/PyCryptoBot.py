@@ -44,6 +44,7 @@ def parse_arguments():
     parser.add_argument('--trailingstoploss', type=float, help='optionally set a trailing stop percent loss below last buy high')
     parser.add_argument('--sim', type=str, help='simulation modes: fast, fast-sample, slow-sample')
     parser.add_argument('--simstartdate', type=str, help="start date for sample simulation e.g '2021-01-15'")
+    parser.add_argument('--simenddate', type=str, help="start date for sample simulation e.g '2021-01-15' or 'now'")
     parser.add_argument('--smartswitch', type=int, help='optionally smart switch between 1 hour and 15 minute intervals')
     parser.add_argument('--verbose', type=int, help='verbose output=1, minimal output=0')
     parser.add_argument('--config', type=str, help="Use the config file at the given location. e.g 'myconfig.json'")
@@ -131,6 +132,7 @@ class PyCryptoBot():
         self.save_graphs = 0
         self.is_sim = 0
         self.simstartdate = None
+        self.simenddate = None
         self.sim_speed = 'fast'
         self.sell_upper_pcnt = None
         self.sell_lower_pcnt = None
@@ -594,7 +596,7 @@ class PyCryptoBot():
             else:
                 return None
         except Exception:
-            return None      
+            return None
 
     def getTakerFee(self):
         if self.exchange == 'coinbasepro':
@@ -789,6 +791,17 @@ class PyCryptoBot():
                     date = self.simstartdate.split('-')
                     startDate = datetime(int(date[0]), int(date[1]), int(date[2]))
                     endDate = startDate + timedelta(minutes=(self.getGranularity()/60)*300)
+                    while len(tradingData) != 300 and attempts < 10:
+                        tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(),
+                                                             startDate.isoformat(timespec='milliseconds'))
+                        attempts += 1
+                elif self.simenddate is not None:
+                    if self.simenddate == 'now':
+                        endDate = datetime.now()
+                    else:
+                        date = self.simenddate.split('-')
+                        endDate = datetime(int(date[0]), int(date[1]), int(date[2]))
+                    startDate = endDate - timedelta(minutes=(self.getGranularity()/60)*300)
                     while len(tradingData) != 300 and attempts < 10:
                         tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(),
                                                              startDate.isoformat(timespec='milliseconds'))
