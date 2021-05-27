@@ -43,6 +43,8 @@ def defaultConfigParse(app, config):
                 app.sim_speed = config['sim']
                 if 'simstartdate' in config:
                     app.simstartdate = config['simstartdate']
+                if 'simenddate' in config:
+                    app.simenddate = config['simenddate']
 
     if 'sellupperpcnt' in config:
         if isinstance(config['sellupperpcnt'], (int, str)):

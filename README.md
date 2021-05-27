@@ -266,6 +266,14 @@ The "sellatloss" option disabled has it's advantages and disadvantages. It does 
 
 In order to trade live you need to authenticate with the Coinbase Pro or Binance APIs. This is all documented in my Medium articles. In summary you will need to include a config.json file in your project root which contains your API keys. If the file does not exist it will only work in test/demo mode.
 
+## Trading Simulation
+
+    --sim ['fast, fast-sample, slow-sample']   Sets simulation mode
+    --simstartdate                             Start date for sample simulation e.g '2021-01-15'
+    --simenddate                               End date for sample simulation or 'now'
+
+`simstartdate` takes priority over `simenddate` if both are given
+
 ## config.json examples
 
 Coinbase Pro basic (using smart switching)
