@@ -593,7 +593,49 @@ def test_configjson_coinbasepro_invalid_granularity():
     if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
         os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')
 
-def test_configjson_islive():
+def test_configjson_binance_islive():
+    config = {
+       "binance": {
+            "api_url": "https://api.binance.com",
+            "api_key": "0000000000000000000000000000000000000000000000000000000000000000",
+            "api_secret": "0000000000000000000000000000000000000000000000000000000000000000",
+            "config": {}
+        }
+    }
+
+    try:
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'binance'
+    assert not app.isLive()
+
+    try:
+        config['binance']['config']['live'] = 1
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.isLive()
+
+    app.setLive(0)
+    assert not app.isLive()
+
+    if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
+        os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')
+
+def test_configjson_coinbasepro_islive():
     config = {
         "coinbasepro": {
             "api_url": "https://api.pro.coinbase.com",
@@ -636,7 +678,47 @@ def test_configjson_islive():
     if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
         os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')
 
-def test_configjson_graphs():
+def test_configjson_binance_graphs():
+    config = {
+       "binance": {
+            "api_url": "https://api.binance.com",
+            "api_key": "0000000000000000000000000000000000000000000000000000000000000000",
+            "api_secret": "0000000000000000000000000000000000000000000000000000000000000000",
+            "config": {}
+        }
+    }
+
+    try:
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'binance'
+    assert not app.shouldSaveGraphs()
+
+    try:
+        config['binance']['config']['graphs'] = 1
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'binance'
+    assert app.shouldSaveGraphs()
+
+    if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
+        os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')
+
+def test_configjson_coinbasepro_graphs():
     config = {
         "coinbasepro": {
             "api_url": "https://api.pro.coinbase.com",
@@ -677,7 +759,47 @@ def test_configjson_graphs():
     if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
         os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')
 
-def test_configjson_isverbose():
+def test_configjson_binance_isverbose():
+    config = {
+       "binance": {
+            "api_url": "https://api.binance.com",
+            "api_key": "0000000000000000000000000000000000000000000000000000000000000000",
+            "api_secret": "0000000000000000000000000000000000000000000000000000000000000000",
+            "config": {}
+        }
+    }
+
+    try:
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'binance'
+    assert not app.isVerbose()
+
+    try:
+        config['binance']['config']['verbose'] = 1
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'binance'
+    assert app.isVerbose()
+
+    if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
+        os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')
+
+def test_configjson_coinbasepro_isverbose():
     config = {
         "coinbasepro": {
             "api_url": "https://api.pro.coinbase.com",
@@ -717,3 +839,813 @@ def test_configjson_isverbose():
 
     if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
         os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')
+
+def test_configjson_binance_sellatloss():
+    config = {
+       "binance": {
+            "api_url": "https://api.binance.com",
+            "api_key": "0000000000000000000000000000000000000000000000000000000000000000",
+            "api_secret": "0000000000000000000000000000000000000000000000000000000000000000",
+            "config": {}
+        }
+    }
+
+    try:
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'binance'
+    assert app.allowSellAtLoss()
+
+    try:
+        config['binance']['config']['sellatloss'] = 0
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'binance'
+    assert not app.allowSellAtLoss()
+
+    if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
+        os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')
+
+def test_configjson_coinbasepro_sellatloss():
+    config = {
+        "coinbasepro": {
+            "api_url": "https://api.pro.coinbase.com",
+            "api_key": "00000000000000000000000000000000",
+            "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+            "api_passphrase": "00000000000",
+            "config": {}
+        }
+    }
+
+    try:
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'coinbasepro'
+    assert app.allowSellAtLoss()
+
+    try:
+        config['coinbasepro']['config']['sellatloss'] = 0
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'coinbasepro'
+    assert not app.allowSellAtLoss()
+
+    if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
+        os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')
+
+def test_configjson_binance_sellupperpcnt():
+    config = {
+       "binance": {
+            "api_url": "https://api.binance.com",
+            "api_key": "0000000000000000000000000000000000000000000000000000000000000000",
+            "api_secret": "0000000000000000000000000000000000000000000000000000000000000000",
+            "config": {}
+        }
+    }
+
+    try:
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'binance'
+    assert app.sellUpperPcnt() is None
+
+    try:
+        config['binance']['config']['sellupperpcnt'] = 10
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'binance'
+    assert type(app.sellUpperPcnt() == 'float')
+    assert app.sellUpperPcnt() == 10
+
+    try:
+        config['binance']['config']['sellupperpcnt'] = 10.5
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(TypeError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'sellupperpcnt must be of type int or str'
+
+    try:
+        config['binance']['config']['sellupperpcnt'] = '10.5'
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'binance'
+    assert type(app.sellUpperPcnt() == 'float')
+    assert app.sellUpperPcnt() == 10.5
+
+    if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
+        os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')
+
+    try:
+        config['binance']['config']['sellupperpcnt'] = -0.1
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(TypeError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'sellupperpcnt must be of type int or str'
+
+    try:
+        config['binance']['config']['sellupperpcnt'] = '-0.2'
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(ValueError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'Invalid config.json: sellupperpcnt must be positive'
+
+    try:
+        config['binance']['config']['sellupperpcnt'] = 0
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(ValueError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'Invalid config.json: sellupperpcnt must be positive'
+
+    try:
+        config['binance']['config']['sellupperpcnt'] = -1
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(ValueError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'Invalid config.json: sellupperpcnt must be positive'
+
+def test_configjson_coinbasepro_sellupperpcnt():
+    config = {
+        "coinbasepro": {
+            "api_url": "https://api.pro.coinbase.com",
+            "api_key": "00000000000000000000000000000000",
+            "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+            "api_passphrase": "00000000000",
+            "config": {}
+        }
+    }
+
+    try:
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'coinbasepro'
+    assert app.sellUpperPcnt() is None
+
+    try:
+        config['coinbasepro']['config']['sellupperpcnt'] = 10
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'coinbasepro'
+    assert type(app.sellUpperPcnt() == 'float')
+    assert app.sellUpperPcnt() == 10
+
+    try:
+        config['coinbasepro']['config']['sellupperpcnt'] = 10.5
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(TypeError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'sellupperpcnt must be of type int or str'
+
+    try:
+        config['coinbasepro']['config']['sellupperpcnt'] = '10.5'
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'coinbasepro'
+    assert type(app.sellUpperPcnt() == 'float')
+    assert app.sellUpperPcnt() == 10.5
+
+    if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
+        os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')
+
+    try:
+        config['coinbasepro']['config']['sellupperpcnt'] = -0.1
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(TypeError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'sellupperpcnt must be of type int or str'
+
+    try:
+        config['coinbasepro']['config']['sellupperpcnt'] = '-0.2'
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(ValueError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'Invalid config.json: sellupperpcnt must be positive'
+
+    try:
+        config['coinbasepro']['config']['sellupperpcnt'] = 0
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(ValueError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'Invalid config.json: sellupperpcnt must be positive'
+
+    try:
+        config['coinbasepro']['config']['sellupperpcnt'] = -1
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(ValueError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'Invalid config.json: sellupperpcnt must be positive'
+
+def test_configjson_binance_selllowerpcnt():
+    config = {
+       "binance": {
+            "api_url": "https://api.binance.com",
+            "api_key": "0000000000000000000000000000000000000000000000000000000000000000",
+            "api_secret": "0000000000000000000000000000000000000000000000000000000000000000",
+            "config": {}
+        }
+    }
+
+    try:
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'binance'
+    assert app.sellLowerPcnt() is None
+
+    try:
+        config['binance']['config']['selllowerpcnt'] = -10
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'binance'
+    assert type(app.sellLowerPcnt() == 'float')
+    assert app.sellLowerPcnt() == -10
+
+    try:
+        config['binance']['config']['selllowerpcnt'] = -10.5
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(TypeError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'selllowerpcnt must be of type int or str'
+
+    try:
+        config['binance']['config']['selllowerpcnt'] = '-10.5'
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'binance'
+    assert type(app.sellLowerPcnt() == 'float')
+    assert app.sellLowerPcnt() == -10.5
+
+    if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
+        os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')
+
+    try:
+        config['binance']['config']['selllowerpcnt'] = 0.1
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(TypeError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'selllowerpcnt must be of type int or str'
+
+    try:
+        config['binance']['config']['selllowerpcnt'] = '0.2'
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(ValueError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'Invalid config.json: selllowerpcnt must be negative'
+
+    try:
+        config['binance']['config']['selllowerpcnt'] = 0
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(ValueError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'Invalid config.json: selllowerpcnt must be negative'
+
+    try:
+        config['binance']['config']['selllowerpcnt'] = 1
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(ValueError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'Invalid config.json: selllowerpcnt must be negative'
+
+def test_configjson_coinbasepro_selllowerpcnt():
+    config = {
+        "coinbasepro": {
+            "api_url": "https://api.pro.coinbase.com",
+            "api_key": "00000000000000000000000000000000",
+            "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+            "api_passphrase": "00000000000",
+            "config": {}
+        }
+    }
+
+    try:
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'coinbasepro'
+    assert app.sellLowerPcnt() is None
+
+    try:
+        config['coinbasepro']['config']['selllowerpcnt'] = -10
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'coinbasepro'
+    assert type(app.sellLowerPcnt() == 'float')
+    assert app.sellLowerPcnt() == -10
+
+    try:
+        config['coinbasepro']['config']['selllowerpcnt'] = -10.5
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(TypeError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'selllowerpcnt must be of type int or str'
+
+    try:
+        config['coinbasepro']['config']['selllowerpcnt'] = '-10.5'
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'coinbasepro'
+    assert type(app.sellLowerPcnt() == 'float')
+    assert app.sellLowerPcnt() == -10.5
+
+    if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
+        os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')
+
+    try:
+        config['coinbasepro']['config']['selllowerpcnt'] = 0.1
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(TypeError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'selllowerpcnt must be of type int or str'
+
+    try:
+        config['coinbasepro']['config']['selllowerpcnt'] = '0.2'
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(ValueError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'Invalid config.json: selllowerpcnt must be negative'
+
+    try:
+        config['coinbasepro']['config']['selllowerpcnt'] = 0
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(ValueError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'Invalid config.json: selllowerpcnt must be negative'
+
+    try:
+        config['coinbasepro']['config']['selllowerpcnt'] = 1
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(ValueError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'Invalid config.json: selllowerpcnt must be negative'
+
+def test_configjson_binance_trailingstoploss():
+    config = {
+       "binance": {
+            "api_url": "https://api.binance.com",
+            "api_key": "0000000000000000000000000000000000000000000000000000000000000000",
+            "api_secret": "0000000000000000000000000000000000000000000000000000000000000000",
+            "config": {}
+        }
+    }
+
+    try:
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'binance'
+    assert app.trailingStopLoss() is None
+
+    try:
+        config['binance']['config']['trailingstoploss'] = -10
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'binance'
+    assert type(app.trailingStopLoss() == 'float')
+    assert app.trailingStopLoss() == -10
+
+    try:
+        config['binance']['config']['trailingstoploss'] = -10.5
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(TypeError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'trailingstoploss must be of type int or str'
+
+    try:
+        config['binance']['config']['trailingstoploss'] = '-10.5'
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'binance'
+    assert type(app.trailingStopLoss() == 'float')
+    assert app.trailingStopLoss() == -10.5
+
+    if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
+        os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')
+
+    try:
+        config['binance']['config']['trailingstoploss'] = 0.1
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(TypeError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'trailingstoploss must be of type int or str'
+
+    try:
+        config['binance']['config']['trailingstoploss'] = '0.2'
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(ValueError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'Invalid config.json: trailingstoploss must be negative'
+
+    try:
+        config['binance']['config']['trailingstoploss'] = 0
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(ValueError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'Invalid config.json: trailingstoploss must be negative'
+
+    try:
+        config['binance']['config']['trailingstoploss'] = 1
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(ValueError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'Invalid config.json: trailingstoploss must be negative'
+
+def test_configjson_coinbasepro_trailingstoploss():
+    config = {
+        "coinbasepro": {
+            "api_url": "https://api.pro.coinbase.com",
+            "api_key": "00000000000000000000000000000000",
+            "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+            "api_passphrase": "00000000000",
+            "config": {}
+        }
+    }
+
+    try:
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'coinbasepro'
+    assert app.trailingStopLoss() is None
+
+    try:
+        config['coinbasepro']['config']['trailingstoploss'] = -10
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'coinbasepro'
+    assert type(app.trailingStopLoss() == 'float')
+    assert app.trailingStopLoss() == -10
+
+    try:
+        config['coinbasepro']['config']['trailingstoploss'] = -10.5
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(TypeError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'trailingstoploss must be of type int or str'
+
+    try:
+        config['coinbasepro']['config']['trailingstoploss'] = '-10.5'
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    app = PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert type(app) is PyCryptoBot
+    assert app.getExchange() == 'coinbasepro'
+    assert type(app.trailingStopLoss() == 'float')
+    assert app.trailingStopLoss() == -10.5
+
+    if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
+        os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')
+
+    try:
+        config['coinbasepro']['config']['trailingstoploss'] = 0.1
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(TypeError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'trailingstoploss must be of type int or str'
+
+    try:
+        config['coinbasepro']['config']['trailingstoploss'] = '0.2'
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(ValueError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'Invalid config.json: trailingstoploss must be negative'
+
+    try:
+        config['coinbasepro']['config']['trailingstoploss'] = 0
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(ValueError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'Invalid config.json: trailingstoploss must be negative'
+
+    try:
+        config['coinbasepro']['config']['trailingstoploss'] = 1
+        config_json = json.dumps(config, indent=4)
+        fh = open('tests/unit_tests/data/pycryptobot_pytest_config.json', 'w')
+        fh.write(config_json)
+        fh.close()
+    except Exception as err:
+        print (err)
+
+    with pytest.raises(ValueError) as execinfo:
+        PyCryptoBot(filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
+    assert str(execinfo.value) == 'Invalid config.json: trailingstoploss must be negative'

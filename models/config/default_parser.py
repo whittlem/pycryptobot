@@ -56,33 +56,57 @@ def defaultConfigParse(app, config):
 
     if 'sellupperpcnt' in config:
         if isinstance(config['sellupperpcnt'], (int, str)):
-            p = re.compile(r"^[0-9\.]{1,5}$")
+            p = re.compile(r"^\-*[0-9\.]{1,5}$")
             if isinstance(config['sellupperpcnt'], str) and p.match(config['sellupperpcnt']):
-                app.sell_upper_pcnt = float(config['sellupperpcnt'])
-            elif isinstance(config['sellupperpcnt'], int) and config['sellupperpcnt'] > 0 and config['sellupperpcnt'] <= 100:
-                app.sell_upper_pcnt = float(config['sellupperpcnt'])
+                if float(config['sellupperpcnt']) > 0:
+                    app.sell_upper_pcnt = float(config['sellupperpcnt'])
+                else:
+                    raise ValueError('sellupperpcnt must be positive')
+            elif isinstance(config['sellupperpcnt'], int) and config['sellupperpcnt'] >= 0 and config['sellupperpcnt'] <= 100:
+                if float(config['sellupperpcnt']) > 0:
+                    app.sell_upper_pcnt = float(config['sellupperpcnt'])
+                else:
+                    raise ValueError('sellupperpcnt must be positive')
+            elif isinstance(config['sellupperpcnt'], int) and config['sellupperpcnt'] < 0:
+                raise ValueError('sellupperpcnt must be positive')
         else:
             raise TypeError('sellupperpcnt must be of type int or str')
 
     if 'selllowerpcnt' in config:
-        if isinstance(config['selllowerpcnt'], (int, float, str)):
-            p = re.compile(r"^\-[0-9\.]{1,5}$")
+        if isinstance(config['selllowerpcnt'], (int, str)):
+            p = re.compile(r"^\-*[0-9\.]{1,5}$")
             if isinstance(config['selllowerpcnt'], str) and p.match(config['selllowerpcnt']):
-                app.sell_lower_pcnt = float(config['selllowerpcnt'])
-            elif isinstance(config['selllowerpcnt'], (int, float)) and config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] < 0:
-                app.sell_lower_pcnt = float(config['selllowerpcnt'])
+                if float(config['selllowerpcnt']) < 0:
+                    app.sell_lower_pcnt  = float(config['selllowerpcnt'])
+                else:
+                    raise ValueError('selllowerpcnt must be negative')
+            elif isinstance(config['selllowerpcnt'], int) and config['selllowerpcnt'] >= -100 and config['selllowerpcnt'] <= 0:
+                if float(config['selllowerpcnt']) < 0:
+                    app.sell_lower_pcnt  = float(config['selllowerpcnt'])
+                else:
+                    raise ValueError('selllowerpcnt must be negative')
+            elif isinstance(config['selllowerpcnt'], (int, float)) and config['selllowerpcnt'] >= 0:
+                raise ValueError('selllowerpcnt must be negative')
         else:
-            raise TypeError('selllowerpcnt must be of type int, float or str')
+            raise TypeError('selllowerpcnt must be of type int or str')
 
     if 'trailingstoploss' in config:
-        if isinstance(config['trailingstoploss'], (int, float, str)):
-            p = re.compile(r"^\-[0-9\.]{1,5}$")
+        if isinstance(config['trailingstoploss'], (int, str)):
+            p = re.compile(r"^\-*[0-9\.]{1,5}$")
             if isinstance(config['trailingstoploss'], str) and p.match(config['trailingstoploss']):
-                app.trailing_stop_loss = float(config['trailingstoploss'])
-            elif isinstance(config['trailingstoploss'], (int, float)) and config['trailingstoploss'] >= -100 and config['trailingstoploss'] < 0:
-                app.trailing_stop_loss = float(config['trailingstoploss'])
+                if float(config['trailingstoploss']) < 0:
+                    app.trailing_stop_loss  = float(config['trailingstoploss'])
+                else:
+                    raise ValueError('trailingstoploss must be negative')
+            elif isinstance(config['trailingstoploss'], int) and config['trailingstoploss'] >= -100 and config['trailingstoploss'] <= 0:
+                if float(config['trailingstoploss']) < 0:
+                    app.trailing_stop_loss  = float(config['trailingstoploss'])
+                else:
+                    raise ValueError('trailingstoploss must be negative')
+            elif isinstance(config['trailingstoploss'], (int, float)) and config['trailingstoploss'] >= 0:
+                raise ValueError('trailingstoploss must be negative')
         else:
-            raise TypeError('trailingstoploss must be of type int, float or str')
+            raise TypeError('trailingstoploss must be of type int or str')
 
     if 'autorestart' in config:
         if isinstance(config['autorestart'], int):
