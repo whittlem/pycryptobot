@@ -795,7 +795,8 @@ class PyCryptoBot():
                     endDate = startDate + timedelta(minutes=(self.getGranularity()/60)*300)
                     while len(tradingData) != 300 and attempts < 10:
                         tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(),
-                                                             startDate.isoformat(timespec='milliseconds'))
+                                                             startDate.isoformat(timespec='milliseconds'),
+                                                             endDate.isoformat(timespec='milliseconds'))
                         attempts += 1
                 elif self.simenddate is not None:
                     if self.simenddate == 'now':
