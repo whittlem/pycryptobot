@@ -183,6 +183,9 @@ class AuthAPI(AuthAPIBase):
         if len(df) == 0:
             return pd.DataFrame()
 
+        # replace null NaN values with 0
+        df.fillna(0, inplace=True)
+
         df = df[[ 'time', 'symbol', 'side', 'type', 'executedQty', 'cummulativeQuoteQty', 'status' ]]
         df.columns = [ 'created_at', 'market', 'action', 'type', 'filled', 'size', 'status' ]
         df['created_at'] = df['created_at'].apply(lambda x: int(str(x)[:10]))

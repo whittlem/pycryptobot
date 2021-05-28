@@ -210,6 +210,9 @@ class AuthAPI(AuthAPIBase):
         else:
             return pd.DataFrame()
 
+        # replace null NaN values with 0
+        df.fillna(0, inplace=True)
+
         # calculates the price at the time of purchase
         if status != 'open':
             df['price'] = df.apply(lambda row: (float(row.executed_value) * 100) / (float(row.filled_size) * 100) if float(row.filled_size) > 0 else 0, axis=1)
