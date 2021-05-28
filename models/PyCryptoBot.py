@@ -14,7 +14,7 @@ from models.Trading import TechnicalAnalysis
 from models.exchange.binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
 from models.exchange.coinbase_pro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
 from models.chat import Telegram
-from models.config import binanceConfigParser, binanceParseMarket, coinbaseProConfigParser, coinbaseProParseMarket
+from models.config import binanceConfigParser, binanceParseMarket, coinbaseProConfigParser, coinbaseProParseMarket, dummyConfigParser, dummyParseMarket
 from models.ConfigBuilder import ConfigBuilder
 
 # disable insecure ssl warning
@@ -186,6 +186,9 @@ class PyCryptoBot():
 
                 elif self.exchange == 'binance' and 'binance' in config:
                     binanceConfigParser(self, config['binance'], args)
+
+                elif self.exchange == 'dummy' and 'dummy' in config:
+                    dummyConfigParser(self, config['dummy'], args)
 
                 if not self.disabletelegram and 'telegram' in config and 'token' in config['telegram'] and 'client_id' in config['telegram']:
                     telegram = config['telegram']

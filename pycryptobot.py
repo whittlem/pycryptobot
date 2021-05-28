@@ -161,7 +161,7 @@ def getAction(now: datetime = datetime.today().strftime('%Y-%m-%d %H:%M:%S'), ap
 
     # anything other than a buy or sell, just wait
     else:
-        state.action = 'WAIT'
+        action = 'WAIT'
 
     # if disabled, do not buy within 3% of the dataframe close high
     if app.disableBuyNearHigh() is True and (price > (df['close'].max() * 0.97)):

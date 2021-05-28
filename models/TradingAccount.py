@@ -26,8 +26,8 @@ class TradingAccount():
 
         # if trading account is for testing it will be instantiated with a balance of 1000
         self.balance = pd.DataFrame([
-            [ 'QUOTE', 1000, 0, 1000 ],
-            [ 'BASE', 0, 0, 0 ]],
+            [ app.getQuoteCurrency(), 1000, 0, 1000 ],
+            [ app.getBaseCurrency(), 0, 0, 0 ]],
             columns=['currency','balance','hold','available'])
 
         self.app = app
