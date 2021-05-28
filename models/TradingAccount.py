@@ -1,10 +1,9 @@
 """Live or test trading account"""
 
 import re
-
 import numpy as np
 import pandas as pd
-
+from datetime import datetime
 from models.PyCryptoBot import truncate
 from models.exchange.binance import AuthAPI as BAuthAPI
 from models.exchange.coinbase_pro import AuthAPI as CBAuthAPI
@@ -26,7 +25,7 @@ class TradingAccount():
 
         # if trading account is for testing it will be instantiated with a balance of 1000
         self.balance = pd.DataFrame([
-            [ app.getQuoteCurrency(), 1000, 0, 1000 ],
+            [ app.getQuoteCurrency(), 0, 0, 0 ],
             [ app.getBaseCurrency(), 0, 0, 0 ]],
             columns=['currency','balance','hold','available'])
 
@@ -113,6 +112,8 @@ class TradingAccount():
                     return self.orders
                 else:
                     return self.orders[self.orders['market'] == market]
+        if self.app.getExchange() == 'dummy':
+            return self.orders[[ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'price', 'status' ]]
 
     def getBalance(self, currency=''):
         """Retrieves balance either live or simulation
@@ -177,7 +178,7 @@ class TradingAccount():
                         else:
                             return float(truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
 
-        else:
+        elif self.app.getExchange() == 'coinbasepro':
             if self.mode == 'live':
                 # if config is provided and live connect to Coinbase Pro account portfolio
                 model = CBAuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
@@ -227,6 +228,155 @@ class TradingAccount():
                             return float(truncate(float(df[df['currency'] == currency]['available'].values[0]), 2))
                         else:
                             return float(truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
+        else:
+            # dummy account
+
+            if currency == '':
+                # retrieve all balances
+                return self.balance
+            else:
+                # retrieve balance of specified currency
+                df = self.balance
+                df_filtered = df[df['currency'] == currency]['available']
+
+                if len(df_filtered) == 0:
+                    # return nil balance if no positive balance was found
+                    return 0.0
+                else:
+                    # return balance of specified currency (if positive)
+                    return float(df[df['currency'] == currency]['available'].values[0])            
+
+    def depositBaseCurrency(self, base_currency: float) -> pd.DataFrame():
+        if self.app.getExchange() != 'dummy':
+            raise Exception('depositBaseCurrency() is for dummy account usage only!')
+
+        if base_currency <= 0:
+            raise ValueError('Invalid base currency: ' + str(base_currency))
+
+        self.balance.loc[self.balance['currency'] == self.app.getBaseCurrency(), 'balance'] = self.balance.loc[self.balance['currency'] == self.app.getBaseCurrency(), 'balance'] + base_currency
+        self.balance.loc[self.balance['currency'] == self.app.getBaseCurrency(), 'available'] = self.balance.loc[self.balance['currency'] == self.app.getBaseCurrency(), 'balance']
+        return self.balance
+
+    def depositQuoteCurrency(self, quote_currency: float) -> pd.DataFrame():
+        if self.app.getExchange() != 'dummy':
+            raise Exception('depositBaseCurrency() is for dummy account usage only!')
+
+        if quote_currency <= 0:
+            raise ValueError('Invalid quote currency: ' + str(quote_currency))
+
+        self.balance.loc[self.balance['currency'] == self.app.getQuoteCurrency(), 'balance'] = self.balance.loc[self.balance['currency'] == self.app.getQuoteCurrency(), 'balance'] + quote_currency
+        self.balance.loc[self.balance['currency'] == self.app.getQuoteCurrency(), 'available'] = self.balance.loc[self.balance['currency'] == self.app.getQuoteCurrency(), 'balance']
+        return self.balance
+
+    def withdrawBaseCurrency(self, base_currency: float) -> pd.DataFrame():
+        if self.app.getExchange() != 'dummy':
+            raise Exception('depositBaseCurrency() is for dummy account usage only!')
+
+        if base_currency <= 0:
+            raise ValueError('Invalid base currency: ' + str(base_currency))
+
+        if float(self.balance.loc[self.balance['currency'] == self.app.getBaseCurrency(), 'balance'] - base_currency) < 0:
+            raise ValueError('Insufficient funds!')
+
+        self.balance.loc[self.balance['currency'] == self.app.getBaseCurrency(), 'balance'] = self.balance.loc[self.balance['currency'] == self.app.getBaseCurrency(), 'balance'] - base_currency
+        self.balance.loc[self.balance['currency'] == self.app.getBaseCurrency(), 'available'] = self.balance.loc[self.balance['currency'] == self.app.getBaseCurrency(), 'balance']
+        return self.balance
+
+    def withdrawQuoteCurrency(self, quote_currency: float) -> pd.DataFrame():
+        if self.app.getExchange() != 'dummy':
+            raise Exception('depositBaseCurrency() is for dummy account usage only!')
+
+        if quote_currency <= 0:
+            raise ValueError('Invalid quote currency: ' + str(quote_currency))
+
+        if float(self.balance.loc[self.balance['currency'] == self.app.getQuoteCurrency(), 'balance'] - quote_currency) < 0:
+            raise ValueError('Insufficient funds!')
+
+        self.balance.loc[self.balance['currency'] == self.app.getQuoteCurrency(), 'balance'] = self.balance.loc[self.balance['currency'] == self.app.getQuoteCurrency(), 'balance'] - quote_currency
+        self.balance.loc[self.balance['currency'] == self.app.getQuoteCurrency(), 'available'] = self.balance.loc[self.balance['currency'] == self.app.getQuoteCurrency(), 'balance']
+        return self.balance
+
+    def marketBuy(self, market: str='', quote_currency: float=0.0, buy_percent: float=100, price: float=0.0) -> pd.DataFrame():
+        if self.app.getExchange() != 'dummy':
+            raise Exception('depositBaseCurrency() is for dummy account usage only!')
+
+        if (price <= 0):
+            raise ValueError('Invalid price: ' + str(price))
+
+        if market == '':
+            market = self.app.getMarket()
+
+        p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
+        if not p.match(market):
+            raise ValueError('Invalid market: ' + market)
+
+        market_base_currency, market_quote_currency = market.split('-')
+
+        if quote_currency > float(self.balance.loc[self.balance['currency'] == market_quote_currency, 'balance']):
+            raise ValueError('Insufficient funds!')
+
+        # update balances
+        self.balance.loc[self.balance['currency'] == market_quote_currency, 'balance'] = self.balance.loc[self.balance['currency'] == market_quote_currency, 'balance'] - quote_currency
+        self.balance.loc[self.balance['currency'] == market_quote_currency, 'available'] = self.balance.loc[self.balance['currency'] == market_quote_currency, 'balance']
+        fees = quote_currency * 0.001
+        self.balance.loc[self.balance['currency'] == market_base_currency, 'balance'] = self.balance.loc[self.balance['currency'] == market_base_currency, 'balance'] + (quote_currency / price) - (fees / price)
+        self.balance.loc[self.balance['currency'] == market_base_currency, 'available'] = self.balance.loc[self.balance['currency'] == market_base_currency, 'balance']
+
+        # update orders
+        self.orders = self.orders.append({
+            'created_at': str(datetime.now()),
+            'market': market,
+            'action': 'buy', 
+            'type': 'market',
+            'size': quote_currency,
+            'filled': float(self.balance.loc[self.balance['currency'] == market_base_currency, 'balance']),
+            'fees': fees,
+            'price': price,
+            'status': 'done'
+            }, ignore_index=True)
+
+        return True
+
+    def marketSell(self, market: str='', base_currency: float=0.0, sell_percent: float=100, price: float=0.0) -> pd.DataFrame():
+        if self.app.getExchange() != 'dummy':
+            raise Exception('depositBaseCurrency() is for dummy account usage only!')
+
+        if (price <= 0):
+            raise ValueError('Invalid price: ' + str(price))
+
+        if market == '':
+            market = self.app.getMarket()
+
+        p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
+        if not p.match(market):
+            raise ValueError('Invalid market: ' + market)
+
+        market_base_currency, market_quote_currency = market.split('-')
+
+        if base_currency > float(self.balance.loc[self.balance['currency'] == market_base_currency, 'balance']):
+           raise ValueError('Insufficient funds!')
+
+        # update balances
+        self.balance.loc[self.balance['currency'] == market_base_currency, 'balance'] = self.balance.loc[self.balance['currency'] == market_base_currency, 'balance'] - base_currency
+        self.balance.loc[self.balance['currency'] == market_base_currency, 'available'] = self.balance.loc[self.balance['currency'] == market_base_currency, 'balance']
+        fees = (base_currency * price) * 0.001
+        self.balance.loc[self.balance['currency'] == market_quote_currency, 'balance'] = self.balance.loc[self.balance['currency'] == market_quote_currency, 'balance'] + (base_currency * price) - fees
+        self.balance.loc[self.balance['currency'] == market_quote_currency, 'available'] = self.balance.loc[self.balance['currency'] == market_quote_currency, 'balance']
+
+        # update orders
+        self.orders = self.orders.append({
+            'created_at': str(datetime.now()),
+            'market': market,
+            'action': 'sell', 
+            'type': 'market',
+            'size': base_currency,
+            'filled': base_currency,
+            'fees': fees,
+            'price': price,
+            'status': 'done'
+            }, ignore_index=True)
+
+        return True
 
     def saveTrackerCSV(self, market='', save_file='tracker.csv'):
         """Saves order tracker to CSV
