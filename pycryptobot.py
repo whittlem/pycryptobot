@@ -1021,13 +1021,13 @@ def main():
             runApp()
         except KeyboardInterrupt:
             raise
-        except:
+        except Exception as e:
             if app.autoRestart():
                 # Wait 30 second and try to relaunch application
                 time.sleep(30)
-                print('Restarting application after exception...')
+                print('Restarting application after exception: ' + repr(e))
 
-                app.notifyTelegram('Auto restarting bot for ' + app.getMarket() + ' after exception')
+                app.notifyTelegram('Auto restarting bot for ' + app.getMarket() + ' after exception:' + repr(e))
 
                 # Cancel the events queue
                 map(s.cancel, s.queue)
