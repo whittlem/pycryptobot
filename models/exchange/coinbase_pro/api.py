@@ -13,6 +13,7 @@ from numpy import floor
 from datetime import datetime, timedelta
 from requests.auth import AuthBase
 from requests import Request
+from models.helper.LogHelper import Logger
 
 # Constants
 
@@ -153,7 +154,7 @@ class AuthAPI(AuthAPIBase):
             fees = self.getFees()
         
         if len(fees) == 0 or 'maker_fee_rate' not in fees:
-            print (f"error: 'maker_fee_rate' not in fees (using {DEFAULT_MAKER_FEE_RATE} as a fallback)")
+            Logger.error(f"error: 'maker_fee_rate' not in fees (using {DEFAULT_MAKER_FEE_RATE} as a fallback)")
             return DEFAULT_MAKER_FEE_RATE
 
         return float(fees['maker_fee_rate'].to_string(index=False).strip())
@@ -165,7 +166,7 @@ class AuthAPI(AuthAPIBase):
             fees = self.getFees()
 
         if len(fees) == 0 or 'taker_fee_rate' not in fees:
-            print (f"error: 'taker_fee_rate' not in fees (using {DEFAULT_TAKER_FEE_RATE} as a fallback)")
+            Logger.error(f"error: 'taker_fee_rate' not in fees (using {DEFAULT_TAKER_FEE_RATE} as a fallback)")
             return DEFAULT_TAKER_FEE_RATE
 
         return float(fees['taker_fee_rate'].to_string(index=False).strip())
@@ -275,7 +276,7 @@ class AuthAPI(AuthAPIBase):
 
         # validates quote_quantity is either an integer or float
         if not isinstance(quote_quantity, int) and not isinstance(quote_quantity, float):
-            print ('Please report this to Michael Whittle: ', quote_quantity, type(quote_quantity))
+            Logger.critical('Please report this to Michael Whittle: ' + str(quote_quantity), str(type(quote_quantity)))
             raise TypeError('The funding amount is not numeric.')
 
         # funding amount needs to be greater than 10
@@ -289,8 +290,7 @@ class AuthAPI(AuthAPIBase):
             'funds': self.marketQuoteIncrement(market, quote_quantity)
         }
 
-        if self.debug is True:
-            print (order)
+        Logger.debug(order)
 
         # connect to authenticated coinbase pro api
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
@@ -312,7 +312,7 @@ class AuthAPI(AuthAPIBase):
             'size': self.marketBaseIncrement(market, base_quantity)
         }
 
-        print (order)
+        Logger.debug(order)
 
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
         return model.authAPI('POST', 'orders', order)
@@ -335,7 +335,7 @@ class AuthAPI(AuthAPIBase):
             'price': future_price
         }
 
-        print (order)
+        Logger.debug(order)
 
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
         return model.authAPI('POST', 'orders', order)
@@ -402,7 +402,7 @@ class AuthAPI(AuthAPIBase):
 
                     raise Exception(method.upper() + ' (' + '{}'.format(resp.status_code) + ') ' + self._api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
                 else:
-                    print ('error:', method.upper() + ' (' + '{}'.format(resp.status_code) + ') ' + self._api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
+                    Logger.error('error: ' + method.upper() + ' (' + '{}'.format(resp.status_code) + ') ' + self._api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
                     return pd.DataFrame()
 
             resp.raise_for_status()
@@ -431,13 +431,13 @@ class AuthAPI(AuthAPIBase):
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
-                print(err)
+                Logger.debug(err)
                 return pd.DataFrame()
         else:
             if self.die_on_api_error:
                 raise SystemExit(f"{reason}: {self._api_url}")
             else:
-                print(f"{reason}: {self._api_url}")
+                Logger.info(f"{reason}: {self._api_url}")
                 return pd.DataFrame()
 
 class PublicAPI(AuthAPIBase):
@@ -552,7 +552,7 @@ class PublicAPI(AuthAPIBase):
                 if self.die_on_api_error:
                     raise Exception(message)
                 else:
-                    print(f"Error: {message}")
+                    Logger.error(f"Error: {message}")
                     return {}
 
             resp.raise_for_status()
@@ -575,11 +575,11 @@ class PublicAPI(AuthAPIBase):
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
-                print (err)
+                Logger.debug(err)
                 return {}
         else:
             if self.die_on_api_error:
                 raise SystemExit(f"{reason}: {self._api_url}")
             else:
-                print(f"{reason}: {self._api_url}")
+                Logger.info(f"{reason}: {self._api_url}")
                 return {}

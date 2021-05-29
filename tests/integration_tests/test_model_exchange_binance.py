@@ -1,12 +1,14 @@
 import json, pandas, pytest, os, sys, urllib3
 from datetime import datetime
-
 # disable insecure ssl warning
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 sys.path.append('.')
 # pylint: disable=import-error
 from models.exchange.binance import AuthAPI, PublicAPI
+from models.helper.LogHelper import Logger
+Logger.configure()
+
 
 # there is no dynamic way of retrieving a valid order market
 VALID_ORDER_MARKET = 'DOGEUSDT'

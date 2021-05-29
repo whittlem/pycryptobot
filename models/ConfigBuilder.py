@@ -4,6 +4,7 @@ from os.path import isfile
 from json import dumps
 from re import compile as re_compile
 from sys import exit as sys_exit
+from models.helper.LogHelper import Logger
 
 class ConfigBuilder():
     def __init__(self) -> None:
@@ -12,10 +13,10 @@ class ConfigBuilder():
         self._t = 0
 
     def init(self) -> None:
-        print ("*** config.json Configuration Builder ***\n")
+        Logger.info("*** config.json Configuration Builder ***")
 
         if isfile('config.json'):
-            print ("config.json already exists.\n")
+            Logger.info("config.json already exists.")
             sys_exit()
 
         config = {}
@@ -25,8 +26,6 @@ class ConfigBuilder():
             self._c = 1
             config['coinbasepro'] = {}
             config['coinbasepro']['api_url'] = 'https://api.pro.coinbase.com'
-
-            print ("\n")
 
             while 'api_key' not in config['coinbasepro']:
                 api_key = input("What is your Coinbase Pro API Key? ")
@@ -46,8 +45,6 @@ class ConfigBuilder():
                 if p.match(api_passphrase):
                     config['coinbasepro']['api_passphrase'] = api_passphrase
 
-            print ("\n")
-
             config['coinbasepro']['config'] = {}
 
             while 'base_currency' not in config['coinbasepro']['config']:
@@ -62,8 +59,6 @@ class ConfigBuilder():
                 if p.match(quote_currency):
                     config['coinbasepro']['config']['quote_currency'] = quote_currency
 
-            print ("\n")
-
             choice = input("Do you want to smart switch between 1 hour and 15 minute intervals (1=yes:default, 2=no)? ")
             if choice == '2':
                 while 'granularity' not in config['coinbasepro']['config']:
@@ -71,7 +66,6 @@ class ConfigBuilder():
                     if int(choice) in [60, 300, 900, 3600, 21600, 86400]:
                         config['coinbasepro']['config']['granularity'] = int(choice)
 
-            print ("\n")
 
             choice = input("Do you want to start live trading? (1=live, 2=test:default)? ")
             if choice == '1':
@@ -79,15 +73,12 @@ class ConfigBuilder():
             else:
                 config['coinbasepro']['config']['live'] = 0
 
-            print ("\n")
 
         choice = input("Do you have API keys for the Binance exchange (1=yes, 2=no:default)? ")
         if choice == '1':
             self._b = 1
             config['binance'] = {}
             config['binance']['api_url'] = 'https://api.binance.com'
-
-            print ("\n")
 
             while 'api_key' not in config['binance']:
                 api_key = input("What is your Binance API Key? ")
@@ -100,8 +91,6 @@ class ConfigBuilder():
                 p = re_compile(r"^[A-z0-9]{64,64}$")
                 if p.match(api_secret):
                     config['binance']['api_secret'] = api_secret
-
-            print ("\n")
 
             config['binance']['config'] = {}
 
@@ -117,8 +106,6 @@ class ConfigBuilder():
                 if p.match(quote_currency):
                     config['binance']['config']['quote_currency'] = quote_currency
 
-            print ("\n")
-
             choice = input("Do you want to smart switch between 1 hour and 15 minute intervals (1=yes:default, 2=no)? ")
             if choice == '2':
                 while 'granularity' not in config['binance']['config']:
@@ -126,22 +113,16 @@ class ConfigBuilder():
                     if choice in ['1m', '5m', '15m', '1h', '6h', '1d']:
                         config['binance']['config']['granularity'] = choice
 
-            print ("\n")
-
             choice = input("Do you want to start live trading? (1=live, 2=test:default)? ")
             if choice == '1':
                 config['binance']['config']['live'] = 1
             else:
                 config['binance']['config']['live'] = 0
 
-            print ("\n")
-
         choice = input("Do you have a Telegram Token and Client ID (1=yes, 2=no:default)? ")
         if choice == '1':
             self._t = 1
             config['telegram'] = {}           
-
-            print ("\n")
 
             while 'token' not in config['telegram']:
                 token = input("What is your Telegram token? ")
@@ -154,8 +135,6 @@ class ConfigBuilder():
                 p = re_compile(r"^-*\d{7,10}$")
                 if p.match(client_id):
                     config['telegram']['client_id'] = client_id
-
-            print ("\n")
 
         choice = input("Do you want to ever sell at a loss even to minimise losses (1:yes, 2=no:default)? ")
         if choice == '1':
@@ -220,15 +199,13 @@ class ConfigBuilder():
             if self._b == 1:
                 config['binance']['config']['autorestart'] = 1    
 
-        print ("\n")
-
         try:
             config_json = dumps(config, indent=4)
             fh = open('./config.json', 'w')
             fh.write(config_json)
-            print ("config.json saved!\n")
+            Logger.info("config.json saved!")
             fh.close()
         except Exception as err:
-            print (err)
+            Logger.critical(err)
 
         return None
