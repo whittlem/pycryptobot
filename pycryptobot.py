@@ -948,7 +948,7 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
         else:
             # poll every 2 minutes
             list(map(s.cancel, s.queue))
-            s.enter(5, 1, executeJob, (sc, app, state))
+            s.enter(120, 1, executeJob, (sc, app, state))
 
 
 def main():
