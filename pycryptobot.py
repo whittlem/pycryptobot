@@ -1027,7 +1027,7 @@ def main():
                 time.sleep(30)
                 print('Restarting application after exception: ' + repr(e))
 
-                app.notifyTelegram('Auto restarting bot for ' + app.getMarket() + ' after exception:' + repr(e))
+                app.notifyTelegram('Auto restarting bot for ' + app.getMarket() + ' after exception: ' + repr(e))
 
                 # Cancel the events queue
                 map(s.cancel, s.queue)
