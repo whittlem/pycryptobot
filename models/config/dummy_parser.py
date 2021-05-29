@@ -1,4 +1,4 @@
-import re, logging
+import re
 
 from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
 
@@ -17,7 +17,7 @@ def parseMarket(market):
 
 
 def parser(app, dummy_config, args={}):
-    logging.info('Dummy Configuration parse')
+    print('Dummy Configuration parse')
 
     if not dummy_config:
         raise Exception('There is an error in your config dictionary')
