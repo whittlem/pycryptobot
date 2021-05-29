@@ -22,7 +22,7 @@ class Logger:
             return logging.NOTSET
 
     @classmethod
-    def configure(cls, filelog, logfile, fileloglevel, consolelog, consoleloglevel):
+    def configure(cls, filelog=1, logfile="pycryptobot.log", fileloglevel="DEBUG", consolelog=1, consoleloglevel="INFO"):
         # reduce informational logging
         logging.getLogger("requests").setLevel(logging.WARNING)
         logging.getLogger("urllib3").setLevel(logging.WARNING)
