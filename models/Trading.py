@@ -8,7 +8,7 @@ from numpy import sum as np_sum
 from numpy import where
 from pandas import DataFrame, Series
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-
+from models.helper.LogHelper import Logger
 
 class TechnicalAnalysis():
     def __init__(self, data=DataFrame()) -> None:
@@ -560,11 +560,11 @@ class TechnicalAnalysis():
             if len(df) > 0:
                 df_last = df.tail(1)
                 if float(df_last[0]) < price:
-                    print (' Support level of ' + str(df_last[0]) + ' formed at ' + str(df_last.index[0]), "\n")
+                    Logger.info(' Support level of ' + str(df_last[0]) + ' formed at ' + str(df_last.index[0]))
                 elif float(df_last[0]) > price:
-                    print (' Resistance level of ' + str(df_last[0]) + ' formed at ' + str(df_last.index[0]), "\n")
+                    Logger.info(' Resistance level of ' + str(df_last[0]) + ' formed at ' + str(df_last.index[0]))
                 else:
-                    print (' Support/Resistance level of ' + str(df_last[0]) + ' formed at ' + str(df_last.index[0]), "\n")
+                    Logger.info(' Support/Resistance level of ' + str(df_last[0]) + ' formed at ' + str(df_last.index[0]))
 
     def getResistance(self, price: float=0) -> float:
         if isinstance(price, int) or isinstance(price, float):
@@ -827,7 +827,7 @@ class TechnicalAnalysis():
         try:
             self.df.to_csv(filename)
         except OSError:
-            print('Unable to save: ', filename)
+            Logger.critical('Unable to save: ', filename)
 
     def __calculateSupportResistenceLevels(self):
         """Support and Resistance levels. (private function)"""

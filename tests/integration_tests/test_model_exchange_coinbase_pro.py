@@ -4,6 +4,8 @@ from datetime import datetime
 sys.path.append('.')
 # pylint: disable=import-error
 from models.exchange.coinbase_pro import AuthAPI, PublicAPI
+from models.helper.LogHelper import Logger
+Logger.configure()
 
 DEFAULT_ORDER_MARKET = 'BTC-GBP'
 

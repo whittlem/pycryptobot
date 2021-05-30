@@ -385,6 +385,27 @@ For telegram, add a piece to the config.json as follows:
 
 You can use @botfather and @myidbot in telegram to create a bot with token and get a client id.
 
+For configuring logger, add a piece to the config.json as follows:
+*This is also default configuration of the logger, if no config is given and log is not disabled this configuration will apply.*
+
+    "logger" : {
+        "filelog": 1,
+        "logfile": "pycryptobot.log",
+        "fileloglevel": "DEBUG",
+        "consolelog": 1,
+        "consoleloglevel": "INFO"
+    }
+
+"filelog" and "consolelog" can only get 1 (enable) or 0 (disable).
+"--disablelog" argument or "disablelog" config will disable to writing logfile as backwards compatibility.
+If you want to disable logging entirely, you can set "filelog" and "consolelog" to 0.
+
+"logfile" is overriden by '--logfile' console argument.
+If '--logfile' used when running bot "logfile": "pycryptobot.log" line in config file will be ignored.
+
+"fileloglevel" and "consoleloglevel" can get one of 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'NOTSET'
+For further detail in log levels: https://docs.python.org/3/library/logging.html#logging-levels
+
 ## Multi-Market Trading
 
 The bot can trade multiple markets at once. This is also documented in my Medium articles. The bot will execute buys using the full "quote currency" balance it has access too and it will sell the full "base currency" balance it has access too. In order to ring-fence your non-bot funds you should create another "Portfolio" in Coinbase Pro and assign API keys to it. That way you limit exposure. You can so something similar with Binance using sub-accounts but I believe you need to be a certain level to do this.

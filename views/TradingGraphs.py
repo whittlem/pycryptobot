@@ -4,8 +4,11 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-from models.Trading import TechnicalAnalysis
 import datetime, re, sys
+
+from models.Trading import TechnicalAnalysis
+from models.helper.LogHelper import Logger
+
 sys.path.append('.')
 
 class TradingGraphs():
@@ -386,7 +389,7 @@ class TradingGraphs():
         plt.tight_layout()
 
         try:
-            print ('creating: graphs/SAM_' + market + '_' + str(granularity) + '.png')
+            Logger.info('creating: graphs/SAM_' + market + '_' + str(granularity) + '.png')
             plt.savefig('graphs/SAM_' + market + '_' + str(granularity) + '.png', dpi=300)
         except OSError:
             raise SystemExit('Unable to save: graphs/SAM_' + market + '_' + str(granularity) + '.png') 
@@ -436,7 +439,7 @@ class TradingGraphs():
         plt.legend()
 
         try:
-            print ('creating: graphs/CAP_' + market + '_' + str(granularity) + '.png')
+            Logger.info('creating: graphs/CAP_' + market + '_' + str(granularity) + '.png')
             plt.savefig('graphs/CAP_' + market + '_' + str(granularity) + '.png', dpi=300)
         except OSError:
             raise SystemExit('Unable to save: graphs/CAP_' + market + '_' + str(granularity) + '.png') 
@@ -546,7 +549,7 @@ class TradingGraphs():
         plt.legend()
 
         try:
-            print ('creating: graphs/CSP_' + market + '_' + str(granularity) + '.png')
+            Logger.info('creating: graphs/CSP_' + market + '_' + str(granularity) + '.png')
             plt.savefig('graphs/CSP_' + market + '_' + str(granularity) + '.png', dpi=300)
         except OSError:
             raise SystemExit('Unable to save: graphs/CSP_' + market + '_' + str(granularity) + '.png') 
@@ -598,7 +601,7 @@ class TradingGraphs():
         plt.legend()
 
         try:
-            print ('creating: graphs/FRL_' + market + '_' + str(granularity) + '.png')
+            Logger.info('creating: graphs/FRL_' + market + '_' + str(granularity) + '.png')
             plt.savefig('graphs/FRL_' + market + '_' + str(granularity) + '.png', dpi=300)
         except OSError:
             raise SystemExit('Unable to save: graphs/FRL_' + market + '_' + str(granularity) + '.png') 
@@ -657,7 +660,7 @@ class TradingGraphs():
         plt.legend()
 
         try:
-            print ('creating: graphs/SRL_' + market + '_' + str(granularity) + '.png')
+            Logger.info('creating: graphs/SRL_' + market + '_' + str(granularity) + '.png')
             plt.savefig('graphs/SRL_' + market + '_' + str(granularity) + '.png', dpi=300)
         except OSError:
             raise SystemExit('Unable to save: graphs/SRL_' + market + '_' + str(granularity) + '.png') 
@@ -696,7 +699,7 @@ class TradingGraphs():
         plt.show()
 
         if show_desc is True:
-            print(df['close_pc'].describe())
+            Logger.info(df['close_pc'].describe())
 
     def renderPercentageChangeScatterMatrix(self):
         """Render Percentage Change Scatter Matrix
