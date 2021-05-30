@@ -1021,7 +1021,7 @@ def main():
             runApp()
         except KeyboardInterrupt:
             raise
-        except Exception as e:
+        except(BaseException, Exception) as e:
             if app.autoRestart():
                 # Wait 30 second and try to relaunch application
                 time.sleep(30)
