@@ -121,7 +121,8 @@ def parser(app, binance_config, args={}):
             'https://api.binance.com/',
             'https://testnet.binance.vision/api/',
             'https://api.binance.com',
-            'https://testnet.binance.vision/api'
+            'https://testnet.binance.vision/api',
+            'https://api.binance.us',
         ]
 
         # validate Binance API

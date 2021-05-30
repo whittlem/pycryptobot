@@ -15,8 +15,7 @@ from models.helper.MarginHelper import calculate_margin
 from views.TradingGraphs import TradingGraphs
 from models.helper.LogHelper import Logger
 
-# production: disable traceback
-# sys.tracebacklimit = 0
+sys.tracebacklimit = 1
 
 app = PyCryptoBot()
 state = AppState()
