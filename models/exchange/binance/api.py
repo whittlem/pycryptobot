@@ -43,6 +43,7 @@ class AuthAPI(AuthAPIBase):
 
         valid_urls = [
             'https://api.binance.com/',
+            'https://api.binance.us/',
             'https://testnet.binance.vision/api/'
         ]
 
@@ -67,10 +68,14 @@ class AuthAPI(AuthAPIBase):
         self.api_url = api_url
         self.api_key = api_key
         self.api_secret = api_secret
-        
+
         for i in range(10):
             try:
-                self.client = Client(self.api_key, self.api_secret, { 'verify': False, 'timeout': 20 })
+                sys.tracebacklimit = 0
+                if 'api.binance.us' in api_url:
+                    self.client = Client(self.api_key, self.api_secret, { 'verify': False, 'timeout': 20 }, tld='us')
+                else:
+                    self.client = Client(self.api_key, self.api_secret, { 'verify': False, 'timeout': 20 })
                 break
             except Exception as e:
                 if i == 9:
@@ -78,6 +83,8 @@ class AuthAPI(AuthAPIBase):
                 Logger.error('Exception: ' + str(e)) 
                 Logger.error('Error on creating instance of AuthAPI Client. Trying again... Attempt: ' + str(i))
                 sleep(0.1)
+
+        sys.tracebacklimit = 1
 
     def handle_init_error(self, err: str) -> None:
         if self.debug:
