@@ -31,7 +31,7 @@ For each currency create a new service file:
     sudo nano /etc/systemd/system/<service-name>.service
 
 Choosing a service name that contains the names of the crypto and fiat currencies simplifies later services management.
-_Example:_  `sudo nano /etc/systemd/system/àda-eur.service`
+_Example:_  `sudo nano /etc/systemd/system/ada-eur.service`
 
 Paste the lines below into each service file:
 
@@ -50,7 +50,7 @@ Paste the lines below into each service file:
     [Install]  
     WantedBy=multi-user.target  
 
-Replace the <placeholders> in the lines `Description=` and `WorkingDirectory=` with correct data for the currency \
+Replace the `<placeholders>` in the lines `Description=` and `WorkingDirectory=` with correct data for the currency \
 being configured.
 
 Let systemd reload the service files and update the list of available services with the newly added files:   
@@ -60,6 +60,7 @@ Let systemd reload the service files and update the list of available services w
 _NOTE:_ this step has to be repeated every time a service file is updated
 
 Now the service(s) are available and can be managed using the standard systemd controls:
+
 #### To START a pycryptobot service
 A single service:
 
@@ -67,7 +68,7 @@ A single service:
 
 Multiple services:
 
-    sudo systemctl start ada-eur.servce bch-eur.service btc-eur.service eos-eur.service eth-eur.service ltc-eur.service
+    sudo systemctl start ada-eur.service bch-eur.service btc-eur.service eos-eur.service eth-eur.service ltc-eur.service
 
 or even with a wildcard: 
 
@@ -80,7 +81,7 @@ A single service:
 
 Multiple services:
 
-    sudo systemctl stop ada-eur.servce bch-eur.service btc-eur.service eos-eur.service eth-eur.service ltc-eur.service
+    sudo systemctl stop ada-eur.service bch-eur.service btc-eur.service eos-eur.service eth-eur.service ltc-eur.service
 
 or even with a wildcard: 
 
@@ -91,14 +92,16 @@ Enabling the service(s) to start at startup once a network connection is availab
 
     sudo systemctl enable *-eur.service 
 
-which enables all services in one go.  
+which enables all services in one go.
+
 Disabling the service(s) to start at startup: 
 
     sudo systemctl disable *-eur.service 
 
-which enables all services in one go.
+which disables all services in one go.
 
 #### Query the STATUS of a(ll) service(s)
+
 To query the status of a service or all services: 
 
     sudo systemctl status *-eur.service
