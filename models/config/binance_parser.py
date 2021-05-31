@@ -159,5 +159,10 @@ def parser(app, binance_config, args={}):
                     app.granularity = to_internal_granularity(config['granularity'])
                     app.smart_switch = 0
 
+        if 'feeasset' in config and config['feeasset'] is not None:
+            if isinstance(config['feeasset'], str):
+                if config['feeasset'] == 'BNB':
+                    app.fee_asset = 'BNB'
+
     else:
         raise Exception('There is an error in your config dictionary')
