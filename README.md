@@ -426,7 +426,7 @@ Example:
                 "granularity" : "1h",
                 "live" : 0,
                 "verbose" : 0,
-                "feeasset: "BNB"
+                "feeasset": "BNB"
             }
         }
     }
