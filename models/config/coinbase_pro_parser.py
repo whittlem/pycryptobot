@@ -16,7 +16,7 @@ def parseMarket(market):
 
 
 def parser(app, coinbase_config, args={}):
-    print('CoinbasePro Configuration parse')
+    #print('CoinbasePro Configuration parse')
 
     if not coinbase_config:
         raise Exception('There is an error in your config dictionary')
