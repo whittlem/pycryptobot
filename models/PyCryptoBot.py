@@ -143,6 +143,7 @@ class PyCryptoBot():
         self.last_action = None
         self._chat_client = None
         self.buymaxsize = None
+        self.fee_asset = ''
 
         self.configbuilder = False
 
@@ -630,6 +631,9 @@ class PyCryptoBot():
             return 0.005
         else:
             return 0.005
+
+    def getFeeAsset(self):
+        return self.fee_asset
 
     def marketBuy(self, market, quote_currency, buy_percent=100):
         if self.is_live == 1:
