@@ -4,7 +4,7 @@ from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_an
 from models.helper.LogHelper import Logger
 
 def parser(app, logger_config):
-    print('Logger Configuration parser')
+    #print('Logger Configuration parser')
 
     if not logger_config:
         raise Exception('There is an error in your config dictionnary')

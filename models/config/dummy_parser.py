@@ -17,7 +17,7 @@ def parseMarket(market):
 
 
 def parser(app, dummy_config, args={}):
-    print('Dummy Configuration parse')
+    #print('Dummy Configuration parse')
 
     if not dummy_config:
         raise Exception('There is an error in your config dictionary')

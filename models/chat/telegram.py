@@ -17,7 +17,7 @@ class Telegram():
         if not p.match(client_id):
             raise Exception('Telegram client_id is invalid')
 
-        print('Telegram configure with for client "' + client_id + '" with token "' + token + '"')
+        #print('Telegram configure with for client "' + client_id + '" with token "' + token + '"')
 
     def send(self, message='') -> str:
         try:

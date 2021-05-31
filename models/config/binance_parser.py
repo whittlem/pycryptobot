@@ -94,7 +94,7 @@ def parseMarket(market):
 
 
 def parser(app, binance_config, args={}):
-    print('Binance Configuration parse')
+    #print('Binance Configuration parse')
 
     if not binance_config:
         raise Exception('There is an error in your config dictionnary')
