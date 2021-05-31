@@ -345,6 +345,11 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
                         if state.last_buy_fee != exchange_last_buy['fee']:
                             state.last_buy_fee = exchange_last_buy['fee']
 
+                    if app.getExchange() == 'binance' and app.getFeeAsset() == 'BNB':
+                        Logger.debug("Recalculating last_buy_fee and last_buy_price")
+                        state.last_buy_fee = round(state.last_buy_size * app.getTakerFee(), 8)
+                        state.last_buy_filled = round(((state.last_buy_size - state.last_buy_fee) / state.last_buy_price), 8)
+
             margin, profit, sell_fee = calculate_margin(
                 buy_size=state.last_buy_size,
                 buy_filled=state.last_buy_filled,
