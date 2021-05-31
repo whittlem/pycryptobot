@@ -406,6 +406,31 @@ If '--logfile' used when running bot "logfile": "pycryptobot.log" line in config
 "fileloglevel" and "consoleloglevel" can get one of 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'NOTSET'
 For further detail in log levels: https://docs.python.org/3/library/logging.html#logging-levels
 
+# Binance BNB fee calculation
+
+Binance trading fees can be paid as Binance Coin (BNB).
+To get bot calculate buy fee pais as BNB need to set "feeasset" key in config.json.
+Otherwise your profit will be calculated without reducing buy fees.
+Since fees will be reduced from your BNB balance not setting this would be misleading and let you lose money from fees.
+
+Example:
+
+    {
+        "binance" : {
+            "api_url" : "https://api.binance.com",
+            "api_key" : "<removed>",
+            "api_secret" : "<removed>",
+            "config" : {
+                "base_currency" : "BTC",
+                "quote_currency" : "ZAR",
+                "granularity" : "1h",
+                "live" : 0,
+                "verbose" : 0,
+                "feeasset: "BNB"
+            }
+        }
+    }
+
 ## Multi-Market Trading
 
 The bot can trade multiple markets at once. This is also documented in my Medium articles. The bot will execute buys using the full "quote currency" balance it has access too and it will sell the full "base currency" balance it has access too. In order to ring-fence your non-bot funds you should create another "Portfolio" in Coinbase Pro and assign API keys to it. That way you limit exposure. You can so something similar with Binance using sub-accounts but I believe you need to be a certain level to do this.
