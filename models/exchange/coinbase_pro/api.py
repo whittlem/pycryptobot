@@ -224,9 +224,16 @@ class AuthAPI(AuthAPIBase):
         # replace null NaN values with 0
         df.fillna(0, inplace=True)
 
+        df['price'] = 0.0
+        df['filled_size'] = df['filled_size'].astype(float)
+        df['specified_funds'] = df['specified_funds'].astype(float)
+        df['executed_value'] = df['executed_value'].astype(float)
+        df['fill_fees'] = df['fill_fees'].astype(float)
+        
         # calculates the price at the time of purchase
         if status != 'open':
-            df['price'] = df.apply(lambda row: (float(row.executed_value) * 100) / (float(row.filled_size) * 100) if float(row.filled_size) > 0 else 0, axis=1)
+            #df['price'] = df.apply(lambda row: (float(row.executed_value) * 100) / (float(row.filled_size) * 100) if float(row.filled_size) > 0 else 0, axis=1)
+            df.loc[df['filled_size'] > 0, 'price'] = (df['executed_value'] * 100) / (df['filled_size'] * 100)
 
         # rename the columns
         if status == 'open':
