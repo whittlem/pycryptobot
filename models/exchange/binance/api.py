@@ -8,22 +8,25 @@ from datetime import datetime, timedelta
 from binance.client import Client
 from time import sleep
 from models.helper.LogHelper import Logger
-# Constants
 
-DEFAULT_MAKER_FEE_RATE = 0.001
-DEFAULT_TAKER_FEE_RATE = 0.001
-DEFAULT_TRADE_FEE_RATE = 0.001
+
+DEFAULT_MAKER_FEE_RATE = 0.0015 # added 0.0005 to allow for price movements
+DEFAULT_TAKER_FEE_RATE = 0.0015 # added 0.0005 to allow for price movements
+DEFAULT_TRADE_FEE_RATE = 0.0015 # added 0.0005 to allow for price movements
 DEFAULT_GRANULARITY="1h"
 SUPPORTED_GRANULARITY = ['1m', '5m', '15m', '1h', '6h', '1d']
 MULTIPLIER_EQUIVALENTS = [1, 5, 15, 60, 360, 1440]
 FREQUENCY_EQUIVALENTS = ["T", "5T", "15T", "H", "6H", "D"]
 DEFAULT_MARKET = "BTCGBP"
+
+
 class AuthAPIBase():
     def _isMarketValid(self, market: str) -> bool:
         p = re.compile(r"^[A-Z0-9]{5,12}$")
         if p.match(market):
             return True
         return False
+
 
 class AuthAPI(AuthAPIBase):
     def __init__(self, api_key: str='', api_secret: str='', api_url: str='https://api.binance.com') -> None:
@@ -86,14 +89,17 @@ class AuthAPI(AuthAPIBase):
 
         sys.tracebacklimit = 1
 
+
     def handle_init_error(self, err: str) -> None:
         if self.debug:
             raise TypeError(err)
         else:
             raise SystemExit(err)
 
+
     def getClient(self) -> Client:
         return self.client
+
 
     def getAccount(self):
         """Retrieves a specific account"""
@@ -110,6 +116,7 @@ class AuthAPI(AuthAPIBase):
             return df
         else:
             return 0.0
+
 
     def getFees(self, market: str='') -> pd.DataFrame:
         if market != '':
@@ -129,6 +136,7 @@ class AuthAPI(AuthAPIBase):
                 return df[[ 'maker_fee_rate', 'taker_fee_rate', 'usd_volume', 'market' ]]
             return pd.DataFrame(columns=[ 'maker_fee_rate', 'taker_fee_rate', 'market' ])
 
+
     def getMakerFee(self, market: str='') -> float:
         if market == '':
             fees = self.getFees()
@@ -144,6 +152,7 @@ class AuthAPI(AuthAPIBase):
         else:
             return float(fees['maker_fee_rate'].to_string(index=False).strip())
 
+
     def getTakerFee(self, market: str='') -> float:
         if market == '':
             return DEFAULT_TAKER_FEE_RATE
@@ -156,11 +165,13 @@ class AuthAPI(AuthAPIBase):
 
         return float(fees['taker_fee_rate'].to_string(index=False).strip())
 
+
     def __convertStatus(self, val: str) -> str:
         if val == 'filled':
             return 'done'
         else:
             return val
+
 
     def getOrders(self, market: str='', action: str='', status: str='all') -> pd.DataFrame:
         """Retrieves your list of orders with optional filtering"""
@@ -219,6 +230,7 @@ class AuthAPI(AuthAPIBase):
 
         return df
 
+
     def marketBuy(self, market: str='', quote_quantity: float=0) -> list:
         """Executes a market buy providing a funding amount"""
 
@@ -253,6 +265,7 @@ class AuthAPI(AuthAPIBase):
             Logger.error(ts + ' Binance ' + ' marketBuy ' + str(err))
             return []       
 
+
     def marketSell(self, market: str='', base_quantity: float=0) -> list:
         """Executes a market sell providing a crypto amount"""
 
@@ -281,6 +294,7 @@ class AuthAPI(AuthAPIBase):
             Logger.error(ts + ' Binance ' + ' marketSell ' + str(err))
             return []
 
+
     def getTradeFee(self, market: str) -> float:
         resp = self.client.get_trade_fee(symbol=market, timestamp=self.getTime())
       
@@ -301,6 +315,7 @@ class AuthAPI(AuthAPIBase):
         else:
             return DEFAULT_TRADE_FEE_RATE
 
+
     def getMarketInfo(self, market: str) -> dict:
         # validates the market is syntactically correct
         if not self._isMarketValid(market):
@@ -308,8 +323,10 @@ class AuthAPI(AuthAPIBase):
 
         return self.client.get_symbol_info(symbol=market)
 
+
     def getMarketInfoFilters(self, market: str) -> pd.DataFrame:
         return pd.DataFrame(self.client.get_symbol_info(symbol=market)['filters'])
+
 
     def getTicker(self, market:str) -> tuple:
         # validates the market is syntactically correct
@@ -324,6 +341,7 @@ class AuthAPI(AuthAPIBase):
         now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
         return (now, 0.0)
 
+
     def getTime(self) -> datetime:
         """Retrieves the exchange time"""
     
@@ -333,6 +351,7 @@ class AuthAPI(AuthAPIBase):
             return datetime.fromtimestamp(epoch)
         except:
             return None
+
 
 class PublicAPI(AuthAPIBase):
     def __init__(self) -> None:
@@ -346,15 +365,16 @@ class PublicAPI(AuthAPIBase):
                 Logger.error('Exception: ' + str(e)) 
                 Logger.error('Error on creating instance of AuthAPI Client. Trying again... Attempt: ' + str(i))
                 sleep(0.1)
-        
-            
+               
 
     def __truncate(self, f, n) -> int:
         return math.floor(f * 10 ** n) / 10 ** n
 
+    
     def getClient(self) -> Client:
         return self.client
 
+    
     def getHistoricalData(self, market: str=DEFAULT_MARKET, granularity: str=DEFAULT_GRANULARITY, iso8601start: str='', iso8601end: str='') -> pd.DataFrame:
         # validates the market is syntactically correct
         if not self._isMarketValid(market):
@@ -457,6 +477,7 @@ class PublicAPI(AuthAPIBase):
 
         return df
 
+    
     def getTicker(self, market: str) -> tuple:
         # validates the market is syntactically correct
         if not self._isMarketValid(market):
@@ -470,6 +491,7 @@ class PublicAPI(AuthAPIBase):
         now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
         return (now, 0.0)
 
+    
     def getTime(self) -> datetime:
         """Retrieves the exchange time"""
     
