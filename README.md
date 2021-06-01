@@ -409,9 +409,9 @@ For further detail in log levels: https://docs.python.org/3/library/logging.html
 # Binance BNB fee calculation
 
 Binance trading fees can be paid as Binance Coin (BNB).
-To get bot calculate buy fee pais as BNB need to set "feeasset" key in config.json.
+To get the bot to calculate the buy fees paid as BNB you need to set the "feeasset" key in the config.json.
 Otherwise your profit will be calculated without reducing buy fees.
-Since fees will be reduced from your BNB balance not setting this would be misleading and let you lose money from fees.
+Since fees will be reduced from your BNB balance, not setting this will be misleading and let you lose money from fees.
 
 Example:
 
