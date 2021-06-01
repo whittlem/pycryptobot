@@ -168,7 +168,7 @@ def getAction(now: datetime = datetime.today().strftime('%Y-%m-%d %H:%M:%S'), ap
         action = 'WAIT'
 
     # if disabled, do not buy within 3% of the dataframe close high
-    if app.disableBuyNearHigh() is True and (price > (df['close'].max() * 0.97)):
+    if last_action == 'SELL' and app.disableBuyNearHigh() is True and (price > (df['close'].max() * 0.97)):
         log_text = str(now) + ' | ' + app.getMarket() + ' | ' + \
             app.printGranularity() + ' | Ignoring Buy Signal (price ' + str(price) + ' within 3% of high ' + str(
             df['close'].max()) + ')'
