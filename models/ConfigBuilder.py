@@ -4,7 +4,6 @@ from os.path import isfile
 from json import dumps
 from re import compile as re_compile
 from sys import exit as sys_exit
-from models.helper.LogHelper import Logger
 
 class ConfigBuilder():
     def __init__(self) -> None:
@@ -13,10 +12,10 @@ class ConfigBuilder():
         self._t = 0
 
     def init(self) -> None:
-        Logger.info("*** config.json Configuration Builder ***")
+        print("*** config.json Configuration Builder ***")
 
         if isfile('config.json'):
-            Logger.info("config.json already exists.")
+            print("config.json already exists.")
             sys_exit()
 
         config = {}
@@ -203,9 +202,9 @@ class ConfigBuilder():
             config_json = dumps(config, indent=4)
             fh = open('./config.json', 'w')
             fh.write(config_json)
-            Logger.info("config.json saved!")
+            print("config.json saved!")
             fh.close()
         except Exception as err:
-            Logger.critical(err)
+            print(err)
 
         return None
