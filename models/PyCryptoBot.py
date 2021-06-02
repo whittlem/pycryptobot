@@ -886,3 +886,7 @@ class PyCryptoBot():
         assert self._discord_chat_client is not None
 
         self._discord_chat_client.send(msg)
+
+    def notify(self, msg: str) -> None:
+        self.notifyTelegram(msg)
+        self.notifyDiscord(msg)

@@ -233,8 +233,7 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
     if app.getSmartSwitch() == 1 and app.getGranularity() == 3600 and app.is1hEMA1226Bull() is True and app.is6hEMA1226Bull() is True:
         Logger.info('*** smart switch from granularity 3600 (1 hour) to 900 (15 min) ***')
 
-        app.notifyTelegram(app.getMarket() + " smart switch from granularity 3600 (1 hour) to 900 (15 min)")
-        app.notifyDiscord(app.getMarket() + " smart switch from granularity 3600 (1 hour) to 900 (15 min)")
+        app.notify(app.getMarket() + " smart switch from granularity 3600 (1 hour) to 900 (15 min)")
 
         app.setGranularity(900)
         list(map(s.cancel, s.queue))
@@ -243,8 +242,7 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
     if app.getSmartSwitch() == 1 and app.getGranularity() == 900 and app.is1hEMA1226Bull() is False and app.is6hEMA1226Bull() is False:
         Logger.info("*** smart switch from granularity 900 (15 min) to 3600 (1 hour) ***")
 
-        app.notifyTelegram(app.getMarket() + " smart switch from granularity 900 (15 min) to 3600 (1 hour)")
-        app.notifyDiscord(app.getMarket() + " smart switch from granularity 900 (15 min) to 3600 (1 hour)")
+        app.notify(app.getMarket() + " smart switch from granularity 900 (15 min) to 3600 (1 hour)")
 
         app.setGranularity(3600)
         list(map(s.cancel, s.queue))
@@ -364,8 +362,7 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
                 immediate_action = True
                 log_text = '! Loss Failsafe Triggered (Fibonacci Band: ' + str(state.fib_low) + ')'
                 Logger.warning(log_text)
-                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
-                app.notifyDiscord(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notify(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             # loss failsafe sell at trailing_stop_loss
             if app.trailingStopLoss() != None and change_pcnt_high < app.trailingStopLoss() and (
@@ -376,8 +373,7 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
                 log_text = '! Trailing Stop Loss Triggered (< ' + str(app.trailingStopLoss()) + '%)'
                 Logger.warning(log_text)
 
-                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
-                app.notifyDiscord(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notify(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             # loss failsafe sell at sell_lower_pcnt
             elif app.disableFailsafeLowerPcnt() is False and app.allowSellAtLoss() and app.sellLowerPcnt() != None and margin < app.sellLowerPcnt():
@@ -387,8 +383,7 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
                 log_text = '! Loss Failsafe Triggered (< ' + str(app.sellLowerPcnt()) + '%)'
                 Logger.warning(log_text)
 
-                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
-                app.notifyDiscord(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notify(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             # profit bank at sell_upper_pcnt
             if app.disableProfitbankUpperPcnt() is False and app.sellUpperPcnt() != None and margin > app.sellUpperPcnt():
@@ -398,8 +393,7 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
                 log_text = '! Profit Bank Triggered (> ' + str(app.sellUpperPcnt()) + '%)'
                 Logger.warning(log_text)
 
-                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
-                app.notifyDiscord(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notify(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             # profit bank when strong reversal detected
             if app.disableProfitbankReversal() is False and margin > 3 and obv_pc < 0 and macdltsignal is True:
@@ -409,8 +403,7 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
                 log_text = '! Profit Bank Triggered (Strong Reversal Detected)'
                 Logger.warning(log_text)
 
-                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
-                app.notifyDiscord(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notify(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             # configuration specifies to not sell at a loss
             if state.action == 'SELL' and not app.allowSellAtLoss() and margin <= 0:
@@ -429,8 +422,7 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
                 Logger.warning(log_text)
 
                 if not (not app.allowSellAtLoss() and margin <= 0):
-                    app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
-                    app.notifyDiscord(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                    app.notify(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
         bullbeartext = ''
         if app.disableBullOnly() is True or (df_last['sma50'].values[0] == df_last['sma200'].values[0]):
@@ -492,64 +484,55 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
                 log_text = '*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Bullish Pattern - Up")'
                 Logger.info(log_text)
 
-                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
-                app.notifyDiscord(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notify(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if three_black_crows is True:
                 log_text = '* Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Pattern - Down")'
                 Logger.info(log_text)
 
-                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
-                app.notifyDiscord(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notify(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if morning_star is True:
                 log_text = '*** Candlestick Detected: Morning Star ("Strong - Reversal - Bullish Pattern - Up")'
                 Logger.info(log_text)
 
-                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
-                app.notifyDiscord(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notify(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if evening_star is True:
                 log_text = '*** Candlestick Detected: Evening Star ("Strong - Reversal - Bearish Pattern - Down")'
                 Logger.info(log_text)
 
-                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
-                app.notifyDiscord(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notify(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if three_line_strike is True:
                 log_text = '** Candlestick Detected: Three Line Strike ("Reliable - Reversal - Bullish Pattern - Up")'
                 Logger.info(log_text)
 
-                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
-                app.notifyDiscord(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notify(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if abandoned_baby is True:
                 log_text = '** Candlestick Detected: Abandoned Baby ("Reliable - Reversal - Bullish Pattern - Up")'
                 Logger.info(log_text)
 
-                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
-                app.notifyDiscord(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notify(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if morning_doji_star is True:
                 log_text = '** Candlestick Detected: Morning Doji Star ("Reliable - Reversal - Bullish Pattern - Up")'
                 Logger.info(log_text)
 
-                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
-                app.notifyDiscord(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notify(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if evening_doji_star is True:
                 log_text = '** Candlestick Detected: Evening Doji Star ("Reliable - Reversal - Bearish Pattern - Down")'
                 Logger.info(log_text)
 
-                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
-                app.notifyDiscord(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notify(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
             if two_black_gapping is True:
                 log_text = '*** Candlestick Detected: Two Black Gapping ("Reliable - Reversal - Bearish Pattern - Down")'
                 Logger.info(log_text)
 
-                app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
-                app.notifyDiscord(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
+                app.notify(app.getMarket() + ' (' + app.printGranularity() + ') ' + log_text)
 
 
             # EMA12 prefix/suffix are aligned to 3 characters
@@ -727,8 +710,7 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
 
                 # if live
                 if app.isLive():
-                    app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') BUY at ' + price_text)
-                    app.notifyDiscord(app.getMarket() + ' (' + app.printGranularity() + ') BUY at ' + price_text)
+                    app.notify(app.getMarket() + ' (' + app.printGranularity() + ') BUY at ' + price_text)
 
                     if not app.isVerbose():
                         Logger.info(formatted_current_df_index + ' | ' + app.getMarket() + ' | ' + app.printGranularity() +  ' | ' + price_text + ' | BUY')
@@ -754,8 +736,7 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
                     Logger.info(app.getQuoteCurrency() + ' balance after order: ' + str(account.getBalance(app.getQuoteCurrency())))
                 # if not live
                 else:
-                    app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') TEST BUY at ' + price_text)
-                    app.notifyDiscord(app.getMarket() + ' (' + app.printGranularity() + ') TEST BUY at ' + price_text)
+                    app.notify(app.getMarket() + ' (' + app.printGranularity() + ') TEST BUY at ' + price_text)
                     # TODO: Improve simulator calculations by including calculations for buy and sell limit configurations. 
                     if state.last_buy_size == 0 and state.last_buy_filled == 0: 
                         state.last_buy_size = 1000
@@ -804,10 +785,7 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
             elif state.action == 'SELL':
                 # if live
                 if app.isLive():
-                    app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') SELL at ' +
-                                      price_text + ' (margin: ' + margin_text + ', (delta: ' +
-                                      str(round(price - state.last_buy_price, precision)) + ')')
-                    app.notifyDiscord(app.getMarket() + ' (' + app.printGranularity() + ') SELL at ' +
+                    app.notify(app.getMarket() + ' (' + app.printGranularity() + ') SELL at ' +
                                       price_text + ' (margin: ' + margin_text + ', (delta: ' +
                                       str(round(price - state.last_buy_price, precision)) + ')')
 
@@ -868,10 +846,7 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
                         margin_text = truncate(margin) + '%'
                     else:
                         margin_text = '0%'
-                    app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') TEST SELL at ' +
-                                      price_text + ' (margin: ' + margin_text + ', (delta: ' +
-                                      str(round(price - state.last_buy_price, precision)) + ')')
-                    app.notifyDiscord(app.getMarket() + ' (' + app.printGranularity() + ') TEST SELL at ' +
+                    app.notify(app.getMarket() + ' (' + app.printGranularity() + ') TEST SELL at ' +
                                       price_text + ' (margin: ' + margin_text + ', (delta: ' +
                                       str(round(price - state.last_buy_price, precision)) + ')')
 
@@ -932,14 +907,12 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
                 Logger.info('   First Buy : ' + str(state.first_buy_size))
                 Logger.info('   Last Sell : ' + str(state.last_buy_size))
 
-                app.notifyTelegram(f"Simulation Summary\n   Buy Count: {state.buy_count}\n   Sell Count: {state.sell_count}\n   First Buy: {state.first_buy_size}\n   Last Sell: {state.last_buy_size}\n")
-                app.notifyDiscord(f"Simulation Summary\n   Buy Count: {state.buy_count}\n   Sell Count: {state.sell_count}\n   First Buy: {state.first_buy_size}\n   Last Sell: {state.last_buy_size}\n")
+                app.notify(f"Simulation Summary\n   Buy Count: {state.buy_count}\n   Sell Count: {state.sell_count}\n   First Buy: {state.first_buy_size}\n   Last Sell: {state.last_buy_size}\n")
 
                 if state.sell_count > 0:
                     Logger.info('      Margin : ' + _truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4) + '%')
                     Logger.info('  ** non-live simulation, assuming highest fees')
-                    app.notifyTelegram(f"      Margin: {_truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4)}%\n  ** non-live simulation, assuming highest fees\n")
-                    app.notifyDiscord(f"      Margin: {_truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4)}%\n  ** non-live simulation, assuming highest fees\n")
+                    app.notify(f"      Margin: {_truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4)}%\n  ** non-live simulation, assuming highest fees\n")
 
 
         else:
@@ -987,8 +960,7 @@ def main():
             message += 'Binance bot'
 
         message += ' for ' + app.getMarket() + ' using granularity ' + app.printGranularity()
-        app.notifyTelegram(message)
-        app.notifyDiscord(message)
+        app.notify(message)
 
         # initialise and start application
         trading_data = app.startApp(account, state.last_action)
@@ -1012,8 +984,7 @@ def main():
                 time.sleep(30)
                 Logger.critical('Restarting application after exception: ' + repr(e))
 
-                app.notifyTelegram('Auto restarting bot for ' + app.getMarket() + ' after exception: ' + repr(e))
-                app.notifyDiscord('Auto restarting bot for ' + app.getMarket() + ' after exception: ' + repr(e))
+                app.notify('Auto restarting bot for ' + app.getMarket() + ' after exception: ' + repr(e))
 
                 # Cancel the events queue
                 map(s.cancel, s.queue)
@@ -1032,8 +1003,7 @@ def main():
             os._exit(0)
     except(BaseException, Exception) as e:
         # catch all not managed exceptions and send a Telegram message if configured
-        app.notifyTelegram('Bot for ' + app.getMarket() + ' got an exception: ' + repr(e))
-        app.notifyDiscord('Bot for ' + app.getMarket() + ' got an exception: ' + repr(e))
+        app.notify('Bot for ' + app.getMarket() + ' got an exception: ' + repr(e))
 
         Logger.critical(repr(e))
 
