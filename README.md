@@ -255,6 +255,7 @@ Special sell cases:
     --disableprofitbankfibonaccihigh    Disable profit bank on fibonacci upper band
     --disableprofitbankreversal         Disable profit bank on strong candlestick reversal
     --disabletelegram                   Disable sending telegram messages
+    --disablediscord                    Disable sending discord messages
     --disablelog                        Disable writing log entries
     --disabletracker                    Disable saving CSV on buy and sell events
 
@@ -384,6 +385,12 @@ For telegram, add a piece to the config.json as follows:
     }
 
 You can use @botfather and @myidbot in telegram to create a bot with token and get a client id.
+
+For discord, add a piece to the config.json as follows:
+
+    "discord" : {
+        "webhook" : "<webhook_uri>"
+    }
 
 For configuring logger, add a piece to the config.json as follows:
 *This is also default configuration of the logger, if no config is given and log is not disabled this configuration will apply.*

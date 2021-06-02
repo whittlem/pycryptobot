@@ -12,7 +12,7 @@ from urllib3.exceptions import ReadTimeoutError
 from models.Trading import TechnicalAnalysis
 from models.exchange.binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
 from models.exchange.coinbase_pro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
-from models.chat import Telegram
+from models.chat import Telegram, Discord
 from models.config import binanceConfigParser, binanceParseMarket, coinbaseProConfigParser, coinbaseProParseMarket, dummyConfigParser, dummyParseMarket, loggerConfigParser
 from models.ConfigBuilder import ConfigBuilder
 from models.helper.LogHelper import Logger
@@ -65,6 +65,7 @@ def parse_arguments():
     parser.add_argument('--disableprofitbankupperpcnt', action="store_true", help="disable profit bank on 'sellupperpcnt'")
     parser.add_argument('--disableprofitbankreversal', action="store_true", help="disable profit bank on strong candlestick reversal")
     parser.add_argument('--disabletelegram', action="store_true", help="disable telegram messages")
+    parser.add_argument('--disablediscord', action="store_true", help="disable discord messages")
     parser.add_argument('--disablelog', action="store_true", help="disable pycryptobot.log")
     parser.add_argument('--disabletracker', action="store_true", help="disable tracker.csv")
 
@@ -138,10 +139,12 @@ class PyCryptoBot():
         self.sell_at_loss = 1
         self.smart_switch = 1
         self.telegram = False
+        self.discord = False
         self.buypercent = 100
         self.sellpercent = 100
         self.last_action = None
         self._chat_client = None
+        self._discord_chat_client = None
         self.buymaxsize = None
 
         self.configbuilder = False
@@ -159,6 +162,7 @@ class PyCryptoBot():
         self.disableprofitbankupperpcnt = False
         self.disableprofitbankreversal = False
         self.disabletelegram = False
+        self.disablediscord = False
         self.disablelog = False
         self.disabletracker = False
 
@@ -194,6 +198,11 @@ class PyCryptoBot():
                     telegram = config['telegram']
                     self._chat_client = Telegram(telegram['token'], telegram['client_id'])
                     self.telegram = True
+
+                if not self.disablediscord and 'discord' in config and 'webhook' in config['discord']:
+                    discord = config['discord']
+                    self._discord_chat_client = Discord(discord['webhook'])
+                    self.discord = True
 
                 if 'logger' in config:
                     loggerConfigParser(self, config['logger'])
@@ -759,6 +768,9 @@ class PyCryptoBot():
             txt = '             Telegram : ' + str(not self.disabletelegram) + '  --disabletelegram'
             Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
 
+            txt = '             Discord : ' + str(not self.disablediscord) + '  --disablediscord'
+            Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
+
             txt = '                  Log : ' + str(not self.disableLog()) + '  --disablelog'
             Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
 
@@ -861,3 +873,16 @@ class PyCryptoBot():
         assert self._chat_client is not None
 
         self._chat_client.send(msg)
+
+    def notifyDiscord(self, msg: str) -> None:
+        """
+        Send a given message to preconfigured Discord. If the discord isn't enabled, e.g. via `--disablediscord`,
+        this method does nothing and returns immediately.
+        """
+
+        if self.disablediscord or not self.discord:
+            return
+
+        assert self._discord_chat_client is not None
+
+        self._discord_chat_client.send(msg)
