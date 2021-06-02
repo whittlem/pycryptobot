@@ -256,6 +256,7 @@ Special sell cases:
     --disableprofitbankreversal         Disable profit bank on strong candlestick reversal
     --disabletelegram                   Disable sending telegram messages
     --disablediscord                    Disable sending discord messages
+    --disabletwilio                     Disable sending twilio messages
     --disablelog                        Disable writing log entries
     --disabletracker                    Disable saving CSV on buy and sell events
 
@@ -390,6 +391,16 @@ For discord, add a piece to the config.json as follows:
 
     "discord" : {
         "webhook" : "<webhook_uri>"
+    }
+
+
+For twilio, add a piece to the config.json as follows:
+
+    "twilio": {
+        "twilio_account_sid": "<twilio_account_sid>",
+        "twilio_auth_token": "<twilio_auth_token>",
+        "twilio_from_phone_number": "<twilio_from_phone_number>",
+        "twilio_to_phone_number": "<twilio_to_phone_number>"
     }
 
 For configuring logger, add a piece to the config.json as follows:
