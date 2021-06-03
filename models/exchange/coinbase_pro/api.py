@@ -142,7 +142,7 @@ class AuthAPI(AuthAPIBase):
     
         return self.authAPI('GET', f"accounts/{account}")
 
-    
+   
     def getFees(self, market: str='') -> pd.DataFrame:
         df = self.authAPI('GET', 'fees')
 
