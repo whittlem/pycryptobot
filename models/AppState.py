@@ -94,7 +94,12 @@ class AppState():
         self.first_buy_size = 0
 
     @classmethod
-    def updateLastAction(self, app:PyCryptoBot, account:TradingAccount, state):
+    def initLastAction(self, app:PyCryptoBot, account:TradingAccount, state):
+        # ignore if manually set
+        if app.getLastAction() is not None:
+            state.last_action = app.getLastAction()
+            return
+
         orders = account.getOrders(app.getMarket(), '', 'done')
         if len(orders) > 0:
             last_order = orders[-1:]

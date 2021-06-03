@@ -21,7 +21,7 @@ sys.tracebacklimit = 1
 app = PyCryptoBot()
 account = TradingAccount(app)
 state = AppState()
-state.updateLastAction(app, account, state)
+state.initLastAction(app, account, state)
 
 s = sched.scheduler(time.time, time.sleep)
 
