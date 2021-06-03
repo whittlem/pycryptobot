@@ -1,25 +1,13 @@
 from models.PyCryptoBot import PyCryptoBot
-from models.Trading import TechnicalAnalysis
-from views.TradingGraphs import TradingGraphs
+from models.TradingAccount import TradingAccount
+from models.AppState import AppState
 
 app = PyCryptoBot()
-trading_data = app.getHistoricalData(app.getMarket(), app.getGranularity())
+account = TradingAccount(app)
+state = AppState(app, account)
 
-ta = TechnicalAnalysis(trading_data)
-ta.addAll()
+print (account.getBalance(app.getBaseCurrency()), account.getBalance(app.getQuoteCurrency()))
 
-df_data = ta.getDataFrame()
-df_fib = ta.getFibonacciRetracementLevels()
-df_sr = ta.getSupportResistanceLevels()
-
-print (df_data)
-print (df_fib)
-print (df_sr)
-
-graphs = TradingGraphs(ta)
-#graphs.renderBuySellSignalEMA1226MACD(saveOnly=False)
-#graphs = TradingGraphs(ta)
-#graphs.renderPercentageChangeHistogram()
-#graphs.renderCumulativeReturn()
-#graphs.renderPercentageChangeScatterMatrix()
-graphs.renderFibonacciBollingerBands(period=24)
+print (state.last_action)
+state.initLastAction(app, account, state)
+print (state.last_action)

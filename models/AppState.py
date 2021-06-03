@@ -7,73 +7,18 @@ from models.TradingAccount import TradingAccount
 from models.exchange.binance import AuthAPI as BAuthAPI
 from models.exchange.coinbase_pro import AuthAPI as CAuthAPI
 
-def binanceMinimumOrderBase(app:PyCryptoBot, account:TradingAccount):
-    app = PyCryptoBot(exchange='binance')
-    api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
-    info = api.client.get_symbol_info(symbol='BTCGBP')
-
-    base_min = 0
-    if 'filters' in info:
-        for filter_type in info['filters']:
-            if 'LOT_SIZE' == filter_type['filterType']:
-                base_min = float(filter_type['minQty'])
-
-    base = float(account.getBalance(app.getBaseCurrency()))
-
-    if base < base_min:
-        sys.tracebacklimit = 0
-        raise Exception(f'Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})')    
-
-def binanceMinimumOrderQuote(app:PyCryptoBot, account:TradingAccount):
-    app = PyCryptoBot(exchange='binance')
-    api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
-    info = api.client.get_symbol_info(symbol='BTCGBP')
-
-    quote_min = 0
-    if 'filters' in info:
-        for filter_type in info['filters']:
-            if 'MIN_NOTIONAL' == filter_type['filterType']:
-                quote_min = float(filter_type['minNotional'])
-
-    quote = float(account.getBalance(app.getQuoteCurrency()))
-
-    if quote < quote_min:
-        sys.tracebacklimit = 0
-        raise Exception(f'Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})')    
-
-def coinbaseproMinimumOrderBase(app:PyCryptoBot, account:TradingAccount):
-    api = CAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIPassphrase(), app.getAPIURL())
-    product = api.authAPI('GET', f'products/{app.getMarket()}')
-    if len(product) == 0:
-        sys.tracebacklimit = 0
-        raise Exception(f'Market not found! ({app.getMarket()})')
-
-    base = float(account.getBalance(app.getBaseCurrency()))
-    base_min = float(product['base_min_size'])
-
-    if base < base_min:
-        sys.tracebacklimit = 0
-        raise Exception(f'Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})')    
-
-def coinbaseproMinimumOrderQuote(app:PyCryptoBot, account:TradingAccount):
-    api = CAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIPassphrase(), app.getAPIURL())
-    product = api.authAPI('GET', f'products/{app.getMarket()}')
-    if len(product) == 0:
-        sys.tracebacklimit = 0
-        raise Exception(f'Market not found! ({app.getMarket()})')
-
-    ticker = api.authAPI('GET', f'products/{app.getMarket()}/ticker')
-    price = float(ticker['price'])
-
-    quote = float(account.getBalance(app.getQuoteCurrency()))
-    base_min = float(product['base_min_size'])
-
-    if (quote / price) < base_min:
-        sys.tracebacklimit = 0
-        raise Exception(f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})')
-
 class AppState():
-    def __init__(self):
+    def __init__(self, app:PyCryptoBot, account:TradingAccount) -> None:
+        if app.getExchange() == 'binance':
+            self.api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
+        elif app.getExchange() == 'coinbasepro':
+            self.api = CAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIPassphrase(), app.getAPIURL())
+        else:
+            self.api = None
+
+        self.app = app
+        self.account = account
+
         self.action = 'WAIT'
         self.buy_count = 0
         self.buy_state = ''
@@ -81,8 +26,9 @@ class AppState():
         self.eri_text = ''
         self.fib_high = 0
         self.fib_low = 0
+        self.first_buy_size = 0
         self.iterations = 0
-        self.last_action = ''
+        self.last_action = 'WAIT'
         self.last_buy_size = 0
         self.last_buy_price = 0
         self.last_buy_filled = 0
@@ -91,10 +37,70 @@ class AppState():
         self.last_df_index = ''
         self.sell_count = 0
         self.sell_sum = 0
-        self.first_buy_size = 0
+
+    def minimumOrderBase(self):
+        if self.app.getExchange() == 'binance':
+            info = self.api.client.get_symbol_info(symbol=self.app.getMarket())
+
+            base_min = 0
+            if 'filters' in info:
+                for filter_type in info['filters']:
+                    if 'LOT_SIZE' == filter_type['filterType']:
+                        base_min = float(filter_type['minQty'])
+
+            base = float(self.account.getBalance(self.app.getBaseCurrency()))
+
+            if base < base_min:
+                sys.tracebacklimit = 0
+                raise Exception(f'Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})')
+
+        elif self.app.getExchange() == 'coinbasepro':
+            product = self.api.authAPI('GET', f'products/{self.app.getMarket()}')
+            if len(product) == 0:
+                sys.tracebacklimit = 0
+                raise Exception(f'Market not found! ({self.app.getMarket()})')
+
+            base = float(self.account.getBalance(self.app.getBaseCurrency()))
+            base_min = float(product['base_min_size'])
+
+            if base < base_min:
+                sys.tracebacklimit = 0
+                raise Exception(f'Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})')
+
+    def minimumOrderQuote(self):
+        if self.app.getExchange() == 'binance':
+            info = self.api.client.get_symbol_info(symbol=self.app.getMarket())
+
+            quote_min = 0
+            if 'filters' in info:
+                for filter_type in info['filters']:
+                    if 'MIN_NOTIONAL' == filter_type['filterType']:
+                        quote_min = float(filter_type['minNotional'])
+
+            quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
+
+            if quote < quote_min:
+                sys.tracebacklimit = 0
+                raise Exception(f'Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})')
+
+        elif self.app.getExchange() == 'coinbasepro':
+            product = self.api.authAPI('GET', f'products/{self.app.getMarket()}')
+            if len(product) == 0:
+                sys.tracebacklimit = 0
+                raise Exception(f'Market not found! ({self.app.getMarket()})')
+
+            ticker = self.api.authAPI('GET', f'products/{self.app.getMarket()}/ticker')
+            price = float(ticker['price'])
+
+            quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
+            base_min = float(product['base_min_size'])
+
+            if (quote / price) < base_min:
+                sys.tracebacklimit = 0
+                raise Exception(f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})')
 
     @classmethod
-    def initLastAction(self, app:PyCryptoBot, account:TradingAccount, state):
+    def initLastAction(cls, app:PyCryptoBot, account:TradingAccount, state):
         # ignore if manually set
         if app.getLastAction() is not None:
             state.last_action = app.getLastAction()
@@ -113,14 +119,9 @@ class AppState():
                 state.last_action = 'BUY'
                 return
             else:
+                cls.minimumOrderBase()
                 state.last_action = 'SELL'
                 state.last_buy_price = 0.0
-
-                if app.getExchange() == 'coinbasepro':
-                    coinbaseproMinimumOrderBase(app, account)
-                elif app.getExchange() == 'binance':
-                    binanceMinimumOrderBase(app, account)
-
                 return
         else:
             base = float(account.getBalance(app.getBaseCurrency()))
@@ -136,19 +137,11 @@ class AppState():
             order_pairs_normalised = (order_pairs - np_min(order_pairs)) / np_ptp(order_pairs)
 
             if order_pairs_normalised[0] < order_pairs_normalised[1]:
+                cls.minimumOrderQuote()
                 state.last_action = 'BUY'
-                if app.getExchange() == 'coinbasepro':
-                    coinbaseproMinimumOrderQuote(app, account)
-                elif app.getExchange() == 'binance':
-                    binanceMinimumOrderQuote(app, account)
-
             elif order_pairs_normalised[0] > order_pairs_normalised[1]:
+                cls.minimumOrderBase()
                 state.last_action = 'SELL'
-                if app.getExchange() == 'coinbasepro':
-                    coinbaseproMinimumOrderBase(app, account)
-                elif app.getExchange() == 'binance':
-                    binanceMinimumOrderBase(app, account)
-
             else:
                 state.last_action = 'WAIT'
 
