@@ -111,7 +111,10 @@ class TradingAccount():
                 if market == '':
                     return self.orders
                 else:
-                    return self.orders[self.orders['market'] == market]
+                    if 'market' in self.orders:
+                        return self.orders[self.orders['market'] == market]
+                    else:
+                        return pd.DataFrame()
         if self.app.getExchange() == 'dummy':
             return self.orders[[ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'price', 'status' ]]
 

@@ -105,6 +105,10 @@ class AppState():
             self.last_action = self.app.getLastAction()
             return
 
+        # if not live
+        if not self.app.isLive():
+            return
+
         orders = self.account.getOrders(self.app.getMarket(), '', 'done')
         if len(orders) > 0:
             last_order = orders[-1:]
