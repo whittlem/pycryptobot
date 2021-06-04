@@ -99,50 +99,49 @@ class AppState():
                 sys.tracebacklimit = 0
                 raise Exception(f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})')
 
-    @classmethod
-    def initLastAction(cls, app:PyCryptoBot, account:TradingAccount, state):
+    def initLastAction(self):
         # ignore if manually set
-        if app.getLastAction() is not None:
-            state.last_action = app.getLastAction()
+        if self.app.getLastAction() is not None:
+            self.last_action = self.app.getLastAction()
             return
 
-        orders = account.getOrders(app.getMarket(), '', 'done')
+        orders = self.account.getOrders(self.app.getMarket(), '', 'done')
         if len(orders) > 0:
             last_order = orders[-1:]
 
             # if orders exist and last order is a buy
             if str(last_order.action.values[0]) == 'buy':
-                state.last_buy_size = float(last_order[last_order.action == 'buy']['size'])
-                state.last_buy_filled = float(last_order[last_order.action == 'buy']['filled'])
-                state.last_buy_price = float(last_order[last_order.action == 'buy']['price'])
-                state.last_buy_fee = float(last_order[last_order.action == 'buy']['fees'])
-                state.last_action = 'BUY'
+                self.last_buy_size = float(last_order[last_order.action == 'buy']['size'])
+                self.last_buy_filled = float(last_order[last_order.action == 'buy']['filled'])
+                self.last_buy_price = float(last_order[last_order.action == 'buy']['price'])
+                self.last_buy_fee = float(last_order[last_order.action == 'buy']['fees'])
+                self.last_action = 'BUY'
                 return
             else:
-                cls.minimumOrderBase()
-                state.last_action = 'SELL'
-                state.last_buy_price = 0.0
+                self.minimumOrderBase()
+                self.last_action = 'SELL'
+                self.last_buy_price = 0.0
                 return
         else:
-            base = float(account.getBalance(app.getBaseCurrency()))
-            quote = float(account.getBalance(app.getQuoteCurrency()))
+            base = float(self.account.getBalance(self.app.getBaseCurrency()))
+            quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
 
             # nil base or quote funds
             if base == 0.0 and quote == 0.0:
                 sys.tracebacklimit = 0
-                raise Exception(f'Insufficient Funds! ({app.getBaseCurrency()}={str(base)}, {app.getQuoteCurrency()}={str(base)})') 
+                raise Exception(f'Insufficient Funds! ({self.app.getBaseCurrency()}={str(base)}, {self.app.getQuoteCurrency()}={str(base)})') 
 
             # determine last action by comparing normalised [0,1] base and quote balances 
             order_pairs = np_array([ base, quote ])
             order_pairs_normalised = (order_pairs - np_min(order_pairs)) / np_ptp(order_pairs)
 
             if order_pairs_normalised[0] < order_pairs_normalised[1]:
-                cls.minimumOrderQuote()
-                state.last_action = 'BUY'
+                self.minimumOrderQuote()
+                self.last_action = 'BUY'
             elif order_pairs_normalised[0] > order_pairs_normalised[1]:
-                cls.minimumOrderBase()
-                state.last_action = 'SELL'
+                self.minimumOrderBase()
+                self.last_action = 'SELL'
             else:
-                state.last_action = 'WAIT'
+                self.last_action = 'WAIT'
 
             return
