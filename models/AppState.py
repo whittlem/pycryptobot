@@ -146,6 +146,7 @@ class AppState():
             elif order_pairs_normalised[0] > order_pairs_normalised[1]:
                 self.minimumOrderBase()
                 self.last_action = 'BUY'
+
             else:
                 self.last_action = 'WAIT'
 
