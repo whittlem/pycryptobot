@@ -1,4 +1,4 @@
-urllib3==1.26
+urllib3==1.26.5
 pandas==1.1.4
 requests==2.25.0
 statsmodels==0.12.1
