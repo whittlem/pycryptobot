@@ -142,7 +142,7 @@ class AuthAPI(AuthAPIBase):
     
         return self.authAPI('GET', f"accounts/{account}")
 
-    
+   
     def getFees(self, market: str='') -> pd.DataFrame:
         df = self.authAPI('GET', 'fees')
 
@@ -232,8 +232,9 @@ class AuthAPI(AuthAPIBase):
         
         # calculates the price at the time of purchase
         if status != 'open':
-            #df['price'] = df.apply(lambda row: (float(row.executed_value) * 100) / (float(row.filled_size) * 100) if float(row.filled_size) > 0 else 0, axis=1)
-            df.loc[df['filled_size'] > 0, 'price'] = (df['executed_value'] * 100) / (df['filled_size'] * 100)
+            df_tmp = df.copy()
+            df['price'] = df_tmp.apply(lambda row: (float(row.executed_value) * 100) / (float(row.filled_size) * 100) if float(row.filled_size) > 0 else 0, axis=1)
+            #df.loc[df['filled_size'] > 0, 'price'] = (df['executed_value'] * 100) / (df['filled_size'] * 100)
 
         # rename the columns
         if status == 'open':

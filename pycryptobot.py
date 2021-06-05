@@ -15,75 +15,15 @@ from models.helper.MarginHelper import calculate_margin
 from views.TradingGraphs import TradingGraphs
 from models.helper.LogHelper import Logger
 
+# minimal traceback
 sys.tracebacklimit = 1
 
 app = PyCryptoBot()
-state = AppState()
+account = TradingAccount(app)
+state = AppState(app, account)
+state.initLastAction()
 
 s = sched.scheduler(time.time, time.sleep)
-
-config = {}
-account = None
-if app.getLastAction() != None:
-    state.last_action = app.getLastAction()
-
-    account = TradingAccount(app)
-    orders = account.getOrders(app.getMarket(), '', 'done')
-    if len(orders) > 0:
-        df = orders[orders.action == 'buy']
-        df = df[-1:]
-
-        if str(df.action.values[0]) == 'buy':
-            state.last_buy_size = float(df[df.action == 'buy']['size'])
-            state.last_buy_filled = float(df[df.action == 'buy']['filled'])
-            state.last_buy_price = float(df[df.action == 'buy']['price'])
-            state.last_buy_fee = float(df[df.action == 'buy']['fees'])
-
-# if live trading is enabled
-elif app.isLive():
-    # connectivity check
-    if app.getTime() is None:
-        raise ConnectionError(
-            'Unable to start the bot as your connection to the exchange is down. Please check your Internet connectivity!')
-
-    account = TradingAccount(app)
-
-    orders = account.getOrders(app.getMarket(), '', 'done')
-    if len(orders) > 0:
-        df = orders[-1:]
-
-        if str(df.action.values[0]) == 'buy':
-            state.last_action = 'BUY'
-            state.last_buy_size = float(df[df.action == 'buy']['size'])
-            state.last_buy_filled = float(df[df.action == 'buy']['filled'])
-            state.last_buy_price = float(df[df.action == 'buy']['price'])
-            state.last_buy_fee = state.last_buy_size * app.getTakerFee()
-        else:
-            state.last_action = 'SELL'
-            state.last_buy_price = 0.0
-    else:
-        # If we do not have any orders, pick last action based on balance
-        if account.getBalance(app.getBaseCurrency()) < account.getBalance(app.getQuoteCurrency()):
-            state.last_action = 'SELL'
-        elif account.getBalance(app.getBaseCurrency()) > account.getBalance(app.getQuoteCurrency()):
-            state.last_action = 'BUY'
-
-    if app.getExchange() == 'binance':
-        if state.last_action == 'SELL' and account.getBalance(app.getQuoteCurrency()) < 0.001:
-            raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(
-                app.getQuoteCurrency())) + ' < 0.1 ' + app.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
-        elif state.last_action == 'BUY' and account.getBalance(app.getBaseCurrency()) < 0.001:
-            raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(
-                app.getBaseCurrency())) + ' < 0.1 ' + app.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
-
-    elif app.getExchange() == 'coinbasepro':
-        if state.last_action == 'SELL' and account.getBalance(app.getQuoteCurrency()) < 50:
-            raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(
-                app.getQuoteCurrency())) + ' < 50 ' + app.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
-        elif state.last_action == 'BUY' and account.getBalance(app.getBaseCurrency()) < 0.001:
-            raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(
-                app.getBaseCurrency())) + ' < 0.1 ' + app.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
-
 
 def getAction(now: datetime = datetime.today().strftime('%Y-%m-%d %H:%M:%S'), app: PyCryptoBot = None, price: float = 0,
               df: pd.DataFrame = pd.DataFrame(), df_last: pd.DataFrame = pd.DataFrame(), last_action: str = 'WAIT') -> str:

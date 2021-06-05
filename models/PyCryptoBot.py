@@ -774,24 +774,6 @@ class PyCryptoBot():
 
             Logger.info('================================================================================')
 
-        # if live
-        if self.isLive():
-            if self.getExchange() == 'binance':
-                if last_action == 'SELL' and account.getBalance(self.getQuoteCurrency()) < 0.001:
-                    raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(
-                        self.getQuoteCurrency())) + ' < 0.1 ' + self.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
-                elif last_action == 'BUY' and account.getBalance(self.getBaseCurrency()) < 0.001:
-                    raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(
-                        self.getBaseCurrency())) + ' < 0.1 ' + self.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
-
-            elif self.getExchange() == 'coinbasepro':
-                if last_action == 'SELL' and account.getBalance(self.getQuoteCurrency()) < 50:
-                    raise Exception('Insufficient available funds to place buy order: ' + str(account.getBalance(
-                        self.getQuoteCurrency())) + ' < 50 ' + self.getQuoteCurrency() + "\nNote: A manual limit order places a hold on available funds.")
-                elif last_action == 'BUY' and account.getBalance(self.getBaseCurrency()) < 0.001:
-                    raise Exception('Insufficient available funds to place sell order: ' + str(account.getBalance(
-                        self.getBaseCurrency())) + ' < 0.1 ' + self.getBaseCurrency() + "\nNote: A manual limit order places a hold on available funds.")
-
         # run the first job immediately after starting
         if self.isSimulation():
             if self.simuluationSpeed() in ['fast-sample', 'slow-sample']:
