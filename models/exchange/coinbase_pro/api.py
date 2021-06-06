@@ -222,7 +222,7 @@ class AuthAPI(AuthAPIBase):
             return pd.DataFrame()
 
         # replace null NaN values with 0
-        df.fillna(0, inplace=True)
+        df.copy().fillna(0, inplace=True)
 
         df_tmp = df.copy()
         df_tmp['price'] = 0.0
