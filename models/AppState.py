@@ -123,7 +123,7 @@ class AppState():
                 self.last_action = 'BUY'
                 return
             else:
-                self.minimumOrderBase()
+                self.minimumOrderQuote()
                 self.last_action = 'SELL'
                 self.last_buy_price = 0.0
                 return
