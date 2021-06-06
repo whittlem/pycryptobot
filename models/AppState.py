@@ -6,6 +6,7 @@ from models.PyCryptoBot import PyCryptoBot
 from models.TradingAccount import TradingAccount
 from models.exchange.binance import AuthAPI as BAuthAPI
 from models.exchange.coinbase_pro import AuthAPI as CAuthAPI
+from models.helper.LogHelper import Logger
 
 class AppState():
     def __init__(self, app:PyCryptoBot, account:TradingAccount) -> None:
@@ -119,13 +120,10 @@ class AppState():
                 self.last_buy_size = float(last_order[last_order.action == 'buy']['size'])
                 self.last_buy_filled = float(last_order[last_order.action == 'buy']['filled'])
                 self.last_buy_price = float(last_order[last_order.action == 'buy']['price'])
-                
-                if 'fees' not in last_order:
-                    print ('Send this to Michael Whittle:')
-                    print (last_order)
-                    sys.exit()
-                
-                self.last_buy_fee = float(last_order[last_order.action == 'buy']['fees'])
+
+                # binance orders do not show fees
+                if self.app.getExchange() == 'coinbasepro':
+                    self.last_buy_fee = float(last_order[last_order.action == 'buy']['fees'])
 
                 self.last_action = 'BUY'
                 return

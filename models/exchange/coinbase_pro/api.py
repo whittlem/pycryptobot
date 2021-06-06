@@ -246,10 +246,12 @@ class AuthAPI(AuthAPIBase):
             df.columns = [ 'created_at', 'market', 'action', 'type', 'value', 'size', 'filled', 'fees', 'status', 'price' ]
             df = df[[ 'created_at', 'market', 'action', 'type', 'size', 'value', 'fees', 'price', 'status' ]]
             df.columns = [ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'price', 'status' ]
-            df['filled'] = df['filled'].astype(float).round(8)
-            df['size'] = df['size'].astype(float).round(8)
-            df['fees'] = df['fees'].astype(float).round(8)
-            df['price'] = df['price'].astype(float).round(8)
+            df_tmp = df.copy()
+            df_tmp['filled'] = df_tmp['filled'].astype(float).round(8)
+            df_tmp['size'] = df_tmp['size'].astype(float).round(8)
+            df_tmp['fees'] = df_tmp['fees'].astype(float).round(8)
+            df_tmp['price'] = df_tmp['price'].astype(float).round(8)
+            df = df_tmp
 
         # convert dataframe to a time series
         tsidx = pd.DatetimeIndex(pd.to_datetime(df['created_at']).dt.strftime('%Y-%m-%dT%H:%M:%S.%Z'))
