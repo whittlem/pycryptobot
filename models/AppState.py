@@ -119,7 +119,14 @@ class AppState():
                 self.last_buy_size = float(last_order[last_order.action == 'buy']['size'])
                 self.last_buy_filled = float(last_order[last_order.action == 'buy']['filled'])
                 self.last_buy_price = float(last_order[last_order.action == 'buy']['price'])
+                
+                if 'fees' not in last_order:
+                    print ('Send this to Michael Whittle:')
+                    print (last_order)
+                    sys.exit()
+                
                 self.last_buy_fee = float(last_order[last_order.action == 'buy']['fees'])
+
                 self.last_action = 'BUY'
                 return
             else:
