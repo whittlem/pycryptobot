@@ -42,7 +42,7 @@ def parser(app, coinbase_config, args={}):
         app.api_secret = coinbase_config['api_secret']
 
         # validates the api passphrase is syntactically correct
-        p = re.compile(r"^[a-z0-9]{10,11}$")
+        p = re.compile(r"^[A-z0-9#$%=@!{},`~&*()<>?.:;_|^/+\[\]]{8,32}$")
         if not p.match(coinbase_config['api_passphrase']):
             raise TypeError('Coinbase Pro API passphrase is invalid')
 
