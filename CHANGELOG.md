@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.26.0] - 2021-06-07
+  
+### Changed
+  
+- Updated validation to allow for custom Coinbase Pro passphrases
+ 
 ## [2.25.0] - 2021-06-06
   
 ### Added
