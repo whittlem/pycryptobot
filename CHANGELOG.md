@@ -8,6 +8,16 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.27.0] - 2021-06-08
+  
+### Changed
+  
+- Optimised simulations, they run a lot faster now
+
+### Added
+
+-- Added app.getHistoricalDataChained
+
 ## [2.26.0] - 2021-06-07
   
 ### Changed
