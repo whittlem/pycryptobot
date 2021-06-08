@@ -20,6 +20,7 @@ sys.tracebacklimit = 1
 
 app = PyCryptoBot()
 account = TradingAccount(app)
+technical_analysis = None
 state = AppState(app, account)
 state.initLastAction()
 
@@ -133,6 +134,8 @@ def getInterval(df: pd.DataFrame = pd.DataFrame(), app: PyCryptoBot = None, iter
 def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading_data=pd.DataFrame()):
     """Trading bot job which runs at a scheduled interval"""
 
+    global technical_analysis
+
     # connectivity check (only when running live)
     if app.isLive() and app.getTime() is None:
         Logger.warning('Your connection to the exchange has gone down, will retry in 1 minute!')
@@ -153,10 +156,13 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
             return None
 
     # analyse the market data
-    trading_dataCopy = trading_data.copy()
-    ta = TechnicalAnalysis(trading_dataCopy)
-    ta.addAll()
-    df = ta.getDataFrame()
+    if app.isSimulation() and len(trading_data.columns) > 8:
+        df = trading_data
+    else:
+        trading_dataCopy = trading_data.copy()
+        technical_analysis = TechnicalAnalysis(trading_dataCopy)
+        technical_analysis.addAll()
+        df = technical_analysis.getDataFrame()
 
     if app.isSimulation():
         df_last = getInterval(df, app, state.iterations)
@@ -354,7 +360,7 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
                 Logger.warning(log_text)
 
             # profit bank when strong reversal detected
-            if app.sellAtResistance() is True and margin >= 2 and price > 0 and price != ta.getTradeExit(price):
+            if app.sellAtResistance() is True and margin >= 2 and price > 0 and price != technical_analysis.getTradeExit(price):
                 state.action = 'SELL'
                 state.last_action = 'BUY'
                 immediate_action = True
@@ -542,7 +548,7 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
 
                 if state.last_action == 'BUY':
                     # display support, resistance and fibonacci levels
-                    Logger.info(ta.printSupportResistanceFibonacciLevels(price))
+                    Logger.info(technical_analysis.printSupportResistanceFibonacciLevels(price))
 
             else:
                 Logger.debug('-- Iteration: ' + str(state.iterations) + ' --' + bullbeartext)
@@ -688,9 +694,9 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
                     if not app.isVerbose():
                         Logger.info(formatted_current_df_index + ' | ' + app.getMarket() + ' | ' + app.printGranularity() + ' | ' + price_text + ' | BUY')
 
-                        bands = ta.getFibonacciRetracementLevels(float(price))
+                        bands = technical_analysis.getFibonacciRetracementLevels(float(price))
                         Logger.info(' Fibonacci Retracement Levels:' + str(bands))
-                        ta.printSupportResistanceLevel(float(price))
+                        technical_analysis.printSupportResistanceLevel(float(price))
 
                         if len(bands) >= 1 and len(bands) <= 2:
                             if len(bands) == 1:
@@ -716,7 +722,7 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
                         Logger.info('--------------------------------------------------------------------------------')
 
                 if app.shouldSaveGraphs():
-                    tradinggraphs = TradingGraphs(ta)
+                    tradinggraphs = TradingGraphs(technical_analysis)
                     ts = datetime.now().timestamp()
                     filename = app.getMarket() + '_' + app.printGranularity() + '_buy_' + str(ts) + '.png'
                     tradinggraphs.renderEMAandMACD(len(trading_data), 'graphs/' + filename, True)
@@ -732,7 +738,7 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
                     if not app.isVerbose():
                         Logger.info(formatted_current_df_index + ' | ' + app.getMarket() + ' | ' + app.printGranularity() + ' | ' + price_text + ' | SELL')
 
-                        bands = ta.getFibonacciRetracementLevels(float(price))
+                        bands = technical_analysis.getFibonacciRetracementLevels(float(price))
                         Logger.info(' Fibonacci Retracement Levels:' + str(bands))
 
                         if len(bands) >= 1 and len(bands) <= 2:
@@ -814,7 +820,7 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
                         Logger.info('--------------------------------------------------------------------------------')
 
                 if app.shouldSaveGraphs():
-                    tradinggraphs = TradingGraphs(ta)
+                    tradinggraphs = TradingGraphs(technical_analysis)
                     ts = datetime.now().timestamp()
                     filename = app.getMarket() + '_' + app.printGranularity() + '_sell_' + str(ts) + '.png'
                     tradinggraphs.renderEMAandMACD(len(trading_data), 'graphs/' + filename, True)
@@ -826,7 +832,7 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
             state.last_df_index = str(df_last.index.format()[0])
 
             if not app.isLive() and state.iterations == len(df):
-                Logger.info("Simulation Summary: ")
+                Logger.info("\nSimulation Summary: ")
 
                 if state.buy_count > state.sell_count and app.allowSellAtLoss():
                     # Calculate last sell size
@@ -837,11 +843,12 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
                     state.sell_count = state.sell_count + 1
 
                 elif state.buy_count > state.sell_count and not app.allowSellAtLoss():
+                    Logger.info("\n")
                     Logger.info('        Note : "sell at loss" is disabled and you have an open trade, if the margin')
                     Logger.info('               result below is negative it will assume you sold at the end of the')
                     Logger.info('               simulation which may not be ideal. Try setting --sellatloss 1')
 
-
+                Logger.info("\n")
                 Logger.info('   Buy Count : ' + str(state.buy_count))                
                 Logger.info('  Sell Count : ' + str(state.sell_count))
                 Logger.info('   First Buy : ' + str(state.first_buy_size))
@@ -850,7 +857,9 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
                 app.notifyTelegram(f"Simulation Summary\n   Buy Count: {state.buy_count}\n   Sell Count: {state.sell_count}\n   First Buy: {state.first_buy_size}\n   Last Sell: {state.last_buy_size}\n")
 
                 if state.sell_count > 0:
+                    Logger.info("\n")
                     Logger.info('      Margin : ' + _truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4) + '%')
+                    Logger.info("\n")
                     Logger.info('  ** non-live simulation, assuming highest fees')
                     app.notifyTelegram(f"      Margin: {_truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4)}%\n  ** non-live simulation, assuming highest fees\n")
 
@@ -878,11 +887,11 @@ def executeJob(sc=None, app: PyCryptoBot = None, state: AppState = None, trading
                 if app.simuluationSpeed() in ['fast', 'fast-sample']:
                     # fast processing
                     list(map(s.cancel, s.queue))
-                    s.enter(0, 1, executeJob, (sc, app, state, trading_data))
+                    s.enter(0, 1, executeJob, (sc, app, state, df))
                 else:
                     # slow processing
                     list(map(s.cancel, s.queue))
-                    s.enter(1, 1, executeJob, (sc, app, state, trading_data))
+                    s.enter(1, 1, executeJob, (sc, app, state, df))
 
         else:
             # poll every 2 minutes

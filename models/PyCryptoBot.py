@@ -163,10 +163,14 @@ class PyCryptoBot():
         self.disabletracker = False
 
         self.filelog = True
-        self.logfile = args['logfile'] if args['logfile'] else "pycryptobot.log"
-        self.fileloglevel = "DEBUG"
+        self.logfile = args['logfile'] if args['logfile'] else 'pycryptobot.log'
+        self.fileloglevel = 'DEBUG'
         self.consolelog = True
-        self.consoleloglevel = "INFO"
+        self.consoleloglevel = 'INFO'
+
+        self.ema1226_1h_cache = None
+        self.ema1226_6h_cache = None
+        self.sma50200_1h_cache = None
 
         if args['init']:
             # config builder
@@ -339,23 +343,59 @@ class PyCryptoBot():
         else:
             return pd.DataFrame()
 
+    def getHistoricalDataChained(self, market, granularity: int, max_interations: int=1) -> pd.DataFrame:
+        df1 = self.getHistoricalData(market, self.getGranularity())
+
+        if max_interations == 1:
+            return df1
+
+        def getPreviousDateRange(df: pd.DataFrame=None) -> tuple:
+            end_date = df['date'].min()
+            minutes_diff = (df['date'].max() - df['date'].min()).total_seconds() / 60.0
+            new_start = df['date'].min() - timedelta(minutes=minutes_diff)
+            return (str(new_start).replace(' ', 'T'), str(end_date).replace(' ', 'T'))
+
+        iterations = 0
+        result_df = pd.DataFrame()
+        while iterations < max_interations:
+            start_date, end_date = getPreviousDateRange(df1)
+            df2 = self.getHistoricalData(market, granularity, start_date, end_date)
+            result_df = pd.concat([result_df, df1, df2]).drop_duplicates()
+            df1 = df2
+            df2 = pd.DataFrame()
+            iterations = iterations + 1
+
+        if 'date'in result_df:
+            result_df.sort_values(by=['date'], ascending=True, inplace=True)
+        
+        return result_df
+
     def getSmartSwitch(self):
         return self.smart_switch
 
     def is1hEMA1226Bull(self):
         try:
-            if self.exchange == 'coinbasepro':
+            if self.isSimulation() and isinstance(self.ema1226_1h_cache, pd.DataFrame):
+                df_data = self.ema1226_1h_cache
+            elif self.exchange == 'coinbasepro':
                 api = CBPublicAPI()
                 df_data = api.getHistoricalData(self.market, 3600)
+                self.ema1226_1h_cache = df_data
             elif self.exchange == 'binance':
                 api = BPublicAPI()
                 df_data = api.getHistoricalData(self.market, '1h')
+                self.ema1226_1h_cache = df_data
             else:
                 return False
 
             ta = TechnicalAnalysis(df_data)
-            ta.addEMA(12)
-            ta.addEMA(26)
+
+            if 'ema12' not in df_data:
+                ta.addEMA(12)
+
+            if 'ema26' not in df_data:
+                ta.addEMA(26)
+            
             df_last = ta.getDataFrame().copy().iloc[-1,:]
             df_last['bull'] = df_last['ema12'] > df_last['ema26']
             return bool(df_last['bull'])
@@ -364,18 +404,27 @@ class PyCryptoBot():
 
     def is1hSMA50200Bull(self):
         try:
+            if self.isSimulation() and isinstance(self.sma50200_1h_cache, pd.DataFrame):
+                df_data = self.sma50200_1h_cache
             if self.exchange == 'coinbasepro':
                 api = CBPublicAPI()
                 df_data = api.getHistoricalData(self.market, 3600)
+                self.sma50200_1h_cache = df_data
             elif self.exchange == 'binance':
                 api = BPublicAPI()
                 df_data = api.getHistoricalData(self.market, '1h')
+                self.sma50200_1h_cache = df_data
             else:
                 return False
 
             ta = TechnicalAnalysis(df_data)
-            ta.addSMA(50)
-            ta.addSMA(200)
+            
+            if 'sma50' not in df_data:
+                ta.addSMA(50)
+            
+            if 'sma200' not in df_data:
+                ta.addSMA(200)
+
             df_last = ta.getDataFrame().copy().iloc[-1,:]
             df_last['bull'] = df_last['sma50'] > df_last['sma200']
             return bool(df_last['bull'])
@@ -408,18 +457,27 @@ class PyCryptoBot():
 
     def is6hEMA1226Bull(self):
         try:
-            if self.exchange == 'coinbasepro':
+            if isinstance(self.ema1226_6h_cache, pd.DataFrame):
+                df_data = self.ema1226_6h_cache
+            elif self.exchange == 'coinbasepro':
                 api = CBPublicAPI()
                 df_data = api.getHistoricalData(self.market, 21600)
+                self.ema1226_6h_cache = df_data
             elif self.exchange == 'binance':
                 api = BPublicAPI()
-                df_data = api.getHistoricalData(self.market, '6h')
+                df_data = api.getHistoricalData
+                self.ema1226_6h_cache = df_data(self.market, '6h')
             else:
                 return False
 
             ta = TechnicalAnalysis(df_data)
-            ta.addEMA(12)
-            ta.addEMA(26)
+
+            if 'ema12' not in df_data:
+                ta.addEMA(12)
+
+            if 'ema26' not in df_data:
+                ta.addEMA(26)
+
             df_last = ta.getDataFrame().copy().iloc[-1, :]
             df_last['bull'] = df_last['ema12'] > df_last['ema26']
             return bool(df_last['bull'])
@@ -611,7 +669,11 @@ class PyCryptoBot():
             return None
 
     def getTakerFee(self):
-        if self.exchange == 'coinbasepro':
+        if self.isSimulation() is True and self.exchange == 'coinbasepro':
+            return 0.005 # default lowest fee tier
+        elif self.isSimulation() is True and self.exchange == 'binance':
+            return 0.001 # default lowest fee tier
+        elif self.exchange == 'coinbasepro':
             api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
             return api.getTakerFee()
         elif self.exchange == 'binance':

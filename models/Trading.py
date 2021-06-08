@@ -23,7 +23,10 @@ class TechnicalAnalysis():
         if not isinstance(data, DataFrame):
             raise TypeError('Data is not a Pandas dataframe.')
 
-        if list(data.keys()) != [ 'date', 'market', 'granularity', 'low', 'high', 'open', 'close', 'volume' ]:
+        if 'date' not in data and 'market' not in data and 'granularity' not in data \
+            and 'low' not in data and 'high' not in data \
+            and 'open' not in data and 'close' not in data \
+            and 'volume' not in data:
             raise ValueError('Data not not contain date, market, granularity, low, high, open, close, volume')
 
         if not 'close' in data.columns:
