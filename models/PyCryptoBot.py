@@ -350,19 +350,17 @@ class PyCryptoBot():
             return df1
 
         def getPreviousDateRange(df: pd.DataFrame=None) -> tuple:
-            end_date = df['date'].min()
-            minutes_diff = (df['date'].max() - df['date'].min()).total_seconds() / 60.0
-            new_start = df['date'].min() - timedelta(minutes=minutes_diff)
+            end_date = df['date'].min() - timedelta(seconds=(granularity / 60))
+            new_start = df['date'].min() - timedelta(hours=300)
             return (str(new_start).replace(' ', 'T'), str(end_date).replace(' ', 'T'))
 
         iterations = 0
         result_df = pd.DataFrame()
-        while iterations < max_interations:
+        while iterations < (max_interations - 1):
             start_date, end_date = getPreviousDateRange(df1)
             df2 = self.getHistoricalData(market, granularity, start_date, end_date)
-            result_df = pd.concat([result_df, df1, df2]).drop_duplicates()
-            df1 = df2
-            df2 = pd.DataFrame()
+            result_df = pd.concat([df2, df1]).drop_duplicates()
+            df1 = result_df
             iterations = iterations + 1
 
         if 'date'in result_df:
