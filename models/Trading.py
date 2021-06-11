@@ -60,6 +60,8 @@ class TechnicalAnalysis():
         self.addFibonacciBollingerBands()
 
         self.addRSI(14)
+        self.addStochasticRSI(14)
+        self.addWilliamsR(14)
         self.addMACD()
         self.addOBV()
         self.addElderRayIndex()
@@ -372,6 +374,20 @@ class TechnicalAnalysis():
 
         return rsi
 
+    def calculateStochasticRelativeStrengthIndex(self, series: int, interval: int=14) -> float:
+        """Calculates the Stochastic RSI on a Pandas series of RSI"""
+
+        if not isinstance(series, Series):
+            raise TypeError('Pandas Series required.')
+
+        if not isinstance(interval, int):
+            raise TypeError('Interval integer required.')
+
+        if(len(series) < interval):
+            raise IndexError('Pandas Series smaller than interval.')
+
+        return (series - series.rolling(interval).min()) / (series.rolling(interval).max() - series.rolling(interval).min())
+
     def addFibonacciBollingerBands(self, interval: int=20, multiplier: int=3) -> None:
         """Adds Fibonacci Bollinger Bands."""
 
@@ -454,6 +470,35 @@ class TechnicalAnalysis():
         rsi = rsi.fillna(50)
         return rsi
 
+    def stochasticRelativeStrengthIndex(self, period) -> DataFrame:
+        """Calculate the Stochastic Relative Strength Index (Stochastic RSI)"""
+
+        if not isinstance(period, int):
+            raise TypeError('Period parameter is not perioderic.')
+
+        if period < 7 or period > 21:
+            raise ValueError('Period is out of range')
+
+        if 'rsi' + str(period) not in self.df:
+            self.addRSI(period)
+
+        # calculate relative strength index
+        stochrsi = self.calculateStochasticRelativeStrengthIndex(self.df['rsi' + str(period)], period)
+        # default to midway-50 for first entries
+        stochrsi = stochrsi.fillna(0.5)
+        return stochrsi
+
+    def williamsR(self, period) -> DataFrame:
+        """Calculate the Williams %R"""
+
+        if not isinstance(period, int):
+            raise TypeError('Period parameter is not perioderic.')
+
+        if period < 7 or period > 21:
+            raise ValueError('Period is out of range')
+
+        return (self.df['high'].rolling(14).max() - self.df['close']) / (self.df['high'].rolling(14).max() - self.df['low'].rolling(14).min())
+
     def addRSI(self, period: int) -> None:
         """Adds the Relative Strength Index (RSI) to the DataFrame"""
 
@@ -465,6 +510,30 @@ class TechnicalAnalysis():
 
         self.df['rsi' + str(period)] = self.relativeStrengthIndex(period)   
         self.df['rsi' + str(period)] = self.df['rsi' + str(period)].replace(nan, 50)
+
+    def addStochasticRSI(self, period: int) -> None:
+        """Adds the Stochastic Relative Strength Index (RSI) to the DataFrame"""
+
+        if not isinstance(period, int):
+            raise TypeError('Period parameter is not perioderic.')
+
+        if period < 7 or period > 21:
+            raise ValueError('Period is out of range')
+
+        self.df['stochrsi' + str(period)] = self.stochasticRelativeStrengthIndex(period)   
+        self.df['stochrsi' + str(period)] = self.df['stochrsi' + str(period)].replace(nan, 0.5)
+
+    def addWilliamsR(self, period: int) -> None:
+        """Adds the Willams %R to the DataFrame"""
+
+        if not isinstance(period, int):
+            raise TypeError('Period parameter is not perioderic.')
+
+        if period < 7 or period > 21:
+            raise ValueError('Period is out of range')
+
+        self.df['williamsr' + str(period)] = self.williamsR(period)   
+        self.df['williamsr' + str(period)] = self.df['williamsr' + str(period)].replace(nan, -50)
 
     def seasonalARIMAModel(self): # TODO: annotate return type
         """Returns the Seasonal ARIMA Model for price predictions"""
