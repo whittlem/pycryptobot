@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.29.0] - 2021-06-11
+  
+### Added
+
+-- Added the Seasonal ARIMA machine learning model for price predictions
+
 ## [2.28.0] - 2021-06-11
   
 ### Added

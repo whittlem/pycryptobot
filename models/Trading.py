@@ -7,7 +7,8 @@ from numpy import maximum, mean, minimum, nan, ndarray, round
 from numpy import sum as np_sum
 from numpy import where
 from pandas import DataFrame, Series
-from statsmodels.tsa.statespace.sarimax import SARIMAX
+from datetime import datetime, timedelta
+from statsmodels.tsa.statespace.sarimax import SARIMAX, SARIMAXResultsWrapper
 from models.helper.LogHelper import Logger
 
 class TechnicalAnalysis():
@@ -535,10 +536,10 @@ class TechnicalAnalysis():
         self.df['williamsr' + str(period)] = self.williamsR(period)   
         self.df['williamsr' + str(period)] = self.df['williamsr' + str(period)].replace(nan, -50)
 
-    def seasonalARIMAModel(self): # TODO: annotate return type
+    def seasonalARIMAModel(self) -> SARIMAXResultsWrapper:
         """Returns the Seasonal ARIMA Model for price predictions"""
 
-        # parameters for SARIMAX
+        # hyperparameters for SARIMAX
         model = SARIMAX(self.df['close'], trend='n', order=(0,1,0), seasonal_order=(1,1,1,12))
         return model.fit(disp=-1)
 
@@ -546,6 +547,39 @@ class TechnicalAnalysis():
         """Returns the Seasonal ARIMA Model for price predictions"""
 
         return self.seasonalARIMAModel().fittedvalues
+
+    def seasonalARIMAModelPrediction(self, minutes: int=180) -> tuple:
+        """Returns seasonal ARIMA model prediction
+        
+        Parameters
+        ----------
+        minutes     : int
+            Number of minutes to predict      
+        """
+
+        if not isinstance(minutes, int):
+            raise TypeError('Prediction minutes is not numeric.')
+
+        if minutes < 1 or minutes > len(self.df):
+            raise ValueError('Predication minutes is out of range')
+
+        results_ARIMA = self.seasonalARIMAModel()
+
+        start_ts = self.df.last_valid_index()
+        end_ts = start_ts + timedelta(minutes=minutes)
+        pred = results_ARIMA.predict(start=str(start_ts), end=str(end_ts), dynamic=True)
+
+        try:
+            if len(pred) == 0:
+                df_last = self.df['close'].tail(1)
+                return (str(df_last.index.values[0]).replace('T', ' ').replace('.000000000', ''), df_last.values[0])
+            else:
+                df_last = pred.tail(1)
+                return (str(df_last.index.values[0]).replace('T', ' ').replace('.000000000', ''), df_last.values[0])
+        except Exception:
+            return None
+
+        return None
 
     def simpleMovingAverage(self, period: int) -> float:
         """Calculates the Simple Moving Average (SMA)"""
