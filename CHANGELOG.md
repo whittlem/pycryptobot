@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.28.0] - 2021-06-11
+  
+### Added
+
+-- Added Stochastic RSI and Williams %R technical indicators
+
 ## [2.27.0] - 2021-06-08
   
 ### Changed
