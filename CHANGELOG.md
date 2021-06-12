@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.30.1] - 2021-06-12
+  
+### Changed
+
+-- Suppressed ARIMA model warning
+
 ## [2.30.0] - 2021-06-12
   
 ### Changed
