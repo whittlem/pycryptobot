@@ -20,72 +20,16 @@ def parseMarket(market):
     if not isMarketValid(market):
         raise ValueError('Binance market invalid: ' + market)
 
-    if market.endswith('BTC'):
-        base_currency = market.replace('BTC', '')
-        quote_currency = 'BTC'
-    elif market.endswith('BNB'):
-        base_currency = market.replace('BNB', '')
-        quote_currency = 'BNB'
-    elif market.endswith('ETH'):
-        base_currency = market.replace('ETH', '')
-        quote_currency = 'ETH'
-    elif market.endswith('USDT'):
-        base_currency = market.replace('USDT', '')
-        quote_currency = 'USDT'
-    elif market.endswith('TUSD'):
-        base_currency = market.replace('TUSD', '')
-        quote_currency = 'TUSD'
-    elif market.endswith('BUSD'):
-        base_currency = market.replace('BUSD', '')
-        quote_currency = 'BUSD'
-    elif market.endswith('DAX'):
-        base_currency = market.replace('DAX', '')
-        quote_currency = 'DAX'
-    elif market.endswith('NGN'):
-        base_currency = market.replace('NGN', '')
-        quote_currency = 'NGN'
-    elif market.endswith('RUB'):
-        base_currency = market.replace('RUB', '')
-        quote_currency = 'RUB'
-    elif market.endswith('TRY'):
-        base_currency = market.replace('TRY', '')
-        quote_currency = 'TRY'
-    elif market.endswith('EUR'):
-        base_currency = market.replace('EUR', '')
-        quote_currency = 'EUR'
-    elif market.endswith('GBP'):
-        base_currency = market.replace('GBP', '')
-        quote_currency = 'GBP'
-    elif market.endswith('ZAR'):
-        base_currency = market.replace('ZAR', '')
-        quote_currency = 'ZAR'
-    elif market.endswith('UAH'):
-        base_currency = market.replace('UAH', '')
-        quote_currency = 'UAH'
-    elif market.endswith('DAI'):
-        base_currency = market.replace('DAI', '')
-        quote_currency = 'DAI'
-    elif market.endswith('BIDR'):
-        base_currency = market.replace('BIDR', '')
-        quote_currency = 'BIDR'
-    elif market.endswith('AUD'):
-        base_currency = market.replace('AUD', '')
-        quote_currency = 'AUD'
-    elif market.endswith('US'):
-        base_currency = market.replace('US', '')
-        quote_currency = 'US'
-    elif market.endswith('NGN'):
-        base_currency = market.replace('NGN', '')
-        quote_currency = 'NGN'
-    elif market.endswith('BRL'):
-        base_currency = market.replace('BRL', '')
-        quote_currency = 'BRL'
-    elif market.endswith('BVND'):
-        base_currency = market.replace('BVND', '')
-        quote_currency = 'BVND'
-    elif market.endswith('VAI'):
-        base_currency = market.replace('VAI', '')
-        quote_currency = 'VAI'
+    quote_currencies = [
+        'BTC', 'BNB', 'ETH', 'USDT', 'TUSD', 'BUSD', 'DAX', 'NGN', 'RUB', 'TRY', 'EUR',
+        'GBP', 'ZAR', 'UAH', 'DAI', 'BIDR', 'AUD', 'US', 'NGN', 'BRL', 'BVND', 'VAI'
+    ]
+
+    for qc in quote_currencies:
+        if market.endswith( qc ):
+            base_currency = market.replace(qc, '')
+            quote_currency = qc
+            break
 
     if len(market) != len(base_currency) + len(quote_currency):
         raise ValueError('Binance market error.')
