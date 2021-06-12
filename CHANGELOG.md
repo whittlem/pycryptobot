@@ -8,6 +8,13 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.30.0] - 2021-06-12
+  
+### Changed
+
+-- Improved ARIMA model output to console
+-- Reduced polling from 2 minutes to 1 minute
+
 ## [2.29.0] - 2021-06-11
   
 ### Added
