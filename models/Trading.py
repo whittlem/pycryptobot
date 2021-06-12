@@ -1,15 +1,18 @@
 """Technical analysis on a trading Pandas DataFrame"""
 
-from numpy import floor
-from re import compile
+import warnings
 
-from numpy import maximum, mean, minimum, nan, ndarray, round
+from re import compile
+from numpy import floor, maximum, mean, minimum, nan, ndarray, round
 from numpy import sum as np_sum
 from numpy import where
 from pandas import DataFrame, Series
 from datetime import datetime, timedelta
 from statsmodels.tsa.statespace.sarimax import SARIMAX, SARIMAXResultsWrapper
+from statsmodels.tools.sm_exceptions import ConvergenceWarning
 from models.helper.LogHelper import Logger
+
+warnings.simplefilter('ignore', ConvergenceWarning)
 
 class TechnicalAnalysis():
     def __init__(self, data=DataFrame()) -> None:
