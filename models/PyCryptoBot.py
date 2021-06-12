@@ -294,9 +294,9 @@ class PyCryptoBot():
         if self.exchange == 'binance':
             return to_binance_granularity(self.granularity)
         if self.exchange == 'coinbasepro':
-            return str(self.granularity) + 's'
+            return str(self.granularity)
         if self.exchange == 'dummy':
-            return str(self.granularity) + 's'
+            return str(self.granularity)
         raise TypeError('Unknown exchange "' + self.exchange + '"')
 
     def getBuyPercent(self):
