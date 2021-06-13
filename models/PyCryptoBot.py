@@ -2,6 +2,7 @@ import pandas as pd
 import argparse
 import json
 import math
+import os
 import random
 import re
 import sys
@@ -172,7 +173,7 @@ class PyCryptoBot():
         self.ema1226_6h_cache = None
         self.sma50200_1h_cache = None
 
-        if args['init']:
+        if args['init'] or (filename == 'config.json' and not os.path.isfile(filename)):
             # config builder
             cb = ConfigBuilder()
             cb.init()
