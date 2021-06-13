@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.31.0] - 2021-06-13
+  
+### Changed
+
+-- Separated strategy into Strategy model for custom strategies
+
 ## [2.30.2] - 2021-06-12
   
 ### Changed
