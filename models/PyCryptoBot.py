@@ -290,6 +290,17 @@ class PyCryptoBot():
         except Exception:
             return 'v0.0.0'
 
+    def getInterval(self, df: pd.DataFrame=pd.DataFrame(), iterations: int=0) -> pd.DataFrame:
+        if len(df) == 0:
+            return df
+
+        if self.isSimulation() and iterations > 0:
+            # with a simulation iterate through data
+            return df.iloc[iterations - 1:iterations]
+        else:
+            # most recent entry
+            return df.tail(1)
+
     def printGranularity(self) -> str:
         if self.exchange == 'binance':
             return to_binance_granularity(self.granularity)
