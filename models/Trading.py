@@ -563,7 +563,7 @@ class TechnicalAnalysis():
         if not isinstance(minutes, int):
             raise TypeError('Prediction minutes is not numeric.')
 
-        if minutes < 1 or minutes > len(self.df):
+        if minutes < 1 or minutes > 4320:
             raise ValueError('Predication minutes is out of range')
 
         results_ARIMA = self.seasonalARIMAModel()
