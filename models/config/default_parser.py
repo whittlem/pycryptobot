@@ -114,6 +114,13 @@ def defaultConfigParse(app, config):
                 app.autorestart = bool(config['autorestart'])
         else:
             raise TypeError('autorestart must be of type int')
+    
+    if 'stats' in config:
+        if isinstance(config['stats'], int):
+            if bool(config['stats']):
+                app.stats = True
+        else:
+            raise TypeError('stats must be of type int')
 
     if 'sellatloss' in config:
         if isinstance(config['sellatloss'], int):

@@ -54,6 +54,7 @@ def parse_arguments():
     # optional options
     parser.add_argument('--sellatresistance', action="store_true", help="sell at resistance or upper fibonacci band")
     parser.add_argument('--autorestart', action="store_true", help="Auto restart the bot in case of exception")
+    parser.add_argument('--stats', action="store_true", help="display summary of completed trades")
 
     # disable defaults
     parser.add_argument('--disablebullonly', action="store_true", help="disable only buying in bull market")
@@ -570,6 +571,9 @@ class PyCryptoBot():
 
     def autoRestart(self) -> bool:
         return self.autorestart
+    
+    def getStats(self) -> bool:
+        return self.stats
 
     def getLastAction(self):
         return self.last_action
