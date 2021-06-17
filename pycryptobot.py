@@ -230,7 +230,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
         now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
 
         # last_action polling if live
-        if app.isLive(): 
+        if app.isLive():
             last_action_current = state.last_action
             state.pollLastAction()
             if last_action_current != state.last_action:
@@ -882,8 +882,9 @@ def main():
             message += 'Coinbase Pro bot'
         elif app.getExchange() == 'binance':
             message += 'Binance bot'
-
-        message += ' for ' + app.getMarket() + ' using granularity ' + app.printGranularity()
+        
+        smartSwitchStatus = 'enabled' if app.getSmartSwitch() else 'disabled'
+        message += ' for ' + app.getMarket() + ' using granularity ' + app.printGranularity() + '. Smartswitch ' + smartSwitchStatus
         app.notifyTelegram(message)
 
         # initialise and start application
