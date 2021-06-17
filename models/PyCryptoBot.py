@@ -150,6 +150,7 @@ class PyCryptoBot():
 
         self.sellatresistance = False
         self.autorestart = False
+        self.stats = False
 
         self.disablebullonly = False
         self.disablebuynearhigh = False
