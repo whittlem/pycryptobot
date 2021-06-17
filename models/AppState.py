@@ -100,15 +100,9 @@ class AppState():
                 sys.tracebacklimit = 0
                 raise Exception(f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})')
 
-    def initLastAction(self):
-        # ignore if manually set
-        if self.app.getLastAction() is not None:
-            self.last_action = self.app.getLastAction()
-            return
-
+    def getLastOrder(self):
         # if not live
         if not self.app.isLive():
-            self.last_action = 'SELL'
             return
 
         orders = self.account.getOrders(self.app.getMarket(), '', 'done')
@@ -156,3 +150,14 @@ class AppState():
                 self.last_action = 'WAIT'
 
             return
+
+    def initLastAction(self):
+        # ignore if manually set
+        if self.app.getLastAction() is not None:
+            self.last_action = self.app.getLastAction()
+            return
+
+        self.getLastOrder()
+
+    def pollLastAction(self):
+        self.getLastOrder()
