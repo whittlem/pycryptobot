@@ -6,9 +6,11 @@ from models.PyCryptoBot import PyCryptoBot
 
 def test_instantiate_model_without_error():
     if not os.path.exists('config.json'):
-        with pytest.raises(ValueError) as execinfo:
-            PyCryptoBot()
-        assert str(execinfo.value) == "Invalid config.json: [Errno 2] No such file or directory: 'config.json'"
+
+#        this is now covered by creating config.json by default
+#        with pytest.raises(ValueError) as execinfo:
+#            PyCryptoBot()
+#        assert str(execinfo.value) == "Invalid config.json: [Errno 2] No such file or directory: 'config.json'"
 
         config = {
             "binance": {

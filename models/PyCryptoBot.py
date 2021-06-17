@@ -2,6 +2,7 @@ import pandas as pd
 import argparse
 import json
 import math
+import os
 import random
 import re
 import sys
@@ -53,6 +54,7 @@ def parse_arguments():
     # optional options
     parser.add_argument('--sellatresistance', action="store_true", help="sell at resistance or upper fibonacci band")
     parser.add_argument('--autorestart', action="store_true", help="Auto restart the bot in case of exception")
+    parser.add_argument('--stats', action="store_true", help="display summary of completed trades")
 
     # disable defaults
     parser.add_argument('--disablebullonly', action="store_true", help="disable only buying in bull market")
@@ -172,7 +174,7 @@ class PyCryptoBot():
         self.ema1226_6h_cache = None
         self.sma50200_1h_cache = None
 
-        if args['init']:
+        if args['init'] or (filename == 'config.json' and not os.path.isfile(filename)):
             # config builder
             cb = ConfigBuilder()
             cb.init()
@@ -569,6 +571,9 @@ class PyCryptoBot():
 
     def autoRestart(self) -> bool:
         return self.autorestart
+    
+    def getStats(self) -> bool:
+        return self.stats
 
     def getLastAction(self):
         return self.last_action
