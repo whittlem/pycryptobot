@@ -9,5 +9,5 @@ state = AppState(app, account)
 print (account.getBalance(app.getBaseCurrency()), account.getBalance(app.getQuoteCurrency()))
 
 print (state.last_action)
-state.initLastAction(app, account, state)
+state.initLastAction()
 print (state.last_action)
