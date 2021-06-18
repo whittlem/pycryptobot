@@ -1,6 +1,6 @@
 [![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg) [![Tests](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)
 
-# Python Crypto Bot v2.36.0 (pycryptobot)
+# Python Crypto Bot v2.37.0 (pycryptobot)
 
 ## Join our chat on Telegram
 
@@ -239,6 +239,7 @@ Special sell cases:
 
 ## Optional Options
 
+    --stats                             Display order profit and loss (P&L) report
     --autorestart                       Automatically restart the bot on error
     --sellatresistance                  Sells if the price reaches either resistance or Fibonacci band
 
