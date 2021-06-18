@@ -103,6 +103,7 @@ class AppState():
     def getLastOrder(self):
         # if not live
         if not self.app.isLive():
+            self.last_action = 'SELL'
             return
 
         orders = self.account.getOrders(self.app.getMarket(), '', 'done')
