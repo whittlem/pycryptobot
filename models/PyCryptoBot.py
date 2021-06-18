@@ -127,7 +127,7 @@ class PyCryptoBot():
                     if exchange == '' and ('coinbasepro' in config or 'api_pass' in config):
                         self.exchange = 'coinbasepro'
                     elif exchange == '' and 'binance' in config:
-                        self.exchange = 'coinbasepro'
+                        self.exchange = 'binance'
                     elif exchange != '' and exchange in ['coinbasepro', 'binance', 'dummy']:
                         self.exchange = exchange
                     else:
