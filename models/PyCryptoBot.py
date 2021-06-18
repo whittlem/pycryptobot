@@ -97,15 +97,15 @@ def truncate(f: Union[int, float], n: Union[int, float]) -> str:
     if not isinstance(n, int) and not isinstance(n, float):
         return '0.0'
 
-    if (f < 0.001) and n >= 4:
-        return f'{f:.4f}'
+    if (f < 0.0001) and n >= 5:
+        return f'{f:.5f}'
 
     # `{n}` inside the actual format honors the precision
     return f'{math.floor(f * 10 ** n) / 10 ** n:.{n}f}'
 
 
 class PyCryptoBot():
-    def __init__(self, exchange='coinbasepro', filename='config.json'):
+    def __init__(self, exchange='', filename='config.json'):
         args = parse_arguments()
 
         self.api_key = ''
@@ -121,7 +121,20 @@ class PyCryptoBot():
             else:
                 self.exchange = args['exchange']
         else:
-            self.exchange = exchange
+            try:
+                with open(filename) as config_file:
+                    config = json.load(config_file)
+                    if exchange == '' and ('coinbasepro' in config or 'api_pass' in config):
+                        self.exchange = 'coinbasepro'
+                    elif exchange == '' and 'binance' in config:
+                        self.exchange = 'coinbasepro'
+                    elif exchange != '' and exchange in ['coinbasepro', 'binance', 'dummy']:
+                        self.exchange = exchange
+                    else:
+                        self.exchange = 'dummy'
+            except:
+                self.exchange = 'dummy'
+                pass
 
         self.market = 'BTC-GBP'
         self.base_currency = 'BTC'
@@ -185,8 +198,9 @@ class PyCryptoBot():
             with open(filename) as config_file:
                 config = json.load(config_file)
 
-                if exchange not in config and 'binance' in config:
-                    self.exchange = 'binance'
+                # if no exchange specified then dummy
+                #if self.exchange not in config:
+                #    self.exchange = 'dummy'
 
                 if self.exchange == 'coinbasepro' and 'coinbasepro' in config:
                     coinbaseProConfigParser(self, config['coinbasepro'], args)

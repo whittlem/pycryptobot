@@ -1,30 +1,13 @@
 from models.PyCryptoBot import PyCryptoBot
-from models.TradingAccount import TradingAccount
 
-# Coinbase Pro orders
 app = PyCryptoBot(exchange='coinbasepro')
-app.setLive(1)
-account = TradingAccount(app)
-#orders = account.getOrders()
-orders = account.getOrders(app.getMarket(), '', 'done')
-print (orders)
+print (app.getExchange())
 
-# Binance Live orders
 app = PyCryptoBot(exchange='binance')
-app.setLive(1)
-account = TradingAccount(app)
-#orders = account.getOrders('DOGEBTC')
-orders = account.getOrders('DOGEBTC', '', 'done')
-print (orders)
+print (app.getExchange())
 
-# Coinbase Pro last buy
-app = PyCryptoBot(exchange='coinbasepro')
-app.setLive(1)
-result = app.getLastBuy()
-print (result)
+app = PyCryptoBot(exchange='dummy')
+print (app.getExchange())
 
-# Binance last buy
-app = PyCryptoBot(exchange='binance')
-app.setLive(1)
-result = app.getLastBuy()
-print (result)
+app = PyCryptoBot()
+print (app.getExchange())
