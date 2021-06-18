@@ -264,3 +264,11 @@ def defaultConfigParse(app, config):
                 app.buymaxsize = config['buymaxsize']
         else:
             raise TypeError('buymaxsize must be of type int or float')
+
+    if 'numberofbots' in config:
+        if isinstance(config['numberofbots'], int):
+            if config['numberofbots'] > 0:
+                app.numberofbots = config['numberofbots']
+        else:
+            raise TypeError('number_of_bots must be of type positive int')
+            

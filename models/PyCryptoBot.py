@@ -49,6 +49,7 @@ def parse_arguments():
     parser.add_argument('--sellpercent', type=int, help="percentage of base currency to sell")
     parser.add_argument('--lastaction', type=str, help="optionally set the last action (BUY, SELL)")
     parser.add_argument('--buymaxsize', type=float, help="maximum size on buy")
+    parser.add_argument('--numberofbots', type=int, help="number of bot instances in trading pool")
 
     # optional options
     parser.add_argument('--sellatresistance', action="store_true", help="sell at resistance or upper fibonacci band")
@@ -143,6 +144,7 @@ class PyCryptoBot():
         self.last_action = None
         self._chat_client = None
         self.buymaxsize = None
+        self.numberofbots = 1
 
         self.configbuilder = False
 
@@ -316,6 +318,13 @@ class PyCryptoBot():
             return float(self.buymaxsize)
         except Exception:
             return None
+
+    def getNumberOfBots(self):
+        if 'numberofbots' in config and self.exchange == 'binance':
+            try:
+                return int(self.numberofbots)
+            except Exception:
+                return 1
 
     def getHistoricalData(self, market, granularity: int, iso8601start='', iso8601end=''):
         if self.exchange == 'coinbasepro':
@@ -830,6 +839,10 @@ class PyCryptoBot():
 
             if self.getBuyMaxSize():
                 txt = '         Max Buy Size : ' + str(self.getBuyMaxSize()) + '  --buymaxsize <size>'
+                Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
+
+            if self.getNumberOfBots() > 1:
+                txt = '       Number of Bots : ' + str(self.getNumberOfBots()) + '  --numberofbots <num>'
                 Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
 
             Logger.info('================================================================================')

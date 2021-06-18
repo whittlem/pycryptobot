@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from binance.client import Client
 from time import sleep
 from models.helper.LogHelper import Logger
+from models.PyCryptoBot import PyCryptoBot
 
 
 DEFAULT_MAKER_FEE_RATE = 0.0015 # added 0.0005 to allow for price movements
@@ -253,6 +254,12 @@ class AuthAPI(AuthAPIBase):
 
             # remove fees
             base_quantity = base_quantity - (base_quantity * self.getTradeFee(market))
+
+            # get number of bots from config/flag for multi bot pool trading
+            number_of_bots = PyCryptoBot.getNumberOfBots()
+
+            # divide base quantity by number of bots for multi bot pool trading
+            base_quantity = base_quantity / number_of_bots
 
             # execute market buy
             stepper = 10.0 ** precision
