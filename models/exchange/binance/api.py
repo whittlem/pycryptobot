@@ -408,7 +408,7 @@ class PublicAPI(AuthAPIBase):
 
         if iso8601start != '' and iso8601end != '':
             Logger.info('Attempting to retrieve data from ' + iso8601start)
-            resp = self.client.get_historical_klines(market, granularity, iso8601start)
+            resp = self.client.get_historical_klines(market, granularity, iso8601start, iso8601end)
 
             if len(resp) > 300:
                 resp = resp[:300]

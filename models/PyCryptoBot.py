@@ -360,12 +360,7 @@ class PyCryptoBot():
             api = BPublicAPI()
 
             if iso8601start != '' and iso8601end != '':
-                return api.getHistoricalData(
-                    market,
-                    to_binance_granularity(granularity),
-                    str(datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S.%f').strftime('%d %b, %Y')),
-                    str(datetime.strptime(iso8601end, '%Y-%m-%dT%H:%M:%S.%f').strftime('%d %b, %Y'))
-                )
+                return api.getHistoricalData(market, to_binance_granularity(granularity), iso8601start, iso8601end)
             else:
                 return api.getHistoricalData(market, to_binance_granularity(granularity))
         else:
@@ -872,15 +867,29 @@ class PyCryptoBot():
 
                 attempts = 0
 
-                if self.simstartdate is not None:
+                if self.simstartdate is not None and self.simenddate is not None:
+                    date = self.simstartdate.split('-')
+                    startDate = datetime(int(date[0]), int(date[1]), int(date[2]))
+                    if self.simenddate == 'now':
+                        endDate = datetime.now()
+                    else:
+                        date = self.simenddate.split('-')
+                        endDate = datetime(int(date[0]), int(date[1]), int(date[2]))
+                    while len(tradingData) != 300 and attempts < 10:
+                        tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(),
+                                                             startDate.isoformat(timespec='milliseconds'),
+                                                             endDate.isoformat(timespec='milliseconds'))
+                        attempts += 1
+                elif self.simstartdate is not None and self.simenddate is None:
                     date = self.simstartdate.split('-')
                     startDate = datetime(int(date[0]), int(date[1]), int(date[2]))
                     endDate = startDate + timedelta(minutes=(self.getGranularity()/60)*300)
                     while len(tradingData) != 300 and attempts < 10:
                         tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(),
-                                                             startDate.isoformat(timespec='milliseconds'))
+                                                             startDate.isoformat(timespec='milliseconds'),
+                                                             endDate.isoformat(timespec='milliseconds'))
                         attempts += 1
-                elif self.simenddate is not None:
+                elif self.simenddate is not None and self.simstartdate is None:
                     if self.simenddate == 'now':
                         endDate = datetime.now()
                     else:
@@ -889,7 +898,8 @@ class PyCryptoBot():
                     startDate = endDate - timedelta(minutes=(self.getGranularity()/60)*300)
                     while len(tradingData) != 300 and attempts < 10:
                         tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(),
-                                                             startDate.isoformat(timespec='milliseconds'))
+                                                             startDate.isoformat(timespec='milliseconds'),
+                                                             endDate.isoformat(timespec='milliseconds'))
                         attempts += 1
                 else:
                     while len(tradingData) != 300 and attempts < 10:
