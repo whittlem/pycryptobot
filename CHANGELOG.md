@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.37.2] - 2021-06-21
+
+### Changed
+
+-- Fixed "simstart" bug
+
 ## [2.37.1] - 2021-06-18
 
 ### Changed
