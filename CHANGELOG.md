@@ -8,6 +8,11 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.37.3] - 2021-06-22
+
+-- Added statstartdate flag to ignore trades before a given date in stats function
+-- Added statgroup flag to merge stats of multiple currency pairs
+
 ## [2.37.2] - 2021-06-21
 
 ### Changed
