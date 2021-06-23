@@ -28,23 +28,39 @@ class Stats():
         for index, row in self.orders.iterrows():
             time = row['created_at'].to_pydatetime()
             if row['action'] == 'buy':
+                if self.app.exchange == 'coinbasepro':
+                    amount = row['filled'] * row['price']
                 if last_order in ['sell', None]:
                     last_order = 'buy'
-                    self.order_pairs.append({'buy': {'time':time, 'size': row['size']}, 'sell': None})
+                    if self.app.exchange == 'coinbasepro':
+                        self.order_pairs.append({'buy': {'time':time, 'size': amount, 'buy_fees': row['fees']}, 'sell': None})
+                    else:
+                        self.order_pairs.append({'buy': {'time':time, 'size': row['size']}, 'sell': None})
                 else:
-                    self.order_pairs[-1]['buy']['size'] += row['size']
+                    if self.app.exchange == 'coinbasepro':
+                        self.order_pairs[-1]['buy']['size'] += amount
+                        self.order_pairs[-1]['buy']['buy_fees'] += row['fees']
+                    else:
+                        self.order_pairs[-1]['buy']['size'] += row['size']
             else:
                 if self.app.exchange == 'coinbasepro':
-                    amount = (row['filled'] * row['price']) - row['fees']
+                    amount = (row['filled'] * row['price'])
                 else:
                     amount = row['size']
                 if last_order == None: # first order is a sell (no pair)
                     continue
                 if last_order == 'buy':
                     last_order = 'sell'
-                    self.order_pairs[-1]['sell'] = {'time':time, 'size': amount}
+                    if self.app.exchange == 'coinbasepro':
+                        self.order_pairs[-1]['sell'] = {'time':time, 'size': amount, 'sell_fees': row['fees']}
+                    else:
+                        self.order_pairs[-1]['sell'] = {'time':time, 'size': amount}
                 else:
-                    self.order_pairs[-1]['sell']['size'] += amount
+                    if self.app.exchange == 'coinbasepro':
+                        self.order_pairs[-1]['sell']['size'] += amount
+                        self.order_pairs[-1]['sell']['sell_fees'] += row['fees']
+                    else:
+                        self.order_pairs[-1]['sell']['size'] += amount
         # remove open trade
         if len(self.order_pairs) > 0:
             if self.order_pairs[-1]['sell'] == None:
@@ -62,10 +78,12 @@ class Stats():
     def data_display(self):
         # get % gains and delta
         for pair in self.order_pairs:
-            print(pair)
-            pair['gain'] = ((pair['sell']['size'] - pair['buy']['size']) / pair['buy']['size']) * 100
-            pair['delta'] = pair['sell']['size'] - pair['buy']['size']
-            print(pair['delta'])
+            if self.app.exchange == 'coinbasepro':
+                pair['delta'] = pair['sell']['size'] - (pair['buy']['size'] + pair['buy']['buy_fees'] + pair['sell']['sell_fees'])
+                pair['gain'] = (pair['delta'] / pair['buy']['size']) * 100
+            else:
+                pair['gain'] = ((pair['sell']['size'] - pair['buy']['size']) / pair['buy']['size']) * 100
+                pair['delta'] = pair['sell']['size'] - pair['buy']['size']
         
         # get day/week/month/all time totals
         totals = {'today': [], 'week': [], 'month': [], 'all_time': []}
