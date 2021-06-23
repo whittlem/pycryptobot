@@ -14,6 +14,7 @@ Upgrade library dependancies (if required):
 
 -- Added statstartdate flag to ignore trades before a given date in stats function
 -- Added statgroup flag to merge stats of multiple currency pairs
+-- Fixed stats for coinbase pro
 
 ## [2.37.3] - 2021-06-22
 
