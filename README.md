@@ -455,6 +455,32 @@ Some of you may have been helping test the new code for a few months in the "bin
 
 Please note you need to be using Python 3.9.x or greater. The previous bot version only required Python 3.x.
 
+## Stats Module
+
+To keep track of the bots performance over time you can run the stats module. e.g.
+
+    python3 pycryptobot.py --stats
+
+This will analyse all the completed buy/sell trade pairs to give stats on todays trades, the trades over the last 7 days, the trades over the last 30 days, and all-time trades.
+
+An optional flag of --statstartdate can be given to ignore all trades that happened before a specified date. The date must be of the format: yyyy-mm-dd. e.g. 
+
+    python3 pycryptobot.py --stats --statstartdate 2021-6-01
+
+To get the stats from all your bots, another optional flag of --statgroup can be used. This takes a list of markets and merges the results into one output. e.g.
+
+    python3 pycryptobot.py --stats --statgroup BTCGBP ETHGBP ADAGBP
+
+or via the config.json file e.g.
+
+    "config": {
+        ....
+        "stats": 1,
+        "statgroup": ["BTCGBP", "ETHGBP", "ADAGBP"],
+        ....
+    }
+Note: --statgroup only accepts a group of markets if the quote currency (in this example GBP) is the same.
+
 ## Upgrading the bots
 
 I push updates regularly and it's best to always be running the latest code. In each bot directory make sure you run this regularly.
