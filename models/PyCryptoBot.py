@@ -482,7 +482,7 @@ class PyCryptoBot():
 
     def is6hEMA1226Bull(self):
         try:
-            if isinstance(self.ema1226_6h_cache, pd.DataFrame):
+            if self.isSimulation() and isinstance(self.ema1226_6h_cache, pd.DataFrame):
                 df_data = self.ema1226_6h_cache
             elif self.exchange == 'coinbasepro':
                 api = CBPublicAPI()
