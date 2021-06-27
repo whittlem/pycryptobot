@@ -8,6 +8,42 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.38.0] - 2021-06-23
+
+### Changed
+
+-- Added statstartdate flag to ignore trades before a given date in stats function
+-- Added statgroup flag to merge stats of multiple currency pairs
+-- Fixed stats for coinbase pro
+
+## [2.37.3] - 2021-06-22
+
+### Changed
+
+-- Fixed smart switch back bug
+
+## [2.37.2] - 2021-06-21
+
+### Changed
+
+-- Fixed "simstart" bug
+
+## [2.37.1] - 2021-06-18
+
+### Changed
+
+-- Fixed issue from previous release
+
+## [2.37.0] - 2021-06-18
+
+### Changed
+
+-- Refactored the new stats feature into it's own Stats class
+-- Fixed a bug with getOrders() for Coinbase Pro
+-- Fixed the rounding issue with precision greater than 4
+-- Fixed the dummy account which has been broken with a previous PR
+-- Updated unit tests
+
 ## [2.31.1] - 2021-06-13
   
 ### Changed

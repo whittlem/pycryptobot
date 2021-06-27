@@ -276,6 +276,9 @@ class AuthAPI(AuthAPIBase):
         # reverse orders and reset index
         df = df.iloc[::-1].reset_index()
 
+        # for sell orders size is filled
+        df['size'] = df['size'].fillna(df['filled'])
+
         return df
 
     

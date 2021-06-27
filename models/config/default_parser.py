@@ -119,9 +119,13 @@ def defaultConfigParse(app, config):
         if isinstance(config['stats'], int):
             if bool(config['stats']):
                 app.stats = True
+                if 'statgroup' in config:
+                    app.statgroup = config['statgroup']
+                if 'statstartdate' in config:    
+                    app.statstartdate = config['statstartdate']
         else:
             raise TypeError('stats must be of type int')
-
+    
     if 'sellatloss' in config:
         if isinstance(config['sellatloss'], int):
             if config['sellatloss'] in [ 0, 1 ]:
