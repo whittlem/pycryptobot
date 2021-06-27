@@ -41,7 +41,7 @@ def parser(app, binance_config, args={}):
     #print('Binance Configuration parse')
 
     if not binance_config:
-        raise Exception('There is an error in your config dictionnary')
+        raise Exception('There is an error in your config dictionary')
 
     if not app:
         raise Exception('No app is passed')
