@@ -420,17 +420,19 @@ class PyCryptoBot():
 
             if 'ema26' not in df_data:
                 ta.addEMA(26)
-            
+
+            df_last = ta.getDataFrame().copy().iloc[-1,:]
+            df_last['bull'] = df_last['ema12'] > df_last['ema26']  
+
             if self.isSimulation():
                 Logger.debug("---- 1h EMA Check----")
                 #Logger.debug(str(iso8601end))
                 Logger.debug("simdate: " + str(df_last['date']))
                 Logger.debug("ema12 1h: " + str(df_last['ema12']))
                 Logger.debug("ema26 1h: " + str(df_last['ema26']))
-                Logger.debug("bull 1h: " + str(df_last['ema12'] > df_last['ema26']))
+                
+            Logger.debug("bull 1h: " + str(df_last['ema12'] > df_last['ema26']))
 
-            df_last = ta.getDataFrame().copy().iloc[-1,:]
-            df_last['bull'] = df_last['ema12'] > df_last['ema26']
             return bool(df_last['bull'])
         except Exception:
             return False
@@ -511,16 +513,18 @@ class PyCryptoBot():
             if 'ema26' not in df_data:
                 ta.addEMA(26)
 
+            df_last = ta.getDataFrame().copy().iloc[-1, :]
+            df_last['bull'] = df_last['ema12'] > df_last['ema26']
+
             if self.isSimulation():
                 Logger.debug("---- 6h EMA Check----")
                 #Logger.debug(str(iso8601end))
                 Logger.debug("simdate: " + str(df_last['date']))
                 Logger.debug("ema12 6h: " + str(df_last['ema12']))
                 Logger.debug("ema26 6h: " + str(df_last['ema26']))
-                Logger.debug("bull 6h: " + str(df_last['ema12'] > df_last['ema26']))
                 
-            df_last = ta.getDataFrame().copy().iloc[-1, :]
-            df_last['bull'] = df_last['ema12'] > df_last['ema26']
+            Logger.debug("bull 6h: " + str(df_last['ema12'] > df_last['ema26']))
+                
             return bool(df_last['bull'])
         except Exception:
             return False
