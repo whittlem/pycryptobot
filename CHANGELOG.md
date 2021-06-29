@@ -8,6 +8,10 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.38.2] - 2021-06-29
+
+-- Fixed smartswitch for binance simulation mode and live
+
 ## [2.38.0] - 2021-06-23
 
 ### Changed
