@@ -398,10 +398,10 @@ class PyCryptoBot():
     def getSmartSwitch(self):
         return self.smart_switch
 
-    def is1hEMA1226Bull(self):
+    def is1hEMA1226Bull(self, iso8601end: str=''):
         try:
             if self.isSimulation() and isinstance(self.ema1226_1h_cache, pd.DataFrame):
-                df_data = self.ema1226_1h_cache
+                df_data = self.ema1226_1h_cache[(self.ema1226_1h_cache['date'] <= iso8601end)]
             elif self.exchange == 'coinbasepro':
                 api = CBPublicAPI()
                 df_data = api.getHistoricalData(self.market, 3600)
@@ -421,6 +421,14 @@ class PyCryptoBot():
             if 'ema26' not in df_data:
                 ta.addEMA(26)
             
+            if self.isSimulation():
+                Logger.debug("---- 1h EMA Check----")
+                #Logger.debug(str(iso8601end))
+                Logger.debug("simdate: " + str(df_last['date']))
+                Logger.debug("ema12 1h: " + str(df_last['ema12']))
+                Logger.debug("ema26 1h: " + str(df_last['ema26']))
+                Logger.debug("bull 1h: " + str(df_last['ema12'] > df_last['ema26']))
+
             df_last = ta.getDataFrame().copy().iloc[-1,:]
             df_last['bull'] = df_last['ema12'] > df_last['ema26']
             return bool(df_last['bull'])
@@ -480,18 +488,18 @@ class PyCryptoBot():
         except Exception:
             return False
 
-    def is6hEMA1226Bull(self):
+    def is6hEMA1226Bull(self, iso8601end: str=''):
         try:
             if self.isSimulation() and isinstance(self.ema1226_6h_cache, pd.DataFrame):
-                df_data = self.ema1226_6h_cache
+                df_data = self.ema1226_6h_cache[(self.ema1226_6h_cache['date'] <= iso8601end)]
             elif self.exchange == 'coinbasepro':
                 api = CBPublicAPI()
                 df_data = api.getHistoricalData(self.market, 21600)
                 self.ema1226_6h_cache = df_data
             elif self.exchange == 'binance':
                 api = BPublicAPI()
-                df_data = api.getHistoricalData
-                self.ema1226_6h_cache = df_data(self.market, '6h')
+                df_data = api.getHistoricalData(self.market, '6h')
+                self.ema1226_6h_cache = df_data
             else:
                 return False
 
@@ -503,6 +511,14 @@ class PyCryptoBot():
             if 'ema26' not in df_data:
                 ta.addEMA(26)
 
+            if self.isSimulation():
+                Logger.debug("---- 6h EMA Check----")
+                #Logger.debug(str(iso8601end))
+                Logger.debug("simdate: " + str(df_last['date']))
+                Logger.debug("ema12 6h: " + str(df_last['ema12']))
+                Logger.debug("ema26 6h: " + str(df_last['ema26']))
+                Logger.debug("bull 6h: " + str(df_last['ema12'] > df_last['ema26']))
+                
             df_last = ta.getDataFrame().copy().iloc[-1, :]
             df_last['bull'] = df_last['ema12'] > df_last['ema26']
             return bool(df_last['bull'])

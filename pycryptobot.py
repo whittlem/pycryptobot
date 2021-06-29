@@ -74,7 +74,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
 
     formatted_current_df_index = f'{current_df_index} 00:00:00' if len(current_df_index) == 10 else current_df_index
 
-    if app.getSmartSwitch() == 1 and app.getGranularity() == 3600 and app.is1hEMA1226Bull() is True and app.is6hEMA1226Bull() is True:
+    if app.getSmartSwitch() == 1 and app.getGranularity() == 3600 and app.is1hEMA1226Bull(formatted_current_df_index) is True and app.is6hEMA1226Bull(formatted_current_df_index) is True:
         Logger.info('*** smart switch from granularity 3600 (1 hour) to 900 (15 min) ***')
 
         app.notifyTelegram(app.getMarket() + " smart switch from granularity 3600 (1 hour) to 900 (15 min)")
@@ -83,7 +83,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
         list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, app, state))
 
-    if app.getSmartSwitch() == 1 and app.getGranularity() == 900 and app.is1hEMA1226Bull() is False and app.is6hEMA1226Bull() is False:
+    if app.getSmartSwitch() == 1 and app.getGranularity() == 900 and app.is1hEMA1226Bull(formatted_current_df_index) is False and app.is6hEMA1226Bull(formatted_current_df_index) is False:
         Logger.info("*** smart switch from granularity 900 (15 min) to 3600 (1 hour) ***")
 
         app.notifyTelegram(app.getMarket() + " smart switch from granularity 900 (15 min) to 3600 (1 hour)")
