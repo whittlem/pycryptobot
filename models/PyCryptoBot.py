@@ -57,6 +57,7 @@ def parse_arguments():
     parser.add_argument('--stats', action="store_true", help="display summary of completed trades")
     parser.add_argument('--statgroup', nargs='+', help="add multiple currency pairs to merge stats")
     parser.add_argument('--statstartdate', type=str, help="trades before this date are ignored in stats function e.g 2021-01-15")
+    parser.add_argument('--statdetail', action="store_true", help="display detail of completed transactions for a given market")
 
     # disable defaults
     parser.add_argument('--disablebullonly', action="store_true", help="disable only buying in bull market")
@@ -168,6 +169,7 @@ class PyCryptoBot():
         self.stats = False
         self.statgroup = None
         self.statstartdate = None
+        self.statdetail = False
 
         self.disablebullonly = False
         self.disablebuynearhigh = False

@@ -29,38 +29,26 @@ class Stats():
             time = row['created_at'].to_pydatetime()
             if row['action'] == 'buy':
                 if self.app.exchange == 'coinbasepro':
-                    amount = row['filled'] * row['price']
+                    amount = row['filled'] * row['price'] + row['fees']
+                else:
+                    amount = row['size']
                 if last_order in ['sell', None]:
                     last_order = 'buy'
-                    if self.app.exchange == 'coinbasepro':
-                        self.order_pairs.append({'buy': {'time':time, 'size': amount, 'buy_fees': row['fees']}, 'sell': None})
-                    else:
-                        self.order_pairs.append({'buy': {'time':time, 'size': row['size']}, 'sell': None})
+                    self.order_pairs.append({'buy': {'time':time, 'size': amount}, 'sell': None, 'market': self.app.getMarket()})
                 else:
-                    if self.app.exchange == 'coinbasepro':
-                        self.order_pairs[-1]['buy']['size'] += amount
-                        self.order_pairs[-1]['buy']['buy_fees'] += row['fees']
-                    else:
-                        self.order_pairs[-1]['buy']['size'] += row['size']
+                    self.order_pairs[-1]['buy']['size'] += amount
             else:
                 if self.app.exchange == 'coinbasepro':
-                    amount = (row['filled'] * row['price'])
+                    amount = (row['filled'] * row['price']) - row['fees']
                 else:
                     amount = row['size']
                 if last_order == None: # first order is a sell (no pair)
                     continue
                 if last_order == 'buy':
                     last_order = 'sell'
-                    if self.app.exchange == 'coinbasepro':
-                        self.order_pairs[-1]['sell'] = {'time':time, 'size': amount, 'sell_fees': row['fees']}
-                    else:
-                        self.order_pairs[-1]['sell'] = {'time':time, 'size': amount}
+                    self.order_pairs[-1]['sell'] = {'time':time, 'size': amount}
                 else:
-                    if self.app.exchange == 'coinbasepro':
-                        self.order_pairs[-1]['sell']['size'] += amount
-                        self.order_pairs[-1]['sell']['sell_fees'] += row['fees']
-                    else:
-                        self.order_pairs[-1]['sell']['size'] += amount
+                    self.order_pairs[-1]['sell']['size'] += amount
         # remove open trade
         if len(self.order_pairs) > 0:
             if self.order_pairs[-1]['sell'] == None:
@@ -78,13 +66,9 @@ class Stats():
     def data_display(self):
         # get % gains and delta
         for pair in self.order_pairs:
-            if self.app.exchange == 'coinbasepro':
-                pair['delta'] = pair['sell']['size'] - (pair['buy']['size'] + pair['buy']['buy_fees'] + pair['sell']['sell_fees'])
-                pair['gain'] = (pair['delta'] / pair['buy']['size']) * 100
-            else:
-                pair['gain'] = ((pair['sell']['size'] - pair['buy']['size']) / pair['buy']['size']) * 100
-                pair['delta'] = pair['sell']['size'] - pair['buy']['size']
-        
+            pair['delta'] = pair['sell']['size'] - pair['buy']['size']
+            pair['gain'] = (pair['delta'] / pair['buy']['size']) * 100
+
         # get day/week/month/all time totals
         totals = {'today': [], 'week': [], 'month': [], 'all_time': []}
         today = datetime.today().date()
@@ -97,6 +81,48 @@ class Stats():
                 raise ValueError("format of --statstartdate must be yyyy-mm-dd")
         else:
             start = None
+        
+        # popular currencies
+        symbol = self.app.getQuoteCurrency()
+        if symbol in ['USD', 'AUD', 'CAD', 'SGD', 'NZD']: symbol = '$'
+        if symbol == 'EUR': symbol = '€'
+        if symbol == 'GBP': symbol = '£'
+
+        if self.app.statdetail:
+            headers = ["| Num  ", "| Market     ", "| Date of Sell ", "| Price bought ", "| Price sold  ", "| Delta     ", "| Gain/Loss  |"]
+            border = "+"
+            for header in headers:
+                border += "-" * (len(header) - 1) + '+'
+            border = border[:-2] + '+'
+            Logger.info(border + "\n" + "".join([x for x in headers]) + "\n" + border)
+            for i, pair in enumerate(self.order_pairs):
+                if start:
+                    if pair['sell']['time'].date() < start:
+                        continue
+                d_num = '| ' + str(i + 1)
+                d_num = d_num + ' ' * (len(headers[0]) - len(d_num))
+                d_date = '| ' + str(pair['sell']['time'].date())
+                d_market = '| ' + pair['market']
+                d_market = d_market + ' ' * (len(headers[1]) - len(d_market))
+                d_date = d_date + ' ' * (len(headers[2]) - len(d_date))
+                d_buy_size = '| ' + symbol + ' ' + '{:.2f}'.format(pair['buy']['size'])
+                d_buy_size = d_buy_size + ' ' * (len(headers[3]) - len(d_buy_size))
+                d_sell_size = '| ' + symbol + ' ' + '{:.2f}'.format(pair['sell']['size'])
+                d_sell_size = d_sell_size + ' ' * (len(headers[4]) - len(d_sell_size))
+                if pair['delta'] > 0:
+                    d_delta = '| ' + symbol + ' {:.2f}'.format(pair['delta'])
+                else:
+                    d_delta = '| ' + symbol + '{:.2f}'.format(pair['delta'])
+                d_delta = d_delta + ' ' * (len(headers[5]) - len(d_delta))
+                if pair['gain'] > 0:
+                    d_gain = '|  ' + '{:.2f}'.format(pair['gain']) + ' %'
+                else:
+                    d_gain = '| ' + '{:.2f}'.format(pair['gain']) + ' %'
+                d_gain = d_gain + ' ' * (len(headers[6]) - len(d_gain) -1) + '|'
+                Logger.info(d_num + d_market + d_date + d_buy_size + d_sell_size + d_delta + d_gain)
+            Logger.info(border)
+            sys.exit()
+
         for pair in self.order_pairs:
             if start:
                 if pair['sell']['time'].date() < start:
@@ -135,12 +161,6 @@ class Stats():
             all_time_delta = [(x['sell']['time'] - x['buy']['time']).total_seconds() for x in totals['all_time']]
             all_time_delta = timedelta(seconds=int(sum(all_time_delta) / len(all_time_delta)))
         else: all_time_delta = '0:0:0'
-
-        # popular currencies
-        symbol = self.app.getQuoteCurrency()
-        if symbol in ['USD', 'AUD', 'CAD', 'SGD', 'NZD']: symbol = '$'
-        if symbol == 'EUR': symbol = '€'
-        if symbol == 'GBP': symbol = '£'
 
         today_sum = symbol + ' {:.2f}'.format(round(sum(today_gain), 2)) if len(today_gain) > 0 else symbol + ' 0.00'
         week_sum = symbol + ' {:.2f}'.format(round(sum(week_gain), 2)) if len(week_gain) > 0 else symbol + ' 0.00'

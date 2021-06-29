@@ -8,6 +8,10 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.39.0] - 2021-06-29
+
+-- Added statdetail flag which gives a detailed list of transactions (works with --statstartdate and --statgroup)
+
 ## [2.38.0] - 2021-06-23
 
 ### Changed
