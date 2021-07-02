@@ -422,26 +422,25 @@ class PyCryptoBot():
                 ta.addEMA(26)
 
             df_last = ta.getDataFrame().copy().iloc[-1,:]
-            df_last['bull'] = df_last['ema12'] > df_last['ema26']  
 
+            Logger.debug("---- EMA1226 1H Check----")
             if self.isSimulation():
-                Logger.debug("---- 1h EMA Check----")
-                #Logger.debug(str(iso8601end))
                 Logger.debug("simdate: " + str(df_last['date']))
                 Logger.debug("ema12 1h: " + str(df_last['ema12']))
                 Logger.debug("ema26 1h: " + str(df_last['ema26']))
                 
             Logger.debug("bull 1h: " + str(df_last['ema12'] > df_last['ema26']))
 
+            df_last['bull'] = df_last['ema12'] > df_last['ema26']  
             return bool(df_last['bull'])
         except Exception:
             return False
 
-    def is1hSMA50200Bull(self):
+    def is1hSMA50200Bull(self, iso8601end: str=''):
         try:
             if self.isSimulation() and isinstance(self.sma50200_1h_cache, pd.DataFrame):
-                df_data = self.sma50200_1h_cache
-            if self.exchange == 'coinbasepro':
+                df_data = self.sma50200_1h_cache[(self.sma50200_1h_cache['date'] <= iso8601end)]
+            elif self.exchange == 'coinbasepro':
                 api = CBPublicAPI()
                 df_data = api.getHistoricalData(self.market, 3600)
                 self.sma50200_1h_cache = df_data
@@ -461,6 +460,15 @@ class PyCryptoBot():
                 ta.addSMA(200)
 
             df_last = ta.getDataFrame().copy().iloc[-1,:]
+
+            Logger.debug("---- SMA50200 1H Check----")
+            if self.isSimulation():
+                Logger.debug("simdate: " + str(df_last['date']))
+                Logger.debug("sma50 1h: " + str(df_last['sma50']))
+                Logger.debug("sma200 1h: " + str(df_last['sma200']))
+                
+            Logger.debug("bull 1h: " + str(df_last['sma50'] > df_last['sma200']))
+
             df_last['bull'] = df_last['sma50'] > df_last['sma200']
             return bool(df_last['bull'])
         except Exception:
@@ -516,9 +524,8 @@ class PyCryptoBot():
             df_last = ta.getDataFrame().copy().iloc[-1, :]
             df_last['bull'] = df_last['ema12'] > df_last['ema26']
 
+            Logger.debug("---- EMA1226 6H Check----")
             if self.isSimulation():
-                Logger.debug("---- 6h EMA Check----")
-                #Logger.debug(str(iso8601end))
                 Logger.debug("simdate: " + str(df_last['date']))
                 Logger.debug("ema12 6h: " + str(df_last['ema12']))
                 Logger.debug("ema26 6h: " + str(df_last['ema26']))
