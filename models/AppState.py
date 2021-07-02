@@ -116,7 +116,7 @@ class AppState():
             last_order = orders[-1:]
 
             # if orders exist and last order is a buy
-            if str(last_order.action.values[0]) == 'buy' and base == 0.0:
+            if str(last_order.action.values[0]) == 'buy' and base > 0.0:
                 self.last_buy_size = float(last_order[last_order.action == 'buy']['size'])
                 self.last_buy_filled = float(last_order[last_order.action == 'buy']['filled'])
                 self.last_buy_price = float(last_order[last_order.action == 'buy']['price'])
