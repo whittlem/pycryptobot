@@ -8,7 +8,11 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-##[2.39.1] - 2021-07-02
+## [2.39.3] - 2021-07-03
+
+-- Update to use correct market data in sim mode + smartswitching
+
+## [2.39.2] - 2021-07-02
 
 -- Update goldencross using the actual sim date in sim mode only
 -- Update to check when your last order is buy but your coin balance in 0 switch to buy instead
