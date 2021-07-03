@@ -500,6 +500,9 @@ or via the config.json file e.g.
     }
 Note: --statgroup only accepts a group of markets if the quote currency (in this example GBP) is the same.
 
+If you want more detail than the simple summary, add the optional flag --statdetail. This will print a more detailed list of the transactions.
+--statdetail can work in conjunction with --statstartdate and --statgroup.
+
 ## Upgrading the bots
 
 I push updates regularly and it's best to always be running the latest code. In each bot directory make sure you run this regularly.

@@ -123,6 +123,8 @@ def defaultConfigParse(app, config):
                     app.statgroup = config['statgroup']
                 if 'statstartdate' in config:    
                     app.statstartdate = config['statstartdate']
+                if 'statdetail' in config:
+                    app.statdetail = config['statdetail']
         else:
             raise TypeError('stats must be of type int')
     
