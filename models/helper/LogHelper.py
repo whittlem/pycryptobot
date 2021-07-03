@@ -1,4 +1,6 @@
 import logging
+from logging.handlers import TimedRotatingFileHandler
+
 
 class Logger:
     logger = None
@@ -12,7 +14,7 @@ class Logger:
             return logging.CRITICAL
         elif level == "ERROR":
             return logging.ERROR
-        elif  level == "WARNING":
+        elif level == "WARNING":
             return logging.WARNING
         elif level == "INFO":
             return logging.INFO
@@ -33,7 +35,7 @@ class Logger:
 
         if not consolelog and not filelog:
             cls.logger.disabled = True
-            
+
         if consolelog:
             # set a format which is simpler for console use
             consoleHandlerFormatter = logging.Formatter('%(message)s')
@@ -49,12 +51,13 @@ class Logger:
 
         if filelog:
             # set up logging to file
-            fileHandlerFormatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-            fileHandler = logging.FileHandler(filename=logfile, mode='a')
+            fileHandlerFormatter = logging.Formatter(
+                fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+            fileHandler = TimedRotatingFileHandler(filename=logfile, when='midnight',
+                                                   backupCount=10)
             fileHandler.setLevel(cls.get_level(fileloglevel))
             fileHandler.setFormatter(fileHandlerFormatter)
-            cls.logger.addHandler(fileHandler)   
-
+            cls.logger.addHandler(fileHandler)
 
     @classmethod
     def debug(cls, str):
