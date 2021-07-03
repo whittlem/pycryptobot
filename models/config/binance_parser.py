@@ -41,10 +41,24 @@ def parser(app, binance_config, args={}):
     #print('Binance Configuration parse')
 
     if not binance_config:
-        raise Exception('There is an error in your config dictionnary')
+        raise Exception('There is an error in your config dictionary')
 
     if not app:
         raise Exception('No app is passed')
+
+    if 'api_key' in binance_config or 'api_secret' in binance_config:
+        print('* "api_key / secret" should be saved in a separate file referred as "api_key_file"')
+        print('* the file should be a simple text file with key / secret on separate lines\n')
+
+    if 'api_key_file' in binance_config:
+        try :
+            with open( binance_config['api_key_file'], 'r') as f :
+                key = f.readline().strip()
+                secret = f.readline().strip()
+            binance_config['api_key'] = key
+            binance_config['api_secret'] = secret
+        except :
+            raise RuntimeError('Unable to read ' + binance_config['api_key_file'])
 
     if 'api_key' in binance_config and 'api_secret' in binance_config and 'api_url' in binance_config:
         # validates the api key is syntactically correct

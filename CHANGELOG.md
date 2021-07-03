@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.39.0] - 2021-06-27
+
+### Changed
+
+-- Added "api_key_file" to config to keep credentials out of config files for safety
+
 ## [2.38.0] - 2021-06-23
 
 ### Changed
