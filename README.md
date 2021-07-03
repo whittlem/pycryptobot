@@ -1,6 +1,6 @@
 [![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg) [![Tests](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)
 
-# Python Crypto Bot v2.38.0 (pycryptobot)
+# Python Crypto Bot v2.40.0 (pycryptobot)
 
 ## Join our chat on Telegram
 
@@ -274,6 +274,25 @@ In order to trade live you need to authenticate with the Coinbase Pro or Binance
     --simenddate                               End date for sample simulation or 'now'
 
 `simstartdate` takes priority over `simenddate` if both are given
+
+## API key / secret / password storage
+
+From now on it's recommended NOT to store the credentials in the config file because people share configs and may inadvertently share their API keys within.
+
+Instead, please, create `binance.key` or `coinbase.key` (or use your own names for the files) and refer to these files in the config as:
+
+    "api_key_file" : "binance.key"
+
+Once you have done that, "api_key" and "api_secret" can be safely removed from your config file and you're free to share your configs without worrying of leaked credentials.
+
+### binance.key / conbase.key examples
+
+Actually it's pretty simple, these files are supposed to be a simple text files with the API key on the first line, API secret on the second line and in case of coinbase, probably the API password on the third. No comments or anything else is allowed, just the long string of numbers:
+
+    0234238792873423...82736827638472
+    68473847745876abscd9872...8237642
+
+(dots are used to indicate places where the strings were shortened)
 
 ## config.json examples
 
