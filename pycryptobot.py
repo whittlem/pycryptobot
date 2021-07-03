@@ -415,7 +415,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
 
             # Post ARIMA prediction to Telegram on the hour.
             s.enter(60, 3600, app.notifyTelegram(
-                f'Seasonal ARIMA model predicts the closing price will be {str(round(prediction[1], 2))} at {prediction[0]} (delta: {round(prediction[1] - price, 2)})'), (app.notifyTelegram,))
+                f'Seasonal ARIMA model predicts the {app.getMarket()} closing price will be {str(round(prediction[1], 2))} at {prediction[0]} (delta: {round(prediction[1] - price, 2)})'), (app.notifyTelegram,))
 
             # name of csv file
             filename = "ARIMA.csv"
