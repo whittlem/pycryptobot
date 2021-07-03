@@ -45,17 +45,37 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
 
     # increment state.iterations
     state.iterations = state.iterations + 1
-
+    
     if not app.isSimulation():
         # retrieve the app.getMarket() data
         trading_data = app.getHistoricalData(app.getMarket(), app.getGranularity())
+        
     else:
         if len(trading_data) == 0:
             return None
 
     # analyse the market data
-    if app.isSimulation() and len(trading_data.columns) > 8:
+    if app.isSimulation() and len(trading_data.columns) > 8:    
         df = trading_data
+        # if smartswitch the get the market data using new granularity
+        if app.sim_smartswitch:
+            df_last = app.getInterval(df, state.iterations)
+            if len(df_last.index.format()) > 0:
+
+                current_df_index = str(df_last.index.format()[0])
+                current_sim_date = f'{current_df_index} 00:00:00' if len(current_df_index) == 10 else current_df_index
+                dt = current_sim_date.split(' ')
+                date = dt[0].split('-')
+                time = dt[1].split(':')
+                startDate = datetime(int(date[0]), int(date[1]), int(date[2]), int(time[0]), int(time[1]), int(time[2]))
+                trading_data = app.getHistoricalData(app.getMarket(), app.getGranularity(), startDate.isoformat(timespec='milliseconds'), datetime.now().isoformat(timespec='milliseconds'))
+                trading_dataCopy = trading_data.copy()
+                technical_analysis = TechnicalAnalysis(trading_dataCopy)
+                technical_analysis.addAll()
+                df = technical_analysis.getDataFrame()
+                state.iterations = 1
+            app.sim_smartswitch = False
+
     else:
         trading_dataCopy = trading_data.copy()
         technical_analysis = TechnicalAnalysis(trading_dataCopy)
@@ -74,18 +94,28 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
 
     formatted_current_df_index = f'{current_df_index} 00:00:00' if len(current_df_index) == 10 else current_df_index
 
-    if app.getSmartSwitch() == 1 and app.getGranularity() == 3600 and app.is1hEMA1226Bull() is True and app.is6hEMA1226Bull() is True:
-        Logger.info('*** smart switch from granularity 3600 (1 hour) to 900 (15 min) ***')
+    current_sim_date = formatted_current_df_index
 
+    # use actual sim mode date to check smartchswitch
+    if app.getSmartSwitch() == 1 and app.getGranularity() == 3600 and app.is1hEMA1226Bull(current_sim_date) is True and app.is6hEMA1226Bull(current_sim_date) is True:
+        Logger.info('*** smart switch from granularity 3600 (1 hour) to 900 (15 min) ***')
+        
+        if app.isSimulation():
+            app.sim_smartswitch = True
+        
         app.notifyTelegram(app.getMarket() + " smart switch from granularity 3600 (1 hour) to 900 (15 min)")
 
         app.setGranularity(900)
         list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, app, state))
 
-    if app.getSmartSwitch() == 1 and app.getGranularity() == 900 and app.is1hEMA1226Bull() is False and app.is6hEMA1226Bull() is False:
+    # use actual sim mode date to check smartchswitch
+    if app.getSmartSwitch() == 1 and app.getGranularity() == 900 and app.is1hEMA1226Bull(current_sim_date) is False and app.is6hEMA1226Bull(current_sim_date) is False:
         Logger.info("*** smart switch from granularity 900 (15 min) to 3600 (1 hour) ***")
-
+        
+        if app.isSimulation():
+            app.sim_smartswitch = True
+        
         app.notifyTelegram(app.getMarket() + " smart switch from granularity 900 (15 min) to 3600 (1 hour)")
 
         app.setGranularity(3600)
@@ -144,9 +174,13 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
         elder_ray_buy = bool(df_last['eri_buy'].values[0])
         elder_ray_sell = bool(df_last['eri_sell'].values[0])
 
+        # if simulation, set goldencross based on actual sim date
+        if app.isSimulation():
+            goldencross = app.is1hSMA50200Bull(current_sim_date)
+
         # if simulation interations < 200 set goldencross to true
-        if app.isSimulation() and state.iterations < 200:
-            goldencross = True
+        #if app.isSimulation() and state.iterations < 200:
+        #    goldencross = True
 
         # candlestick detection
         hammer = bool(df_last['hammer'].values[0])

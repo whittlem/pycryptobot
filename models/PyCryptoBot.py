@@ -194,6 +194,8 @@ class PyCryptoBot():
         self.ema1226_6h_cache = None
         self.sma50200_1h_cache = None
 
+        self.sim_smartswitch = False
+
         if args['init'] or (filename == 'config.json' and not os.path.isfile(filename)):
             # config builder
             cb = ConfigBuilder()
@@ -400,10 +402,10 @@ class PyCryptoBot():
     def getSmartSwitch(self):
         return self.smart_switch
 
-    def is1hEMA1226Bull(self):
+    def is1hEMA1226Bull(self, iso8601end: str=''):
         try:
             if self.isSimulation() and isinstance(self.ema1226_1h_cache, pd.DataFrame):
-                df_data = self.ema1226_1h_cache
+                df_data = self.ema1226_1h_cache[(self.ema1226_1h_cache['date'] <= iso8601end)]
             elif self.exchange == 'coinbasepro':
                 api = CBPublicAPI()
                 df_data = api.getHistoricalData(self.market, 3600)
@@ -422,18 +424,27 @@ class PyCryptoBot():
 
             if 'ema26' not in df_data:
                 ta.addEMA(26)
-            
+
             df_last = ta.getDataFrame().copy().iloc[-1,:]
-            df_last['bull'] = df_last['ema12'] > df_last['ema26']
+
+            Logger.debug("---- EMA1226 1H Check----")
+            if self.isSimulation():
+                Logger.debug("simdate: " + str(df_last['date']))
+                Logger.debug("ema12 1h: " + str(df_last['ema12']))
+                Logger.debug("ema26 1h: " + str(df_last['ema26']))
+                
+            Logger.debug("bull 1h: " + str(df_last['ema12'] > df_last['ema26']))
+
+            df_last['bull'] = df_last['ema12'] > df_last['ema26']  
             return bool(df_last['bull'])
         except Exception:
             return False
 
-    def is1hSMA50200Bull(self):
+    def is1hSMA50200Bull(self, iso8601end: str=''):
         try:
             if self.isSimulation() and isinstance(self.sma50200_1h_cache, pd.DataFrame):
-                df_data = self.sma50200_1h_cache
-            if self.exchange == 'coinbasepro':
+                df_data = self.sma50200_1h_cache[(self.sma50200_1h_cache['date'] <= iso8601end)]
+            elif self.exchange == 'coinbasepro':
                 api = CBPublicAPI()
                 df_data = api.getHistoricalData(self.market, 3600)
                 self.sma50200_1h_cache = df_data
@@ -453,6 +464,15 @@ class PyCryptoBot():
                 ta.addSMA(200)
 
             df_last = ta.getDataFrame().copy().iloc[-1,:]
+
+            Logger.debug("---- SMA50200 1H Check----")
+            if self.isSimulation():
+                Logger.debug("simdate: " + str(df_last['date']))
+                Logger.debug("sma50 1h: " + str(df_last['sma50']))
+                Logger.debug("sma200 1h: " + str(df_last['sma200']))
+                
+            Logger.debug("bull 1h: " + str(df_last['sma50'] > df_last['sma200']))
+
             df_last['bull'] = df_last['sma50'] > df_last['sma200']
             return bool(df_last['bull'])
         except Exception:
@@ -482,18 +502,18 @@ class PyCryptoBot():
         except Exception:
             return False
 
-    def is6hEMA1226Bull(self):
+    def is6hEMA1226Bull(self, iso8601end: str=''):
         try:
             if self.isSimulation() and isinstance(self.ema1226_6h_cache, pd.DataFrame):
-                df_data = self.ema1226_6h_cache
+                df_data = self.ema1226_6h_cache[(self.ema1226_6h_cache['date'] <= iso8601end)]
             elif self.exchange == 'coinbasepro':
                 api = CBPublicAPI()
                 df_data = api.getHistoricalData(self.market, 21600)
                 self.ema1226_6h_cache = df_data
             elif self.exchange == 'binance':
                 api = BPublicAPI()
-                df_data = api.getHistoricalData
-                self.ema1226_6h_cache = df_data(self.market, '6h')
+                df_data = api.getHistoricalData(self.market, '6h')
+                self.ema1226_6h_cache = df_data
             else:
                 return False
 
@@ -507,6 +527,15 @@ class PyCryptoBot():
 
             df_last = ta.getDataFrame().copy().iloc[-1, :]
             df_last['bull'] = df_last['ema12'] > df_last['ema26']
+
+            Logger.debug("---- EMA1226 6H Check----")
+            if self.isSimulation():
+                Logger.debug("simdate: " + str(df_last['date']))
+                Logger.debug("ema12 6h: " + str(df_last['ema12']))
+                Logger.debug("ema26 6h: " + str(df_last['ema26']))
+                
+            Logger.debug("bull 6h: " + str(df_last['ema12'] > df_last['ema26']))
+                
             return bool(df_last['bull'])
         except Exception:
             return False

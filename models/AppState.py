@@ -51,6 +51,8 @@ class AppState():
 
             base = float(self.account.getBalance(self.app.getBaseCurrency()))
 
+
+
             if base < base_min:
                 sys.tracebacklimit = 0
                 raise Exception(f'Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})')
@@ -105,13 +107,16 @@ class AppState():
         if not self.app.isLive():
             self.last_action = 'SELL'
             return
+        
+        base = float(self.account.getBalance(self.app.getBaseCurrency()))
+        quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
 
         orders = self.account.getOrders(self.app.getMarket(), '', 'done')
         if len(orders) > 0:
             last_order = orders[-1:]
 
             # if orders exist and last order is a buy
-            if str(last_order.action.values[0]) == 'buy':
+            if str(last_order.action.values[0]) == 'buy' and base > 0.0:
                 self.last_buy_size = float(last_order[last_order.action == 'buy']['size'])
                 self.last_buy_filled = float(last_order[last_order.action == 'buy']['filled'])
                 self.last_buy_price = float(last_order[last_order.action == 'buy']['price'])
@@ -119,6 +124,7 @@ class AppState():
                 # binance orders do not show fees
                 if self.app.getExchange() == 'coinbasepro':
                     self.last_buy_fee = float(last_order[last_order.action == 'buy']['fees'])
+
 
                 self.last_action = 'BUY'
                 return
@@ -128,8 +134,6 @@ class AppState():
                 self.last_buy_price = 0.0
                 return
         else:
-            base = float(self.account.getBalance(self.app.getBaseCurrency()))
-            quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
 
             # nil base or quote funds
             if base == 0.0 and quote == 0.0:

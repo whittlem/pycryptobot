@@ -8,6 +8,17 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.42.0] - 2021-07-03
+
+### Changed
+
+-- Fixed smartswitch for binance simulation mode and live
+-- Fixed smartswitch timings to use sim date instead of just defaulting to current date
+-- Update goldencross using the actual sim date in sim mode only
+-- Update to check when your last order is buy but your coin balance in 0 switch to buy instead
+    - Possible bug if you transfer or convert coins on the exchange instead of selling them
+-- Update to use correct market data in sim mode + smartswitching
+
 ## [2.41.0] - 2021-07-03
 
 ### Added
