@@ -8,20 +8,34 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-## [2.39.3] - 2021-07-03
+## [2.42.0] - 2021-07-03
 
--- Update to use correct market data in sim mode + smartswitching
-
-## [2.39.2] - 2021-07-02
-
--- Update goldencross using the actual sim date in sim mode only
--- Update to check when your last order is buy but your coin balance in 0 switch to buy instead
-    - Possible bug if you transfer or convert coins on the exchange instead of selling them
-
-## [2.39.1] - 2021-06-29
+### Changed
 
 -- Fixed smartswitch for binance simulation mode and live
 -- Fixed smartswitch timings to use sim date instead of just defaulting to current date
+-- Update goldencross using the actual sim date in sim mode only
+-- Update to check when your last order is buy but your coin balance in 0 switch to buy instead
+    - Possible bug if you transfer or convert coins on the exchange instead of selling them
+-- Update to use correct market data in sim mode + smartswitching
+
+## [2.41.0] - 2021-07-03
+
+### Added
+
+-- statdetail flag which gives a detailed list of transactions (works with --statstartdate and --statgroup)
+
+## [2.40.0] - 2021-07-03
+
+### Changed
+
+-- Updated validation for Telegram keys
+
+## [2.39.0] - 2021-06-27
+
+### Changed
+
+-- Added "api_key_file" to config to keep credentials out of config files for safety
 
 ## [2.38.0] - 2021-06-23
 
