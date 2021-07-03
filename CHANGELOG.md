@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.40.0] - 2021-07-03
+
+### Changed
+
+-- Updated validation for Telegram keys
+
 ## [2.39.0] - 2021-06-27
 
 ### Changed
