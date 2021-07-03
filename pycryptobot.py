@@ -1,5 +1,6 @@
 """Python Crypto Bot consuming Coinbase Pro or Binance APIs"""
 
+import csv
 import functools
 import os
 import sched
@@ -403,6 +404,37 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                 elif float(obv_pc) < 0:
                     obv_prefix = 'v '
                     obv_suffix = ' v | '
+
+            # field names
+            fields = ['ARIMA Price', 'Time', 'Currency', 'Price']
+
+            # data rows of csv file
+            csv_update_price = truncate(price)
+            prediction = technical_analysis.seasonalARIMAModelPrediction(int(app.getGranularity() / 60) * 3)
+            rows = [[f'{str(round(prediction[1], 2))},{prediction[0]},{app.getMarket()},{csv_update_price}']]
+
+            # Post ARIMA prediction to Telegram on the hour.
+            s.enter(60, 3600, app.notifyTelegram(
+                f'Seasonal ARIMA model predicts the closing price will be {str(round(prediction[1], 2))} at {prediction[0]} (delta: {round(prediction[1] - price, 2)})'), (app.notifyTelegram,))
+
+            # name of csv file
+            filename = "ARIMA.csv"
+
+            # writing to csv file
+            with open(filename, 'a') as csvfile:
+                # creating a csv writer object
+                csvwriter = csv.writer(csvfile)
+
+                # writing the fields
+                csvwriter.writerow(fields)
+
+                # writing the data rows
+                csvwriter.writerows(rows)
+
+            if state.last_action == 'BUY':
+                # display support, resistance and fibonacci levels
+                Logger.info(
+                    technical_analysis.printSupportResistanceFibonacciLevels(price))
 
             if not app.isVerbose():
                 if state.last_action != '':
