@@ -38,7 +38,6 @@ class AppState():
         self.last_df_index = ''
         self.sell_count = 0
         self.sell_sum = 0
-        self.sim_smartsswitch = False
 
     def minimumOrderBase(self):
         if self.app.getExchange() == 'binance':

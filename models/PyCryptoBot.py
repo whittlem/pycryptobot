@@ -192,6 +192,8 @@ class PyCryptoBot():
         self.ema1226_6h_cache = None
         self.sma50200_1h_cache = None
 
+        self.sim_smartswitch = False
+
         if args['init'] or (filename == 'config.json' and not os.path.isfile(filename)):
             # config builder
             cb = ConfigBuilder()
