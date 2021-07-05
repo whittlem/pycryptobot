@@ -8,6 +8,10 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.44.2] - 2021-07-05
+
+-- Fixed ARIMA bug in coinbase pro when frequency not set in dataframe
+
 ## [2.44.1] - 2021-07-05
 
 ### Changed
