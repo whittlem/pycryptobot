@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.43.1] - 2021-07-05
+
+### Changed
+
+-- Filter on filled orders only in Binance dataframe
+
 ## [2.42.0] - 2021-07-03
 
 ### Changed
