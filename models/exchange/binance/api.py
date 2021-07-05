@@ -201,6 +201,10 @@ class AuthAPI(AuthAPIBase):
         if len(df) == 0:
             return pd.DataFrame()
 
+        # fix: float division by zero
+        # remove pending orders with status new (i.e. order made by user at limit)
+        df = df[df['status'] == "FILLED"]
+
         # replace null NaN values with 0
         df.fillna(0, inplace=True)
 
