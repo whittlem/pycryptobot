@@ -543,7 +543,6 @@ class TechnicalAnalysis():
         """Returns the Seasonal ARIMA Model for price predictions"""
 
         # hyperparameters for SARIMAX
-        print(self.df.index)
         if not self.df.index.freq:
             freq = str(self.df['granularity'].iloc[-1]).replace("m","T").replace("h","H").replace("d","D")
             if freq.isdigit(): freq += 'S'
