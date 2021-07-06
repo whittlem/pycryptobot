@@ -147,3 +147,5 @@ graphs/
 *.log
 
 tests/unit_tests/data/*.json
+
+*.key

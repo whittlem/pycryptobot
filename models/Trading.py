@@ -3,9 +3,7 @@
 import warnings
 
 from re import compile
-from numpy import floor, maximum, mean, minimum, nan, ndarray, round
-from numpy import sum as np_sum
-from numpy import where
+from numpy import abs, floor, maximum, mean, minimum, nan, ndarray, round, sum as np_sum, where
 from pandas import DataFrame, Series
 from datetime import datetime, timedelta
 from statsmodels.tsa.statespace.sarimax import SARIMAX, SARIMAXResultsWrapper
@@ -72,7 +70,9 @@ class TechnicalAnalysis():
 
         self.addEMABuySignals()
         self.addSMABuySignals()
-        self.addMACDBuySignals()       
+        self.addMACDBuySignals()
+
+        self.addADXBuySignals() 
 
         self.addCandleAstralBuy()
         self.addCandleAstralSell()
@@ -295,8 +295,65 @@ class TechnicalAnalysis():
             & (self.df['close'].shift(6) > self.df['close'].shift(9)) & (self.df['high'].shift(6) > self.df['high'].shift(11)) \
             & (self.df['close'].shift(7) > self.df['close'].shift(10)) & (self.df['high'].shift(7) > self.df['high'].shift(12))
   
-    def addCandleAstralSell(self) -> None:
+    def addCandleAstralSell(self, period: int=14) -> None:
         self.df['astral_sell'] = self.candleAstralSell()
+
+    def addADXBuySignals(self, period: int=14) -> None:
+        """Adds Average Directional Index (ADX) buy and sell signals to the DataFrame"""
+
+        self.df['adx'] = self.averageDirectionalIndex(period)['adx']
+        self.df['adx_trend'] = self.averageDirectionalIndex(period)['adx_trend']
+        self.df['adx_strength'] = self.averageDirectionalIndex(period)['adx_strength']
+
+    def addADX(self, period: int=14) -> None:
+        """Adds Average Directional Index (ADX)"""
+
+        self.df['adx'] = self.averageDirectionalIndex(period)['adx']
+
+    def averageDirectionalIndex(self, period: int=14) -> DataFrame:
+        """Average Directional Index (ADX)"""
+
+        if not isinstance(period, int):
+            raise TypeError('Period parameter is not perioderic.')
+
+        if period < 5 or period > 200:
+            raise ValueError('Period is out of range')
+
+        if len(self.df) < period:
+            raise Exception('Data range too small.')
+
+        df = self.df.copy()
+
+        df['-dm'] = df['low'].shift(1)-df['low']
+        df['+dm'] = df['high']-df['high'].shift(1)
+        df['+dm'] = where((df['+dm']>df['-dm'])&(df['+dm']>0), df['+dm'], 0.0)
+        df['-dm'] = where((df['-dm']>df['+dm'])&(df['-dm']>0), df['-dm'], 0.0)
+
+        df['tr_tmp1'] = df['high']-df['low']
+        df['tr_tmp2'] = abs(df['high']-df['close'].shift(1))
+        df['tr_tmp3'] = abs(df['low']-df['close'].shift(1))
+        df['tr'] = df[['tr_tmp1', 'tr_tmp2', 'tr_tmp3']].max(axis=1)
+
+        df['tr14'] = df['tr'].rolling(period).sum()
+
+        df['+dmi14'] = df['+dm'].rolling(period).sum()
+        df['-dmi14'] = df['-dm'].rolling(period).sum()
+
+        df['+di14'] = df['+dmi14']/df['tr14']*100
+        df['-di14'] = df['-dmi14']/df['tr14']*100
+        df['di14-'] = abs(df['+di14']-df['-di14'])
+        df['di14+'] = df['+di14']+df['-di14']
+
+        df['dx'] = (df['di14-']/df['di14+'])*100
+
+        df['adx'] = df['dx'].rolling(period).mean()
+
+        df['adx'] = df['adx'].fillna(df['adx'].mean())
+
+        df['adx_trend'] = where(df['+dm']>df['-dm'], 'bull', 'bear')
+        df['adx_strength'] = where(df['adx']>=30, 'strong', 'weak')
+
+        return df[['adx','adx_trend','adx_strength']]
 
     def changePct(self) -> DataFrame:
         """Close change percentage"""
