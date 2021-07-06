@@ -8,6 +8,13 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.45.0] - 2021-07-06
+
+### Added
+
+-- Added ADX technical indicator
+-- Added auto migrate API keys to coinbasepro.key and/or binance.key
+
 ## [2.44.1] - 2021-07-05
 
 ### Changed
