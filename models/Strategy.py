@@ -34,7 +34,7 @@ class Strategy():
             return False
 
         # criteria for a buy signal 1
-        if bool(self._df_last['ema12gtema26co'].values[0]) is True \
+        if bool(self._df_last['ema12gtema26co'].values[0]) is True or self.app.disableBuyEMA())\
                 and (bool(self._df_last['macdgtsignal'].values[0]) is True or self.app.disableBuyMACD()) \
                 and (bool(self._df_last['goldencross'].values[0]) is True or self.app.disableBullOnly()) \
                 and (float(self._df_last['obv_pc'].values[0]) > -5 or self.app.disableBuyOBV()) \
