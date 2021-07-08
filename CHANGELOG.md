@@ -8,7 +8,16 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.45.2] - 2021-07-08
+
+### Changed
+
+-- Improved ADX technical indicator
+-- Added ATX technical indicator
+
 ## [2.45.1] - 2021-07-06
+
+### Changed
 
 -- Fixed ARIMA bug in coinbase pro when frequency not set in dataframe
 
