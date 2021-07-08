@@ -13,7 +13,10 @@ Upgrade library dependancies (if required):
 ### Changed
 
 -- Improved ADX technical indicator
--- Added ATX technical indicator
+
+### Added
+
+-- Added ATR technical indicator
 
 ## [2.45.1] - 2021-07-06
 
