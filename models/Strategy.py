@@ -34,7 +34,7 @@ class Strategy():
             return False
 
         # criteria for a buy signal 1
-        if bool(self._df_last['ema12gtema26co'].values[0]) is True or self.app.disableBuyEMA())\
+        if (bool(self._df_last['ema12gtema26co'].values[0]) is True or self.app.disableBuyEMA())\
                 and (bool(self._df_last['macdgtsignal'].values[0]) is True or self.app.disableBuyMACD()) \
                 and (bool(self._df_last['goldencross'].values[0]) is True or self.app.disableBullOnly()) \
                 and (float(self._df_last['obv_pc'].values[0]) > -5 or self.app.disableBuyOBV()) \
@@ -49,7 +49,7 @@ class Strategy():
             return True
 
         # criteria for buy signal 2 (optionally add additional buy singals)
-        elif bool(self._df_last['ema12gtema26co'].values[0]) is True \
+        elif (bool(self._df_last['ema12gtema26co'].values[0]) is True or self.app.disableBuyEMA())\
                 and bool(self._df_last['macdgtsignalco'].values[0]) is True \
                 and (bool(self._df_last['goldencross'].values[0]) is True or self.app.disableBullOnly()) \
                 and (float(self._df_last['obv_pc'].values[0]) > -5 or self.app.disableBuyOBV()) \
@@ -75,7 +75,7 @@ class Strategy():
                 raise AttributeError(f"'{indicator}' not in Pandas dataframe")
 
         # criteria for a sell signal 1
-        if bool(self._df_last['ema12ltema26co'].values[0]) is True \
+        if (bool(self._df_last['ema12ltema26co'].values[0]) is True or self.app.disableBuyEMA())\
             and (bool(self._df_last['macdltsignal'].values[0]) is True or self.app.disableBuyMACD()) \
             and self.state.last_action not in ['', 'SELL']:
 

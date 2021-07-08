@@ -273,7 +273,9 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
             truncate = functools.partial(_truncate, n=precision)
 
             price_text = 'Close: ' + truncate(price)
-            ema_text = app.compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26', precision)
+            ema_text=''
+            if app.disableBuyEMA() is False:
+                ema_text = app.compare(df_last['ema12'].values[0], df_last['ema26'].values[0], 'EMA12/26', precision)
 
             macd_text = ''
             if app.disableBuyMACD() is False:
@@ -365,18 +367,19 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
 
             ema_co_prefix = ''
             ema_co_suffix = ''
-            if ema12gtema26co is True:
-                ema_co_prefix = '*^ '
-                ema_co_suffix = ' ^*'
-            elif ema12ltema26co is True:
-                ema_co_prefix = '*v '
-                ema_co_suffix = ' v*'
-            elif ema12gtema26 is True:
-                ema_co_prefix = '^ '
-                ema_co_suffix = ' ^'
-            elif ema12ltema26 is True:
-                ema_co_prefix = 'v '
-                ema_co_suffix = ' v'
+            if app.disableBuyEMA() is False:
+                if ema12gtema26co is True:
+                    ema_co_prefix = '*^ '
+                    ema_co_suffix = ' ^*'
+                elif ema12ltema26co is True:
+                    ema_co_prefix = '*v '
+                    ema_co_suffix = ' v*'
+                elif ema12gtema26 is True:
+                    ema_co_prefix = '^ '
+                    ema_co_suffix = ' ^'
+                elif ema12ltema26 is True:
+                    ema_co_prefix = 'v '
+                    ema_co_suffix = ' v'
 
             macd_co_prefix = ''
             macd_co_suffix = ''

@@ -858,6 +858,10 @@ class PyCryptoBot():
             txt = '         Use Buy MACD : ' + str(not self.disableBuyMACD()) + '  --disablebuymacd'
             Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
 
+            txt = '         Use Buy EMA : ' + str(not self.disableBuyEMA()) + '  --disablebuyema'
+            Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
+
+
             txt = '          Use Buy OBV : ' + str(not self.disableBuyOBV()) + '  --disablebuyobv'
             Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
 
