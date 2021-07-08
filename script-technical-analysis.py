@@ -5,6 +5,6 @@ app = PyCryptoBot()
 df = app.getHistoricalData(app.getMarket(), app.getGranularity())
 
 model = TechnicalAnalysis(df)
-model.addAll()
+model.addATR(14)
 df = model.getDataFrame()
 print (df)
