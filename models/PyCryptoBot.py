@@ -903,7 +903,7 @@ class PyCryptoBot():
                 Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
 
             if self.disablebuyema and self.disablebuymacd :
-                Logger.info('| WARNING : EMA and MACD indicators disabled, no buy or sell events will happen|')
+                Logger.info('| WARNING : EMA and MACD indicators disabled, no buy events will happen|')
                 Logger.info('|                             Python Crypto Bot                                |')
 
             Logger.info('================================================================================')

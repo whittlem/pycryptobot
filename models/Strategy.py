@@ -34,9 +34,9 @@ class Strategy():
 
             return False
         
-        # if core indicators(EMA and MACD) are disabled, do not buy
+        # if EMA, MACD are disabled, do not buy
         if self.app.disableBuyEMA() and self.app.disableBuyMACD() :
-            log_text = str(now) + ' | ' + self.app.getMarket() + ' | ' + self.app.printGranularity() + ' | EMA and MACD indicators are deactivated '
+            log_text = str(now) + ' | ' + self.app.getMarket() + ' | ' + self.app.printGranularity() + ' | EMA, MACD indicators are disabled '
             Logger.warning(log_text)
             return False
 
@@ -81,14 +81,9 @@ class Strategy():
             if indicator not in self._df_last:
                 raise AttributeError(f"'{indicator}' not in Pandas dataframe")
 
-        # if core indicators(EMA and MACD) are disabled, do not sell
-        if self.app.disableBuyEMA() and self.app.disableBuyMACD() :
-            
-            return False
-
 
         # criteria for a sell signal 1
-        if (bool(self._df_last['ema12ltema26co'].values[0]) is True or self.app.disableBuyEMA())\
+        if bool(self._df_last['ema12ltema26co'].values[0]) is True \
             and (bool(self._df_last['macdltsignal'].values[0]) is True or self.app.disableBuyMACD()) \
             and self.state.last_action not in ['', 'SELL']:
 
