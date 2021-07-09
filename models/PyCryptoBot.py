@@ -826,7 +826,7 @@ class PyCryptoBot():
                 txt = '             Bot Mode : TEST - test trades using dummy funds :)'
 
             Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
-
+                
             txt = '          Bot Started : ' + str(datetime.now())
             Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
             Logger.info('================================================================================')
@@ -901,6 +901,10 @@ class PyCryptoBot():
             if self.getBuyMaxSize():
                 txt = '         Max Buy Size : ' + str(self.getBuyMaxSize()) + '  --buymaxsize <size>'
                 Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
+
+            if self.disablebuyema and self.disablebuymacd :
+                Logger.info('| WARNING : EMA and MACD indicators disabled, no buy or sell events will happen|')
+                Logger.info('|                             Python Crypto Bot                                |')
 
             Logger.info('================================================================================')
 

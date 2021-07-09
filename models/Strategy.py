@@ -18,6 +18,9 @@ class Strategy():
         self._df = df
         self._df_last = app.getInterval(df, iterations)
 
+    def isAllDeactivated(self):
+        return 
+
     def isBuySignal(self, now: datetime = datetime.today().strftime('%Y-%m-%d %H:%M:%S'), price: float=0.0) -> bool:
         # required technical indicators or candle sticks for buy signal strategy
         required_indicators = [ 'ema12gtema26co', 'macdgtsignal', 'goldencross', 'obv_pc', 'eri_buy' ]
@@ -31,6 +34,13 @@ class Strategy():
             log_text = str(now) + ' | ' + self.app.getMarket() + ' | ' + self.app.printGranularity() + ' | Ignoring Buy Signal (price ' + str(price) + ' within 3% of high ' + str(self._df['close'].max()) + ')'
             Logger.warning(log_text)
 
+            return False
+        
+        # if core indicators(EMA and MACD) are disabled, do not buy
+        if self.app.disableBuyEMA() and self.app.disableBuyMACD() :
+
+            log_text = str(now) + ' | ' + self.app.getMarket() + ' | ' + self.app.printGranularity() + ' | EMA and MACD indicators are deactivated (price ' + str(price) + ' within 3% of high ' + str(self._df['close'].max()) + ')'
+            Logger.warning(log_text)
             return False
 
         # criteria for a buy signal 1
@@ -73,6 +83,14 @@ class Strategy():
         for indicator in required_indicators:
             if indicator not in self._df_last:
                 raise AttributeError(f"'{indicator}' not in Pandas dataframe")
+
+        # if core indicators(EMA and MACD) are disabled, do not sell
+        if self.app.disableBuyEMA() and self.app.disableBuyMACD() :
+
+            log_text = str(now) + ' | ' + self.app.getMarket() + ' | ' + self.app.printGranularity() + ' | EMA and MACD indicators are deactivated (price ' + str(price) + ' within 3% of high ' + str(self._df['close'].max()) + ')'
+            Logger.warning(log_text)
+            return False
+
 
         # criteria for a sell signal 1
         if (bool(self._df_last['ema12ltema26co'].values[0]) is True or self.app.disableBuyEMA())\
