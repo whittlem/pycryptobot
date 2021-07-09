@@ -18,8 +18,6 @@ class Strategy():
         self._df = df
         self._df_last = app.getInterval(df, iterations)
 
-    def isAllDeactivated(self):
-        return 
 
     def isBuySignal(self, now: datetime = datetime.today().strftime('%Y-%m-%d %H:%M:%S'), price: float=0.0) -> bool:
         # required technical indicators or candle sticks for buy signal strategy
@@ -38,8 +36,7 @@ class Strategy():
         
         # if core indicators(EMA and MACD) are disabled, do not buy
         if self.app.disableBuyEMA() and self.app.disableBuyMACD() :
-
-            log_text = str(now) + ' | ' + self.app.getMarket() + ' | ' + self.app.printGranularity() + ' | EMA and MACD indicators are deactivated (price ' + str(price) + ' within 3% of high ' + str(self._df['close'].max()) + ')'
+            log_text = str(now) + ' | ' + self.app.getMarket() + ' | ' + self.app.printGranularity() + ' | EMA and MACD indicators are deactivated '
             Logger.warning(log_text)
             return False
 
@@ -86,9 +83,7 @@ class Strategy():
 
         # if core indicators(EMA and MACD) are disabled, do not sell
         if self.app.disableBuyEMA() and self.app.disableBuyMACD() :
-
-            log_text = str(now) + ' | ' + self.app.getMarket() + ' | ' + self.app.printGranularity() + ' | EMA and MACD indicators are deactivated (price ' + str(price) + ' within 3% of high ' + str(self._df['close'].max()) + ')'
-            Logger.warning(log_text)
+            
             return False
 
 
