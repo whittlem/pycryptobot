@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.45.3] - 2021-07-09
+
+### Changed
+
+-- Increased number of attempts at retrieving previous orders in binance api
+
 ## [2.45.2] - 2021-07-08
 
 ### Changed
