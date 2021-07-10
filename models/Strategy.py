@@ -38,6 +38,7 @@ class Strategy():
         if self.app.disableBuyEMA() and self.app.disableBuyMACD() :
             log_text = str(now) + ' | ' + self.app.getMarket() + ' | ' + self.app.printGranularity() + ' | EMA, MACD indicators are disabled '
             Logger.warning(log_text)
+            
             return False
 
         # criteria for a buy signal 1
