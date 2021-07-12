@@ -8,6 +8,16 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.46.1] - 2021-07-12
+
+### Changed
+
+-- use `granularity` instead of `self.getGranularity`
+
+-- use `granularity` instead of `self.getGranularity()`  in `getHistoricalDateRange()` call
+
+* Update README.md
+
 ## [2.46.0] - 2021-07-09
 
 ### Changed
