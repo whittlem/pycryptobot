@@ -55,7 +55,7 @@ being configured.
 
 Let systemd reload the service files and update the list of available services with the newly added files:   
 
-    sudo systemctl daemon reload
+    sudo systemctl daemon-reload
 
 _NOTE:_ this step has to be repeated every time a service file is updated
 
