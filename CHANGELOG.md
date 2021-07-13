@@ -8,6 +8,13 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.44.0] - 2021-07-13
+
+### Changed
+
+-- Fixed smartwitch for coinbase historic data limit
+-- Fixed smartswitching date sync 
+
 ## [2.42.0] - 2021-07-03
 
 ### Changed
