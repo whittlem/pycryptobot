@@ -18,6 +18,7 @@ class Strategy():
         self._df = df
         self._df_last = app.getInterval(df, iterations)
 
+
     def isBuySignal(self, now: datetime = datetime.today().strftime('%Y-%m-%d %H:%M:%S'), price: float=0.0) -> bool:
         # required technical indicators or candle sticks for buy signal strategy
         required_indicators = [ 'ema12gtema26co', 'macdgtsignal', 'goldencross', 'obv_pc', 'eri_buy' ]
@@ -32,9 +33,16 @@ class Strategy():
             Logger.warning(log_text)
 
             return False
+        
+        # if EMA, MACD are disabled, do not buy
+        if self.app.disableBuyEMA() and self.app.disableBuyMACD() :
+            log_text = str(now) + ' | ' + self.app.getMarket() + ' | ' + self.app.printGranularity() + ' | EMA, MACD indicators are disabled '
+            Logger.warning(log_text)
+            
+            return False
 
         # criteria for a buy signal 1
-        if bool(self._df_last['ema12gtema26co'].values[0]) is True \
+        if (bool(self._df_last['ema12gtema26co'].values[0]) is True or self.app.disableBuyEMA())\
                 and (bool(self._df_last['macdgtsignal'].values[0]) is True or self.app.disableBuyMACD()) \
                 and (bool(self._df_last['goldencross'].values[0]) is True or self.app.disableBullOnly()) \
                 and (float(self._df_last['obv_pc'].values[0]) > -5 or self.app.disableBuyOBV()) \
@@ -49,7 +57,7 @@ class Strategy():
             return True
 
         # criteria for buy signal 2 (optionally add additional buy singals)
-        elif bool(self._df_last['ema12gtema26co'].values[0]) is True \
+        elif (bool(self._df_last['ema12gtema26co'].values[0]) is True or self.app.disableBuyEMA())\
                 and bool(self._df_last['macdgtsignalco'].values[0]) is True \
                 and (bool(self._df_last['goldencross'].values[0]) is True or self.app.disableBullOnly()) \
                 and (float(self._df_last['obv_pc'].values[0]) > -5 or self.app.disableBuyOBV()) \
@@ -73,6 +81,7 @@ class Strategy():
         for indicator in required_indicators:
             if indicator not in self._df_last:
                 raise AttributeError(f"'{indicator}' not in Pandas dataframe")
+
 
         # criteria for a sell signal 1
         if bool(self._df_last['ema12ltema26co'].values[0]) is True \
