@@ -57,23 +57,31 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
     # analyse the market data
     if app.isSimulation() and len(trading_data.columns) > 8:    
         df = trading_data
-        # if smartswitch the get the market data using new granularity
+        # if smartswitch then get the market data using new granularity
         if app.sim_smartswitch:
-            df_last = app.getInterval(df, state.iterations)
+            df_last = app.getInterval(df, state.iterations - 1)
             if len(df_last.index.format()) > 0:
+                if app.simstartdate is not None:
+                    startDate = app.simstartdate
+                else:
+                    startDate = str(df_last.index.format()[0])
+                    
+                if app.simenddate is not None:
+                    if app.simenddate == "now":
+                        endDate = str(datetime.now())
+                        dt = endDate.split(".")
+                        endDate = dt[0]
+                    else:
+                        endDate = app.simenddate
+                else:
+                    endDate = str(df.tail(1).index.format()[0])
 
-                current_df_index = str(df_last.index.format()[0])
-                current_sim_date = f'{current_df_index} 00:00:00' if len(current_df_index) == 10 else current_df_index
-                dt = current_sim_date.split(' ')
-                date = dt[0].split('-')
-                time = dt[1].split(':')
-                startDate = datetime(int(date[0]), int(date[1]), int(date[2]), int(time[0]), int(time[1]), int(time[2]))
-                trading_data = app.getHistoricalData(app.getMarket(), app.getGranularity(), startDate.isoformat(timespec='milliseconds'), datetime.now().isoformat(timespec='milliseconds'))
-                trading_dataCopy = trading_data.copy()
-                technical_analysis = TechnicalAnalysis(trading_dataCopy)
-                technical_analysis.addAll()
-                df = technical_analysis.getDataFrame()
-                state.iterations = 1
+                startDate = f'{startDate} 00:00:00' if len(startDate) == 10 else startDate
+                endDate = f'{endDate} 00:00:00' if len(endDate) == 10 else endDate
+                
+                df = app.getsmartswitchHistoricalDataChained(app.getMarket(), app.getGranularity(), str(startDate), str(endDate), str(df_last.index.format()[0]))
+                state.iterations = 2
+
             app.sim_smartswitch = False
 
     else:
@@ -774,7 +782,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                 account.saveTrackerCSV()
 
         if app.isSimulation():
-            if state.iterations < 300:
+            if state.iterations < len(df):
                 if app.simuluationSpeed() in ['fast', 'fast-sample']:
                     # fast processing
                     list(map(s.cancel, s.queue))
@@ -805,6 +813,9 @@ def main():
 
         # initialise and start application
         trading_data = app.startApp(account, state.last_action)
+
+        if app.getSmartSwitch():
+            app.sim_smartswitch = True
 
         def runApp():
             # run the first job immediately after starting
