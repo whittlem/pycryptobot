@@ -458,7 +458,7 @@ class PyCryptoBot():
             return rdf
 
     def getHistoricalDataChained(self, market, granularity: int, max_interations: int=1) -> pd.DataFrame:
-        df1 = self.getHistoricalData(market, self.getGranularity())
+        df1 = self.getHistoricalData(market, granularity)
 
         if max_interations == 1:
             return df1

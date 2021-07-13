@@ -3,10 +3,8 @@
 import warnings
 
 from re import compile
-from numpy import floor, maximum, mean, minimum, nan, ndarray, round
-from numpy import sum as np_sum
-from numpy import where
-from pandas import DataFrame, Series
+from numpy import abs, floor, max, maximum, mean, minimum, nan, ndarray, round, sum as np_sum, where
+from pandas import concat, DataFrame, Series
 from datetime import datetime, timedelta
 from statsmodels.tsa.statespace.sarimax import SARIMAX, SARIMAXResultsWrapper
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
@@ -72,7 +70,9 @@ class TechnicalAnalysis():
 
         self.addEMABuySignals()
         self.addSMABuySignals()
-        self.addMACDBuySignals()       
+        self.addMACDBuySignals()
+
+        self.addADXBuySignals() 
 
         self.addCandleAstralBuy()
         self.addCandleAstralSell()
@@ -295,8 +295,100 @@ class TechnicalAnalysis():
             & (self.df['close'].shift(6) > self.df['close'].shift(9)) & (self.df['high'].shift(6) > self.df['high'].shift(11)) \
             & (self.df['close'].shift(7) > self.df['close'].shift(10)) & (self.df['high'].shift(7) > self.df['high'].shift(12))
   
-    def addCandleAstralSell(self) -> None:
+    def addCandleAstralSell(self, period: int=14) -> None:
         self.df['astral_sell'] = self.candleAstralSell()
+
+    def addADXBuySignals(self, interval: int=14) -> None:
+        """Adds Average Directional Index (ADX) buy and sell signals to the DataFrame"""
+
+        data = self.averageDirectionalIndex(interval)
+        self.df['-di' + str(interval)] = data['-di' + str(interval)]
+        self.df['+di' + str(interval)] = data['+di' + str(interval)]
+        self.df['adx' + str(interval)] = data['adx' + str(interval)]
+        self.df['adx' + str(interval) + '_trend'] = data['adx' + str(interval) + '_trend']
+        self.df['adx' + str(interval) + '_strength'] = data['adx' + str(interval) + '_strength']
+
+    def addADX(self, interval: int=14) -> None:
+        """Adds Average Directional Index (ADX)"""
+
+        data = self.averageDirectionalIndex(interval)
+        self.df['-di' + str(interval)] = data['-di' + str(interval)]
+        self.df['+di' + str(interval)] = data[['+di' + str(interval)]]
+        self.df['adx' + str(interval)] = data[['adx' + str(interval)]]
+
+    def averageDirectionalIndex(self, interval: int=14) -> DataFrame:
+        """Average Directional Index (ADX)"""
+
+        if not isinstance(interval, int):
+            raise TypeError('interval parameter is not intervaleric.')
+
+        if interval < 5 or interval > 200:
+            raise ValueError('interval is out of range')
+
+        if len(self.df) < interval:
+            raise Exception('Data range too small.')
+
+        df = self.df.copy()
+
+        df['-dm'] = df['low'].shift(1)-df['low']
+        df['+dm'] = df['high']-df['high'].shift(1)
+        df['+dm'] = where((df['+dm']>df['-dm'])&(df['+dm']>0), df['+dm'], 0.0)
+        df['-dm'] = where((df['-dm']>df['+dm'])&(df['-dm']>0), df['-dm'], 0.0)
+
+        df['tr_tmp1'] = df['high']-df['low']
+        df['tr_tmp2'] = abs(df['high']-df['close'].shift(1))
+        df['tr_tmp3'] = abs(df['low']-df['close'].shift(1))
+        df['tr'] = df[['tr_tmp1', 'tr_tmp2', 'tr_tmp3']].max(axis=1)
+
+        df['tr' + str(interval)] = df['tr'].rolling(interval).sum()
+
+        df['+dmi' + str(interval)] = df['+dm'].rolling(interval).sum()
+        df['-dmi' + str(interval)] = df['-dm'].rolling(interval).sum()
+
+        df['+di' + str(interval)] = df['+dmi' + str(interval)]/df['tr' + str(interval)]*100
+        df['-di' + str(interval)] = df['-dmi' + str(interval)]/df['tr' + str(interval)]*100
+        df['di' + str(interval) + '-'] = abs(df['+di' + str(interval)]-df['-di' + str(interval)])
+        df['di' + str(interval) + '+'] = df['+di' + str(interval)]+df['-di' + str(interval)]
+
+        df['dx'] = (df['di' + str(interval) + '-']/df['di' + str(interval) + '+'])*100
+
+        df['adx' + str(interval)] = df['dx'].rolling(interval).mean()
+
+        df['-di' + str(interval)] = df['-di' + str(interval)].fillna(df['-di' + str(interval)].mean())
+        df['+di' + str(interval)] = df['+di' + str(interval)].fillna(df['+di' + str(interval)].mean())
+        df['adx' + str(interval)] = df['adx' + str(interval)].fillna(df['adx' + str(interval)].mean())
+
+        df['adx' + str(interval) + '_trend'] = where(df['+di' + str(interval)] > df['-di' + str(interval)], 'bull', 'bear')
+        df['adx' + str(interval) + '_strength'] = where(df['adx' + str(interval)] > 25, 'strong', where(df['adx' + str(interval)] < 20, 'weak', 'normal'))
+
+        return df[['-di' + str(interval),'+di' + str(interval),'adx' + str(interval),'adx' + str(interval) + '_trend','adx' + str(interval) + '_strength']]
+
+    def addATR(self, interval: int=14) -> None:
+        """Adds Average True Range (ATR)"""
+
+        self.df['atr' + str(interval)] = self.averageTrueRange(interval)
+        self.df['atr' + str(interval)] = self.df['atr' + str(interval)].fillna(self.df['atr' + str(interval)].mean())
+
+    def averageTrueRange(self, interval: int=14) -> DataFrame:
+        """Average True Range (ATX)"""
+
+        if not isinstance(interval, int):
+            raise TypeError('interval parameter is not intervaleric.')
+
+        if interval < 5 or interval > 200:
+            raise ValueError('interval is out of range')
+
+        if len(self.df) < interval:
+            raise Exception('Data range too small.')
+
+        high_low = self.df['high'] - self.df['low']
+        high_close = abs(self.df['high'] - self.df['close'].shift())
+        low_close = abs(self.df['low'] - self.df['close'].shift())
+
+        ranges = concat([high_low, high_close, low_close], axis=1)
+        true_range = max(ranges, axis=1)
+
+        return true_range.rolling(interval).sum() / interval
 
     def changePct(self) -> DataFrame:
         """Close change percentage"""
@@ -543,6 +635,10 @@ class TechnicalAnalysis():
         """Returns the Seasonal ARIMA Model for price predictions"""
 
         # hyperparameters for SARIMAX
+        if not self.df.index.freq:
+            freq = str(self.df['granularity'].iloc[-1]).replace("m","T").replace("h","H").replace("d","D")
+            if freq.isdigit(): freq += 'S'
+            self.df.index = self.df.index.to_period(freq)
         model = SARIMAX(self.df['close'], trend='n', order=(0,1,0), seasonal_order=(1,1,1,12))
         return model.fit(disp=-1)
 

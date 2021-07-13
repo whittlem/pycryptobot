@@ -8,12 +8,70 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-## [2.44.0] - 2021-07-13
+## [2.47.0] - 2021-07-13
 
 ### Changed
 
 -- Fixed smartwitch for coinbase historic data limit
 -- Fixed smartswitching date sync 
+
+## [2.46.1] - 2021-07-12
+
+### Changed
+
+-- use `granularity` instead of `self.getGranularity`
+
+-- use `granularity` instead of `self.getGranularity()`  in `getHistoricalDateRange()` call
+
+* Update README.md
+
+## [2.46.0] - 2021-07-09
+
+### Changed
+
+-- Increased number of attempts at retrieving previous orders in binance api
+
+## [2.45.2] - 2021-07-08
+
+### Changed
+
+-- Improved ADX technical indicator
+
+### Added
+
+-- Added ATR technical indicator
+
+## [2.45.1] - 2021-07-06
+
+### Changed
+
+-- Fixed ARIMA bug in coinbase pro when frequency not set in dataframe
+
+## [2.45.0] - 2021-07-06
+
+### Added
+
+-- Added ADX technical indicator
+-- Added auto migrate API keys to coinbasepro.key and/or binance.key
+
+## [2.44.1] - 2021-07-05
+
+### Changed
+
+-- Updated README.md
+
+## [2.44.0] - 2021-07-05
+
+### Added
+
+-- Added log file rotation
+
+## [2.43.1] - 2021-07-05
+
+### Changed
+
+-- Filter on filled orders only in Binance dataframe
+
 
 ## [2.42.0] - 2021-07-03
 

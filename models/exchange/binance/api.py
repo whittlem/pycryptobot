@@ -71,6 +71,7 @@ class AuthAPI(AuthAPIBase):
         self.api_url = api_url
         self.api_key = api_key
         self.api_secret = api_secret
+        self.order_attempts = 0
 
         for i in range(10):
             try:
@@ -192,14 +193,28 @@ class AuthAPI(AuthAPIBase):
         if not status in ['open', 'pending', 'done', 'active', 'all']:
             raise ValueError('Invalid order status.')
 
-        resp = self.client.get_all_orders(symbol=market)
-        if len(resp) > 0:
-            df = pd.DataFrame(resp)
-        else:
-            df = pd.DataFrame()
+        def attempt_orders():
+            resp = self.client.get_all_orders(symbol=market)
+            if len(resp) > 0:
+                self.order_attempts = 0
+                return pd.DataFrame(resp)
+            else:
+                if self.order_attempts < 3:
+                    self.order_attempts += 1
+                    Logger.debug(f'No previous orders found. Retrying: attempt {self.order_attempts}/3')
+                    return attempt_orders()
+                else:
+                    Logger.debug(f'Exhausted attempts to retrieve orders')
+                    return pd.DataFrame()
+
+        df = attempt_orders()
 
         if len(df) == 0:
             return pd.DataFrame()
+
+        # fix: float division by zero
+        # remove pending orders with status new (i.e. order made by user at limit)
+        df = df[df['status'] == "FILLED"]
 
         # replace null NaN values with 0
         df.fillna(0, inplace=True)

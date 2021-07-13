@@ -1,6 +1,7 @@
 [![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg) [![Tests](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)
 
-# Python Crypto Bot v2.44.0 (pycryptobot)
+
+# Python Crypto Bot v2.47.0 (pycryptobot)
 
 ## Join our chat on Telegram
 
@@ -279,7 +280,7 @@ In order to trade live you need to authenticate with the Coinbase Pro or Binance
 
 From now on it's recommended NOT to store the credentials in the config file because people share configs and may inadvertently share their API keys within.
 
-Instead, please, create `binance.key` or `coinbase.key` (or use your own names for the files) and refer to these files in the config as:
+Instead, please, create `binance.key` or `coinbase.key` (or use your own names for the files) and refer to these files in the `config.json` file as:
 
     "api_key_file" : "binance.key"
 
@@ -300,9 +301,7 @@ Coinbase Pro basic (using smart switching)
 
     {
         "api_url" : "https://api.pro.coinbase.com",
-        "api_key" : "<removed>",
-        "api_secret" : "<removed>",
-        "api_pass" : "<removed>",
+        "api_key_file" : "coinbase.key"
         "config" : {
             "cryptoMarket" : "BTC",
             "fiatMarket" : "GBP",
@@ -315,9 +314,7 @@ Coinbase Pro basic (specific granularity, no smart switching)
 
     {
         "api_url" : "https://api.pro.coinbase.com",
-        "api_key" : "<removed>",
-        "api_secret" : "<removed>",
-        "api_pass" : "<removed>",
+        "api_key_file" : "coinbase.key"
         "config" : {
             "cryptoMarket" : "BCH",
             "fiatMarket" : "GBP",
@@ -332,9 +329,7 @@ Coinbase Pro only (new format)
     {
         "coinbasepro" : {
             "api_url" : "https://api.pro.coinbase.com",
-            "api_key" : "<removed>",
-            "api_secret" : "<removed>",
-            "api_passphrase" : "<removed>",
+            "api_key_file" : "coinbase.key"
             "config" : {
                 "base_currency" : "BTC",
                 "quote_currency" : "GBP",
@@ -350,8 +345,7 @@ Binance only (new format)
     {
         "binance" : {
             "api_url" : "https://api.binance.com",
-            "api_key" : "<removed>",
-            "api_secret" : "<removed>",
+            "api_key_file" : "binance.key"
             "config" : {
                 "base_currency" : "BTC",
                 "quote_currency" : "ZAR",
@@ -367,8 +361,7 @@ Coinbase Pro and Binance (new format)
     {
         "binance" : {
             "api_url" : "https://api.binance.com",
-            "api_key" : "<removed>",
-            "api_secret" : "<removed>",
+            "api_key_file" : "binance.key"
             "config" : {
                 "base_currency" : "BTC",
                 "quote_currency" : "ZAR",
@@ -379,9 +372,7 @@ Coinbase Pro and Binance (new format)
         },
         "coinbasepro" : {
             "api_url" : "https://api.pro.coinbase.com",
-            "api_key" : "<removed>",
-            "api_secret" : "<removed>",
-            "api_passphrase" : "<removed>",
+            "api_key_file" : "coinbase.key"
             "config" : {
                 "base_currency" : "BTC",
                 "quote_currency" : "GBP",
@@ -438,9 +429,7 @@ Assuming each bot has a config.json that looks similar to this (update the "cryp
 
     {
         "api_url" : "https://api.pro.coinbase.com",
-        "api_key" : "<removed>",
-        "api_secret" : "<removed>",
-        "api_pass" : "<removed>",
+        "api_key_file" : "coinbase.key"
         "config" : {
             "cryptoMarket" : "BTC",
             "fiatMarket" : "GBP",

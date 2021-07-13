@@ -1,4 +1,7 @@
 import re
+import ast
+import json
+import os.path
 
 from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
 
@@ -24,9 +27,30 @@ def parser(app, coinbase_config, args={}):
     if not app:
         raise Exception('No app is passed')
 
-    if 'api_key' in coinbase_config or 'api_secret' in coinbase_config:
-        print('* "api_key / secret" should be saved in a separate file referred as "api_key_file"')
-        print('* the file should be a simple text file with key/secret/passwd on separate lines\n')
+    if 'api_key' in coinbase_config or 'api_secret' in coinbase_config or 'api_passphrase' in coinbase_config:
+        print('>>> migrating api keys to coinbasepro.key <<<', "\n")
+
+        # create 'coinbasepro.key'
+        fh = open('coinbasepro.key', 'w')
+        fh.write(coinbase_config['api_key'] + "\n" + coinbase_config['api_secret'] + "\n" + coinbase_config['api_passphrase'])
+        fh.close()
+
+        if os.path.isfile('config.json') and os.path.isfile('coinbasepro.key'):
+            coinbase_config['api_key_file'] = coinbase_config.pop('api_key')
+            coinbase_config['api_key_file'] = 'coinbasepro.key'
+            del coinbase_config['api_secret']
+            del coinbase_config['api_passphrase']
+
+            # read 'coinbasepro' element from config.json
+            fh = open('config.json', 'r')
+            config_json = ast.literal_eval(fh.read())
+            config_json['coinbasepro'] = coinbase_config
+            fh.close()
+
+            # write new 'coinbasepro' element
+            fh = open('config.json', 'w')
+            fh.write(json.dumps(config_json, indent=4))
+            fh.close()
 
     if 'api_key_file' in coinbase_config:
         try :
