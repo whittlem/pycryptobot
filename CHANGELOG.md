@@ -8,6 +8,15 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.46.2] - 2021-07-13
+
+### Changed
+
+-- Added --disablebuyema argument
+
+-- Updated README.md
+
+
 ## [2.46.1] - 2021-07-12
 
 ### Changed
