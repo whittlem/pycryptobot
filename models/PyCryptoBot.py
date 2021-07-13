@@ -63,6 +63,7 @@ def parse_arguments():
     parser.add_argument('--disablebullonly', action="store_true", help="disable only buying in bull market")
     parser.add_argument('--disablebuynearhigh', action="store_true", help="disable buy within 5 percent of high")
     parser.add_argument('--disablebuymacd', action="store_true", help="disable macd buy signal")
+    parser.add_argument('--disablebuyema', action="store_true", help="disable ema buy signal")
     parser.add_argument('--disablebuyobv', action="store_true", help="disable obv buy signal")
     parser.add_argument('--disablebuyelderray', action="store_true", help="disable elder ray buy signal")
     parser.add_argument('--disablefailsafefibonaccilow', action="store_true", help="disable failsafe sell on fibonacci lower band")
@@ -174,6 +175,7 @@ class PyCryptoBot():
         self.disablebullonly = False
         self.disablebuynearhigh = False
         self.disablebuymacd = False
+        self.disablebuyema= False
         self.disablebuyobv = False
         self.disablebuyelderray = False
         self.disablefailsafefibonaccilow = False
@@ -632,6 +634,9 @@ class PyCryptoBot():
     def disableBuyMACD(self) -> bool:
         return self.disablebuymacd
 
+    def disableBuyEMA(self) -> bool:
+        return self.disablebuyema
+
     def disableBuyOBV(self) -> bool:
         return self.disablebuyobv
 
@@ -821,7 +826,7 @@ class PyCryptoBot():
                 txt = '             Bot Mode : TEST - test trades using dummy funds :)'
 
             Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
-
+                
             txt = '          Bot Started : ' + str(datetime.now())
             Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
             Logger.info('================================================================================')
@@ -852,6 +857,10 @@ class PyCryptoBot():
 
             txt = '         Use Buy MACD : ' + str(not self.disableBuyMACD()) + '  --disablebuymacd'
             Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
+
+            txt = '         Use Buy EMA : ' + str(not self.disableBuyEMA()) + '  --disablebuyema'
+            Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
+
 
             txt = '          Use Buy OBV : ' + str(not self.disableBuyOBV()) + '  --disablebuyobv'
             Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
@@ -892,6 +901,9 @@ class PyCryptoBot():
             if self.getBuyMaxSize():
                 txt = '         Max Buy Size : ' + str(self.getBuyMaxSize()) + '  --buymaxsize <size>'
                 Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
+
+            if self.disablebuyema and self.disablebuymacd :
+                Logger.info('| WARNING : EMA and MACD indicators disabled, no buy events will happen        |')
 
             Logger.info('================================================================================')
 
