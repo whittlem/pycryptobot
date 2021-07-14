@@ -8,6 +8,13 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+
+## [2.47.1] - 2021-07-13
+
+### Changed
+
+-- Fixed simulation date issues
+
 ## [2.47.0] - 2021-07-13
 
 ### Changed

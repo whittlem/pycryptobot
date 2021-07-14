@@ -356,14 +356,12 @@ class PyCryptoBot():
         except Exception:
             return None
 
-    def getDateFromStr(self, date: str) :
-                
+    def getDateFromISO8601Str(self, date: str) :
         new_date_str = f'{date} 00:00:00' if len(date) == 10 else date
-        dt = new_date_str.split(' ')
+        dt = new_date_str.split('T')
         date = dt[0].split('-')
         time = dt[1].split(':')
         return datetime(int(date[0]), int(date[1]), int(date[2]), int(time[0]), int(time[1]), int(time[2])) 
-        #return new_date
 
     def getHistoricalData(self, market, granularity: int, iso8601start='', iso8601end=''):
         if self.exchange == 'coinbasepro':
@@ -387,42 +385,37 @@ class PyCryptoBot():
             return pd.DataFrame()
 
 
-    def getsmartswitchDataFrame(self, df: pd.DataFrame, market, granularity: int, simstart: str="", simend: str="", simcurrent: str="") -> pd.DataFrame:
+
+    def getSmartSwitchDataFrame(self, df: pd.DataFrame, market, granularity: int, simstart: str="", simend: str="", simcurrent: str="") -> pd.DataFrame:
         Logger.info(" *** getting smartswitch (" + str(granularity) + ") market data *** ")
         
         if self.isSimulation():
-            
             result_df_cache = df
 
-            simstart = self.getDateFromStr(simstart)
-            simend = self.getDateFromStr(simend)
+            simstart = self.getDateFromISO8601Str(simstart)
+            simend = self.getDateFromISO8601Str(simend)
             
-            #Logger.debug("START DATE: " + str(simstart))
-            #Logger.debug("END DATE: " + str(simend))
-            #Logger.debug("SIM DATE: " + str(simcurrent))
             try:
                 df_first = None
                 df_last = None
                 
                 Logger.debug("Row Count (" + str(granularity) + "): " + str(df.shape[0]))
-                df_first = self.getDateFromStr(str(df.head(1).index.format()[0]))
-                df_last = self.getDateFromStr(str(df.tail(1).index.format()[0]))
+                df_first = self.getDateFromISO8601Str(str(df.head(1).index.format()[0]))
+                df_last = self.getDateFromISO8601Str(str(df.tail(1).index.format()[0]))
             except Exception:
                 result_df_cache = pd.DataFrame()
 
-            #Logger.debug("(" + str(granularity) + ") df_first: " + str(df_first))
-            #Logger.debug("(" + str(granularity) + ") df_last: " + str(df_last))
-            
             if (df_first is None and df_last is None) or (df_first.isoformat(timespec='milliseconds') > simstart.isoformat(timespec='milliseconds')):
                 df1 = self.getHistoricalData(market, granularity)
                 result_df_cache = df1
                 
-                df_first = self.getDateFromStr(str(df1.head(1).index.format()[0]))
-                df_last = self.getDateFromStr(str(df1.tail(1).index.format()[0]))
-                end_date = self.getDateFromStr(str(simend))
+
+                df_first = self.getDateFromISO8601Str(datetime.strptime(str(simstart), "%Y-%m-%d %H:%M:%S").isoformat())
+                df_last = self.getDateFromISO8601Str(datetime.strptime(str(simend), "%Y-%m-%d %H:%M:%S").isoformat())
+                end_date = self.getDateFromISO8601Str(datetime.strptime(str(simend), "%Y-%m-%d %H:%M:%S").isoformat())
                 
                 if df_first.isoformat(timespec='milliseconds') > simstart.isoformat(timespec='milliseconds'):
-                    df1 = self.getHistoricalData(market, granularity, str(df_first), str(end_date))
+                    df1 = self.getHistoricalData(market, granularity, datetime.strptime(str(df_first), "%Y-%m-%d %H:%M:%S").isoformat(), datetime.strptime(str(end_date), "%Y-%m-%d %H:%M:%S").isoformat())
 
                     while df_first.isoformat(timespec='milliseconds') > simstart.isoformat(timespec='milliseconds'):
                         end_date = df_first
@@ -444,20 +437,16 @@ class PyCryptoBot():
 
             return result_df_cache
 
-    def getsmartswitchHistoricalDataChained(self, market, granularity: int, start: str="", end: str="", simdate: str="") -> pd.DataFrame:
-        
+    def getSmartSwitchHistoricalDataChained(self, market, granularity: int, start: str="", end: str="", simdate: str="") -> pd.DataFrame:
         if self.isSimulation():
-
-            self.ema1226_15m_cache = self.getsmartswitchDataFrame(self.ema1226_15m_cache, market, 900, start, end, simdate)
-            self.ema1226_1h_cache = self.getsmartswitchDataFrame(self.ema1226_1h_cache, market, 3600, start, end, simdate)
-            self.ema1226_6h_cache = self.getsmartswitchDataFrame(self.ema1226_6h_cache, market, 21600, start, end, simdate)                
+            self.ema1226_15m_cache = self.getSmartSwitchDataFrame(self.ema1226_15m_cache, market, 900, start, end, simdate)
+            self.ema1226_1h_cache = self.getSmartSwitchDataFrame(self.ema1226_1h_cache, market, 3600, start, end, simdate)
+            self.ema1226_6h_cache = self.getSmartSwitchDataFrame(self.ema1226_6h_cache, market, 21600, start, end, simdate)                
             
             if granularity == 900:
-                rdf = self.ema1226_15m_cache[(self.ema1226_15m_cache['date'] >= str(simdate))]
+                return self.ema1226_15m_cache[(self.ema1226_15m_cache['date'] >= str(simdate))]
             else:
-                rdf = self.ema1226_1h_cache[(self.ema1226_1h_cache['date'] >= str(simdate))]
-
-            return rdf
+                return self.ema1226_1h_cache[(self.ema1226_1h_cache['date'] >= str(simdate))]
 
     def getHistoricalDataChained(self, market, granularity: int, max_interations: int=1) -> pd.DataFrame:
         df1 = self.getHistoricalData(market, granularity)

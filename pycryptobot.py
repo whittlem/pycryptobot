@@ -78,8 +78,9 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
 
                 startDate = f'{startDate} 00:00:00' if len(startDate) == 10 else startDate
                 endDate = f'{endDate} 00:00:00' if len(endDate) == 10 else endDate
-                
-                df = app.getsmartswitchHistoricalDataChained(app.getMarket(), app.getGranularity(), str(startDate), str(endDate), str(df_last.index.format()[0]))
+               
+                df = app.getSmartSwitchHistoricalDataChained(app.getMarket(), app.getGranularity(), datetime.strptime(startDate, "%Y-%m-%d %H:%M:%S").isoformat(), datetime.strptime(endDate, "%Y-%m-%d %H:%M:%S").isoformat(), str(df_last.index.format()[0]))
+
                 state.iterations = 2
 
             app.sim_smartswitch = False
