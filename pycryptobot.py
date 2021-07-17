@@ -628,7 +628,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                         Logger.info(' Fibonacci Retracement Levels:' + str(bands))
                         
                         if app.getSmartSwitch():
-                            ta.printSupportResistanceLevel(float(price), str(current_sim_date))
+                            ta.printSupportResistanceLevel(float(price))
                         else:
                             technical_analysis.printSupportResistanceLevel(float(price))
 
