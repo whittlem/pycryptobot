@@ -415,7 +415,7 @@ class PyCryptoBot():
 
                 df_first = simend 
                 df_first -= timedelta(minutes=(300*(granularity/60)))
-                df1 = self.getHistoricalData(market, self.printGranularity(granularity),
+                df1 = self.getHistoricalData(market, granularity,
                                                 str(df_first.isoformat()), 
                                                 str(simend.isoformat()))
 																								  
