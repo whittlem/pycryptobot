@@ -357,11 +357,13 @@ class PyCryptoBot():
             return None
 
     def getDateFromISO8601Str(self, date: str) :
+		
         new_date_str = f'{date} 00:00:00' if len(date) == 10 else date
-        dt = new_date_str.split('T')
+																   
+        dt = new_date_str.split(' ')
         date = dt[0].split('-')
         time = dt[1].split(':')
-        return datetime(int(date[0]), int(date[1]), int(date[2]), int(time[0]), int(time[1]), int(time[2])) 
+        return datetime(int(date[0]), int(date[1]), int(date[2]), int(time[0]), int(time[1]), int(time[2]))
 
     def getHistoricalData(self, market, granularity: int, iso8601start='', iso8601end=''):
         if self.exchange == 'coinbasepro':
@@ -387,7 +389,6 @@ class PyCryptoBot():
 
 
     def getSmartSwitchDataFrame(self, df: pd.DataFrame, market, granularity: int, simstart: str="", simend: str="", simcurrent: str="") -> pd.DataFrame:
-        Logger.info(" *** getting smartswitch (" + str(granularity) + ") market data *** ")
         
         if self.isSimulation():
             result_df_cache = df
@@ -398,55 +399,63 @@ class PyCryptoBot():
             try:
                 df_first = None
                 df_last = None
-                
-                Logger.debug("Row Count (" + str(granularity) + "): " + str(df.shape[0]))
+				
+                #Logger.debug("Row Count (" + str(granularity) + "): " + str(df.shape[0]))
+
                 df_first = self.getDateFromISO8601Str(str(df.head(1).index.format()[0]))
                 df_last = self.getDateFromISO8601Str(str(df.tail(1).index.format()[0]))
+									 
             except Exception:
                 result_df_cache = pd.DataFrame()
 
-            if (df_first is None and df_last is None) or (df_first.isoformat(timespec='milliseconds') > simstart.isoformat(timespec='milliseconds')):
-                df1 = self.getHistoricalData(market, granularity)
+            if (df_first is None and df_last is None):
+                Logger.info('--------------------------------------------------------------------------------')
+                Logger.info('             *** getting smartswitch (' + str(granularity) + ') market data ***')
+                Logger.info('--------------------------------------------------------------------------------')
+
+                df_first = simend 
+                df_first -= timedelta(minutes=(300*(granularity/60)))
+                df1 = self.getHistoricalData(market, self.printGranularity(granularity),
+                                                str(df_first.isoformat()), 
+                                                str(simend.isoformat()))
+																								  
                 result_df_cache = df1
-                
 
-                df_first = self.getDateFromISO8601Str(datetime.strptime(str(simstart), "%Y-%m-%d %H:%M:%S").isoformat())
-                df_last = self.getDateFromISO8601Str(datetime.strptime(str(simend), "%Y-%m-%d %H:%M:%S").isoformat())
-                end_date = self.getDateFromISO8601Str(datetime.strptime(str(simend), "%Y-%m-%d %H:%M:%S").isoformat())
-                
-                if df_first.isoformat(timespec='milliseconds') > simstart.isoformat(timespec='milliseconds'):
-                    df1 = self.getHistoricalData(market, granularity, datetime.strptime(str(df_first), "%Y-%m-%d %H:%M:%S").isoformat(), datetime.strptime(str(end_date), "%Y-%m-%d %H:%M:%S").isoformat())
-
-                    while df_first.isoformat(timespec='milliseconds') > simstart.isoformat(timespec='milliseconds'):
-                        end_date = df_first
-                        df_first -= timedelta(minutes=(300*(granularity/60)))
+                while df_first.isoformat(timespec='milliseconds') > simstart.isoformat(timespec='milliseconds'):
+                    end_date = df_first
+                    df_first -= timedelta(minutes=(300*(granularity/60)))
                         
-                        if df_first.isoformat(timespec='milliseconds') < simstart.isoformat(timespec='milliseconds'):
-                                df_first = simstart
+                    if df_first.isoformat(timespec='milliseconds') < simstart.isoformat(timespec='milliseconds'):
+                        df_first = self.getDateFromISO8601Str(str(simstart))
 
-                        df2 = self.getHistoricalData(market, granularity, str(df_first), str(end_date))
+                    df2 = self.getHistoricalData(market, granularity, str(df_first.isoformat()), str(end_date.isoformat()))
 
-                        result_df_cache = pd.concat([df2.copy(), df1.copy()]).drop_duplicates()
-                        df1 = result_df_cache
-            if 'morning_star' not in result_df_cache:
+                    result_df_cache = pd.concat([df2.copy(), df1.copy()]).drop_duplicates()
+                    df1 = result_df_cache
+
+											  
+            if len(result_df_cache) > 0 and 'morning_star' not in result_df_cache:
+									  
                 result_df_cache.sort_values(by=['date'], ascending=True, inplace=True)
                 trading_dataCopy = result_df_cache.copy()
                 technical_analysis = TechnicalAnalysis(trading_dataCopy)
                 technical_analysis.addAll()
-                result_df_cache = technical_analysis.getDataFrame()
+                result_df_cache = trading_dataCopy
 
+			
             return result_df_cache
 
     def getSmartSwitchHistoricalDataChained(self, market, granularity: int, start: str="", end: str="", simdate: str="") -> pd.DataFrame:
         if self.isSimulation():
+			
             self.ema1226_15m_cache = self.getSmartSwitchDataFrame(self.ema1226_15m_cache, market, 900, start, end, simdate)
             self.ema1226_1h_cache = self.getSmartSwitchDataFrame(self.ema1226_1h_cache, market, 3600, start, end, simdate)
             self.ema1226_6h_cache = self.getSmartSwitchDataFrame(self.ema1226_6h_cache, market, 21600, start, end, simdate)                
             
             if granularity == 900:
-                return self.ema1226_15m_cache[(self.ema1226_15m_cache['date'] >= str(simdate))]
+                return self.ema1226_15m_cache
             else:
-                return self.ema1226_1h_cache[(self.ema1226_1h_cache['date'] >= str(simdate))]
+                return self.ema1226_1h_cache
 
     def getHistoricalDataChained(self, market, granularity: int, max_interations: int=1) -> pd.DataFrame:
         df1 = self.getHistoricalData(market, granularity)
@@ -570,11 +579,9 @@ class PyCryptoBot():
             ta = TechnicalAnalysis(df_data)
             
             if 'sma50' not in df_data:
-                Logger.info("Adding sma50")
                 ta.addSMA(50)
             
             if 'sma200' not in df_data:
-                Logger.info("Adding sma200")
                 ta.addSMA(200)
 
             df_last = ta.getDataFrame().copy().iloc[-1,:]
@@ -1027,50 +1034,86 @@ class PyCryptoBot():
                 attempts = 0
 
                 if self.simstartdate is not None and self.simenddate is not None:
-                    date = self.simstartdate.split('-')
-                    startDate = datetime(int(date[0]), int(date[1]), int(date[2]))
+												   
+                    startDate = self.getDateFromISO8601Str(self.simstartdate.replace("T", " "))
+																				   
                     if self.simenddate == 'now':
-                        endDate = datetime.now()
+                        endDate = self.getDateFromISO8601Str(str(datetime.now()).split(".")[0])
                     else:
-                        date = self.simenddate.split('-')
-                        endDate = datetime(int(date[0]), int(date[1]), int(date[2]))
-                    while len(tradingData) != 300 and attempts < 10:
-                        tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(),
-                                                             startDate.isoformat(timespec='milliseconds'),
-                                                             endDate.isoformat(timespec='milliseconds'))
+                        endDate = self.getDateFromISO8601Str(self.simenddate.replace("T", " "))
+																					 
+                    while len(tradingData) < 300 and attempts < 10:
+                        if self.smart_switch == 1:
+                            tradingData = self.getSmartSwitchHistoricalDataChained(self.market, 3600,
+                                                                                   str(startDate),
+                                                                                   str(endDate),
+                                                                                   str(startDate))
+
+                        else:
+                            tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(),
+                                                                startDate.isoformat(timespec='milliseconds'),
+                                                                endDate.isoformat(timespec='milliseconds'))
                         attempts += 1
                 elif self.simstartdate is not None and self.simenddate is None:
-                    date = self.simstartdate.split('-')
-                    startDate = datetime(int(date[0]), int(date[1]), int(date[2]))
+                    #date = self.simstartdate.split('-')
+                    startDate = self.getDateFromISO8601Str(self.simstartdate.replace("T", " "))
                     endDate = startDate + timedelta(minutes=(self.getGranularity()/60)*300)
-                    while len(tradingData) != 300 and attempts < 10:
-                        tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(),
+					
+                    while len(tradingData) < 300 and attempts < 10:
+                        if self.smart_switch == 1:
+                            tradingData = self.getSmartSwitchHistoricalDataChained(self.market, self.getGranularity(),
+                                                                                   str(startDate),
+                                                                                   str(endDate),
+                                                                                   str(startDate))
+
+                        else:
+                            tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(),
                                                              startDate.isoformat(timespec='milliseconds'),
                                                              endDate.isoformat(timespec='milliseconds'))
                         attempts += 1
                 elif self.simenddate is not None and self.simstartdate is None:
                     if self.simenddate == 'now':
-                        endDate = datetime.now()
+                        endDate = self.getDateFromISO8601Str(str(datetime.now()).split(".")[0])
                     else:
-                        date = self.simenddate.split('-')
-                        endDate = datetime(int(date[0]), int(date[1]), int(date[2]))
+                        endDate = self.getDateFromISO8601Str(self.simenddate.replace("T", " "))
+
                     startDate = endDate - timedelta(minutes=(self.getGranularity()/60)*300)
-                    while len(tradingData) != 300 and attempts < 10:
-                        tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(),
+                    while len(tradingData) < 300 and attempts < 10:
+                        if self.smart_switch == 1:
+                            tradingData = self.getSmartSwitchHistoricalDataChained(self.market, self.getGranularity(),
+                                                                                   str(startDate),
+                                                                                   str(endDate),
+                                                                                   str(startDate))
+
+                        else:
+                            tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(),
                                                              startDate.isoformat(timespec='milliseconds'),
                                                              endDate.isoformat(timespec='milliseconds'))
                         attempts += 1
                 else:
+                    endDate = datetime.now() - timedelta(hours=random.randint(0, 8760 * 3))  # 3 years in hours
+                    startDate = endDate - timedelta(minutes=(self.getGranularity()/60)*300)
+					
                     while len(tradingData) != 300 and attempts < 10:
-                        endDate = datetime.now() - timedelta(hours=random.randint(0, 8760 * 3))  # 3 years in hours
-                        startDate = endDate - timedelta(minutes=(self.getGranularity()/60)*300)
-                        tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(),
+                        if self.smart_switch == 1:
+                            tradingData = self.getSmartSwitchHistoricalDataChained(self.market, self.getGranularity(),
+                                                                                   str(startDate).split(".")[0],
+                                                                                   str(endDate).split(".")[0],
+                                                                                   str(startDate).split(".")[0])
+
+                        else:
+                            tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(),
                                                              startDate.isoformat(timespec='milliseconds'))
                         attempts += 1
-                    if len(tradingData) != 300:
+						
+                    if self.smart_switch == 1:
+                        self.simstartdate = str(startDate).split(" ")[0]
+                        self.simenddate = str(endDate).split(" ")[0]											  
+																		
+                    if len(tradingData) < 300:
                         raise Exception(
                             'Unable to retrieve 300 random sets of data between ' + str(startDate) + ' and ' + str(
-                                endDate) + ' in ' + str(attempts) + ' attempts.')
+                                endDate) + ' in 10 attempts.')
 
                 if banner:
                     startDate = str(startDate.isoformat())
@@ -1087,6 +1130,7 @@ class PyCryptoBot():
                     Logger.info('================================================================================')
 
             else:
+															
                 tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity())
 
             return tradingData

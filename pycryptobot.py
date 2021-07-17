@@ -56,36 +56,66 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
 
     # analyse the market data
     if app.isSimulation() and len(trading_data.columns) > 8:    
+													
         df = trading_data
+														  
+																				 
         # if smartswitch then get the market data using new granularity
         if app.sim_smartswitch:
-            df_last = app.getInterval(df, state.iterations - 1)
+            df_last = app.getInterval(df, state.iterations)
             if len(df_last.index.format()) > 0:
                 if app.simstartdate is not None:
-                    startDate = app.simstartdate
+                    startDate = app.simstartdate.replace("T", " ")
                 else:
                     startDate = str(df_last.index.format()[0])
-                    
+
                 if app.simenddate is not None:
                     if app.simenddate == "now":
-                        endDate = str(datetime.now())
-                        dt = endDate.split(".")
-                        endDate = dt[0]
+                        endDate = str(datetime.now()).split(".")[0]
                     else:
-                        endDate = app.simenddate
+                        endDate = app.simenddate.replace("T", " ")
                 else:
                     endDate = str(df.tail(1).index.format()[0])
 
                 startDate = f'{startDate} 00:00:00' if len(startDate) == 10 else startDate
                 endDate = f'{endDate} 00:00:00' if len(endDate) == 10 else endDate
-               
-                df = app.getSmartSwitchHistoricalDataChained(app.getMarket(), app.getGranularity(), datetime.strptime(startDate, "%Y-%m-%d %H:%M:%S").isoformat(), datetime.strptime(endDate, "%Y-%m-%d %H:%M:%S").isoformat(), str(df_last.index.format()[0]))
+                simDate = f'{endDate} 00:00:00' if len(str(df_last.index.format()[0])) == 10 else str(df_last.index.format()[0])																																		  
+                
+                trading_data = app.getSmartSwitchHistoricalDataChained(app.getMarket(), app.getGranularity(), str(startDate), str(endDate), str(df_last.index.format()[0]))
+                
+                if app.getGranularity() == 3600:
+                    simDate = app.getDateFromISO8601Str(simDate)
+                    rounded = simDate - (simDate - datetime.min) % timedelta(minutes=60)
+                    simDate = rounded
+                    
+                state.iterations = trading_data.index.get_loc(str(simDate))
+                    
+                if state.iterations == 0:
+                    state.iterations = 1
 
-                state.iterations = 2
+                trading_dataCopy = trading_data.copy()
+                technical_analysis = TechnicalAnalysis(trading_dataCopy)
 
-            app.sim_smartswitch = False
+                if 'morning_star' not in df:
+                    technical_analysis.addAll()
+                    
+                df = technical_analysis.getDataFrame()
+                
+                app.sim_smartswitch = False
 
+            
+        elif app.getSmartSwitch() == 1 and technical_analysis is None:
+                trading_dataCopy = trading_data.copy()
+                technical_analysis = TechnicalAnalysis(trading_dataCopy)
+
+                if 'morning_star' not in df:
+                    technical_analysis.addAll()
+                    Logger.info("Iteration3 " + str(state.iterations))
+                    
+                df = technical_analysis.getDataFrame()
+									   
     else:
+							
         trading_dataCopy = trading_data.copy()
         technical_analysis = TechnicalAnalysis(trading_dataCopy)
         technical_analysis.addAll()
@@ -104,7 +134,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
     formatted_current_df_index = f'{current_df_index} 00:00:00' if len(current_df_index) == 10 else current_df_index
 
     current_sim_date = formatted_current_df_index
-
+																																																	
     # use actual sim mode date to check smartchswitch
     if app.getSmartSwitch() == 1 and app.getGranularity() == 3600 and app.is1hEMA1226Bull(current_sim_date) is True and app.is6hEMA1226Bull(current_sim_date) is True:
         Logger.info('*** smart switch from granularity 3600 (1 hour) to 900 (15 min) ***')
@@ -186,10 +216,6 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
         # if simulation, set goldencross based on actual sim date
         if app.isSimulation():
             goldencross = app.is1hSMA50200Bull(current_sim_date)
-
-        # if simulation interations < 200 set goldencross to true
-        #if app.isSimulation() and state.iterations < 200:
-        #    goldencross = True
 
         # candlestick detection
         hammer = bool(df_last['hammer'].values[0])
@@ -594,10 +620,18 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
 
                     if not app.isVerbose():
                         Logger.info(formatted_current_df_index + ' | ' + app.getMarket() + ' | ' + app.printGranularity() + ' | ' + price_text + ' | BUY')
+                        
+                        trading_dataCopy = trading_data[trading_data['date'] <= current_sim_date].copy()
+                        ta = TechnicalAnalysis(trading_dataCopy)
 
-                        bands = technical_analysis.getFibonacciRetracementLevels(float(price))
+                        bands = ta.getFibonacciRetracementLevels(float(price))
                         Logger.info(' Fibonacci Retracement Levels:' + str(bands))
-                        technical_analysis.printSupportResistanceLevel(float(price))
+                        
+                        if app.getSmartSwitch():
+                            ta.printSupportResistanceLevel(float(price), str(current_sim_date))
+                        else:
+                            technical_analysis.printSupportResistanceLevel(float(price))
+
 
                         if len(bands) >= 1 and len(bands) <= 2:
                             if len(bands) == 1:
@@ -618,6 +652,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                                 state.fib_high = bands[second_key]
 
                     else:
+						
                         Logger.info('--------------------------------------------------------------------------------')
                         Logger.info('|                      *** Executing TEST Buy Order ***                        |')
                         Logger.info('--------------------------------------------------------------------------------')
@@ -815,8 +850,8 @@ def main():
         # initialise and start application
         trading_data = app.startApp(account, state.last_action)
 
-        if app.getSmartSwitch():
-            app.sim_smartswitch = True
+								 
+									   
 
         def runApp():
             # run the first job immediately after starting
