@@ -8,6 +8,11 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.47.2] - 2021-07-17
+
+### Changed
+
+-- Fixed fast-sample smartswitching for coinbase
 
 ## [2.47.1] - 2021-07-13
 
