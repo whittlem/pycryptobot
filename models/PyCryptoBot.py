@@ -357,13 +357,17 @@ class PyCryptoBot():
             return None
 
     def getDateFromISO8601Str(self, date: str) :
-		
+
+        #If date passed from datetime.now() remove milliseconds
+        if date.find('.') != -1:
+            dt = date.split('.')[0]
+            date = dt
+										
+        date = date.replace('T', ' ') if date.find('T') != -1 else date
+        #Add time in case only a date is passed in
         new_date_str = f'{date} 00:00:00' if len(date) == 10 else date
-																   
-        dt = new_date_str.split(' ')
-        date = dt[0].split('-')
-        time = dt[1].split(':')
-        return datetime(int(date[0]), int(date[1]), int(date[2]), int(time[0]), int(time[1]), int(time[2]))
+
+        return datetime.strptime(new_date_str, "%Y-%m-%d %H:%M:%S") 
 
     def getHistoricalData(self, market, granularity: int, iso8601start='', iso8601end=''):
         if self.exchange == 'coinbasepro':
@@ -401,17 +405,16 @@ class PyCryptoBot():
                 df_last = None
 				
                 #Logger.debug("Row Count (" + str(granularity) + "): " + str(df.shape[0]))
-
+                # if df already has data get first and last record date
                 df_first = self.getDateFromISO8601Str(str(df.head(1).index.format()[0]))
                 df_last = self.getDateFromISO8601Str(str(df.tail(1).index.format()[0]))
 									 
             except Exception:
+                #if df = None create a new data frame
                 result_df_cache = pd.DataFrame()
 
             if (df_first is None and df_last is None):
-                Logger.info('--------------------------------------------------------------------------------')
                 Logger.info('             *** getting smartswitch (' + str(granularity) + ') market data ***')
-                Logger.info('--------------------------------------------------------------------------------')
 
                 df_first = simend 
                 df_first -= timedelta(minutes=(300*(granularity/60)))
@@ -485,44 +488,6 @@ class PyCryptoBot():
     def getSmartSwitch(self):
         return self.smart_switch
 
-    def is15mEMA1226Bull(self, iso8601end: str=''):
-        try:
-            if self.isSimulation() and isinstance(self.ema1226_15m_cache, pd.DataFrame):
-                df_data = self.ema1226_15m_cache.loc[self.ema1226_15m_cache['date'] <= iso8601end].copy()
-            elif self.exchange == 'coinbasepro':
-                api = CBPublicAPI()
-                df_data = api.getHistoricalData(self.market, 900)
-                self.ema1226_15m_cache = df_data
-            elif self.exchange == 'binance':
-                api = BPublicAPI()
-                df_data = api.getHistoricalData(self.market, '15m')
-                self.ema1226_15m_cache = df_data
-            else:
-                return False
-
-            ta = TechnicalAnalysis(df_data)
-
-            if 'ema12' not in df_data:
-                ta.addEMA(12)
-
-            if 'ema26' not in df_data:
-                ta.addEMA(26)
-
-            df_last = ta.getDataFrame().copy().iloc[-1,:]
-
-            Logger.debug("---- EMA1226 15m Check----")
-            if self.isSimulation():
-                Logger.debug("simdate: " + str(df_last['date']))
-                Logger.debug("ema12 15m: " + str(df_last['ema12']))
-                Logger.debug("ema26 15m: " + str(df_last['ema26']))
-                
-            Logger.debug("bull 15m: " + str(df_last['ema12'] > df_last['ema26']))
-
-            df_last['bull'] = df_last['ema12'] > df_last['ema26']  
-            return bool(df_last['bull'])
-        except Exception:
-            return False
-
     def is1hEMA1226Bull(self, iso8601end: str=''):
         try:
             if self.isSimulation() and isinstance(self.ema1226_1h_cache, pd.DataFrame):
@@ -547,16 +512,8 @@ class PyCryptoBot():
                 ta.addEMA(26)
 
             df_last = ta.getDataFrame().copy().iloc[-1,:]
+            df_last['bull'] = df_last['ema12'] > df_last['ema26'] 
 
-            Logger.debug("---- EMA1226 1H Check----")
-            if self.isSimulation():
-                Logger.debug("simdate: " + str(df_last['date']))
-                Logger.debug("ema12 1h: " + str(df_last['ema12']))
-                Logger.debug("ema26 1h: " + str(df_last['ema26']))
-                
-            Logger.debug("bull 1h: " + str(df_last['ema12'] > df_last['ema26']))
-
-            df_last['bull'] = df_last['ema12'] > df_last['ema26']  
             return bool(df_last['bull'])
         except Exception:
             return False
@@ -585,16 +542,8 @@ class PyCryptoBot():
                 ta.addSMA(200)
 
             df_last = ta.getDataFrame().copy().iloc[-1,:]
-
-            Logger.debug("---- SMA50200 1H Check----")
-            if self.isSimulation():
-                Logger.debug("simdate: " + str(df_last['date']))
-                Logger.debug("sma50 1h: " + str(df_last['sma50']))
-                Logger.debug("sma200 1h: " + str(df_last['sma200']))
-                
-            Logger.debug("bull 1h: " + str(df_last['sma50'] > df_last['sma200']))
-
             df_last['bull'] = df_last['sma50'] > df_last['sma200']
+
             return bool(df_last['bull'])
         except Exception:
             return False
@@ -649,14 +598,6 @@ class PyCryptoBot():
             df_last = ta.getDataFrame().copy().iloc[-1, :]
             df_last['bull'] = df_last['ema12'] > df_last['ema26']
 
-            Logger.debug("---- EMA1226 6H Check----")
-            if self.isSimulation():
-                Logger.debug("simdate: " + str(df_last['date']))
-                Logger.debug("ema12 6h: " + str(df_last['ema12']))
-                Logger.debug("ema26 6h: " + str(df_last['ema26']))
-                
-            Logger.debug("bull 6h: " + str(df_last['ema12'] > df_last['ema26']))
-                
             return bool(df_last['bull'])
         except Exception:
             return False
@@ -1035,16 +976,16 @@ class PyCryptoBot():
 
                 if self.simstartdate is not None and self.simenddate is not None:
 												   
-                    startDate = self.getDateFromISO8601Str(self.simstartdate.replace("T", " "))
+                    startDate = self.getDateFromISO8601Str(self.simstartdate)
 																				   
                     if self.simenddate == 'now':
-                        endDate = self.getDateFromISO8601Str(str(datetime.now()).split(".")[0])
+                        endDate = self.getDateFromISO8601Str(str(datetime.now()))
                     else:
-                        endDate = self.getDateFromISO8601Str(self.simenddate.replace("T", " "))
+                        endDate = self.getDateFromISO8601Str(self.simenddate)
 																					 
                     while len(tradingData) < 300 and attempts < 10:
                         if self.smart_switch == 1:
-                            tradingData = self.getSmartSwitchHistoricalDataChained(self.market, 3600,
+                            tradingData = self.getSmartSwitchHistoricalDataChained(self.market, self.getGranularity(),
                                                                                    str(startDate),
                                                                                    str(endDate),
                                                                                    str(startDate))
@@ -1056,7 +997,7 @@ class PyCryptoBot():
                         attempts += 1
                 elif self.simstartdate is not None and self.simenddate is None:
                     #date = self.simstartdate.split('-')
-                    startDate = self.getDateFromISO8601Str(self.simstartdate.replace("T", " "))
+                    startDate = self.getDateFromISO8601Str(self.simstartdate)
                     endDate = startDate + timedelta(minutes=(self.getGranularity()/60)*300)
 					
                     while len(tradingData) < 300 and attempts < 10:
@@ -1073,9 +1014,9 @@ class PyCryptoBot():
                         attempts += 1
                 elif self.simenddate is not None and self.simstartdate is None:
                     if self.simenddate == 'now':
-                        endDate = self.getDateFromISO8601Str(str(datetime.now()).split(".")[0])
+                        endDate = self.getDateFromISO8601Str(str(datetime.now()))
                     else:
-                        endDate = self.getDateFromISO8601Str(self.simenddate.replace("T", " "))
+                        endDate = self.getDateFromISO8601Str(self.simenddate)
 
                     startDate = endDate - timedelta(minutes=(self.getGranularity()/60)*300)
                     while len(tradingData) < 300 and attempts < 10:
@@ -1091,15 +1032,22 @@ class PyCryptoBot():
                                                              endDate.isoformat(timespec='milliseconds'))
                         attempts += 1
                 else:
-                    endDate = datetime.now() - timedelta(hours=random.randint(0, 8760 * 3))  # 3 years in hours
-                    startDate = endDate - timedelta(minutes=(self.getGranularity()/60)*300)
-					
-                    while len(tradingData) != 300 and attempts < 10:
+                    endDate = datetime.now()
+                    endDate = self.getDateFromISO8601Str(str(endDate))
+                    if self.getExchange() == 'coinbasepro':
+                        endDate -= timedelta(hours=random.randint(0, 8760 * 3))  # 3 years in hours
+                    else:
+                        endDate -= timedelta(hours=random.randint(0, 8760 * 1))
+                        
+                    startDate = self.getDateFromISO8601Str(str(endDate))
+                    startDate -= timedelta(minutes=(self.getGranularity()/60)*300)
+					   
+                    while len(tradingData) < 300 and attempts < 10:
                         if self.smart_switch == 1:
                             tradingData = self.getSmartSwitchHistoricalDataChained(self.market, self.getGranularity(),
-                                                                                   str(startDate).split(".")[0],
-                                                                                   str(endDate).split(".")[0],
-                                                                                   str(startDate).split(".")[0])
+                                                                                   str(startDate),
+                                                                                   str(endDate),
+                                                                                   str(startDate))
 
                         else:
                             tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(),
@@ -1107,8 +1055,8 @@ class PyCryptoBot():
                         attempts += 1
 						
                     if self.smart_switch == 1:
-                        self.simstartdate = str(startDate).split(" ")[0]
-                        self.simenddate = str(endDate).split(" ")[0]											  
+                        self.simstartdate = str(startDate)
+                        self.simenddate = str(endDate)				  
 																		
                     if len(tradingData) < 300:
                         raise Exception(
