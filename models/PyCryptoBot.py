@@ -390,8 +390,6 @@ class PyCryptoBot():
         else:
             return pd.DataFrame()
 
-
-
     def getSmartSwitchDataFrame(self, df: pd.DataFrame, market, granularity: int, simstart: str="", simend: str="", simcurrent: str="") -> pd.DataFrame:
         
         if self.isSimulation():
@@ -445,7 +443,6 @@ class PyCryptoBot():
                 technical_analysis.addAll()
                 result_df_cache = trading_dataCopy
 
-			
             return result_df_cache
 
     def getSmartSwitchHistoricalDataChained(self, market, granularity: int, start: str="", end: str="", simdate: str="") -> pd.DataFrame:
