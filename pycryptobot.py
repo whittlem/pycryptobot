@@ -81,13 +81,21 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                 
                 if app.getGranularity() == 3600:
                     simDate = app.getDateFromISO8601Str(str(simDate))
-                    rounded = simDate - (simDate - datetime.min) % timedelta(minutes=60)
-                    simDate = rounded
+                    sim_rounded = pd.Series(simDate).dt.round('60min')
+                    simDate = sim_rounded[0]
+                elif app.getGranularity() == 900:
+                    simDate = app.getDateFromISO8601Str(str(simDate))
+                    sim_rounded = pd.Series(simDate).dt.round('15min')
+                    simDate = sim_rounded[0]
                     
                 state.iterations = trading_data.index.get_loc(str(simDate))
-                    
+
                 if state.iterations == 0:
                     state.iterations = 1
+                elif app.getGranularity() == 3600:
+                    state.iterations += 2            
+                elif app.getGranularity() == 900:
+                    state.iterations -= 2 
 
                 trading_dataCopy = trading_data.copy()
                 technical_analysis = TechnicalAnalysis(trading_dataCopy)
@@ -105,7 +113,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
 
                 if 'morning_star' not in df:
                     technical_analysis.addAll()
-                    
+
                 df = technical_analysis.getDataFrame()
 
     else:
@@ -119,7 +127,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
         df_last = app.getInterval(df, state.iterations)
     else:
         df_last = app.getInterval(df)
-
+    
     if len(df_last.index.format()) > 0:
         current_df_index = str(df_last.index.format()[0])
     else:
@@ -128,7 +136,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
     formatted_current_df_index = f'{current_df_index} 00:00:00' if len(current_df_index) == 10 else current_df_index
 
     current_sim_date = formatted_current_df_index
-																																																	
+
     # use actual sim mode date to check smartchswitch
     if app.getSmartSwitch() == 1 and app.getGranularity() == 3600 and app.is1hEMA1226Bull(current_sim_date) is True and app.is6hEMA1226Bull(current_sim_date) is True:
         Logger.info('*** smart switch from granularity 3600 (1 hour) to 900 (15 min) ***')
@@ -291,6 +299,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
             bullbeartext = ' (BEAR)'
 
         # polling is every 5 minutes (even for hourly intervals), but only process once per interval
+        #Logger.debug("DateCheck: " + str(immediate_action) + ' ' + str(state.last_df_index) + ' ' + str(current_df_index))
         if (immediate_action is True or state.last_df_index != current_df_index):
             precision = 4
 
