@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.47.2] - 2021-07-14
+
+### Changed
+
+-- Fixed missing server time (binance) issue
+
 ## [2.47.1] - 2021-07-13
 
 ### Changed
