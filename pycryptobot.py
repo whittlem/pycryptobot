@@ -297,11 +297,11 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
             state.eri_text = ''
             if app.disableBuyElderRay() is False:
                 if elder_ray_buy is True:
-                    state.eri_text = 'ERI: buy | '
+                    state.eri_text = 'ERI: buy'
                 elif elder_ray_sell is True:
-                    state.eri_text = 'ERI: sell | '
+                    state.eri_text = 'ERI: sell'
                 else:
-                    state.eri_text = 'ERI: | '
+                    state.eri_text = 'ERI:'
 
             if hammer is True:
                 log_text = '* Candlestick Detected: Hammer ("Weak - Reversal - Bullish Signal - Up")'
@@ -410,23 +410,24 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
             if app.disableBuyOBV() is False:
                 if float(obv_pc) > 0:
                     obv_prefix = '^ '
-                    obv_suffix = ' ^ | '
+                    obv_suffix = ' ^'
                 elif float(obv_pc) < 0:
                     obv_prefix = 'v '
-                    obv_suffix = ' v | '
+                    obv_suffix = ' v'
 
             if not app.isVerbose():
                 if state.last_action != '':
                     output_text = formatted_current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + \
                                   app.printGranularity() + ' | ' + price_text + ' | ' + ema_co_prefix + \
                                   ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + \
-                                  obv_prefix + obv_text + obv_suffix + state.eri_text + ' | ' + state.action + \
-                                  ' | Last Action: ' + state.last_action
+                                  ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + state.eri_text + ' | ' + \
+                                  state.action + ' | Last Action: ' + state.last_action
                 else:
                     output_text = formatted_current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + \
                                   app.printGranularity() + ' | ' + price_text + ' | ' + ema_co_prefix + \
                                   ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + \
-                                  obv_prefix + obv_text + obv_suffix + state.eri_text + ' | ' + state.action + ' '
+                                  ' | ' + obv_prefix + obv_text + obv_suffix + ' | ' + state.eri_text + ' | ' + \
+                                  state.action + ' '
 
                 if state.last_action == 'BUY':
                     if state.last_buy_size > 0:
