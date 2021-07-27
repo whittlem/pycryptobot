@@ -1,3 +1,5 @@
+"""Remotely control your Binance account via their API : https://binance-docs.github.io/apidocs/spot/en"""
+
 import re
 import json
 import hmac
@@ -104,6 +106,56 @@ class AuthAPI(AuthAPIBase):
     def getTimestamp(self):
         return int(time.time() * 1000)
 
+
+    def getAccounts(self) -> pd.DataFrame:
+        """Retrieves your list of accounts"""
+
+        # GET /api/v3/account
+        resp = self.authAPI('GET', '/api/v3/account')
+
+        if 'balances' in resp:
+            balances = resp['balances']
+
+            if isinstance(balances, list):
+                df = pd.DataFrame.from_dict(balances)
+            else: 
+                df = pd.DataFrame(balances, index=[0])
+        else:
+            return pd.DataFrame()
+  
+        if len(df) == 0:
+            return pd.DataFrame()
+
+        # exclude accounts that are locked
+        df = df[df.locked != 0.0]
+        df['locked'] = df['locked'].astype(bool)
+
+        # reset the dataframe index to start from 0
+        df = df.reset_index()
+
+        df['id'] = df['index']
+        df['hold'] = 0.0
+        df['profile_id'] = None
+        df['available'] = df['free']
+
+        # exclude accounts with a nil balance
+        df = df[df.available != '0.00000000']
+        df = df[df.available != '0.00']
+
+        # rename columns
+        df.columns = ['index', 'currency', 'balance', 'trading_enabled', 'id', 'hold', 'profile_id', 'available']
+
+        return df[['index', 'id', 'currency', 'balance', 'hold', 'available', 'profile_id', 'trading_enabled' ]]
+
+    def getAccount(self, account: int) -> pd.DataFrame:
+        """Retrieves a specific account"""
+
+        # validates the account is syntactically correct
+        if not isinstance(account, int):
+            self.handle_init_error('Binance account is invalid')
+    
+        df = self.getAccounts()
+        return df[df.id == account]
 
     def authAPI(self, method: str, uri: str, payload: str={}) -> dict:
         if not isinstance(method, str):
