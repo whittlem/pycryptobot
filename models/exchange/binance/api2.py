@@ -138,6 +138,9 @@ class AuthAPI(AuthAPIBase):
         df['profile_id'] = None
         df['available'] = df['free']
 
+        df['id'] = df['id'].astype(object)
+        df['hold'] = df['hold'].astype(object)
+
         # exclude accounts with a nil balance
         df = df[df.available != '0.00000000']
         df = df[df.available != '0.00']
@@ -146,6 +149,7 @@ class AuthAPI(AuthAPIBase):
         df.columns = ['index', 'currency', 'balance', 'trading_enabled', 'id', 'hold', 'profile_id', 'available']
 
         return df[['index', 'id', 'currency', 'balance', 'hold', 'available', 'profile_id', 'trading_enabled' ]]
+
 
     def getAccount(self, account: int) -> pd.DataFrame:
         """Retrieves a specific account"""
@@ -157,6 +161,21 @@ class AuthAPI(AuthAPIBase):
         df = self.getAccounts()
         return df[df.id == account]
 
+
+    def getFees(self, market: str='') -> pd.DataFrame:
+        # GET /api/v3/account
+        resp = self.authAPI('GET', '/api/v3/account')
+
+        if 'makerCommission' in resp and 'takerCommission' in resp:
+            maker_fee_rate = resp['makerCommission'] / 10000
+            taker_fee_rate = resp['takerCommission'] / 10000
+        else:
+            maker_fee_rate = 0.001
+            taker_fee_rate = 0.001
+      
+        return pd.DataFrame([{ 'maker_fee_rate': maker_fee_rate, 'taker_fee_rate': taker_fee_rate, 'usd_volume': 0, 'market': '' }])
+
+
     def authAPI(self, method: str, uri: str, payload: str={}) -> dict:
         if not isinstance(method, str):
             raise TypeError('Method is not a string.')
@@ -167,17 +186,17 @@ class AuthAPI(AuthAPIBase):
         if not isinstance(uri, str):
             raise TypeError('URI is not a string.')
 
-        public_uri = [
-            '/api/v3/klines'
+        signed_uri = [
+            '/api/v3/account'
         ]
 
         query_string = urlencode(payload, True)
-        if uri not in public_uri and query_string:
+        if uri in signed_uri and query_string:
             query_string = "{}&timestamp={}".format(query_string, self.getTimestamp())
-        elif uri not in public_uri:
+        elif uri in signed_uri:
             query_string = 'timestamp={}'.format(self.getTimestamp())
 
-        if uri not in public_uri:
+        if uri in signed_uri:
             url = self._api_url + uri + '?' + query_string + '&signature=' + self.createHash(query_string)
         else:
             url = self._api_url + uri + '?' + query_string

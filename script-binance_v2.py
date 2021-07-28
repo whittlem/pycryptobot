@@ -18,7 +18,7 @@ resp = api.authAPI('GET', '/api/v3/klines' , { 'symbol': 'BTCGBP', 'interval': '
 print(resp)
 """
 
-
+"""
 app = PyCryptoBot(exchange='binance')
 api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
 df = api.getAccounts()
@@ -28,7 +28,7 @@ app = PyCryptoBot(exchange='coinbasepro')
 api = CAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIPassphrase())
 df = api.getAccounts()
 print(df)
-
+"""
 
 """
 app = PyCryptoBot(exchange='binance')
@@ -41,3 +41,13 @@ api = CAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIPassphrase())
 df = api.getAccount('b54a0159-7a5c-4961-9db6-c31cafd663c7')
 print(df)
 """
+
+app = PyCryptoBot(exchange='binance')
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+df = api.getFees()
+print(df)
+
+app = PyCryptoBot(exchange='coinbasepro')
+api = CAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIPassphrase())
+df = api.getFees()
+print(df)
