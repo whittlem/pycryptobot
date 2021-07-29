@@ -9,6 +9,7 @@ import requests
 import base64
 import sys
 import pandas as pd
+import numpy as np
 from numpy import floor
 from datetime import datetime, timedelta
 from requests.auth import AuthBase
@@ -163,6 +164,8 @@ class AuthAPI(AuthAPIBase):
 
 
     def getFees(self, market: str='') -> pd.DataFrame:
+        """Retrieves a account fees"""
+
         # GET /api/v3/account
         resp = self.authAPI('GET', '/api/v3/account')
 
@@ -176,6 +179,112 @@ class AuthAPI(AuthAPIBase):
         return pd.DataFrame([{ 'maker_fee_rate': maker_fee_rate, 'taker_fee_rate': taker_fee_rate, 'usd_volume': 0, 'market': '' }])
 
 
+    def getMakerFee(self, market: str='') -> float:
+        if len(market):
+            fees = self.getFees(market)
+        else:
+            fees = self.getFees()
+        
+        if len(fees) == 0 or 'maker_fee_rate' not in fees:
+            Logger.error(f"error: 'maker_fee_rate' not in fees (using {DEFAULT_MAKER_FEE_RATE} as a fallback)")
+            return DEFAULT_MAKER_FEE_RATE
+
+        return float(fees['maker_fee_rate'].to_string(index=False).strip())
+
+    
+    def getTakerFee(self, market: str='') -> float:
+        if len(market) != None:
+            fees = self.getFees(market)
+        else:
+            fees = self.getFees()
+
+        if len(fees) == 0 or 'taker_fee_rate' not in fees:
+            Logger.error(f"error: 'taker_fee_rate' not in fees (using {DEFAULT_TAKER_FEE_RATE} as a fallback)")
+            return DEFAULT_TAKER_FEE_RATE
+
+        return float(fees['taker_fee_rate'].to_string(index=False).strip())
+
+
+    def getUSDVolume(self) -> float:
+        fees = self.getFees()
+        return float(fees['usd_volume'].to_string(index=False).strip())
+
+
+    def getOrders(self, market: str='', action: str='', status: str='all') -> pd.DataFrame:
+        """Retrieves your list of orders with optional filtering"""
+
+        # if market provided
+        if market != '':
+            # validates the market is syntactically correct
+            if not self._isMarketValid(market):
+                raise ValueError('Binance market is invalid.')
+        else:
+           raise ValueError('Binance market is empty.') 
+
+        # if action provided
+        if action != '':
+            # validates action is either a buy or sell
+            if not action in ['buy', 'sell']:
+                raise ValueError('Invalid order action.')
+
+        # validates status is either open, canceled, pending, done, active, or all
+        if not status in ['open', 'canceled', 'pending', 'done', 'active', 'all']:
+            raise ValueError('Invalid order status.')
+
+        # GET /api/v3/allOrders
+        resp = self.authAPI('GET', '/api/v3/allOrders', { 'symbol': market })
+        
+        if isinstance(resp, list):
+            df = pd.DataFrame.from_dict(resp)
+        else: 
+            df = pd.DataFrame(resp, index=[0])
+
+        # feature engineering
+
+        def convert_time(epoch: int=0):
+            epoch_str = str(epoch)[0:10]
+            return datetime.fromtimestamp(int(epoch_str))
+
+        df.time = df['time'].map(convert_time)
+        df['time'] = pd.to_datetime(df['time']).dt.tz_localize('UTC')
+
+        df['size'] = np.where(df['side']=='BUY', df['cummulativeQuoteQty'], np.where(df['side']=='SELL', df['executedQty'], 222))
+        df['fees'] = df['size'].astype(float) * 0.001
+
+        df['side'] = df['side'].str.lower() 
+
+        df.rename(columns={ 
+            'time': 'created_at', 
+            'symbol': 'market', 
+            'side': 'action', 
+            'executedQty': 'filled' 
+        }, errors='raise', inplace=True)
+
+        def convert_status(status: str=''):
+            if status == 'FILLED':
+                return 'done'
+            elif status == 'NEW':
+                return 'open'
+            elif status == 'PARTIALLY_FILLED':
+                return 'pending'
+            else:
+                return status    
+
+        df.status = df.status.map(convert_status)
+        df['status'] = df['status'].str.lower()
+
+        # select columns
+        df = df[[ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'price', 'status' ]]
+
+        # filtering
+        if action != '':
+            df = df[df['action'] == action]
+        if status != 'all':
+            df = df[df['status'] == status]
+
+        return df
+
+
     def authAPI(self, method: str, uri: str, payload: str={}) -> dict:
         if not isinstance(method, str):
             raise TypeError('Method is not a string.')
@@ -187,7 +296,8 @@ class AuthAPI(AuthAPIBase):
             raise TypeError('URI is not a string.')
 
         signed_uri = [
-            '/api/v3/account'
+            '/api/v3/account',
+            '/api/v3/allOrders'
         ]
 
         query_string = urlencode(payload, True)

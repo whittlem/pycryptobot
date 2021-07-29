@@ -42,6 +42,7 @@ df = api.getAccount('b54a0159-7a5c-4961-9db6-c31cafd663c7')
 print(df)
 """
 
+"""
 app = PyCryptoBot(exchange='binance')
 api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
 df = api.getFees()
@@ -51,3 +52,48 @@ app = PyCryptoBot(exchange='coinbasepro')
 api = CAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIPassphrase())
 df = api.getFees()
 print(df)
+"""
+
+"""
+app = PyCryptoBot(exchange='binance')
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+df = api.getMakerFee()
+print(df)
+
+app = PyCryptoBot(exchange='coinbasepro')
+api = CAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIPassphrase())
+df = api.getMakerFee()
+print(df)
+
+app = PyCryptoBot(exchange='binance')
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+df = api.getTakerFee()
+print(df)
+
+app = PyCryptoBot(exchange='coinbasepro')
+api = CAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIPassphrase())
+df = api.getTakerFee()
+print(df)
+"""
+
+"""
+app = PyCryptoBot(exchange='binance')
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+df = api.getUSDVolume()
+print(df)
+
+app = PyCryptoBot(exchange='coinbasepro')
+api = CAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIPassphrase())
+df = api.getUSDVolume()
+print(df)
+"""
+
+app = PyCryptoBot(exchange='binance')
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+df = api.getOrders('SHIBUSDT')
+print(df)
+
+#app = PyCryptoBot(exchange='coinbasepro')
+#api = CAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIPassphrase())
+#df = api.getOrders('BTC-GBP')
+#print(df)
