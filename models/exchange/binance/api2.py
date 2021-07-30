@@ -451,6 +451,38 @@ class PublicAPI(AuthAPIBase):
 
         self._api_url = api_url
 
+
+    def getTime(self) -> datetime:
+        """Retrieves the exchange time"""
+    
+        def convert_time(epoch: int=0):
+            epoch_str = str(epoch)[0:10]
+            return datetime.fromtimestamp(int(epoch_str))
+
+        try:
+            # GET /api/v3/time
+            resp = self.authAPI('GET', '/api/v3/time')
+            return convert_time(int(resp['serverTime']))
+        except:
+            return None
+
+
+    def getTicker(self, market: str=DEFAULT_MARKET) -> tuple:
+       # validates the market is syntactically correct
+        if not self._isMarketValid(market):
+            raise TypeError('Binance market required.')
+
+        # GET /api/v3/ticker/price
+        resp = self.authAPI('GET', '/api/v3/ticker/price', { 'symbol': market })
+
+        now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+
+        if 'price' in resp:
+            return (now, float(resp['price']))
+        else:
+            return (now, 0.0)
+
+
     def authAPI(self, method: str, uri: str, payload: str={}) -> dict:
         if not isinstance(method, str):
             raise TypeError('Method is not a string.')

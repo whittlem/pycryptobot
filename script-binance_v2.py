@@ -108,6 +108,7 @@ df = api.getMarkets()
 print (df)
 """
 
+"""
 app = PyCryptoBot(exchange='binance')
 api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
 ts = api.getTime()
@@ -117,3 +118,14 @@ app = PyCryptoBot(exchange='coinbasepro')
 api = CAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIPassphrase())
 ts = api.getTime()
 print(ts)
+"""
+
+app = PyCryptoBot(exchange='binance')
+api = BPublicAPI()
+ticker = api.getTicker('BTCGBP')
+print(ticker)
+
+app = PyCryptoBot(exchange='coinbasepro')
+api = CPublicAPI()
+ticker = api.getTicker('BTC-GBP')
+print(ticker)
