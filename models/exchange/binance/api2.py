@@ -37,7 +37,7 @@ class AuthAPIBase():
 
 
 class AuthAPI(AuthAPIBase):
-    def __init__(self, api_key='', api_secret='', api_url='https://api.binance.com') -> None:
+    def __init__(self, api_key: str='', api_secret: str='', api_url: str='https://api.binance.com', order_history: list=[]) -> None:
         """Binance API object model
     
         Parameters
@@ -77,6 +77,9 @@ class AuthAPI(AuthAPIBase):
         self._api_key = api_key
         self._api_secret = api_secret
         self._api_url = api_url
+
+        # order history
+        self.order_history = order_history
 
 
     def handle_init_error(self, err: str) -> None:
@@ -210,16 +213,40 @@ class AuthAPI(AuthAPIBase):
         return float(fees['usd_volume'].to_string(index=False).strip())
 
 
-    def getOrders(self, market: str='', action: str='', status: str='all') -> pd.DataFrame:
+    def getMarkets(self) -> list:
+        """Retrieves a list of markets on the exchange"""
+
+        # GET /api/v3/allOrders
+        resp = self.authAPI('GET', '/api/v3/exchangeInfo')
+
+        if 'symbols' in resp:
+            if isinstance(resp['symbols'], list):
+                df = pd.DataFrame.from_dict(resp['symbols'])
+            else: 
+                df = pd.DataFrame(resp['symbols'], index=[0])
+        else:
+            df = pd.DataFrame()
+
+        return df[df['isSpotTradingAllowed'] == True][['symbol']].squeeze().tolist()
+
+
+    def getOrders(self, market: str='', action: str='', status: str='all', order_history: list=[]) -> pd.DataFrame:
         """Retrieves your list of orders with optional filtering"""
 
         # if market provided
+        markets = None
         if market != '':
             # validates the market is syntactically correct
             if not self._isMarketValid(market):
                 raise ValueError('Binance market is invalid.')
         else:
-           raise ValueError('Binance market is empty.') 
+            if len(order_history) > 0:
+                full_scan = False
+                self.order_history = order_history
+                markets = self.order_history
+            else:
+                full_scan = True
+                markets = self.getMarkets()
 
         # if action provided
         if action != '':
@@ -231,13 +258,39 @@ class AuthAPI(AuthAPIBase):
         if not status in ['open', 'canceled', 'pending', 'done', 'active', 'all']:
             raise ValueError('Invalid order status.')
 
-        # GET /api/v3/allOrders
-        resp = self.authAPI('GET', '/api/v3/allOrders', { 'symbol': market })
-        
-        if isinstance(resp, list):
-            df = pd.DataFrame.from_dict(resp)
-        else: 
-            df = pd.DataFrame(resp, index=[0])
+        if markets is not None:
+            df = pd.DataFrame()
+            for market in markets:
+                if full_scan is True:
+                    print (f'scanning {market} order history.')
+
+                # GET /api/v3/allOrders
+                resp = self.authAPI('GET', '/api/v3/allOrders', { 'symbol': market })
+
+                if full_scan is True:
+                    time.sleep(0.25)
+
+                if isinstance(resp, list):
+                    df_tmp = pd.DataFrame.from_dict(resp)
+                else: 
+                    df_tmp = pd.DataFrame(resp, index=[0])
+
+                if full_scan is True and len(df_tmp) > 0:
+                    self.order_history.append(market)
+                
+                if len(df_tmp) > 0:
+                    df = pd.concat([df, df_tmp])
+
+            if full_scan is True:
+                print ('add to order history to prevent full scan:', self.order_history)
+        else:
+            # GET /api/v3/allOrders
+            resp = self.authAPI('GET', '/api/v3/allOrders', { 'symbol': market })
+            
+            if isinstance(resp, list):
+                df = pd.DataFrame.from_dict(resp)
+            else: 
+                df = pd.DataFrame(resp, index=[0])
 
         # feature engineering
 
@@ -250,6 +303,7 @@ class AuthAPI(AuthAPIBase):
 
         df['size'] = np.where(df['side']=='BUY', df['cummulativeQuoteQty'], np.where(df['side']=='SELL', df['executedQty'], 222))
         df['fees'] = df['size'].astype(float) * 0.001
+        df['fees'] = df['fees'].astype(object)
 
         df['side'] = df['side'].str.lower() 
 
@@ -283,6 +337,21 @@ class AuthAPI(AuthAPIBase):
             df = df[df['status'] == status]
 
         return df
+
+
+    def getTime(self) -> datetime:
+        """Retrieves the exchange time"""
+    
+        def convert_time(epoch: int=0):
+            epoch_str = str(epoch)[0:10]
+            return datetime.fromtimestamp(int(epoch_str))
+
+        try:
+            # GET /api/v3/time
+            resp = self.authAPI('GET', '/api/v3/time')
+            return convert_time(int(resp['serverTime']))
+        except:
+            return None
 
 
     def authAPI(self, method: str, uri: str, payload: str={}) -> dict:

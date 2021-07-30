@@ -88,12 +88,32 @@ df = api.getUSDVolume()
 print(df)
 """
 
+"""
 app = PyCryptoBot(exchange='binance')
 api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
-df = api.getOrders('SHIBUSDT')
+df = api.getOrders(order_history=['BTGBTC', 'DOGEBTC', 'BTCGBP', 'DOGEGBP', 'SHIBUSDT'])
+#df = api.getOrders()
 print(df)
 
 #app = PyCryptoBot(exchange='coinbasepro')
 #api = CAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIPassphrase())
 #df = api.getOrders('BTC-GBP')
 #print(df)
+"""
+
+"""
+app = PyCryptoBot(exchange='binance')
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+df = api.getMarkets()
+print (df)
+"""
+
+app = PyCryptoBot(exchange='binance')
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+ts = api.getTime()
+print(ts)
+
+app = PyCryptoBot(exchange='coinbasepro')
+api = CAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIPassphrase())
+ts = api.getTime()
+print(ts)
