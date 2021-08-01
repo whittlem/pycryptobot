@@ -8,6 +8,13 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.47.3] - 2021-08-1
+
+## Changed
+
+-- Fixed misaligned text on initial bot info table
+
+
 ## [2.47.2] - 2021-07-14
 
 ### Changed
