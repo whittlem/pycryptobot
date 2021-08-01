@@ -478,9 +478,90 @@ class PublicAPI(AuthAPIBase):
         now = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
 
         if 'price' in resp:
-            return (now, float(resp['price']))
+            return (str(self.getTime()), float(resp['price']))
         else:
             return (now, 0.0)
+
+
+    def getHistoricalData(self, market: str=DEFAULT_MARKET, granularity: str=DEFAULT_GRANULARITY, iso8601start: str='', iso8601end: str='') -> pd.DataFrame:
+        # validates the market is syntactically correct
+        if not self._isMarketValid(market):
+            raise TypeError('Binance market required.')
+
+        # validates granularity is a string
+        if not isinstance(granularity, str):
+            raise TypeError('Granularity string required.')
+
+        # validates the granularity is supported by Binance
+        if not granularity in SUPPORTED_GRANULARITY:
+            raise TypeError('Granularity options: ' + ", ".join(map(str, SUPPORTED_GRANULARITY)))
+
+        # validates the ISO 8601 end date is a string (if provided)
+        if not isinstance(iso8601end, str):
+            raise TypeError('ISO8601 end integer as string required.')
+
+        if iso8601start != '' and iso8601end == '':
+            startTime = int((datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S') - datetime(1970, 1, 1)).total_seconds())
+           
+            # GET /api/v3/klines
+            resp = self.authAPI('GET', '/api/v3/klines', { 'symbol': market, 'interval': granularity, 'startTime': startTime, 'limit': 300 })  
+        elif iso8601start != '' and iso8601end != '':
+            startTime = int((datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S') - datetime(1970, 1, 1)).total_seconds())
+           
+            # GET /api/v3/klines
+            resp = self.authAPI('GET', '/api/v3/klines', { 'symbol': market, 'interval': granularity, 'startTime': startTime, 'limit': 300 })
+        else:
+            # GET /api/v3/klines
+            resp = self.authAPI('GET', '/api/v3/klines', { 'symbol': market, 'interval': granularity, 'limit': 300 })
+        
+        # convert the API response into a Pandas DataFrame
+        df = pd.DataFrame(resp, columns=[ 'open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_asset_volume', 'number_of_trades', 'taker_buy_base_asset_volume', 'traker_buy_quote_asset_volume', 'ignore' ])
+
+        df['market'] = market
+        df['granularity'] = granularity
+
+        # binance epoch is too long
+        df['open_time'] = df['open_time'] + 1
+        df['open_time'] = df['open_time'].astype(str)
+        df['open_time'] = df['open_time'].str.replace(r'\d{3}$', '', regex=True)   
+
+        try:
+            freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity)]
+        except:
+            freq = "D"
+
+        # convert the DataFrame into a time series with the date as the index/key
+        try:
+            tsidx = pd.DatetimeIndex(pd.to_datetime(df['open_time'], unit='s'), dtype='datetime64[ns]', freq=freq)
+            df.set_index(tsidx, inplace=True)
+            df = df.drop(columns=['open_time'])
+            df.index.names = ['ts']
+            df['date'] = tsidx
+        except ValueError:
+            tsidx = pd.DatetimeIndex(pd.to_datetime(df['open_time'], unit='s'), dtype='datetime64[ns]')
+            df.set_index(tsidx, inplace=True)
+            df = df.drop(columns=['open_time'])
+            df.index.names = ['ts']           
+            df['date'] = tsidx
+
+        # if specified, fix end time
+        if iso8601end != '':
+            df = df[df['date'] <= iso8601end]
+
+        # re-order columns
+        df = df[[ 'date', 'market', 'granularity', 'low', 'high', 'open', 'close', 'volume' ]]
+
+        # correct column types
+        df['low'] = df['low'].astype(float)
+        df['high'] = df['high'].astype(float)   
+        df['open'] = df['open'].astype(float)   
+        df['close'] = df['close'].astype(float)   
+        df['volume'] = df['volume'].astype(float)      
+
+        # reset pandas dataframe index
+        df.reset_index()
+
+        return df
 
 
     def authAPI(self, method: str, uri: str, payload: str={}) -> dict:
