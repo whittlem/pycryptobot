@@ -919,7 +919,7 @@ class PyCryptoBot():
             txt = '              Release : ' + self.getVersionFromREADME()
             Logger.info('|  ' +  txt + (' ' * (75 - len(txt))) + ' | ')
 
-            Logger.info('-----------------------------------------------------------------------------')
+            Logger.info('--------------------------------------------------------------------------------')
 
             if self.isVerbose():
                 txt = '               Market : ' + self.getMarket()

@@ -1,0 +1,93 @@
+2021-07-30 19:22:46 INFO     ------------- TODAY : MERGE --------------
+2021-07-30 19:22:46 INFO     Number of Completed Trades:   0
+2021-07-30 19:22:46 INFO     Percentage Gains:             0.0000%
+2021-07-30 19:22:46 INFO     Average Time Held (H:M:S):    0:0:0
+2021-07-30 19:22:46 INFO     Total Profit/Loss:            £ 0.00
+2021-07-30 19:22:46 INFO     
+-------------- WEEK : MERGE --------------
+2021-07-30 19:22:46 INFO     Number of Completed Trades:   15
+2021-07-30 19:22:46 INFO     Percentage Gains:             7.3131%
+2021-07-30 19:22:46 INFO     Average Time Held (H:M:S):    4 days, 0:44:43
+2021-07-30 19:22:46 INFO     Total Profit/Loss:            £ 5.95
+2021-07-30 19:22:46 INFO     
+------------- MONTH : MERGE --------------
+2021-07-30 19:22:46 INFO     Number of Completed Trades:   22
+2021-07-30 19:22:46 INFO     Percentage Gains:             12.2463%
+2021-07-30 19:22:46 INFO     Average Time Held (H:M:S):    2 days, 22:35:10
+2021-07-30 19:22:46 INFO     Total Profit/Loss:            £ 9.45
+2021-07-30 19:22:46 INFO     
+------------ ALL TIME : MERGE ------------
+2021-07-30 19:22:46 INFO     Number of Completed Trades:   49
+2021-07-30 19:22:46 INFO     Percentage Gains:             41.1478%
+2021-07-30 19:22:46 INFO     Average Time Held (H:M:S):    1 day, 14:00:52
+2021-07-30 19:22:46 INFO     Total Profit/Loss:            £ 34.10
+2021-07-30 19:22:54 INFO     ------------- TODAY : MERGE --------------
+2021-07-30 19:22:54 INFO     Number of Completed Trades:   0
+2021-07-30 19:22:54 INFO     Percentage Gains:             0.0000%
+2021-07-30 19:22:54 INFO     Average Time Held (H:M:S):    0:0:0
+2021-07-30 19:22:54 INFO     Total Profit/Loss:            £ 0.00
+2021-07-30 19:22:54 INFO     
+-------------- WEEK : MERGE --------------
+2021-07-30 19:22:54 INFO     Number of Completed Trades:   15
+2021-07-30 19:22:54 INFO     Percentage Gains:             7.3131%
+2021-07-30 19:22:54 INFO     Average Time Held (H:M:S):    4 days, 0:44:43
+2021-07-30 19:22:54 INFO     Total Profit/Loss:            £ 5.95
+2021-07-30 19:22:54 INFO     
+------------- MONTH : MERGE --------------
+2021-07-30 19:22:54 INFO     Number of Completed Trades:   22
+2021-07-30 19:22:54 INFO     Percentage Gains:             12.2463%
+2021-07-30 19:22:54 INFO     Average Time Held (H:M:S):    2 days, 22:35:10
+2021-07-30 19:22:54 INFO     Total Profit/Loss:            £ 9.45
+2021-07-30 19:22:54 INFO     
+------------ ALL TIME : MERGE ------------
+2021-07-30 19:22:54 INFO     Number of Completed Trades:   77
+2021-07-30 19:22:54 INFO     Percentage Gains:             28.5543%
+2021-07-30 19:22:54 INFO     Average Time Held (H:M:S):    1 day, 9:59:50
+2021-07-30 19:22:54 INFO     Total Profit/Loss:            £ 33.63
+2021-07-30 19:22:59 INFO     ------------- TODAY : MERGE --------------
+2021-07-30 19:22:59 INFO     Number of Completed Trades:   0
+2021-07-30 19:22:59 INFO     Percentage Gains:             0.0000%
+2021-07-30 19:22:59 INFO     Average Time Held (H:M:S):    0:0:0
+2021-07-30 19:22:59 INFO     Total Profit/Loss:            £ 0.00
+2021-07-30 19:22:59 INFO     
+-------------- WEEK : MERGE --------------
+2021-07-30 19:22:59 INFO     Number of Completed Trades:   15
+2021-07-30 19:22:59 INFO     Percentage Gains:             7.3131%
+2021-07-30 19:22:59 INFO     Average Time Held (H:M:S):    4 days, 0:44:43
+2021-07-30 19:22:59 INFO     Total Profit/Loss:            £ 5.95
+2021-07-30 19:22:59 INFO     
+------------- MONTH : MERGE --------------
+2021-07-30 19:22:59 INFO     Number of Completed Trades:   22
+2021-07-30 19:22:59 INFO     Percentage Gains:             12.2463%
+2021-07-30 19:22:59 INFO     Average Time Held (H:M:S):    2 days, 22:35:10
+2021-07-30 19:22:59 INFO     Total Profit/Loss:            £ 9.45
+2021-07-30 19:22:59 INFO     
+------------ ALL TIME : MERGE ------------
+2021-07-30 19:22:59 INFO     Number of Completed Trades:   77
+2021-07-30 19:22:59 INFO     Percentage Gains:             28.5543%
+2021-07-30 19:22:59 INFO     Average Time Held (H:M:S):    1 day, 9:59:50
+2021-07-30 19:22:59 INFO     Total Profit/Loss:            £ 33.63
+2021-07-30 19:23:03 DEBUG    No previous orders found. Retrying: attempt 1/3
+2021-07-30 19:23:03 INFO     ------------- TODAY : MERGE --------------
+2021-07-30 19:23:03 INFO     Number of Completed Trades:   0
+2021-07-30 19:23:03 INFO     Percentage Gains:             0.0000%
+2021-07-30 19:23:03 INFO     Average Time Held (H:M:S):    0:0:0
+2021-07-30 19:23:03 INFO     Total Profit/Loss:            £ 0.00
+2021-07-30 19:23:03 INFO     
+-------------- WEEK : MERGE --------------
+2021-07-30 19:23:03 INFO     Number of Completed Trades:   15
+2021-07-30 19:23:03 INFO     Percentage Gains:             7.3131%
+2021-07-30 19:23:03 INFO     Average Time Held (H:M:S):    4 days, 0:44:43
+2021-07-30 19:23:03 INFO     Total Profit/Loss:            £ 5.95
+2021-07-30 19:23:03 INFO     
+------------- MONTH : MERGE --------------
+2021-07-30 19:23:03 INFO     Number of Completed Trades:   22
+2021-07-30 19:23:03 INFO     Percentage Gains:             12.2463%
+2021-07-30 19:23:03 INFO     Average Time Held (H:M:S):    2 days, 22:35:10
+2021-07-30 19:23:03 INFO     Total Profit/Loss:            £ 9.45
+2021-07-30 19:23:03 INFO     
+------------ ALL TIME : MERGE ------------
+2021-07-30 19:23:03 INFO     Number of Completed Trades:   77
+2021-07-30 19:23:03 INFO     Percentage Gains:             28.5543%
+2021-07-30 19:23:03 INFO     Average Time Held (H:M:S):    1 day, 9:59:50
+2021-07-30 19:23:03 INFO     Total Profit/Loss:            £ 33.63
