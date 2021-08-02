@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [3.0.0] - 2021-08-03
+
+### Changed
+
+--- Replaced python-binance library with in-built code
+
 ## [2.47.2] - 2021-07-14
 
 ### Changed
