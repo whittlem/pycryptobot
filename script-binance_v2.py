@@ -160,6 +160,7 @@ fee = api.getTradeFee('BTCGBP')
 print (fee)
 """
 
+"""
 app = PyCryptoBot(exchange='binance')
 api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
 df = api.getOrders('SHIBUSDT')
@@ -167,11 +168,30 @@ print(df)
 
 app = PyCryptoBot(exchange='binance')
 api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
-#resp = api.marketSell('SHIBUSDT', 2485964.0, test=True)
-resp = api.marketSell('SHIBUSDT', 2485964.0)
+resp = api.marketSell('SHIBUSDT', 2485964.0, test=True)
+#resp = api.marketSell('SHIBUSDT', 2485964.0)
 print (resp)
 
 app = PyCryptoBot(exchange='binance')
 api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
 df = api.getOrders('SHIBUSDT')
 print(df)
+"""
+
+"""
+app = PyCryptoBot(exchange='binance')
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+df = api.getOrders('MATICUSDT')
+print(df)
+
+app = PyCryptoBot(exchange='binance')
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+resp = api.marketBuy('MATICUSDT', 15.58064897, test=True)
+#resp = api.marketBuy('MATICUSDT', 15.58064897)
+print (resp)
+
+app = PyCryptoBot(exchange='binance')
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+df = api.getOrders('MATICUSDT')
+print(df)
+"""
