@@ -519,8 +519,15 @@ class AuthAPI(AuthAPIBase):
         try:
             resp = self._dispatch_request(method)(**params)
 
-            if resp.status_code != 200:               
-                resp_message = resp.json()['msg']
+            if resp.status_code != 200:
+                json = resp.json()
+                if 'msg' in json:
+                    resp_message = resp.json()['msg']
+                elif 'message' in json: 
+                    resp_message = resp.json()['message']
+                else:
+                    resp_message = 'undefined error'
+
                 message = f'{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message}'
                 if self.die_on_api_error:
                     raise Exception(message)
