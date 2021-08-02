@@ -17,6 +17,7 @@ from models.chat import Telegram
 from models.config import binanceConfigParser, binanceParseMarket, coinbaseProConfigParser, coinbaseProParseMarket, dummyConfigParser, dummyParseMarket, loggerConfigParser
 from models.ConfigBuilder import ConfigBuilder
 from models.helper.LogHelper import Logger
+from models.helper.TextBoxHelper import TextBox
 
 # disable insecure ssl warning
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -362,7 +363,7 @@ class PyCryptoBot():
         if date.find('.') != -1:
             dt = date.split('.')[0]
             date = dt
-										
+
         date = date.replace('T', ' ') if date.find('T') != -1 else date
         #Add time in case only a date is passed in
         new_date_str = f'{date} 00:00:00' if len(date) == 10 else date
@@ -401,12 +402,12 @@ class PyCryptoBot():
             try:
                 df_first = None
                 df_last = None
-				
+
                 #Logger.debug("Row Count (" + str(granularity) + "): " + str(df.shape[0]))
                 # if df already has data get first and last record date
                 df_first = self.getDateFromISO8601Str(str(df.head(1).index.format()[0]))
                 df_last = self.getDateFromISO8601Str(str(df.tail(1).index.format()[0]))
-									 
+
             except Exception:
                 #if df = None create a new data frame
                 result_df_cache = pd.DataFrame()
@@ -419,7 +420,7 @@ class PyCryptoBot():
                 df1 = self.getHistoricalData(market, granularity,
                                                 str(df_first.isoformat()), 
                                                 str(simend.isoformat()))
-																								  
+
                 result_df_cache = df1
 
                 while df_first.isoformat(timespec='milliseconds') > simstart.isoformat(timespec='milliseconds'):
@@ -434,9 +435,7 @@ class PyCryptoBot():
                     result_df_cache = pd.concat([df2.copy(), df1.copy()]).drop_duplicates()
                     df1 = result_df_cache
 
-											  
             if len(result_df_cache) > 0 and 'morning_star' not in result_df_cache:
-									  
                 result_df_cache.sort_values(by=['date'], ascending=True, inplace=True)
                 trading_dataCopy = result_df_cache.copy()
                 technical_analysis = TechnicalAnalysis(trading_dataCopy)
@@ -447,7 +446,6 @@ class PyCryptoBot():
 
     def getSmartSwitchHistoricalDataChained(self, market, granularity: int, start: str="", end: str="", simdate: str="") -> pd.DataFrame:
         if self.isSimulation():
-			
             self.ema1226_15m_cache = self.getSmartSwitchDataFrame(self.ema1226_15m_cache, market, 900, start, end, simdate)
             self.ema1226_1h_cache = self.getSmartSwitchDataFrame(self.ema1226_1h_cache, market, 3600, start, end, simdate)
             self.ema1226_6h_cache = self.getSmartSwitchDataFrame(self.ema1226_6h_cache, market, 21600, start, end, simdate)                
@@ -722,7 +720,6 @@ class PyCryptoBot():
         if granularity in [60, 300, 900, 3600, 21600, 86400]:
             self.granularity = granularity
 
-
     def compare(self, val1, val2, label='', precision=2):
         if val1 > val2:
             if label == '':
@@ -861,108 +858,65 @@ class PyCryptoBot():
             self.sell_at_loss = flag
 
     def startApp(self, account, last_action='', banner=True):
+        textBox = TextBox(80, 26)
         if banner:
-            Logger.info('--------------------------------------------------------------------------------')
-            Logger.info('|                             Python Crypto Bot                                |')
-            Logger.info('--------------------------------------------------------------------------------')
-            txt = '              Release : ' + self.getVersionFromREADME()
-            Logger.info('|  ' +  txt + (' ' * (75 - len(txt))) + ' | ')
-
-            Logger.info('--------------------------------------------------------------------------------')
+            textBox.singleLine()
+            textBox.center('Python Crypto Bot')
+            textBox.singleLine()
+            textBox.line('Release', self.getVersionFromREADME())
+            textBox.singleLine()
 
             if self.isVerbose():
-                txt = '               Market : ' + self.getMarket()
-                Logger.info('|  ' +  txt + (' ' * (75 - len(txt))) + ' | ')
-                txt = '          Granularity : ' + str(self.getGranularity()) + ' seconds'
-                Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                Logger.info('-----------------------------------------------------------------------------')
+                textBox.line('Market', self.getMarket())
+                textBox.line('Granularity', str(self.getGranularity()) + ' seconds')
+                textBox.singleLine()
 
             if self.isLive():
-                txt = '             Bot Mode : LIVE - live trades using your funds!'
+                textBox.line('Bot Mode', 'LIVE - live trades using your funds!')
             else:
-                txt = '             Bot Mode : TEST - test trades using dummy funds :)'
+                textBox.line('Bot Mode', 'TEST - test trades using dummy funds :)')
 
-            Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                
-            txt = '          Bot Started : ' + str(datetime.now())
-            Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
-            Logger.info('================================================================================')
+            textBox.line('Bot Started', str(datetime.now()))
+            textBox.doubleLine()
 
             if self.sellUpperPcnt() != None:
-                txt = '           Sell Upper : ' + str(self.sellUpperPcnt()) + '%'
-                Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
+                textBox.line('Sell Upper', str(self.sellUpperPcnt()) + '%')
 
             if self.sellLowerPcnt() != None:
-                txt = '           Sell Lower : ' + str(self.sellLowerPcnt()) + '%'
-                Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
+                textBox.line('Sell Lower', str(self.sellLowerPcnt()) + '%')
 
             if self.trailingStopLoss() != None:
-                txt = '   Trailing Stop Loss : ' + str(self.trailingStopLoss()) + '%'
-                Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
+                textBox.line('Trailing Stop Loss', str(self.trailingStopLoss()) + '%')
 
-            txt = '         Sell At Loss : ' + str(self.allowSellAtLoss()) + '  --sellatloss ' + str(self.allowSellAtLoss())
-            Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
-
-            txt = '   Sell At Resistance : ' + str(self.sellAtResistance()) + '  --sellatresistance'
-            Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
-
-            txt = '      Trade Bull Only : ' + str(not self.disableBullOnly()) + '  --disablebullonly'
-            Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
-
-            txt = '        Buy Near High : ' + str(not self.disableBuyNearHigh()) + '  --disablebuynearhigh'
-            Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
-
-            txt = '         Use Buy MACD : ' + str(not self.disableBuyMACD()) + '  --disablebuymacd'
-            Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
-
-            txt = '          Use Buy EMA : ' + str(not self.disableBuyEMA()) + '  --disablebuyema'
-            Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
-
-
-            txt = '          Use Buy OBV : ' + str(not self.disableBuyOBV()) + '  --disablebuyobv'
-            Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
-
-            txt = '    Use Buy Elder-Ray : ' + str(not self.disableBuyElderRay()) + '  --disablebuyelderray'
-            Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
-
-            txt = '   Sell Fibonacci Low : ' + str(
-                not self.disableFailsafeFibonacciLow()) + '  --disablefailsafefibonaccilow'
-            Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
+            textBox.line('Sell At Loss', str(self.allowSellAtLoss()) + '  --sellatloss ' + str(self.allowSellAtLoss()))
+            textBox.line('Sell At Resistance', str(self.sellAtResistance()) + '  --sellatresistance')
+            textBox.line('Trade Bull Only', str(not self.disableBullOnly()) + '  --disablebullonly')
+            textBox.line('Buy Near High', str(not self.disableBuyNearHigh()) + '  --disablebuynearhigh')
+            textBox.line('Use Buy MACD', str(not self.disableBuyMACD()) + '  --disablebuymacd')
+            textBox.line('Use Buy EMA', str(not self.disableBuyEMA()) + '  --disablebuyema')
+            textBox.line('Use Buy OBV', str(not self.disableBuyOBV()) + '  --disablebuyobv')
+            textBox.line('Use Buy Elder-Ray', str(not self.disableBuyElderRay()) + '  --disablebuyelderray')
+            textBox.line('Sell Fibonacci Low', str(not self.disableFailsafeFibonacciLow()) + '  --disablefailsafefibonaccilow')
 
             if self.sellLowerPcnt() != None:
-                txt = '      Sell Lower Pcnt : ' + str(
-                    not self.disableFailsafeLowerPcnt()) + '  --disablefailsafelowerpcnt'
-                Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
+                textBox.line('Sell Lower Pcnt', str(not self.disableFailsafeLowerPcnt()) + '  --disablefailsafelowerpcnt')
 
             if self.sellUpperPcnt() != None:
-                txt = '      Sell Upper Pcnt : ' + str(
-                    not self.disableFailsafeLowerPcnt()) + '  --disableprofitbankupperpcnt'
-                Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
+                textBox.line('Sell Upper Pcnt', str(not self.disableFailsafeLowerPcnt()) + '  --disableprofitbankupperpcnt')
 
-            txt = ' Candlestick Reversal : ' + str(
-                not self.disableProfitbankReversal()) + '  --disableprofitbankreversal'
-            Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
-
-            txt = '             Telegram : ' + str(not self.disabletelegram) + '  --disabletelegram'
-            Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
-
-            txt = '                  Log : ' + str(not self.disableLog()) + '  --disablelog'
-            Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
-
-            txt = '              Tracker : ' + str(not self.disableTracker()) + '  --disabletracker'
-            Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
-
-            txt = '     Auto restart Bot : ' + str(self.autoRestart()) + '  --autorestart'
-            Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
+            textBox.line('Candlestick Reversal', str(not self.disableProfitbankReversal()) + '  --disableprofitbankreversal')
+            textBox.line('Telegram', str(not self.disabletelegram) + '  --disabletelegram')
+            textBox.line('Log', str(not self.disableLog()) + '  --disablelog')
+            textBox.line('Tracker', str(not self.disableTracker()) + '  --disabletracker')
+            textBox.line('Auto restart Bot', str(self.autoRestart()) + '  --autorestart')
 
             if self.getBuyMaxSize():
-                txt = '         Max Buy Size : ' + str(self.getBuyMaxSize()) + '  --buymaxsize <size>'
-                Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
+                textBox.line('Max Buy Size', str(self.getBuyMaxSize()) + '  --buymaxsize <size>')
 
-            if self.disablebuyema and self.disablebuymacd :
-                Logger.info('| WARNING : EMA and MACD indicators disabled, no buy events will happen        |')
+            if self.disablebuyema and self.disablebuymacd:
+                textBox.center('WARNING : EMA and MACD indicators disabled, no buy events will happen')
 
-            Logger.info('================================================================================')
+            textBox.doubleLine()
 
         # run the first job immediately after starting
         if self.isSimulation():
@@ -972,14 +926,14 @@ class PyCryptoBot():
                 attempts = 0
 
                 if self.simstartdate is not None and self.simenddate is not None:
-												   
+
                     startDate = self.getDateFromISO8601Str(self.simstartdate)
-																				   
+
                     if self.simenddate == 'now':
                         endDate = self.getDateFromISO8601Str(str(datetime.now()))
                     else:
                         endDate = self.getDateFromISO8601Str(self.simenddate)
-																					 
+
                     while len(tradingData) < 300 and attempts < 10:
                         if self.smart_switch == 1:
                             tradingData = self.getSmartSwitchHistoricalDataChained(self.market, self.getGranularity(),
@@ -996,7 +950,7 @@ class PyCryptoBot():
                     #date = self.simstartdate.split('-')
                     startDate = self.getDateFromISO8601Str(self.simstartdate)
                     endDate = startDate + timedelta(minutes=(self.getGranularity()/60)*300)
-					
+
                     while len(tradingData) < 300 and attempts < 10:
                         if self.smart_switch == 1:
                             tradingData = self.getSmartSwitchHistoricalDataChained(self.market, self.getGranularity(),
@@ -1038,7 +992,7 @@ class PyCryptoBot():
                         
                     startDate = self.getDateFromISO8601Str(str(endDate))
                     startDate -= timedelta(minutes=(self.getGranularity()/60)*300)
-					   
+
                     while len(tradingData) < 300 and attempts < 10:
                         if self.smart_switch == 1:
                             tradingData = self.getSmartSwitchHistoricalDataChained(self.market, self.getGranularity(),
@@ -1050,11 +1004,11 @@ class PyCryptoBot():
                             tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(),
                                                              startDate.isoformat(timespec='milliseconds'))
                         attempts += 1
-						
+
                     if self.smart_switch == 1:
                         self.simstartdate = str(startDate)
                         self.simenddate = str(endDate)				  
-																		
+
                     if len(tradingData) < 300:
                         raise Exception(
                             'Unable to retrieve 300 random sets of data between ' + str(startDate) + ' and ' + str(
@@ -1063,19 +1017,14 @@ class PyCryptoBot():
                 if banner:
                     startDate = str(startDate.isoformat())
                     endDate = str(endDate.isoformat())
-                    txt = '   Sampling start : ' + str(startDate)
-                    Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                    txt = '     Sampling end : ' + str(endDate)
-                    Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
+                    textBox.line('Sampling start', str(startDate))
+                    textBox.line('Sampling end', str(endDate))
                     if self.simstartdate != None and len(tradingData) < 300:
-                        txt = '    WARNING: Using less than 300 intervals'
-                        Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                        txt = '    Interval size : ' + str(len(tradingData))
-                        Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                    Logger.info('================================================================================')
+                        textBox.center('WARNING: Using less than 300 intervals')
+                        textBox.line('Interval size', str(len(tradingData)))
+                    textBox.doubleLine()
 
             else:
-															
                 tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity())
 
             return tradingData
