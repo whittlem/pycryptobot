@@ -132,6 +132,7 @@ ticker = api.getTicker('BTC-GBP')
 print(ticker)
 """
 
+"""
 app = PyCryptoBot(exchange='binance')
 api = BPublicAPI()
 df = api.getHistoricalData('BTCGBP', '1h')
@@ -142,4 +143,35 @@ app = PyCryptoBot(exchange='coinbasepro')
 api = CPublicAPI()
 df = api.getHistoricalData('BTC-GBP', 3600)
 #df = api.getHistoricalData('BTC-GBP', 3600, '2020-06-19T10:00:00', '2020-06-19T14:00:00')
+print(df)
+"""
+
+"""
+app = PyCryptoBot(exchange='binance')
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+df = api.getMarketInfoFilters('BTCGBP')
+print(df)
+"""
+
+"""
+app = PyCryptoBot(exchange='binance')
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+fee = api.getTradeFee('BTCGBP')
+print (fee)
+"""
+
+app = PyCryptoBot(exchange='binance')
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+df = api.getOrders('SHIBUSDT')
+print(df)
+
+app = PyCryptoBot(exchange='binance')
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+#resp = api.marketSell('SHIBUSDT', 2485964.0, test=True)
+resp = api.marketSell('SHIBUSDT', 2485964.0)
+print (resp)
+
+app = PyCryptoBot(exchange='binance')
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+df = api.getOrders('SHIBUSDT')
 print(df)

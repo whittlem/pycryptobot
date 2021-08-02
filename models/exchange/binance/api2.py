@@ -8,6 +8,7 @@ import time
 import requests
 import base64
 import sys
+import math
 import pandas as pd
 import numpy as np
 from numpy import floor
@@ -354,6 +355,78 @@ class AuthAPI(AuthAPIBase):
             return None
 
 
+    def getMarketInfoFilters(self, market: str) -> pd.DataFrame:
+        """Retrieves markets exchange info"""
+
+        # GET /api/v3/allOrders
+        resp = self.authAPI('GET', '/api/v3/exchangeInfo', { 'symbol': market })
+        df = pd.DataFrame()
+
+        if 'symbols' in resp:
+            if isinstance(resp['symbols'], list):
+                if 'filters' in resp['symbols'][0]:
+                    df = pd.DataFrame.from_dict(resp['symbols'][0]['filters'])
+            else: 
+                if 'filers' in resp['symbols'][0]:   
+                    df = pd.DataFrame(resp['symbols'][0]['filters'], index=[0])
+
+        return df
+
+
+    def getTradeFee(self, market: str) -> float:
+        # GET /sapi/v1/asset/tradeFee
+        resp = self.authAPI('GET', '/sapi/v1/asset/tradeFee', { 'symbol': market })
+     
+        if len(resp) == 1 and 'takerCommission' in resp[0]:
+            return float(resp[0]['takerCommission'])
+        else:
+            return DEFAULT_TRADE_FEE_RATE
+
+
+    def marketSell(self, market: str='', base_quantity: float=0, test: bool=False) -> list:
+        """Executes a market sell providing a crypto amount"""
+
+        # validates the market is syntactically correct
+        if not self._isMarketValid(market):
+            raise ValueError('Binance market is invalid.')
+
+        if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
+            raise TypeError('The crypto amount is not numeric.')
+
+        try:
+            df_filters = self.getMarketInfoFilters(market)
+            step_size = float(df_filters.loc[df_filters['filterType'] == 'LOT_SIZE']['stepSize'])
+            precision = int(round(-math.log(step_size, 10), 0))
+
+            # remove fees
+            base_quantity = base_quantity - (base_quantity * self.getTradeFee(market))
+
+            # execute market sell
+            stepper = 10.0 ** precision
+            truncated = math.trunc(stepper * base_quantity) / stepper
+            #Logger.info('Order quantity after rounding and fees: ' + str(truncated))
+
+            payload = { 
+                'symbol': market, 
+                'side': 'SELL', 
+                'type': 'MARKET', 
+                'quantity': truncated 
+            }
+            #Logger.info(payload)
+
+            # POST /api/v3/order/test
+            if test is True:
+                resp = self.authAPI('POST', '/api/v3/order/test', payload)
+            else:
+                resp = self.authAPI('POST', '/api/v3/order', payload)
+
+            return resp
+        except Exception as err:
+            ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+            Logger.error(ts + ' Binance ' + ' marketSell ' + str(err))
+            return []
+
+
     def authAPI(self, method: str, uri: str, payload: str={}) -> dict:
         if not isinstance(method, str):
             raise TypeError('Method is not a string.')
@@ -366,7 +439,10 @@ class AuthAPI(AuthAPIBase):
 
         signed_uri = [
             '/api/v3/account',
-            '/api/v3/allOrders'
+            '/api/v3/allOrders',
+            '/api/v3/order',
+            '/api/v3/order/test',
+            '/sapi/v1/asset/tradeFee'
         ]
 
         query_string = urlencode(payload, True)
