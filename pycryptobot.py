@@ -55,36 +55,69 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
             return None
 
     # analyse the market data
-    if app.isSimulation() and len(trading_data.columns) > 8:    
+    if app.isSimulation() and len(trading_data.columns) > 8:    										
         df = trading_data
+														  																		 
         # if smartswitch then get the market data using new granularity
         if app.sim_smartswitch:
-            df_last = app.getInterval(df, state.iterations - 1)
+            df_last = app.getInterval(df, state.iterations)
             if len(df_last.index.format()) > 0:
                 if app.simstartdate is not None:
-                    startDate = app.simstartdate
+                    startDate = app.getDateFromISO8601Str(app.simstartdate)
                 else:
-                    startDate = str(df_last.index.format()[0])
-                    
+                    startDate = app.getDateFromISO8601Str(str(df.head(1).index.format()[0]))
+
                 if app.simenddate is not None:
                     if app.simenddate == "now":
-                        endDate = str(datetime.now())
-                        dt = endDate.split(".")
-                        endDate = dt[0]
+                        endDate = app.getDateFromISO8601Str(str(datetime.now()))
                     else:
-                        endDate = app.simenddate
+                        endDate = app.getDateFromISO8601Str(app.simenddate)
                 else:
-                    endDate = str(df.tail(1).index.format()[0])
+                    endDate = app.getDateFromISO8601Str(str(df.tail(1).index.format()[0]))
 
-                startDate = f'{startDate} 00:00:00' if len(startDate) == 10 else startDate
-                endDate = f'{endDate} 00:00:00' if len(endDate) == 10 else endDate
-               
-                df = app.getSmartSwitchHistoricalDataChained(app.getMarket(), app.getGranularity(), datetime.strptime(startDate, "%Y-%m-%d %H:%M:%S").isoformat(), datetime.strptime(endDate, "%Y-%m-%d %H:%M:%S").isoformat(), str(df_last.index.format()[0]))
-                state.iterations = 2
+                simDate = app.getDateFromISO8601Str(str(df_last.index.format()[0]))
+                
+                trading_data = app.getSmartSwitchHistoricalDataChained(app.getMarket(), app.getGranularity(), str(startDate), str(endDate), str(simDate))
+                
+                if app.getGranularity() == 3600:
+                    simDate = app.getDateFromISO8601Str(str(simDate))
+                    sim_rounded = pd.Series(simDate).dt.round('60min')
+                    simDate = sim_rounded[0]
+                elif app.getGranularity() == 900:
+                    simDate = app.getDateFromISO8601Str(str(simDate))
+                    sim_rounded = pd.Series(simDate).dt.round('15min')
+                    simDate = sim_rounded[0]
+                    
+                state.iterations = trading_data.index.get_loc(str(simDate))
 
-            app.sim_smartswitch = False
+                if state.iterations == 0:
+                    state.iterations = 1
+                elif app.getGranularity() == 3600:
+                    state.iterations += 2            
+                elif app.getGranularity() == 900:
+                    state.iterations -= 2 
+
+                trading_dataCopy = trading_data.copy()
+                technical_analysis = TechnicalAnalysis(trading_dataCopy)
+
+                if 'morning_star' not in df:
+                    technical_analysis.addAll()
+                    
+                df = technical_analysis.getDataFrame()
+                
+                app.sim_smartswitch = False
+
+        elif app.getSmartSwitch() == 1 and technical_analysis is None:
+                trading_dataCopy = trading_data.copy()
+                technical_analysis = TechnicalAnalysis(trading_dataCopy)
+
+                if 'morning_star' not in df:
+                    technical_analysis.addAll()
+
+                df = technical_analysis.getDataFrame()
 
     else:
+
         trading_dataCopy = trading_data.copy()
         technical_analysis = TechnicalAnalysis(trading_dataCopy)
         technical_analysis.addAll()
@@ -94,7 +127,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
         df_last = app.getInterval(df, state.iterations)
     else:
         df_last = app.getInterval(df)
-
+    
     if len(df_last.index.format()) > 0:
         current_df_index = str(df_last.index.format()[0])
     else:
@@ -186,10 +219,6 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
         if app.isSimulation():
             goldencross = app.is1hSMA50200Bull(current_sim_date)
 
-        # if simulation interations < 200 set goldencross to true
-        #if app.isSimulation() and state.iterations < 200:
-        #    goldencross = True
-
         # candlestick detection
         hammer = bool(df_last['hammer'].values[0])
         inverted_hammer = bool(df_last['inverted_hammer'].values[0])
@@ -270,6 +299,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
             bullbeartext = ' (BEAR)'
 
         # polling is every 5 minutes (even for hourly intervals), but only process once per interval
+        #Logger.debug("DateCheck: " + str(immediate_action) + ' ' + str(state.last_df_index) + ' ' + str(current_df_index))
         if (immediate_action is True or state.last_df_index != current_df_index):
             precision = 4
 
@@ -593,11 +623,20 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
 
                     if not app.isVerbose():
                         Logger.info(formatted_current_df_index + ' | ' + app.getMarket() + ' | ' + app.printGranularity() + ' | ' + price_text + ' | BUY')
+                        
+                        if app.getSmartSwitch():
+                            # make a copy of the technical_analysis up until the current_sim_date
+                            # use this to get the correct Fibonacci Retracement Levels for the current_sim_date
+                            trading_dataCopy = trading_data[trading_data['date'] <= current_sim_date].copy()
+                            ta = TechnicalAnalysis(trading_dataCopy)
+                            bands = ta.getFibonacciRetracementLevels(float(price))
+                            ta.printSupportResistanceLevel(float(price))
+                        else:
+                            bands = technical_analysis.getFibonacciRetracementLevels(float(price))
+                            technical_analysis.printSupportResistanceLevel(float(price))
 
-                        bands = technical_analysis.getFibonacciRetracementLevels(float(price))
                         Logger.info(' Fibonacci Retracement Levels:' + str(bands))
-                        technical_analysis.printSupportResistanceLevel(float(price))
-
+                        
                         if len(bands) >= 1 and len(bands) <= 2:
                             if len(bands) == 1:
                                 first_key = list(bands.keys())[0]
@@ -617,6 +656,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                                 state.fib_high = bands[second_key]
 
                     else:
+						
                         Logger.info('--------------------------------------------------------------------------------')
                         Logger.info('|                      *** Executing TEST Buy Order ***                        |')
                         Logger.info('--------------------------------------------------------------------------------')
@@ -813,9 +853,6 @@ def main():
 
         # initialise and start application
         trading_data = app.startApp(account, state.last_action)
-
-        if app.getSmartSwitch():
-            app.sim_smartswitch = True
 
         def runApp():
             # run the first job immediately after starting
