@@ -422,7 +422,7 @@ class PublicAPI(AuthAPIBase):
             iso8601end = str((datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S.%f') + timedelta(minutes=granularity * multiplier)).isoformat())
 
         if iso8601start != '' and iso8601end != '':
-            Logger.info('Attempting to retrieve data from ' + iso8601start)
+            #Logger.info('Attempting to retrieve data from ' + iso8601start)
             resp = self.client.get_historical_klines(market, granularity, iso8601start, iso8601end)
 
             if len(resp) > 300:
