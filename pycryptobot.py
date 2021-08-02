@@ -408,32 +408,32 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
             if app.disableBuyEMA() is False:
                 if ema12gtema26co is True:
                     ema_co_prefix = '*^ '
-                    ema_co_suffix = ' ^*'
+                    ema_co_suffix = ' ^* | '
                 elif ema12ltema26co is True:
                     ema_co_prefix = '*v '
-                    ema_co_suffix = ' v*'
+                    ema_co_suffix = ' v* | '
                 elif ema12gtema26 is True:
                     ema_co_prefix = '^ '
-                    ema_co_suffix = ' ^'
+                    ema_co_suffix = ' ^ | '
                 elif ema12ltema26 is True:
                     ema_co_prefix = 'v '
-                    ema_co_suffix = ' v'
+                    ema_co_suffix = ' v | '
 
             macd_co_prefix = ''
             macd_co_suffix = ''
             if app.disableBuyMACD() is False:
                 if macdgtsignalco is True:
                     macd_co_prefix = '*^ '
-                    macd_co_suffix = ' ^*'
+                    macd_co_suffix = ' ^* | '
                 elif macdltsignalco is True:
                     macd_co_prefix = '*v '
-                    macd_co_suffix = ' v*'
+                    macd_co_suffix = ' v* | '
                 elif macdgtsignal is True:
                     macd_co_prefix = '^ '
-                    macd_co_suffix = ' ^'
+                    macd_co_suffix = ' ^ | '
                 elif macdltsignal is True:
                     macd_co_prefix = 'v '
-                    macd_co_suffix = ' v'
+                    macd_co_suffix = ' v | '
 
             obv_prefix = ''
             obv_suffix = ''
@@ -444,19 +444,21 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                 elif float(obv_pc) < 0:
                     obv_prefix = 'v '
                     obv_suffix = ' v | '
+                else:
+                    obv_suffix = ' | '
 
             if not app.isVerbose():
                 if state.last_action != '':
                     output_text = formatted_current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + \
                                   app.printGranularity() + ' | ' + price_text + ' | ' + ema_co_prefix + \
-                                  ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + \
-                                  obv_prefix + obv_text + obv_suffix + state.eri_text + ' | ' + state.action + \
+                                  ema_text + ema_co_suffix + macd_co_prefix + macd_text + macd_co_suffix + \
+                                  obv_prefix + obv_text + obv_suffix + state.eri_text + state.action + \
                                   ' | Last Action: ' + state.last_action
                 else:
                     output_text = formatted_current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + \
                                   app.printGranularity() + ' | ' + price_text + ' | ' + ema_co_prefix + \
-                                  ema_text + ema_co_suffix + ' | ' + macd_co_prefix + macd_text + macd_co_suffix + \
-                                  obv_prefix + obv_text + obv_suffix + state.eri_text + ' | ' + state.action + ' '
+                                  ema_text + ema_co_suffix + macd_co_prefix + macd_text + macd_co_suffix + \
+                                  obv_prefix + obv_text + obv_suffix + state.eri_text + state.action + ' '
 
                 if state.last_action == 'BUY':
                     if state.last_buy_size > 0:
