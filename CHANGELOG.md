@@ -8,18 +8,23 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-## [2.47.3] - 2021-08-1
+## [2.48.2] - 2021-08-1
 
 ## Changed
 
 -- Fixed misaligned text on initial bot info table
 
-
-## [2.47.2] - 2021-07-14
+## [2.48.1] - 2021-08-01
 
 ### Changed
 
--- Fixed missing server time (binance) issue
+-- Fixed output formatting
+
+## [2.48.0] - 2021-08-01
+
+### Changed
+
+-- Fixed fast-sample smartswitching for coinbase
 
 ## [2.47.1] - 2021-07-13
 
