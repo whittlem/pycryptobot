@@ -93,18 +93,17 @@ Local repo
 
     % docker build -t pycryptobot .
 
-
 ## Additional Information
 
 The "requirements.txt" was created with `python3 -m pip freeze`
 
 ## Run it
 
-### Manual:
+### Manual
 
     % python3 pycryptobot.py <arguments>
 
-### Docker (Option 1):
+### Docker (Option 1)
 
     Example Local Absolute Path: /home/example/config.json
     Example Market: BTC-GBP
@@ -141,28 +140,27 @@ Typically I would save all my settings in the config.json but running from the c
 
     % python3 pycryptobot.py --market BTC-GBP --granularity 3600 --live 1 --verbose 0 --selllowerpcnt -2
 
-### docker-compose (Option 2):
+### docker-compose (Option 2)
 
 To run using the config.json in template folder,
 
     % docker-compose up -d
 
-
 By default, docker-compose will use the config inside `./market/template`. We provide this as a template for any market config.
 
 For each market you want to trade, create a copy of this folder under market
 For example, if you are trading `BTCEUR` and `ETHEUR` your market folder should look like this:
-```
-├── market
-│ ├── BTCEUR
-│ │ ├── config.json
-│ │ ├── pycryptobot.log
-│ │ └── graphs
-│ └── ETHEUR
-│   ├── config.json
-│   ├── pycryptobot.log
-│   └── graphs
-```
+
+    ├── market
+    │ ├── BTCEUR
+    │ │ ├── config.json
+    │ │ ├── pycryptobot.log
+    │ │ └── graphs
+    │ └── ETHEUR
+    │   ├── config.json
+    │   ├── pycryptobot.log
+    │   └── graphs
+
 
 modify docker-compose.yaml
 
@@ -202,6 +200,114 @@ modify docker-compose.yaml
 Run all your bots. Note that each market should have it's own config. Graphs will be saved on each market's folder.
 
     % docker-compose up -d
+
+### Kubernetes (Helm) (Option 3)
+
+There is a helm chart available in this repo. It will create your config.json as a configmap and the binance/coinbase keys as secrets, and mount them into the Pod.
+To run pycryptobot as a Kubernetes deployment, create your helm values as yaml in the following format (do not change the path to the api_key_file):
+
+    config: >
+        {
+            "coinbasepro": {
+                "api_url": "https://api.pro.coinbase.com",
+                "config": {
+                    "base_currency": "ETH",
+                    "quote_currency": "EUR",
+                    "live": 1,
+                    "sellatloss": 0,
+                    "disablelog": 1,
+                    "autorestart": 1
+                },
+                "api_key_file": "/app/keys/coinbasepro.key"
+            },
+            "telegram" : {
+                "token" : "<telegram_token>",
+                "client_id" : "<client_id>",
+            }
+        }
+
+    coinbasepro_key: |
+        XXXXXXXXXXXXXXXXXXXX
+        YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+        zzzzzzzzzzzz
+
+Or, for binance:
+
+    config: >
+        {
+            "binance": {
+                "api_url": "https://api.binance.com",
+                "config": {
+                    "base_currency": "ETH",
+                    "quote_currency": "EUR",
+                    "live": 1,
+                    "sellatloss": 0,
+                    "disablelog": 1,
+                    "autorestart": 1
+                },
+                "api_key_file": "/app/keys/binance.key"
+            },
+            "telegram" : {
+                "token" : "<telegram_token>",
+                "client_id" : "<client_id>",
+            }
+        }
+
+    binance_key: |
+        XXXXXXXXXXXXXXXXXXXX
+        YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+
+Or both:
+
+    config: >
+        {
+            "coinbasepro": {
+                "api_url": "https://api.pro.coinbase.com",
+                "config": {
+                    "base_currency": "ETH",
+                    "quote_currency": "EUR",
+                    "live": 1,
+                    "sellatloss": 0,
+                    "disablelog": 1,
+                    "autorestart": 1
+                },
+                "api_key_file": "/app/keys/coinbasepro.key"
+            },
+            "binance": {
+                "api_url": "https://api.binance.com",
+                "config": {
+                    "base_currency": "ETH",
+                    "quote_currency": "EUR",
+                    "live": 1,
+                    "sellatloss": 0,
+                    "disablelog": 1,
+                    "autorestart": 1
+                },
+                "api_key_file": "/app/keys/binance.key"
+            },
+            "telegram" : {
+                "token" : "<telegram_token>",
+                "client_id" : "<client_id>",
+            }
+        }
+
+    coinbasepro_key: |
+        XXXXXXXXXXXXXXXXXXXX
+        YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+        zzzzzzzzzzzz
+    binance_key: |
+        XXXXXXXXXXXXXXXXXXXX
+        YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+
+Then run:
+
+    git clone https://github.com/whittlem/pycryptobot
+    cd pycryptobot/chart
+    helm upgrade -i pycryptobot-eth-eur -f <path_to_helm_config>
+
+So if you created above helm values file as config-eth-eur.yaml, you would run:
+
+    helm upgrade -i pycryptobot-eth-eur -f config-eth-eur.yaml
 
 ## Bot mechanics
 
@@ -471,7 +577,7 @@ To keep track of the bots performance over time you can run the stats module. e.
 
 This will analyse all the completed buy/sell trade pairs to give stats on todays trades, the trades over the last 7 days, the trades over the last 30 days, and all-time trades.
 
-An optional flag of --statstartdate can be given to ignore all trades that happened before a specified date. The date must be of the format: yyyy-mm-dd. e.g. 
+An optional flag of --statstartdate can be given to ignore all trades that happened before a specified date. The date must be of the format: yyyy-mm-dd. e.g.
 
     python3 pycryptobot.py --stats --statstartdate 2021-6-01
 
