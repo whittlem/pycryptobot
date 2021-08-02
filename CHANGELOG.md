@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.49.0] - 2021-08-1
+
+## Added
+
+-- Added Kubernetes helm charts
+
 ## [2.48.2] - 2021-08-1
 
 ## Changed
