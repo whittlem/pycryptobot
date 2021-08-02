@@ -8,7 +8,7 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-## [2.47.2] - 2021-07-17
+## [2.48.0] - 2021-08-01
 
 ### Changed
 

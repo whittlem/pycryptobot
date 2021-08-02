@@ -365,7 +365,7 @@ class AuthAPI(AuthAPIBase):
             epoch = int(str(resp['serverTime'])[0:10])
             return datetime.fromtimestamp(epoch)
         except:
-            return None
+            return datetime.now()
 
 
 class PublicAPI(AuthAPIBase):
@@ -515,5 +515,5 @@ class PublicAPI(AuthAPIBase):
             epoch = int(str(resp['serverTime'])[0:10])
             return datetime.fromtimestamp(epoch)
         except:
-            return None
+            return datetime.now()
 
