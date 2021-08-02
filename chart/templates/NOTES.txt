@@ -1,0 +1,2 @@
+1. pycryptobot successfully deployed
+2. check pod logs to see progress

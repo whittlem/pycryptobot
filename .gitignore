@@ -149,3 +149,4 @@ graphs/
 tests/unit_tests/data/*.json
 
 *.key
+config*.yaml
