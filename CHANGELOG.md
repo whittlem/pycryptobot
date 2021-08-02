@@ -8,6 +8,11 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.49.1] - 2021-08-1
+
+### Changed
+-- The gitignore pattern excluded the configmap.yaml for the helm chart.
+
 ## [2.49.0] - 2021-08-1
 
 ## Added
