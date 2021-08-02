@@ -144,8 +144,11 @@ graphs/
 
 .vs/
 
+# new log files don't end in .log
 *.log
+pycryptobot.log.*
 
 tests/unit_tests/data/*.json
 
 *.key
+config-*.yaml

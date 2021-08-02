@@ -14,11 +14,35 @@ Upgrade library dependancies (if required):
 
 --- Replaced python-binance library with in-built code
 
-## [2.47.2] - 2021-07-14
+## [2.49.1] - 2021-08-1
 
 ### Changed
 
--- Fixed missing server time (binance) issue
+-- The gitignore pattern excluded the configmap.yaml for the helm chart.
+
+## [2.49.0] - 2021-08-1
+
+## Added
+
+-- Added Kubernetes helm charts
+
+## [2.48.2] - 2021-08-1
+
+## Changed
+
+-- Fixed misaligned text on initial bot info table
+
+## [2.48.1] - 2021-08-01
+
+### Changed
+
+-- Fixed output formatting
+
+## [2.48.0] - 2021-08-01
+
+### Changed
+
+-- Fixed fast-sample smartswitching for coinbase
 
 ## [2.47.1] - 2021-07-13
 
@@ -97,7 +121,6 @@ Upgrade library dependancies (if required):
 ### Changed
 
 -- Filter on filled orders only in Binance dataframe
-
 
 ## [2.42.0] - 2021-07-03
 
