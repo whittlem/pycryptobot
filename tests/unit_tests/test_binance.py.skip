@@ -112,7 +112,7 @@ def test_get_account(mocker):
     exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
-    mocker.patch("models.exchange.binance.Client.get_account", return_value=client_response)
+    mocker.patch("models.exchange.binance.getAccount", return_value=client_response)
     df = exchange.getAccount()
     assert type(df) is pandas.core.frame.DataFrame
 

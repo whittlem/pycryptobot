@@ -221,7 +221,7 @@ class AuthAPI(AuthAPIBase):
 
         return df[df['isSpotTradingAllowed'] == True][['symbol']].squeeze().tolist()
 
-    def getOrders(self, market: str='', action: str='', status: str='all', order_history: list=[]) -> pd.DataFrame:
+    def getOrders(self, market: str='', action: str='', status: str='done', order_history: list=[]) -> pd.DataFrame:
         """Retrieves your list of orders with optional filtering"""
 
         # if market provided
@@ -657,7 +657,7 @@ class PublicAPI(AuthAPIBase):
         try:
             freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity)]
         except:
-            freq = "D"
+            freq = 'D'
 
         # convert the DataFrame into a time series with the date as the index/key
         try:
