@@ -231,10 +231,13 @@ class AuthAPI(AuthAPIBase):
             if not self._isMarketValid(market):
                 raise ValueError('Binance market is invalid.')
         else:
-            if len(order_history) > 0:
+            if len(order_history) > 0 or status != 'all':
                 full_scan = False
                 self.order_history = order_history
-                markets = self.order_history
+                if len(self.order_history) > 0:
+                    if market not in self.order_history:
+                        self.order_history.append(market)
+                    markets = self.order_history
             else:
                 full_scan = True
                 markets = self.getMarkets()
@@ -283,7 +286,7 @@ class AuthAPI(AuthAPIBase):
             else:
                 df = pd.DataFrame(resp, index=[0])
 
-        if len(df) == 0:
+        if len(df) == 0 or 'time' not in df:
             return pd.DataFrame()
 
         # feature engineering

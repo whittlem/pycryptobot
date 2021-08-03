@@ -90,18 +90,16 @@ df = api.getUSDVolume()
 print(df)
 """
 
-"""
 app = PyCryptoBot(exchange='binance')
 api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
-df = api.getOrders(order_history=['BTGBTC', 'DOGEBTC', 'BTCGBP', 'DOGEGBP', 'SHIBUSDT'])
-#df = api.getOrders()
+#df = api.getOrders(order_history=['BTGBTC', 'DOGEBTC', 'BTCGBP', 'DOGEGBP', 'SHIBUSDT'])
+df = api.getOrders()
 print(df)
 
 #app = PyCryptoBot(exchange='coinbasepro')
 #api = CAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIPassphrase())
 #df = api.getOrders('BTC-GBP')
 #print(df)
-"""
 
 """
 app = PyCryptoBot(exchange='binance')
@@ -205,8 +203,10 @@ balance = account.getBalance('SHIBUSDT')
 print (balance)
 """
 
+"""
 app = PyCryptoBot(exchange='binance')
 account = TradingAccount(app)
 state = AppState(app, account)
 #state.minimumOrderBase()
 state.minimumOrderQuote()
+"""
