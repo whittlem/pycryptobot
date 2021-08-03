@@ -858,65 +858,8 @@ class PyCryptoBot():
             self.sell_at_loss = flag
 
     def startApp(self, account, last_action='', banner=True):
-        textBox = TextBox(80, 26)
         if banner:
-            textBox.singleLine()
-            textBox.center('Python Crypto Bot')
-            textBox.singleLine()
-            textBox.line('Release', self.getVersionFromREADME())
-            textBox.singleLine()
-
-            if self.isVerbose():
-                textBox.line('Market', self.getMarket())
-                textBox.line('Granularity', str(self.getGranularity()) + ' seconds')
-                textBox.singleLine()
-
-            if self.isLive():
-                textBox.line('Bot Mode', 'LIVE - live trades using your funds!')
-            else:
-                textBox.line('Bot Mode', 'TEST - test trades using dummy funds :)')
-
-            textBox.line('Bot Started', str(datetime.now()))
-            textBox.doubleLine()
-
-            if self.sellUpperPcnt() != None:
-                textBox.line('Sell Upper', str(self.sellUpperPcnt()) + '%')
-
-            if self.sellLowerPcnt() != None:
-                textBox.line('Sell Lower', str(self.sellLowerPcnt()) + '%')
-
-            if self.trailingStopLoss() != None:
-                textBox.line('Trailing Stop Loss', str(self.trailingStopLoss()) + '%')
-
-            textBox.line('Sell At Loss', str(self.allowSellAtLoss()) + '  --sellatloss ' + str(self.allowSellAtLoss()))
-            textBox.line('Sell At Resistance', str(self.sellAtResistance()) + '  --sellatresistance')
-            textBox.line('Trade Bull Only', str(not self.disableBullOnly()) + '  --disablebullonly')
-            textBox.line('Buy Near High', str(not self.disableBuyNearHigh()) + '  --disablebuynearhigh')
-            textBox.line('Use Buy MACD', str(not self.disableBuyMACD()) + '  --disablebuymacd')
-            textBox.line('Use Buy EMA', str(not self.disableBuyEMA()) + '  --disablebuyema')
-            textBox.line('Use Buy OBV', str(not self.disableBuyOBV()) + '  --disablebuyobv')
-            textBox.line('Use Buy Elder-Ray', str(not self.disableBuyElderRay()) + '  --disablebuyelderray')
-            textBox.line('Sell Fibonacci Low', str(not self.disableFailsafeFibonacciLow()) + '  --disablefailsafefibonaccilow')
-
-            if self.sellLowerPcnt() != None:
-                textBox.line('Sell Lower Pcnt', str(not self.disableFailsafeLowerPcnt()) + '  --disablefailsafelowerpcnt')
-
-            if self.sellUpperPcnt() != None:
-                textBox.line('Sell Upper Pcnt', str(not self.disableFailsafeLowerPcnt()) + '  --disableprofitbankupperpcnt')
-
-            textBox.line('Candlestick Reversal', str(not self.disableProfitbankReversal()) + '  --disableprofitbankreversal')
-            textBox.line('Telegram', str(not self.disabletelegram) + '  --disabletelegram')
-            textBox.line('Log', str(not self.disableLog()) + '  --disablelog')
-            textBox.line('Tracker', str(not self.disableTracker()) + '  --disabletracker')
-            textBox.line('Auto restart Bot', str(self.autoRestart()) + '  --autorestart')
-
-            if self.getBuyMaxSize():
-                textBox.line('Max Buy Size', str(self.getBuyMaxSize()) + '  --buymaxsize <size>')
-
-            if self.disablebuyema and self.disablebuymacd:
-                textBox.center('WARNING : EMA and MACD indicators disabled, no buy events will happen')
-
-            textBox.doubleLine()
+            self._generate_banner()
 
         # run the first job immediately after starting
         if self.isSimulation():
@@ -1015,6 +958,7 @@ class PyCryptoBot():
                                 endDate) + ' in 10 attempts.')
 
                 if banner:
+                    textBox = TextBox(80, 26)
                     startDate = str(startDate.isoformat())
                     endDate = str(endDate.isoformat())
                     textBox.line('Sampling start', str(startDate))
@@ -1041,3 +985,63 @@ class PyCryptoBot():
         assert self._chat_client is not None
 
         self._chat_client.send(msg)
+
+    def _generate_banner(self) -> None:
+        textBox = TextBox(80, 26)
+        textBox.singleLine()
+        textBox.center('Python Crypto Bot')
+        textBox.singleLine()
+        textBox.line('Release', self.getVersionFromREADME())
+        textBox.singleLine()
+
+        if self.isVerbose():
+            textBox.line('Market', self.getMarket())
+            textBox.line('Granularity', str(self.getGranularity()) + ' seconds')
+            textBox.singleLine()
+
+        if self.isLive():
+            textBox.line('Bot Mode', 'LIVE - live trades using your funds!')
+        else:
+            textBox.line('Bot Mode', 'TEST - test trades using dummy funds :)')
+
+        textBox.line('Bot Started', str(datetime.now()))
+        textBox.doubleLine()
+
+        if self.sellUpperPcnt() != None:
+            textBox.line('Sell Upper', str(self.sellUpperPcnt()) + '%')
+
+        if self.sellLowerPcnt() != None:
+            textBox.line('Sell Lower', str(self.sellLowerPcnt()) + '%')
+
+        if self.trailingStopLoss() != None:
+            textBox.line('Trailing Stop Loss', str(self.trailingStopLoss()) + '%')
+
+        textBox.line('Sell At Loss', str(self.allowSellAtLoss()) + '  --sellatloss ' + str(self.allowSellAtLoss()))
+        textBox.line('Sell At Resistance', str(self.sellAtResistance()) + '  --sellatresistance')
+        textBox.line('Trade Bull Only', str(not self.disableBullOnly()) + '  --disablebullonly')
+        textBox.line('Buy Near High', str(not self.disableBuyNearHigh()) + '  --disablebuynearhigh')
+        textBox.line('Use Buy MACD', str(not self.disableBuyMACD()) + '  --disablebuymacd')
+        textBox.line('Use Buy EMA', str(not self.disableBuyEMA()) + '  --disablebuyema')
+        textBox.line('Use Buy OBV', str(not self.disableBuyOBV()) + '  --disablebuyobv')
+        textBox.line('Use Buy Elder-Ray', str(not self.disableBuyElderRay()) + '  --disablebuyelderray')
+        textBox.line('Sell Fibonacci Low', str(not self.disableFailsafeFibonacciLow()) + '  --disablefailsafefibonaccilow')
+
+        if self.sellLowerPcnt() != None:
+            textBox.line('Sell Lower Pcnt', str(not self.disableFailsafeLowerPcnt()) + '  --disablefailsafelowerpcnt')
+
+        if self.sellUpperPcnt() != None:
+            textBox.line('Sell Upper Pcnt', str(not self.disableFailsafeLowerPcnt()) + '  --disableprofitbankupperpcnt')
+
+        textBox.line('Candlestick Reversal', str(not self.disableProfitbankReversal()) + '  --disableprofitbankreversal')
+        textBox.line('Telegram', str(not self.disabletelegram) + '  --disabletelegram')
+        textBox.line('Log', str(not self.disableLog()) + '  --disablelog')
+        textBox.line('Tracker', str(not self.disableTracker()) + '  --disabletracker')
+        textBox.line('Auto restart Bot', str(self.autoRestart()) + '  --autorestart')
+
+        if self.getBuyMaxSize():
+            textBox.line('Max Buy Size', str(self.getBuyMaxSize()) + '  --buymaxsize <size>')
+
+        if self.disablebuyema and self.disablebuymacd:
+            textBox.center('WARNING : EMA and MACD indicators disabled, no buy events will happen')
+
+        textBox.doubleLine()
