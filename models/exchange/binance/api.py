@@ -34,6 +34,10 @@ class AuthAPIBase():
             return True
         return False
 
+    def convert_time(self, epoch: int=0):
+        epoch_str = str(epoch)[0:10]
+        return datetime.fromtimestamp(int(epoch_str))
+
 class AuthAPI(AuthAPIBase):
     def __init__(self, api_key: str='', api_secret: str='', api_url: str='https://api.binance.com', order_history: list=[]) -> None:
         """Binance API object model
@@ -284,11 +288,7 @@ class AuthAPI(AuthAPIBase):
 
         # feature engineering
 
-        def convert_time(epoch: int=0):
-            epoch_str = str(epoch)[0:10]
-            return datetime.fromtimestamp(int(epoch_str))
-
-        df.time = df['time'].map(convert_time)
+        df.time = df['time'].map(self.convert_time)
         df['time'] = pd.to_datetime(df['time']).dt.tz_localize('UTC')
 
         df['size'] = np.where(df['side']=='BUY', df['cummulativeQuoteQty'], np.where(df['side']=='SELL', df['executedQty'], 222))
@@ -331,14 +331,10 @@ class AuthAPI(AuthAPIBase):
     def getTime(self) -> datetime:
         """Retrieves the exchange time"""
 
-        def convert_time(epoch: int=0):
-            epoch_str = str(epoch)[0:10]
-            return datetime.fromtimestamp(int(epoch_str))
-
         try:
             # GET /api/v3/time
             resp = self.authAPI('GET', '/api/v3/time')
-            return convert_time(int(resp['serverTime']))
+            return self.convert_time(int(resp['serverTime']))
         except:
             return None
 
@@ -590,14 +586,10 @@ class PublicAPI(AuthAPIBase):
     def getTime(self) -> datetime:
         """Retrieves the exchange time"""
 
-        def convert_time(epoch: int=0):
-            epoch_str = str(epoch)[0:10]
-            return datetime.fromtimestamp(int(epoch_str))
-
         try:
             # GET /api/v3/time
             resp = self.authAPI('GET', '/api/v3/time')
-            return convert_time(int(resp['serverTime']))
+            return self.convert_time(int(resp['serverTime']))
         except:
             return None
 
