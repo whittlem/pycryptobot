@@ -1,5 +1,6 @@
 from models.PyCryptoBot import PyCryptoBot
 from models.TradingAccount import TradingAccount
+from models.AppState import AppState
 from models.exchange.binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
 from models.exchange.coinbase_pro import AuthAPI as CAuthAPI, PublicAPI as CPublicAPI
 
@@ -197,7 +198,15 @@ df = api.getOrders('MATICUSDT')
 print(df)
 """
 
+"""
 app = PyCryptoBot(exchange='binance')
 account = TradingAccount(app)
 balance = account.getBalance('SHIBUSDT')
 print (balance)
+"""
+
+app = PyCryptoBot(exchange='binance')
+account = TradingAccount(app)
+state = AppState(app, account)
+#state.minimumOrderBase()
+state.minimumOrderQuote()
