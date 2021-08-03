@@ -20,12 +20,12 @@ resp = api.authAPI('GET', '/api/v3/klines' , { 'symbol': 'BTCGBP', 'interval': '
 print(resp)
 """
 
-"""
+
 app = PyCryptoBot(exchange='binance')
 api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
 df = api.getAccounts()
 print(df)
-
+"""
 app = PyCryptoBot(exchange='coinbasepro')
 api = CAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIPassphrase())
 df = api.getAccounts()
