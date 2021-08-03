@@ -156,11 +156,11 @@ class AuthAPI(AuthAPIBase):
 
         return self.getAccounts()
 
-    def getFees(self, market: str='') -> pd.DataFrame:
+    def getFees(self, market: str='', recvWindow: int=6000) -> pd.DataFrame:
         """Retrieves a account fees"""
 
         # GET /api/v3/account
-        resp = self.authAPI('GET', '/api/v3/account')
+        resp = self.authAPI('GET', '/api/v3/account', { 'recvWindow': recvWindow })
 
         if 'makerCommission' in resp and 'takerCommission' in resp:
             maker_fee_rate = resp['makerCommission'] / 10000
@@ -221,7 +221,7 @@ class AuthAPI(AuthAPIBase):
 
         return df[df['isSpotTradingAllowed'] == True][['symbol']].squeeze().tolist()
 
-    def getOrders(self, market: str='', action: str='', status: str='done', order_history: list=[]) -> pd.DataFrame:
+    def getOrders(self, market: str='', action: str='', status: str='done', order_history: list=[], recvWindow: int=6000) -> pd.DataFrame:
         """Retrieves your list of orders with optional filtering"""
 
         # if market provided
@@ -259,7 +259,7 @@ class AuthAPI(AuthAPIBase):
                     print (f'scanning {market} order history.')
 
                 # GET /api/v3/allOrders
-                resp = self.authAPI('GET', '/api/v3/allOrders', { 'symbol': market })
+                resp = self.authAPI('GET', '/api/v3/allOrders', { 'symbol': market, 'recvWindow': recvWindow })
 
                 if full_scan is True:
                     time.sleep(0.25)
@@ -279,7 +279,7 @@ class AuthAPI(AuthAPIBase):
                 print ('add to order history to prevent full scan:', self.order_history)
         else:
             # GET /api/v3/allOrders
-            resp = self.authAPI('GET', '/api/v3/allOrders', { 'symbol': market })
+            resp = self.authAPI('GET', '/api/v3/allOrders', { 'symbol': market, 'recvWindow': recvWindow })
 
             if isinstance(resp, list):
                 df = pd.DataFrame.from_dict(resp)
@@ -358,11 +358,11 @@ class AuthAPI(AuthAPIBase):
 
         return df
 
-    def getTradeFee(self, market: str) -> float:
+    def getTradeFee(self, market: str, recvWindow: int=6000) -> float:
         """Retrieves the trade fees"""
 
         # GET /sapi/v1/asset/tradeFee
-        resp = self.authAPI('GET', '/sapi/v1/asset/tradeFee', { 'symbol': market })
+        resp = self.authAPI('GET', '/sapi/v1/asset/tradeFee', { 'symbol': market, 'recvWindow': recvWindow })
 
         if len(resp) == 1 and 'takerCommission' in resp[0]:
             return float(resp[0]['takerCommission'])
@@ -386,7 +386,7 @@ class AuthAPI(AuthAPIBase):
         else:
             return (now, 0.0)
 
-    def marketBuy(self, market: str='', quote_quantity: float=0, test: bool=False) -> list:
+    def marketBuy(self, market: str='', quote_quantity: float=0, test: bool=False, recvWindow: int=6000) -> list:
         """Executes a market buy providing a funding amount"""
 
         # validates the market is syntactically correct
@@ -417,7 +417,8 @@ class AuthAPI(AuthAPIBase):
                 'symbol': market,
                 'side': 'BUY',
                 'type': 'MARKET',
-                'quantity': truncated
+                'quantity': truncated,
+                'recvWindow': recvWindow
             }
 
             Logger.debug(order)
@@ -434,7 +435,7 @@ class AuthAPI(AuthAPIBase):
             Logger.error(ts + ' Binance ' + ' marketBuy ' + str(err))
             return []
 
-    def marketSell(self, market: str='', base_quantity: float=0, test: bool=False) -> list:
+    def marketSell(self, market: str='', base_quantity: float=0, test: bool=False, recvWindow: int=6000) -> list:
         """Executes a market sell providing a crypto amount"""
 
         # validates the market is syntactically correct
@@ -460,7 +461,8 @@ class AuthAPI(AuthAPIBase):
                 'symbol': market,
                 'side': 'SELL',
                 'type': 'MARKET',
-                'quantity': truncated
+                'quantity': truncated,
+                'recvWindow': recvWindow
             }
 
             Logger.debug(order)

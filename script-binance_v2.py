@@ -134,13 +134,13 @@ ticker = api.getTicker('BTC-GBP')
 print(ticker)
 """
 
+"""
 app = PyCryptoBot(exchange='binance')
 api = BPublicAPI()
 #df = api.getHistoricalData('BTCGBP', '1h')
 df = api.getHistoricalData('BTCGBP', '1h', '2020-06-19T10:00:00', '2020-06-19T14:00:00')
 print(df)
 
-"""
 app = PyCryptoBot(exchange='coinbasepro')
 api = CPublicAPI()
 df = api.getHistoricalData('BTC-GBP', 3600)
