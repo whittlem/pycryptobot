@@ -37,7 +37,7 @@ class AuthAPIBase():
 class AuthAPI(AuthAPIBase):
     def __init__(self, api_key: str='', api_secret: str='', api_url: str='https://api.binance.com', order_history: list=[]) -> None:
         """Binance API object model
-    
+
         Parameters
         ----------
         api_key : str
@@ -66,7 +66,7 @@ class AuthAPI(AuthAPIBase):
         p = re.compile(r"^[A-z0-9]{64,64}$")
         if not p.match(api_key):
             self.handle_init_error('Binance API key is invalid')
- 
+
         # validates the api secret is syntactically correct
         p = re.compile(r"^[A-z0-9]{64,64}$")
         if not p.match(api_secret):
@@ -115,11 +115,11 @@ class AuthAPI(AuthAPIBase):
 
             if isinstance(balances, list):
                 df = pd.DataFrame.from_dict(balances)
-            else: 
+            else:
                 df = pd.DataFrame(balances, index=[0])
         else:
             return pd.DataFrame()
-  
+
         if len(df) == 0:
             return pd.DataFrame()
 
@@ -147,15 +147,10 @@ class AuthAPI(AuthAPIBase):
 
         return df[['index', 'id', 'currency', 'balance', 'hold', 'available', 'profile_id', 'trading_enabled' ]]
 
-    def getAccount(self, account: int) -> pd.DataFrame:
-        """Retrieves a specific account"""
+    def getAccount(self) -> pd.DataFrame:
+        """Retrieves all accounts for Binance as there is no specific account id"""
 
-        # validates the account is syntactically correct
-        if not isinstance(account, int):
-            self.handle_init_error('Binance account is invalid')
-    
-        df = self.getAccounts()
-        return df[df.id == account]
+        return self.getAccounts()
 
     def getFees(self, market: str='') -> pd.DataFrame:
         """Retrieves a account fees"""
@@ -169,23 +164,23 @@ class AuthAPI(AuthAPIBase):
         else:
             maker_fee_rate = 0.001
             taker_fee_rate = 0.001
-      
+
         return pd.DataFrame([{ 'maker_fee_rate': maker_fee_rate, 'taker_fee_rate': taker_fee_rate, 'usd_volume': 0, 'market': '' }])
 
     def getMakerFee(self, market: str='') -> float:
         """Retrieves the maker fee"""
-        
+
         if len(market):
             fees = self.getFees(market)
         else:
             fees = self.getFees()
-        
+
         if len(fees) == 0 or 'maker_fee_rate' not in fees:
             Logger.error(f"error: 'maker_fee_rate' not in fees (using {DEFAULT_MAKER_FEE_RATE} as a fallback)")
             return DEFAULT_MAKER_FEE_RATE
 
         return float(fees['maker_fee_rate'].to_string(index=False).strip())
-   
+
     def getTakerFee(self, market: str='') -> float:
         """Retrieves the taker fee"""
 
@@ -215,7 +210,7 @@ class AuthAPI(AuthAPIBase):
         if 'symbols' in resp:
             if isinstance(resp['symbols'], list):
                 df = pd.DataFrame.from_dict(resp['symbols'])
-            else: 
+            else:
                 df = pd.DataFrame(resp['symbols'], index=[0])
         else:
             df = pd.DataFrame()
@@ -264,12 +259,12 @@ class AuthAPI(AuthAPIBase):
 
                 if isinstance(resp, list):
                     df_tmp = pd.DataFrame.from_dict(resp)
-                else: 
+                else:
                     df_tmp = pd.DataFrame(resp, index=[0])
 
                 if full_scan is True and len(df_tmp) > 0:
                     self.order_history.append(market)
-                
+
                 if len(df_tmp) > 0:
                     df = pd.concat([df, df_tmp])
 
@@ -278,10 +273,10 @@ class AuthAPI(AuthAPIBase):
         else:
             # GET /api/v3/allOrders
             resp = self.authAPI('GET', '/api/v3/allOrders', { 'symbol': market })
-            
+
             if isinstance(resp, list):
                 df = pd.DataFrame.from_dict(resp)
-            else: 
+            else:
                 df = pd.DataFrame(resp, index=[0])
 
         if len(df) == 0:
@@ -300,13 +295,13 @@ class AuthAPI(AuthAPIBase):
         df['fees'] = df['size'].astype(float) * 0.001
         df['fees'] = df['fees'].astype(object)
 
-        df['side'] = df['side'].str.lower() 
+        df['side'] = df['side'].str.lower()
 
-        df.rename(columns={ 
-            'time': 'created_at', 
-            'symbol': 'market', 
-            'side': 'action', 
-            'executedQty': 'filled' 
+        df.rename(columns={
+            'time': 'created_at',
+            'symbol': 'market',
+            'side': 'action',
+            'executedQty': 'filled'
         }, errors='raise', inplace=True)
 
         def convert_status(status: str=''):
@@ -317,7 +312,7 @@ class AuthAPI(AuthAPIBase):
             elif status == 'PARTIALLY_FILLED':
                 return 'pending'
             else:
-                return status    
+                return status
 
         df.status = df.status.map(convert_status)
         df['status'] = df['status'].str.lower()
@@ -335,7 +330,7 @@ class AuthAPI(AuthAPIBase):
 
     def getTime(self) -> datetime:
         """Retrieves the exchange time"""
-    
+
         def convert_time(epoch: int=0):
             epoch_str = str(epoch)[0:10]
             return datetime.fromtimestamp(int(epoch_str))
@@ -358,8 +353,8 @@ class AuthAPI(AuthAPIBase):
             if isinstance(resp['symbols'], list):
                 if 'filters' in resp['symbols'][0]:
                     df = pd.DataFrame.from_dict(resp['symbols'][0]['filters'])
-            else: 
-                if 'filers' in resp['symbols'][0]:   
+            else:
+                if 'filers' in resp['symbols'][0]:
                     df = pd.DataFrame(resp['symbols'][0]['filters'], index=[0])
 
         return df
@@ -369,7 +364,7 @@ class AuthAPI(AuthAPIBase):
 
         # GET /sapi/v1/asset/tradeFee
         resp = self.authAPI('GET', '/sapi/v1/asset/tradeFee', { 'symbol': market })
-     
+
         if len(resp) == 1 and 'takerCommission' in resp[0]:
             return float(resp[0]['takerCommission'])
         else:
@@ -419,11 +414,11 @@ class AuthAPI(AuthAPIBase):
             stepper = 10.0 ** precision
             truncated = math.trunc(stepper * base_quantity) / stepper
 
-            order = { 
-                'symbol': market, 
-                'side': 'BUY', 
-                'type': 'MARKET', 
-                'quantity': truncated 
+            order = {
+                'symbol': market,
+                'side': 'BUY',
+                'type': 'MARKET',
+                'quantity': truncated
             }
 
             Logger.debug(order)
@@ -438,7 +433,7 @@ class AuthAPI(AuthAPIBase):
         except Exception as err:
             ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
             Logger.error(ts + ' Binance ' + ' marketBuy ' + str(err))
-            return []  
+            return []
 
     def marketSell(self, market: str='', base_quantity: float=0, test: bool=False) -> list:
         """Executes a market sell providing a crypto amount"""
@@ -462,11 +457,11 @@ class AuthAPI(AuthAPIBase):
             stepper = 10.0 ** precision
             truncated = math.trunc(stepper * base_quantity) / stepper
 
-            order = { 
-                'symbol': market, 
-                'side': 'SELL', 
-                'type': 'MARKET', 
-                'quantity': truncated 
+            order = {
+                'symbol': market,
+                'side': 'SELL',
+                'type': 'MARKET',
+                'quantity': truncated
             }
 
             Logger.debug(order)
@@ -513,7 +508,7 @@ class AuthAPI(AuthAPIBase):
             url = self._api_url + uri + '?' + query_string + '&signature=' + self.createHash(query_string)
         else:
             url = self._api_url + uri + '?' + query_string
-        
+
         params = {'url': url, 'params': {}}
 
         try:
@@ -523,7 +518,7 @@ class AuthAPI(AuthAPIBase):
                 json = resp.json()
                 if 'msg' in json:
                     resp_message = resp.json()['msg']
-                elif 'message' in json: 
+                elif 'message' in json:
                     resp_message = resp.json()['message']
                 else:
                     resp_message = 'undefined error'
@@ -537,7 +532,7 @@ class AuthAPI(AuthAPIBase):
 
             resp.raise_for_status()
             return resp.json()
-        
+
         except requests.ConnectionError as err:
             return self.handle_api_error(err, 'ConnectionError')
 
@@ -569,7 +564,7 @@ class AuthAPI(AuthAPIBase):
 class PublicAPI(AuthAPIBase):
     def __init__(self, api_url='https://api.binance.com') -> None:
         """Binance API object model
-    
+
         Parameters
         ----------
         api_url
@@ -594,7 +589,7 @@ class PublicAPI(AuthAPIBase):
 
     def getTime(self) -> datetime:
         """Retrieves the exchange time"""
-    
+
         def convert_time(epoch: int=0):
             epoch_str = str(epoch)[0:10]
             return datetime.fromtimestamp(int(epoch_str))
@@ -608,7 +603,7 @@ class PublicAPI(AuthAPIBase):
 
     def getTicker(self, market: str=DEFAULT_MARKET) -> tuple:
         """Retrives the market ticker"""
-        
+
         # validates the market is syntactically correct
         if not self._isMarketValid(market):
             raise TypeError('Binance market required.')
@@ -644,18 +639,18 @@ class PublicAPI(AuthAPIBase):
 
         if iso8601start != '' and iso8601end == '':
             startTime = int((datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S') - datetime(1970, 1, 1)).total_seconds())
-           
+
             # GET /api/v3/klines
-            resp = self.authAPI('GET', '/api/v3/klines', { 'symbol': market, 'interval': granularity, 'startTime': startTime, 'limit': 300 })  
+            resp = self.authAPI('GET', '/api/v3/klines', { 'symbol': market, 'interval': granularity, 'startTime': startTime, 'limit': 300 })
         elif iso8601start != '' and iso8601end != '':
             startTime = int((datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S') - datetime(1970, 1, 1)).total_seconds())
-           
+
             # GET /api/v3/klines
             resp = self.authAPI('GET', '/api/v3/klines', { 'symbol': market, 'interval': granularity, 'startTime': startTime, 'limit': 300 })
         else:
             # GET /api/v3/klines
             resp = self.authAPI('GET', '/api/v3/klines', { 'symbol': market, 'interval': granularity, 'limit': 300 })
-        
+
         # convert the API response into a Pandas DataFrame
         df = pd.DataFrame(resp, columns=[ 'open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_asset_volume', 'number_of_trades', 'taker_buy_base_asset_volume', 'traker_buy_quote_asset_volume', 'ignore' ])
 
@@ -665,7 +660,7 @@ class PublicAPI(AuthAPIBase):
         # binance epoch is too long
         df['open_time'] = df['open_time'] + 1
         df['open_time'] = df['open_time'].astype(str)
-        df['open_time'] = df['open_time'].str.replace(r'\d{3}$', '', regex=True)   
+        df['open_time'] = df['open_time'].str.replace(r'\d{3}$', '', regex=True)
 
         try:
             freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity)]
@@ -683,7 +678,7 @@ class PublicAPI(AuthAPIBase):
             tsidx = pd.DatetimeIndex(pd.to_datetime(df['open_time'], unit='s'), dtype='datetime64[ns]')
             df.set_index(tsidx, inplace=True)
             df = df.drop(columns=['open_time'])
-            df.index.names = ['ts']           
+            df.index.names = ['ts']
             df['date'] = tsidx
 
         # if specified, fix end time
@@ -695,10 +690,10 @@ class PublicAPI(AuthAPIBase):
 
         # correct column types
         df['low'] = df['low'].astype(float)
-        df['high'] = df['high'].astype(float)   
-        df['open'] = df['open'].astype(float)   
-        df['close'] = df['close'].astype(float)   
-        df['volume'] = df['volume'].astype(float)      
+        df['high'] = df['high'].astype(float)
+        df['open'] = df['open'].astype(float)
+        df['close'] = df['close'].astype(float)
+        df['volume'] = df['volume'].astype(float)
 
         # reset pandas dataframe index
         df.reset_index()
@@ -707,7 +702,7 @@ class PublicAPI(AuthAPIBase):
 
     def authAPI(self, method: str, uri: str, payload: str={}) -> dict:
         """Initiates a REST API call to exchange"""
-        
+
         if not isinstance(method, str):
             raise TypeError('Method is not a string.')
 
@@ -731,7 +726,7 @@ class PublicAPI(AuthAPIBase):
 
             resp.raise_for_status()
             return resp.json()
-        
+
         except requests.ConnectionError as err:
             return self.handle_api_error(err, 'ConnectionError')
 

@@ -1,4 +1,5 @@
 from models.PyCryptoBot import PyCryptoBot
+from models.TradingAccount import TradingAccount
 from models.exchange.binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
 from models.exchange.coinbase_pro import AuthAPI as CAuthAPI, PublicAPI as CPublicAPI
 
@@ -195,3 +196,8 @@ api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
 df = api.getOrders('MATICUSDT')
 print(df)
 """
+
+app = PyCryptoBot(exchange='binance')
+account = TradingAccount(app)
+balance = account.getBalance('SHIBUSDT')
+print (balance)
