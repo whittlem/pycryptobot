@@ -633,12 +633,12 @@ class PublicAPI(AuthAPIBase):
             raise TypeError('ISO8601 end integer as string required.')
 
         if iso8601start != '' and iso8601end == '':
-            startTime = int((datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S') - datetime(1970, 1, 1)).total_seconds())
+            startTime = datetime.timestamp(datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S'))
 
             # GET /api/v3/klines
             resp = self.authAPI('GET', '/api/v3/klines', { 'symbol': market, 'interval': granularity, 'startTime': startTime, 'limit': 300 })
         elif iso8601start != '' and iso8601end != '':
-            startTime = int((datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S') - datetime(1970, 1, 1)).total_seconds())
+            startTime = int(datetime.timestamp(datetime.strptime(iso8601start, '%Y-%m-%dT%H:%M:%S')))
 
             # GET /api/v3/klines
             resp = self.authAPI('GET', '/api/v3/klines', { 'symbol': market, 'interval': granularity, 'startTime': startTime, 'limit': 300 })

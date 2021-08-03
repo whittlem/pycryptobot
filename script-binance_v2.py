@@ -90,6 +90,7 @@ df = api.getUSDVolume()
 print(df)
 """
 
+"""
 app = PyCryptoBot(exchange='binance')
 api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
 #df = api.getOrders(order_history=['BTGBTC', 'DOGEBTC', 'BTCGBP', 'DOGEGBP', 'SHIBUSDT'])
@@ -100,6 +101,7 @@ print(df)
 #api = CAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIPassphrase())
 #df = api.getOrders('BTC-GBP')
 #print(df)
+"""
 
 """
 app = PyCryptoBot(exchange='binance')
@@ -132,13 +134,13 @@ ticker = api.getTicker('BTC-GBP')
 print(ticker)
 """
 
-"""
 app = PyCryptoBot(exchange='binance')
 api = BPublicAPI()
-df = api.getHistoricalData('BTCGBP', '1h')
-#df = api.getHistoricalData('BTCGBP', '1h', '2020-06-19T10:00:00', '2020-06-19T14:00:00')
+#df = api.getHistoricalData('BTCGBP', '1h')
+df = api.getHistoricalData('BTCGBP', '1h', '2020-06-19T10:00:00', '2020-06-19T14:00:00')
 print(df)
 
+"""
 app = PyCryptoBot(exchange='coinbasepro')
 api = CPublicAPI()
 df = api.getHistoricalData('BTC-GBP', 3600)
