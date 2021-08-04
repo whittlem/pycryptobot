@@ -29,3 +29,10 @@ def test_api_v3_account1():
         assert df.dtypes['available'] == 'object'
         assert df.dtypes['profile_id'] == 'object'
         assert df.dtypes['trading_enabled'] == 'bool'
+
+def test_instantiate_authapi_without_error():
+    app = PyCryptoBot(exchange='binance')
+    api_key = app.getAPIKey()
+    api_secret = app.getAPISecret()
+    exchange = BAuthAPI(api_key, api_secret)
+    assert type(exchange) is BAuthAPI
