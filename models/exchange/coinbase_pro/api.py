@@ -53,7 +53,9 @@ class AuthAPI(AuthAPIBase):
 
         valid_urls = [
             'https://api.pro.coinbase.com',
-            'https://api.pro.coinbase.com/'
+            'https://api.pro.coinbase.com/',
+            'https://public.sandbox.pro.coinbase.com',
+            'https://public.sandbox.pro.coinbase.com/'
         ]
 
         # validate Coinbase Pro API
