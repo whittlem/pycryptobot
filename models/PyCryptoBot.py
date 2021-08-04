@@ -109,13 +109,10 @@ def truncate(f: Union[int, float], n: Union[int, float]) -> str:
 
 
 class PyCryptoBot():
-    def __init__(self, exchange='', filename='config.json'):
+    def __init__(self, exchange='', filename='config.json', config: bool=True):
         args = parse_arguments()
 
-        self.api_key = ''
-        self.api_secret = ''
-        self.api_passphrase = ''
-        self.api_url = ''
+        self.config = config
 
         if args['config'] is not None:
             filename = args['config']
@@ -137,13 +134,37 @@ class PyCryptoBot():
                     else:
                         self.exchange = 'dummy'
             except:
-                self.exchange = 'dummy'
+                if exchange == 'binance':
+                    self.exchange = 'binance'
+                elif exchange == 'coinbasepro':
+                    self.exchange = 'coinbasepro'
+                else:
+                    self.exchange = 'dummy'
                 pass
 
-        self.market = 'BTC-GBP'
+        if self.exchange == 'binance': # default for binance (test mode)
+            self.api_key = '0000000000000000000000000000000000000000000000000000000000000000'
+            self.api_secret = '0000000000000000000000000000000000000000000000000000000000000000'
+            self.api_url = 'https://api.binance.com'
+            self.market = 'BTCGBP'
+
+        elif self.exchange == 'coinbasepro': # default for coinbase pro (test mode)
+            self.api_key = '00000000000000000000000000000000'
+            self.api_secret = '0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000=='
+            self.api_passphrase = '00000000000'
+            self.api_url = 'https://api.pro.coinbase.com'
+            self.market = 'BTC-GBP'
+
+        else: # default/dummy uses coinbase data (test mode)
+            self.api_key = '00000000000000000000000000000000"'
+            self.api_secret = '0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000=='
+            self.api_passphrase = '00000000000'
+            self.api_url = 'https://api.pro.coinbase.com'
+            self.market = 'BTC-GBP'
+
+        self.granularity = 3600
         self.base_currency = 'BTC'
         self.quote_currency = 'GBP'
-        self.granularity = 3600
         self.is_live = 0
         self.is_verbose = 0
         self.save_graphs = 0
@@ -199,55 +220,70 @@ class PyCryptoBot():
 
         self.sim_smartswitch = False
 
-        if args['init'] or (filename == 'config.json' and not os.path.isfile(filename)):
+        if args['init']:
             # config builder
             cb = ConfigBuilder()
             cb.init()
             sys.exit()
 
-        try:
-            with open(filename) as config_file:
-                config = json.load(config_file)
+        if (filename == 'config.json' and not os.path.isfile(filename)):
+            self.config = False
+            self.is_live = 0 # no config will prevent live mode
 
-                # if no exchange specified then dummy
-                #if self.exchange not in config:
-                #    self.exchange = 'dummy'
+        if self.config is True:
+            try:
+                with open(filename) as config_file:
+                    config = json.load(config_file)
 
-                if self.exchange == 'coinbasepro' and 'coinbasepro' in config:
-                    coinbaseProConfigParser(self, config['coinbasepro'], args)
+                    # if no exchange specified then dummy
+                    #if self.exchange not in config:
+                    #    self.exchange = 'dummy'
 
-                elif self.exchange == 'binance' and 'binance' in config:
-                    binanceConfigParser(self, config['binance'], args)
+                    if self.exchange == 'coinbasepro' and 'coinbasepro' in config:
+                        coinbaseProConfigParser(self, config['coinbasepro'], args)
 
-                elif self.exchange == 'dummy' and 'dummy' in config:
-                    dummyConfigParser(self, config['dummy'], args)
+                    elif self.exchange == 'binance' and 'binance' in config:
+                        binanceConfigParser(self, config['binance'], args)
 
-                if not self.disabletelegram and 'telegram' in config and 'token' in config['telegram'] and 'client_id' in config['telegram']:
-                    telegram = config['telegram']
-                    self._chat_client = Telegram(telegram['token'], telegram['client_id'])
-                    self.telegram = True
+                    elif self.exchange == 'dummy' and 'dummy' in config:
+                        dummyConfigParser(self, config['dummy'], args)
 
-                if 'logger' in config:
-                    loggerConfigParser(self, config['logger'])
-                
-                if self.disablelog:
-                    self.filelog = 0
-                    self.fileloglevel = 'NOTSET'
-                    self.logfile == "pycryptobot.log"
+                    if not self.disabletelegram and 'telegram' in config and 'token' in config['telegram'] and 'client_id' in config['telegram']:
+                        telegram = config['telegram']
+                        self._chat_client = Telegram(telegram['token'], telegram['client_id'])
+                        self.telegram = True
 
-                Logger.configure(filelog=self.filelog, logfile=self.logfile, fileloglevel=self.fileloglevel, consolelog=self.consolelog, consoleloglevel=self.consoleloglevel)     
+                    if 'logger' in config:
+                        loggerConfigParser(self, config['logger'])
 
-        except json.decoder.JSONDecodeError as err:
-            sys.tracebacklimit = 0
-            raise ValueError('Invalid config.json: ' + str(err))
+                    if self.disablelog:
+                        self.filelog = 0
+                        self.fileloglevel = 'NOTSET'
+                        self.logfile == 'pycryptobot.log'
 
-        except IOError as err:
-            sys.tracebacklimit = 0
-            raise ValueError('Invalid config.json: ' + str(err))
+            except json.decoder.JSONDecodeError as err:
+                sys.tracebacklimit = 0
+                raise ValueError('Invalid config.json: ' + str(err))
 
-        except ValueError as err:
-            sys.tracebacklimit = 0
-            raise ValueError('Invalid config.json: ' + str(err))
+            except IOError as err:
+                sys.tracebacklimit = 0
+                raise ValueError('Invalid config.json: ' + str(err))
+
+            except ValueError as err:
+                sys.tracebacklimit = 0
+                raise ValueError('Invalid config.json: ' + str(err))
+
+        else:
+            if self.exchange == 'binance':
+                binanceConfigParser(self, None, args)
+            elif self.exchange == 'coinbasepro':
+                coinbaseProConfigParser(self, None, args)
+
+            self.filelog = 0
+            self.fileloglevel = 'NOTSET'
+            self.logfile == 'pycryptobot.log'
+
+        Logger.configure(filelog=self.filelog, logfile=self.logfile, fileloglevel=self.fileloglevel, consolelog=self.consolelog, consoleloglevel=self.consoleloglevel)
 
     def _isCurrencyValid(self, currency):
         if self.exchange == 'coinbasepro' or self.exchange == 'binance':
@@ -362,15 +398,22 @@ class PyCryptoBot():
         if date.find('.') != -1:
             dt = date.split('.')[0]
             date = dt
-										
+
         date = date.replace('T', ' ') if date.find('T') != -1 else date
         #Add time in case only a date is passed in
         new_date_str = f'{date} 00:00:00' if len(date) == 10 else date
 
-        return datetime.strptime(new_date_str, "%Y-%m-%d %H:%M:%S") 
+        return datetime.strptime(new_date_str, "%Y-%m-%d %H:%M:%S")
 
     def getHistoricalData(self, market, granularity: int, iso8601start='', iso8601end=''):
-        if self.exchange == 'coinbasepro':
+        if self.exchange == 'binance':
+            api = BPublicAPI()
+
+            if iso8601start != '' and iso8601end != '':
+                return api.getHistoricalData(market, to_binance_granularity(granularity), iso8601start, iso8601end)
+            else:
+                return api.getHistoricalData(market, to_binance_granularity(granularity))
+        else: # returns data from coinbase if not specified
             api = CBPublicAPI()
 
             if iso8601start != '' and iso8601end == '':
@@ -380,33 +423,23 @@ class PyCryptoBot():
             else:
                 return api.getHistoricalData(market, to_coinbase_pro_granularity(granularity))
 
-        elif self.exchange == 'binance':
-            api = BPublicAPI()
-
-            if iso8601start != '' and iso8601end != '':
-                return api.getHistoricalData(market, to_binance_granularity(granularity), iso8601start, iso8601end)
-            else:
-                return api.getHistoricalData(market, to_binance_granularity(granularity))
-        else:
-            return pd.DataFrame()
-
     def getSmartSwitchDataFrame(self, df: pd.DataFrame, market, granularity: int, simstart: str="", simend: str="", simcurrent: str="") -> pd.DataFrame:
-        
+
         if self.isSimulation():
             result_df_cache = df
 
             simstart = self.getDateFromISO8601Str(simstart)
             simend = self.getDateFromISO8601Str(simend)
-            
+
             try:
                 df_first = None
                 df_last = None
-				
+
                 #Logger.debug("Row Count (" + str(granularity) + "): " + str(df.shape[0]))
                 # if df already has data get first and last record date
                 df_first = self.getDateFromISO8601Str(str(df.head(1).index.format()[0]))
                 df_last = self.getDateFromISO8601Str(str(df.tail(1).index.format()[0]))
-									 
+
             except Exception:
                 #if df = None create a new data frame
                 result_df_cache = pd.DataFrame()
@@ -414,18 +447,18 @@ class PyCryptoBot():
             if (df_first is None and df_last is None):
                 Logger.info('             *** getting smartswitch (' + str(granularity) + ') market data ***')
 
-                df_first = simend 
+                df_first = simend
                 df_first -= timedelta(minutes=(300*(granularity/60)))
                 df1 = self.getHistoricalData(market, granularity,
-                                                str(df_first.isoformat()), 
+                                                str(df_first.isoformat()),
                                                 str(simend.isoformat()))
-																								  
+
                 result_df_cache = df1
 
                 while df_first.isoformat(timespec='milliseconds') > simstart.isoformat(timespec='milliseconds'):
                     end_date = df_first
                     df_first -= timedelta(minutes=(300*(granularity/60)))
-                        
+
                     if df_first.isoformat(timespec='milliseconds') < simstart.isoformat(timespec='milliseconds'):
                         df_first = self.getDateFromISO8601Str(str(simstart))
 
@@ -434,9 +467,9 @@ class PyCryptoBot():
                     result_df_cache = pd.concat([df2.copy(), df1.copy()]).drop_duplicates()
                     df1 = result_df_cache
 
-											  
+
             if len(result_df_cache) > 0 and 'morning_star' not in result_df_cache:
-									  
+
                 result_df_cache.sort_values(by=['date'], ascending=True, inplace=True)
                 trading_dataCopy = result_df_cache.copy()
                 technical_analysis = TechnicalAnalysis(trading_dataCopy)
@@ -447,11 +480,11 @@ class PyCryptoBot():
 
     def getSmartSwitchHistoricalDataChained(self, market, granularity: int, start: str="", end: str="", simdate: str="") -> pd.DataFrame:
         if self.isSimulation():
-			
+
             self.ema1226_15m_cache = self.getSmartSwitchDataFrame(self.ema1226_15m_cache, market, 900, start, end, simdate)
             self.ema1226_1h_cache = self.getSmartSwitchDataFrame(self.ema1226_1h_cache, market, 3600, start, end, simdate)
-            self.ema1226_6h_cache = self.getSmartSwitchDataFrame(self.ema1226_6h_cache, market, 21600, start, end, simdate)                
-            
+            self.ema1226_6h_cache = self.getSmartSwitchDataFrame(self.ema1226_6h_cache, market, 21600, start, end, simdate)
+
             if granularity == 900:
                 return self.ema1226_15m_cache
             else:
@@ -479,7 +512,7 @@ class PyCryptoBot():
 
         if 'date'in result_df:
             result_df.sort_values(by=['date'], ascending=True, inplace=True)
-        
+
         return result_df
 
     def getSmartSwitch(self):
@@ -509,7 +542,7 @@ class PyCryptoBot():
                 ta.addEMA(26)
 
             df_last = ta.getDataFrame().copy().iloc[-1,:]
-            df_last['bull'] = df_last['ema12'] > df_last['ema26'] 
+            df_last['bull'] = df_last['ema12'] > df_last['ema26']
 
             return bool(df_last['bull'])
         except Exception:
@@ -531,10 +564,10 @@ class PyCryptoBot():
                 return False
 
             ta = TechnicalAnalysis(df_data)
-            
+
             if 'sma50' not in df_data:
                 ta.addSMA(50)
-            
+
             if 'sma200' not in df_data:
                 ta.addSMA(200)
 
@@ -620,14 +653,12 @@ class PyCryptoBot():
             return False
 
     def getTicker(self, market):
-        if self.exchange == 'coinbasepro':
-            api = CBPublicAPI()
-            return api.getTicker(market)
-        elif self.exchange == 'binance':
+        if self.exchange == 'binance':
             api = BPublicAPI()
             return api.getTicker(market)
-        else:
-            return None
+        else: # returns data from coinbase if not specified
+            api = CBPublicAPI()
+            return api.getTicker(market)
 
     def getTime(self):
         if self.exchange == 'coinbasepro':
@@ -675,7 +706,7 @@ class PyCryptoBot():
 
     def autoRestart(self) -> bool:
         return self.autorestart
-    
+
     def getStats(self) -> bool:
         return self.stats
 
@@ -883,7 +914,7 @@ class PyCryptoBot():
                 txt = '             Bot Mode : TEST - test trades using dummy funds :)'
 
             Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                
+
             txt = '          Bot Started : ' + str(datetime.now())
             Logger.info('|  ' + txt + (' ' * (75 - len(txt))) + ' | ')
             Logger.info('================================================================================')
@@ -972,14 +1003,14 @@ class PyCryptoBot():
                 attempts = 0
 
                 if self.simstartdate is not None and self.simenddate is not None:
-												   
+
                     startDate = self.getDateFromISO8601Str(self.simstartdate)
-																				   
+
                     if self.simenddate == 'now':
                         endDate = self.getDateFromISO8601Str(str(datetime.now()))
                     else:
                         endDate = self.getDateFromISO8601Str(self.simenddate)
-																					 
+
                     while len(tradingData) < 300 and attempts < 10:
                         if self.smart_switch == 1:
                             tradingData = self.getSmartSwitchHistoricalDataChained(self.market, self.getGranularity(),
@@ -996,7 +1027,7 @@ class PyCryptoBot():
                     #date = self.simstartdate.split('-')
                     startDate = self.getDateFromISO8601Str(self.simstartdate)
                     endDate = startDate + timedelta(minutes=(self.getGranularity()/60)*300)
-					
+
                     while len(tradingData) < 300 and attempts < 10:
                         if self.smart_switch == 1:
                             tradingData = self.getSmartSwitchHistoricalDataChained(self.market, self.getGranularity(),
@@ -1035,10 +1066,10 @@ class PyCryptoBot():
                         endDate -= timedelta(hours=random.randint(0, 8760 * 3))  # 3 years in hours
                     else:
                         endDate -= timedelta(hours=random.randint(0, 8760 * 1))
-                        
+
                     startDate = self.getDateFromISO8601Str(str(endDate))
                     startDate -= timedelta(minutes=(self.getGranularity()/60)*300)
-					   
+
                     while len(tradingData) < 300 and attempts < 10:
                         if self.smart_switch == 1:
                             tradingData = self.getSmartSwitchHistoricalDataChained(self.market, self.getGranularity(),
@@ -1050,11 +1081,11 @@ class PyCryptoBot():
                             tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity(),
                                                              startDate.isoformat(timespec='milliseconds'))
                         attempts += 1
-						
+
                     if self.smart_switch == 1:
                         self.simstartdate = str(startDate)
-                        self.simenddate = str(endDate)				  
-																		
+                        self.simenddate = str(endDate)
+
                     if len(tradingData) < 300:
                         raise Exception(
                             'Unable to retrieve 300 random sets of data between ' + str(startDate) + ' and ' + str(
@@ -1075,7 +1106,7 @@ class PyCryptoBot():
                     Logger.info('================================================================================')
 
             else:
-															
+
                 tradingData = self.getHistoricalData(self.getMarket(), self.getGranularity())
 
             return tradingData
