@@ -53,7 +53,9 @@ class AuthAPI(AuthAPIBase):
 
         valid_urls = [
             'https://api.pro.coinbase.com',
-            'https://api.pro.coinbase.com/'
+            'https://api.pro.coinbase.com/',
+            'https://public.sandbox.pro.coinbase.com',
+            'https://public.sandbox.pro.coinbase.com/'
         ]
 
         # validate Coinbase Pro API
@@ -416,7 +418,7 @@ class AuthAPI(AuthAPIBase):
             raise TypeError('Method is not a string.')
 
         if not method in ['DELETE','GET','POST']:
-             raise TypeError('Method not DELETE, GET or POST.')
+            raise TypeError('Method not DELETE, GET or POST.')
 
         if not isinstance(uri, str):
             raise TypeError('URI is not a string.')

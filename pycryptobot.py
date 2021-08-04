@@ -5,17 +5,20 @@ import os
 import sched
 import sys
 import time
-import pandas as pd
 from datetime import datetime, timedelta
-from models.PyCryptoBot import PyCryptoBot, truncate as _truncate
+
+import pandas as pd
+
 from models.AppState import AppState
+from models.helper.LogHelper import Logger
+from models.helper.MarginHelper import calculate_margin
+from models.PyCryptoBot import PyCryptoBot
+from models.PyCryptoBot import truncate as _truncate
+from models.Stats import Stats
+from models.Strategy import Strategy
 from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
-from models.Stats import Stats
-from models.helper.MarginHelper import calculate_margin
 from views.TradingGraphs import TradingGraphs
-from models.Strategy import Strategy
-from models.helper.LogHelper import Logger
 
 # minimal traceback
 sys.tracebacklimit = 1
