@@ -136,32 +136,33 @@ def test_get_orders():
 #
 
 ## This doesnt work. Apparently the client_response is wrong. Need a proper json from a live response here
-# @responses.activate
-# def test_get_orders():
-#     global app
-#     client_response = [{
-#             'symbol': 'CHZUSDT',
-#             'orderId': 123456789,
-#             'orderListId': -1,
-#             'clientOrderId': 'SOME-CLIENT-ORDER-ID',
-#             'price': '0.00000000',
-#             'origQty': '31.30000000',
-#             'executedQty': '31.30000000',
-#             'cummulativeQuoteQty': '15.68161300',
-#             'status': 'FILLED',
-#             'timeInForce': 'GTC',
-#             'type': 'MARKET',
-#             'side': 'SELL',
-#             'stopPrice': '0.00000000',
-#             'icebergQty': '0.00000000',
-#             'time': 1616845743872,
-#             'updateTime': 1616845743872,
-#             'isWorking': True,
-#             'origQuoteOrderQty': '0.00000000'
-#     }]
-#     api = AuthAPI(app.getAPIKey(), app.getAPISecret())
+@pytest.mark.skip
+@responses.activate
+def test_get_orders():
+    global app
+    client_response = [{
+            'symbol': 'CHZUSDT',
+            'orderId': 123456789,
+            'orderListId': -1,
+            'clientOrderId': 'SOME-CLIENT-ORDER-ID',
+            'price': '0.00000000',
+            'origQty': '31.30000000',
+            'executedQty': '31.30000000',
+            'cummulativeQuoteQty': '15.68161300',
+            'status': 'FILLED',
+            'timeInForce': 'GTC',
+            'type': 'MARKET',
+            'side': 'SELL',
+            'stopPrice': '0.00000000',
+            'icebergQty': '0.00000000',
+            'time': 1616845743872,
+            'updateTime': 1616845743872,
+            'isWorking': True,
+            'origQuoteOrderQty': '0.00000000'
+    }]
+    api = AuthAPI(app.getAPIKey(), app.getAPISecret())
 
-#     responses.add(responses.GET, f'https://api.binance.com/api/v3/allOrders', json=json.dumps(client_response), status=200)
-#     df = api.getOrders()
+    responses.add(responses.GET, f'https://api.binance.com/api/v3/allOrders', json=json.dumps(client_response), status=200)
+    df = api.getOrders()
 
-#     assert len(df) > 0
+    assert len(df) > 0
