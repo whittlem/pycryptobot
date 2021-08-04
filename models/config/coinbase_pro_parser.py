@@ -9,14 +9,12 @@ def isMarketValid(market) -> bool:
     p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
     return p.match(market) is not None
 
-
 def parseMarket(market):
     if not isMarketValid(market):
         raise ValueError('Coinbase Pro market invalid: ' + market)
 
     base_currency, quote_currency = market.split('-', 2)
     return market, base_currency, quote_currency
-
 
 def parser(app, coinbase_config, args={}):
     #print('CoinbasePro Configuration parse')
@@ -131,3 +129,5 @@ def parser(app, coinbase_config, args={}):
         if granularity in [60, 300, 900, 3600, 21600, 86400]:
             app.granularity = granularity
             app.smart_switch = 0
+        else:
+            raise ValueError('granularity supplied is not supported.')

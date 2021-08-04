@@ -2,6 +2,7 @@ import re
 import ast
 import json
 import os.path
+import sys
 
 from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
 
@@ -11,10 +12,8 @@ def isMarketValid(market) -> bool:
     p = re.compile(r"^[0-9A-Z]{5,12}$")
     return p.match(market) is not None
 
-
 def to_internal_granularity(granularity: str) -> int:
     return {'1m': 60, '5m': 300, '15m': 900, '1h': 3600, '6h': 21600, '1d': 86400}[granularity]
-
 
 def parseMarket(market):
     base_currency = 'BTC'
@@ -38,7 +37,6 @@ def parseMarket(market):
         raise ValueError('Binance market error.')
 
     return market, base_currency, quote_currency
-
 
 def parser(app, binance_config, args={}):
     #print('Binance Configuration parse')
@@ -141,3 +139,5 @@ def parser(app, binance_config, args={}):
             if config['granularity'] in ['1m', '5m', '15m', '1h', '6h', '1d']:
                 app.granularity = to_internal_granularity(config['granularity'])
                 app.smart_switch = 0
+            else:
+                raise ValueError('granularity supplied is not supported.')
