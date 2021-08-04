@@ -11,7 +11,7 @@ from models.exchange.binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
 
 @responses.activate
 def test_api_v3_account1():
-    app = PyCryptoBot(exchange='binance')
+    app = PyCryptoBot(exchange='binance', config=False)
     api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
 
     with open('tests/unit_tests/responses/account1.json') as fh:

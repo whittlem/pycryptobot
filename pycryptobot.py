@@ -45,19 +45,19 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
 
     # increment state.iterations
     state.iterations = state.iterations + 1
-    
+
     if not app.isSimulation():
         # retrieve the app.getMarket() data
         trading_data = app.getHistoricalData(app.getMarket(), app.getGranularity())
-        
+
     else:
         if len(trading_data) == 0:
             return None
 
     # analyse the market data
-    if app.isSimulation() and len(trading_data.columns) > 8:    										
+    if app.isSimulation() and len(trading_data.columns) > 8:
         df = trading_data
-														  																		 
+
         # if smartswitch then get the market data using new granularity
         if app.sim_smartswitch:
             df_last = app.getInterval(df, state.iterations)
@@ -76,9 +76,9 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                     endDate = app.getDateFromISO8601Str(str(df.tail(1).index.format()[0]))
 
                 simDate = app.getDateFromISO8601Str(str(df_last.index.format()[0]))
-                
+
                 trading_data = app.getSmartSwitchHistoricalDataChained(app.getMarket(), app.getGranularity(), str(startDate), str(endDate), str(simDate))
-                
+
                 if app.getGranularity() == 3600:
                     simDate = app.getDateFromISO8601Str(str(simDate))
                     sim_rounded = pd.Series(simDate).dt.round('60min')
@@ -87,24 +87,24 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                     simDate = app.getDateFromISO8601Str(str(simDate))
                     sim_rounded = pd.Series(simDate).dt.round('15min')
                     simDate = sim_rounded[0]
-                    
+
                 state.iterations = trading_data.index.get_loc(str(simDate))
 
                 if state.iterations == 0:
                     state.iterations = 1
                 elif app.getGranularity() == 3600:
-                    state.iterations += 2            
+                    state.iterations += 2
                 elif app.getGranularity() == 900:
-                    state.iterations -= 2 
+                    state.iterations -= 2
 
                 trading_dataCopy = trading_data.copy()
                 technical_analysis = TechnicalAnalysis(trading_dataCopy)
 
                 if 'morning_star' not in df:
                     technical_analysis.addAll()
-                    
+
                 df = technical_analysis.getDataFrame()
-                
+
                 app.sim_smartswitch = False
 
         elif app.getSmartSwitch() == 1 and technical_analysis is None:
@@ -127,7 +127,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
         df_last = app.getInterval(df, state.iterations)
     else:
         df_last = app.getInterval(df)
-    
+
     if len(df_last.index.format()) > 0:
         current_df_index = str(df_last.index.format()[0])
     else:
@@ -140,10 +140,10 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
     # use actual sim mode date to check smartchswitch
     if app.getSmartSwitch() == 1 and app.getGranularity() == 3600 and app.is1hEMA1226Bull(current_sim_date) is True and app.is6hEMA1226Bull(current_sim_date) is True:
         Logger.info('*** smart switch from granularity 3600 (1 hour) to 900 (15 min) ***')
-        
+
         if app.isSimulation():
             app.sim_smartswitch = True
-        
+
         app.notifyTelegram(app.getMarket() + " smart switch from granularity 3600 (1 hour) to 900 (15 min)")
 
         app.setGranularity(900)
@@ -153,10 +153,10 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
     # use actual sim mode date to check smartchswitch
     if app.getSmartSwitch() == 1 and app.getGranularity() == 900 and app.is1hEMA1226Bull(current_sim_date) is False and app.is6hEMA1226Bull(current_sim_date) is False:
         Logger.info("*** smart switch from granularity 900 (15 min) to 3600 (1 hour) ***")
-        
+
         if app.isSimulation():
             app.sim_smartswitch = True
-        
+
         app.notifyTelegram(app.getMarket() + " smart switch from granularity 900 (15 min) to 3600 (1 hour)")
 
         app.setGranularity(3600)
@@ -510,7 +510,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                 Logger.debug('obv_pc: ' + str(obv_pc))
                 Logger.debug('action: ' + state.action)
 
-                # informational output on the most recent entry  
+                # informational output on the most recent entry
                 Logger.info('')
                 Logger.info('================================================================================')
                 txt = '        Iteration : ' + str(state.iterations) + bullbeartext
@@ -615,17 +615,17 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                 # if not live
                 else:
                     app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') TEST BUY at ' + price_text)
-                    # TODO: Improve simulator calculations by including calculations for buy and sell limit configurations. 
-                    if state.last_buy_size == 0 and state.last_buy_filled == 0: 
+                    # TODO: Improve simulator calculations by including calculations for buy and sell limit configurations.
+                    if state.last_buy_size == 0 and state.last_buy_filled == 0:
                         state.last_buy_size = 1000
                         state.first_buy_size = 1000
 
                     state.buy_count = state.buy_count + 1
-                    state.buy_sum = state.buy_sum + state.last_buy_size    
+                    state.buy_sum = state.buy_sum + state.last_buy_size
 
                     if not app.isVerbose():
                         Logger.info(formatted_current_df_index + ' | ' + app.getMarket() + ' | ' + app.printGranularity() + ' | ' + price_text + ' | BUY')
-                        
+
                         if app.getSmartSwitch():
                             # make a copy of the technical_analysis up until the current_sim_date
                             # use this to get the correct Fibonacci Retracement Levels for the current_sim_date
@@ -638,7 +638,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                             technical_analysis.printSupportResistanceLevel(float(price))
 
                         Logger.info(' Fibonacci Retracement Levels:' + str(bands))
-                        
+
                         if len(bands) >= 1 and len(bands) <= 2:
                             if len(bands) == 1:
                                 first_key = list(bands.keys())[0]
@@ -658,7 +658,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                                 state.fib_high = bands[second_key]
 
                     else:
-						
+
                         Logger.info('--------------------------------------------------------------------------------')
                         Logger.info('|                      *** Executing TEST Buy Order ***                        |')
                         Logger.info('--------------------------------------------------------------------------------')
@@ -721,12 +721,12 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                 # if not live
                 else:
                     margin, profit, sell_fee = calculate_margin(
-                        buy_size=state.last_buy_size, 
-                        buy_filled=state.last_buy_filled, 
-                        buy_price=state.last_buy_price, 
-                        buy_fee=state.last_buy_fee, 
-                        sell_percent=app.getSellPercent(), 
-                        sell_price=price, 
+                        buy_size=state.last_buy_size,
+                        buy_filled=state.last_buy_filled,
+                        buy_price=state.last_buy_price,
+                        buy_fee=state.last_buy_fee,
+                        sell_percent=app.getSellPercent(),
+                        sell_price=price,
                         sell_taker_fee=app.getTakerFee())
 
                     if state.last_buy_size > 0:
@@ -790,7 +790,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                     Logger.info('               simulation which may not be ideal. Try setting --sellatloss 1')
 
                 Logger.info("\n")
-                Logger.info('   Buy Count : ' + str(state.buy_count))                
+                Logger.info('   Buy Count : ' + str(state.buy_count))
                 Logger.info('  Sell Count : ' + str(state.sell_count))
                 Logger.info('   First Buy : ' + str(state.first_buy_size))
                 Logger.info('   Last Sell : ' + str(state.last_buy_size))
@@ -848,7 +848,7 @@ def main():
             message += 'Coinbase Pro bot'
         elif app.getExchange() == 'binance':
             message += 'Binance bot'
-        
+
         smartSwitchStatus = 'enabled' if app.getSmartSwitch() else 'disabled'
         message += ' for ' + app.getMarket() + ' using granularity ' + app.printGranularity() + '. Smartswitch ' + smartSwitchStatus
         app.notifyTelegram(message)
