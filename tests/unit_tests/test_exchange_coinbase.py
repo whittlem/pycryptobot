@@ -12,27 +12,6 @@ from models.exchange.coinbase_pro import AuthAPI, PublicAPI
 
 app = PyCryptoBot(exchange='coinbasepro')
 
-# @responses.activate
-# def test_api_v3_account1():
-#     global app
-#     api = AuthAPI(app.getAPIKey(), app.getAPISecret())
-
-#     with open('tests/unit_tests/responses/account1.json') as fh:
-#         responses.add(responses.GET, 'https://api.pro.coinbase.com/account', json=json.load(fh), status=200)
-#         df = api.getAccounts()
-#         fh.close()
-
-#         assert len(df) > 1
-#         assert df.columns.tolist() == [ 'index', 'id', 'currency', 'balance', 'hold', 'available', 'profile_id', 'trading_enabled' ]
-#         assert df.dtypes['index'] == 'int64'
-#         assert df.dtypes['id'] == 'object'
-#         assert df.dtypes['currency'] == 'object'
-#         assert df.dtypes['balance'] == 'object'
-#         assert df.dtypes['hold'] == 'object'
-#         assert df.dtypes['available'] == 'object'
-#         assert df.dtypes['profile_id'] == 'object'
-#         assert df.dtypes['trading_enabled'] == 'bool'
-
 def test_instantiate_authapi_without_error():
     global app
     api_key = app.getAPIKey()
@@ -105,6 +84,36 @@ def test_get_maker_fee_with_market():
     fee = exchange.getMakerFee()
     assert type(fee) is float
     assert fee == 0.005
+
+
+## TODO: fix tests below
+# this is more or less copy pasted from binance
+@pytest.mark.skip
+@responses.activate
+def test_api_v3_account1():
+    global app
+    api_key = app.getAPIKey()
+    api_secret = app.getAPISecret()
+    api_passphrase = app.getAPIPassphrase()
+    api_url = "https://public.sandbox.pro.coinbase.com"
+    api = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+
+    with open('tests/unit_tests/responses/account1.json') as fh:
+        responses.add(responses.GET, f'{api_url}/account', json=json.load(fh), status=200)
+        df = api.getAccounts()
+        fh.close()
+
+        assert len(df) > 1
+        assert df.columns.tolist() == [ 'index', 'id', 'currency', 'balance', 'hold', 'available', 'profile_id', 'trading_enabled' ]
+        assert df.dtypes['index'] == 'int64'
+        assert df.dtypes['id'] == 'object'
+        assert df.dtypes['currency'] == 'object'
+        assert df.dtypes['balance'] == 'object'
+        assert df.dtypes['hold'] == 'object'
+        assert df.dtypes['available'] == 'object'
+        assert df.dtypes['profile_id'] == 'object'
+        assert df.dtypes['trading_enabled'] == 'bool'
+
 
 @pytest.mark.skip
 def test_get_orders():
