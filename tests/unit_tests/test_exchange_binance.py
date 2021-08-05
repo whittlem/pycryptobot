@@ -10,7 +10,7 @@ sys.path.append('.')
 from models.PyCryptoBot import PyCryptoBot
 from models.exchange.binance import AuthAPI, PublicAPI
 
-app = PyCryptoBot()
+app = PyCryptoBot(exchange='binance')
 
 @responses.activate
 def test_api_v3_account1():
@@ -155,7 +155,7 @@ def binance_orders_response():
 
 
 ## This doesnt work. Apparently the client_response is wrong. Need a proper json from a live response here
-#@pytest.mark.skip
+@pytest.mark.skip
 @responses.activate
 def test_get_orders(binance_orders_response):
     global app
