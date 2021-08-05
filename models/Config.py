@@ -313,6 +313,57 @@ class Config:
             except:
                 raise
 
+        # set exchange platform
+        self.exchange = kwargs['exchange']
+        self.valid_exchanges = [
+            'coinbasepro',
+            'binance',
+            'dummy'
+        ]
+        if self.exchange and self.exchange in self.valid_exchanges:
+            pass
+        if not self.exchange:
+            if ("coinbasepro" or "api_pass") in config:
+                self.exchange = "coinbasepro"
+            elif "binance" in config:
+                self.exchange = "binance"
+            else:
+                self.exchange = "dummy"
+
+        if self.cli_args["exchange"] is not None:
+            self.exchange = self.cli_args["exchange"]
+
+        if self.exchange not in self.valid_exchanges:
+            raise TypeError(f"Invalid exchange: {self.exchange}. Valid choices: {self.valid_exchanges}")
+
+
+
+
+        if self.exchange == "binance":  # default for binance (test mode)
+            self.api_key = (
+                "0000000000000000000000000000000000000000000000000000000000000000"
+            )
+            self.api_secret = (
+                "0000000000000000000000000000000000000000000000000000000000000000"
+            )
+            self.api_url = "https://api.binance.com"
+            self.market = "BTCGBP"
+
+        elif self.exchange == "coinbasepro":  # default for coinbase pro (test mode)
+            self.api_key = "00000000000000000000000000000000"
+            self.api_secret = "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000=="
+            self.api_passphrase = "00000000000"
+            self.api_url = "https://api.pro.coinbase.com"
+            self.market = "BTC-GBP"
+
+        else:  # default/dummy uses coinbase data (test mode)
+            self.api_key = '00000000000000000000000000000000"'
+            self.api_secret = "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000=="
+            self.api_passphrase = "00000000000"
+            self.api_url = "https://api.pro.coinbase.com"
+            self.market = "BTC-GBP"
+
+
         if self.config_provided:
             if self.exchange == "coinbasepro" and "coinbasepro" in config:
                 coinbaseProConfigParser(self, config["coinbasepro"], self.cli_args)
@@ -341,8 +392,7 @@ class Config:
             if self.disablelog:
                 self.filelog = 0
                 self.fileloglevel = "NOTSET"
-                self.logfile == "pycryptobot.log"
-
+                self.logfile == "/dev/null"
 
         else:
             if self.exchange == "binance":
@@ -352,53 +402,4 @@ class Config:
 
             self.filelog = 0
             self.fileloglevel = "NOTSET"
-            self.logfile == "pycryptobot.log"
-
-        if self.cli_args["exchange"] is not None:
-            if self.cli_args["exchange"] not in ["coinbasepro", "binance", "dummy"]:
-                raise TypeError("Invalid exchange. Valid choices: coinbasepro, binance")
-            else:
-                self.exchange = self.cli_args["exchange"]
-        else:
-            try:
-                if self.exchange == "" and (
-                    configuration in ["coinbasepro", "api_pass"]
-                ):
-                    self.exchange = "coinbasepro"
-                elif self.exchange == "" and "binance" in configuration:
-                    self.exchange = "binance"
-                elif self.exchange != "" and self.exchange in [
-                    "coinbasepro",
-                    "binance",
-                    "dummy",
-                ]:
-                    pass
-                else:
-                    self.exchange = "dummy"
-            except:
-                if self.exchange not in ["binance", "coinbasepro"]:
-                    self.exchange = "dummy"
-
-        if self.exchange == "binance":  # default for binance (test mode)
-            self.api_key = (
-                "0000000000000000000000000000000000000000000000000000000000000000"
-            )
-            self.api_secret = (
-                "0000000000000000000000000000000000000000000000000000000000000000"
-            )
-            self.api_url = "https://api.binance.com"
-            self.market = "BTCGBP"
-
-        elif self.exchange == "coinbasepro":  # default for coinbase pro (test mode)
-            self.api_key = "00000000000000000000000000000000"
-            self.api_secret = "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000=="
-            self.api_passphrase = "00000000000"
-            self.api_url = "https://api.pro.coinbase.com"
-            self.market = "BTC-GBP"
-
-        else:  # default/dummy uses coinbase data (test mode)
-            self.api_key = '00000000000000000000000000000000"'
-            self.api_secret = "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000=="
-            self.api_passphrase = "00000000000"
-            self.api_url = "https://api.pro.coinbase.com"
-            self.market = "BTC-GBP"
+            self.logfile == "/dev/null"

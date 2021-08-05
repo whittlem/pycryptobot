@@ -51,10 +51,10 @@ def truncate(f: Union[int, float], n: Union[int, float]) -> str:
 
 
 class PyCryptoBot(Config):
-    def __init__(self, exchange='', config_file='config.json'):
+    def __init__(self, config_file: str = None, exchange: str = None):
+        self.config_file = config_file or 'config.json'
         self.exchange = exchange
-        self.config_file = config_file
-        super(PyCryptoBot, self).__init__(filename=self.config_file)
+        super(PyCryptoBot, self).__init__(filename=self.config_file, exchange=self.exchange)
 
     def _isCurrencyValid(self, currency):
         if self.exchange == 'coinbasepro' or self.exchange == 'binance':
@@ -107,23 +107,18 @@ class PyCryptoBot(Config):
         return self.granularity
 
     def getVersionFromREADME(self) -> str:
+        regex = r'^# Python Crypto Bot (v(?:\d+.){2}\d(?:-[\w\d]+)?).*'
         try:
-            count = 0
-            with open('README.md', 'r', encoding='utf8') as reader:
-                line = reader.readline()
-                while count < 5:
-                    line = reader.readline()
-
-                    if '# Python Crypto Bot' in line:
-                        line = line.replace('# Python Crypto Bot ', '')
-                        line = line.replace(' (pycryptobot)', '')
-                        return line.strip()
-
-                    count = count + 1
-
-            return 'v0.0.0'
+            with open('README.md', 'r', encoding='utf8') as stream:
+                content = stream.read()
+                match = re.search(regex, content)
+                try:
+                    version = match.group(1)
+                except:
+                    version = 'v0.0.0'
+            return version
         except Exception:
-            return 'v0.0.0'
+            raise
 
     def getInterval(self, df: pd.DataFrame=pd.DataFrame(), iterations: int=0) -> pd.DataFrame:
         if len(df) == 0:
