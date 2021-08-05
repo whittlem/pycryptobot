@@ -12,6 +12,8 @@ import pandas as pd
 import urllib3
 import yaml
 from urllib3.exceptions import ReadTimeoutError
+from yaml.constructor import ConstructorError
+from yaml.scanner import ScannerError
 
 from models.chat import Telegram
 from models.config import (
@@ -256,7 +258,9 @@ class Config:
         self.disabletracker = False
 
         self.filelog = True
-        self.logfile = self.cli_args["logfile"] if self.cli_args["logfile"] else "pycryptobot.log"
+        self.logfile = (
+            self.cli_args["logfile"] if self.cli_args["logfile"] else "pycryptobot.log"
+        )
         self.fileloglevel = "DEBUG"
         self.consolelog = True
         self.consoleloglevel = "INFO"
@@ -276,7 +280,7 @@ class Config:
             consoleloglevel=self.consoleloglevel,
         )
 
-        self.config_file = kwargs.get('config_file', 'config.json')
+        self.config_file = kwargs.get("config_file", "config.json")
         self.config_provided = False
 
         if self.cli_args["init"]:
@@ -300,7 +304,9 @@ class Config:
 
             except (ScannerError, ConstructorError) as err:
                 sys.tracebacklimit = 0
-                raise ValueError(f"Invalid config: cannot parse config file: {str(err)}")
+                raise ValueError(
+                    f"Invalid config: cannot parse config file: {str(err)}"
+                )
 
             except (IOError, FileNotFoundError) as err:
                 sys.tracebacklimit = 0
@@ -314,12 +320,8 @@ class Config:
                 raise
 
         # set exchange platform
-        self.exchange = kwargs['exchange']
-        self.valid_exchanges = [
-            'coinbasepro',
-            'binance',
-            'dummy'
-        ]
+        self.exchange = kwargs["exchange"]
+        self.valid_exchanges = ["coinbasepro", "binance", "dummy"]
         if self.exchange and self.exchange in self.valid_exchanges:
             pass
         if not self.exchange:
@@ -334,10 +336,9 @@ class Config:
             self.exchange = self.cli_args["exchange"]
 
         if self.exchange not in self.valid_exchanges:
-            raise TypeError(f"Invalid exchange: {self.exchange}. Valid choices: {self.valid_exchanges}")
-
-
-
+            raise TypeError(
+                f"Invalid exchange: {self.exchange}. Valid choices: {self.valid_exchanges}"
+            )
 
         if self.exchange == "binance":  # default for binance (test mode)
             self.api_key = (
@@ -363,7 +364,6 @@ class Config:
             self.api_url = "https://api.pro.coinbase.com"
             self.market = "BTC-GBP"
 
-
         if self.config_provided:
             if self.exchange == "coinbasepro" and "coinbasepro" in config:
                 coinbaseProConfigParser(self, config["coinbasepro"], self.cli_args)
@@ -381,9 +381,7 @@ class Config:
                 and "client_id" in config["telegram"]
             ):
                 telegram = config["telegram"]
-                self._chat_client = Telegram(
-                    telegram["token"], telegram["client_id"]
-                )
+                self._chat_client = Telegram(telegram["token"], telegram["client_id"])
                 self.telegram = True
 
             if "logger" in config:
