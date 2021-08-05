@@ -51,10 +51,10 @@ def truncate(f: Union[int, float], n: Union[int, float]) -> str:
 
 
 class PyCryptoBot(Config):
-    def __init__(self, exchange='', filename='config.json'):
+    def __init__(self, exchange='', config_file='config.json'):
         self.exchange = exchange
-        self.filename = filename
-        super(PyCryptoBot, self).__init__(exchange=self.exchange, filename=self.filename)
+        self.config_file = config_file
+        super(PyCryptoBot, self).__init__(filename=self.config_file)
 
     def _isCurrencyValid(self, currency):
         if self.exchange == 'coinbasepro' or self.exchange == 'binance':
