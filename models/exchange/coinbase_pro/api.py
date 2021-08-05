@@ -76,7 +76,7 @@ class AuthAPI(AuthAPIBase):
             self.handle_init_error('Coinbase Pro API secret is invalid')
 
         # validates the api passphase is syntactically correct
-        p = re.compile(r"^[a-z0-9]{10,11}$")
+        p = re.compile(r"^[a-z0-9]{10,12}$")
         if not p.match(api_passphrase):
             self.handle_init_error('Coinbase Pro API passphrase is invalid')
 
