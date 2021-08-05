@@ -35,8 +35,9 @@ class AuthAPIBase():
         return False
 
     def convert_time(self, epoch: int=0):
-        epoch_str = str(epoch)[0:10]
-        return datetime.fromtimestamp(int(epoch_str))
+        if math.isnan(epoch) is False:
+            epoch_str = str(epoch)[0:10]
+            return datetime.fromtimestamp(int(epoch_str))
 
 class AuthAPI(AuthAPIBase):
     def __init__(self, api_key: str='', api_secret: str='', api_url: str='https://api.binance.com', order_history: list=[]) -> None:
@@ -235,7 +236,7 @@ class AuthAPI(AuthAPIBase):
                 full_scan = False
                 self.order_history = order_history
                 if len(self.order_history) > 0:
-                    if market not in self.order_history:
+                    if self._isMarketValid(market) and market not in self.order_history:
                         self.order_history.append(market)
                     markets = self.order_history
             else:
@@ -322,6 +323,17 @@ class AuthAPI(AuthAPIBase):
 
         # select columns
         df = df[[ 'created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'price', 'status' ]]
+
+        df['size'] = df['size'].astype(float)
+        df['filled'] = df['filled'].astype(float)
+        df['fees'] = df['fees'].astype(float)
+
+        if status != 'open':
+            df['price'] = df.copy().apply(lambda row: row.size / row.filled if float(row.filled) > 0 else 0, axis=1)
+
+        df['size'] = df['size'].astype(object)
+        df['filled'] = df['filled'].astype(object)
+        df['fees'] = df['fees'].astype(object)
 
         # filtering
         if action != '':
