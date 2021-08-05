@@ -1,11 +1,7 @@
 import pandas as pd
-import argparse
-import json
 import math
-import os
 import random
 import re
-import sys
 import urllib3
 from datetime import datetime, timedelta
 from typing import Union
@@ -13,9 +9,7 @@ from urllib3.exceptions import ReadTimeoutError
 from models.Trading import TechnicalAnalysis
 from models.exchange.binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
 from models.exchange.coinbase_pro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
-from models.chat import Telegram
-from models.config import binanceConfigParser, binanceParseMarket, coinbaseProConfigParser, coinbaseProParseMarket, dummyConfigParser, dummyParseMarket, loggerConfigParser
-from models.ConfigBuilder import ConfigBuilder
+from models.config import binanceParseMarket, coinbaseProParseMarket
 from models.helper.LogHelper import Logger
 from models.Config import Config
 
@@ -106,19 +100,6 @@ class PyCryptoBot(Config):
     def getGranularity(self) -> int:
         return self.granularity
 
-    def getVersionFromREADME(self) -> str:
-        regex = r'^# Python Crypto Bot (v(?:\d+.){2}\d(?:-[\w\d]+)?).*'
-        try:
-            with open('README.md', 'r', encoding='utf8') as stream:
-                content = stream.read()
-                match = re.search(regex, content)
-                try:
-                    version = match.group(1)
-                except:
-                    version = 'v0.0.0'
-            return version
-        except Exception:
-            raise
 
     def getInterval(self, df: pd.DataFrame=pd.DataFrame(), iterations: int=0) -> pd.DataFrame:
         if len(df) == 0:

@@ -1,40 +1,21 @@
 import argparse
-import json
-import math
 import os
-import random
 import re
 import sys
-from datetime import datetime, timedelta
-from typing import Union
 
-import pandas as pd
-import urllib3
 import yaml
-from urllib3.exceptions import ReadTimeoutError
 from yaml.constructor import ConstructorError
 from yaml.scanner import ScannerError
 
 from models.chat import Telegram
 from models.config import (
     binanceConfigParser,
-    binanceParseMarket,
     coinbaseProConfigParser,
-    coinbaseProParseMarket,
     dummyConfigParser,
-    dummyParseMarket,
     loggerConfigParser,
 )
 from models.ConfigBuilder import ConfigBuilder
-from models.exchange.binance import AuthAPI as BAuthAPI
-from models.exchange.binance import PublicAPI as BPublicAPI
-from models.exchange.coinbase_pro import AuthAPI as CBAuthAPI
-from models.exchange.coinbase_pro import PublicAPI as CBPublicAPI
 from models.helper.LogHelper import Logger
-from models.Trading import TechnicalAnalysis
-
-# disable insecure ssl warning
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def parse_arguments():
@@ -296,6 +277,7 @@ class Config:
         if self.config_file == "config.json" and not os.path.isfile(self.config_file):
             self.is_live = 0  # no config will prevent live mode
 
+        # read and set config from file
         if os.path.isfile(self.config_file):
             self.config_provided = True
             try:
@@ -401,3 +383,17 @@ class Config:
             self.filelog = 0
             self.fileloglevel = "NOTSET"
             self.logfile == "/dev/null"
+
+    def getVersionFromREADME(self) -> str:
+        regex = r"^# Python Crypto Bot (v(?:\d+.){2}\d(?:-[\w\d]+)?).*"
+        try:
+            with open("README.md", "r", encoding="utf8") as stream:
+                content = stream.read()
+                match = re.search(regex, content)
+                try:
+                    version = match.group(1)
+                except:
+                    version = "v0.0.0"
+            return version
+        except Exception:
+            raise
