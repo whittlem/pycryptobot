@@ -10,12 +10,12 @@ sys.path.append('.')
 from models.PyCryptoBot import PyCryptoBot
 from models.exchange.binance import AuthAPI, PublicAPI
 
-app = PyCryptoBot(exchange='binance')
+app = PyCryptoBot()
 
 @responses.activate
 def test_api_v3_account1():
     global app
-    api = AuthAPI(app.getAPIKey(), app.getAPISecret())
+    api = AuthAPI(app.api_key, app.api_secret)
 
     with open('tests/unit_tests/responses/account1.json') as fh:
         responses.add(responses.GET, 'https://api.binance.com/api/v3/account', json=json.load(fh), status=200)
@@ -35,39 +35,34 @@ def test_api_v3_account1():
 
 def test_instantiate_authapi_without_error():
     global app
-    api_key = app.getAPIKey()
-    api_secret = app.getAPISecret()
-    exchange = AuthAPI(api_key, api_secret)
+    exchange = AuthAPI(app.api_key, app.api_secret)
     assert type(exchange) is AuthAPI
 
 
 def test_instantiate_authapi_with_api_key_error():
     global app
     api_key = "Invalid"
-    api_secret = app.getAPISecret()
 
     with pytest.raises(SystemExit) as execinfo:
-        AuthAPI(api_key, api_secret)
+        AuthAPI(api_key, app.api_secret)
     assert str(execinfo.value) == 'Binance API key is invalid'
 
 
 def test_instantiate_authapi_with_api_secret_error():
     global app
-    api_key = app.getAPIKey()
     api_secret = "Ivalid"
 
     with pytest.raises(SystemExit) as execinfo:
-        AuthAPI(api_key, api_secret)
+        AuthAPI(app.api_key, api_secret)
     assert str(execinfo.value) == 'Binance API secret is invalid'
 
 
 def test_instantiate_authapi_with_api_url_error():
-    api_key = app.getAPIKey()
-    api_secret = app.getAPISecret()
+    global app
     api_url = "https://foo.com"
 
     with pytest.raises(ValueError) as execinfo:
-        AuthAPI(api_key, api_secret, api_url)
+        AuthAPI(app.api_key, app.api_secret, api_url)
     assert str(execinfo.value) == 'Binance API URL is invalid'
 
 def test_instantiate_publicapi_without_error():
@@ -76,13 +71,14 @@ def test_instantiate_publicapi_without_error():
 
 
 def test_get_fees_with_market():
-    api_key = app.getAPIKey()
-    api_secret = app.getAPISecret()
-    exchange = AuthAPI(api_key, api_secret)
+    global app
+    exchange = AuthAPI(app.api_key, app.api_secret)
     assert type(exchange) is AuthAPI
+
     df = exchange.getFees()
     assert type(df) is pandas.core.frame.DataFrame
     assert len(df) == 1
+
     actual = df.columns.to_list()
     expected = ['maker_fee_rate', 'taker_fee_rate', 'usd_volume', 'market']
     assert len(actual) == len(expected)
@@ -90,9 +86,8 @@ def test_get_fees_with_market():
 
 
 def test_get_taker_fee_with_market():
-    api_key = app.getAPIKey()
-    api_secret = app.getAPISecret()
-    exchange = AuthAPI(api_key, api_secret)
+    global app
+    exchange = AuthAPI(app.api_key, app.api_secret)
     assert type(exchange) is AuthAPI
 
     fee = exchange.getTakerFee()
@@ -101,9 +96,8 @@ def test_get_taker_fee_with_market():
 
 
 def test_get_maker_fee_with_market():
-    api_key = app.getAPIKey()
-    api_secret = app.getAPISecret()
-    exchange = AuthAPI(api_key, api_secret)
+    global app
+    exchange = AuthAPI(app.api_key, app.api_secret)
     assert type(exchange) is AuthAPI
 
     fee = exchange.getMakerFee()
@@ -112,14 +106,14 @@ def test_get_maker_fee_with_market():
 
 
 def test_get_orders():
-    api_key = app.getAPIKey()
-    api_secret = app.getAPISecret()
-    exchange = AuthAPI(api_key, api_secret)
+    global app
+    exchange = AuthAPI(app.api_key, app.api_secret)
     assert type(exchange) is AuthAPI
 
     df = exchange.getOrders()
     assert type(df) is pandas.core.frame.DataFrame
     assert len(df) > 0
+
     actual = df.columns.to_list()
     expected = ['created_at', 'market', 'action', 'type', 'size', 'filled', 'status', 'price']
     assert len(actual) == len(expected)
@@ -134,35 +128,41 @@ def test_get_orders():
 # def test_config_json_exists_and_valid(): -> imo obsolete/pointless, we are reading the config
 #       when instantiating PyCryptoBot class
 #
+@pytest.fixture
+def binance_orders_response():
+    return [
+        {
+            "symbol": "LTCBTC",
+            "orderId": 1,
+            "orderListId": -1,
+            "clientOrderId": "myOrder1",
+            "price": "0.1",
+            "origQty": "1.0",
+            "executedQty": "0.0",
+            "cummulativeQuoteQty": "0.0",
+            "status": "NEW",
+            "timeInForce": "GTC",
+            "type": "LIMIT",
+            "side": "BUY",
+            "stopPrice": "0.0",
+            "icebergQty": "0.0",
+            "time": 1499827319559,
+            "updateTime": 1499827319559,
+            "isWorking": "true",
+            "origQuoteOrderQty": "0.000000"
+        }
+    ]
+
 
 ## This doesnt work. Apparently the client_response is wrong. Need a proper json from a live response here
-@pytest.mark.skip
+#@pytest.mark.skip
 @responses.activate
-def test_get_orders():
+def test_get_orders(binance_orders_response):
     global app
-    client_response = [{
-            'symbol': 'CHZUSDT',
-            'orderId': 123456789,
-            'orderListId': -1,
-            'clientOrderId': 'SOME-CLIENT-ORDER-ID',
-            'price': '0.00000000',
-            'origQty': '31.30000000',
-            'executedQty': '31.30000000',
-            'cummulativeQuoteQty': '15.68161300',
-            'status': 'FILLED',
-            'timeInForce': 'GTC',
-            'type': 'MARKET',
-            'side': 'SELL',
-            'stopPrice': '0.00000000',
-            'icebergQty': '0.00000000',
-            'time': 1616845743872,
-            'updateTime': 1616845743872,
-            'isWorking': True,
-            'origQuoteOrderQty': '0.00000000'
-    }]
-    api = AuthAPI(app.getAPIKey(), app.getAPISecret())
+    api_url = "https://testnet.binance.vision"
+    api = AuthAPI(app.api_key, app.api_secret, api_url=api_url)
 
-    responses.add(responses.GET, f'https://api.binance.com/api/v3/allOrders', json=json.dumps(client_response), status=200)
+    responses.add(responses.GET, f'{api_url}/api/v3/allOrders', json=json.dumps(binance_orders_response), status=200)
     df = api.getOrders()
 
     assert len(df) > 0
