@@ -40,7 +40,7 @@ class AuthAPIBase():
             return datetime.fromtimestamp(int(epoch_str))
 
 class AuthAPI(AuthAPIBase):
-    def __init__(self, api_key: str='', api_secret: str='', api_url: str='https://api.binance.com', order_history: list=[]) -> None:
+    def __init__(self, api_key: str='', api_secret: str='', api_url: str='https://api.binance.com', order_history: list=[], recv_window: int=5000) -> None:
         """Binance API object model
 
         Parameters
@@ -83,6 +83,9 @@ class AuthAPI(AuthAPIBase):
 
         # order history
         self.order_history = order_history
+
+        # api recvWindow
+        self.recv_window = recv_window
 
     def handle_init_error(self, err: str) -> None:
         if self.debug:
@@ -157,11 +160,11 @@ class AuthAPI(AuthAPIBase):
 
         return self.getAccounts()
 
-    def getFees(self, market: str='', recvWindow: int=6000) -> pd.DataFrame:
+    def getFees(self, market: str='') -> pd.DataFrame:
         """Retrieves a account fees"""
 
         # GET /api/v3/account
-        resp = self.authAPI('GET', '/api/v3/account', { 'recvWindow': recvWindow })
+        resp = self.authAPI('GET', '/api/v3/account', { 'recvWindow': self.recv_window })
 
         if 'makerCommission' in resp and 'takerCommission' in resp:
             maker_fee_rate = resp['makerCommission'] / 10000
@@ -222,7 +225,7 @@ class AuthAPI(AuthAPIBase):
 
         return df[df['isSpotTradingAllowed'] == True][['symbol']].squeeze().tolist()
 
-    def getOrders(self, market: str='', action: str='', status: str='done', order_history: list=[], recvWindow: int=6000) -> pd.DataFrame:
+    def getOrders(self, market: str='', action: str='', status: str='done', order_history: list=[]) -> pd.DataFrame:
         """Retrieves your list of orders with optional filtering"""
 
         # if market provided
@@ -260,7 +263,7 @@ class AuthAPI(AuthAPIBase):
                     print (f'scanning {market} order history.')
 
                 # GET /api/v3/allOrders
-                resp = self.authAPI('GET', '/api/v3/allOrders', { 'symbol': market, 'recvWindow': recvWindow })
+                resp = self.authAPI('GET', '/api/v3/allOrders', { 'symbol': market, 'recvWindow': self.recv_window })
 
                 if full_scan is True:
                     time.sleep(0.25)
@@ -280,7 +283,7 @@ class AuthAPI(AuthAPIBase):
                 print ('add to order history to prevent full scan:', self.order_history)
         else:
             # GET /api/v3/allOrders
-            resp = self.authAPI('GET', '/api/v3/allOrders', { 'symbol': market, 'recvWindow': recvWindow })
+            resp = self.authAPI('GET', '/api/v3/allOrders', { 'symbol': market, 'recvWindow': self.recv_window })
 
             if isinstance(resp, list):
                 df = pd.DataFrame.from_dict(resp)
@@ -370,11 +373,11 @@ class AuthAPI(AuthAPIBase):
 
         return df
 
-    def getTradeFee(self, market: str, recvWindow: int=6000) -> float:
+    def getTradeFee(self, market: str) -> float:
         """Retrieves the trade fees"""
 
         # GET /sapi/v1/asset/tradeFee
-        resp = self.authAPI('GET', '/sapi/v1/asset/tradeFee', { 'symbol': market, 'recvWindow': recvWindow })
+        resp = self.authAPI('GET', '/sapi/v1/asset/tradeFee', { 'symbol': market, 'recvWindow': self.recv_window })
 
         if len(resp) == 1 and 'takerCommission' in resp[0]:
             return float(resp[0]['takerCommission'])
@@ -398,7 +401,7 @@ class AuthAPI(AuthAPIBase):
         else:
             return (now, 0.0)
 
-    def marketBuy(self, market: str='', quote_quantity: float=0, test: bool=False, recvWindow: int=6000) -> list:
+    def marketBuy(self, market: str='', quote_quantity: float=0, test: bool=False) -> list:
         """Executes a market buy providing a funding amount"""
 
         # validates the market is syntactically correct
@@ -430,7 +433,7 @@ class AuthAPI(AuthAPIBase):
                 'side': 'BUY',
                 'type': 'MARKET',
                 'quantity': truncated,
-                'recvWindow': recvWindow
+                'recvWindow': self.recv_window
             }
 
             Logger.debug(order)
@@ -447,7 +450,7 @@ class AuthAPI(AuthAPIBase):
             Logger.error(ts + ' Binance ' + ' marketBuy ' + str(err))
             return []
 
-    def marketSell(self, market: str='', base_quantity: float=0, test: bool=False, recvWindow: int=6000) -> list:
+    def marketSell(self, market: str='', base_quantity: float=0, test: bool=False) -> list:
         """Executes a market sell providing a crypto amount"""
 
         # validates the market is syntactically correct
@@ -474,7 +477,7 @@ class AuthAPI(AuthAPIBase):
                 'side': 'SELL',
                 'type': 'MARKET',
                 'quantity': truncated,
-                'recvWindow': recvWindow
+                'recvWindow': self.recv_window
             }
 
             Logger.debug(order)
