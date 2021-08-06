@@ -141,6 +141,7 @@ class AuthAPI(AuthAPIBase):
         else:
             return pd.DataFrame()
 
+        # if df is empty, then return
         if len(df) == 0:
             return pd.DataFrame()
 
@@ -162,6 +163,10 @@ class AuthAPI(AuthAPIBase):
         # exclude accounts with a nil balance
         df = df[df.available != "0.00000000"]
         df = df[df.available != "0.00"]
+
+        # if df is empty after filtering, then return
+        if len(df) == 0:
+            return pd.DataFrame()
 
         # rename columns
         df.columns = [
