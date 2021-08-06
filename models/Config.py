@@ -233,14 +233,16 @@ class Config:
 
     def getVersionFromREADME(self) -> str:
         regex = r"^# Python Crypto Bot (v(?:\d+.){2}\d(?:-[\w\d]+)?).*"
+        version = 'v0.0.0'
         try:
             with open("README.md", "r", encoding="utf8") as stream:
-                content = stream.read()
-                match = re.search(regex, content)
-                try:
-                    version = match.group(1)
-                except:
-                    version = "v0.0.0"
+                for line in stream:
+                    match = re.search(regex, line)
+                    try:
+                        version = match.group(1)
+                        break
+                    except:
+                        continue
             return version
         except Exception:
             raise
