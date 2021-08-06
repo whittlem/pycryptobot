@@ -134,7 +134,12 @@ class Config:
         self.exchange = self._set_exchange(kwargs["exchange"])
 
         # set defaults
-        self.api_url, self.api_key, self.api_secret, self.api_passphrase = self._set_default_api_info(self.exchange)
+        (
+            self.api_url,
+            self.api_key,
+            self.api_secret,
+            self.api_passphrase,
+        ) = self._set_default_api_info(self.exchange)
         self.market = "BTCGBP"
 
         if self.config_provided:
@@ -175,7 +180,6 @@ class Config:
             self.fileloglevel = "NOTSET"
             self.logfile == "/dev/null"
 
-
     def _set_exchange(self, exchange: str = None) -> str:
         valid_exchanges = ["coinbasepro", "binance", "dummy"]
 
@@ -199,29 +203,33 @@ class Config:
             )
         return exchange
 
-
-    def _set_default_api_info(self, exchange: str = 'dummy') -> tuple:
+    def _set_default_api_info(self, exchange: str = "dummy") -> tuple:
         conf = {
-            'binance': {
-                'api_url': 'https://api.binance.com',
-                'api_key': "0000000000000000000000000000000000000000000000000000000000000000",
-                'api_secret': "0000000000000000000000000000000000000000000000000000000000000000",
-                'api_passphrase': '',
+            "binance": {
+                "api_url": "https://api.binance.com",
+                "api_key": "0000000000000000000000000000000000000000000000000000000000000000",
+                "api_secret": "0000000000000000000000000000000000000000000000000000000000000000",
+                "api_passphrase": "",
             },
-            'coinbasepro': {
-                'api_url': 'https://api.pro.coinbase.com',
-                'api_key': "00000000000000000000000000000000",
-                'api_secret': "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
-                'api_passphrase': '00000000000',
+            "coinbasepro": {
+                "api_url": "https://api.pro.coinbase.com",
+                "api_key": "00000000000000000000000000000000",
+                "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+                "api_passphrase": "00000000000",
             },
-            'dummy': {
-                'api_url': 'https://api.pro.coinbase.com',
-                'api_key': "00000000000000000000000000000000",
-                'api_secret': "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
-                'api_passphrase': '00000000000',
+            "dummy": {
+                "api_url": "https://api.pro.coinbase.com",
+                "api_key": "00000000000000000000000000000000",
+                "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+                "api_passphrase": "00000000000",
             },
         }
-        return conf[exchange]['api_url'], conf[exchange]['api_key'], conf[exchange]['api_secret'], conf[exchange]['api_passphrase'],
+        return (
+            conf[exchange]["api_url"],
+            conf[exchange]["api_key"],
+            conf[exchange]["api_secret"],
+            conf[exchange]["api_passphrase"],
+        )
 
     def getVersionFromREADME(self) -> str:
         regex = r"^# Python Crypto Bot (v(?:\d+.){2}\d(?:-[\w\d]+)?).*"
@@ -248,7 +256,6 @@ class Config:
             else:
                 raise ValueError("recvWindow out of bounds!")
         return recv_window
-
 
     def _parse_arguments(self):
         # instantiate the arguments parser
