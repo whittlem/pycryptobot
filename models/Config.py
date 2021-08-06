@@ -1,4 +1,5 @@
 import argparse
+import fileinput
 import os
 import re
 import sys
@@ -111,6 +112,11 @@ class Config:
         if os.path.isfile(self.config_file):
             self.config_provided = True
             try:
+                # replace tabs in config files, yaml doesn't support tabs and wants spaces
+                with fileinput.FileInput(self.config_file, inplace=True) as stream:
+                    for line in stream:
+                        print(line.replace("\t", "  "), end="")
+
                 with open(self.config_file, "r") as stream:
                     self.config = yaml.safe_load(stream)
 
@@ -234,7 +240,7 @@ class Config:
 
     def getVersionFromREADME(self) -> str:
         regex = r"^# Python Crypto Bot (v(?:\d+.){2}\d(?:-[\w\d]+)?).*"
-        version = 'v0.0.0'
+        version = "v0.0.0"
         try:
             with open("README.md", "r", encoding="utf8") as stream:
                 for line in stream:
@@ -254,7 +260,9 @@ class Config:
             if 5000 <= int(self.cli_args["recvWindow"]) <= 60000:
                 recv_window = int(self.cli_args["recvWindow"])
             else:
-                raise ValueError("recvWindow out of bounds! Should be between 5000 and 60000.")
+                raise ValueError(
+                    "recvWindow out of bounds! Should be between 5000 and 60000."
+                )
         return recv_window
 
     def _parse_arguments(self):
