@@ -12,21 +12,39 @@ Upgrade library dependancies (if required):
 
 ### Changed
 
---- Replaced python-binance library with in-built code
+-- Replaced python-binance library with in-built code
+-- Loads of enhancements and improvements
+-- Unit tests added and improved
 
 ## [2.49.1] - 2021-08-1
 
 ### Changed
 
+## [2.51.0] - 2021-08-06
+
+### Changed
+
+-- Add section about code style to CONTRIBUTING.md
+
+## [2.50.0] - 2021-08-06
+
+### Changed
+
+-- Upgrade pip to latest version before using it to install packages
+
+## [2.49.1] - 2021-08-01
+
+### Changed
+
 -- The gitignore pattern excluded the configmap.yaml for the helm chart.
 
-## [2.49.0] - 2021-08-1
+## [2.49.0] - 2021-08-01
 
 ## Added
 
 -- Added Kubernetes helm charts
 
-## [2.48.2] - 2021-08-1
+## [2.48.2] - 2021-08-01
 
 ## Changed
 
