@@ -67,6 +67,9 @@ class PyCryptoBot(Config):
 
         return False
 
+    def getRecvWindow(self):
+        return self.recv_window
+
     def getLogFile(self):
         return self.logfile
 
@@ -543,7 +546,7 @@ class PyCryptoBot(Config):
                     'date' : str(pd.DatetimeIndex(pd.to_datetime(last_order['created_at']).dt.strftime('%Y-%m-%dT%H:%M:%S.%Z'))[0])
                 }
             elif self.exchange == 'binance':
-                api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
+                api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL(), recv_window=self.recv_window)
                 orders = api.getOrders(self.getMarket())
 
                 if len(orders) == 0:
@@ -576,7 +579,7 @@ class PyCryptoBot(Config):
             api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
             return api.getTakerFee()
         elif self.exchange == 'binance':
-            api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
+            api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL(), recv_window=self.recv_window)
             return api.getTakerFee()
         else:
             return 0.005
@@ -586,7 +589,7 @@ class PyCryptoBot(Config):
             api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
             return api.getMakerFee()
         elif self.exchange == 'binance':
-            api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
+            api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL(), recv_window=self.recv_window)
             # return api.getMakerFee()
             return 0.005
         else:
@@ -602,7 +605,7 @@ class PyCryptoBot(Config):
                 api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
                 return api.marketBuy(market, float(truncate(quote_currency, 2)))
             elif self.exchange == 'binance':
-                api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
+                api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL(), recv_window=self.recv_window)
                 return api.marketBuy(market, quote_currency)
             else:
                 return None
@@ -616,7 +619,7 @@ class PyCryptoBot(Config):
                     api = CBAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIPassphrase(), self.getAPIURL())
                     return api.marketSell(market, base_currency)
                 elif self.exchange == 'binance':
-                    api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL())
+                    api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL(), recv_window=self.recv_window)
                     return api.marketSell(market, base_currency)
             else:
                 return None
