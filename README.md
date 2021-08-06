@@ -1,48 +1,48 @@
 [![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg) [![Tests](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)
 
-# Python Crypto Bot v2.51.0 (pycryptobot)
+# Python Crypto Bot v3.0.0 (pycryptobot)
 
 ## Join our chat on Telegram
 
-https://t.me/joinchat/09hYKfelbRY2MDNk
+<https://t.me/joinchat/09hYKfelbRY2MDNk>
 
-##  Supporting The Project
+## Supporting The Project
 
 I get paid to write on Medium. Readers following me, applauding and commenting on my articles, all helps with my earnings. I provided this bot to all of you for free and actively developing it. One way you can support my efforts is to follow me on Medium and read my articles. The Medium subscription is $5 a month (roughly £3) so basically nothing in terms of the value you are getting from the bot. Your efforts here would be greatly appreciated!
 
 Follow me on Medium for updates!
 
-https://whittle.medium.com
+<https://whittle.medium.com>
 
 Python Crypto Bot (PyCryptoBot)
 
-https://medium.com/coinmonks/python-crypto-bot-pycryptobot-b54f4b3dbb75
+<https://medium.com/coinmonks/python-crypto-bot-pycryptobot-b54f4b3dbb75>
 
 What’s new in PyCryptoBot 2?
 
-https://medium.com/coinmonks/whats-new-in-pycryptobot-2-a4bbb1b0c90e
+<https://medium.com/coinmonks/whats-new-in-pycryptobot-2-a4bbb1b0c90e>
 
 PyCryptoBot with Telegram
 
-https://medium.com/coinmonks/pycryptobot-with-telegram-83eed5f230c2
+<https://medium.com/coinmonks/pycryptobot-with-telegram-83eed5f230c2>
 
 PyCryptoBot Results and Config
 
-https://medium.com/coinmonks/pycryptobot-results-and-config-57fb6625a6d9
+<https://medium.com/coinmonks/pycryptobot-results-and-config-57fb6625a6d9>
 
 Coinbase Pro Portfolio Tracker
 
-https://medium.com/coinmonks/coinbase-pro-portfolio-tracker-a6e4a1c6b8f8
+<https://medium.com/coinmonks/coinbase-pro-portfolio-tracker-a6e4a1c6b8f8>
 
 TradingView.com Charts ❤
 
-https://levelup.gitconnected.com/tradingview-com-charts-36a49c9f77ea
+<https://levelup.gitconnected.com/tradingview-com-charts-36a49c9f77ea>
 
 ## Optional Add-on
 
 Coinbase Pro Portfolio Tracker
 
-https://github.com/whittlem/coinbaseprotracker
+<https://github.com/whittlem/coinbaseprotracker>
 
 An all-in-one view of all your Coinbase Pro portfolios. Highly recommended
 if running multiple bots and keeping track of their progress.
@@ -51,13 +51,13 @@ if running multiple bots and keeping track of their progress.
 
 * When running in containers: a working docker/podman installation
 
-* Python 3.9.x installed -- https://installpython3.com  (must be Python 3.9 or greater)
+* Python 3.9.x installed -- <https://installpython3.com>  (must be Python 3.9 or greater)
 
     % python3 --version
 
     Python 3.9.1
 
-* Python 3 PIP installed -- https://pip.pypa.io/en/stable/installing
+* Python 3 PIP installed -- <https://pip.pypa.io/en/stable/installing>
 
     % python3 -m pip --version
 
@@ -160,7 +160,6 @@ For example, if you are trading `BTCEUR` and `ETHEUR` your market folder should 
     │   ├── config.json
     │   ├── pycryptobot.log
     │   └── graphs
-
 
 modify docker-compose.yaml
 
@@ -354,7 +353,7 @@ Special sell cases:
     --disablebullonly                   Disable only buying in bull market
     --disablebuynearhigh                Disable buying within 3% of the dataframe high
     --disablebuymacd                    Disable macd buy signal
-	--disablebuyema                     Disable ema buy signal.If both core indicators ema and macd buy signals are disabled, bot won't buy.Doesn't affect sell strategy.
+ --disablebuyema                     Disable ema buy signal.If both core indicators ema and macd buy signals are disabled, bot won't buy.Doesn't affect sell strategy.
     --disablebuyobv                     Disable obv buy signal
     --disablebuyelderray                Disable elder ray buy signal
     --disablefailsafefibonaccilow       Disable failsafe sell on fibonacci lower band
@@ -521,7 +520,7 @@ If you want to disable logging entirely, you can set "filelog" and "consolelog" 
 If '--logfile' used when running bot "logfile": "pycryptobot.log" line in config file will be ignored.
 
 "fileloglevel" and "consoleloglevel" can get one of 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'NOTSET'
-For further detail in log levels: https://docs.python.org/3/library/logging.html#logging-levels
+For further detail in log levels: <https://docs.python.org/3/library/logging.html#logging-levels>
 
 ## Multi-Market Trading
 

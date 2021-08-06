@@ -8,6 +8,18 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [3.0.0] - 2021-08-03
+
+### Changed
+
+-- Replaced python-binance library with in-built code
+-- Loads of enhancements and improvements
+-- Unit tests added and improved
+
+## [2.49.1] - 2021-08-1
+
+### Changed
+
 ## [2.51.0] - 2021-08-06
 
 ### Changed
@@ -127,7 +139,6 @@ Upgrade library dependancies (if required):
 ### Changed
 
 -- Filter on filled orders only in Binance dataframe
-
 
 ## [2.42.0] - 2021-07-03
 
