@@ -98,6 +98,7 @@ class Config:
 
         self.config_file = kwargs.get("config_file", "config.json")
         self.config_provided = False
+        self.config = {}
 
         if self.cli_args["config"] is not None:
             self.config_file = self.cli_args["config"]
