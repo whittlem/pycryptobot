@@ -98,9 +98,9 @@ def parser(app, binance_config, args={}):
 
             valid_urls = [
                 'https://api.binance.com/',
-                'https://testnet.binance.vision/api/',
+                'https://testnet.binance.vision/',
                 'https://api.binance.com',
-                'https://testnet.binance.vision/api',
+                'https://testnet.binance.vision',
                 'https://api.binance.us',
             ]
 
@@ -140,4 +140,7 @@ def parser(app, binance_config, args={}):
                 app.granularity = to_internal_granularity(config['granularity'])
                 app.smart_switch = 0
             else:
-                raise ValueError('granularity supplied is not supported.')
+                app.granularity = int(config['granularity'])
+                app.smart_switch = 0
+            # else:
+            #     raise ValueError('granularity supplied is not supported.')
