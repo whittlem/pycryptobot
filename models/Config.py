@@ -22,6 +22,12 @@ class Config:
     def __init__(self, *args, **kwargs):
         self.cli_args = self._parse_arguments()
 
+        if self.cli_args["init"]:
+            ConfigBuilder().init()
+            sys.exit()
+
+        self.configbuilder = False
+
         self.granularity = 3600
         self.base_currency = "BTC"
         self.quote_currency = "GBP"
@@ -43,8 +49,6 @@ class Config:
         self.last_action = None
         self._chat_client = None
         self.buymaxsize = None
-
-        self.configbuilder = False
 
         self.sellatresistance = False
         self.autorestart = False
@@ -82,15 +86,7 @@ class Config:
 
         self.sim_smartswitch = False
 
-        self.recv_window = 5000
-        if self.cli_args["recvWindow"] and isinstance(self.cli_args["recvWindow"], int):
-            if (
-                int(self.cli_args["recvWindow"]) >= 5000
-                and int(self.cli_args["recvWindow"]) <= 60000
-            ):
-                self.recv_window = 5000
-            else:
-                raise ValueError("recvWindow out of bounds!")
+        self.recv_window = self._set_recv_window()
 
         Logger.configure(
             filelog=self.filelog,
@@ -102,12 +98,6 @@ class Config:
 
         self.config_file = kwargs.get("config_file", "config.json")
         self.config_provided = False
-
-        if self.cli_args["init"]:
-            # config builder
-            cb = ConfigBuilder()
-            cb.init()
-            sys.exit()
 
         if self.cli_args["config"] is not None:
             self.config_file = self.cli_args["config"]
@@ -121,7 +111,7 @@ class Config:
             self.config_provided = True
             try:
                 with open(self.config_file, "r") as stream:
-                    config = yaml.safe_load(stream)
+                    self.config = yaml.safe_load(stream)
 
             except (ScannerError, ConstructorError) as err:
                 sys.tracebacklimit = 0
@@ -141,72 +131,34 @@ class Config:
                 raise
 
         # set exchange platform
-        self.exchange = kwargs["exchange"]
-        self.valid_exchanges = ["coinbasepro", "binance", "dummy"]
-        if self.exchange and self.exchange in self.valid_exchanges:
-            pass
-        if not self.exchange:
-            if ("coinbasepro" or "api_pass") in config:
-                self.exchange = "coinbasepro"
-            elif "binance" in config:
-                self.exchange = "binance"
-            else:
-                self.exchange = "dummy"
+        self.exchange = self._set_exchange(kwargs["exchange"])
 
-        if self.cli_args["exchange"] is not None:
-            self.exchange = self.cli_args["exchange"]
-
-        if self.exchange not in self.valid_exchanges:
-            raise TypeError(
-                f"Invalid exchange: {self.exchange}. Valid choices: {self.valid_exchanges}"
-            )
-
-        if self.exchange == "binance":  # default for binance (test mode)
-            self.api_key = (
-                "0000000000000000000000000000000000000000000000000000000000000000"
-            )
-            self.api_secret = (
-                "0000000000000000000000000000000000000000000000000000000000000000"
-            )
-            self.api_url = "https://api.binance.com"
-            self.market = "BTCGBP"
-
-        elif self.exchange == "coinbasepro":  # default for coinbase pro (test mode)
-            self.api_key = "00000000000000000000000000000000"
-            self.api_secret = "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000=="
-            self.api_passphrase = "00000000000"
-            self.api_url = "https://api.pro.coinbase.com"
-            self.market = "BTC-GBP"
-
-        else:  # default/dummy uses coinbase data (test mode)
-            self.api_key = '00000000000000000000000000000000"'
-            self.api_secret = "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000=="
-            self.api_passphrase = "00000000000"
-            self.api_url = "https://api.pro.coinbase.com"
-            self.market = "BTC-GBP"
+        # set defaults
+        self.api_url, self.api_key, self.api_secret, self.api_passphrase = self._set_default_api_info(self.exchange)
+        self.market = "BTCGBP"
 
         if self.config_provided:
-            if self.exchange == "coinbasepro" and "coinbasepro" in config:
-                coinbaseProConfigParser(self, config["coinbasepro"], self.cli_args)
+            if self.exchange == "coinbasepro" and "coinbasepro" in self.config:
+                coinbaseProConfigParser(self, self.config["coinbasepro"], self.cli_args)
 
-            elif self.exchange == "binance" and "binance" in config:
-                binanceConfigParser(self, config["binance"], self.cli_args)
+            elif self.exchange == "binance" and "binance" in self.config:
+                binanceConfigParser(self, self.config["binance"], self.cli_args)
 
-            elif self.exchange == "dummy" and "dummy" in config:
-                dummyConfigParser(self, config["dummy"], self.cli_args)
+            elif self.exchange == "dummy" and "dummy" in self.config:
+                dummyConfigParser(self, self.config["dummy"], self.cli_args)
 
             if (
                 not self.disabletelegram
-                and "telegram" in config
-                and "token" in config["telegram"]
-                and "client_id" in config["telegram"]
+                and "telegram" in self.config
+                and "token" in self.config["telegram"]
+                and "client_id" in self.config["telegram"]
             ):
-                telegram = config["telegram"]
+                telegram = self.config["telegram"]
                 self._chat_client = Telegram(telegram["token"], telegram["client_id"])
                 self.telegram = True
 
-            if "logger" in config:
-                loggerConfigParser(self, config["logger"])
+            if "logger" in self.config:
+                loggerConfigParser(self, self.config["logger"])
 
             if self.disablelog:
                 self.filelog = 0
@@ -223,6 +175,54 @@ class Config:
             self.fileloglevel = "NOTSET"
             self.logfile == "/dev/null"
 
+
+    def _set_exchange(self, exchange: str = None) -> str:
+        valid_exchanges = ["coinbasepro", "binance", "dummy"]
+
+        if self.cli_args["exchange"] is not None:
+            exchange = self.cli_args["exchange"]
+
+        if exchange and exchange in valid_exchanges:
+            return exchange
+
+        if not exchange:
+            if ("coinbasepro" or "api_pass") in self.config:
+                exchange = "coinbasepro"
+            elif "binance" in self.config:
+                exchange = "binance"
+            else:
+                exchange = "dummy"
+
+        if exchange not in valid_exchanges:
+            raise TypeError(
+                f"Invalid exchange: {exchange}. Valid choices: {valid_exchanges}"
+            )
+        return exchange
+
+
+    def _set_default_api_info(self, exchange: str = 'dummy') -> tuple:
+        conf = {
+            'binance': {
+                'api_url': 'https://api.binance.com',
+                'api_key': "0000000000000000000000000000000000000000000000000000000000000000",
+                'api_secret': "0000000000000000000000000000000000000000000000000000000000000000",
+                'api_passphrase': '',
+            },
+            'coinbasepro': {
+                'api_url': 'https://api.pro.coinbase.com',
+                'api_key': "00000000000000000000000000000000",
+                'api_secret': "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+                'api_passphrase': '00000000000',
+            },
+            'dummy': {
+                'api_url': 'https://api.pro.coinbase.com',
+                'api_key': "00000000000000000000000000000000",
+                'api_secret': "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+                'api_passphrase': '00000000000',
+            },
+        }
+        return conf[exchange]['api_url'], conf[exchange]['api_key'], conf[exchange]['api_secret'], conf[exchange]['api_passphrase'],
+
     def getVersionFromREADME(self) -> str:
         regex = r"^# Python Crypto Bot (v(?:\d+.){2}\d(?:-[\w\d]+)?).*"
         try:
@@ -236,6 +236,19 @@ class Config:
             return version
         except Exception:
             raise
+
+    def _set_recv_window(self):
+        recv_window = 5000
+        if self.cli_args["recvWindow"] and isinstance(self.cli_args["recvWindow"], int):
+            if (
+                int(self.cli_args["recvWindow"]) >= 5000
+                and int(self.cli_args["recvWindow"]) <= 60000
+            ):
+                recv_window = 5000
+            else:
+                raise ValueError("recvWindow out of bounds!")
+        return recv_window
+
 
     def _parse_arguments(self):
         # instantiate the arguments parser
