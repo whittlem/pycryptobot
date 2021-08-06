@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [2.51.0] - 2021-08-06
+
+### Changed
+
+-- Add section about code style to CONTRIBUTING.md
+
 ## [2.50.0] - 2021-08-06
 
 ### Changed
