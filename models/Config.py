@@ -251,13 +251,10 @@ class Config:
     def _set_recv_window(self):
         recv_window = 5000
         if self.cli_args["recvWindow"] and isinstance(self.cli_args["recvWindow"], int):
-            if (
-                int(self.cli_args["recvWindow"]) >= 5000
-                and int(self.cli_args["recvWindow"]) <= 60000
-            ):
-                recv_window = 5000
+            if 5000 <= int(self.cli_args["recvWindow"]) <= 60000:
+                recv_window = int(self.cli_args["recvWindow"])
             else:
-                raise ValueError("recvWindow out of bounds!")
+                raise ValueError("recvWindow out of bounds! Should be between 5000 and 60000.")
         return recv_window
 
     def _parse_arguments(self):
