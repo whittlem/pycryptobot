@@ -3,8 +3,8 @@ pandas==1.1.4
 requests==2.25.0
 statsmodels==0.12.2
 matplotlib==3.3.3
-binance==0.3
-python-binance==1.0.11
 mock==4.0.3
 pytest==6.2.2
 pytest-mock==3.6.1
+responses==0.13.3
+pyyaml==5.4.1

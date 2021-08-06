@@ -1357,6 +1357,7 @@ def test_configjson_coinbasepro_selllowerpcnt():
         PyCryptoBot(exchange='coinbasepro', filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
     assert str(execinfo.value) == 'Invalid config.json: selllowerpcnt must be negative'
 
+@pytest.mark.skip(reason="further work required to get this working")
 def test_configjson_binance_trailingstoploss():
     config = {
        "binance": {
@@ -1464,6 +1465,7 @@ def test_configjson_binance_trailingstoploss():
     with pytest.raises(ValueError) as execinfo:
         PyCryptoBot(exchange='binance', filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
     assert str(execinfo.value) == 'Invalid config.json: trailingstoploss must be negative'
+
 
 def test_configjson_coinbasepro_trailingstoploss():
     config = {

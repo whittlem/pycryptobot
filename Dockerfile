@@ -4,7 +4,8 @@ WORKDIR /app
 
 COPY requirements.txt /app/
 
-RUN python3 -m pip install --no-cache-dir -r requirements.txt
+RUN python -m pip install -U pip &&\
+      python -m pip install --no-cache-dir -r requirements.txt
 
 COPY . /app/
 

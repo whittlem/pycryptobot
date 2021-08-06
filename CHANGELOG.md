@@ -8,23 +8,49 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-## [2.49.2] - 2021-08-1
+## [3.0.1] - 2021-08-03
 
 ### Changed
+
 -- Refactor text boxes in logs
+
+## [3.0.0] - 2021-08-03
+
+### Changed
+
+-- Replaced python-binance library with in-built code
+-- Loads of enhancements and improvements
+-- Unit tests added and improved
 
 ## [2.49.1] - 2021-08-1
 
 ### Changed
+
+## [2.51.0] - 2021-08-06
+
+### Changed
+
+-- Add section about code style to CONTRIBUTING.md
+
+## [2.50.0] - 2021-08-06
+
+### Changed
+
+-- Upgrade pip to latest version before using it to install packages
+
+## [2.49.1] - 2021-08-01
+
+### Changed
+
 -- The gitignore pattern excluded the configmap.yaml for the helm chart.
 
-## [2.49.0] - 2021-08-1
+## [2.49.0] - 2021-08-01
 
 ## Added
 
 -- Added Kubernetes helm charts
 
-## [2.48.2] - 2021-08-1
+## [2.48.2] - 2021-08-01
 
 ## Changed
 
@@ -119,7 +145,6 @@ Upgrade library dependancies (if required):
 ### Changed
 
 -- Filter on filled orders only in Binance dataframe
-
 
 ## [2.42.0] - 2021-07-03
 

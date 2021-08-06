@@ -34,28 +34,25 @@ class AppState():
         self.last_buy_price = 0
         self.last_buy_filled = 0
         self.last_buy_fee = 0
-        self.last_buy_high = 0 
+        self.last_buy_high = 0
         self.last_df_index = ''
         self.sell_count = 0
         self.sell_sum = 0
 
     def minimumOrderBase(self):
         if self.app.getExchange() == 'binance':
-            info = self.api.client.get_symbol_info(symbol=self.app.getMarket())
+            df = self.api.getMarketInfoFilters(self.app.getMarket())
 
-            base_min = 0
-            if 'filters' in info:
-                for filter_type in info['filters']:
-                    if 'LOT_SIZE' == filter_type['filterType']:
-                        base_min = float(filter_type['minQty'])
+            if len(df) > 0:
+                try:
+                    base_min = float(df[df['filterType'] == 'LOT_SIZE'][['minQty']].values[0][0])
+                    base = float(self.account.getBalance(self.app.getBaseCurrency()))
+                except:
+                    return
 
-            base = float(self.account.getBalance(self.app.getBaseCurrency()))
-
-
-
-            if base < base_min:
-                sys.tracebacklimit = 0
-                raise Exception(f'Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})')
+                if base < base_min:
+                    sys.tracebacklimit = 0
+                    raise Exception(f'Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})')
 
         elif self.app.getExchange() == 'coinbasepro':
             product = self.api.authAPI('GET', f'products/{self.app.getMarket()}')
@@ -72,19 +69,18 @@ class AppState():
 
     def minimumOrderQuote(self):
         if self.app.getExchange() == 'binance':
-            info = self.api.client.get_symbol_info(symbol=self.app.getMarket())
+            df = self.api.getMarketInfoFilters(self.app.getMarket())
 
-            quote_min = 0
-            if 'filters' in info:
-                for filter_type in info['filters']:
-                    if 'MIN_NOTIONAL' == filter_type['filterType']:
-                        quote_min = float(filter_type['minNotional'])
+            if len(df) > 0:
+                try:
+                    quote_min = float(df[df['filterType'] == 'MIN_NOTIONAL'][['minNotional']].values[0][0])
+                    quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
+                except:
+                    return
 
-            quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
-
-            if quote < quote_min:
-                sys.tracebacklimit = 0
-                raise Exception(f'Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})')
+                if quote < quote_min:
+                    sys.tracebacklimit = 0
+                    raise Exception(f'Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})')
 
         elif self.app.getExchange() == 'coinbasepro':
             product = self.api.authAPI('GET', f'products/{self.app.getMarket()}')
@@ -107,7 +103,7 @@ class AppState():
         if not self.app.isLive():
             self.last_action = 'SELL'
             return
-        
+
         base = float(self.account.getBalance(self.app.getBaseCurrency()))
         quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
 
@@ -138,9 +134,9 @@ class AppState():
             # nil base or quote funds
             if base == 0.0 and quote == 0.0:
                 sys.tracebacklimit = 0
-                raise Exception(f'Insufficient Funds! ({self.app.getBaseCurrency()}={str(base)}, {self.app.getQuoteCurrency()}={str(base)})') 
+                raise Exception(f'Insufficient Funds! ({self.app.getBaseCurrency()}={str(base)}, {self.app.getQuoteCurrency()}={str(base)})')
 
-            # determine last action by comparing normalised [0,1] base and quote balances 
+            # determine last action by comparing normalised [0,1] base and quote balances
             order_pairs = np_array([ base, quote ])
             order_pairs_normalised = (order_pairs - np_min(order_pairs)) / np_ptp(order_pairs)
 

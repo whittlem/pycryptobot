@@ -1,0 +1,14 @@
+coinbasepro:
+  api_url: https://public.sandbox.pro.coinbase.com
+  config:
+    base_currency: ADA
+    quote_currency: EUR
+    live: 0
+  api_key_file: coinbasepro.key
+binance:
+  api_url: https://testnet.binance.vision
+  config:
+    base_currency: ADA
+    quote_currency: EUR
+    live: 0
+  api_key_file: binance.key
