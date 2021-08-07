@@ -418,7 +418,7 @@ class AuthAPI(AuthAPIBase):
 
         if status != "open":
             df["price"] = df.copy().apply(
-                lambda row: row.size / row.filled if float(row.filled) > 0 else 0,
+                lambda row: (row.size - row.fees) / row.filled if float(row.filled) > 0 else 0,
                 axis=1,
             )
 
