@@ -19,6 +19,9 @@ from models.Strategy import Strategy
 from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
 from views.TradingGraphs import TradingGraphs
+from models.Strategy import Strategy
+from models.helper.LogHelper import Logger
+from models.helper.TextBoxHelper import TextBox
 
 # minimal traceback
 sys.tracebacklimit = 1
@@ -304,6 +307,8 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
         # polling is every 5 minutes (even for hourly intervals), but only process once per interval
         #Logger.debug("DateCheck: " + str(immediate_action) + ' ' + str(state.last_df_index) + ' ' + str(current_df_index))
         if (immediate_action is True or state.last_df_index != current_df_index):
+            textBox = TextBox(80, 22)
+
             precision = 4
 
             if (price < 0.01):
@@ -515,74 +520,54 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
 
                 # informational output on the most recent entry
                 Logger.info('')
-                Logger.info('================================================================================')
-                txt = '        Iteration : ' + str(state.iterations) + bullbeartext
-                Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                txt = '        Timestamp : ' + str(df_last.index.format()[0])
-                Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                Logger.info('--------------------------------------------------------------------------------')
-                txt = '            Close : ' + truncate(price)
-                Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                txt = '            EMA12 : ' + truncate(float(df_last['ema12'].values[0]))
-                Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                txt = '            EMA26 : ' + truncate(float(df_last['ema26'].values[0]))
-                Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                txt = '   Crossing Above : ' + str(ema12gtema26co)
-                Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                txt = '  Currently Above : ' + str(ema12gtema26)
-                Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                txt = '   Crossing Below : ' + str(ema12ltema26co)
-                Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                txt = '  Currently Below : ' + str(ema12ltema26)
-                Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
+                textBox.doubleLine()
+                textBox.line('Iteration', str(state.iterations) + bullbeartext)
+                textBox.line('Timestamp', str(df_last.index.format()[0]))
+                textBox.singleLine()
+                textBox.line('Close', truncate(price))
+                textBox.line('EMA12', truncate(float(df_last['ema12'].values[0])))
+                textBox.line('EMA26', truncate(float(df_last['ema26'].values[0])))
+                textBox.line('Crossing Above', str(ema12gtema26co))
+                textBox.line('Currently Above', str(ema12gtema26))
+                textBox.line('Crossing Below', str(ema12ltema26co))
+                textBox.line('Currently Below', str(ema12ltema26))
 
                 if (ema12gtema26 is True and ema12gtema26co is True):
-                    txt = '        Condition : EMA12 is currently crossing above EMA26'
+                    textBox.line('Condition', 'EMA12 is currently crossing above EMA26')
                 elif (ema12gtema26 is True and ema12gtema26co is False):
-                    txt = '        Condition : EMA12 is currently above EMA26 and has crossed over'
+                    textBox.line('Condition', 'EMA12 is currently above EMA26 and has crossed over')
                 elif (ema12ltema26 is True and ema12ltema26co is True):
-                    txt = '        Condition : EMA12 is currently crossing below EMA26'
+                    textBox.line('Condition', 'EMA12 is currently crossing below EMA26')
                 elif (ema12ltema26 is True and ema12ltema26co is False):
-                    txt = '        Condition : EMA12 is currently below EMA26 and has crossed over'
+                    textBox.line('Condition', 'EMA12 is currently below EMA26 and has crossed over')
                 else:
-                    txt = '        Condition : -'
-                Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
+                    textBox.line('Condition', '-')
 
-                txt = '            SMA20 : ' + truncate(float(df_last['sma20'].values[0]))
-                Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                txt = '           SMA200 : ' + truncate(float(df_last['sma200'].values[0]))
-                Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
-
-                Logger.info('--------------------------------------------------------------------------------')
-                txt = '             MACD : ' + truncate(float(df_last['macd'].values[0]))
-                Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                txt = '           Signal : ' + truncate(float(df_last['signal'].values[0]))
-                Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                txt = '  Currently Above : ' + str(macdgtsignal)
-                Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                txt = '  Currently Below : ' + str(macdltsignal)
-                Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
+                textBox.line('SMA20', truncate(float(df_last['sma20'].values[0])))
+                textBox.line('SMA200', truncate(float(df_last['sma200'].values[0])))
+                textBox.singleLine()
+                textBox.line('MACD', truncate(float(df_last['macd'].values[0])))
+                textBox.line('Signal', truncate(float(df_last['signal'].values[0])))
+                textBox.line('Currently Above', str(macdgtsignal))
+                textBox.line('Currently Below', str(macdltsignal))
 
                 if (macdgtsignal is True and macdgtsignalco is True):
-                    txt = '        Condition : MACD is currently crossing above Signal'
+                    textBox.line('Condition', 'MACD is currently crossing above Signal')
                 elif (macdgtsignal is True and macdgtsignalco is False):
-                    txt = '        Condition : MACD is currently above Signal and has crossed over'
+                    textBox.line('Condition', 'MACD is currently above Signal and has crossed over')
                 elif (macdltsignal is True and macdltsignalco is True):
-                    txt = '        Condition : MACD is currently crossing below Signal'
+                    textBox.line('Condition', 'MACD is currently crossing below Signal')
                 elif (macdltsignal is True and macdltsignalco is False):
-                    txt = '        Condition : MACD is currently below Signal and has crossed over'
+                    textBox.line('Condition', 'MACD is currently below Signal and has crossed over')
                 else:
-                    txt = '        Condition : -'
-                Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
+                    textBox.line('Condition', '-')
 
-                Logger.info('--------------------------------------------------------------------------------')
-                txt = '           Action : ' + state.action
-                Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                Logger.info('================================================================================')
+                textBox.singleLine()
+                textBox.line('Action', state.action)
+                textBox.doubleLine()
                 if state.last_action == 'BUY':
-                    txt = '           Margin : ' + margin_text
-                    Logger.info(' | ' + txt + (' ' * (75 - len(txt))) + ' | ')
-                    Logger.info('================================================================================')
+                    textBox.line('Margin', margin_text)
+                    textBox.doubleLine()
 
             # if a buy signal
             if state.action == 'BUY':
@@ -596,9 +581,9 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                     if not app.isVerbose():
                         Logger.info(formatted_current_df_index + ' | ' + app.getMarket() + ' | ' + app.printGranularity() +  ' | ' + price_text + ' | BUY')
                     else:
-                        Logger.info('--------------------------------------------------------------------------------')
-                        Logger.info('|                      *** Executing LIVE Buy Order ***                        |')
-                        Logger.info('--------------------------------------------------------------------------------')
+                        textBox.singleLine()
+                        textBox.center('*** Executing LIVE Buy Order ***')
+                        textBox.singleLine()
 
                     # display balances
                     Logger.info(app.getBaseCurrency() + ' balance before order: ' + str(account.getBalance(app.getBaseCurrency())))
@@ -661,10 +646,9 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                                 state.fib_high = bands[second_key]
 
                     else:
-
-                        Logger.info('--------------------------------------------------------------------------------')
-                        Logger.info('|                      *** Executing TEST Buy Order ***                        |')
-                        Logger.info('--------------------------------------------------------------------------------')
+                        textBox.singleLine()
+                        textBox.center('*** Executing TEST Buy Order ***')
+                        textBox.singleLine()
 
                 if app.shouldSaveGraphs():
                     tradinggraphs = TradingGraphs(technical_analysis)
@@ -705,9 +689,9 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                                 state.fib_high = bands[second_key]
 
                     else:
-                        Logger.info('--------------------------------------------------------------------------------')
-                        Logger.info('|                      *** Executing LIVE Sell Order ***                        |')
-                        Logger.info('--------------------------------------------------------------------------------')
+                        textBox.singleLine()
+                        textBox.center('*** Executing LIVE Sell Order ***')
+                        textBox.singleLine()
 
                     # display balances
                     Logger.info(app.getBaseCurrency() + ' balance before order: ' + str(account.getBalance(app.getBaseCurrency())))
@@ -759,9 +743,9 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                                      margin_text + ' | MARGIN FEES | ' + str(round(sell_fee, precision)))
 
                     else:
-                        Logger.info('--------------------------------------------------------------------------------')
-                        Logger.info('|                      *** Executing TEST Sell Order ***                        |')
-                        Logger.info('--------------------------------------------------------------------------------')
+                        textBox.singleLine()
+                        textBox.center('*** Executing TEST Sell Order ***')
+                        textBox.singleLine()
 
                 if app.shouldSaveGraphs():
                     tradinggraphs = TradingGraphs(technical_analysis)
