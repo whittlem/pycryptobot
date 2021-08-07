@@ -397,6 +397,19 @@ class AuthAPI(AuthAPIBase):
         df.status = df.status.map(convert_status)
         df["status"] = df["status"].str.lower()
 
+        def calculate_price(row):
+            print (row)
+            if row.type == 'LIMIT' and float(row.price) > 0:
+                return row.price
+            elif row.action == 'buy':
+                return float(row.cummulativeQuoteQty) / float(row.filled)
+            elif row.action == 'sell':
+                return float(row.cummulativeQuoteQty) / float(row.size)
+            else:
+                return row.price
+
+        df["price"] = df.copy().apply(calculate_price, axis=1)
+
         # select columns
         df = df[
             [
@@ -411,20 +424,6 @@ class AuthAPI(AuthAPIBase):
                 "status",
             ]
         ]
-
-        df["size"] = df["size"].astype(float)
-        df["filled"] = df["filled"].astype(float)
-        df["fees"] = df["fees"].astype(float)
-
-        if status != "open":
-            df["price"] = df.copy().apply(
-                lambda row: (row.size - row.fees) / row.filled if float(row.filled) > 0 else 0,
-                axis=1,
-            )
-
-        df["size"] = df["size"].astype(object)
-        df["filled"] = df["filled"].astype(object)
-        df["fees"] = df["fees"].astype(object)
 
         # filtering
         if action != "":
