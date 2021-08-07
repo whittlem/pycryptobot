@@ -8,7 +8,13 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-## [3.1.0] - 2021-08-03
+## [3.1.1] - 2021-08-07
+
+### Changed
+
+-- Updated Binance price calculation
+
+## [3.1.0] - 2021-08-07
 
 ### Changed
 
