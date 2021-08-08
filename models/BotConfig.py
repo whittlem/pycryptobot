@@ -20,9 +20,13 @@ from models.ConfigBuilder import ConfigBuilder
 from models.helper.LogHelper import Logger
 
 
-class Config:
+class BotConfig:
     def __init__(self, *args, **kwargs):
         self.cli_args = self._parse_arguments()
+
+        if self.cli_args["init"]:
+            ConfigBuilder().init()
+            sys.exit()
 
         self.configbuilder = False
 
@@ -95,10 +99,6 @@ class Config:
         )
 
         self.config_file = kwargs.get("config_file", "config.json")
-
-        if self.cli_args["init"] or (self.config_file == 'config.json' and not os.path.isfile(self.config_file)):
-            ConfigBuilder().init()
-            sys.exit()
 
         self.config_provided = False
         self.config = {}
@@ -181,7 +181,7 @@ class Config:
         else:
             if self.exchange == "binance":
                 binanceConfigParser(self, None, self.cli_args)
-            elif self.exchange == "coinbasepro":
+            else:
                 coinbaseProConfigParser(self, None, self.cli_args)
 
             self.filelog = 0
