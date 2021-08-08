@@ -35,6 +35,12 @@ state.initLastAction()
 
 s = sched.scheduler(time.time, time.sleep)
 
+print ('There is a potential high risk bug that needs investigating in the new version 3.')
+print ('In order to prevent a loss please check out a version 2 tag', "\n")
+print ('git fetch --all --tags')
+print ('git checkout tags/2.51.0 -b tag/2.51.0', "\n")
+sys.exit()
+
 def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_data=pd.DataFrame()):
     """Trading bot job which runs at a scheduled interval"""
 
