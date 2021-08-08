@@ -1,5 +1,6 @@
 import argparse
 import fileinput
+import json
 import os
 import re
 import sys
@@ -22,10 +23,6 @@ from models.helper.LogHelper import Logger
 class Config:
     def __init__(self, *args, **kwargs):
         self.cli_args = self._parse_arguments()
-
-        if self.cli_args["init"]:
-            ConfigBuilder().init()
-            sys.exit()
 
         self.configbuilder = False
 
@@ -98,6 +95,11 @@ class Config:
         )
 
         self.config_file = kwargs.get("config_file", "config.json")
+
+        if self.cli_args["init"] or (self.config_file == 'config.json' and not os.path.isfile(self.config_file)):
+            ConfigBuilder().init()
+            sys.exit()
+
         self.config_provided = False
         self.config = {}
 
@@ -105,20 +107,19 @@ class Config:
             self.config_file = self.cli_args["config"]
             self.config_provided = True
 
-        if self.config_file == "config.json" and not os.path.isfile(self.config_file):
-            self.is_live = 0  # no config will prevent live mode
-
         # read and set config from file
         if os.path.isfile(self.config_file):
             self.config_provided = True
             try:
-                # replace tabs in config files, yaml doesn't support tabs and wants spaces
-                with fileinput.FileInput(self.config_file, inplace=True) as stream:
-                    for line in stream:
-                        print(line.replace("\t", "  "), end="")
-
                 with open(self.config_file, "r") as stream:
-                    self.config = yaml.safe_load(stream)
+                    try:
+                        self.config = yaml.safe_load(stream)
+                    except:
+                        try:
+                            self.config = json.load(stream)
+                        except json.decoder.JSONDecodeError as err:
+                            sys.tracebacklimit = 0
+                            raise ValueError('Invalid config.json: ' + str(err))
 
             except (ScannerError, ConstructorError) as err:
                 sys.tracebacklimit = 0
@@ -146,8 +147,8 @@ class Config:
             self.api_key,
             self.api_secret,
             self.api_passphrase,
+            self.market
         ) = self._set_default_api_info(self.exchange)
-        self.market = "BTCGBP"
 
         if self.config_provided:
             if self.exchange == "coinbasepro" and "coinbasepro" in self.config:
@@ -217,18 +218,21 @@ class Config:
                 "api_key": "0000000000000000000000000000000000000000000000000000000000000000",
                 "api_secret": "0000000000000000000000000000000000000000000000000000000000000000",
                 "api_passphrase": "",
+                "market": "BTCGBP"
             },
             "coinbasepro": {
                 "api_url": "https://api.pro.coinbase.com",
                 "api_key": "00000000000000000000000000000000",
                 "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
                 "api_passphrase": "00000000000",
+                "market": "BTC-GBP"
             },
             "dummy": {
                 "api_url": "https://api.pro.coinbase.com",
                 "api_key": "00000000000000000000000000000000",
                 "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
                 "api_passphrase": "00000000000",
+                "market": "BTC-GBP"
             },
         }
         return (
@@ -236,6 +240,7 @@ class Config:
             conf[exchange]["api_key"],
             conf[exchange]["api_secret"],
             conf[exchange]["api_passphrase"],
+            conf[exchange]["market"]
         )
 
     def getVersionFromREADME(self) -> str:
