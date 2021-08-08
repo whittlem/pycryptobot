@@ -12,7 +12,7 @@ from models.exchange.coinbase_pro import AuthAPI as CBAuthAPI, PublicAPI as CBPu
 from models.config import binanceParseMarket, coinbaseProParseMarket
 from models.helper.LogHelper import Logger
 from models.helper.TextBoxHelper import TextBox
-from models.Config import Config
+from models.BotConfig import BotConfig
 
 # disable insecure ssl warning
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -45,7 +45,7 @@ def truncate(f: Union[int, float], n: Union[int, float]) -> str:
     return f'{math.floor(f * 10 ** n) / 10 ** n:.{n}f}'
 
 
-class PyCryptoBot(Config):
+class PyCryptoBot(BotConfig):
     def __init__(self, config_file: str = None, exchange: str = None):
         self.config_file = config_file or 'config.json'
         self.exchange = exchange
@@ -732,7 +732,7 @@ class PyCryptoBot(Config):
 
                     if self.smart_switch == 1:
                         self.simstartdate = str(startDate)
-                        self.simenddate = str(endDate)				  
+                        self.simenddate = str(endDate)
 
                     if len(tradingData) < 300:
                         raise Exception(
