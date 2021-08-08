@@ -398,7 +398,6 @@ class AuthAPI(AuthAPIBase):
         df["status"] = df["status"].str.lower()
 
         def calculate_price(row):
-            print (row)
             if row.type == 'LIMIT' and float(row.price) > 0:
                 return row.price
             elif row.action == 'buy':
