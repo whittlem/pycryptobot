@@ -114,8 +114,12 @@ class Config:
                 with open(self.config_file, "r") as stream:
                     try:
                         self.config = yaml.safe_load(stream)
-                    except ScannerError:
-                        self.config = json.load(stream)
+                    except:
+                        try:
+                            self.config = json.load(stream)
+                        except json.decoder.JSONDecodeError as err:
+                            sys.tracebacklimit = 0
+                            raise ValueError('Invalid config.json: ' + str(err))
 
             except (ScannerError, ConstructorError) as err:
                 sys.tracebacklimit = 0
