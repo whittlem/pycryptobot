@@ -1,5 +1,4 @@
 import logging
-from logging.handlers import TimedRotatingFileHandler
 
 
 class Logger:
@@ -24,13 +23,20 @@ class Logger:
             return logging.NOTSET
 
     @classmethod
-    def configure(cls, filelog=1, logfile="pycryptobot.log", fileloglevel="DEBUG", consolelog=1, consoleloglevel="INFO"):
+    def configure(
+        cls,
+        filelog=1,
+        logfile="pycryptobot.log",
+        fileloglevel="DEBUG",
+        consolelog=1,
+        consoleloglevel="INFO",
+    ):
         # reduce informational logging
         logging.getLogger("requests").setLevel(logging.WARNING)
         logging.getLogger("urllib3").setLevel(logging.WARNING)
 
         # initialize class logger
-        cls.logger = logging.getLogger('pycryptobot')
+        cls.logger = logging.getLogger("pycryptobot")
         cls.logger.setLevel(logging.DEBUG)
 
         if not consolelog and not filelog:
@@ -38,7 +44,7 @@ class Logger:
 
         if consolelog:
             # set a format which is simpler for console use
-            consoleHandlerFormatter = logging.Formatter('%(message)s')
+            consoleHandlerFormatter = logging.Formatter("%(message)s")
             # define a Handler which writes sys.stdout
             consoleHandler = logging.StreamHandler()
             # Set log level
@@ -52,9 +58,10 @@ class Logger:
         if filelog:
             # set up logging to file
             fileHandlerFormatter = logging.Formatter(
-                fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-            fileHandler = TimedRotatingFileHandler(filename=logfile, when='midnight',
-                                                   backupCount=10)
+                fmt="%(asctime)s %(levelname)-8s %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
+            )
+            fileHandler = logging.FileHandler(logfile)
             fileHandler.setLevel(cls.get_level(fileloglevel))
             fileHandler.setFormatter(fileHandlerFormatter)
             cls.logger.addHandler(fileHandler)
