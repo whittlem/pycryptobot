@@ -12,7 +12,8 @@ Upgrade library dependancies (if required):
 
 ### Changed
 
--- Removed debug print
+-- Removed log rotation from the bot as it shouldn't be there
+-- Removed debug code which was left in
 
 ## [3.2.0] - 2021-08-08
 
