@@ -14,10 +14,6 @@ Upgrade library dependancies (if required):
 
 -- Drafted new release
 
-### Changed
-
--- Fix issue with tabs in config files
-
 ## [3.2.1] - 2021-08-08
 
 ### Changed
