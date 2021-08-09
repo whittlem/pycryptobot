@@ -116,6 +116,7 @@ class BotConfig:
                         self.config = yaml.safe_load(stream)
                     except:
                         try:
+                            stream.seek(0)
                             self.config = json.load(stream)
                         except json.decoder.JSONDecodeError as err:
                             sys.tracebacklimit = 0
