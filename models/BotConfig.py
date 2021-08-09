@@ -115,8 +115,12 @@ class BotConfig:
                     try:
                         self.config = yaml.safe_load(stream)
                     except:
-                        stream.seek(0)
-                        self.config = json.load(stream)
+                        try:
+                            stream.seek(0)
+                            self.config = json.load(stream)
+                        except json.decoder.JSONDecodeError as err:
+                            sys.tracebacklimit = 0
+                            raise ValueError('Invalid config.json: ' + str(err))
 
             except (ScannerError, ConstructorError) as err:
                 sys.tracebacklimit = 0
