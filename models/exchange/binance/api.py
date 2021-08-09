@@ -164,10 +164,6 @@ class AuthAPI(AuthAPIBase):
         df = df[df.available != "0.00000000"]
         df = df[df.available != "0.00"]
 
-        # if df is empty after filtering, then return
-        if len(df) == 0:
-            return pd.DataFrame()
-
         # rename columns
         df.columns = [
             "index",
@@ -398,11 +394,11 @@ class AuthAPI(AuthAPIBase):
         df["status"] = df["status"].str.lower()
 
         def calculate_price(row):
-            if row.type == 'LIMIT' and float(row.price) > 0:
+            if row.type == "LIMIT" and float(row.price) > 0:
                 return row.price
-            elif row.action == 'buy':
+            elif row.action == "buy":
                 return float(row.cummulativeQuoteQty) / float(row.filled)
-            elif row.action == 'sell':
+            elif row.action == "sell":
                 return float(row.cummulativeQuoteQty) / float(row.size)
             else:
                 return row.price
@@ -636,16 +632,23 @@ class AuthAPI(AuthAPIBase):
 
         try:
             resp = self._dispatch_request(method)(**params)
+            json = resp.json()
 
-            if resp.status_code != 200:
-                json = resp.json()
-                if "msg" in json:
-                    resp_message = resp.json()["msg"]
-                elif "message" in json:
-                    resp_message = resp.json()["message"]
-                else:
-                    resp_message = "undefined error"
+            if "msg" in json:
+                resp_message = json["msg"]
+            elif "message" in json:
+                resp_message = json["message"]
+            else:
+                resp_message = ""
 
+            if resp.status_code == 400 and (
+                resp_message
+                == "Timestamp for this request is outside of the recvWindow."
+            ):
+                message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (hint: increase recvWindow with --recvWindow <5000-60000>)"
+                Logger.error(f"Error: {message}")
+                return {}
+            elif resp.status_code != 200:
                 message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
                 if self.die_on_api_error:
                     raise Exception(message)
