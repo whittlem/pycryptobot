@@ -112,19 +112,28 @@ class BotConfig:
             self.config_provided = True
             try:
                 with open(self.config_file, "r") as stream:
-                    self.config = json.load(stream)
+                    try:
+                        self.config = yaml.safe_load(stream)
+                    except:
+                        stream.seek(0)
+                        self.config = json.load(stream)
 
-            except json.decoder.JSONDecodeError as err:
+            except (ScannerError, ConstructorError) as err:
                 sys.tracebacklimit = 0
-                raise ValueError('Invalid config.json: ' + str(err))
+                raise ValueError(
+                    f"Invalid config: cannot parse config file: {str(err)}"
+                )
 
-            except IOError as err:
+            except (IOError, FileNotFoundError) as err:
                 sys.tracebacklimit = 0
-                raise ValueError('Invalid config.json: ' + str(err))
+                raise ValueError(f"Invalid config: cannot open config file: {str(err)}")
 
             except ValueError as err:
                 sys.tracebacklimit = 0
-                raise ValueError('Invalid config.json: ' + str(err))
+                raise ValueError("Invalid config: " + str(err))
+
+            except:
+                raise
 
         # set exchange platform
         self.exchange = self._set_exchange(kwargs["exchange"])
