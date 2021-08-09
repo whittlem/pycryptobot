@@ -53,7 +53,7 @@ In general, we follow the ["fork-and-pull" Git workflow](https://github.com/susa
 5. Following any [formatting](#code-style-conventions) and testing guidelines specific to this repo
 6. Increment the version number in the [README](../README.md). Try and follow [SemVer](https://semver.org/). If you're unsure, reach out to the contributors.
 7. Push changes to your fork
-8. Open a PR in this repository and follow the PR template so that we can efficiently review the changes.
+8. Open a PR in this repository against the *beta* branch and follow the PR template so that we can efficiently review the changes.
 
 ### Code Style Conventions
 
