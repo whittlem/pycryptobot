@@ -164,6 +164,9 @@ class AuthAPI(AuthAPIBase):
         df = df[df.available != "0.00000000"]
         df = df[df.available != "0.00"]
 
+        if "currency" not in df:
+            return pd.DataFrame()
+
         # rename columns
         df.columns = [
             "index",

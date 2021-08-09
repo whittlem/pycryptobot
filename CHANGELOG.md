@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [3.2.5] - 2021-08-09
+
+### Changed
+
+-- Added failsafe check for "currency" in getAccounts
+
 ## [3.2.4] - 2021-08-09
 
 ### Changed
