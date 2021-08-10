@@ -129,7 +129,10 @@ class AuthAPI(AuthAPIBase):
         """Retrieves your list of accounts"""
 
         # GET /api/v3/account
-        resp = self.authAPI("GET", "/api/v3/account")
+        try:
+            resp = self.authAPI("GET", "/api/v3/account")
+        except:
+            return pd.DataFrame()
 
         if "balances" in resp:
             balances = resp["balances"]
@@ -163,9 +166,6 @@ class AuthAPI(AuthAPIBase):
         # exclude accounts with a nil balance
         df = df[df.available != "0.00000000"]
         df = df[df.available != "0.00"]
-
-        if "currency" not in df:
-            return pd.DataFrame()
 
         # rename columns
         df.columns = [

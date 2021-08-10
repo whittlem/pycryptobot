@@ -13,6 +13,8 @@ Upgrade library dependancies (if required):
 ### Changed
 
 -- Fixed custom logging bug
+-- Add a try/catch to resolve "currency" key issue with recvWindow
+-- Removed previous failsafe check for "currency" in getAccounts
 
 ## [3.2.5] - 2021-08-09
 
