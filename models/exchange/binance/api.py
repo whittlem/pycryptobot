@@ -130,7 +130,9 @@ class AuthAPI(AuthAPIBase):
 
         # GET /api/v3/account
         try:
-            resp = self.authAPI("GET", "/api/v3/account")
+            resp = self.authAPI(
+                "GET", "/api/v3/account", {"recvWindow": self.recv_window}
+            )
         except:
             return pd.DataFrame()
 
@@ -683,6 +685,13 @@ class AuthAPI(AuthAPIBase):
             ):
                 message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (hint: increase recvWindow with --recvWindow <5000-60000>)"
                 Logger.error(f"Error: {message}")
+                return {}
+            elif resp.status_code == 429 and (
+                resp_message.startswith("Too much request weight used")
+            ):
+                message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (sleeping for 5 seconds to prevent being banned)"
+                Logger.error(f"Error: {message}")
+                time.sleep(5)
                 return {}
             elif resp.status_code != 200:
                 message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
