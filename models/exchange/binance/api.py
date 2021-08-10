@@ -129,7 +129,12 @@ class AuthAPI(AuthAPIBase):
         """Retrieves your list of accounts"""
 
         # GET /api/v3/account
-        resp = self.authAPI("GET", "/api/v3/account")
+        try:
+            resp = self.authAPI(
+                "GET", "/api/v3/account", {"recvWindow": self.recv_window}
+            )
+        except:
+            return pd.DataFrame()
 
         if "balances" in resp:
             balances = resp["balances"]
@@ -197,6 +202,39 @@ class AuthAPI(AuthAPIBase):
     def getFees(self, market: str = "") -> pd.DataFrame:
         """Retrieves a account fees"""
 
+        volume = 0
+        try:
+            # GET /api/v3/klines
+            resp = self.authAPI(
+                "GET",
+                "/api/v3/klines",
+                {"symbol": "BTCUSDT", "interval": "1d", "limit": 30},
+            )
+
+            # convert the API response into a Pandas DataFrame
+            df = pd.DataFrame(
+                resp,
+                columns=[
+                    "open_time",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "volume",
+                    "close_time",
+                    "quote_asset_volume",
+                    "number_of_trades",
+                    "taker_buy_base_asset_volume",
+                    "traker_buy_quote_asset_volume",
+                    "ignore",
+                ],
+            )
+
+            df["volume"] = df["volume"].astype(float)
+            volume = np.round(float(df[["volume"]].mean()))
+        except:
+            pass
+
         # GET /api/v3/account
         resp = self.authAPI("GET", "/api/v3/account", {"recvWindow": self.recv_window})
 
@@ -212,7 +250,7 @@ class AuthAPI(AuthAPIBase):
                 {
                     "maker_fee_rate": maker_fee_rate,
                     "taker_fee_rate": taker_fee_rate,
-                    "usd_volume": 0,
+                    "usd_volume": volume,
                     "market": "",
                 }
             ]
@@ -647,6 +685,13 @@ class AuthAPI(AuthAPIBase):
             ):
                 message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (hint: increase recvWindow with --recvWindow <5000-60000>)"
                 Logger.error(f"Error: {message}")
+                return {}
+            elif resp.status_code == 429 and (
+                resp_message.startswith("Too much request weight used")
+            ):
+                message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (sleeping for 5 seconds to prevent being banned)"
+                Logger.error(f"Error: {message}")
+                time.sleep(5)
                 return {}
             elif resp.status_code != 200:
                 message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"

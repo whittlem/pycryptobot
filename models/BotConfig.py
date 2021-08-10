@@ -90,14 +90,6 @@ class BotConfig:
 
         self.recv_window = self._set_recv_window()
 
-        Logger.configure(
-            filelog=self.filelog,
-            logfile=self.logfile,
-            fileloglevel=self.fileloglevel,
-            consolelog=self.consolelog,
-            consoleloglevel=self.consoleloglevel,
-        )
-
         self.config_file = kwargs.get("config_file", "config.json")
 
         self.config_provided = False
@@ -188,6 +180,14 @@ class BotConfig:
             self.filelog = 0
             self.fileloglevel = "NOTSET"
             self.logfile == "/dev/null"
+
+        Logger.configure(
+            filelog=self.filelog,
+            logfile=self.logfile,
+            fileloglevel=self.fileloglevel,
+            consolelog=self.consolelog,
+            consoleloglevel=self.consoleloglevel,
+        )
 
     def _set_exchange(self, exchange: str = None) -> str:
         valid_exchanges = ["coinbasepro", "binance", "dummy"]

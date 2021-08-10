@@ -126,8 +126,11 @@ class AuthAPI(AuthAPIBase):
     def getAccounts(self) -> pd.DataFrame:
         """Retrieves your list of accounts"""
 
-        # GET /accounts
-        df = self.authAPI("GET", "accounts")
+        # GET /api/v3/account
+        try:
+            df = self.authAPI("GET", "accounts")
+        except:
+            return pd.DataFrame()
 
         if len(df) == 0:
             return pd.DataFrame()
@@ -561,7 +564,22 @@ class AuthAPI(AuthAPIBase):
             elif method == "POST":
                 resp = requests.post(self._api_url + uri, json=payload, auth=self)
 
-            if resp.status_code != 200:
+            json = resp.json()
+
+            if "msg" in json:
+                resp_message = json["msg"]
+            elif "message" in json:
+                resp_message = json["message"]
+            else:
+                resp_message = ""
+
+            if resp.status_code == 401 and (
+                resp_message == "request timestamp expired"
+            ):
+                message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (hint: check your system time is using NTP)"
+                Logger.error(f"Error: {message}")
+                return {}
+            elif resp.status_code != 200:
                 if self.die_on_api_error or resp.status_code == 401:
                     # disable traceback
                     sys.tracebacklimit = 0
@@ -574,7 +592,7 @@ class AuthAPI(AuthAPIBase):
                         + self._api_url
                         + uri
                         + " - "
-                        + "{}".format(resp.json()["message"])
+                        + "{}".format(resp_message)
                     )
                 else:
                     Logger.error(
@@ -586,17 +604,17 @@ class AuthAPI(AuthAPIBase):
                         + self._api_url
                         + uri
                         + " - "
-                        + "{}".format(resp.json()["message"])
+                        + "{}".format(resp_message)
                     )
                     return pd.DataFrame()
 
             resp.raise_for_status()
 
-            if isinstance(resp.json(), list):
-                df = pd.DataFrame.from_dict(resp.json())
+            if isinstance(json, list):
+                df = pd.DataFrame.from_dict(json)
                 return df
             else:
-                df = pd.DataFrame(resp.json(), index=[0])
+                df = pd.DataFrame(json, index=[0])
                 return df
 
         except requests.ConnectionError as err:
