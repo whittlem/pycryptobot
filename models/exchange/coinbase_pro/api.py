@@ -126,8 +126,11 @@ class AuthAPI(AuthAPIBase):
     def getAccounts(self) -> pd.DataFrame:
         """Retrieves your list of accounts"""
 
-        # GET /accounts
-        df = self.authAPI("GET", "accounts")
+        # GET /api/v3/account
+        try:
+            df = self.authAPI("GET", "accounts")
+        except:
+            return pd.DataFrame()
 
         if len(df) == 0:
             return pd.DataFrame()
