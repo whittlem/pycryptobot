@@ -35,7 +35,7 @@ print(df)
 """
 app = PyCryptoBot(exchange='binance')
 api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
-df = api.getAccount(416)
+df = api.getAccount()
 print(df)
 
 app = PyCryptoBot(exchange='coinbasepro')

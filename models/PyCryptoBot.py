@@ -104,7 +104,6 @@ class PyCryptoBot(BotConfig):
     def getGranularity(self) -> int:
         return self.granularity
 
-
     def getInterval(self, df: pd.DataFrame=pd.DataFrame(), iterations: int=0) -> pd.DataFrame:
         if len(df) == 0:
             return df
@@ -588,8 +587,7 @@ class PyCryptoBot(BotConfig):
             return api.getMakerFee()
         elif self.exchange == 'binance':
             api = BAuthAPI(self.getAPIKey(), self.getAPISecret(), self.getAPIURL(), recv_window=self.recv_window)
-            # return api.getMakerFee()
-            return 0.005
+            return api.getMakerFee()
         else:
             return 0.005
 
