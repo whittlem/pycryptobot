@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [3.2.7] - 2021-08-11
+
+### Changed
+
+-- Surrounded signed Binance API calls within a try except
+
 ## [3.2.6] - 2021-08-09
 
 ### Changed

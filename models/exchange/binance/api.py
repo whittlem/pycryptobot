@@ -133,66 +133,62 @@ class AuthAPI(AuthAPIBase):
             resp = self.authAPI(
                 "GET", "/api/v3/account", {"recvWindow": self.recv_window}
             )
-        except:
-            return pd.DataFrame()
 
-        if "balances" in resp:
-            balances = resp["balances"]
-
-            if isinstance(balances, list):
-                df = pd.DataFrame.from_dict(balances)
+            if isinstance(resp["balances"], list):
+                df = pd.DataFrame.from_dict(resp["balances"])
             else:
-                df = pd.DataFrame(balances, index=[0])
-        else:
-            return pd.DataFrame()
+                df = pd.DataFrame(resp["balances"], index=[0])
 
-        # if df is empty, then return
-        if len(df) == 0:
-            return pd.DataFrame()
+            # if df is empty, then return
+            if len(df) == 0:
+                return pd.DataFrame()
 
-        # exclude accounts that are locked
-        df = df[df.locked != 0.0]
-        df["locked"] = df["locked"].astype(bool)
+            # exclude accounts that are locked
+            df = df[df.locked != 0.0]
+            df["locked"] = df["locked"].astype(bool)
 
-        # reset the dataframe index to start from 0
-        df = df.reset_index()
+            # reset the dataframe index to start from 0
+            df = df.reset_index()
 
-        df["id"] = df["index"]
-        df["hold"] = 0.0
-        df["profile_id"] = None
-        df["available"] = df["free"]
+            df["id"] = df["index"]
+            df["hold"] = 0.0
+            df["profile_id"] = None
+            df["available"] = df["free"]
 
-        df["id"] = df["id"].astype(object)
-        df["hold"] = df["hold"].astype(object)
+            df["id"] = df["id"].astype(object)
+            df["hold"] = df["hold"].astype(object)
 
-        # exclude accounts with a nil balance
-        df = df[df.available != "0.00000000"]
-        df = df[df.available != "0.00"]
+            # exclude accounts with a nil balance
+            df = df[df.available != "0.00000000"]
+            df = df[df.available != "0.00"]
 
-        # rename columns
-        df.columns = [
-            "index",
-            "currency",
-            "balance",
-            "trading_enabled",
-            "id",
-            "hold",
-            "profile_id",
-            "available",
-        ]
-
-        return df[
-            [
+            # rename columns
+            df.columns = [
                 "index",
-                "id",
                 "currency",
                 "balance",
-                "hold",
-                "available",
-                "profile_id",
                 "trading_enabled",
+                "id",
+                "hold",
+                "profile_id",
+                "available",
             ]
-        ]
+
+            return df[
+                [
+                    "index",
+                    "id",
+                    "currency",
+                    "balance",
+                    "hold",
+                    "available",
+                    "profile_id",
+                    "trading_enabled",
+                ]
+            ]
+
+        except:
+            return pd.DataFrame()
 
     def getAccount(self) -> pd.DataFrame:
         """Retrieves all accounts for Binance as there is no specific account id"""
@@ -297,7 +293,7 @@ class AuthAPI(AuthAPIBase):
     def getMarkets(self) -> list:
         """Retrieves a list of markets on the exchange"""
 
-        # GET /api/v3/allOrders
+        # GET /api/v3/exchangeInfo
         resp = self.authAPI("GET", "/api/v3/exchangeInfo")
 
         if "symbols" in resp:
@@ -347,12 +343,39 @@ class AuthAPI(AuthAPIBase):
         if not status in ["open", "canceled", "pending", "done", "active", "all"]:
             raise ValueError("Invalid order status.")
 
-        if markets is not None:
-            df = pd.DataFrame()
-            for market in markets:
-                if full_scan is True:
-                    print(f"scanning {market} order history.")
+        try:
+            if markets is not None:
+                df = pd.DataFrame()
+                for market in markets:
+                    if full_scan is True:
+                        print(f"scanning {market} order history.")
 
+                    # GET /api/v3/allOrders
+                    resp = self.authAPI(
+                        "GET",
+                        "/api/v3/allOrders",
+                        {"symbol": market, "recvWindow": self.recv_window},
+                    )
+
+                    if full_scan is True:
+                        time.sleep(0.25)
+
+                    if isinstance(resp, list):
+                        df_tmp = pd.DataFrame.from_dict(resp)
+                    else:
+                        df_tmp = pd.DataFrame(resp, index=[0])
+
+                    if full_scan is True and len(df_tmp) > 0:
+                        self.order_history.append(market)
+
+                    if len(df_tmp) > 0:
+                        df = pd.concat([df, df_tmp])
+
+                if full_scan is True:
+                    print(
+                        "add to order history to prevent full scan:", self.order_history
+                    )
+            else:
                 # GET /api/v3/allOrders
                 resp = self.authAPI(
                     "GET",
@@ -360,111 +383,90 @@ class AuthAPI(AuthAPIBase):
                     {"symbol": market, "recvWindow": self.recv_window},
                 )
 
-                if full_scan is True:
-                    time.sleep(0.25)
-
                 if isinstance(resp, list):
-                    df_tmp = pd.DataFrame.from_dict(resp)
+                    df = pd.DataFrame.from_dict(resp)
                 else:
-                    df_tmp = pd.DataFrame(resp, index=[0])
+                    df = pd.DataFrame(resp, index=[0])
 
-                if full_scan is True and len(df_tmp) > 0:
-                    self.order_history.append(market)
+            if len(df) == 0 or "time" not in df:
+                return pd.DataFrame()
 
-                if len(df_tmp) > 0:
-                    df = pd.concat([df, df_tmp])
+            # feature engineering
 
-            if full_scan is True:
-                print("add to order history to prevent full scan:", self.order_history)
-        else:
-            # GET /api/v3/allOrders
-            resp = self.authAPI(
-                "GET",
-                "/api/v3/allOrders",
-                {"symbol": market, "recvWindow": self.recv_window},
+            df.time = df["time"].map(self.convert_time)
+            df["time"] = pd.to_datetime(df["time"]).dt.tz_localize("UTC")
+
+            df["size"] = np.where(
+                df["side"] == "BUY",
+                df["cummulativeQuoteQty"],
+                np.where(df["side"] == "SELL", df["executedQty"], 222),
+            )
+            df["fees"] = df["size"].astype(float) * 0.001
+            df["fees"] = df["fees"].astype(object)
+
+            df["side"] = df["side"].str.lower()
+
+            df.rename(
+                columns={
+                    "time": "created_at",
+                    "symbol": "market",
+                    "side": "action",
+                    "executedQty": "filled",
+                },
+                errors="raise",
+                inplace=True,
             )
 
-            if isinstance(resp, list):
-                df = pd.DataFrame.from_dict(resp)
-            else:
-                df = pd.DataFrame(resp, index=[0])
+            def convert_status(status: str = ""):
+                if status == "FILLED":
+                    return "done"
+                elif status == "NEW":
+                    return "open"
+                elif status == "PARTIALLY_FILLED":
+                    return "pending"
+                else:
+                    return status
 
-        if len(df) == 0 or "time" not in df:
-            return pd.DataFrame()
+            df.status = df.status.map(convert_status)
+            df["status"] = df["status"].str.lower()
 
-        # feature engineering
+            def calculate_price(row):
+                if row.type == "LIMIT" and float(row.price) > 0:
+                    return row.price
+                elif row.action == "buy":
+                    return float(row.cummulativeQuoteQty) / float(row.filled)
+                elif row.action == "sell":
+                    return float(row.cummulativeQuoteQty) / float(row.size)
+                else:
+                    return row.price
 
-        df.time = df["time"].map(self.convert_time)
-        df["time"] = pd.to_datetime(df["time"]).dt.tz_localize("UTC")
+            df["price"] = df.copy().apply(calculate_price, axis=1)
 
-        df["size"] = np.where(
-            df["side"] == "BUY",
-            df["cummulativeQuoteQty"],
-            np.where(df["side"] == "SELL", df["executedQty"], 222),
-        )
-        df["fees"] = df["size"].astype(float) * 0.001
-        df["fees"] = df["fees"].astype(object)
-
-        df["side"] = df["side"].str.lower()
-
-        df.rename(
-            columns={
-                "time": "created_at",
-                "symbol": "market",
-                "side": "action",
-                "executedQty": "filled",
-            },
-            errors="raise",
-            inplace=True,
-        )
-
-        def convert_status(status: str = ""):
-            if status == "FILLED":
-                return "done"
-            elif status == "NEW":
-                return "open"
-            elif status == "PARTIALLY_FILLED":
-                return "pending"
-            else:
-                return status
-
-        df.status = df.status.map(convert_status)
-        df["status"] = df["status"].str.lower()
-
-        def calculate_price(row):
-            if row.type == "LIMIT" and float(row.price) > 0:
-                return row.price
-            elif row.action == "buy":
-                return float(row.cummulativeQuoteQty) / float(row.filled)
-            elif row.action == "sell":
-                return float(row.cummulativeQuoteQty) / float(row.size)
-            else:
-                return row.price
-
-        df["price"] = df.copy().apply(calculate_price, axis=1)
-
-        # select columns
-        df = df[
-            [
-                "created_at",
-                "market",
-                "action",
-                "type",
-                "size",
-                "filled",
-                "fees",
-                "price",
-                "status",
+            # select columns
+            df = df[
+                [
+                    "created_at",
+                    "market",
+                    "action",
+                    "type",
+                    "size",
+                    "filled",
+                    "fees",
+                    "price",
+                    "status",
+                ]
             ]
-        ]
 
-        # filtering
-        if action != "":
-            df = df[df["action"] == action]
-        if status != "all":
-            df = df[df["status"] == status]
+            # filtering
+            if action != "":
+                df = df[df["action"] == action]
+            if status != "all":
+                df = df[df["status"] == status]
 
-        return df
+            return df
+
+        except:
+            return pd.DataFrame()
 
     def getTime(self) -> datetime:
         """Retrieves the exchange time"""
@@ -479,7 +481,7 @@ class AuthAPI(AuthAPIBase):
     def getMarketInfoFilters(self, market: str) -> pd.DataFrame:
         """Retrieves markets exchange info"""
 
-        # GET /api/v3/allOrders
+        # GET /api/v3/exchangeInfo
         resp = self.authAPI("GET", "/api/v3/exchangeInfo", {"symbol": market})
         df = pd.DataFrame()
 
@@ -496,16 +498,20 @@ class AuthAPI(AuthAPIBase):
     def getTradeFee(self, market: str) -> float:
         """Retrieves the trade fees"""
 
-        # GET /sapi/v1/asset/tradeFee
-        resp = self.authAPI(
-            "GET",
-            "/sapi/v1/asset/tradeFee",
-            {"symbol": market, "recvWindow": self.recv_window},
-        )
+        try:
+            # GET /sapi/v1/asset/tradeFee
+            resp = self.authAPI(
+                "GET",
+                "/sapi/v1/asset/tradeFee",
+                {"symbol": market, "recvWindow": self.recv_window},
+            )
 
-        if len(resp) == 1 and "takerCommission" in resp[0]:
-            return float(resp[0]["takerCommission"])
-        else:
+            if len(resp) == 1 and "takerCommission" in resp[0]:
+                return float(resp[0]["takerCommission"])
+            else:
+                return DEFAULT_TRADE_FEE_RATE
+
+        except:
             return DEFAULT_TRADE_FEE_RATE
 
     def getTicker(self, market: str = DEFAULT_MARKET) -> tuple:
