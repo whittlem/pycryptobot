@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [3.2.8] - 2021-08-12
+
+### Changed
+
+-- Surrounded API calls for both Binance and Coinbase Pro within a try except
+
 ## [3.2.7] - 2021-08-11
 
 ### Changed

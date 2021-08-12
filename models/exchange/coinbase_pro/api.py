@@ -150,19 +150,29 @@ class AuthAPI(AuthAPIBase):
         if not p.match(account):
             self.handle_init_error("Coinbase Pro account is invalid")
 
-        return self.authAPI("GET", f"accounts/{account}")
+        try:
+            return self.authAPI("GET", f"accounts/{account}")
+        except:
+            return pd.DataFrame()
 
     def getFees(self, market: str = "") -> pd.DataFrame:
         """Retrieves market fees"""
 
-        df = self.authAPI("GET", "fees")
+        try:
+            df = self.authAPI("GET", "fees")
 
-        if len(market):
-            df["market"] = market
-        else:
-            df["market"] = ""
+            if len(df) == 0:
+                return pd.DataFrame()
 
-        return df
+            if len(market):
+                df["market"] = market
+            else:
+                df["market"] = ""
+
+            return df
+
+        except:
+            return pd.DataFrame()
 
     def getMakerFee(self, market: str = "") -> float:
         """Retrieves maker fee"""
@@ -199,8 +209,14 @@ class AuthAPI(AuthAPIBase):
     def getUSDVolume(self) -> float:
         """Retrieves USD volume"""
 
-        fees = self.getFees()
-        return float(fees["usd_volume"].to_string(index=False).strip())
+        try:
+            fees = self.getFees()
+            if "usd_volume" in fees:
+                return float(fees["usd_volume"].to_string(index=False).strip())
+            else:
+                return 0
+        except:
+            return 0
 
     def getOrders(
         self, market: str = "", action: str = "", status: str = "all"
@@ -223,179 +239,183 @@ class AuthAPI(AuthAPIBase):
         if not status in ["open", "pending", "done", "active", "all"]:
             raise ValueError("Invalid order status.")
 
-        # GET /orders?status
-        resp = self.authAPI("GET", f"orders?status={status}")
-        if len(resp) > 0:
-            if status == "open":
-                df = resp.copy()[
-                    [
-                        "created_at",
-                        "product_id",
-                        "side",
-                        "type",
-                        "size",
-                        "price",
-                        "status",
-                    ]
-                ]
-                df["value"] = float(df["price"]) * float(df["size"]) - (
-                    float(df["price"]) * MARGIN_ADJUSTMENT
-                )
-            else:
-                if "specified_funds" in resp:
+        try:
+            # GET /orders?status
+            resp = self.authAPI("GET", f"orders?status={status}")
+            if len(resp) > 0:
+                if status == "open":
                     df = resp.copy()[
                         [
                             "created_at",
                             "product_id",
                             "side",
                             "type",
-                            "filled_size",
-                            "specified_funds",
-                            "executed_value",
-                            "fill_fees",
+                            "size",
+                            "price",
                             "status",
                         ]
                     ]
+                    df["value"] = float(df["price"]) * float(df["size"]) - (
+                        float(df["price"]) * MARGIN_ADJUSTMENT
+                    )
                 else:
-                    # manual limit orders do not contain 'specified_funds'
-                    df_tmp = resp.copy()
-                    df_tmp["specified_funds"] = None
-                    df = df_tmp[
-                        [
-                            "created_at",
-                            "product_id",
-                            "side",
-                            "type",
-                            "filled_size",
-                            "specified_funds",
-                            "executed_value",
-                            "fill_fees",
-                            "status",
+                    if "specified_funds" in resp:
+                        df = resp.copy()[
+                            [
+                                "created_at",
+                                "product_id",
+                                "side",
+                                "type",
+                                "filled_size",
+                                "specified_funds",
+                                "executed_value",
+                                "fill_fees",
+                                "status",
+                            ]
                         ]
-                    ]
-        else:
-            return pd.DataFrame()
+                    else:
+                        # manual limit orders do not contain 'specified_funds'
+                        df_tmp = resp.copy()
+                        df_tmp["specified_funds"] = None
+                        df = df_tmp[
+                            [
+                                "created_at",
+                                "product_id",
+                                "side",
+                                "type",
+                                "filled_size",
+                                "specified_funds",
+                                "executed_value",
+                                "fill_fees",
+                                "status",
+                            ]
+                        ]
+            else:
+                return pd.DataFrame()
 
-        # replace null NaN values with 0
-        df.copy().fillna(0, inplace=True)
+            # replace null NaN values with 0
+            df.copy().fillna(0, inplace=True)
 
-        df_tmp = df.copy()
-        df_tmp["price"] = 0.0
-        df_tmp["filled_size"] = df_tmp["filled_size"].astype(float)
-        df_tmp["specified_funds"] = df_tmp["specified_funds"].astype(float)
-        df_tmp["executed_value"] = df_tmp["executed_value"].astype(float)
-        df_tmp["fill_fees"] = df_tmp["fill_fees"].astype(float)
-        df = df_tmp
+            df_tmp = df.copy()
+            df_tmp["price"] = 0.0
+            df_tmp["filled_size"] = df_tmp["filled_size"].astype(float)
+            df_tmp["specified_funds"] = df_tmp["specified_funds"].astype(float)
+            df_tmp["executed_value"] = df_tmp["executed_value"].astype(float)
+            df_tmp["fill_fees"] = df_tmp["fill_fees"].astype(float)
+            df = df_tmp
 
-        # calculates the price at the time of purchase
-        if status != "open":
-            df["price"] = df.copy().apply(
-                lambda row: (float(row.executed_value) * 100)
-                / (float(row.filled_size) * 100)
-                if float(row.filled_size) > 0
-                else 0,
-                axis=1,
-            )
-            # df.loc[df['filled_size'] > 0, 'price'] = (df['executed_value'] * 100) / (df['filled_size'] * 100)
+            # calculates the price at the time of purchase
+            if status != "open":
+                df["price"] = df.copy().apply(
+                    lambda row: (float(row.executed_value) * 100)
+                    / (float(row.filled_size) * 100)
+                    if float(row.filled_size) > 0
+                    else 0,
+                    axis=1,
+                )
+                # df.loc[df['filled_size'] > 0, 'price'] = (df['executed_value'] * 100) / (df['filled_size'] * 100)
 
-        # rename the columns
-        if status == "open":
-            df.columns = [
-                "created_at",
-                "market",
-                "action",
-                "type",
-                "size",
-                "price",
-                "status",
-                "value",
-            ]
-            df = df[
-                [
+            # rename the columns
+            if status == "open":
+                df.columns = [
                     "created_at",
                     "market",
                     "action",
                     "type",
                     "size",
+                    "price",
+                    "status",
                     "value",
+                ]
+                df = df[
+                    [
+                        "created_at",
+                        "market",
+                        "action",
+                        "type",
+                        "size",
+                        "value",
+                        "status",
+                        "price",
+                    ]
+                ]
+                df["size"] = df["size"].astype(float).round(8)
+            else:
+                df.columns = [
+                    "created_at",
+                    "market",
+                    "action",
+                    "type",
+                    "value",
+                    "size",
+                    "filled",
+                    "fees",
                     "status",
                     "price",
                 ]
-            ]
-            df["size"] = df["size"].astype(float).round(8)
-        else:
-            df.columns = [
-                "created_at",
-                "market",
-                "action",
-                "type",
-                "value",
-                "size",
-                "filled",
-                "fees",
-                "status",
-                "price",
-            ]
-            df = df[
-                [
+                df = df[
+                    [
+                        "created_at",
+                        "market",
+                        "action",
+                        "type",
+                        "size",
+                        "value",
+                        "fees",
+                        "price",
+                        "status",
+                    ]
+                ]
+                df.columns = [
                     "created_at",
                     "market",
                     "action",
                     "type",
                     "size",
-                    "value",
+                    "filled",
                     "fees",
                     "price",
                     "status",
                 ]
-            ]
-            df.columns = [
-                "created_at",
-                "market",
-                "action",
-                "type",
-                "size",
-                "filled",
-                "fees",
-                "price",
-                "status",
-            ]
-            df_tmp = df.copy()
-            df_tmp["filled"] = df_tmp["filled"].astype(float).round(8)
-            df_tmp["size"] = df_tmp["size"].astype(float).round(8)
-            df_tmp["fees"] = df_tmp["fees"].astype(float).round(8)
-            df_tmp["price"] = df_tmp["price"].astype(float).round(8)
-            df = df_tmp
+                df_tmp = df.copy()
+                df_tmp["filled"] = df_tmp["filled"].astype(float).round(8)
+                df_tmp["size"] = df_tmp["size"].astype(float).round(8)
+                df_tmp["fees"] = df_tmp["fees"].astype(float).round(8)
+                df_tmp["price"] = df_tmp["price"].astype(float).round(8)
+                df = df_tmp
 
-        # convert dataframe to a time series
-        tsidx = pd.DatetimeIndex(
-            pd.to_datetime(df["created_at"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z")
-        )
-        df.set_index(tsidx, inplace=True)
-        df = df.drop(columns=["created_at"])
+            # convert dataframe to a time series
+            tsidx = pd.DatetimeIndex(
+                pd.to_datetime(df["created_at"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z")
+            )
+            df.set_index(tsidx, inplace=True)
+            df = df.drop(columns=["created_at"])
 
-        # if marker provided
-        if market != "":
-            # filter by market
-            df = df[df["market"] == market]
+            # if marker provided
+            if market != "":
+                # filter by market
+                df = df[df["market"] == market]
 
-        # if action provided
-        if action != "":
-            # filter by action
-            df = df[df["action"] == action]
+            # if action provided
+            if action != "":
+                # filter by action
+                df = df[df["action"] == action]
 
-        # if status provided
-        if status != "all":
-            # filter by status
-            df = df[df["status"] == status]
+            # if status provided
+            if status != "all":
+                # filter by status
+                df = df[df["status"] == status]
 
-        # reverse orders and reset index
-        df = df.iloc[::-1].reset_index()
+            # reverse orders and reset index
+            df = df.iloc[::-1].reset_index()
 
-        # for sell orders size is filled
-        df["size"] = df["size"].fillna(df["filled"])
+            # for sell orders size is filled
+            df["size"] = df["size"].fillna(df["filled"])
 
-        return df
+            return df
+
+        except:
+            return pd.DataFrame()
 
     def getTime(self) -> datetime:
         """Retrieves the exchange time"""
@@ -430,22 +450,26 @@ class AuthAPI(AuthAPIBase):
         if quote_quantity < MINIMUM_TRADE_AMOUNT:
             raise ValueError(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).")
 
-        order = {
-            "product_id": market,
-            "type": "market",
-            "side": "buy",
-            "funds": self.marketQuoteIncrement(market, quote_quantity),
-        }
+        try:
+            order = {
+                "product_id": market,
+                "type": "market",
+                "side": "buy",
+                "funds": self.marketQuoteIncrement(market, quote_quantity),
+            }
 
-        Logger.debug(order)
+            Logger.debug(order)
 
-        # connect to authenticated coinbase pro api
-        model = AuthAPI(
-            self._api_key, self._api_secret, self._api_passphrase, self._api_url
-        )
+            # connect to authenticated coinbase pro api
+            model = AuthAPI(
+                self._api_key, self._api_secret, self._api_passphrase, self._api_url
+            )
 
-        # place order and return result
-        return model.authAPI("POST", "orders", order)
+            # place order and return result
+            return model.authAPI("POST", "orders", order)
+
+        except:
+            return pd.DataFrame()
 
     def marketSell(self, market: str = "", base_quantity: float = 0) -> pd.DataFrame:
         """Executes a market sell providing a crypto amount"""
@@ -456,19 +480,23 @@ class AuthAPI(AuthAPIBase):
         if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
             raise TypeError("The crypto amount is not numeric.")
 
-        order = {
-            "product_id": market,
-            "type": "market",
-            "side": "sell",
-            "size": self.marketBaseIncrement(market, base_quantity),
-        }
+        try:
+            order = {
+                "product_id": market,
+                "type": "market",
+                "side": "sell",
+                "size": self.marketBaseIncrement(market, base_quantity),
+            }
 
-        Logger.debug(order)
+            Logger.debug(order)
 
-        model = AuthAPI(
-            self._api_key, self._api_secret, self._api_passphrase, self._api_url
-        )
-        return model.authAPI("POST", "orders", order)
+            model = AuthAPI(
+                self._api_key, self._api_secret, self._api_passphrase, self._api_url
+            )
+            return model.authAPI("POST", "orders", order)
+
+        except:
+            return pd.DataFrame()
 
     def limitSell(
         self, market: str = "", base_quantity: float = 0, future_price: float = 0
@@ -484,20 +512,24 @@ class AuthAPI(AuthAPIBase):
         if not isinstance(future_price, int) and not isinstance(future_price, float):
             raise TypeError("The future crypto price is not numeric.")
 
-        order = {
-            "product_id": market,
-            "type": "limit",
-            "side": "sell",
-            "size": self.marketBaseIncrement(market, base_quantity),
-            "price": future_price,
-        }
+        try:
+            order = {
+                "product_id": market,
+                "type": "limit",
+                "side": "sell",
+                "size": self.marketBaseIncrement(market, base_quantity),
+                "price": future_price,
+            }
 
-        Logger.debug(order)
+            Logger.debug(order)
 
-        model = AuthAPI(
-            self._api_key, self._api_secret, self._api_passphrase, self._api_url
-        )
-        return model.authAPI("POST", "orders", order)
+            model = AuthAPI(
+                self._api_key, self._api_secret, self._api_passphrase, self._api_url
+            )
+            return model.authAPI("POST", "orders", order)
+
+        except:
+            return pd.DataFrame()
 
     def cancelOrders(self, market: str = "") -> pd.DataFrame:
         """Cancels an order"""
@@ -505,10 +537,14 @@ class AuthAPI(AuthAPIBase):
         if not self._isMarketValid(market):
             raise ValueError("Coinbase Pro market is invalid.")
 
-        model = AuthAPI(
-            self._api_key, self._api_secret, self._api_passphrase, self._api_url
-        )
-        return model.authAPI("DELETE", "orders")
+        try:
+            model = AuthAPI(
+                self._api_key, self._api_secret, self._api_passphrase, self._api_url
+            )
+            return model.authAPI("DELETE", "orders")
+
+        except:
+            return pd.DataFrame()
 
     def marketBaseIncrement(self, market, amount) -> float:
         """Retrives the market base increment"""
