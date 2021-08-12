@@ -134,12 +134,16 @@ class AuthAPI(AuthAPIBase):
                 "GET", "/api/v3/account", {"recvWindow": self.recv_window}
             )
 
+            # unexpected data, then return
+            if len(resp) == 0 or "balances" not in resp:
+                return pd.DataFrame()
+
             if isinstance(resp["balances"], list):
                 df = pd.DataFrame.from_dict(resp["balances"])
             else:
                 df = pd.DataFrame(resp["balances"], index=[0])
 
-            # if df is empty, then return
+            # unexpected data, then return
             if len(df) == 0:
                 return pd.DataFrame()
 
@@ -162,6 +166,10 @@ class AuthAPI(AuthAPIBase):
             df = df[df.available != "0.00000000"]
             df = df[df.available != "0.00"]
 
+            # inconsistent columns, then return
+            if len(df.columns) != 8:
+                return pd.DataFrame()
+
             # rename columns
             df.columns = [
                 "index",
@@ -173,6 +181,10 @@ class AuthAPI(AuthAPIBase):
                 "profile_id",
                 "available",
             ]
+
+            # return if currency is missing
+            if "currency" not in df:
+                return df.DataFrame()
 
             return df[
                 [
@@ -207,6 +219,10 @@ class AuthAPI(AuthAPIBase):
                 {"symbol": "BTCUSDT", "interval": "1d", "limit": 30},
             )
 
+            # if response is empty, then return
+            if len(resp) == 0:
+                return pd.DataFrame()
+
             # convert the API response into a Pandas DataFrame
             df = pd.DataFrame(
                 resp,
@@ -233,6 +249,10 @@ class AuthAPI(AuthAPIBase):
 
         # GET /api/v3/account
         resp = self.authAPI("GET", "/api/v3/account", {"recvWindow": self.recv_window})
+
+        # unexpected data, then return
+        if len(resp) == 0:
+            return pd.DataFrame()
 
         if "makerCommission" in resp and "takerCommission" in resp:
             maker_fee_rate = resp["makerCommission"] / 10000
@@ -293,18 +313,26 @@ class AuthAPI(AuthAPIBase):
     def getMarkets(self) -> list:
         """Retrieves a list of markets on the exchange"""
 
-        # GET /api/v3/exchangeInfo
-        resp = self.authAPI("GET", "/api/v3/exchangeInfo")
+        try:
+            # GET /api/v3/exchangeInfo
+            resp = self.authAPI("GET", "/api/v3/exchangeInfo")
 
-        if "symbols" in resp:
-            if isinstance(resp["symbols"], list):
-                df = pd.DataFrame.from_dict(resp["symbols"])
+            # unexpected data, then return
+            if len(resp) == 0:
+                return pd.DataFrame()
+
+            if "symbols" in resp:
+                if isinstance(resp["symbols"], list):
+                    df = pd.DataFrame.from_dict(resp["symbols"])
+                else:
+                    df = pd.DataFrame(resp["symbols"], index=[0])
             else:
-                df = pd.DataFrame(resp["symbols"], index=[0])
-        else:
-            df = pd.DataFrame()
+                df = pd.DataFrame()
 
-        return df[df["isSpotTradingAllowed"] == True][["symbol"]].squeeze().tolist()
+            return df[df["isSpotTradingAllowed"] == True][["symbol"]].squeeze().tolist()
+
+        except:
+            return pd.DataFrame()
 
     def getOrders(
         self,
@@ -357,6 +385,10 @@ class AuthAPI(AuthAPIBase):
                         {"symbol": market, "recvWindow": self.recv_window},
                     )
 
+                    # unexpected data, then return
+                    if len(resp) == 0:
+                        return pd.DataFrame()
+
                     if full_scan is True:
                         time.sleep(0.25)
 
@@ -364,6 +396,10 @@ class AuthAPI(AuthAPIBase):
                         df_tmp = pd.DataFrame.from_dict(resp)
                     else:
                         df_tmp = pd.DataFrame(resp, index=[0])
+
+                    # unexpected data, then return
+                    if len(df_tmp) == 0:
+                        return pd.DataFrame()
 
                     if full_scan is True and len(df_tmp) > 0:
                         self.order_history.append(market)
@@ -382,6 +418,10 @@ class AuthAPI(AuthAPIBase):
                     "/api/v3/allOrders",
                     {"symbol": market, "recvWindow": self.recv_window},
                 )
+
+                # unexpected data, then return
+                if len(resp) == 0:
+                    return pd.DataFrame()
 
                 if isinstance(resp, list):
                     df = pd.DataFrame.from_dict(resp)
@@ -481,19 +521,28 @@ class AuthAPI(AuthAPIBase):
     def getMarketInfoFilters(self, market: str) -> pd.DataFrame:
         """Retrieves markets exchange info"""
 
-        # GET /api/v3/exchangeInfo
-        resp = self.authAPI("GET", "/api/v3/exchangeInfo", {"symbol": market})
         df = pd.DataFrame()
 
-        if "symbols" in resp:
-            if isinstance(resp["symbols"], list):
-                if "filters" in resp["symbols"][0]:
-                    df = pd.DataFrame.from_dict(resp["symbols"][0]["filters"])
-            else:
-                if "filers" in resp["symbols"][0]:
-                    df = pd.DataFrame(resp["symbols"][0]["filters"], index=[0])
+        try:
+            # GET /api/v3/exchangeInfo
+            resp = self.authAPI("GET", "/api/v3/exchangeInfo", {"symbol": market})
 
-        return df
+            # unexpected data, then return
+            if len(resp) == 0:
+                return pd.DataFrame()
+
+            if "symbols" in resp:
+                if isinstance(resp["symbols"], list):
+                    if "filters" in resp["symbols"][0]:
+                        df = pd.DataFrame.from_dict(resp["symbols"][0]["filters"])
+                else:
+                    if "filers" in resp["symbols"][0]:
+                        df = pd.DataFrame(resp["symbols"][0]["filters"], index=[0])
+
+            return df
+
+        except:
+            return df
 
     def getTradeFee(self, market: str) -> float:
         """Retrieves the trade fees"""
@@ -505,6 +554,10 @@ class AuthAPI(AuthAPIBase):
                 "/sapi/v1/asset/tradeFee",
                 {"symbol": market, "recvWindow": self.recv_window},
             )
+
+            # unexpected data, then return
+            if len(resp) == 0:
+                return pd.DataFrame()
 
             if len(resp) == 1 and "takerCommission" in resp[0]:
                 return float(resp[0]["takerCommission"])
@@ -521,14 +574,21 @@ class AuthAPI(AuthAPIBase):
         if not self._isMarketValid(market):
             raise TypeError("Binance market required.")
 
-        # GET /api/v3/ticker/price
-        resp = self.authAPI("GET", "/api/v3/ticker/price", {"symbol": market})
-
         now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
-        if "price" in resp:
-            return (str(self.getTime()), float(resp["price"]))
-        else:
+        try:
+            # GET /api/v3/ticker/price
+            resp = self.authAPI("GET", "/api/v3/ticker/price", {"symbol": market})
+
+            # unexpected data, then return
+            if len(resp) == 0:
+                return pd.DataFrame()
+
+            if "price" in resp:
+                return (str(self.getTime()), float(resp["price"]))
+            else:
+                return (now, 0.0)
+        except:
             return (now, 0.0)
 
     def marketBuy(
