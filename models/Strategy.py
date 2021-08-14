@@ -19,7 +19,7 @@ class Strategy():
         self._df_last = app.getInterval(df, iterations)
 
 
-    def isBuySignal(self, now: datetime = datetime.today().strftime('%Y-%m-%d %H:%M:%S'), price: float=0.0) -> bool:
+    def isBuySignal(self, price, now: datetime = datetime.today().strftime('%Y-%m-%d %H:%M:%S')) -> bool:
         # required technical indicators or candle sticks for buy signal strategy
         required_indicators = [ 'ema12gtema26co', 'macdgtsignal', 'goldencross', 'obv_pc', 'eri_buy' ]
 
@@ -153,8 +153,8 @@ class Strategy():
 
         return False
 
-    def getAction(self):
-        if self.isBuySignal():
+    def getAction(self, price):
+        if self.isBuySignal(price):
             return 'BUY'
         elif self.isSellSignal():
             return 'SELL'

@@ -241,7 +241,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
         two_black_gapping = bool(df_last['two_black_gapping'].values[0])
 
         strategy = Strategy(app, state, df, state.iterations)
-        state.action = strategy.getAction()
+        state.action = strategy.getAction(price)
 
         immediate_action = False
         margin, profit, sell_fee = 0, 0, 0
