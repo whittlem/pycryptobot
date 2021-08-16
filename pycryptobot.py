@@ -43,10 +43,11 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
     # connectivity check (only when running live)
     if app.isLive() and app.getTime() is None:
         Logger.warning('Your connection to the exchange has gone down, will retry in 1 minute!')
-
-        # poll every 5 minute
+        app.notifyTelegram('Bot for ' + app.getMarket() + ' got Disconnected :( ')
+        # poll every 1 minute
         list(map(s.cancel, s.queue))
-        s.enter(300, 1, executeJob, (sc, app, state))
+        s.enter(60, 0.25, executeJob, (sc, app, state))
+        app.notifyTelegram('Bot for ' + app.getMarket() + ' Attempting reconnect :) ')
         return
 
     # increment state.iterations
@@ -241,7 +242,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
         two_black_gapping = bool(df_last['two_black_gapping'].values[0])
 
         strategy = Strategy(app, state, df, state.iterations)
-        state.action = strategy.getAction()
+        state.action = strategy.getAction(price)
 
         immediate_action = False
         margin, profit, sell_fee = 0, 0, 0
@@ -461,12 +462,14 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                                   app.printGranularity() + ' | ' + price_text + ' | ' + ema_co_prefix + \
                                   ema_text + ema_co_suffix + macd_co_prefix + macd_text + macd_co_suffix + \
                                   obv_prefix + obv_text + obv_suffix + state.eri_text + state.action + \
-                                  ' | Last Action: ' + state.last_action
+                                  ' | Last Action: ' + state.last_action + ' | DF HIGH: ' + str(df['close'].max()) + ' | ' + ' DF LOW: ' + str(df['close'].min()) + ' | SWING: ' +str(round(((df['close'].max()-df['close'].min()) / df['close'].min())*100, 2)) + '% |' + \
+                                  ' CURR Price is ' + str(round(((price-df['close'].max()) / df['close'].max())*100, 2)) + '% ' + 'away from DF HIGH | Range: ' + str(df.iloc[0, 0]) + ' <--> ' + str(df.iloc[299, 0])
                 else:
                     output_text = formatted_current_df_index + ' | ' + app.getMarket() + bullbeartext + ' | ' + \
                                   app.printGranularity() + ' | ' + price_text + ' | ' + ema_co_prefix + \
                                   ema_text + ema_co_suffix + macd_co_prefix + macd_text + macd_co_suffix + \
-                                  obv_prefix + obv_text + obv_suffix + state.eri_text + state.action + ' '
+                                  obv_prefix + obv_text + obv_suffix + state.eri_text + state.action + ' | DF HIGH: ' + str(df['close'].max()) + ' | ' + ' DF LOW: ' + str(df['close'].min()) + ' | SWING: ' +str(round(((df['close'].max()-df['close'].min()) / df['close'].min())*100, 2)) + '%' + \
+                                  ' CURR Price is ' + str(round(((price-df['close'].max()) / df['close'].max())*100, 2)) + '% ' + 'away from DF HIGH | Range: ' +str(df.iloc[0, 0]) + ' <--> ' +str(df.iloc[299, 0]) 
 
                 if state.last_action == 'BUY':
                     if state.last_buy_size > 0:
@@ -797,7 +800,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                 # show profit and margin if already bought
                 Logger.info(now + ' | ' + app.getMarket() + bullbeartext + ' | ' + app.printGranularity() + ' | Current Price: ' + str(price) + ' | Margin: ' + str(margin) + ' | Profit: ' + str(profit))
             else:
-                Logger.info(now + ' | ' + app.getMarket() + bullbeartext + ' | ' + app.printGranularity() + ' | Current Price: ' + str(price))
+                Logger.info(now + ' | ' + app.getMarket() + bullbeartext + ' | ' + app.printGranularity() + ' | Current Price: ' + str(price) +' is ' + str(round(((price-df['close'].max()) / df['close'].max())*100, 2)) + '% ' + 'away from DF HIGH')
 
             # decrement ignored iteration
             state.iterations = state.iterations - 1

@@ -28,8 +28,8 @@ class Strategy:
 
     def isBuySignal(
         self,
-        now: datetime = datetime.today().strftime("%Y-%m-%d %H:%M:%S"),
-        price: float = 0.0,
+        price,
+        now: datetime = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
     ) -> bool:
         # required technical indicators or candle sticks for buy signal strategy
         required_indicators = [
@@ -321,9 +321,9 @@ class Strategy:
 
         return False
 
-    def getAction(self):
-        if self.isBuySignal():
-            return "BUY"
+    def getAction(self, price):
+        if self.isBuySignal(price):
+            return 'BUY'
         elif self.isSellSignal():
             return "SELL"
         else:
