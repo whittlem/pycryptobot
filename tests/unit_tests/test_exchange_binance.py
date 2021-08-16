@@ -182,22 +182,3 @@ def binance_orders_response():
             "origQuoteOrderQty": "0.000000",
         }
     ]
-
-
-## This doesnt work. Apparently the client_response is wrong. Need a proper json from a live response here
-@pytest.mark.skip
-@responses.activate
-def test_get_orders(binance_orders_response):
-    global app
-    api_url = "https://testnet.binance.vision"
-    api = AuthAPI(app.api_key, app.api_secret, api_url=api_url)
-
-    responses.add(
-        responses.GET,
-        f"{api_url}/api/v3/allOrders",
-        json=json.dumps(binance_orders_response),
-        status=200,
-    )
-    df = api.getOrders()
-
-    assert len(df) > 0
