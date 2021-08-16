@@ -88,7 +88,7 @@ def test_instantiate_publicapi_without_error():
 
 
 @pytest.mark.skip
-@responses.activate # mocker response required
+@responses.activate  # mocker response required
 def test_get_fees_with_market():
     global app
     exchange = AuthAPI(app.api_key, app.api_secret)
@@ -105,7 +105,7 @@ def test_get_fees_with_market():
 
 
 @pytest.mark.skip
-@responses.activate # mocker response required
+@responses.activate  # mocker response required
 def test_get_taker_fee_with_market():
     global app
     exchange = AuthAPI(app.api_key, app.api_secret)
@@ -117,7 +117,7 @@ def test_get_taker_fee_with_market():
 
 
 @pytest.mark.skip
-@responses.activate # mocker response required
+@responses.activate  # mocker response required
 def test_get_maker_fee_with_market():
     global app
     exchange = AuthAPI(app.api_key, app.api_secret)
@@ -128,6 +128,8 @@ def test_get_maker_fee_with_market():
     assert fee == 0.0015
 
 
+@pytest.mark.skip
+@responses.activate  # mocker response required
 def test_get_orders():
     global app
     exchange = AuthAPI(app.api_key, app.api_secret)
