@@ -440,6 +440,12 @@ class PyCryptoBot(BotConfig):
     def sellLowerPcnt(self):
         return self.sell_lower_pcnt
 
+    def noSellMinPercent(self):
+        return self.nosellminpcnt
+
+    def noSellMaxPercent(self):
+        return self.nosellmaxpcnt
+
     def trailingStopLoss(self):
         return self.trailing_stop_loss
 

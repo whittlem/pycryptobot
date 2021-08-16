@@ -8,7 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-## [3.2.9] - 2021-08-13
+## [3.2.9] - 2021-08-16
+
+### Added
+
+-- 'nosellminpcnt' to specify minimum margin to not sell
+-- 'nosellmaxpcnt' to specify maximum margin to not sell
 
 ### Changed
 
