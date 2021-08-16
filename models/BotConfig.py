@@ -42,6 +42,8 @@ class BotConfig:
         self.sim_speed = "fast"
         self.sell_upper_pcnt = None
         self.sell_lower_pcnt = None
+        self.nosellminpcnt = None
+        self.nosellmaxpcnt = None
         self.trailing_stop_loss = None
         self.sell_at_loss = 1
         self.smart_switch = 1
@@ -310,6 +312,16 @@ class BotConfig:
             "--selllowerpcnt",
             type=float,
             help="optionally set sell lower percent limit",
+        )
+        parser.add_argument(
+            "--nosellminpcnt",
+            type=float,
+            help="optionally set minimum margin to not sell",
+        )
+        parser.add_argument(
+            "--nosellmaxpcnt",
+            type=float,
+            help="optionally set maximum margin to not sell",
         )
         parser.add_argument(
             "--trailingstoploss",

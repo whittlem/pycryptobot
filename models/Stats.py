@@ -21,7 +21,7 @@ class Stats():
                 raise ValueError("all currency pairs in statgroup must use the same quote currency")
         else:
             self.fiat_currency = self.app.getQuoteCurrency()
-        
+
         # get buy/sell pairs (merge as necessary)
         last_order = None
         # pylint: disable=unused-variable
@@ -66,8 +66,19 @@ class Stats():
     def data_display(self):
         # get % gains and delta
         for pair in self.order_pairs:
-            pair['delta'] = pair['sell']['size'] - pair['buy']['size']
-            pair['gain'] = (pair['delta'] / pair['buy']['size']) * 100
+            try: # return 0 if unexpected exception
+                pair['delta'] = float(pair['sell']['size']) - float(pair['buy']['size'])
+            except:
+                Logger.warning('unexpected error calculating delta, returning 0')
+                Logger.debug(pair)
+                pair['delta'] = 0
+
+            try: # return 0 if unexpected exception
+                pair['gain'] = (float(pair['delta']) / float(pair['buy']['size'])) * 100
+            except:
+                Logger.warning('unexpected error calculating gain, returning 0')
+                Logger.debug(pair)
+                pair['gain'] = 0
 
         # get day/week/month/all time totals
         totals = {'today': [], 'week': [], 'month': [], 'all_time': []}
@@ -81,7 +92,7 @@ class Stats():
                 raise ValueError("format of --statstartdate must be yyyy-mm-dd")
         else:
             start = None
-        
+
         # popular currencies
         symbol = self.app.getQuoteCurrency()
         if symbol in ['USD', 'AUD', 'CAD', 'SGD', 'NZD']: symbol = '$'
@@ -134,7 +145,7 @@ class Stats():
                 totals['week'].append(pair)
             if pair['sell']['time'].date() > lastmonth:
                 totals['month'].append(pair)
-        
+
         # prepare data for output
         today_per = [x['gain'] for x in totals['today']]
         week_per = [x['gain'] for x in totals['week']]
@@ -170,7 +181,7 @@ class Stats():
         week_percent = str(round(sum(week_per), 4)) + '%' if len(week_per) > 0 else '0.0000%'
         month_percent = str(round(sum(month_per), 4)) + '%' if len(month_per) > 0 else '0.0000%'
         all_time_percent = str(round(sum(all_time_per), 4)) + '%' if len(all_time_per) > 0 else '0.0000%'
-            
+
         trades = 'Number of Completed Trades:'
         gains = 'Percentage Gains:'
         aver = 'Average Time Held (H:M:S):'

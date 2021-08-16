@@ -736,12 +736,11 @@ class AuthAPI(AuthAPIBase):
 
         try:
             resp = self._dispatch_request(method)(**params)
-            json = resp.json()
 
-            if "msg" in json:
-                resp_message = json["msg"]
-            elif "message" in json:
-                resp_message = json["message"]
+            if "msg" in resp.json():
+                resp_message = resp.json()["msg"]
+            elif "message" in resp.json():
+                resp_message = resp.json()["message"]
             else:
                 resp_message = ""
 
