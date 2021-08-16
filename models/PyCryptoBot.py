@@ -157,7 +157,7 @@ class PyCryptoBot(BotConfig):
 
     def getHistoricalData(self, market, granularity: int, iso8601start='', iso8601end=''):
         if self.exchange == 'binance':
-            api = BPublicAPI()
+            api = BPublicAPI(api_url=self.getAPIURL())
 
             if iso8601start != '' and iso8601end != '':
                 return api.getHistoricalData(market, to_binance_granularity(granularity), iso8601start, iso8601end)
@@ -275,7 +275,7 @@ class PyCryptoBot(BotConfig):
                 df_data = api.getHistoricalData(self.market, 3600)
                 self.ema1226_1h_cache = df_data
             elif self.exchange == 'binance':
-                api = BPublicAPI()
+                api = BPublicAPI(api_url=self.getAPIURL())
                 df_data = api.getHistoricalData(self.market, '1h')
                 self.ema1226_1h_cache = df_data
             else:
@@ -305,7 +305,7 @@ class PyCryptoBot(BotConfig):
                 df_data = api.getHistoricalData(self.market, 3600)
                 self.sma50200_1h_cache = df_data
             elif self.exchange == 'binance':
-                api = BPublicAPI()
+                api = BPublicAPI(api_url=self.getAPIURL())
                 df_data = api.getHistoricalData(self.market, '1h')
                 self.sma50200_1h_cache = df_data
             else:
@@ -332,7 +332,7 @@ class PyCryptoBot(BotConfig):
                 api = CBPublicAPI()
                 df_data = api.getHistoricalData(self.market, 86400)
             elif self.exchange == 'binance':
-                api = BPublicAPI()
+                api = BPublicAPI(api_url=self.getAPIURL())
                 df_data = api.getHistoricalData(self.market, '1d')
             else:
                 return False  # if there is an API issue, default to False to avoid hard sells
@@ -359,7 +359,7 @@ class PyCryptoBot(BotConfig):
                 df_data = api.getHistoricalData(self.market, 21600)
                 self.ema1226_6h_cache = df_data
             elif self.exchange == 'binance':
-                api = BPublicAPI()
+                api = BPublicAPI(api_url=self.getAPIURL())
                 df_data = api.getHistoricalData(self.market, '6h')
                 self.ema1226_6h_cache = df_data
             else:
@@ -386,7 +386,7 @@ class PyCryptoBot(BotConfig):
                 api = CBPublicAPI()
                 df_data = api.getHistoricalData(self.market, 21600)
             elif self.exchange == 'binance':
-                api = BPublicAPI()
+                api = BPublicAPI(api_url=self.getAPIURL())
                 df_data = api.getHistoricalData(self.market, '6h')
             else:
                 return False
@@ -402,7 +402,7 @@ class PyCryptoBot(BotConfig):
 
     def getTicker(self, market):
         if self.exchange == 'binance':
-            api = BPublicAPI()
+            api = BPublicAPI(api_url=self.getAPIURL())
             return api.getTicker(market)
         else: # returns data from coinbase if not specified
             api = CBPublicAPI()
@@ -448,6 +448,9 @@ class PyCryptoBot(BotConfig):
 
     def trailingStopLoss(self):
         return self.trailing_stop_loss
+
+    def trailingStopLossTrigger(self):
+        return self.trailing_stop_loss_trigger
 
     def allowSellAtLoss(self) -> bool:
         return self.sell_at_loss == 1
@@ -800,8 +803,17 @@ class PyCryptoBot(BotConfig):
         if self.sellLowerPcnt() != None:
             textBox.line('Sell Lower', str(self.sellLowerPcnt()) + '%')
 
+        if self.sellUpperPcnt() != None:
+            textBox.line('No Sell Max', str(self.noSellMaxPercent()) + '%')
+
+        if self.sellLowerPcnt() != None:
+            textBox.line('No Sell Min', str(self.noSellMinPercent()) + '%')
+
         if self.trailingStopLoss() != None:
             textBox.line('Trailing Stop Loss', str(self.trailingStopLoss()) + '%')
+
+        if self.trailingStopLossTrigger() != None:
+            textBox.line('Trailing Stop Loss Trigger', str(self.trailingStopLossTrigger()) + '%')
 
         textBox.line('Sell At Loss', str(self.allowSellAtLoss()) + '  --sellatloss ' + str(self.allowSellAtLoss()))
         textBox.line('Sell At Resistance', str(self.sellAtResistance()) + '  --sellatresistance')

@@ -4,25 +4,25 @@ from models.AppState import AppState
 from models.exchange.binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
 from models.exchange.coinbase_pro import AuthAPI as CAuthAPI, PublicAPI as CPublicAPI
 
-"""
 app = PyCryptoBot(exchange='binance')
 
-api = BPublicAPI()
+"""
+api = BPublicAPI(api_url=app.getAPIURL())
 resp = api.authAPI('GET', '/api/v3/klines' , { 'symbol': 'BTCGBP', 'interval': '1h', 'limit': 300 })
 print(resp)
 
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
 resp = api.authAPI('GET', '/api/v3/account')
 print(resp)
 
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
 resp = api.authAPI('GET', '/api/v3/klines' , { 'symbol': 'BTCGBP', 'interval': '1h', 'limit': 300 })
 print(resp)
 """
 
 """
 app = PyCryptoBot(exchange='binance')
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
 df = api.getAccounts()
 print(df)
 
@@ -34,7 +34,7 @@ print(df)
 
 """
 app = PyCryptoBot(exchange='binance')
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
 df = api.getAccount()
 print(df)
 
@@ -46,7 +46,7 @@ print(df)
 
 """
 app = PyCryptoBot(exchange='binance')
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
 df = api.getFees()
 print(df)
 
@@ -58,7 +58,7 @@ print(df)
 
 """
 app = PyCryptoBot(exchange='binance')
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
 df = api.getMakerFee()
 print(df)
 
@@ -68,7 +68,7 @@ df = api.getMakerFee()
 print(df)
 
 app = PyCryptoBot(exchange='binance')
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
 df = api.getTakerFee()
 print(df)
 
@@ -80,7 +80,7 @@ print(df)
 
 """
 app = PyCryptoBot(exchange='binance')
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
 df = api.getUSDVolume()
 print(df)
 
@@ -92,7 +92,7 @@ print(df)
 
 """
 app = PyCryptoBot(exchange='binance')
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
 df = api.getOrders(order_history=['BTGBTC', 'DOGEBTC', 'BTCGBP', 'DOGEGBP', 'SHIBUSDT'])
 #df = api.getOrders('SHIBUSDT')
 print(df)
@@ -105,14 +105,14 @@ print(df)
 
 """
 app = PyCryptoBot(exchange='binance')
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
 df = api.getMarkets()
 print (df)
 """
 
 """
 app = PyCryptoBot(exchange='binance')
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
 ts = api.getTime()
 print(ts)
 
@@ -124,7 +124,7 @@ print(ts)
 
 """
 app = PyCryptoBot(exchange='binance')
-api = BPublicAPI()
+api = BPublicAPI(api_url=app.getAPIURL())
 ticker = api.getTicker('BTCGBP')
 print(ticker)
 
@@ -136,7 +136,7 @@ print(ticker)
 
 """
 app = PyCryptoBot(exchange='binance')
-api = BPublicAPI()
+api = BPublicAPI(api_url=app.getAPIURL())
 #df = api.getHistoricalData('BTCGBP', '1h')
 df = api.getHistoricalData('BTCGBP', '1h', '2020-06-19T10:00:00', '2020-06-19T14:00:00')
 print(df)
@@ -150,50 +150,50 @@ print(df)
 
 """
 app = PyCryptoBot(exchange='binance')
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
 df = api.getMarketInfoFilters('BTCGBP')
 print(df)
 """
 
 """
 app = PyCryptoBot(exchange='binance')
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
 fee = api.getTradeFee('BTCGBP')
 print (fee)
 """
 
 """
 app = PyCryptoBot(exchange='binance')
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
 df = api.getOrders('SHIBUSDT')
 print(df)
 
 app = PyCryptoBot(exchange='binance')
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
 resp = api.marketSell('SHIBUSDT', 2485964.0, test=True)
 #resp = api.marketSell('SHIBUSDT', 2485964.0)
 print (resp)
 
 app = PyCryptoBot(exchange='binance')
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
 df = api.getOrders('SHIBUSDT')
 print(df)
 """
 
 """
 app = PyCryptoBot(exchange='binance')
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
 df = api.getOrders('MATICUSDT')
 print(df)
 
 app = PyCryptoBot(exchange='binance')
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
 resp = api.marketBuy('MATICUSDT', 15.58064897, test=True)
 #resp = api.marketBuy('MATICUSDT', 15.58064897)
 print (resp)
 
 app = PyCryptoBot(exchange='binance')
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
 df = api.getOrders('MATICUSDT')
 print(df)
 """

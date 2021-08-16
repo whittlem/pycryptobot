@@ -45,6 +45,7 @@ class BotConfig:
         self.nosellminpcnt = None
         self.nosellmaxpcnt = None
         self.trailing_stop_loss = None
+        self.trailing_stop_loss_trigger = None
         self.sell_at_loss = 1
         self.smart_switch = 1
         self.telegram = False
@@ -327,6 +328,11 @@ class BotConfig:
             "--trailingstoploss",
             type=float,
             help="optionally set a trailing stop percent loss below last buy high",
+        )
+        parser.add_argument(
+            "--trailingstoplosstrigger",
+            type=float,
+            help="optionally set when the trailing stop loss should start",
         )
         parser.add_argument(
             "--sim", type=str, help="simulation modes: fast, fast-sample, slow-sample"

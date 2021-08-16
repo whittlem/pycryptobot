@@ -206,7 +206,7 @@ class Strategy:
         if (
             self.app.trailingStopLoss() != None
             and change_pcnt_high < self.app.trailingStopLoss()
-            and (self.app.allowSellAtLoss() or margin > 0)
+            and (self.app.allowSellAtLoss() or margin > self.app.trailingStopLossTrigger())
         ):
             log_text = (
                 "! Trailing Stop Loss Triggered (< "
@@ -306,16 +306,18 @@ class Strategy:
         if (
             self.state.action == "SELL"
             and not self.app.allowSellAtLoss()
-            and (
-                (self.app.nosellmaxpcnt is not None)
-                and margin <= self.app.nosellmaxpcnt
-            )
-            and (
-                (self.app.nosellminpcnt is not None)
-                and (margin > self.app.nosellminpcnt)
-            )
+            and margin <= 0
         ):
             log_text = "! Ignore Sell Signal (No Sell At Loss)"
+            Logger.warning(log_text)
+            return True
+
+        if (
+            (self.app.nosellminpcnt is not None) and (margin >= self.app.nosellminpcnt)
+        ) and (
+            (self.app.nosellmaxpcnt is not None) and (margin <= self.app.nosellmaxpcnt)
+        ):
+            log_text = "! Ignore Sell Signal (Within No-Sell Bounds)"
             Logger.warning(log_text)
             return True
 

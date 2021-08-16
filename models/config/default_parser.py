@@ -192,6 +192,33 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("trailingstoploss must be of type int or str")
 
+    if "trailingstoplosstrigger" in config:
+        if isinstance(config["trailingstoplosstrigger"], (int, float, str)):
+            p = re.compile(r"^\-*[0-9\.]{1,5}$")
+            if isinstance(config["trailingstoplosstrigger"], str) and p.match(
+                config["trailingstoplosstrigger"]
+            ):
+                if float(config["trailingstoplosstrigger"]) > 0:
+                    app.trailing_stop_loss_trigger = float(config["trailingstoplosstrigger"])
+                else:
+                    raise ValueError("trailingstoplosstrigger must be positive")
+            elif (
+                isinstance(config["trailingstoplosstrigger"], (int, float))
+                and config["trailingstoplosstrigger"] >= 0
+                and config["trailingstoplosstrigger"] <= 100
+            ):
+                if float(config["trailingstoplosstrigger"]) > 0:
+                    app.trailing_stop_loss_trigger = float(config["trailingstoplosstrigger"])
+                else:
+                    raise ValueError("trailingstoplosstrigger must be positive")
+            elif (
+                isinstance(config["trailingstoplosstrigger"], (int, float))
+                and config["trailingstoplosstrigger"] <= 0
+            ):
+                raise ValueError("trailingstoplosstrigger must be positive")
+        else:
+            raise TypeError("trailingstoplosstrigger must be of type int or str")
+
     if "autorestart" in config:
         if isinstance(config["autorestart"], int):
             if config["autorestart"] in [0, 1]:
