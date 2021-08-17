@@ -996,10 +996,10 @@ class PyCryptoBot(BotConfig):
         if self.sellLowerPcnt() != None:
             textBox.line("Sell Lower", str(self.sellLowerPcnt()) + "%")
 
-        if self.sellUpperPcnt() != None:
+        if self.noSellMaxPercent() != None:
             textBox.line("No Sell Max", str(self.noSellMaxPercent()) + "%")
 
-        if self.sellLowerPcnt() != None:
+        if self.noSellMinPercent() != None:
             textBox.line("No Sell Min", str(self.noSellMinPercent()) + "%")
 
         if self.trailingStopLoss() != None:
