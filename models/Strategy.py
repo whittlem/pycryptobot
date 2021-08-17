@@ -27,9 +27,7 @@ class Strategy:
         self._df_last = app.getInterval(df, iterations)
 
     def isBuySignal(
-        self,
-        price,
-        now: datetime = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+        self, price, now: datetime = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
     ) -> bool:
         # required technical indicators or candle sticks for buy signal strategy
         required_indicators = [
@@ -206,7 +204,10 @@ class Strategy:
         if (
             self.app.trailingStopLoss() != None
             and change_pcnt_high < self.app.trailingStopLoss()
-            and (self.app.allowSellAtLoss() or margin > self.app.trailingStopLossTrigger())
+            and (
+                self.app.allowSellAtLoss()
+                or margin > self.app.trailingStopLossTrigger()
+            )
         ):
             log_text = (
                 "! Trailing Stop Loss Triggered (< "
@@ -325,7 +326,7 @@ class Strategy:
 
     def getAction(self, price):
         if self.isBuySignal(price):
-            return 'BUY'
+            return "BUY"
         elif self.isSellSignal():
             return "SELL"
         else:

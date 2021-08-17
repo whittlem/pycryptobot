@@ -198,8 +198,10 @@ def defaultConfigParse(app, config):
             if isinstance(config["trailingstoplosstrigger"], str) and p.match(
                 config["trailingstoplosstrigger"]
             ):
-                if float(config["trailingstoplosstrigger"]) > 0:
-                    app.trailing_stop_loss_trigger = float(config["trailingstoplosstrigger"])
+                if float(config["trailingstoplosstrigger"]) >= 0:
+                    app.trailing_stop_loss_trigger = float(
+                        config["trailingstoplosstrigger"]
+                    )
                 else:
                     raise ValueError("trailingstoplosstrigger must be positive")
             elif (
@@ -207,8 +209,10 @@ def defaultConfigParse(app, config):
                 and config["trailingstoplosstrigger"] >= 0
                 and config["trailingstoplosstrigger"] <= 100
             ):
-                if float(config["trailingstoplosstrigger"]) > 0:
-                    app.trailing_stop_loss_trigger = float(config["trailingstoplosstrigger"])
+                if float(config["trailingstoplosstrigger"]) >= 0:
+                    app.trailing_stop_loss_trigger = float(
+                        config["trailingstoplosstrigger"]
+                    )
                 else:
                     raise ValueError("trailingstoplosstrigger must be positive")
             elif (
