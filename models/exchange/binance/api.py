@@ -823,7 +823,6 @@ class PublicAPI(AuthAPIBase):
             raise ValueError("Binance API URL is invalid")
 
         self._api_url = api_url
-        print (self._api_url)
 
     def getTime(self) -> datetime:
         """Retrieves the exchange time"""
