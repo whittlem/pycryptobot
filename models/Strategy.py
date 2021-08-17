@@ -206,7 +206,7 @@ class Strategy:
             and change_pcnt_high < self.app.trailingStopLoss()
             and (
                 self.app.allowSellAtLoss()
-                or margin > self.app.trailingStopLossTrigger()
+                and margin > self.app.trailingStopLossTrigger()
             )
         ):
             log_text = (
