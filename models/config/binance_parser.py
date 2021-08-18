@@ -24,7 +24,7 @@ def parseMarket(market):
 
     quote_currencies = [
         'BTC', 'BNB', 'ETH', 'USDT', 'TUSD', 'BUSD', 'DAX', 'NGN', 'RUB', 'TRY', 'EUR',
-        'GBP', 'ZAR', 'UAH', 'DAI', 'BIDR', 'AUD', 'US', 'NGN', 'BRL', 'BVND', 'VAI'
+        'GBP', 'ZAR', 'UAH', 'DAI', 'BIDR', 'AUD', 'USD', 'NGN', 'BRL', 'BVND', 'VAI'
     ]
 
     for qc in quote_currencies:
