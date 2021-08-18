@@ -291,10 +291,9 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                 state.last_action = 'BUY'
                 immediate_action = True
 
-            # handle overriding wait actions (do not sell if sell at loss disabled!)
-            if strategy.isWaitTrigger(margin):
+            # handle overriding wait actions (e.g. do not sell if sell at loss disabled!, do not buy in bull if bull only)
+            if strategy.isWaitTrigger(margin, goldencross):
                 state.action = 'WAIT'
-                state.last_action = 'BUY'
                 immediate_action = False
 
         bullbeartext = ''
