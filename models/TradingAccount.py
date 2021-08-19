@@ -90,7 +90,10 @@ class TradingAccount:
             if self.mode == "live":
                 # if config is provided and live connect to Binance account portfolio
                 model = BAuthAPI(
-                    self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIURL()
+                    self.app.getAPIKey(),
+                    self.app.getAPISecret(),
+                    self.app.getAPIURL(),
+                    recv_window=app.getRecvWindow(),
                 )
                 # retrieve orders from live Binance account portfolio
                 self.orders = model.getOrders(market, action, status)
@@ -149,7 +152,10 @@ class TradingAccount:
         if self.app.getExchange() == "binance":
             if self.mode == "live":
                 model = BAuthAPI(
-                    self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIURL()
+                    self.app.getAPIKey(),
+                    self.app.getAPISecret(),
+                    self.app.getAPIURL(),
+                    recv_window=app.getRecvWindow(),
                 )
                 df = model.getAccount()
                 if isinstance(df, pd.DataFrame):
