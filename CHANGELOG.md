@@ -14,6 +14,9 @@ Upgrade library dependancies (if required):
 
 -- 'nosellminpcnt' to specify minimum margin to not sell
 -- 'nosellmaxpcnt' to specify maximum margin to not sell
+-- fixed Stats.py issue on smaller datasets
+-- fixed recvWindow issue
+-- binance.us is now working
 
 ### Changed
 
