@@ -42,7 +42,10 @@ class BotConfig:
         self.sim_speed = "fast"
         self.sell_upper_pcnt = None
         self.sell_lower_pcnt = None
+        self.nosellminpcnt = None
+        self.nosellmaxpcnt = None
         self.trailing_stop_loss = None
+        self.trailing_stop_loss_trigger = 0
         self.sell_at_loss = 1
         self.smart_switch = 1
         self.telegram = False
@@ -112,7 +115,7 @@ class BotConfig:
                             self.config = json.load(stream)
                         except json.decoder.JSONDecodeError as err:
                             sys.tracebacklimit = 0
-                            raise ValueError('Invalid config.json: ' + str(err))
+                            raise ValueError("Invalid config.json: " + str(err))
 
             except (ScannerError, ConstructorError) as err:
                 sys.tracebacklimit = 0
@@ -140,7 +143,7 @@ class BotConfig:
             self.api_key,
             self.api_secret,
             self.api_passphrase,
-            self.market
+            self.market,
         ) = self._set_default_api_info(self.exchange)
 
         if self.config_provided:
@@ -219,21 +222,21 @@ class BotConfig:
                 "api_key": "0000000000000000000000000000000000000000000000000000000000000000",
                 "api_secret": "0000000000000000000000000000000000000000000000000000000000000000",
                 "api_passphrase": "",
-                "market": "BTCGBP"
+                "market": "BTCGBP",
             },
             "coinbasepro": {
                 "api_url": "https://api.pro.coinbase.com",
                 "api_key": "00000000000000000000000000000000",
                 "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
                 "api_passphrase": "00000000000",
-                "market": "BTC-GBP"
+                "market": "BTC-GBP",
             },
             "dummy": {
                 "api_url": "https://api.pro.coinbase.com",
                 "api_key": "00000000000000000000000000000000",
                 "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
                 "api_passphrase": "00000000000",
-                "market": "BTC-GBP"
+                "market": "BTC-GBP",
             },
         }
         return (
@@ -241,7 +244,7 @@ class BotConfig:
             conf[exchange]["api_key"],
             conf[exchange]["api_secret"],
             conf[exchange]["api_passphrase"],
-            conf[exchange]["market"]
+            conf[exchange]["market"],
         )
 
     def getVersionFromREADME(self) -> str:
@@ -312,9 +315,24 @@ class BotConfig:
             help="optionally set sell lower percent limit",
         )
         parser.add_argument(
+            "--nosellminpcnt",
+            type=float,
+            help="optionally set minimum margin to not sell",
+        )
+        parser.add_argument(
+            "--nosellmaxpcnt",
+            type=float,
+            help="optionally set maximum margin to not sell",
+        )
+        parser.add_argument(
             "--trailingstoploss",
             type=float,
             help="optionally set a trailing stop percent loss below last buy high",
+        )
+        parser.add_argument(
+            "--trailingstoplosstrigger",
+            type=float,
+            help="optionally set when the trailing stop loss should start",
         )
         parser.add_argument(
             "--sim", type=str, help="simulation modes: fast, fast-sample, slow-sample"

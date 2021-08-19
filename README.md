@@ -1,6 +1,6 @@
 [![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg) [![Tests](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)
 
-# Python Crypto Bot v3.2.8 (pycryptobot)
+# Python Crypto Bot v3.2.9 (pycryptobot)
 
 ## Join our chat on Telegram
 
@@ -333,7 +333,9 @@ Sell signal:
 
 Special sell cases:
 
-* "buymaxsize" specify a fixed max amount of the quote currency to buy with
+* "buymaxsize" specifies a fixed max amount of the quote currency to buy with
+* "nosellminpcnt" specifies the lower margin limit to not sell above
+* "nosellmaxpcnt" specifies the upper margin limit to not sell below
 * If "sellatloss" is on, bot will sell if price drops below the lower Fibonacci band
 * If "sellatloss" is on and "selllowerpcnt" is specified the bot will sell at the specified amount E.g. -2 for -2% margin
 * If "sellatloss" is on and "trailingstoploss" is specified the bot will sell at the specified amount below the buy high
