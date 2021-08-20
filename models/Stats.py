@@ -41,7 +41,7 @@ class Stats():
                 if self.app.exchange == 'coinbasepro':
                     amount = (row['filled'] * row['price']) - row['fees']
                 else:
-                    amount = row['size']
+                    amount = (float(row['filled']) * float(row['price'])) - row['fees']
                 if last_order == None: # first order is a sell (no pair)
                     continue
                 if last_order == 'buy':
