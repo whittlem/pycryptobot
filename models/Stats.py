@@ -22,6 +22,7 @@ class Stats():
         else:
             self.fiat_currency = self.app.getQuoteCurrency()
 
+        Logger.info(self.orders)
         # get buy/sell pairs (merge as necessary)
         last_order = None
         # pylint: disable=unused-variable
@@ -41,7 +42,7 @@ class Stats():
                 if self.app.exchange == 'coinbasepro':
                     amount = (row['filled'] * row['price']) - row['fees']
                 else:
-                    amount = row['size']
+                    amount = (float(row['filled']) * float(row['price'])) - row['fees']
                 if last_order == None: # first order is a sell (no pair)
                     continue
                 if last_order == 'buy':
@@ -116,9 +117,9 @@ class Stats():
                 d_market = '| ' + pair['market']
                 d_market = d_market + ' ' * (len(headers[1]) - len(d_market))
                 d_date = d_date + ' ' * (len(headers[2]) - len(d_date))
-                d_buy_size = '| ' + symbol + ' ' + '{:.2f}'.format(pair['buy']['size'])
+                d_buy_size = '| ' + symbol + ' ' + '{:.2f}'.format(float(pair['buy']['size']))
                 d_buy_size = d_buy_size + ' ' * (len(headers[3]) - len(d_buy_size))
-                d_sell_size = '| ' + symbol + ' ' + '{:.2f}'.format(pair['sell']['size'])
+                d_sell_size = '| ' + symbol + ' ' + '{:.2f}'.format(float(pair['sell']['size']))
                 d_sell_size = d_sell_size + ' ' * (len(headers[4]) - len(d_sell_size))
                 if pair['delta'] > 0:
                     d_delta = '| ' + symbol + ' {:.2f}'.format(pair['delta'])
