@@ -22,7 +22,6 @@ class Stats():
         else:
             self.fiat_currency = self.app.getQuoteCurrency()
 
-        Logger.info(self.orders)
         # get buy/sell pairs (merge as necessary)
         last_order = None
         # pylint: disable=unused-variable
