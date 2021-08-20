@@ -8,6 +8,13 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [3.2.10] - 2021-08-20
+
+### Changed
+
+-- 'stats' for binance was retuning incorrect percentage gains.
+-- 'statdetail' was not working for binance as some values were sting instead of float
+
 ## [3.2.9] - 2021-08-16
 
 ### Added

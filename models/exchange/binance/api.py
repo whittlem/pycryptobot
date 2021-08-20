@@ -476,7 +476,7 @@ class AuthAPI(AuthAPIBase):
                 elif row.action == "buy":
                     return float(row.cummulativeQuoteQty) / float(row.filled)
                 elif row.action == "sell":
-                    return float(row.cummulativeQuoteQty) / float(row.size)
+                    return float(row.cummulativeQuoteQty) / float(row.filled)
                 else:
                     return row.price
 
