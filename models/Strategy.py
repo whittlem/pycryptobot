@@ -302,14 +302,14 @@ class Strategy:
 
         return False
 
-    def isWaitTrigger(self, margin: float=0.0, goldencross: bool=False):
+    def isWaitTrigger(self, margin: float = 0.0, goldencross: bool = False):
         # if bear market and bull only return true to abort buy
         if (
-            self.state.action == "SELL"
+            self.state.action == "BUY"
             and not self.app.disableBullOnly()
             and not goldencross
         ):
-            log_text = "! Ignore Sell Signal (Bear Sell In Bull Only)"
+            log_text = "! Ignore Buy Signal (Bear Buy In Bull Only)"
             Logger.warning(log_text)
             return True
 
