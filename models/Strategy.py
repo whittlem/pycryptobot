@@ -304,7 +304,13 @@ class Strategy:
 
     def isWaitTrigger(self, margin: float=0.0, goldencross: bool=False):
         # if bear market and bull only return true to abort buy
-        if not self.app.disableBullOnly() and not goldencross:
+        if (
+            self.state.action == "SELL"
+            and not self.app.disableBullOnly()
+            and not goldencross
+        ):
+            log_text = "! Ignore Sell Signal (Bear Sell In Bull Only)"
+            Logger.warning(log_text)
             return True
 
         # configuration specifies to not sell at a loss
@@ -317,6 +323,7 @@ class Strategy:
             Logger.warning(log_text)
             return True
 
+        # configuration specifies not to sell within min and max margin percent bounds
         if (
             (self.app.nosellminpcnt is not None) and (margin >= self.app.nosellminpcnt)
         ) and (
