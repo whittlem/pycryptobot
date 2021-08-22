@@ -1,0 +1,62 @@
+{
+    "binance": {
+        "api_url": "https://api.binance.com",
+        "api_key_file": "binance.key",
+        "config" : {
+            "base_currency" : "BTC",
+            "quote_currency" : "GBP",
+            "live" : 0,
+            "sellatloss" : 0,
+            "sellatresistance" : 0,
+            "trailingstoploss" : -1.5,
+            "trailingstoplosstrigger" : 5,
+            "nosellmaxpcnt" : 3,
+            "nosellminpcnt" : -3,
+            "disablebullonly" : 0,
+            "disablebuynearhigh" : 1,
+            "disablebuymacd" : 0,
+            "disablebuyobv" : 1,
+            "disablebuyelderray" : 0,
+            "disablefailsafefibonaccilow" : 1,
+            "disableprofitbankreversal" : 0,
+            "disabletracker" : 1,
+            "disabletelegram" : 1,
+            "autorestart" : 0,
+            "graphs" : 0,
+            "verbose" : 0,
+            "stats" : 0
+        }
+    },
+    "coinbasepro": {
+        "api_url": "https://api.pro.coinbase.com",
+        "api_key_file": "coinbasepro.key",
+        "config" : {
+            "base_currency" : "BTC",
+            "quote_currency" : "GBP",
+            "live" : 0,
+            "sellatloss" : 0,
+            "sellatresistance" : 0,
+            "trailingstoploss" : -1.5,
+            "trailingstoplosstrigger" : 5,
+            "nosellmaxpcnt" : 3,
+            "nosellminpcnt" : -3,
+            "disablebullonly" : 0,
+            "disablebuynearhigh" : 1,
+            "disablebuymacd" : 0,
+            "disablebuyobv" : 1,
+            "disablebuyelderray" : 0,
+            "disablefailsafefibonaccilow" : 1,
+            "disableprofitbankreversal" : 0,
+            "disabletracker" : 1,
+            "disabletelegram" : 1,
+            "autorestart" : 0,
+            "graphs" : 0,
+            "verbose" : 0,
+            "stats" : 0
+        }
+    },
+    "telegram": {
+        "token": "",
+        "client_id": ""
+    }
+}
