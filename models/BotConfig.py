@@ -248,7 +248,7 @@ class BotConfig:
         )
 
     def getVersionFromREADME(self) -> str:
-        regex = r"^# Python Crypto Bot (v(?:\d+.){2}\d(?:-[\w\d]+)?).*"
+        regex = r"^# Python Crypto Bot (v\d{1,3}\.\d{1,3}\.\d{1,3})"
         version = "v0.0.0"
         try:
             with open("README.md", "r", encoding="utf8") as stream:

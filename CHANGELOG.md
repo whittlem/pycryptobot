@@ -8,6 +8,14 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [3.2.11] - 2021-08-22
+
+### Changed
+
+-- Adjustment to isWaitTrigger
+-- Tidying up repo
+-- Fixed version
+
 ## [3.2.10] - 2021-08-20
 
 ### Changed
