@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [3.2.12] - 2021-08-23
+
+### Changed
+
+-- Binance US is missing 'tradeFee' API endpoint, now returns default fee for this url
+
 ## [3.2.11] - 2021-08-22
 
 ### Changed
