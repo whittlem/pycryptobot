@@ -8,6 +8,16 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [3.2.12] - 2021-08-23
+
+### Added
+
+-- Verbose debug option to isSellTrigger and isWaitTrigger
+
+### Changed
+
+-- Logic in isSellTrigger and isWaitTrigger
+
 ## [3.2.11] - 2021-08-22
 
 ### Changed
