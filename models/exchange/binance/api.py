@@ -547,6 +547,10 @@ class AuthAPI(AuthAPIBase):
     def getTradeFee(self, market: str) -> float:
         """Retrieves the trade fees"""
 
+        # Binance US does not currently define "/sapi/v1/asset/tradeFee" in its API
+        if self._api_url == "https://api.binance.us":
+            return DEFAULT_TRADE_FEE_RATE
+
         try:
             # GET /sapi/v1/asset/tradeFee
             resp = self.authAPI(
