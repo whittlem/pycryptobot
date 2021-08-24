@@ -61,7 +61,7 @@ def parse_arguments():
 
     # disable defaults
     parser.add_argument('--disablebullonly', action="store_true", help="disable only buying in bull market")
-    parser.add_argument('--disablebuynearhigh', action="store_true", help="disable buy within 5 percent of high")
+    parser.add_argument('--disablebuynearhigh', action="store_true", help="disable buy within 3 percent of high")
     parser.add_argument('--disablebuymacd', action="store_true", help="disable macd buy signal")
     parser.add_argument('--disablebuyobv', action="store_true", help="disable obv buy signal")
     parser.add_argument('--disablebuyelderray', action="store_true", help="disable elder ray buy signal")
