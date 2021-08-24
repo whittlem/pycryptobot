@@ -277,3 +277,10 @@ def defaultConfigParse(app, config):
                 app.buymaxsize = config['buymaxsize']
         else:
             raise TypeError('buymaxsize must be of type int or float')
+
+    if 'buynearhighpcnt' in config:
+        if isinstance(config['buynearhighpcnt'], (int, float)):
+            if config['buynearhighpcnt'] > 0:
+                app.buynearhigh_pcnt = config['buynearhighpcnt']
+        else:
+            raise TypeError('buynearhighpcnt must be of type int or float')

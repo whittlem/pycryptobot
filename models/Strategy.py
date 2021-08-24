@@ -27,8 +27,8 @@ class Strategy():
                 raise AttributeError(f"'{indicator}' not in Pandas dataframe")
 
         # buy signal exclusion (if disabled, do not buy within 3% of the dataframe close high)
-        if self.state.last_action == 'SELL' and self.app.disableBuyNearHigh() is True and (price > (self._df['close'].max() * 0.97)):
-            log_text = str(now) + ' | ' + self.app.getMarket() + ' | ' + self.app.printGranularity() + ' | Ignoring Buy Signal (price ' + str(price) + ' within 3% of high ' + str(self._df['close'].max()) + ')'
+        if self.state.last_action == 'SELL' and self.app.disableBuyNearHigh() is True and (price > (self._df['close'].max() * (1 - self.app.buyNearHighPcnt()/100))):
+            log_text = str(now) + ' | ' + self.app.getMarket() + ' | ' + self.app.printGranularity() + ' | Ignoring Buy Signal (price ' + str(price) + ' within ' +  str(self.app.buyNearHighPcnt()) + '% of high ' + str(self._df['close'].max()) + ')'
             Logger.warning(log_text)
 
             return False

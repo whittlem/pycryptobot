@@ -50,6 +50,7 @@ def parse_arguments():
     parser.add_argument('--sellpercent', type=int, help="percentage of base currency to sell")
     parser.add_argument('--lastaction', type=str, help="optionally set the last action (BUY, SELL)")
     parser.add_argument('--buymaxsize', type=float, help="maximum size on buy")
+    parser.add_argument('--buynearhighpcnt', type=float, help="optionally set the percent of high for buying near high (only if buynearhigh is\n't disabled)")
 
     # optional options
     parser.add_argument('--sellatresistance', action="store_true", help="sell at resistance or upper fibonacci band")
@@ -170,6 +171,7 @@ class PyCryptoBot():
         self.statgroup = None
         self.statstartdate = None
         self.statdetail = False
+        self.buynearhigh_pcnt = 3
 
         self.disablebullonly = False
         self.disablebuynearhigh = False
@@ -601,6 +603,9 @@ class PyCryptoBot():
 
     def sellLowerPcnt(self):
         return self.sell_lower_pcnt
+
+    def buyNearHighPcnt(self) -> float:
+        return self.buynearhigh_pcnt
 
     def trailingStopLoss(self):
         return self.trailing_stop_loss
