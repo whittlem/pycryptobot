@@ -605,7 +605,6 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                 # if not live
                 else:
                     app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') TEST BUY at ' + price_text)
-                    # TODO: Improve simulator calculations by including calculations for buy and sell limit configurations.
                     if state.last_buy_size == 0 and state.last_buy_filled == 0:
                         state.last_buy_size = 1000
                         state.first_buy_size = 1000
@@ -617,8 +616,6 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                         Logger.info(formatted_current_df_index + ' | ' + app.getMarket() + ' | ' + app.printGranularity() + ' | ' + price_text + ' | BUY')
 
                         if app.getSmartSwitch():
-                            # make a copy of the technical_analysis up until the current_sim_date
-                            # use this to get the correct Fibonacci Retracement Levels for the current_sim_date
                             trading_dataCopy = trading_data[trading_data['date'] <= current_sim_date].copy()
                             ta = TechnicalAnalysis(trading_dataCopy)
                             bands = ta.getFibonacciRetracementLevels(float(price))
@@ -722,15 +719,16 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                         margin_text = truncate(margin) + '%'
                     else:
                         margin_text = '0%'
+
                     app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') TEST SELL at ' +
                                       price_text + ' (margin: ' + margin_text + ', (delta: ' +
                                       str(round(price - state.last_buy_price, precision)) + ')')
 
-                    # Preserve next buy values for simulator
+                    # preserve next sell values for simulator
                     state.sell_count = state.sell_count + 1
-                    buy_size = ((app.getSellPercent() / 100) * ((price / state.last_buy_price) * (state.last_buy_size - state.last_buy_fee)))
-                    state.last_buy_size = buy_size - sell_fee
-                    state.sell_sum = state.sell_sum + state.last_buy_size
+                    sell_size = ((app.getSellPercent() / 100) * ((price / state.last_buy_price) * (state.last_buy_size - state.last_buy_fee)))
+                    state.last_sell_size = sell_size - sell_fee
+                    state.sell_sum = state.sell_sum + state.last_sell_size
 
                     if not app.isVerbose():
                         if price > 0:
@@ -764,35 +762,51 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
             if not app.isLive() and state.iterations == len(df):
                 Logger.info("\nSimulation Summary: ")
 
-                if state.buy_count > state.sell_count and app.allowSellAtLoss():
-                    # Calculate last sell size
+                if state.buy_count == 0:
+                    state.last_buy_size = 0
+                    state.sell_sum = 0
+                else:
+                    # calculate last sell size
                     state.last_buy_size = ((app.getSellPercent() / 100) * ((price / state.last_buy_price) * (state.last_buy_size - state.last_buy_fee)))
-                    # Reduce sell fee from last sell size
+
+                    # reduce sell fee from last sell size
                     state.last_buy_size = state.last_buy_size - state.last_buy_price * app.getTakerFee()
                     state.sell_sum = state.sell_sum + state.last_buy_size
-                    state.sell_count = state.sell_count + 1
 
-                elif state.buy_count > state.sell_count and not app.allowSellAtLoss():
-                    Logger.info("\n")
-                    Logger.info('        Note : "sell at loss" is disabled and you have an open trade, if the margin')
-                    Logger.info('               result below is negative it will assume you sold at the end of the')
-                    Logger.info('               simulation which may not be ideal. Try setting --sellatloss 1')
+                remove_last_buy = False
+                if state.buy_count > state.sell_count:
+                    remove_last_buy = True
+                    state.buy_count -= 1 # remove last buy as there has not been a corresponding sell yet
+
+                    Logger.info("\nWarning: simulation ended with an open trade and it will be excluded from the margin calculation.")
+                    Logger.info("         (it is not realistic to hard sell at the end of a simulation without a sell signal)")
 
                 Logger.info("\n")
-                Logger.info('   Buy Count : ' + str(state.buy_count))
+                if remove_last_buy is True:
+                    Logger.info('   Buy Count : ' + str(state.buy_count) + ' (open buy excluded)')
+                else:
+                    Logger.info('   Buy Count : ' + str(state.buy_count))
                 Logger.info('  Sell Count : ' + str(state.sell_count))
                 Logger.info('   First Buy : ' + str(state.first_buy_size))
-                Logger.info('   Last Sell : ' + str(state.last_buy_size))
-
-                app.notifyTelegram(f"Simulation Summary\n   Buy Count: {state.buy_count}\n   Sell Count: {state.sell_count}\n   First Buy: {state.first_buy_size}\n   Last Sell: {state.last_buy_size}\n")
 
                 if state.sell_count > 0:
+                    Logger.info('   Last Sell : ' + str(state.last_sell_size) + "\n")
+                else:
                     Logger.info("\n")
-                    Logger.info('      Margin : ' + _truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4) + '%')
+                    Logger.info('      Margin : 0.00%')
                     Logger.info("\n")
-                    Logger.info('  ** non-live simulation, assuming highest fees')
-                    app.notifyTelegram(f"      Margin: {_truncate((((state.last_buy_size - state.first_buy_size) / state.first_buy_size) * 100), 4)}%\n  ** non-live simulation, assuming highest fees\n")
+                    Logger.info("  ** margin is nil as a sell as not occurred during the simulation\n")
+                    app.notifyTelegram(f"      Margin: 0.00%\n  ** margin is nil as a sell as not occurred during the simulation\n")
 
+                app.notifyTelegram(f"Simulation Summary\n   Buy Count: {state.buy_count}\n   Sell Count: {state.sell_count}\n   First Buy: {state.first_buy_size}\n   Last Buy: {state.last_buy_size}\n")
+
+                if state.sell_count > 0:
+                    Logger.info('      Margin : ' + _truncate((((state.last_sell_size - state.first_buy_size) / state.first_buy_size) * 100), 4) + '%')
+                    Logger.info("\n")
+
+                    Logger.info("  ** non-live simulation, assuming highest fees")
+                    Logger.info("  ** open trade excluded from margin calculation\n")
+                    app.notifyTelegram(f"      Margin: {_truncate((((state.last_sell_size - state.first_buy_size) / state.first_buy_size) * 100), 4)}%\n  ** non-live simulation, assuming highest fees\n  ** open trade excluded from margin calculation\n")
 
         else:
             if state.last_buy_size > 0 and state.last_buy_price > 0 and price > 0 and state.last_action == 'BUY':

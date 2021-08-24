@@ -8,6 +8,13 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [3.2.14] - 2021-08-24
+
+### Changed
+
+-- Found and fixed 'currency' key exception
+-- Fixed simulation summary
+
 ## [3.2.13] - 2021-08-23
 
 ### Changed
