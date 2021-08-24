@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# encoding: utf-8
+
 """Python Crypto Bot consuming Coinbase Pro or Binance APIs"""
 
 import functools
