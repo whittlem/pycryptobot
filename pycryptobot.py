@@ -45,12 +45,13 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
 
     # connectivity check (only when running live)
     if app.isLive() and app.getTime() is None:
-        Logger.warning('Your connection to the exchange has gone down, will retry in 1 minute!')
-        app.notifyTelegram('Bot for ' + app.getMarket() + ' got Disconnected :( ')
+        Logger.warning('Bot for ' + app.getMarket() + ' has lost connection to the exchange (will retry in 1 minute)')
+        app.notifyTelegram('Bot for ' + app.getMarket() + ' has lost connection to the exchange (will retry in 1 minute)')
         # poll every 1 minute
         list(map(s.cancel, s.queue))
         s.enter(60, 0.25, executeJob, (sc, app, state))
-        app.notifyTelegram('Bot for ' + app.getMarket() + ' Attempting reconnect :) ')
+        Logger.warning('Bot for ' + app.getMarket() + ' is attempting to reconnect!')
+        app.notifyTelegram('Bot for ' + app.getMarket() + ' is attempting to reconnect!')
         return
 
     # increment state.iterations

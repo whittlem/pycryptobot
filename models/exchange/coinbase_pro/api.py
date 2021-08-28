@@ -424,7 +424,8 @@ class AuthAPI(AuthAPIBase):
             resp = self.authAPI("GET", "time")
             epoch = int(resp["epoch"])
             return datetime.fromtimestamp(epoch)
-        except:
+        except Exception as e:
+            Logger.error(f"Error: {e}")
             return None
 
     def marketBuy(self, market: str = "", quote_quantity: float = 0) -> pd.DataFrame:
@@ -800,7 +801,8 @@ class PublicAPI(AuthAPIBase):
             resp = self.authAPI("GET", "time")
             epoch = int(resp["epoch"])
             return datetime.fromtimestamp(epoch)
-        except:
+        except Exception as e:
+            Logger.error(f"Error: {e}")
             return None
 
     def authAPI(self, method: str, uri: str, payload: str = "") -> dict:
