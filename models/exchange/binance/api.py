@@ -515,7 +515,8 @@ class AuthAPI(AuthAPIBase):
             # GET /api/v3/time
             resp = self.authAPI("GET", "/api/v3/time")
             return self.convert_time(int(resp["serverTime"]))
-        except:
+        except Exception as e:
+            Logger.error(f"Error: {e}")
             return None
 
     def getMarketInfoFilters(self, market: str) -> pd.DataFrame:
@@ -835,7 +836,8 @@ class PublicAPI(AuthAPIBase):
             # GET /api/v3/time
             resp = self.authAPI("GET", "/api/v3/time")
             return self.convert_time(int(resp["serverTime"]))
-        except:
+        except Exception as e:
+            Logger.error(f"Error: {e}")
             return None
 
     def getTicker(self, market: str = DEFAULT_MARKET) -> tuple:

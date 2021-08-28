@@ -8,6 +8,13 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [3.3.0] - 2021-08-28
+
+### Changed
+
+-- added "buynearhighpcnt" to specify the percentage from high that the bot should not buy if "disablebuynearhigh" is not specified.
+-- added a catch and display of exception message for getTime()
+
 ## [3.2.15] - 2021-08-24
 
 ### Changed

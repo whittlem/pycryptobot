@@ -148,6 +148,12 @@ class PyCryptoBot(BotConfig):
         except Exception:
             return None
 
+    def getBuyNearHighPcnt(self):
+        try:
+            return float(self.buynearhighpcnt)
+        except Exception:
+            return None
+
     def getDateFromISO8601Str(self, date: str):
 
         # If date passed from datetime.now() remove milliseconds
@@ -519,6 +525,9 @@ class PyCryptoBot(BotConfig):
 
     def trailingStopLoss(self):
         return self.trailing_stop_loss
+
+    def buyNearHighPcnt(self) -> float:
+        return self.buynearhighpcnt
 
     def trailingStopLossTrigger(self):
         return self.trailing_stop_loss_trigger
@@ -1026,6 +1035,11 @@ class PyCryptoBot(BotConfig):
             "Buy Near High",
             str(not self.disableBuyNearHigh()) + "  --disablebuynearhigh",
         )
+        if self.disableBuyNearHigh():
+            textBox.line(
+                "Buy Near High Pcnt",
+                str(self.buyNearHighPcnt()) + "% --buynearhighpcnt <pcnt>",
+            )
         textBox.line(
             "Use Buy MACD", str(not self.disableBuyMACD()) + "  --disablebuymacd"
         )
