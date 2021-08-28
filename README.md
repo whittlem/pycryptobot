@@ -1,6 +1,6 @@
 [![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg) [![Tests](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)
 
-# Python Crypto Bot v3.2.15 (pycryptobot)
+# Python Crypto Bot v3.3.0 (pycryptobot)
 
 ## Join our chat on Telegram
 
@@ -326,6 +326,10 @@ Buy signal:
 
 The bot will only trade in a bull market to minimise losses! (you can disable this)
 
+Special buy cases:
+
+* "buynearhighpcnt" to specify the percentage from high that the bot should not buy if "disablebuynearhigh" is not specified.
+
 Sell signal:
 
 * EMA12 is currently crossing below the EMA26
@@ -355,7 +359,7 @@ Special sell cases:
     --disablebullonly                   Disable only buying in bull market
     --disablebuynearhigh                Disable buying within 3% of the dataframe high
     --disablebuymacd                    Disable macd buy signal
- --disablebuyema                     Disable ema buy signal.If both core indicators ema and macd buy signals are disabled, bot won't buy.Doesn't affect sell strategy.
+    --disablebuyema                     Disable ema buy signal.If both core indicators ema and macd buy signals are disabled, bot won't buy.Doesn't affect sell strategy.
     --disablebuyobv                     Disable obv buy signal
     --disablebuyelderray                Disable elder ray buy signal
     --disablefailsafefibonaccilow       Disable failsafe sell on fibonacci lower band

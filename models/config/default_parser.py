@@ -57,6 +57,34 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("sim must be of type str")
 
+    if "buynearhighpcnt" in config:
+        print (config)
+        if isinstance(config["buynearhighpcnt"], (int, float, str)):
+            p = re.compile(r"^\-*[0-9\.]{1,5}$")
+            if isinstance(config["buynearhighpcnt"], str) and p.match(
+                config["buynearhighpcnt"]
+            ):
+                if float(config["buynearhighpcnt"]) > 0:
+                    app.buynearhighpcnt = float(config["buynearhighpcnt"])
+                else:
+                    raise ValueError("buynearhighpcnt must be positive")
+            elif (
+                isinstance(config["buynearhighpcnt"], (int, float))
+                and config["buynearhighpcnt"] >= 0
+                and config["buynearhighpcnt"] <= 100
+            ):
+                if float(config["buynearhighpcnt"]) > 0:
+                    app.buynearhighpcnt = float(config["buynearhighpcnt"])
+                else:
+                    raise ValueError("buynearhighpcnt must be positive")
+            elif (
+                isinstance(config["buynearhighpcnt"], (int, float))
+                and config["buynearhighpcnt"] < 0
+            ):
+                raise ValueError("buynearhighpcnt must be positive")
+        else:
+            raise TypeError("buynearhighpcnt must be of type int or str")
+
     if "sellupperpcnt" in config:
         if isinstance(config["sellupperpcnt"], (int, float, str)):
             p = re.compile(r"^\-*[0-9\.]{1,5}$")
