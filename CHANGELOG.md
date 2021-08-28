@@ -13,6 +13,7 @@ Upgrade library dependancies (if required):
 ### Changed
 
 -- added "buynearhighpcnt" to specify the percentage from high that the bot should not buy if "disablebuynearhigh" is not specified.
+-- added a catch and display of exception message for getTime()
 
 ## [3.2.15] - 2021-08-24
 
