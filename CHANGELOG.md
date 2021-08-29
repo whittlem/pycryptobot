@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependancies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [3.3.1] - 2021-08-29
+
+### Changed
+
+-- added additional error handling for Coinbase Pro getTime()
+
 ## [3.3.0] - 2021-08-28
 
 ### Changed

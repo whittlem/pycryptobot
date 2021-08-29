@@ -422,8 +422,12 @@ class AuthAPI(AuthAPIBase):
 
         try:
             resp = self.authAPI("GET", "time")
-            epoch = int(resp["epoch"])
-            return datetime.fromtimestamp(epoch)
+            if "epoch" in resp:
+                epoch = int(resp["epoch"])
+                return datetime.fromtimestamp(epoch)
+            else:
+                Logger.error(resp)
+                return None
         except Exception as e:
             Logger.error(f"Error: {e}")
             return None
@@ -799,8 +803,12 @@ class PublicAPI(AuthAPIBase):
 
         try:
             resp = self.authAPI("GET", "time")
-            epoch = int(resp["epoch"])
-            return datetime.fromtimestamp(epoch)
+            if "epoch" in resp:
+                epoch = int(resp["epoch"])
+                return datetime.fromtimestamp(epoch)
+            else:
+                Logger.error(resp)
+                return None
         except Exception as e:
             Logger.error(f"Error: {e}")
             return None
