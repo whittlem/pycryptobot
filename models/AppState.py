@@ -51,6 +51,9 @@ class AppState:
         self.sell_count = 0
         self.sell_sum = 0
 
+        self.margintracker = 0
+        self.profitlosstracker = 0
+
     def minimumOrderBase(self):
         if self.app.getExchange() == "binance":
             df = self.api.getMarketInfoFilters(self.app.getMarket())
