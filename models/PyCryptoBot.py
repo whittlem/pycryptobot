@@ -292,6 +292,14 @@ class PyCryptoBot(BotConfig):
 
                 result_df_cache.sort_values(by=["date"], ascending=True, inplace=True)
 
+            if self.smart_switch == False:
+                if self.extraCandlesFound == False:
+                    textBox = TextBox(80, 26)
+                    textBox.singleLine()
+                    textBox.center(str(self.exchange) + " is not returning data for the requested start date.")
+                    textBox.center("Switching to earliest start date: " + str(result_df_cache.head(1).index.format()[0]))
+                    textBox.singleLine()
+                    self.simstartdate = str(result_df_cache.head(1).index.format()[0])
 
             return result_df_cache.copy()
 
@@ -318,7 +326,7 @@ class PyCryptoBot(BotConfig):
                     if self.getDateFromISO8601Str(str(self.ema1226_15m_cache.index.format()[0])).isoformat() != self.getDateFromISO8601Str(start).isoformat():
                         textBox = TextBox(80, 26)
                         textBox.singleLine()
-                        textBox.center(str(self.exchange) + " is not returning date for the requested start date.")
+                        textBox.center(str(self.exchange) + " is not returning data for the requested start date.")
                         textBox.center("Switching to earliest start date: " + str(self.ema1226_15m_cache.head(1).index.format()[0]))
                         textBox.singleLine()
                         self.simstartdate = str(self.ema1226_15m_cache.head(1).index.format()[0])
@@ -326,7 +334,7 @@ class PyCryptoBot(BotConfig):
                     if self.getDateFromISO8601Str(str(self.ema1226_1h_cache.index.format()[0])).isoformat() != self.getDateFromISO8601Str(start).isoformat():
                         textBox = TextBox(80, 26)
                         textBox.singleLine()
-                        textBox.center(str(self.exchange) + " is not returning date for the requested start date.")
+                        textBox.center(str(self.exchange) + " is not returning data for the requested start date.")
                         textBox.center("Switching to earliest start date: " + str(self.ema1226_1h_cache.head(1).index.format()[0]))
                         textBox.singleLine()
                         self.simstartdate = str(self.ema1226_1h_cache.head(1).index.format()[0])                    
@@ -405,7 +413,7 @@ class PyCryptoBot(BotConfig):
             if self.isSimulation() and isinstance(self.sma50200_1h_cache, pd.DataFrame):
                 df_data = self.sma50200_1h_cache.loc[
                     self.sma50200_1h_cache["date"] <= iso8601end
-                ]
+                ].copy()
             elif self.exchange == "coinbasepro":
                 api = CBPublicAPI()
                 df_data = api.getHistoricalData(self.market, 3600)
@@ -461,7 +469,7 @@ class PyCryptoBot(BotConfig):
             if self.isSimulation() and isinstance(self.ema1226_6h_cache, pd.DataFrame):
                 df_data = self.ema1226_6h_cache[
                     (self.ema1226_6h_cache["date"] <= iso8601end)
-                ]
+                ].copy()
             elif self.exchange == "coinbasepro":
                 api = CBPublicAPI()
                 df_data = api.getHistoricalData(self.market, 21600)
