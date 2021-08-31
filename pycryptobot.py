@@ -138,6 +138,12 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
         technical_analysis.addAll()
         df = technical_analysis.getDataFrame()
 
+        if app.appStarted and app.simstartdate is not None:
+            # On first run set the iteration to the start date entered
+            # This sim mode now pulls 300 candles from before the entered start date 
+            state.iterations = df.index.get_loc(str(app.getDateFromISO8601Str(app.simstartdate))) + 1
+            app.appStarted = False
+
     if app.isSimulation():
         df_last = app.getInterval(df, state.iterations)
     else:
