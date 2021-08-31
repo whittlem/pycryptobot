@@ -8,6 +8,14 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [3.3.3] - 2021-08-31
+
+### Changed
+
+-- fix for profit and loss summary for simulations
+-- added trade history in simulation summary in verbose mode will also export to CSV '({market}{daterange}_trades.csv)'
+-- added trade history export to csv 'trades.csv' 
+
 ## [3.3.2] - 2021-08-30
 
 ### Changed
