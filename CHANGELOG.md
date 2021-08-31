@@ -5,8 +5,18 @@ Upgrade version:
 - git checkout main
 - git pull
 
-Upgrade library dependancies (if required):
+Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
+
+## [3.3.2] - 2021-08-30
+
+### Changed
+
+-- update to smartswitch sim processing speed.
+-- update to sim summary to include total margin and profit/loss.
+-- fixed timestamp bug when using simstartdate.
+-- fixed graphs in sim mode.
+-- remove limit for sims using specific granularity.
 
 ## [3.3.1] - 2021-08-29
 
