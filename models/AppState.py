@@ -53,6 +53,7 @@ class AppState:
 
         self.margintracker = 0
         self.profitlosstracker = 0
+        self.feetracker = 0
 
     def minimumOrderBase(self):
         if self.app.getExchange() == "binance":

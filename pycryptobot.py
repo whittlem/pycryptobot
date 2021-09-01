@@ -138,7 +138,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
         technical_analysis.addAll()
         df = technical_analysis.getDataFrame()
 
-        if app.appStarted and app.simstartdate is not None:
+        if app.isSimulation() and app.appStarted and app.simstartdate is not None:
             # On first run set the iteration to the start date entered
             # This sim mode now pulls 300 candles from before the entered start date 
             state.iterations = df.index.get_loc(str(app.getDateFromISO8601Str(app.simstartdate))) + 1
@@ -690,6 +690,19 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                         textBox.center('*** Executing TEST Buy Order ***')
                         textBox.singleLine()
 
+                    app.trade_tracker = app.trade_tracker.append(
+                        {
+                            "Datetime": str(current_sim_date),
+                            "Market": app.getMarket(),
+                            "Action": "BUY",
+                            "Price": price,
+                            "Quote": state.last_buy_size,
+                            "Base": float(state.last_buy_size) / float(price),
+                            "DF_High": df[df['date'] <= current_sim_date]['close'].max(),
+                            "DF_Low": df[df['date'] <= current_sim_date]['close'].min()}
+                            , ignore_index=True
+                                )
+
                 if app.shouldSaveGraphs():
                     tradinggraphs = TradingGraphs(technical_analysis)
                     ts = datetime.now().timestamp()
@@ -784,6 +797,23 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                         # Added to track profit and loss margins during sim runs
                         state.margintracker += float(margin)
                         state.profitlosstracker += float(profit)
+                        state.feetracker += float(sell_fee)
+
+                        app.trade_tracker = app.trade_tracker.append(
+                            {
+                                "Datetime": str(current_sim_date),
+                                "Market": app.getMarket(),
+                                "Action": "SELL",
+                                "Price": price,
+                                "Quote": state.last_sell_size,
+                                "Base": state.last_buy_filled,
+                                "Margin": margin,
+                                "Profit": profit,
+                                "Fee": sell_fee,
+                                "DF_High": df[df['date'] <= current_sim_date]['close'].max(),
+                                "DF_Low": df[df['date'] <= current_sim_date]['close'].min()}
+                                , ignore_index=True
+                            )
 
                         Logger.info(formatted_current_df_index + ' | ' + app.getMarket() + ' | ' +
                                      app.printGranularity() + ' | SELL | ' + str(price) + ' | BUY | ' +
@@ -814,6 +844,21 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
 
             if not app.isLive() and state.iterations == len(df):
                 Logger.info("\nSimulation Summary: ")
+
+                if app.isVerbose():
+                    Logger.info("\n" + app.trade_tracker)
+                    if app.simuluationSpeed() == "fast":
+                        start = str(df.head(1).index.format()[0]).replace(":", ".")
+                        end = str(df.tail(1).index.format()[0]).replace(":", ".")
+                        filename = f"{app.getMarket()} {str(start)} - {str(end)}_trades.csv"
+                    else:
+                        filename = f"{app.getMarket()} {str(app.simstartdate)} - {str(app.simenddate)}_trades.csv"
+                else:
+                    filename = "trades.csv"
+                try:
+                    app.trade_tracker.to_csv(filename)
+                except OSError:
+                    Logger.critical(f"Unable to save: {filename}")
 
                 if state.buy_count == 0:
                     state.last_buy_size = 0
@@ -857,13 +902,12 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                     Logger.info('   Last Trade Margin : ' + _truncate((((state.last_sell_size - state.first_buy_size) / state.first_buy_size) * 100), 4) + '%')
                     Logger.info("\n")
                     Logger.info('   All Trades Buys (' + app.quote_currency + '): ' + _truncate((state.first_buy_size * state.buy_count), 4))
-                    Logger.info('   All Trades Profit/Loss (' + app.quote_currency + '): ' + _truncate(((state.first_buy_size * state.buy_count) * (state.profitlosstracker /100)), 2) + " (" + _truncate(state.profitlosstracker, 4) + '%)')
+                    Logger.info('   All Trades Profit/Loss (' + app.quote_currency + '): ' + _truncate(state.profitlosstracker, 2) + " (" + _truncate(state.feetracker,2) + " in fees)")
                     Logger.info('   All Trades Margin : ' + _truncate(state.margintracker, 4) + '%')
                     Logger.info("\n")
                     Logger.info("  ** non-live simulation, assuming highest fees")
                     Logger.info("  ** open trade excluded from margin calculation\n")
                     app.notifyTelegram(f"      Margin: {_truncate((((state.last_sell_size - state.first_buy_size) / state.first_buy_size) * 100), 4)}%\n  ** non-live simulation, assuming highest fees\n  ** open trade excluded from margin calculation\n")
-
         else:
             if state.last_buy_size > 0 and state.last_buy_price > 0 and price > 0 and state.last_action == 'BUY':
                 # show profit and margin if already bought
