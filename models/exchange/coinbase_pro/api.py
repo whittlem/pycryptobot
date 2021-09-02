@@ -813,6 +813,14 @@ class PublicAPI(AuthAPIBase):
             Logger.error(f"Error: {e}")
             return None
 
+    def getMarkets24HrStats(self) -> pd.DataFrame():
+        """Retrieves exchange markets 24hr stats"""
+
+        try:
+            return self.authAPI("GET", "products/stats")
+        except:
+            return pd.DataFrame()
+
     def authAPI(self, method: str, uri: str, payload: str = "") -> dict:
         """Initiates a REST API call"""
 

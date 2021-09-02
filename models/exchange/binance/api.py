@@ -840,6 +840,14 @@ class PublicAPI(AuthAPIBase):
             Logger.error(f"Error: {e}")
             return None
 
+    def getMarkets24HrStats(self) -> pd.DataFrame():
+        """Retrieves exchange markets 24hr stats"""
+
+        try:
+            return self.authAPI("GET", "/api/v3/ticker/24hr")
+        except:
+            return pd.DataFrame()
+
     def getTicker(self, market: str = DEFAULT_MARKET) -> tuple:
         """Retrives the market ticker"""
 

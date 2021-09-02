@@ -58,7 +58,6 @@ def defaultConfigParse(app, config):
             raise TypeError("sim must be of type str")
 
     if "buynearhighpcnt" in config:
-        print (config)
         if isinstance(config["buynearhighpcnt"], (int, float, str)):
             p = re.compile(r"^\-*[0-9\.]{1,5}$")
             if isinstance(config["buynearhighpcnt"], str) and p.match(
