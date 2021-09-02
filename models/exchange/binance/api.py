@@ -716,7 +716,6 @@ class AuthAPI(AuthAPIBase):
 
     def authAPI(self, method: str, uri: str, payload: str = {}) -> dict:
         """Initiates a REST API call to the exchange"""
-        print(datetime.now(), method, uri)
 
         if not isinstance(method, str):
             raise TypeError("Method is not a string.")
