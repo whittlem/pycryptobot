@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append("..")
+sys.path.append(".")
 # pylint: disable=import-error
 from models.exchange.binance import PublicAPI as BPublicAPI
 from models.exchange.coinbase_pro import PublicAPI as CPublicAPI
