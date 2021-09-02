@@ -56,7 +56,11 @@ class AppState:
         self.feetracker = 0
         self.buy_tracker = 0
 
-    def minimumOrderBase(self):
+        self.account_balance_df = None
+        self.account_df = None
+        self.all_orders_df = None
+
+    def minimumOrderBase(self, account_df):
         if self.app.getExchange() == "binance":
             df = self.api.getMarketInfoFilters(self.app.getMarket())
 
@@ -65,7 +69,7 @@ class AppState:
                     base_min = float(
                         df[df["filterType"] == "LOT_SIZE"][["minQty"]].values[0][0]
                     )
-                    base = float(self.account.getBalance(self.app.getBaseCurrency()))
+                    base = float(self.account.getBalance(self.app.getBaseCurrency(), account_df))
                 except:
                     return
 
@@ -90,7 +94,7 @@ class AppState:
                     f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})"
                 )
 
-    def minimumOrderQuote(self):
+    def minimumOrderQuote(self, account_df):
         if self.app.getExchange() == "binance":
             df = self.api.getMarketInfoFilters(self.app.getMarket())
 
@@ -101,7 +105,7 @@ class AppState:
                             0
                         ][0]
                     )
-                    quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
+                    quote = float(self.account.getBalance(self.app.getQuoteCurrency(), account_df))
                 except:
                     return
 
@@ -135,10 +139,20 @@ class AppState:
             self.last_action = "SELL"
             return
 
-        base = float(self.account.getBalance(self.app.getBaseCurrency()))
-        quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
+        model = BAuthAPI(
+                self.app.getAPIKey(),
+                self.app.getAPISecret(),
+                self.app.getAPIURL(),
+                recv_window=self.app.getRecvWindow(),
+                                       )
+        self.account_df = model.getAccount()
+        self.account_balance_df = model.getAccountBalances(self.account_df)
 
-        orders = self.account.getOrders(self.app.getMarket(), "", "done")
+        base = float(self.account.getBalance(self.app.getBaseCurrency(), self.account_balance_df))
+        quote = float(self.account.getBalance(self.app.getQuoteCurrency(), self.account_balance_df))
+
+        orders = self.account.getOrders(self.app.getMarket(), "", "done", self.all_orders_df)
+        self.all_orders_df = orders
         if len(orders) > 0:
             last_order = orders[-1:]
 
@@ -163,7 +177,7 @@ class AppState:
                 self.last_action = "BUY"
                 return
             else:
-                self.minimumOrderQuote()
+                self.minimumOrderQuote(self.account_balance_df)
                 self.last_action = "SELL"
                 self.last_buy_price = 0.0
                 return
@@ -182,10 +196,10 @@ class AppState:
             )
 
             if order_pairs_normalised[0] < order_pairs_normalised[1]:
-                self.minimumOrderQuote()
+                self.minimumOrderQuote(self.account_balance_df)
                 self.last_action = "SELL"
             elif order_pairs_normalised[0] > order_pairs_normalised[1]:
-                self.minimumOrderBase()
+                self.minimumOrderBase(self.account_balance_df)
                 self.last_action = "BUY"
 
             else:

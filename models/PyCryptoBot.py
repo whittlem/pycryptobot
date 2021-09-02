@@ -664,7 +664,7 @@ class PyCryptoBot(BotConfig):
                     + truncate(val2, precision)
                 )
 
-    def getLastBuy(self) -> dict:
+    def getLastBuy(self, all_orders_df=None) -> dict:
         """Retrieves the last exchange buy order and returns a dictionary"""
 
         try:
@@ -706,7 +706,7 @@ class PyCryptoBot(BotConfig):
                     self.getAPIURL(),
                     recv_window=self.recv_window,
                 )
-                orders = api.getOrders(self.getMarket())
+                orders = api.getOrders(self.getMarket(), all_orders_df=all_orders_df)
 
                 if len(orders) == 0:
                     return None
@@ -735,7 +735,7 @@ class PyCryptoBot(BotConfig):
         except Exception:
             return None
 
-    def getTakerFee(self):
+    def getTakerFee(self, account_df=None):
         if self.isSimulation() is True and self.exchange == "coinbasepro":
             return 0.005  # default lowest fee tier
         elif self.isSimulation() is True and self.exchange == "binance":
@@ -747,7 +747,7 @@ class PyCryptoBot(BotConfig):
                 self.getAPIPassphrase(),
                 self.getAPIURL(),
             )
-            return api.getTakerFee()
+            return api.getTakerFee(self.market)
         elif self.exchange == "binance":
             api = BAuthAPI(
                 self.getAPIKey(),
@@ -755,7 +755,7 @@ class PyCryptoBot(BotConfig):
                 self.getAPIURL(),
                 recv_window=self.recv_window,
             )
-            return api.getTakerFee()
+            return api.getTakerFee(self.market, account_df=account_df)
         else:
             return 0.005
 
