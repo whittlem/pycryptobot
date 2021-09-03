@@ -61,7 +61,7 @@ class TradingAccount:
             if not p.match(market):
                 raise TypeError("Binance market is invalid.")
 
-    def getOrders(self, market="", action="", status="all", all_orders_df=None):
+    def getOrders(self, market="", action="", status="all"):
         """Retrieves orders either live or simulation
 
         Parameters
@@ -96,7 +96,7 @@ class TradingAccount:
                     recv_window=self.app.getRecvWindow(),
                 )
                 # retrieve orders from live Binance account portfolio
-                self.orders = model.getOrders(market, action, status, all_orders_df)
+                self.orders = model.getOrders(market, action, status)
                 return self.orders
             else:
                 # return dummy orders
@@ -140,7 +140,7 @@ class TradingAccount:
                 ]
             ]
 
-    def getBalance(self, currency="", df=None):
+    def getBalance(self, currency=""):
         """Retrieves balance either live or simulation
 
         Parameters
@@ -151,15 +151,13 @@ class TradingAccount:
 
         if self.app.getExchange() == "binance":
             if self.mode == "live":
-                if not isinstance(df, pd.DataFrame):
-                    model = BAuthAPI(
-                            self.app.getAPIKey(),
-                            self.app.getAPISecret(),
-                            self.app.getAPIURL(),
-                            recv_window=self.app.getRecvWindow(),
-                            )
-                    account = model.getAccount()
-                    df = model.getAccountBalances(account)
+                model = BAuthAPI(
+                    self.app.getAPIKey(),
+                    self.app.getAPISecret(),
+                    self.app.getAPIURL(),
+                    recv_window=self.app.getRecvWindow(),
+                )
+                df = model.getAccount()
                 if isinstance(df, pd.DataFrame):
                     if currency == "":
                         # retrieve all balances

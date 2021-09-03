@@ -137,97 +137,91 @@ class AuthAPI(AuthAPIBase):
             # unexpected data, then return
             if len(resp) == 0 or "balances" not in resp:
                 return pd.DataFrame()
-        except:
-            return pd.DataFrame()
 
-        df = pd.DataFrame([resp], columns=resp.keys())
+            if isinstance(resp["balances"], list):
+                df = pd.DataFrame.from_dict(resp["balances"])
+            else:
+                df = pd.DataFrame(resp["balances"], index=[0])
 
-        return df
+            # unexpected data, then return
+            if len(df) == 0:
+                return pd.DataFrame()
 
+            # exclude accounts that are locked
+            df = df[df.locked != 0.0]
+            df["locked"] = df["locked"].astype(bool)
 
-    def getAccountBalances(self, df) -> pd.DataFrame:
+            # reset the dataframe index to start from 0
+            df = df.reset_index()
 
-        df = pd.DataFrame(df["balances"][0])
+            df["id"] = df["index"]
+            df["hold"] = 0.0
+            df["profile_id"] = None
+            df["available"] = df["free"]
 
-        # unexpected data, then return
-        if len(df) == 0:
-            return pd.DataFrame()
+            df["id"] = df["id"].astype(object)
+            df["hold"] = df["hold"].astype(object)
 
-        # exclude accounts that are locked
-        df = df[df.locked != 0.0]
-        df["locked"] = df["locked"].astype(bool)
+            # exclude accounts with a nil balance
+            df = df[df.available != "0.00000000"]
+            df = df[df.available != "0.00"]
 
-        # reset the dataframe index to start from 0
-        df = df.reset_index()
+            # inconsistent columns, then return
+            if len(df.columns) != 8:
+                return pd.DataFrame()
 
-        df["id"] = df["index"]
-        df["hold"] = 0.0
-        df["profile_id"] = None
-        df["available"] = df["free"]
-
-        df["id"] = df["id"].astype(object)
-        df["hold"] = df["hold"].astype(object)
-
-        # exclude accounts with a nil balance
-        df = df[df.available != "0.00000000"]
-        df = df[df.available != "0.00"]
-
-        # inconsistent columns, then return
-        if len(df.columns) != 8:
-            return pd.DataFrame()
-
-        # rename columns
-        df.columns = [
-            "index",
-            "currency",
-            "balance",
-            "trading_enabled",
-            "id",
-            "hold",
-            "profile_id",
-            "available",
-        ]
-
-        # return if currency is missing
-        if "currency" not in df:
-            return df.DataFrame()
-
-        return df[
-            [
+            # rename columns
+            df.columns = [
                 "index",
-                "id",
                 "currency",
                 "balance",
-                "hold",
-                "available",
-                "profile_id",
                 "trading_enabled",
+                "id",
+                "hold",
+                "profile_id",
+                "available",
             ]
-        ]
 
+            # return if currency is missing
+            if "currency" not in df:
+                return df.DataFrame()
+
+            return df[
+                [
+                    "index",
+                    "id",
+                    "currency",
+                    "balance",
+                    "hold",
+                    "available",
+                    "profile_id",
+                    "trading_enabled",
+                ]
+            ]
+
+        except:
+            return pd.DataFrame()
 
     def getAccount(self) -> pd.DataFrame:
         """Retrieves all accounts for Binance as there is no specific account id"""
 
         return self.getAccounts()
 
-    def getFees(self, market: str = "BTCUSDT", account_df=None) -> pd.DataFrame:
+    def getFees(self, market: str = "") -> pd.DataFrame:
         """Retrieves a account fees"""
 
         volume = 0
-        # If we checked klines on this run already, use it
         try:
             # GET /api/v3/klines
             resp = self.authAPI(
                 "GET",
                 "/api/v3/klines",
-                {"symbol": market, "interval": "1d", "limit": 30},
+                {"symbol": "BTCUSDT", "interval": "1d", "limit": 30},
             )
 
             # if response is empty, then return
             if len(resp) == 0:
                 return pd.DataFrame()
-
 
             # convert the API response into a Pandas DataFrame
             df = pd.DataFrame(
@@ -247,22 +241,18 @@ class AuthAPI(AuthAPIBase):
                     "ignore",
                 ],
             )
-        except:
-            pass
 
             df["volume"] = df["volume"].astype(float)
             volume = np.round(float(df[["volume"]].mean()))
+        except:
+            pass
 
-        if not isinstance(account_df, pd.DataFrame):
-            # GET /api/v3/account
-            resp = self.authAPI("GET", "/api/v3/account", {"recvWindow": self.recv_window})
+        # GET /api/v3/account
+        resp = self.authAPI("GET", "/api/v3/account", {"recvWindow": self.recv_window})
 
-            # unexpected data, then return
-            if len(resp) == 0:
-                return pd.DataFrame()
-        else:
-            resp = pd.DataFrame.to_dict(account_df, orient='records')[0]
-            # orig_resp = self.authAPI("GET", "/api/v3/account", {"recvWindow": self.recv_window})
+        # unexpected data, then return
+        if len(resp) == 0:
+            return pd.DataFrame()
 
         if "makerCommission" in resp and "takerCommission" in resp:
             maker_fee_rate = resp["makerCommission"] / 10000
@@ -298,11 +288,11 @@ class AuthAPI(AuthAPIBase):
 
         return float(fees["maker_fee_rate"].to_string(index=False).strip())
 
-    def getTakerFee(self, market: str = "", account_df=None) -> float:
+    def getTakerFee(self, market: str = "") -> float:
         """Retrieves the taker fee"""
 
         if len(market) != None:
-            fees = self.getFees(market, account_df=account_df)
+            fees = self.getFees(market)
         else:
             fees = self.getFees()
 
@@ -350,7 +340,6 @@ class AuthAPI(AuthAPIBase):
         action: str = "",
         status: str = "done",
         order_history: list = [],
-        all_orders_df: pd.DataFrame = None
     ) -> pd.DataFrame:
         """Retrieves your list of orders with optional filtering"""
 
@@ -389,8 +378,6 @@ class AuthAPI(AuthAPIBase):
                     if full_scan is True:
                         print(f"scanning {market} order history.")
 
-                    if isinstance(all_orders_df, pd.DataFrame):
-                        return all_orders_df
                     # GET /api/v3/allOrders
                     resp = self.authAPI(
                         "GET",
@@ -425,8 +412,6 @@ class AuthAPI(AuthAPIBase):
                         "add to order history to prevent full scan:", self.order_history
                     )
             else:
-                if isinstance(all_orders_df, pd.DataFrame):
-                    return all_orders_df
                 # GET /api/v3/allOrders
                 resp = self.authAPI(
                     "GET",

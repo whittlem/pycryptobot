@@ -278,12 +278,12 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                 change_pcnt_high = 0
 
             # buy and sell calculations
-            state.last_buy_fee = round(state.last_buy_size * app.getTakerFee(account_df=state.account_df), 8)
+            state.last_buy_fee = round(state.last_buy_size * app.getTakerFee(), 8)
             state.last_buy_filled = round(((state.last_buy_size - state.last_buy_fee) / state.last_buy_price), 8)
 
             # if not a simulation, sync with exchange orders
             if not app.isSimulation():
-                exchange_last_buy = app.getLastBuy(all_orders_df=state.all_orders_df)
+                exchange_last_buy = app.getLastBuy()
                 if exchange_last_buy is not None:
                     if state.last_buy_size != exchange_last_buy['size']:
                         state.last_buy_size = exchange_last_buy['size']
@@ -303,7 +303,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                 buy_fee=state.last_buy_fee,
                 sell_percent=app.getSellPercent(),
                 sell_price=price,
-                sell_taker_fee=app.getTakerFee(account_df=state.account_df))
+                sell_taker_fee=app.getTakerFee())
 
             # handle immedate sell actions
             if strategy.isSellTrigger(price, technical_analysis.getTradeExit(price), margin, change_pcnt_high, obv_pc, macdltsignal):
@@ -771,7 +771,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                         buy_fee=state.last_buy_fee,
                         sell_percent=app.getSellPercent(),
                         sell_price=price,
-                        sell_taker_fee=app.getTakerFee(account_df=state.account_df))
+                        sell_taker_fee=app.getTakerFee())
 
                     if state.last_buy_size > 0:
                         margin_text = truncate(margin) + '%'
@@ -788,16 +788,28 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                     state.last_sell_size = sell_size - sell_fee
                     state.sell_sum = state.sell_sum + state.last_sell_size
 
+                    # Added to track profit and loss margins during sim runs
+                    state.margintracker += float(margin)
+                    state.profitlosstracker += float(profit)
+                    state.feetracker += float(sell_fee)
+                    state.buy_tracker += float(state.last_sell_size)
+
                     if not app.isVerbose():
                         if price > 0:
                             margin_text = truncate(margin) + '%'
                         else:
                             margin_text = '0%'
 
-                        # Added to track profit and loss margins during sim runs
-                        state.margintracker += float(margin)
-                        state.profitlosstracker += float(profit)
-                        state.feetracker += float(sell_fee)
+                        Logger.info(formatted_current_df_index + ' | ' + app.getMarket() + ' | ' +
+                                     app.printGranularity() + ' | SELL | ' + str(price) + ' | BUY | ' +
+                                     str(state.last_buy_price) + ' | DIFF | ' + str(price - state.last_buy_price) +
+                                     ' | DIFF | ' + str(profit) + ' | MARGIN NO FEES | ' +
+                                     margin_text + ' | MARGIN FEES | ' + str(round(sell_fee, precision)))
+
+                    else:
+                        textBox.singleLine()
+                        textBox.center('*** Executing TEST Sell Order ***')
+                        textBox.singleLine()
 
                     app.trade_tracker = app.trade_tracker.append(
                         {
@@ -876,7 +888,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                 Logger.info('   First Buy : ' + str(state.first_buy_size))
 
                 if state.sell_count > 0:
-                    Logger.info('   Last Sell : ' + str(state.last_sell_size) + "\n")
+                    Logger.info('   Last Sell : ' + _truncate(state.last_sell_size, 2) + "\n")
                 else:
                     Logger.info("\n")
                     Logger.info('      Margin : 0.00%')
@@ -889,7 +901,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                 if state.sell_count > 0:
                     Logger.info('   Last Trade Margin : ' + _truncate((((state.last_sell_size - state.first_buy_size) / state.first_buy_size) * 100), 4) + '%')
                     Logger.info("\n")
-                    Logger.info('   All Trades Buys (' + app.quote_currency + '): ' + _truncate((state.first_buy_size * state.buy_count), 4))
+                    Logger.info('   All Trades Buys (' + app.quote_currency + '): ' + _truncate(state.buy_tracker, 2))
                     Logger.info('   All Trades Profit/Loss (' + app.quote_currency + '): ' + _truncate(state.profitlosstracker, 2) + " (" + _truncate(state.feetracker,2) + " in fees)")
                     Logger.info('   All Trades Margin : ' + _truncate(state.margintracker, 4) + '%')
                     Logger.info("\n")
