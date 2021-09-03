@@ -3,10 +3,11 @@
 
 import os
 import re
-import argparse
-from websvc.app import app
-
 import sys
+import argparse
+import webbrowser
+from threading import Timer
+from websvc.app import app
 
 parser = argparse.ArgumentParser(description="PyCryptoBot Web Portal")
 parser.add_argument(
@@ -19,6 +20,8 @@ parser.add_argument(
     type=int,
     help="web service port (default: 5000)",
 )
+parser.add_argument("--quiet", action="store_true", help="don't open browser")
+parser.add_argument("--debug", action="store_true", help="enable debugging")
 
 args = parser.parse_args()
 
@@ -39,6 +42,14 @@ if args.port is not None:
     else:
         parser.print_help(sys.stderr)
 
+
+def open_browser() -> None:
+    webbrowser.open_new("http://127.0.0.1:5000/")
+
+
 if __name__ == "__main__":
+    if args.quiet is False:
+        Timer(1, open_browser).start()
+
     port = int(os.environ.get("PORT", http_port))
-    app.run(host=http_host, port=port, debug=True)
+    app.run(host=http_host, port=port, debug=args.debug)
