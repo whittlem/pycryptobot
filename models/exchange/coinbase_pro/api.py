@@ -675,7 +675,7 @@ class AuthAPI(AuthAPIBase):
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
-                Logger.debug(err)
+                Logger.error(err)
                 return pd.DataFrame()
         else:
             if self.die_on_api_error:
@@ -807,11 +807,20 @@ class PublicAPI(AuthAPIBase):
                 epoch = int(resp["epoch"])
                 return datetime.fromtimestamp(epoch)
             else:
+                Logger.error('resp does not contain the epoch key for some reason!') # remove this later
                 Logger.error(resp)
                 return None
         except Exception as e:
             Logger.error(f"Error: {e}")
             return None
+
+    def getMarkets24HrStats(self) -> pd.DataFrame():
+        """Retrieves exchange markets 24hr stats"""
+
+        try:
+            return self.authAPI("GET", "products/stats")
+        except:
+            return pd.DataFrame()
 
     def authAPI(self, method: str, uri: str, payload: str = "") -> dict:
         """Initiates a REST API call"""
@@ -844,15 +853,19 @@ class PublicAPI(AuthAPIBase):
             return resp.json()
 
         except requests.ConnectionError as err:
+            Logger.error('requests.ConnectionError') # remove this later
             return self.handle_api_error(err, "ConnectionError")
 
         except requests.exceptions.HTTPError as err:
+            Logger.error('requests.exceptions.HTTPError') # remove this later
             return self.handle_api_error(err, "HTTPError")
 
         except requests.Timeout as err:
+            Logger.error('requests.Timeout') # remove this later
             return self.handle_api_error(err, "Timeout")
 
         except json.decoder.JSONDecodeError as err:
+            Logger.error('json.decoder.JSONDecodeError') # remove this later
             return self.handle_api_error(err, "JSONDecodeError")
 
     def handle_api_error(self, err: str, reason: str) -> dict:
@@ -862,7 +875,7 @@ class PublicAPI(AuthAPIBase):
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
-                Logger.debug(err)
+                Logger.error(err)
                 return {}
         else:
             if self.die_on_api_error:

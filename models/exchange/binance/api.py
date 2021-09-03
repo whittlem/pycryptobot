@@ -793,7 +793,7 @@ class AuthAPI(AuthAPIBase):
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
-                Logger.debug(err)
+                Logger.error(err)
                 return {}
         else:
             if self.die_on_api_error:
@@ -839,6 +839,14 @@ class PublicAPI(AuthAPIBase):
         except Exception as e:
             Logger.error(f"Error: {e}")
             return None
+
+    def getMarkets24HrStats(self) -> pd.DataFrame():
+        """Retrieves exchange markets 24hr stats"""
+
+        try:
+            return self.authAPI("GET", "/api/v3/ticker/24hr")
+        except:
+            return pd.DataFrame()
 
     def getTicker(self, market: str = DEFAULT_MARKET) -> tuple:
         """Retrives the market ticker"""
@@ -1045,7 +1053,7 @@ class PublicAPI(AuthAPIBase):
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
-                Logger.debug(err)
+                Logger.error(err)
                 return {}
         else:
             if self.die_on_api_error:
