@@ -8,15 +8,7 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-## [3.3.3] - 2021-08-31
-
-### Changed
-
--- fix for profit and loss summary for simulations
--- added trade history in simulation summary in verbose mode will also export to CSV '({market}{daterange}_trades.csv)'
--- added trade history export to csv 'trades.csv' 
-
-## [3.3.2] - 2021-08-30
+## [3.4.0] - 2021-09-03
 
 ### Changed
 
@@ -25,6 +17,10 @@ Upgrade library dependencies (if required):
 -- fixed timestamp bug when using simstartdate.
 -- fixed graphs in sim mode.
 -- remove limit for sims using specific granularity.
+-- fix for profit and loss summary for simulations
+-- added trade history in simulation summary in verbose mode will also export to CSV '({market}{daterange}_trades.csv)'
+-- added trade history export to csv 'trades.csv'
+-- added web portal ./websvc.py
 
 ## [3.3.1] - 2021-08-29
 
