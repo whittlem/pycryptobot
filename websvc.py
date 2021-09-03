@@ -44,7 +44,7 @@ if args.port is not None:
 
 
 def open_browser() -> None:
-    webbrowser.open_new("http://{http_host}:{http_port}/")
+    webbrowser.open_new(f"http://{http_host}:{http_port}/")
 
 
 if __name__ == "__main__":
