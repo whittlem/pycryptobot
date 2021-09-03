@@ -26,6 +26,7 @@ def header() -> str:
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj" crossorigin="anonymous"></script>
 
         <script type="text/javascript" src="js/app.js"></script>
+        <script type="text/css" src="css/app.css"></script>
 
         <title>PyCryptoBot Web Portal</title>
     </head>
@@ -73,13 +74,13 @@ class Pages:
                 <tr>
                     <th scope="row">1</th>
                     <td style="border-left: 1px solid #000;">
-                        <a href="/binance">Binance</a>
+                        <a class="text-dark" href="/binance">Binance</a>
                     </td>
                 </tr>
                 <tr>
                     <th scope="row">2</th>
                     <td style="border-left: 1px solid #000;">
-                        <a href="/coinbasepro">Coinbase Pro</a>
+                        <a class="text-dark" href="/coinbasepro">Coinbase Pro</a>
                     </td>
                 </tr>
             </tbody>
@@ -99,7 +100,7 @@ class Pages:
                 if market["lastPrice"] > market["openPrice"]:
                     html += f"""
                     <tr>
-                        <th class="table-success" scope="row"><a href="/binance/{market['symbol']}">{market['symbol']}</a></th>
+                        <th class="table-success" scope="row"><a class="text-dark" href="/binance/{market['symbol']}">{market['symbol']}</a></th>
                         <td class="table-success" style="border-left: 1px solid #000;">{market['priceChangePercent']}%</td>
                         <td class="table-success">{market['openPrice']}</td>
                         <td class="table-success">{market['highPrice']}</td>
@@ -111,7 +112,7 @@ class Pages:
                 elif market["lastPrice"] < market["openPrice"]:
                     html += f"""
                     <tr>
-                        <th class="table-danger" scope="row"><a href="/binance/{market['symbol']}">{market['symbol']}</a></th>
+                        <th class="table-danger" scope="row"><a class="text-dark" href="/binance/{market['symbol']}">{market['symbol']}</a></th>
                         <td class="table-danger" style="border-left: 1px solid #000;">{market['priceChangePercent']}%</td>
                         <td class="table-danger">{market['openPrice']}</td>
                         <td class="table-danger">{market['highPrice']}</td>
@@ -123,7 +124,7 @@ class Pages:
                 else:
                     html += f"""
                     <tr>
-                        <th scope="row"><a href="/binance/{market['symbol']}">{market['symbol']}</a></th>
+                        <th scope="row"><a class="text-dark" href="/binance/{market['symbol']}">{market['symbol']}</a></th>
                         <td style="border-left: 1px solid #000;">{market['priceChangePercent']}%</td>
                         <td>{market['openPrice']}</td>
                         <td>{market['highPrice']}</td>
@@ -156,7 +157,8 @@ class Pages:
 
         <br />
         <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-        <a href='/'><button class="btn btn-dark me-md-2" type="button">Go Back</button></a>
+        <a class="text-dark" href='/binance'><button class="btn btn-success me-md-2" type="button">Refresh</button></a>
+        <a class="text-dark" href='/'><button class="btn btn-dark me-md-2" type="button">Go Back</button></a>
         </div>
 
         {footer()}
@@ -195,7 +197,7 @@ class Pages:
                 if stats_24hour_close > stats_24hour_open:
                     html += f"""
                     <tr>
-                        <th class="table-success" scope="row"><a href="/coinbasepro/{market}">{market}</a></th>
+                        <th class="table-success" scope="row"><a class="text-dark" href="/coinbasepro/{market}">{market}</a></th>
                         <td class="table-success" style="border-left: 1px solid #000;">{stats_30day_volume}</td>
                         <td class="table-success" style="border-left: 1px solid #000;">{stats_24hour_open}</td>
                         <td class="table-success">{stats_24hour_high}</td>
@@ -207,7 +209,7 @@ class Pages:
                 elif stats_24hour_close < stats_24hour_open:
                     html += f"""
                     <tr>
-                        <th class="table-danger" scope="row"><a href="/coinbasepro/{market}">{market}</a></th>
+                        <th class="table-danger" scope="row"><a class="text-dark" href="/coinbasepro/{market}">{market}</a></th>
                         <td class="table-danger" style="border-left: 1px solid #000;">{stats_30day_volume}</td>
                         <td class="table-danger" style="border-left: 1px solid #000;">{stats_24hour_open}</td>
                         <td class="table-danger">{stats_24hour_high}</td>
@@ -219,7 +221,7 @@ class Pages:
                 else:
                     html += f"""
                     <tr>
-                        <th scope="row"><a href="/coinbasepro/{market}">{market}</a></th>
+                        <th scope="row"><a class="text-dark" href="/coinbasepro/{market}">{market}</a></th>
                         <td style="border-left: 1px solid #000;">{stats_30day_volume}</td>
                         <td style="border-left: 1px solid #000;">{stats_24hour_open}</td>
                         <td>{stats_24hour_high}</td>
@@ -252,7 +254,8 @@ class Pages:
 
         <br />
         <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-        <a href='/'><button class="btn btn-dark me-md-2" type="button">Go Back</button></a>
+        <a class="text-dark" href='/coinbasepro'><button class="btn btn-success me-md-2" type="button">Refresh</button></a>
+        <a class="text-dark" href='/'><button class="btn btn-dark me-md-2" type="button">Go Back</button></a>
         </div>
 
         {footer()}
@@ -267,7 +270,7 @@ class Pages:
                 <h4>Invalid Market!</h4>
 
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                <a href='/{exchange}'><button class="btn btn-primary me-md-2" type="button">Go Back</button></a>
+                <a class="text-dark" href='/{exchange}'><button class="btn btn-primary me-md-2" type="button">Go Back</button></a>
                 </div>
                 {footer()}
                 """
@@ -278,7 +281,7 @@ class Pages:
                 <h4>Invalid Market!</h4>
 
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                <a href='/{exchange}'><button class="btn btn-primary me-md-2" type="button">Go Back</button></a>
+                <a class="text-dark" href='/{exchange}'><button class="btn btn-primary me-md-2" type="button">Go Back</button></a>
                 </div>
                 {footer()}
                 """
@@ -306,10 +309,66 @@ class Pages:
         df_6h = ta.getDataFrame()
         df_6h_last = df_6h.tail(1)
 
+        print (df_1h.columns)
+
         if exchange == 'binance':
             exchange_name = 'Binance'
         elif exchange == 'coinbasepro':
             exchange_name = 'Coinbase Pro'
+
+        rsi14_15m_class = 'table-normal'
+        rsi14_15m_desc = 'Uneventful'
+        if df_15m_last['rsi14'].values[0] > 70:
+            rsi14_15m_class = 'table-danger'
+            rsi14_15m_desc = 'Overbought (Sell)'
+        elif df_15m_last['rsi14'].values[0] < 30:
+            rsi14_15m_class = 'table-success'
+            rsi14_15m_desc = 'Oversold (Buy)'
+
+        rsi14_1h_class = 'table-normal'
+        rsi14_1h_desc = 'Uneventful'
+        if df_1h_last['rsi14'].values[0] > 70:
+            rsi14_1h_class = 'table-danger'
+            rsi14_1h_desc = 'Overbought (Sell)'
+        elif df_1h_last['rsi14'].values[0] < 30:
+            rsi14_1h_class = 'table-success'
+            rsi14_1h_desc = 'Oversold (Buy)'
+
+        rsi14_6h_class = 'table-normal'
+        rsi14_6h_desc = 'Uneventful'
+        if df_6h_last['rsi14'].values[0] > 70:
+            rsi14_6h_class = 'table-danger'
+            rsi14_6h_desc = 'Overbought (Sell)'
+        elif df_6h_last['rsi14'].values[0] < 30:
+            rsi14_6h_class = 'table-success'
+            rsi14_6h_desc = 'Oversold (Buy)'
+
+        stochrsi14_15m_class = 'table-normal'
+        stochrsi14_15m_desc = 'Uneventful'
+        if df_15m_last['stochrsi14'].values[0] > 0.8:
+            stochrsi14_15m_class = 'table-danger'
+            stochrsi14_15m_desc = 'Overbought (Sell)'
+        elif df_15m_last['stochrsi14'].values[0] < 0.2:
+            stochrsi14_15m_class = 'table-success'
+            stochrsi14_15m_desc = 'Oversold (Buy)'
+
+        stochrsi14_1h_class = 'table-normal'
+        stochrsi14_1h_desc = 'Uneventful'
+        if df_1h_last['stochrsi14'].values[0] > 0.8:
+            stochrsi14_1h_class = 'table-danger'
+            stochrsi14_1h_desc = 'Overbought (Sell)'
+        elif df_1h_last['stochrsi14'].values[0] < 0.2:
+            stochrsi14_1h_class = 'table-success'
+            stochrsi14_1h_desc = 'Oversold (Buy)'
+
+        stochrsi14_6h_class = 'table-normal'
+        stochrsi14_6h_desc = 'Uneventful'
+        if df_6h_last['stochrsi14'].values[0] > 0.8:
+            stochrsi14_6h_class = 'table-danger'
+            stochrsi14_6h_desc = 'Overbought (Sell)'
+        elif df_6h_last['stochrsi14'].values[0] < 0.2:
+            stochrsi14_6h_class = 'table-success'
+            stochrsi14_6h_desc = 'Oversold (Buy)'
 
         return f"""
         {header()}
@@ -387,9 +446,9 @@ class Pages:
                 <div class="col-sm">
                     <table class="table table-sm table-light table-hover table-striped">
                         <thead>
-                            <th scope="col">SMA50</th>
-                            <th scope="col">SMA200</th>
-                            <th scope="col">Status</th>
+                            <th scope="col" style="width: 30%">SMA50</th>
+                            <th scope="col" style="width: 30%">SMA200</th>
+                            <th scope="col" style="width: 40%">Status</th>
                         </thead>
                         <tbody>
                             <tr class="{'table-success' if df_15m_last['sma50'].values[0] > df_15m_last['sma200'].values[0] else 'table-danger'}">
@@ -403,9 +462,9 @@ class Pages:
                 <div class="col-sm">
                     <table class="table table-sm table-light table-hover table-striped">
                         <thead>
-                            <th scope="col">SMA50</th>
-                            <th scope="col">SMA200</th>
-                            <th scope="col">Status</th>
+                            <th scope="col" style="width: 30%">SMA50</th>
+                            <th scope="col" style="width: 30%">SMA200</th>
+                            <th scope="col" style="width: 40%">Status</th>
                         </thead>
                         <tbody>
                             <tr class="{'table-success' if df_1h_last['sma50'].values[0] > df_1h_last['sma200'].values[0] else 'table-danger'}">
@@ -419,9 +478,9 @@ class Pages:
                 <div class="col-sm">
                     <table class="table table-sm table-light table-hover table-striped">
                         <thead>
-                            <th scope="col">SMA50</th>
-                            <th scope="col">SMA200</th>
-                            <th scope="col">Status</th>
+                            <th scope="col" style="width: 30%">SMA50</th>
+                            <th scope="col" style="width: 30%">SMA200</th>
+                            <th scope="col" style="width: 40%">Status</th>
                         </thead>
                         <tbody>
                             <tr class="{'table-success' if df_6h_last['sma50'].values[0] > df_6h_last['sma200'].values[0] else 'table-danger'}">
@@ -434,11 +493,114 @@ class Pages:
                 </div>
             </div>
 
+            <br />
+            <h5 class="text-center">Momentum Indicators</h5>
+
+            <div class="row">
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" colspan="3">15 Minutes</th>
+                        </thead>
+                        <thead>
+                            <th scope="col" style="width: 50%">RSI14</th>
+                            <th scope="col" style="width: 50%">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{rsi14_15m_class}">
+                                <td>{'%.08f' % round(df_15m_last['rsi14'].values[0], 8)}</td>
+                                <td>{rsi14_15m_desc}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" colspan="3">1 Hour</th>
+                        </thead>
+                        <thead>
+                            <th scope="col" style="width: 50%">RSI14</th>
+                            <th scope="col" style="width: 50%">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{rsi14_1h_class}">
+                                <td>{'%.08f' % round(df_1h_last['rsi14'].values[0], 8)}</td>
+                                <td>{rsi14_1h_desc}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" colspan="3">6 Hour</th>
+                        </thead>
+                        <thead>
+                            <th scope="col" style="width: 50%">RSI14</th>
+                            <th scope="col" style="width: 50%">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{rsi14_6h_class}">
+                                <td>{'%.08f' % round(df_6h_last['rsi14'].values[0], 8)}</td>
+                                <td>{rsi14_6h_desc}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" style="width: 50%">StochRSI14</th>
+                            <th scope="col" style="width: 50%">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{stochrsi14_15m_class}">
+                                <td>{'%.08f' % round(df_15m_last['stochrsi14'].values[0], 8)}</td>
+                                <td>{stochrsi14_15m_desc}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" style="width: 50%">StochRSI14</th>
+                            <th scope="col" style="width: 50%">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{stochrsi14_1h_class}">
+                                <td>{'%.08f' % round(df_1h_last['stochrsi14'].values[0], 8)}</td>
+                                <td>{stochrsi14_1h_desc}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" style="width: 50%">StochRSI14</th>
+                            <th scope="col" style="width: 50%">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{stochrsi14_6h_class}">
+                                <td>{'%.08f' % round(df_6h_last['stochrsi14'].values[0], 8)}</td>
+                                <td>{stochrsi14_6h_desc}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
 
         <br />
         <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-        <a href='/{exchange}'><button class="btn btn-dark me-md-2" type="button">Go Back</button></a>
+        <a class="text-dark" href='/{exchange}/{market}'><button class="btn btn-success me-md-2" type="button">Refresh</button></a>
+        <a class="text-dark" href='/{exchange}'><button class="btn btn-dark me-md-2" type="button">Go Back</button></a>
         </div>
 
         {footer()}
