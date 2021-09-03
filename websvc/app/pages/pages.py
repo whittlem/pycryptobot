@@ -3,6 +3,7 @@ import sys
 
 sys.path.append(".")
 # pylint: disable=import-error
+from models.Trading import TechnicalAnalysis
 from models.exchange.binance import PublicAPI as BPublicAPI
 from models.exchange.coinbase_pro import PublicAPI as CPublicAPI
 
@@ -268,10 +269,23 @@ class Pages:
             {footer()}
             """
 
+        api = BPublicAPI()
+        ticker = api.getTicker(market)
+        print(ticker)
+        ta = TechnicalAnalysis(api.getHistoricalData(market, "1h"))
+        ta.addAll()
+        df_1h = ta.getDataFrame()
+        df_1h_last = df_1h.tail(1)
+        print(df_1h_last.dtypes)
+        print(df_1h_last)
+
         return f"""
         {header()}
 
         <h4>Binance - {market}</h4>
+
+        <h6>Last update: {ticker[0]}</h6>
+        <h6>Closing price: {'%.08f' % ticker[1]}</h6>
 
         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
         <a href='/binance'><button class="btn btn-primary me-md-2" type="button">Go Back</button></a>
@@ -293,10 +307,23 @@ class Pages:
             {footer()}
             """
 
+        api = CPublicAPI()
+        ticker = api.getTicker(market)
+        print(ticker)
+        ta = TechnicalAnalysis(api.getHistoricalData(market, 3600))
+        ta.addAll()
+        df_1h = ta.getDataFrame()
+        df_1h_last = df_1h.tail(1)
+        print(df_1h_last.dtypes)
+        print(df_1h_last)
+
         return f"""
         {header()}
 
         <h4>Coinbase Pro - {market}</h4>
+
+        <h6>Last update: {ticker[0]}</h6>
+        <h6>Closing price: {'%.08f' % ticker[1]}</h6>
 
         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
         <a href='/coinbasepro'><button class="btn btn-primary me-md-2" type="button">Go Back</button></a>
