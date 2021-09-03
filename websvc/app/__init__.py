@@ -29,7 +29,7 @@ def binance():
 
 @app.route("/binance/<market>")
 def binance_market(market):
-    return Pages.binance_market(market)
+    return Pages.technical_analysis('binance', market, '15m', '1h', '6h')
 
 
 @app.route("/coinbasepro")
@@ -39,4 +39,4 @@ def coinbasepro():
 
 @app.route("/coinbasepro/<market>")
 def coinbasepro_market(market):
-    return Pages.coinbasepro_market(market)
+    return Pages.technical_analysis('coinbasepro', market, 900, 3600, 21600)

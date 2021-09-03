@@ -154,8 +154,9 @@ class Pages:
             </tbody>
         </table>
 
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-        <a href='/'><button class="btn btn-primary me-md-2" type="button">Go Back</button></a>
+        <br />
+        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+        <a href='/'><button class="btn btn-dark me-md-2" type="button">Go Back</button></a>
         </div>
 
         {footer()}
@@ -249,84 +250,195 @@ class Pages:
             </tbody>
         </table>
 
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-        <a href='/'><button class="btn btn-primary me-md-2" type="button">Go Back</button></a>
+        <br />
+        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+        <a href='/'><button class="btn btn-dark me-md-2" type="button">Go Back</button></a>
         </div>
 
         {footer()}
         """
 
     @staticmethod
-    def binance_market(market) -> str:
-        if not isBinanceMarketValid(market):
-            return f"""
-            {header()}
-            <h4>Invalid Market!</h4>
+    def technical_analysis(exchange: str, market: str, g1, g2, g3) -> str:
+        if exchange == 'binance':
+            if not isBinanceMarketValid(market):
+                return f"""
+                {header()}
+                <h4>Invalid Market!</h4>
 
-            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-            <a href='/binance'><button class="btn btn-primary me-md-2" type="button">Go Back</button></a>
-            </div>
-            {footer()}
-            """
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href='/{exchange}'><button class="btn btn-primary me-md-2" type="button">Go Back</button></a>
+                </div>
+                {footer()}
+                """
+        elif exchange == 'coinbasepro':
+            if not isCoinbaseMarketValid(market):
+                return f"""
+                {header()}
+                <h4>Invalid Market!</h4>
 
-        api = BPublicAPI()
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href='/{exchange}'><button class="btn btn-primary me-md-2" type="button">Go Back</button></a>
+                </div>
+                {footer()}
+                """
+        else:
+            return "Invalid Exchange!"
+
+        if exchange == 'binance':
+            api = BPublicAPI()
+        if exchange == 'coinbasepro':
+            api = CPublicAPI()
         ticker = api.getTicker(market)
-        print(ticker)
-        ta = TechnicalAnalysis(api.getHistoricalData(market, "1h"))
+
+        ta = TechnicalAnalysis(api.getHistoricalData(market, g1))
+        ta.addAll()
+        df_15m = ta.getDataFrame()
+        df_15m_last = df_15m.tail(1)
+
+        ta = TechnicalAnalysis(api.getHistoricalData(market, g2))
         ta.addAll()
         df_1h = ta.getDataFrame()
         df_1h_last = df_1h.tail(1)
-        print(df_1h_last.dtypes)
-        print(df_1h_last)
+
+        ta = TechnicalAnalysis(api.getHistoricalData(market, g3))
+        ta.addAll()
+        df_6h = ta.getDataFrame()
+        df_6h_last = df_6h.tail(1)
+
+        if exchange == 'binance':
+            exchange_name = 'Binance'
+        elif exchange == 'coinbasepro':
+            exchange_name = 'Coinbase Pro'
 
         return f"""
         {header()}
 
-        <h4>Binance - {market}</h4>
+        <div class="container">
+            <h4 class="text-center">{exchange_name} - {market}</h4>
 
-        <h6>Last update: {ticker[0]}</h6>
-        <h6>Closing price: {'%.08f' % ticker[1]}</h6>
+            <h6 class="text-center">Last update: {ticker[0]}</h6>
+            <h6 class="text-center">Closing price: {'%.08f' % ticker[1]}</h6>
 
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-        <a href='/binance'><button class="btn btn-primary me-md-2" type="button">Go Back</button></a>
+            <br />
+            <h5 class="text-center">Moving Averages</h5>
+
+            <div class="row">
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" colspan="3">15 Minutes</th>
+                        </thead>
+                        <thead>
+                            <th scope="col">EMA12</th>
+                            <th scope="col">EMA26</th>
+                            <th scope="col">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{'table-success' if df_15m_last['ema12'].values[0] > df_15m_last['ema26'].values[0] else 'table-danger'}">
+                                <td>{'%.08f' % round(df_15m_last['ema12'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_15m_last['ema26'].values[0], 8)}</td>
+                                <td>{'EMA12 > EMA26' if df_15m_last['ema12'].values[0] > df_15m_last['ema26'].values[0] else 'EMA12 <= EMA26'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" colspan="3">1 Hour</th>
+                        </thead>
+                        <thead>
+                            <th scope="col">EMA12</th>
+                            <th scope="col">EMA26</th>
+                            <th scope="col">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{'table-success' if df_1h_last['ema12'].values[0] > df_1h_last['ema26'].values[0] else 'table-danger'}">
+                                <td>{'%.08f' % round(df_1h_last['ema12'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_1h_last['ema26'].values[0], 8)}</td>
+                                <td>{'EMA12 > EMA26' if df_1h_last['ema12'].values[0] > df_1h_last['ema26'].values[0] else 'EMA12 <= EMA26'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" colspan="3">6 Hour</th>
+                        </thead>
+                        <thead>
+                            <th scope="col">EMA12</th>
+                            <th scope="col">EMA26</th>
+                            <th scope="col">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{'table-success' if df_6h_last['ema12'].values[0] > df_6h_last['ema26'].values[0] else 'table-danger'}">
+                                <td>{'%.08f' % round(df_6h_last['ema12'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_6h_last['ema26'].values[0], 8)}</td>
+                                <td>{'EMA12 > EMA26' if df_6h_last['ema12'].values[0] > df_6h_last['ema26'].values[0] else 'EMA12 <= EMA26'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col">SMA50</th>
+                            <th scope="col">SMA200</th>
+                            <th scope="col">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{'table-success' if df_15m_last['sma50'].values[0] > df_15m_last['sma200'].values[0] else 'table-danger'}">
+                                <td>{'%.08f' % round(df_15m_last['sma50'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_15m_last['sma200'].values[0], 8)}</td>
+                                <td>{'SMA50 > SMA200' if df_15m_last['sma50'].values[0] > df_15m_last['sma200'].values[0] else 'SMA50 <= SMA200'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col">SMA50</th>
+                            <th scope="col">SMA200</th>
+                            <th scope="col">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{'table-success' if df_1h_last['sma50'].values[0] > df_1h_last['sma200'].values[0] else 'table-danger'}">
+                                <td>{'%.08f' % round(df_1h_last['sma50'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_1h_last['sma200'].values[0], 8)}</td>
+                                <td>{'SMA50 > SMA200' if df_1h_last['sma50'].values[0] > df_1h_last['sma200'].values[0] else 'SMA50 <= SMA200'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col">SMA50</th>
+                            <th scope="col">SMA200</th>
+                            <th scope="col">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{'table-success' if df_6h_last['sma50'].values[0] > df_6h_last['sma200'].values[0] else 'table-danger'}">
+                                <td>{'%.08f' % round(df_6h_last['sma50'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_6h_last['sma200'].values[0], 8)}</td>
+                                <td>{'SMA50 > SMA200' if df_6h_last['sma50'].values[0] > df_6h_last['sma200'].values[0] else 'SMA50 <= SMA200'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
 
-        {footer()}
-        """
-
-    @staticmethod
-    def coinbasepro_market(market) -> str:
-        if not isCoinbaseMarketValid(market):
-            return f"""
-            {header()}
-            <h4>Invalid Market!</h4>
-
-            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-            <a href='/coinbasepro'><button class="btn btn-primary me-md-2" type="button">Go Back</button></a>
-            </div>
-            {footer()}
-            """
-
-        api = CPublicAPI()
-        ticker = api.getTicker(market)
-        print(ticker)
-        ta = TechnicalAnalysis(api.getHistoricalData(market, 3600))
-        ta.addAll()
-        df_1h = ta.getDataFrame()
-        df_1h_last = df_1h.tail(1)
-        print(df_1h_last.dtypes)
-        print(df_1h_last)
-
-        return f"""
-        {header()}
-
-        <h4>Coinbase Pro - {market}</h4>
-
-        <h6>Last update: {ticker[0]}</h6>
-        <h6>Closing price: {'%.08f' % ticker[1]}</h6>
-
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-        <a href='/coinbasepro'><button class="btn btn-primary me-md-2" type="button">Go Back</button></a>
+        <br />
+        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+        <a href='/{exchange}'><button class="btn btn-dark me-md-2" type="button">Go Back</button></a>
         </div>
 
         {footer()}
