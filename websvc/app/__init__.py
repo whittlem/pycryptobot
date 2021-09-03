@@ -1,7 +1,7 @@
 import sys
 from flask import Flask, send_from_directory
 
-from app.pages import Pages
+from websvc.app.pages import Pages
 
 app = Flask(__name__, static_url_path='')
 pages = Pages()
