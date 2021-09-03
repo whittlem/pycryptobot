@@ -1,3 +1,4 @@
+import re
 import sys
 
 sys.path.append(".")
@@ -36,6 +37,20 @@ def footer() -> str:
     </body>
     </html>
     """
+
+
+def isBinanceMarketValid(market: str) -> bool:
+    p = re.compile(r"^[A-Z0-9]{5,12}$")
+    if p.match(market):
+        return True
+    return False
+
+
+def isCoinbaseMarketValid(market: str) -> bool:
+    p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
+    if p.match(market):
+        return True
+    return False
 
 
 class Pages:
@@ -80,10 +95,10 @@ class Pages:
             api = BPublicAPI()
             resp = api.getMarkets24HrStats()
             for market in resp:
-                if market['lastPrice'] > market['openPrice']:
+                if market["lastPrice"] > market["openPrice"]:
                     html += f"""
                     <tr>
-                        <th class="table-success" scope="row">{market['symbol']}</th>
+                        <th class="table-success" scope="row"><a href="/binance/{market['symbol']}">{market['symbol']}</a></th>
                         <td class="table-success" style="border-left: 1px solid #000;">{market['priceChangePercent']}%</td>
                         <td class="table-success">{market['openPrice']}</td>
                         <td class="table-success">{market['highPrice']}</td>
@@ -92,10 +107,10 @@ class Pages:
                         <td class="table-success">{market['quoteVolume']}</td>
                     </tr>
                     """
-                elif market['lastPrice'] < market['openPrice']:
+                elif market["lastPrice"] < market["openPrice"]:
                     html += f"""
                     <tr>
-                        <th class="table-danger" scope="row">{market['symbol']}</th>
+                        <th class="table-danger" scope="row"><a href="/binance/{market['symbol']}">{market['symbol']}</a></th>
                         <td class="table-danger" style="border-left: 1px solid #000;">{market['priceChangePercent']}%</td>
                         <td class="table-danger">{market['openPrice']}</td>
                         <td class="table-danger">{market['highPrice']}</td>
@@ -107,7 +122,7 @@ class Pages:
                 else:
                     html += f"""
                     <tr>
-                        <th scope="row">{market['symbol']}</th>
+                        <th scope="row"><a href="/binance/{market['symbol']}">{market['symbol']}</a></th>
                         <td style="border-left: 1px solid #000;">{market['priceChangePercent']}%</td>
                         <td>{market['openPrice']}</td>
                         <td>{market['highPrice']}</td>
@@ -178,7 +193,7 @@ class Pages:
                 if stats_24hour_close > stats_24hour_open:
                     html += f"""
                     <tr>
-                        <th class="table-success" scope="row">{market}</th>
+                        <th class="table-success" scope="row"><a href="/coinbasepro/{market}">{market}</a></th>
                         <td class="table-success" style="border-left: 1px solid #000;">{stats_30day_volume}</td>
                         <td class="table-success" style="border-left: 1px solid #000;">{stats_24hour_open}</td>
                         <td class="table-success">{stats_24hour_high}</td>
@@ -190,7 +205,7 @@ class Pages:
                 elif stats_24hour_close < stats_24hour_open:
                     html += f"""
                     <tr>
-                        <th class="table-danger" scope="row">{market}</th>
+                        <th class="table-danger" scope="row"><a href="/coinbasepro/{market}">{market}</a></th>
                         <td class="table-danger" style="border-left: 1px solid #000;">{stats_30day_volume}</td>
                         <td class="table-danger" style="border-left: 1px solid #000;">{stats_24hour_open}</td>
                         <td class="table-danger">{stats_24hour_high}</td>
@@ -202,7 +217,7 @@ class Pages:
                 else:
                     html += f"""
                     <tr>
-                        <th scope="row">{market}</th>
+                        <th scope="row"><a href="/coinbasepro/{market}">{market}</a></th>
                         <td style="border-left: 1px solid #000;">{stats_30day_volume}</td>
                         <td style="border-left: 1px solid #000;">{stats_24hour_open}</td>
                         <td>{stats_24hour_high}</td>
@@ -235,6 +250,56 @@ class Pages:
 
         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
         <a href='/'><button class="btn btn-primary me-md-2" type="button">Go Back</button></a>
+        </div>
+
+        {footer()}
+        """
+
+    @staticmethod
+    def binance_market(market) -> str:
+        if not isBinanceMarketValid(market):
+            return f"""
+            {header()}
+            <h4>Invalid Market!</h4>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <a href='/binance'><button class="btn btn-primary me-md-2" type="button">Go Back</button></a>
+            </div>
+            {footer()}
+            """
+
+        return f"""
+        {header()}
+
+        <h4>Binance - {market}</h4>
+
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <a href='/binance'><button class="btn btn-primary me-md-2" type="button">Go Back</button></a>
+        </div>
+
+        {footer()}
+        """
+
+    @staticmethod
+    def coinbasepro_market(market) -> str:
+        if not isCoinbaseMarketValid(market):
+            return f"""
+            {header()}
+            <h4>Invalid Market!</h4>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <a href='/coinbasepro'><button class="btn btn-primary me-md-2" type="button">Go Back</button></a>
+            </div>
+            {footer()}
+            """
+
+        return f"""
+        {header()}
+
+        <h4>Coinbase Pro - {market}</h4>
+
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <a href='/coinbasepro'><button class="btn btn-primary me-md-2" type="button">Go Back</button></a>
         </div>
 
         {footer()}
