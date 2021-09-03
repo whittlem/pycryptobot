@@ -664,7 +664,7 @@ class PyCryptoBot(BotConfig):
                     + truncate(val2, precision)
                 )
 
-    def getLastBuy(self, all_orders_df=None) -> dict:
+    def getLastBuy(self, all_orders_df: pd.DataFrame = None) -> dict:
         """Retrieves the last exchange buy order and returns a dictionary"""
 
         try:
@@ -735,7 +735,7 @@ class PyCryptoBot(BotConfig):
         except Exception:
             return None
 
-    def getTakerFee(self, account_df=None):
+    def getTakerFee(self, account_df: pd.DataFrame = None):
         if self.isSimulation() is True and self.exchange == "coinbasepro":
             return 0.005  # default lowest fee tier
         elif self.isSimulation() is True and self.exchange == "binance":

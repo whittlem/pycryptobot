@@ -144,7 +144,6 @@ class AuthAPI(AuthAPIBase):
 
         return df
 
-
     def getAccountBalances(self, df) -> pd.DataFrame:
 
         df = pd.DataFrame(df["balances"][0])
@@ -215,7 +214,6 @@ class AuthAPI(AuthAPIBase):
         """Retrieves a account fees"""
 
         volume = 0
-        # If we checked klines on this run already, use it
         try:
             # GET /api/v3/klines
             resp = self.authAPI(
@@ -227,7 +225,6 @@ class AuthAPI(AuthAPIBase):
             # if response is empty, then return
             if len(resp) == 0:
                 return pd.DataFrame()
-
 
             # convert the API response into a Pandas DataFrame
             df = pd.DataFrame(
@@ -253,6 +250,7 @@ class AuthAPI(AuthAPIBase):
             df["volume"] = df["volume"].astype(float)
             volume = np.round(float(df[["volume"]].mean()))
 
+        # If we have account_df, we re-use it instead of making another call
         if not isinstance(account_df, pd.DataFrame):
             # GET /api/v3/account
             resp = self.authAPI("GET", "/api/v3/account", {"recvWindow": self.recv_window})
@@ -298,13 +296,13 @@ class AuthAPI(AuthAPIBase):
 
         return float(fees["maker_fee_rate"].to_string(index=False).strip())
 
-    def getTakerFee(self, market: str = "", account_df=None) -> float:
+    def getTakerFee(self, market: str = "", account_df: pd.DataFrame = None) -> float:
         """Retrieves the taker fee"""
 
         if len(market) != None:
             fees = self.getFees(market, account_df=account_df)
         else:
-            fees = self.getFees()
+            fees = self.getFees(account_df=account_df)
 
         if len(fees) == 0 or "taker_fee_rate" not in fees:
             Logger.error(
@@ -389,6 +387,7 @@ class AuthAPI(AuthAPIBase):
                     if full_scan is True:
                         print(f"scanning {market} order history.")
 
+                    # If we already have the all_orders_df, we re-use it instead of making another call
                     if isinstance(all_orders_df, pd.DataFrame):
                         return all_orders_df
                     # GET /api/v3/allOrders
@@ -425,6 +424,7 @@ class AuthAPI(AuthAPIBase):
                         "add to order history to prevent full scan:", self.order_history
                     )
             else:
+                # If we already have the all_orders_df, we re-use it instead of making another call
                 if isinstance(all_orders_df, pd.DataFrame):
                     return all_orders_df
                 # GET /api/v3/allOrders
@@ -716,6 +716,7 @@ class AuthAPI(AuthAPIBase):
 
     def authAPI(self, method: str, uri: str, payload: str = {}) -> dict:
         """Initiates a REST API call to the exchange"""
+        print(datetime.now(), method, uri)
 
         if not isinstance(method, str):
             raise TypeError("Method is not a string.")

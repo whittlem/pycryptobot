@@ -630,8 +630,10 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                         textBox.singleLine()
 
                     # display balances
-                    Logger.info(app.getBaseCurrency() + ' balance before order: ' + str(account.getBalance(app.getBaseCurrency())))
-                    Logger.info(app.getQuoteCurrency() + ' balance before order: ' + str(account.getBalance(app.getQuoteCurrency())))
+                    Logger.info(app.getBaseCurrency() + ' balance before order: ' + str(
+                        account.getBalance(app.getBaseCurrency())))
+                    Logger.info(app.getQuoteCurrency() + ' balance before order: ' + str(
+                        account.getBalance(app.getQuoteCurrency())))
 
                     # execute a live market buy
                     state.last_buy_size = float(account.getBalance(app.getQuoteCurrency()))
@@ -642,8 +644,10 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                     Logger.debug(resp)
 
                     # display balances
-                    Logger.info(app.getBaseCurrency() + ' balance after order: ' + str(account.getBalance(app.getBaseCurrency())))
-                    Logger.info(app.getQuoteCurrency() + ' balance after order: ' + str(account.getBalance(app.getQuoteCurrency())))
+                    Logger.info(app.getBaseCurrency() + ' balance after order: ' + str(
+                        account.getBalance(app.getBaseCurrency())))
+                    Logger.info(app.getQuoteCurrency() + ' balance after order: ' + str(
+                        account.getBalance(app.getQuoteCurrency())))
                 # if not live
                 else:
                     app.notifyTelegram(app.getMarket() + ' (' + app.printGranularity() + ') TEST BUY at ' + price_text)
@@ -751,16 +755,20 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                         textBox.singleLine()
 
                     # display balances
-                    Logger.info(app.getBaseCurrency() + ' balance before order: ' + str(account.getBalance(app.getBaseCurrency())))
-                    Logger.info(app.getQuoteCurrency() + ' balance before order: ' + str(account.getBalance(app.getQuoteCurrency())))
+                    Logger.info(app.getBaseCurrency() + ' balance before order: ' + str(
+                        account.getBalance(app.getBaseCurrency())))
+                    Logger.info(app.getQuoteCurrency() + ' balance before order: ' + str(
+                        account.getBalance(app.getQuoteCurrency())))
 
                     # execute a live market sell
                     resp = app.marketSell(app.getMarket(), float(account.getBalance(app.getBaseCurrency())), app.getSellPercent())
                     Logger.debug(resp)
 
                     # display balances
-                    Logger.info(app.getBaseCurrency() + ' balance after order: ' + str(account.getBalance(app.getBaseCurrency())))
-                    Logger.info(app.getQuoteCurrency() + ' balance after order: ' + str(account.getBalance(app.getQuoteCurrency())))
+                    Logger.info(app.getBaseCurrency() + ' balance after order: ' + str(
+                        account.getBalance(app.getBaseCurrency())))
+                    Logger.info(app.getQuoteCurrency() + ' balance after order: ' + str(
+                        account.getBalance(app.getQuoteCurrency())))
 
                 # if not live
                 else:

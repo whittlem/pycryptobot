@@ -72,6 +72,9 @@ class TradingAccount:
             Filters orders by action
         status : str
             Filters orders by status, defaults to 'all'
+        all_orders_df: pd.Dataframe, options
+            Dataframe captured from the allOrders api.
+            We re-use it if available instead of making another call
         """
 
         # validate market is syntactically correct
@@ -140,18 +143,22 @@ class TradingAccount:
                 ]
             ]
 
-    def getBalance(self, currency="", df=None):
+    def getBalance(self, currency="", account_df=None):
         """Retrieves balance either live or simulation
 
         Parameters
         ----------
         currency: str, optional
             Filters orders by currency
+        account_df: pd.Dataframe, optional
+            Dataframe captured from the accounts api
+            We use it here to avoid making duplicate calls during the same run
+
         """
 
         if self.app.getExchange() == "binance":
             if self.mode == "live":
-                if not isinstance(df, pd.DataFrame):
+                if not isinstance(account_df, pd.DataFrame):
                     model = BAuthAPI(
                             self.app.getAPIKey(),
                             self.app.getAPISecret(),
@@ -159,18 +166,18 @@ class TradingAccount:
                             recv_window=self.app.getRecvWindow(),
                             )
                     account = model.getAccount()
-                    df = model.getAccountBalances(account)
-                if isinstance(df, pd.DataFrame):
+                    account_df = model.getAccountBalances(account)
+                if isinstance(account_df, pd.DataFrame):
                     if currency == "":
                         # retrieve all balances
-                        return df
+                        return account_df
                     else:
                         # return nil if dataframe is empty
-                        if len(df) == 0:
+                        if len(account_df) == 0:
                             return 0.0
 
                         # retrieve balance of specified currency
-                        df_filtered = df[df["currency"] == currency]["available"]
+                        df_filtered = account_df[account_df["currency"] == currency]["available"]
                         if len(df_filtered) == 0:
                             # return nil balance if no positive balance was found
                             return 0.0
@@ -180,7 +187,7 @@ class TradingAccount:
                                 return float(
                                     truncate(
                                         float(
-                                            df[df["currency"] == currency][
+                                            account_df[account_df["currency"] == currency][
                                                 "available"
                                             ].values[0]
                                         ),
@@ -191,7 +198,7 @@ class TradingAccount:
                                 return float(
                                     truncate(
                                         float(
-                                            df[df["currency"] == currency][
+                                            account_df[account_df["currency"] == currency][
                                                 "available"
                                             ].values[0]
                                         ),
@@ -221,8 +228,8 @@ class TradingAccount:
                         self.balance.loc[len(self.balance)] = [currency, 0, 0, 0]
 
                     # retrieve balance of specified currency
-                    df = self.balance
-                    df_filtered = df[df["currency"] == currency]["available"]
+                    account_df = self.balance
+                    df_filtered = account_df[account_df["currency"] == currency]["available"]
 
                     if len(df_filtered) == 0:
                         # return nil balance if no positive balance was found
@@ -233,7 +240,7 @@ class TradingAccount:
                             return float(
                                 truncate(
                                     float(
-                                        df[df["currency"] == currency][
+                                        account_df[account_df["currency"] == currency][
                                             "available"
                                         ].values[0]
                                     ),
@@ -244,7 +251,7 @@ class TradingAccount:
                             return float(
                                 truncate(
                                     float(
-                                        df[df["currency"] == currency][
+                                        account_df[account_df["currency"] == currency][
                                             "available"
                                         ].values[0]
                                     ),
@@ -267,14 +274,14 @@ class TradingAccount:
                         ["currency", "balance", "hold", "available"]
                     ]
                 else:
-                    df = model.getAccounts()
+                    account_df = model.getAccounts()
 
                     # return nil if dataframe is empty
-                    if len(df) == 0:
+                    if len(account_df) == 0:
                         return 0.0
 
                     # retrieve balance of specified currency
-                    df_filtered = df[df["currency"] == currency]["available"]
+                    df_filtered = account_df[account_df["currency"] == currency]["available"]
                     if len(df_filtered) == 0:
                         # return nil balance if no positive balance was found
                         return 0.0
@@ -284,7 +291,7 @@ class TradingAccount:
                             return float(
                                 truncate(
                                     float(
-                                        df[df["currency"] == currency][
+                                        account_df[account_df["currency"] == currency][
                                             "available"
                                         ].values[0]
                                     ),
@@ -295,7 +302,7 @@ class TradingAccount:
                             return float(
                                 truncate(
                                     float(
-                                        df[df["currency"] == currency][
+                                        account_df[account_df["currency"] == currency][
                                             "available"
                                         ].values[0]
                                     ),
@@ -325,8 +332,8 @@ class TradingAccount:
                         self.balance.loc[len(self.balance)] = [currency, 0, 0, 0]
 
                     # retrieve balance of specified currency
-                    df = self.balance
-                    df_filtered = df[df["currency"] == currency]["available"]
+                    account_df = self.balance
+                    df_filtered = account_df[account_df["currency"] == currency]["available"]
 
                     if len(df_filtered) == 0:
                         # return nil balance if no positive balance was found
@@ -337,7 +344,7 @@ class TradingAccount:
                             return float(
                                 truncate(
                                     float(
-                                        df[df["currency"] == currency][
+                                        account_df[account_df["currency"] == currency][
                                             "available"
                                         ].values[0]
                                     ),
@@ -348,7 +355,7 @@ class TradingAccount:
                             return float(
                                 truncate(
                                     float(
-                                        df[df["currency"] == currency][
+                                        account_df[account_df["currency"] == currency][
                                             "available"
                                         ].values[0]
                                     ),
@@ -363,15 +370,15 @@ class TradingAccount:
                 return self.balance
             else:
                 # retrieve balance of specified currency
-                df = self.balance
-                df_filtered = df[df["currency"] == currency]["available"]
+                account_df = self.balance
+                df_filtered = account_df[account_df["currency"] == currency]["available"]
 
                 if len(df_filtered) == 0:
                     # return nil balance if no positive balance was found
                     return 0.0
                 else:
                     # return balance of specified currency (if positive)
-                    return float(df[df["currency"] == currency]["available"].values[0])
+                    return float(account_df[account_df["currency"] == currency]["available"].values[0])
 
     def depositBaseCurrency(self, base_currency: float) -> pd.DataFrame():
         if self.app.getExchange() != "dummy":
