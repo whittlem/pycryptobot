@@ -139,20 +139,29 @@ class AppState:
             self.last_action = "SELL"
             return
 
-        model = BAuthAPI(
-                self.app.getAPIKey(),
-                self.app.getAPISecret(),
-                self.app.getAPIURL(),
-                recv_window=self.app.getRecvWindow(),
-                                       )
-        self.account_df = model.getAccount()
-        self.account_balance_df = model.getAccountBalances(self.account_df)
+        if self.app.getExchange() == "binance":
+            model = BAuthAPI(
+                    self.app.getAPIKey(),
+                    self.app.getAPISecret(),
+                    self.app.getAPIURL(),
+                    recv_window=self.app.getRecvWindow(),
+                                           )
+            self.account_df = model.getAccount()
+            self.account_balance_df = model.getAccountBalances(self.account_df)
 
-        base = float(self.account.getBalance(self.app.getBaseCurrency(), self.account_balance_df))
-        quote = float(self.account.getBalance(self.app.getQuoteCurrency(), self.account_balance_df))
+            base = float(self.account.getBalance(self.app.getBaseCurrency(), self.account_balance_df))
+            quote = float(self.account.getBalance(self.app.getQuoteCurrency(), self.account_balance_df))
 
-        orders = self.account.getOrders(self.app.getMarket(), "", "done", self.all_orders_df)
-        self.all_orders_df = orders
+            orders = self.account.getOrders(self.app.getMarket(), "", "done", self.all_orders_df)
+            self.all_orders_df = orders
+
+        elif self.app.getExchange() == "coinbasepro":
+
+            base = float(self.account.getBalance(self.app.getBaseCurrency()))
+            quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
+
+            orders = self.account.getOrders(self.app.getMarket(), "", "done")
+
         if len(orders) > 0:
             last_order = orders[-1:]
 
