@@ -309,8 +309,6 @@ class Pages:
         df_6h = ta.getDataFrame()
         df_6h_last = df_6h.tail(1)
 
-        print (df_1h.columns)
-
         if exchange == 'binance':
             exchange_name = 'Binance'
         elif exchange == 'coinbasepro':
@@ -592,6 +590,203 @@ class Pages:
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <br />
+            <h5 class="text-center">Trend Indicators</h5>
+
+            <div class="row">
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" colspan="3">15 Minutes</th>
+                        </thead>
+                        <thead>
+                            <th scope="col">MACD</th>
+                            <th scope="col">Signal</th>
+                            <th scope="col">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{'table-success' if df_15m_last['macd'].values[0] > df_15m_last['signal'].values[0] else 'table-danger'}">
+                                <td>{'%.08f' % round(df_15m_last['macd'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_15m_last['signal'].values[0], 8)}</td>
+                                <td>{'MACD > Signal' if df_15m_last['macd'].values[0] > df_15m_last['signal'].values[0] else 'MACD <= Signal'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" colspan="3">1 Hour</th>
+                        </thead>
+                        <thead>
+                            <th scope="col">MACD</th>
+                            <th scope="col">Signal</th>
+                            <th scope="col">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{'table-success' if df_1h_last['macd'].values[0] > df_1h_last['signal'].values[0] else 'table-danger'}">
+                                <td>{'%.08f' % round(df_1h_last['macd'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_1h_last['signal'].values[0], 8)}</td>
+                                <td>{'MACD > Signal' if df_1h_last['macd'].values[0] > df_1h_last['signal'].values[0] else 'MACD <= Signal'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" colspan="3">6 Hour</th>
+                        </thead>
+                        <thead>
+                            <th scope="col">MACD</th>
+                            <th scope="col">Signal</th>
+                            <th scope="col">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{'table-success' if df_6h_last['macd'].values[0] > df_6h_last['signal'].values[0] else 'table-danger'}">
+                                <td>{'%.08f' % round(df_6h_last['macd'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_6h_last['signal'].values[0], 8)}</td>
+                                <td>{'MACD > Signal' if df_6h_last['macd'].values[0] > df_6h_last['signal'].values[0] else 'MACD <= Signal'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <br />
+            <h5 class="text-center">Volume Indicators</h5>
+
+            <div class="row">
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" colspan="3">15 Minutes</th>
+                        </thead>
+                        <thead>
+                            <th scope="col" style="width: 50%">OBV10</th>
+                            <th scope="col" style="width: 50%">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{'table-success' if df_15m_last['obv'].values[0] > 0 else 'table-danger'}">
+                                <td>{'%.0f' % df_15m_last['obv'].values[0]} ({df_15m_last['obv_pc'].values[0]}%)</td>
+                                <td>{'OBV > 0' if df_15m_last['obv'].values[0] > 0 else 'OBV <= 0'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" colspan="3">1 Hour</th>
+                        </thead>
+                        <thead>
+                            <th scope="col" style="width: 50%">OBV10</th>
+                            <th scope="col" style="width: 50%">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{'table-success' if df_1h_last['obv'].values[0] > 0 else 'table-danger'}">
+                                <td>{'%.0f' % df_1h_last['obv'].values[0]} ({df_1h_last['obv_pc'].values[0]}%)</td>
+                                <td>{'OBV > 0' if df_1h_last['obv'].values[0] > 0 else 'OBV <= 0'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" colspan="3">6 Hour</th>
+                        </thead>
+                        <thead>
+                            <th scope="col" style="width: 50%">OBV10</th>
+                            <th scope="col" style="width: 50%">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{'table-success' if df_6h_last['obv'].values[0] > 0 else 'table-danger'}">
+                                <td>{'%.0f' % df_6h_last['obv'].values[0]} ({df_6h_last['obv_pc'].values[0]}%)</td>
+                                <td>{'OBV > 0' if df_6h_last['obv'].values[0] > 0 else 'OBV <= 0'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <br />
+            <h5 class="text-center">Fibonacci Retracement Levels</h5>
+
+            <div class="row">
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" colspan="5">15 Minutes</th>
+                        </thead>
+                        <thead>
+                            <th scope="col" style="width: 20%">23.6%</th>
+                            <th scope="col" style="width: 20%">38.2%</th>
+                            <th scope="col" style="width: 20%">50%</th>
+                            <th scope="col" style="width: 20%">61.8%</th>
+                            <th scope="col" style="width: 20%">78.6%</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{rsi14_15m_class}">
+                                <td>{'%.08f' % round(df_15m_last['fbb_lower0_236'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_15m_last['fbb_lower0_382'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_15m_last['fbb_lower0_5'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_15m_last['fbb_lower0_618'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_15m_last['fbb_lower0_786'].values[0], 8)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" colspan="5">1 Hour</th>
+                        </thead>
+                        <thead>
+                            <th scope="col" style="width: 20%">23.6%</th>
+                            <th scope="col" style="width: 20%">38.2%</th>
+                            <th scope="col" style="width: 20%">50%</th>
+                            <th scope="col" style="width: 20%">61.8%</th>
+                            <th scope="col" style="width: 20%">78.6%</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{rsi14_15m_class}">
+                                <td>{'%.08f' % round(df_1h_last['fbb_lower0_236'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_1h_last['fbb_lower0_382'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_1h_last['fbb_lower0_5'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_1h_last['fbb_lower0_618'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_1h_last['fbb_lower0_786'].values[0], 8)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" colspan="5">6 Hours</th>
+                        </thead>
+                        <thead>
+                            <th scope="col" style="width: 20%">23.6%</th>
+                            <th scope="col" style="width: 20%">38.2%</th>
+                            <th scope="col" style="width: 20%">50%</th>
+                            <th scope="col" style="width: 20%">61.8%</th>
+                            <th scope="col" style="width: 20%">78.6%</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{rsi14_15m_class}">
+                                <td>{'%.08f' % round(df_6h_last['fbb_lower0_236'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_6h_last['fbb_lower0_382'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_6h_last['fbb_lower0_5'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_6h_last['fbb_lower0_618'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_6h_last['fbb_lower0_786'].values[0], 8)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
                 </div>
             </div>
 
