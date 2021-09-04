@@ -997,11 +997,15 @@ class TechnicalAnalysis:
         if minutes < 1 or minutes > 4320:
             raise ValueError("Predication minutes is out of range")
 
+        Logger.info('Line 1001, getting results_ARIMA')
         results_ARIMA = self.seasonalARIMAModel()
+        Logger.info('Line 1001, got results_ARIMA')
 
         start_ts = self.df.last_valid_index()
         end_ts = start_ts + timedelta(minutes=minutes)
+        Logger.info('Line 1007, running results_ARIMA.predict')
         pred = results_ARIMA.predict(start=str(start_ts), end=str(end_ts), dynamic=True)
+        Logger.info('Line 1007, ran results_ARIMA.predict')
 
         try:
             if len(pred) == 0:
