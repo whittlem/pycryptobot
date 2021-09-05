@@ -138,7 +138,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
         technical_analysis.addAll()
         df = technical_analysis.getDataFrame()
 
-        if app.isSimulation() and app.appStarted and app.simstartdate is not None:
+        if app.isSimulation() and app.appStarted:
             # On first run set the iteration to the start date entered
             # This sim mode now pulls 300 candles from before the entered start date 
             state.iterations = df.index.get_loc(str(app.getDateFromISO8601Str(app.simstartdate))) + 1
@@ -255,7 +255,11 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
         evening_doji_star = bool(df_last['evening_doji_star'].values[0])
         two_black_gapping = bool(df_last['two_black_gapping'].values[0])
 
-        strategy = Strategy(app, state, df, state.iterations)
+        if app.isSimulation():
+            strategy = Strategy(app, state, df[df["date"] <= current_sim_date].tail(300), 299)
+        else:
+            strategy = Strategy(app, state, df, state.iterations)
+
         state.action = strategy.getAction(price)
 
         immediate_action = False
