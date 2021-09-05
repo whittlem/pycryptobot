@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [3.5.0] - 2021-09-05
+
+### Added
+
+-- added Seasonal ARIMA model predictions to websvc analysis
+
 ## [3.4.0] - 2021-09-03
 
 ### Changed
