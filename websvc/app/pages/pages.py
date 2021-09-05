@@ -1,5 +1,6 @@
 import re
 import sys
+import datetime
 
 sys.path.append(".")
 # pylint: disable=import-error
@@ -367,6 +368,32 @@ class Pages:
         elif df_6h_last['stochrsi14'].values[0] < 0.2:
             stochrsi14_6h_class = 'table-success'
             stochrsi14_6h_desc = 'Oversold (Buy)'
+
+        def arima_predictions(even_rows: bool = True):
+            results_ARIMA = ta.seasonalARIMAModel()
+            start_date = df_1h.last_valid_index()
+            end_date = start_date + datetime.timedelta(days=3)
+            arima_pred = results_ARIMA.predict(
+                start=str(start_date), end=str(end_date), dynamic=True
+            )
+
+            if even_rows:
+                arima_pred_rows = arima_pred.iloc[::2]
+            else:
+                arima_pred_rows = arima_pred.iloc[1::2]
+
+            html = ""
+            for index, pred in arima_pred_rows.iteritems():
+                html += f"""
+                <tbody>
+                    <tr class={'table-success' if pred >= ticker[1] else 'table-danger'}>
+                        <td>{index}</td>
+                        <td>{pred}</td>
+                    </tr>
+                </tbody>
+                """
+
+            return html
 
         return f"""
         {header()}
@@ -789,6 +816,30 @@ class Pages:
                 <div class="col-sm">
                 </div>
             </div>
+
+            <br />
+            <h5 class="text-center">Seasonal ARIMA Model Predictions</h5>
+
+            <div class="row">
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" style="width: 50%">Time</th>
+                            <th scope="col" style="width: 50%">Prediction</th>
+                        </thead>
+                        {arima_predictions(True)}
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" style="width: 50%">Time</th>
+                            <th scope="col" style="width: 50%">Prediction</th>
+                        </thead>
+                        {arima_predictions(False)}
+                    </table>
+                </div>
+            <div>
 
         </div>
 
