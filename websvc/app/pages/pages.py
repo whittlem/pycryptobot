@@ -344,12 +344,12 @@ class Pages:
 
         stochrsi14_15m_class = 'table-normal'
         stochrsi14_15m_desc = 'Uneventful'
-        if df_15m_last['stochrsi14'].values[0] > 0.8:
-            stochrsi14_15m_class = 'table-danger'
-            stochrsi14_15m_desc = 'Overbought (Sell)'
-        elif df_15m_last['stochrsi14'].values[0] < 0.2:
-            stochrsi14_15m_class = 'table-success'
-            stochrsi14_15m_desc = 'Oversold (Buy)'
+        if df_6h_last['stochrsi14'].values[0] > 0.8:
+            stochrsi14_6h_class = 'table-danger'
+            stochrsi14_6h_desc = 'Overbought (Sell)'
+        elif df_6h_last['stochrsi14'].values[0] < 0.2:
+            stochrsi14_6h_class = 'table-success'
+            stochrsi14_6h_desc = 'Oversold (Buy)'
 
         stochrsi14_1h_class = 'table-normal'
         stochrsi14_1h_desc = 'Uneventful'
@@ -368,6 +368,33 @@ class Pages:
         elif df_6h_last['stochrsi14'].values[0] < 0.2:
             stochrsi14_6h_class = 'table-success'
             stochrsi14_6h_desc = 'Oversold (Buy)'
+
+        adx14_15m_class = 'table-normal'
+        adx14_15m_desc = 'Normal Trend'
+        if df_15m_last['adx14'].values[0] > 25:
+            adx14_15m_class = 'table-success'
+            adx14_15m_desc = 'Strong Trend'
+        elif df_15m_last['adx14'].values[0] < 20:
+            adx14_15m_class = 'table-danger'
+            adx14_15m_desc = 'Weak Trend'
+
+        adx14_1h_class = 'table-normal'
+        adx14_1h_desc = 'Normal Trend'
+        if df_1h_last['adx14'].values[0] > 25:
+            adx14_1h_class = 'table-success'
+            adx14_1h_desc = 'Strong Trend'
+        elif df_1h_last['adx14'].values[0] < 20:
+            adx14_1h_class = 'table-danger'
+            adx14_1h_desc = 'Weak Trend'
+
+        adx14_6h_class = 'table-normal'
+        adx14_6h_desc = 'Normal Trend'
+        if df_6h_last['adx14'].values[0] > 25:
+            adx14_6h_class = 'table-success'
+            adx14_6h_desc = 'Strong Trend'
+        elif df_6h_last['adx14'].values[0] < 20:
+            adx14_6h_class = 'table-danger'
+            adx14_6h_desc = 'Weak Trend'
 
         def arima_predictions(even_rows: bool = True):
             results_ARIMA = ta.seasonalARIMAModel()
@@ -641,6 +668,16 @@ class Pages:
                                 <td>{'MACD > Signal' if df_15m_last['macd'].values[0] > df_15m_last['signal'].values[0] else 'MACD <= Signal'}</td>
                             </tr>
                         </tbody>
+                        <thead>
+                            <th scope="col" colspan="2">ADX14</th>
+                            <th scope="col">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{adx14_15m_class}">
+                                <td colspan="2">{'%.08f' % round(df_15m_last['adx14'].values[0], 8)}</td>
+                                <td>{adx14_15m_desc}</td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
                 <div class="col-sm">
@@ -660,6 +697,16 @@ class Pages:
                                 <td>{'MACD > Signal' if df_1h_last['macd'].values[0] > df_1h_last['signal'].values[0] else 'MACD <= Signal'}</td>
                             </tr>
                         </tbody>
+                        <thead>
+                            <th scope="col" colspan="2">ADX14</th>
+                            <th scope="col">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{adx14_1h_class}">
+                                <td colspan="2">{'%.08f' % round(df_1h_last['adx14'].values[0], 8)}</td>
+                                <td>{adx14_1h_desc}</td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
                 <div class="col-sm">
@@ -677,6 +724,16 @@ class Pages:
                                 <td>{'%.08f' % round(df_6h_last['macd'].values[0], 8)}</td>
                                 <td>{'%.08f' % round(df_6h_last['signal'].values[0], 8)}</td>
                                 <td>{'MACD > Signal' if df_6h_last['macd'].values[0] > df_6h_last['signal'].values[0] else 'MACD <= Signal'}</td>
+                            </tr>
+                        </tbody>
+                        <thead>
+                            <th scope="col" colspan="2">ADX14</th>
+                            <th scope="col">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{adx14_6h_class}">
+                                <td colspan="2">{'%.08f' % round(df_6h_last['adx14'].values[0], 8)}</td>
+                                <td>{adx14_6h_desc}</td>
                             </tr>
                         </tbody>
                     </table>
