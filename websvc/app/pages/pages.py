@@ -657,9 +657,9 @@ class Pages:
                             <th scope="col" colspan="3">15 Minutes</th>
                         </thead>
                         <thead>
-                            <th scope="col">MACD</th>
-                            <th scope="col">Signal</th>
-                            <th scope="col">Status</th>
+                            <th scope="col" style="width: 30%">MACD</th>
+                            <th scope="col" style="width: 30%">Signal</th>
+                            <th scope="col" style="width: 40%">Status</th>
                         </thead>
                         <tbody>
                             <tr class="{'table-success' if df_15m_last['macd'].values[0] > df_15m_last['signal'].values[0] else 'table-danger'}">
@@ -668,9 +668,54 @@ class Pages:
                                 <td>{'MACD > Signal' if df_15m_last['macd'].values[0] > df_15m_last['signal'].values[0] else 'MACD <= Signal'}</td>
                             </tr>
                         </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
                         <thead>
-                            <th scope="col" colspan="2">ADX14</th>
-                            <th scope="col">Status</th>
+                            <th scope="col" colspan="3">1 Hour</th>
+                        </thead>
+                        <thead>
+                            <th scope="col" style="width: 30%">MACD</th>
+                            <th scope="col" style="width: 30%">Signal</th>
+                            <th scope="col" style="width: 40%">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{'table-success' if df_1h_last['macd'].values[0] > df_1h_last['signal'].values[0] else 'table-danger'}">
+                                <td>{'%.08f' % round(df_1h_last['macd'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_1h_last['signal'].values[0], 8)}</td>
+                                <td>{'MACD > Signal' if df_1h_last['macd'].values[0] > df_1h_last['signal'].values[0] else 'MACD <= Signal'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" colspan="3">6 Hour</th>
+                        </thead>
+                        <thead>
+                            <th scope="col" style="width: 30%">MACD</th>
+                            <th scope="col" style="width: 30%">Signal</th>
+                            <th scope="col" style="width: 40%">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{'table-success' if df_6h_last['macd'].values[0] > df_6h_last['signal'].values[0] else 'table-danger'}">
+                                <td>{'%.08f' % round(df_6h_last['macd'].values[0], 8)}</td>
+                                <td>{'%.08f' % round(df_6h_last['signal'].values[0], 8)}</td>
+                                <td>{'MACD > Signal' if df_6h_last['macd'].values[0] > df_6h_last['signal'].values[0] else 'MACD <= Signal'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" colspan="2" style="width: 60%">ADX14</th>
+                            <th scope="col" style="width: 40%">Status</th>
                         </thead>
                         <tbody>
                             <tr class="{adx14_15m_class}">
@@ -683,23 +728,8 @@ class Pages:
                 <div class="col-sm">
                     <table class="table table-sm table-light table-hover table-striped">
                         <thead>
-                            <th scope="col" colspan="3">1 Hour</th>
-                        </thead>
-                        <thead>
-                            <th scope="col">MACD</th>
-                            <th scope="col">Signal</th>
-                            <th scope="col">Status</th>
-                        </thead>
-                        <tbody>
-                            <tr class="{'table-success' if df_1h_last['macd'].values[0] > df_1h_last['signal'].values[0] else 'table-danger'}">
-                                <td>{'%.08f' % round(df_1h_last['macd'].values[0], 8)}</td>
-                                <td>{'%.08f' % round(df_1h_last['signal'].values[0], 8)}</td>
-                                <td>{'MACD > Signal' if df_1h_last['macd'].values[0] > df_1h_last['signal'].values[0] else 'MACD <= Signal'}</td>
-                            </tr>
-                        </tbody>
-                        <thead>
-                            <th scope="col" colspan="2">ADX14</th>
-                            <th scope="col">Status</th>
+                            <th scope="col" colspan="2" style="width: 60%">ADX14</th>
+                            <th scope="col" style="width: 40%">Status</th>
                         </thead>
                         <tbody>
                             <tr class="{adx14_1h_class}">
@@ -712,23 +742,8 @@ class Pages:
                 <div class="col-sm">
                     <table class="table table-sm table-light table-hover table-striped">
                         <thead>
-                            <th scope="col" colspan="3">6 Hour</th>
-                        </thead>
-                        <thead>
-                            <th scope="col">MACD</th>
-                            <th scope="col">Signal</th>
-                            <th scope="col">Status</th>
-                        </thead>
-                        <tbody>
-                            <tr class="{'table-success' if df_6h_last['macd'].values[0] > df_6h_last['signal'].values[0] else 'table-danger'}">
-                                <td>{'%.08f' % round(df_6h_last['macd'].values[0], 8)}</td>
-                                <td>{'%.08f' % round(df_6h_last['signal'].values[0], 8)}</td>
-                                <td>{'MACD > Signal' if df_6h_last['macd'].values[0] > df_6h_last['signal'].values[0] else 'MACD <= Signal'}</td>
-                            </tr>
-                        </tbody>
-                        <thead>
-                            <th scope="col" colspan="2">ADX14</th>
-                            <th scope="col">Status</th>
+                            <th scope="col" colspan="2" style="width: 60%">ADX14</th>
+                            <th scope="col" style="width: 40%">Status</th>
                         </thead>
                         <tbody>
                             <tr class="{adx14_6h_class}">
