@@ -96,6 +96,10 @@ class BotConfig:
 
         self.config_file = kwargs.get("config_file", "config.json")
 
+        self.tradesfile = (
+            self.cli_args["tradesfile"] if self.cli_args["tradesfile"] else "trades.csv"
+        )
+
         self.config_provided = False
         self.config = {}
 
@@ -365,6 +369,11 @@ class BotConfig:
             "--logfile",
             type=str,
             help="Use the log file at the given location. e.g 'mymarket.log'",
+        )
+        parser.add_argument(
+            "--tradesfile",
+            type=str,
+            help="Path to file to log trades done during simulation. eg './trades/BTCBUSD-trades.csv",
         )
         parser.add_argument(
             "--buypercent", type=int, help="percentage of quote currency to buy"
