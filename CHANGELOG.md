@@ -8,6 +8,13 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [3.6.0] - 2021-09-06
+
+### Added
+
+-- fixed williams %r indicator and added it to the websvc dashboard
+-- added adx14 indicator and added it to the websvc dashboard
+
 ## [3.5.0] - 2021-09-05
 
 ### Added
