@@ -369,6 +369,33 @@ class Pages:
             stochrsi14_6h_class = 'table-success'
             stochrsi14_6h_desc = 'Oversold (Buy)'
 
+        williamsr14_15m_class = 'table-normal'
+        williamsr14_15m_desc = 'Uneventful'
+        if df_15m_last['williamsr14'].values[0] > -20:
+            williamsr14_15m_class = 'table-danger'
+            williamsr14_15m_desc = 'Overbought (Sell)'
+        elif df_15m_last['williamsr14'].values[0] < -80:
+            williamsr14_15m_class = 'table-success'
+            williamsr14_15m_desc = 'Oversold (Buy)'
+
+        williamsr14_1h_class = 'table-normal'
+        williamsr14_1h_desc = 'Uneventful'
+        if df_1h_last['williamsr14'].values[0] > -20:
+            williamsr14_1h_class = 'table-danger'
+            williamsr14_1h_desc = 'Overbought (Sell)'
+        elif df_1h_last['williamsr14'].values[0] < -80:
+            williamsr14_1h_class = 'table-success'
+            williamsr14_1h_desc = 'Oversold (Buy)'
+
+        williamsr14_6h_class = 'table-normal'
+        williamsr14_6h_desc = 'Uneventful'
+        if df_6h_last['williamsr14'].values[0] > -20:
+            williamsr14_6h_class = 'table-danger'
+            williamsr14_6h_desc = 'Overbought (Sell)'
+        elif df_6h_last['williamsr14'].values[0] < -80:
+            williamsr14_6h_class = 'table-success'
+            williamsr14_6h_desc = 'Oversold (Buy)'
+
         adx14_15m_class = 'table-normal'
         adx14_15m_desc = 'Normal Trend'
         if df_15m_last['adx14'].values[0] > 25:
@@ -641,6 +668,51 @@ class Pages:
                             <tr class="{stochrsi14_6h_class}">
                                 <td>{'%.08f' % round(df_6h_last['stochrsi14'].values[0], 8)}</td>
                                 <td>{stochrsi14_6h_desc}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" style="width: 50%">Williams %R</th>
+                            <th scope="col" style="width: 50%">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{williamsr14_15m_class}">
+                                <td>{'%.08f' % round(df_15m_last['williamsr14'].values[0], 8)}</td>
+                                <td>{williamsr14_15m_desc}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" style="width: 50%">Williams %R</th>
+                            <th scope="col" style="width: 50%">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{williamsr14_1h_class}">
+                                <td>{'%.08f' % round(df_1h_last['williamsr14'].values[0], 8)}</td>
+                                <td>{williamsr14_1h_desc}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-sm">
+                    <table class="table table-sm table-light table-hover table-striped">
+                        <thead>
+                            <th scope="col" style="width: 50%">Williams %R</th>
+                            <th scope="col" style="width: 50%">Status</th>
+                        </thead>
+                        <tbody>
+                            <tr class="{williamsr14_6h_class}">
+                                <td>{'%.08f' % round(df_6h_last['williamsr14'].values[0], 8)}</td>
+                                <td>{williamsr14_6h_desc}</td>
                             </tr>
                         </tbody>
                     </table>

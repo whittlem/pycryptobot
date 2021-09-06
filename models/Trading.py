@@ -900,9 +900,10 @@ class TechnicalAnalysis:
         if period < 7 or period > 21:
             raise ValueError("Period is out of range")
 
-        return (self.df["high"].rolling(14).max() - self.df["close"]) / (
-            self.df["high"].rolling(14).max() - self.df["low"].rolling(14).min()
-        )
+        return (
+            (self.df["high"].rolling(14).max() - self.df["close"]) /
+            (self.df["high"].rolling(14).max() - self.df["low"].rolling(14).min())
+        ) * -100
 
     def addRSI(self, period: int) -> None:
         """Adds the Relative Strength Index (RSI) to the DataFrame"""
