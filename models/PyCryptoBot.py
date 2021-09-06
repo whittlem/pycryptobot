@@ -275,7 +275,7 @@ class PyCryptoBot(BotConfig):
                     )
 
                     #check to see if there are an extra 300 candles availble to be used, if not just use the original starting point
-                    if (addingExtraCandles == True and df2.size != 2400):
+                    if (addingExtraCandles == True and len(df2) <= 0):
                         self.extraCandlesFound = False
                         simstart = originalSimStart
                     else:
@@ -906,6 +906,8 @@ class PyCryptoBot(BotConfig):
                     startDate -= timedelta(minutes=(self.getGranularity() / 60) * 300)
 
                 while len(tradingData) < 300 and attempts < 10:
+                    if endDate.isoformat() > datetime.now().isoformat():
+                        endDate = datetime.now()
                     if self.smart_switch == 1:
                         tradingData = self.getSmartSwitchHistoricalDataChained(
                             self.market,
@@ -959,6 +961,9 @@ class PyCryptoBot(BotConfig):
                 endDate = pd.Series(endDate).dt.round(freq = 'H')[0]
                 startDate -= timedelta(minutes=(self.getGranularity() / 60) * 300)
 
+                if endDate.isoformat() > datetime.now().isoformat():
+                    endDate = datetime.now()
+                    
                 tradingData = self.getSmartSwitchDataFrame(tradingData,
                     self.getMarket(), self.getGranularity(), self.getDateFromISO8601Str(str(startDate)).isoformat(), endDate.isoformat())
                 if self.extraCandlesFound:
