@@ -862,8 +862,8 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                 else:
                     filename = tradesfile
                 try:
-                    if os.path.exists("CSV"):
-                        os.makedirs("CSV")
+                    if os.path.exists("csv"):
+                        os.makedirs("csv")
                     app.trade_tracker.to_csv("./csv/" + filename)
                 except OSError:
                     Logger.critical(f"Unable to save: /csv/{filename}")
