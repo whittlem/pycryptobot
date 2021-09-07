@@ -864,9 +864,9 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
                 try:
                     if os.path.exists("CSV"):
                         os.makedirs("CSV")
-                    app.trade_tracker.to_csv("./CSV/" + filename)
+                    app.trade_tracker.to_csv("./csv/" + filename)
                 except OSError:
-                    Logger.critical(f"Unable to save: /CSV/{filename}")
+                    Logger.critical(f"Unable to save: /csv/{filename}")
 
                 if state.buy_count == 0:
                     state.last_buy_size = 0
