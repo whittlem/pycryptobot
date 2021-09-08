@@ -848,17 +848,18 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
 
             if not app.isLive() and state.iterations == len(df):
                 Logger.info("\nSimulation Summary: ")
+                tradesfile = app.getTradesFile()
 
                 if app.isVerbose():
                     Logger.info("\n" + str(app.trade_tracker))
                     if app.simuluationSpeed() == "fast":
                         start = str(df.head(1).index.format()[0]).replace(":", ".")
                         end = str(df.tail(1).index.format()[0]).replace(":", ".")
-                        filename = f"{app.getMarket()} {str(start)} - {str(end)}_trades.csv"
+                        filename = f"{app.getMarket()} {str(start)} - {str(end)}_{tradesfile}"
                     else:
-                        filename = f"{app.getMarket()} {str(app.simstartdate)} - {str(app.simenddate)}_trades.csv"
+                        filename = f"{app.getMarket()} {str(app.simstartdate)} - {str(app.simenddate)}_{tradesfile}"
                 else:
-                    filename = "trades.csv"
+                    filename = tradesfile
                 try:
                     app.trade_tracker.to_csv(filename)
                 except OSError:
@@ -1008,4 +1009,9 @@ def main():
         raise
 
 
-main()
+if __name__ == '__main__':
+    if sys.version_info < (3, 6, 0):
+        sys.stderr.write("You need python 3.6 or higher to run this script\n")
+        exit(1)
+
+    main()

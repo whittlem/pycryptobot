@@ -82,6 +82,9 @@ class PyCryptoBot(BotConfig):
     def getLogFile(self):
         return self.logfile
 
+    def getTradesFile(self):
+        return self.tradesfile
+
     def getExchange(self):
         return self.exchange
 

@@ -13,6 +13,8 @@ from numpy import floor
 from datetime import datetime, timedelta
 from requests.auth import AuthBase
 from requests import Request
+from threading import Thread
+from websocket import create_connection, WebSocketConnectionClosedException
 from models.helper.LogHelper import Logger
 
 MARGIN_ADJUSTMENT = 0.0025
@@ -788,7 +790,9 @@ class PublicAPI(AuthAPIBase):
                 epoch = int(resp["epoch"])
                 return datetime.fromtimestamp(epoch)
             else:
-                Logger.error('resp does not contain the epoch key for some reason!') # remove this later
+                Logger.error(
+                    "resp does not contain the epoch key for some reason!"
+                )  # remove this later
                 Logger.error(resp)
                 return None
         except Exception as e:
@@ -834,19 +838,19 @@ class PublicAPI(AuthAPIBase):
             return resp.json()
 
         except requests.ConnectionError as err:
-            Logger.error('requests.ConnectionError') # remove this later
+            Logger.error("requests.ConnectionError")  # remove this later
             return self.handle_api_error(err, "ConnectionError")
 
         except requests.exceptions.HTTPError as err:
-            Logger.error('requests.exceptions.HTTPError') # remove this later
+            Logger.error("requests.exceptions.HTTPError")  # remove this later
             return self.handle_api_error(err, "HTTPError")
 
         except requests.Timeout as err:
-            Logger.error('requests.Timeout') # remove this later
+            Logger.error("requests.Timeout")  # remove this later
             return self.handle_api_error(err, "Timeout")
 
         except json.decoder.JSONDecodeError as err:
-            Logger.error('json.decoder.JSONDecodeError') # remove this later
+            Logger.error("json.decoder.JSONDecodeError")  # remove this later
             return self.handle_api_error(err, "JSONDecodeError")
 
     def handle_api_error(self, err: str, reason: str) -> dict:
@@ -864,3 +868,241 @@ class PublicAPI(AuthAPIBase):
             else:
                 Logger.info(f"{reason}: {self._api_url}")
                 return {}
+
+
+class WebSocket(AuthAPIBase):
+    def __init__(
+        self,
+        markets=None,
+        api_url="wss://ws-feed.pro.coinbase.com",
+    ) -> None:
+        # options
+        self.debug = False
+
+        valid_urls = [
+            "wss://ws-feed.pro.coinbase.com",
+            "wss://ws-feed.pro.coinbase.com/",
+        ]
+
+        # validate Coinbase Pro API
+        if api_url not in valid_urls:
+            raise ValueError("Coinbase Pro WebSocket URL is invalid")
+
+        if api_url[-1] != "/":
+            api_url = api_url + "/"
+
+        self._api_url = api_url
+
+        self.markets = None
+        self.type = "subscribe"
+        self.stop = True
+        self.error = None
+        self.ws = None
+        self.thread = None
+
+    def start(self):
+        def _go():
+            self._connect()
+            self._listen()
+            self._disconnect()
+
+        self.stop = False
+        self.on_open()
+        self.thread = Thread(target=_go)
+        self.keepalive = Thread(target=self._keepalive)
+        self.thread.start()
+
+    def _connect(self):
+        if self.markets is None:
+            print("Error: no market specified!")
+            sys.exit()
+        elif not isinstance(self.markets, list):
+            self.markets = [self.markets]
+
+        self.ws = create_connection(self._api_url)
+        self.ws.send(
+            json.dumps(
+                {
+                    "type": "subscribe",
+                    "product_ids": self.markets,
+                    "channels": ["matches"],
+                }
+            )
+        )
+
+    def _keepalive(self, interval=30):
+        while self.ws.connected:
+            self.ws.ping("keepalive")
+            time.sleep(interval)
+
+    def _listen(self):
+        self.keepalive.start()
+        while not self.stop:
+            try:
+                data = self.ws.recv()
+                if data != "":
+                    msg = json.loads(data)
+                else:
+                    msg = {}
+            except ValueError as e:
+                self.on_error(e)
+            except Exception as e:
+                self.on_error(e)
+            else:
+                self.on_message(msg)
+
+    def _disconnect(self):
+        try:
+            if self.ws:
+                self.ws.close()
+        except WebSocketConnectionClosedException:
+            pass
+        finally:
+            self.keepalive.join()
+
+    def close(self):
+        self.stop = True
+        self._disconnect()
+        self.thread.join()
+
+    def on_open(self):
+        print("-- Subscribed! --\n")
+
+    def on_close(self):
+        print("\n-- Socket Closed --")
+
+    def on_message(self, msg):
+        print(msg)
+
+    def on_error(self, e, data=None):
+        print("Error", e)
+        self.stop = True
+        print("{} - data: {}".format(e, data))
+
+
+class WebSocketClient(WebSocket):
+    def __init__(
+        self,
+        markets: list = [],
+        api_url: str = "wss://ws-feed.pro.coinbase.com",
+    ) -> None:
+        if len(markets) == 0:
+            raise ValueError("A list of one or more markets is required.")
+
+        for market in markets:
+            # validates the market is syntactically correct
+            if not self._isMarketValid(market):
+                raise ValueError("Coinbase Pro market is invalid.")
+
+        self.markets = markets
+        self._api_url = api_url
+        self.tickers = None
+        self.candles_1m = None
+
+    def on_open(self):
+        self.message_count = 0
+
+    def on_message(self, msg):
+        if "time" in msg and "product_id" in msg and "price" in msg:
+            # create dataframe from websocket message
+            df = pd.DataFrame(
+                columns=["created_at", "market", "price"],
+                data=[
+                    [
+                        datetime.strptime(
+                            msg["time"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                        ).strftime("%Y-%m-%d %H:%M:%S"),
+                        msg["product_id"],
+                        msg["price"],
+                    ]
+                ],
+            )
+
+            # set column types
+            df["created_at"] = df["created_at"].astype("datetime64[ns]")
+            df["price"] = df["price"].astype("float64")
+
+            # form candles
+            df["1m"] = df["created_at"].dt.floor(freq='1T')
+            df["5m"] = df["created_at"].dt.floor(freq='5T')
+            df["15m"] = df["created_at"].dt.floor(freq='15T')
+            df["1h"] = df["created_at"].dt.floor(freq='1H')
+            df["6h"] = df["created_at"].dt.floor(freq='6H')
+            df["1d"] = df["created_at"].dt.floor(freq='1D')
+
+            if self.candles_1m is None:
+                # create dataframe from websocket message
+                self.candles_1m = pd.DataFrame(
+                    columns=["created_at", "market", "granularity", "open", "high", "close", "low", "volume"],
+                    data=[
+                        [
+                            df['1m'].values[0],
+                            df['market'].values[0],
+                            60,
+                            df['price'].values[0],
+                            df['price'].values[0],
+                            df['price'].values[0],
+                            df['price'].values[0],
+                            msg['size']
+                        ]
+                    ],
+                )
+                print (self.candles_1m)
+            else:
+                candle_exists = ((self.candles_1m['created_at'] == df['1m'].values[0]) & (self.candles_1m['market'] == df['market'].values[0])).any()
+                if not candle_exists:
+                    df_new_candle = pd.DataFrame(
+                        columns=["created_at", "market", "granularity", "open", "high", "close", "low", "volume"],
+                        data=[
+                            [
+                                df['1m'].values[0],
+                                df['market'].values[0],
+                                60,
+                                df['price'].values[0],
+                                df['price'].values[0],
+                                df['price'].values[0],
+                                df['price'].values[0],
+                                msg['size']
+                            ]
+                        ],
+                    )
+                    self.candles_1m = self.candles_1m.append(df_new_candle)
+                    print (self.candles_1m)
+                else:
+                    candle = self.candles_1m[((self.candles_1m['created_at'] == df['1m'].values[0]) & (self.candles_1m['market'] == df['market'].values[0]))]
+
+                    # set high on high
+                    if float(df['price'].values[0]) > float(candle.high.values[0]):
+                        self.candles_1m.at[candle.index.values[0], "high"] = df['price'].values[0]
+
+                    self.candles_1m.at[candle.index.values[0], "close"] = df['price'].values[0]
+
+                    # set low on low
+                    if float(df['price'].values[0]) < float(candle.high.values[0]):
+                        self.candles_1m.at[candle.index.values[0], "high"] = df['price'].values[0]
+
+                    # increment candle base volume
+                    self.candles_1m.at[candle.index.values[0], "volume"] = float(candle["volume"].values[0]) + float(msg['size'])
+
+                    print (self.candles_1m)
+
+            # insert first entry
+            if self.tickers is None and len(df) > 0:
+                self.tickers = df
+            # append future entries without duplicates
+            elif self.tickers is not None and len(df) > 0:
+                self.tickers = (
+                    pd.concat([self.tickers, df])
+                    .drop_duplicates(subset="market", keep="last")
+                    .reset_index(drop=True)
+                )
+
+            # convert dataframe to a time series
+            tsidx = pd.DatetimeIndex(
+                pd.to_datetime(df["created_at"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z")
+            )
+            df.set_index(tsidx, inplace=True)
+
+            # print (f'{msg["time"]} {msg["product_id"]} {msg["price"]}')
+            # print(json.dumps(msg, indent=4, sort_keys=True))
+        self.message_count += 1
