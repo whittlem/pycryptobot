@@ -409,7 +409,7 @@ class AuthAPI(AuthAPIBase):
 
                 if full_scan is True:
                     print(
-                        "add to order history to prevent full scan:", self.order_history
+                        f"add to order history to prevent full scan: {self.order_history}"
                     )
             else:
                 # GET /api/v3/allOrders
@@ -648,7 +648,7 @@ class AuthAPI(AuthAPIBase):
             return resp
         except Exception as err:
             ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-            Logger.error(ts + " Binance " + " marketBuy " + str(err))
+            Logger.error(f'{ts} Binance  marketBuy {str(err)}')
             return []
 
     def marketSell(
@@ -696,7 +696,7 @@ class AuthAPI(AuthAPIBase):
             return resp
         except Exception as err:
             ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-            Logger.error(ts + " Binance " + " marketSell " + str(err))
+            Logger.error(f'{ts} Binance  marketSell {str(err)}')
             return []
 
     def authAPI(self, method: str, uri: str, payload: str = {}) -> dict:

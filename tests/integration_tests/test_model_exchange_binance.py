@@ -687,7 +687,7 @@ def test_getTime():
 
     exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
-    
+
     resp = exchange.getTime()
     assert type(resp) is datetime
 

@@ -20,7 +20,7 @@ def parseMarket(market):
     quote_currency = 'GBP'
 
     if not isMarketValid(market):
-        raise ValueError('Binance market invalid: ' + market)
+        raise ValueError(f'Binance market invalid: {market}')
 
     quote_currencies = [
         'BTC', 'BNB', 'ETH', 'USDT', 'TUSD', 'BUSD', 'DAX', 'NGN', 'RUB', 'TRY', 'EUR',
@@ -46,11 +46,11 @@ def parser(app, binance_config, args={}):
 
     if isinstance(binance_config, dict):
         if 'api_key' in binance_config or 'api_secret' in binance_config:
-            print('>>> migrating api keys to binance.key <<<', "\n")
+            print(f'>>> migrating api keys to binance.key <<<\n')
 
             # create 'binance.key'
             fh = open('binance.key', 'w')
-            fh.write(binance_config['api_key'] + "\n" + binance_config['api_secret'])
+            fh.write(f"{binance_config['api_key']}\n{binance_config['api_secret']}")
             fh.close()
 
             if os.path.isfile('config.json') and os.path.isfile('binance.key'):
@@ -69,7 +69,7 @@ def parser(app, binance_config, args={}):
                 fh.write(json.dumps(config_json, indent=4))
                 fh.close()
             else:
-                print ('migration failed (io error)', "\n")
+                print (f'migration failed (io error)\n')
 
         if 'api_key_file' in binance_config:
             try :
@@ -79,7 +79,7 @@ def parser(app, binance_config, args={}):
                 binance_config['api_key'] = key
                 binance_config['api_secret'] = secret
             except :
-                raise RuntimeError('Unable to read ' + binance_config['api_key_file'])
+                raise RuntimeError(f"Unable to read {binance_config['api_key_file']}")
 
         if 'api_key' in binance_config and 'api_secret' in binance_config and 'api_url' in binance_config:
             # validates the api key is syntactically correct

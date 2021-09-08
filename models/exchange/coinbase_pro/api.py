@@ -623,28 +623,9 @@ class AuthAPI(AuthAPIBase):
                     # disable traceback
                     sys.tracebacklimit = 0
 
-                    raise Exception(
-                        method.upper()
-                        + " ("
-                        + "{}".format(resp.status_code)
-                        + ") "
-                        + self._api_url
-                        + uri
-                        + " - "
-                        + "{}".format(resp_message)
-                    )
+                    raise Exception(f"{method.upper()} ({resp.status_code}) {self._api_url}{uri} - {resp_message}")
                 else:
-                    Logger.error(
-                        "error: "
-                        + method.upper()
-                        + " ("
-                        + "{}".format(resp.status_code)
-                        + ") "
-                        + self._api_url
-                        + uri
-                        + " - "
-                        + "{}".format(resp_message)
-                    )
+                    Logger.error(f"error: {method.upper()} ({resp.status_code}) {self._api_url}{uri} - {resp_message}")
                     return pd.DataFrame()
 
             resp.raise_for_status()

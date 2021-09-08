@@ -116,7 +116,7 @@ class BotConfig:
                             self.config = json.load(stream)
                         except json.decoder.JSONDecodeError as err:
                             sys.tracebacklimit = 0
-                            raise ValueError("Invalid config.json: " + str(err))
+                            raise ValueError(f"Invalid config.json: {str(err)}")
 
             except (ScannerError, ConstructorError) as err:
                 sys.tracebacklimit = 0
@@ -130,7 +130,7 @@ class BotConfig:
 
             except ValueError as err:
                 sys.tracebacklimit = 0
-                raise ValueError("Invalid config: " + str(err))
+                raise ValueError(f"Invalid config: {str(err)}")
 
             except:
                 raise
