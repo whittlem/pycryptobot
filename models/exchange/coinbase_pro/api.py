@@ -1062,6 +1062,10 @@ class WebSocketClient(WebSocket):
         self.tickers = None
         self.candles_1m = None
         self.candles_5m = None
+        self.candles_15m = None
+        self.candles_1h = None
+        self.candles_6h = None
+        self.candles_1d = None
 
     def on_open(self):
         self.message_count = 0
@@ -1094,9 +1098,12 @@ class WebSocketClient(WebSocket):
             df["candle_6h"] = df["date"].dt.floor(freq="6H")
             df["candle_1d"] = df["date"].dt.floor(freq="1D")
 
+            # 1m candles dataframe is empty
+            candle_1m_seconds = 60
             if self.candles_1m is None:
-                resp = PublicAPI().getHistoricalData(df["market"].values[0], 60)
-
+                resp = PublicAPI().getHistoricalData(
+                    df["market"].values[0], candle_1m_seconds
+                )
                 if len(resp) > 0:
                     self.candles_1m = resp
                 else:
@@ -1116,7 +1123,7 @@ class WebSocketClient(WebSocket):
                             [
                                 df["candle_1m"].values[0],
                                 df["market"].values[0],
-                                60,
+                                candle_1m_seconds,
                                 df["price"].values[0],
                                 df["price"].values[0],
                                 df["price"].values[0],
@@ -1125,36 +1132,78 @@ class WebSocketClient(WebSocket):
                             ]
                         ],
                     )
+            # 1m candles dataframe contains some data
             else:
+                # check if the current candle exists
                 candle_exists = (
                     (self.candles_1m["date"] == df["candle_1m"].values[0])
                     & (self.candles_1m["market"] == df["market"].values[0])
                 ).any()
                 if not candle_exists:
-                    df_new_candle = pd.DataFrame(
-                        columns=[
-                            "date",
-                            "market",
-                            "granularity",
-                            "open",
-                            "high",
-                            "close",
-                            "low",
-                            "volume",
-                        ],
-                        data=[
-                            [
-                                df["candle_1m"].values[0],
-                                df["market"].values[0],
-                                60,
-                                df["price"].values[0],
-                                df["price"].values[0],
-                                df["price"].values[0],
-                                df["price"].values[0],
-                                msg["size"],
+                    # populate historical data via api if it does not exist
+                    if (
+                        len(
+                            self.candles_1m[
+                                self.candles_1m["market"] == df["market"].values[0]
                             ]
-                        ],
-                    )
+                        )
+                        == 0
+                    ):
+                        resp = PublicAPI().getHistoricalData(df["market"].values[0], 60)
+                        if len(resp) > 0:
+                            df_new_candle = resp
+                        else:
+                            # create dataframe from websocket message
+                            df_new_candle = pd.DataFrame(
+                                columns=[
+                                    "date",
+                                    "market",
+                                    "granularity",
+                                    "open",
+                                    "high",
+                                    "close",
+                                    "low",
+                                    "volume",
+                                ],
+                                data=[
+                                    [
+                                        df["candle_1m"].values[0],
+                                        df["market"].values[0],
+                                        candle_1m_seconds,
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        msg["size"],
+                                    ]
+                                ],
+                            )
+
+                    else:
+                        df_new_candle = pd.DataFrame(
+                            columns=[
+                                "date",
+                                "market",
+                                "granularity",
+                                "open",
+                                "high",
+                                "close",
+                                "low",
+                                "volume",
+                            ],
+                            data=[
+                                [
+                                    df["candle_1m"].values[0],
+                                    df["market"].values[0],
+                                    candle_1m_seconds,
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    msg["size"],
+                                ]
+                            ],
+                        )
                     self.candles_1m = self.candles_1m.append(df_new_candle)
                 else:
                     candle = self.candles_1m[
@@ -1185,9 +1234,12 @@ class WebSocketClient(WebSocket):
                         candle["volume"].values[0]
                     ) + float(msg["size"])
 
+            # 5m candles dataframe is empty
+            candle_5m_seconds = 300
             if self.candles_5m is None:
-                resp = PublicAPI().getHistoricalData(df["market"].values[0], 300)
-
+                resp = PublicAPI().getHistoricalData(
+                    df["market"].values[0], candle_5m_seconds
+                )
                 if len(resp) > 0:
                     self.candles_5m = resp
                 else:
@@ -1207,7 +1259,7 @@ class WebSocketClient(WebSocket):
                             [
                                 df["candle_5m"].values[0],
                                 df["market"].values[0],
-                                300,
+                                candle_5m_seconds,
                                 df["price"].values[0],
                                 df["price"].values[0],
                                 df["price"].values[0],
@@ -1216,36 +1268,78 @@ class WebSocketClient(WebSocket):
                             ]
                         ],
                     )
+            # 5m candles dataframe contains some data
             else:
+                # check if the current candle exists
                 candle_exists = (
                     (self.candles_5m["date"] == df["candle_5m"].values[0])
                     & (self.candles_5m["market"] == df["market"].values[0])
                 ).any()
                 if not candle_exists:
-                    df_new_candle = pd.DataFrame(
-                        columns=[
-                            "date",
-                            "market",
-                            "granularity",
-                            "open",
-                            "high",
-                            "close",
-                            "low",
-                            "volume",
-                        ],
-                        data=[
-                            [
-                                df["candle_5m"].values[0],
-                                df["market"].values[0],
-                                300,
-                                df["price"].values[0],
-                                df["price"].values[0],
-                                df["price"].values[0],
-                                df["price"].values[0],
-                                msg["size"],
+                    # populate historical data via api if it does not exist
+                    if (
+                        len(
+                            self.candles_5m[
+                                self.candles_5m["market"] == df["market"].values[0]
                             ]
-                        ],
-                    )
+                        )
+                        == 0
+                    ):
+                        resp = PublicAPI().getHistoricalData(df["market"].values[0], 60)
+                        if len(resp) > 0:
+                            df_new_candle = resp
+                        else:
+                            # create dataframe from websocket message
+                            df_new_candle = pd.DataFrame(
+                                columns=[
+                                    "date",
+                                    "market",
+                                    "granularity",
+                                    "open",
+                                    "high",
+                                    "close",
+                                    "low",
+                                    "volume",
+                                ],
+                                data=[
+                                    [
+                                        df["candle_5m"].values[0],
+                                        df["market"].values[0],
+                                        candle_5m_seconds,
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        msg["size"],
+                                    ]
+                                ],
+                            )
+
+                    else:
+                        df_new_candle = pd.DataFrame(
+                            columns=[
+                                "date",
+                                "market",
+                                "granularity",
+                                "open",
+                                "high",
+                                "close",
+                                "low",
+                                "volume",
+                            ],
+                            data=[
+                                [
+                                    df["candle_5m"].values[0],
+                                    df["market"].values[0],
+                                    candle_5m_seconds,
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    msg["size"],
+                                ]
+                            ],
+                        )
                     self.candles_5m = self.candles_5m.append(df_new_candle)
                 else:
                     candle = self.candles_5m[
@@ -1273,6 +1367,550 @@ class WebSocketClient(WebSocket):
 
                     # increment candle base volume
                     self.candles_5m.at[candle.index.values[0], "volume"] = float(
+                        candle["volume"].values[0]
+                    ) + float(msg["size"])
+
+            # 15m candles dataframe is empty
+            candle_15m_seconds = 900
+            if self.candles_15m is None:
+                resp = PublicAPI().getHistoricalData(
+                    df["market"].values[0], candle_15m_seconds
+                )
+                if len(resp) > 0:
+                    self.candles_15m = resp
+                else:
+                    # create dataframe from websocket message
+                    self.candles_15m = pd.DataFrame(
+                        columns=[
+                            "date",
+                            "market",
+                            "granularity",
+                            "open",
+                            "high",
+                            "close",
+                            "low",
+                            "volume",
+                        ],
+                        data=[
+                            [
+                                df["candle_15m"].values[0],
+                                df["market"].values[0],
+                                candle_15m_seconds,
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                msg["size"],
+                            ]
+                        ],
+                    )
+            # 15m candles dataframe contains some data
+            else:
+                # check if the current candle exists
+                candle_exists = (
+                    (self.candles_15m["date"] == df["candle_15m"].values[0])
+                    & (self.candles_15m["market"] == df["market"].values[0])
+                ).any()
+                if not candle_exists:
+                    # populate historical data via api if it does not exist
+                    if (
+                        len(
+                            self.candles_15m[
+                                self.candles_15m["market"] == df["market"].values[0]
+                            ]
+                        )
+                        == 0
+                    ):
+                        resp = PublicAPI().getHistoricalData(df["market"].values[0], 60)
+                        if len(resp) > 0:
+                            df_new_candle = resp
+                        else:
+                            # create dataframe from websocket message
+                            df_new_candle = pd.DataFrame(
+                                columns=[
+                                    "date",
+                                    "market",
+                                    "granularity",
+                                    "open",
+                                    "high",
+                                    "close",
+                                    "low",
+                                    "volume",
+                                ],
+                                data=[
+                                    [
+                                        df["candle_15m"].values[0],
+                                        df["market"].values[0],
+                                        candle_15m_seconds,
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        msg["size"],
+                                    ]
+                                ],
+                            )
+
+                    else:
+                        df_new_candle = pd.DataFrame(
+                            columns=[
+                                "date",
+                                "market",
+                                "granularity",
+                                "open",
+                                "high",
+                                "close",
+                                "low",
+                                "volume",
+                            ],
+                            data=[
+                                [
+                                    df["candle_15m"].values[0],
+                                    df["market"].values[0],
+                                    candle_15m_seconds,
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    msg["size"],
+                                ]
+                            ],
+                        )
+                    self.candles_15m = self.candles_15m.append(df_new_candle)
+                else:
+                    candle = self.candles_15m[
+                        (
+                            (self.candles_15m["date"] == df["candle_15m"].values[0])
+                            & (self.candles_15m["market"] == df["market"].values[0])
+                        )
+                    ]
+
+                    # set high on high
+                    if float(df["price"].values[0]) > float(candle.high.values[0]):
+                        self.candles_15m.at[candle.index.values[0], "high"] = df[
+                            "price"
+                        ].values[0]
+
+                    self.candles_15m.at[candle.index.values[0], "close"] = df[
+                        "price"
+                    ].values[0]
+
+                    # set low on low
+                    if float(df["price"].values[0]) < float(candle.low.values[0]):
+                        self.candles_15m.at[candle.index.values[0], "low"] = df[
+                            "price"
+                        ].values[0]
+
+                    # increment candle base volume
+                    self.candles_15m.at[candle.index.values[0], "volume"] = float(
+                        candle["volume"].values[0]
+                    ) + float(msg["size"])
+
+            # 1h candles dataframe is empty
+            candle_1h_seconds = 3600
+            if self.candles_1h is None:
+                resp = PublicAPI().getHistoricalData(
+                    df["market"].values[0], candle_1h_seconds
+                )
+                if len(resp) > 0:
+                    self.candles_1h = resp
+                else:
+                    # create dataframe from websocket message
+                    self.candles_1h = pd.DataFrame(
+                        columns=[
+                            "date",
+                            "market",
+                            "granularity",
+                            "open",
+                            "high",
+                            "close",
+                            "low",
+                            "volume",
+                        ],
+                        data=[
+                            [
+                                df["candle_1h"].values[0],
+                                df["market"].values[0],
+                                candle_1h_seconds,
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                msg["size"],
+                            ]
+                        ],
+                    )
+            # 1h candles dataframe contains some data
+            else:
+                # check if the current candle exists
+                candle_exists = (
+                    (self.candles_1h["date"] == df["candle_1h"].values[0])
+                    & (self.candles_1h["market"] == df["market"].values[0])
+                ).any()
+                if not candle_exists:
+                    # populate historical data via api if it does not exist
+                    if (
+                        len(
+                            self.candles_1h[
+                                self.candles_1h["market"] == df["market"].values[0]
+                            ]
+                        )
+                        == 0
+                    ):
+                        resp = PublicAPI().getHistoricalData(df["market"].values[0], 60)
+                        if len(resp) > 0:
+                            df_new_candle = resp
+                        else:
+                            # create dataframe from websocket message
+                            df_new_candle = pd.DataFrame(
+                                columns=[
+                                    "date",
+                                    "market",
+                                    "granularity",
+                                    "open",
+                                    "high",
+                                    "close",
+                                    "low",
+                                    "volume",
+                                ],
+                                data=[
+                                    [
+                                        df["candle_1h"].values[0],
+                                        df["market"].values[0],
+                                        candle_1h_seconds,
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        msg["size"],
+                                    ]
+                                ],
+                            )
+
+                    else:
+                        df_new_candle = pd.DataFrame(
+                            columns=[
+                                "date",
+                                "market",
+                                "granularity",
+                                "open",
+                                "high",
+                                "close",
+                                "low",
+                                "volume",
+                            ],
+                            data=[
+                                [
+                                    df["candle_1h"].values[0],
+                                    df["market"].values[0],
+                                    candle_1h_seconds,
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    msg["size"],
+                                ]
+                            ],
+                        )
+                    self.candles_1h = self.candles_1h.append(df_new_candle)
+                else:
+                    candle = self.candles_1h[
+                        (
+                            (self.candles_1h["date"] == df["candle_1h"].values[0])
+                            & (self.candles_1h["market"] == df["market"].values[0])
+                        )
+                    ]
+
+                    # set high on high
+                    if float(df["price"].values[0]) > float(candle.high.values[0]):
+                        self.candles_1h.at[candle.index.values[0], "high"] = df[
+                            "price"
+                        ].values[0]
+
+                    self.candles_1h.at[candle.index.values[0], "close"] = df[
+                        "price"
+                    ].values[0]
+
+                    # set low on low
+                    if float(df["price"].values[0]) < float(candle.low.values[0]):
+                        self.candles_1h.at[candle.index.values[0], "low"] = df[
+                            "price"
+                        ].values[0]
+
+                    # increment candle base volume
+                    self.candles_1h.at[candle.index.values[0], "volume"] = float(
+                        candle["volume"].values[0]
+                    ) + float(msg["size"])
+
+            # 6h candles dataframe is empty
+            candle_6h_seconds = 21600
+            if self.candles_6h is None:
+                resp = PublicAPI().getHistoricalData(
+                    df["market"].values[0], candle_6h_seconds
+                )
+                if len(resp) > 0:
+                    self.candles_6h = resp
+                else:
+                    # create dataframe from websocket message
+                    self.candles_6h = pd.DataFrame(
+                        columns=[
+                            "date",
+                            "market",
+                            "granularity",
+                            "open",
+                            "high",
+                            "close",
+                            "low",
+                            "volume",
+                        ],
+                        data=[
+                            [
+                                df["candle_6h"].values[0],
+                                df["market"].values[0],
+                                candle_6h_seconds,
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                msg["size"],
+                            ]
+                        ],
+                    )
+            # 6h candles dataframe contains some data
+            else:
+                # check if the current candle exists
+                candle_exists = (
+                    (self.candles_6h["date"] == df["candle_6h"].values[0])
+                    & (self.candles_6h["market"] == df["market"].values[0])
+                ).any()
+                if not candle_exists:
+                    # populate historical data via api if it does not exist
+                    if (
+                        len(
+                            self.candles_6h[
+                                self.candles_6h["market"] == df["market"].values[0]
+                            ]
+                        )
+                        == 0
+                    ):
+                        resp = PublicAPI().getHistoricalData(df["market"].values[0], 60)
+                        if len(resp) > 0:
+                            df_new_candle = resp
+                        else:
+                            # create dataframe from websocket message
+                            df_new_candle = pd.DataFrame(
+                                columns=[
+                                    "date",
+                                    "market",
+                                    "granularity",
+                                    "open",
+                                    "high",
+                                    "close",
+                                    "low",
+                                    "volume",
+                                ],
+                                data=[
+                                    [
+                                        df["candle_6h"].values[0],
+                                        df["market"].values[0],
+                                        candle_6h_seconds,
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        msg["size"],
+                                    ]
+                                ],
+                            )
+
+                    else:
+                        df_new_candle = pd.DataFrame(
+                            columns=[
+                                "date",
+                                "market",
+                                "granularity",
+                                "open",
+                                "high",
+                                "close",
+                                "low",
+                                "volume",
+                            ],
+                            data=[
+                                [
+                                    df["candle_6h"].values[0],
+                                    df["market"].values[0],
+                                    candle_6h_seconds,
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    msg["size"],
+                                ]
+                            ],
+                        )
+                    self.candles_6h = self.candles_6h.append(df_new_candle)
+                else:
+                    candle = self.candles_6h[
+                        (
+                            (self.candles_6h["date"] == df["candle_6h"].values[0])
+                            & (self.candles_6h["market"] == df["market"].values[0])
+                        )
+                    ]
+
+                    # set high on high
+                    if float(df["price"].values[0]) > float(candle.high.values[0]):
+                        self.candles_6h.at[candle.index.values[0], "high"] = df[
+                            "price"
+                        ].values[0]
+
+                    self.candles_6h.at[candle.index.values[0], "close"] = df[
+                        "price"
+                    ].values[0]
+
+                    # set low on low
+                    if float(df["price"].values[0]) < float(candle.low.values[0]):
+                        self.candles_6h.at[candle.index.values[0], "low"] = df[
+                            "price"
+                        ].values[0]
+
+                    # increment candle base volume
+                    self.candles_6h.at[candle.index.values[0], "volume"] = float(
+                        candle["volume"].values[0]
+                    ) + float(msg["size"])
+
+            # 1d candles dataframe is empty
+            candle_1d_seconds = 86400
+            if self.candles_1d is None:
+                resp = PublicAPI().getHistoricalData(
+                    df["market"].values[0], candle_1d_seconds
+                )
+                if len(resp) > 0:
+                    self.candles_1d = resp
+                else:
+                    # create dataframe from websocket message
+                    self.candles_1d = pd.DataFrame(
+                        columns=[
+                            "date",
+                            "market",
+                            "granularity",
+                            "open",
+                            "high",
+                            "close",
+                            "low",
+                            "volume",
+                        ],
+                        data=[
+                            [
+                                df["candle_1d"].values[0],
+                                df["market"].values[0],
+                                candle_1d_seconds,
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                msg["size"],
+                            ]
+                        ],
+                    )
+            # 1d candles dataframe contains some data
+            else:
+                # check if the current candle exists
+                candle_exists = (
+                    (self.candles_1d["date"] == df["candle_1d"].values[0])
+                    & (self.candles_1d["market"] == df["market"].values[0])
+                ).any()
+                if not candle_exists:
+                    # populate historical data via api if it does not exist
+                    if (
+                        len(
+                            self.candles_1d[
+                                self.candles_1d["market"] == df["market"].values[0]
+                            ]
+                        )
+                        == 0
+                    ):
+                        resp = PublicAPI().getHistoricalData(df["market"].values[0], 60)
+                        if len(resp) > 0:
+                            df_new_candle = resp
+                        else:
+                            # create dataframe from websocket message
+                            df_new_candle = pd.DataFrame(
+                                columns=[
+                                    "date",
+                                    "market",
+                                    "granularity",
+                                    "open",
+                                    "high",
+                                    "close",
+                                    "low",
+                                    "volume",
+                                ],
+                                data=[
+                                    [
+                                        df["candle_1d"].values[0],
+                                        df["market"].values[0],
+                                        candle_1d_seconds,
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        msg["size"],
+                                    ]
+                                ],
+                            )
+
+                    else:
+                        df_new_candle = pd.DataFrame(
+                            columns=[
+                                "date",
+                                "market",
+                                "granularity",
+                                "open",
+                                "high",
+                                "close",
+                                "low",
+                                "volume",
+                            ],
+                            data=[
+                                [
+                                    df["candle_1d"].values[0],
+                                    df["market"].values[0],
+                                    candle_1d_seconds,
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    msg["size"],
+                                ]
+                            ],
+                        )
+                    self.candles_1d = self.candles_1d.append(df_new_candle)
+                else:
+                    candle = self.candles_1d[
+                        (
+                            (self.candles_1d["date"] == df["candle_1d"].values[0])
+                            & (self.candles_1d["market"] == df["market"].values[0])
+                        )
+                    ]
+
+                    # set high on high
+                    if float(df["price"].values[0]) > float(candle.high.values[0]):
+                        self.candles_1d.at[candle.index.values[0], "high"] = df[
+                            "price"
+                        ].values[0]
+
+                    self.candles_1d.at[candle.index.values[0], "close"] = df[
+                        "price"
+                    ].values[0]
+
+                    # set low on low
+                    if float(df["price"].values[0]) < float(candle.low.values[0]):
+                        self.candles_1d.at[candle.index.values[0], "low"] = df[
+                            "price"
+                        ].values[0]
+
+                    # increment candle base volume
+                    self.candles_1d.at[candle.index.values[0], "volume"] = float(
                         candle["volume"].values[0]
                     ) + float(msg["size"])
 
@@ -1311,8 +1949,8 @@ class WebSocketClient(WebSocket):
             self.candles_5m.index.name = "ts"
 
             # keep last 300 candles per market
-            self.candles_1m.drop(self.candles_1m[self.candles_1m['market'] == df["market"].values[0]].head(len(self.candles_1m)-300).index, inplace=True)
-            self.candles_5m.drop(self.candles_5m[self.candles_5m['market'] == df["market"].values[0]].head(len(self.candles_5m)-300).index, inplace=True)
+            self.candles_1m = self.candles_1m.groupby("market").tail(300)
+            self.candles_5m = self.candles_5m.groupby("market").tail(300)
 
             # print (f'{msg["time"]} {msg["product_id"]} {msg["price"]}')
             # print(json.dumps(msg, indent=4, sort_keys=True))
