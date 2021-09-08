@@ -1175,7 +1175,7 @@ class WebSocketClient(WebSocket):
             self.candles_1m.index.name = 'ts'
 
             # keep last 300 candles
-            self.candles_1m = self.candles_1m.tail(200)
+            self.candles_1m = self.candles_1m.tail(300)
 
             # print (f'{msg["time"]} {msg["product_id"]} {msg["price"]}')
             # print(json.dumps(msg, indent=4, sort_keys=True))
