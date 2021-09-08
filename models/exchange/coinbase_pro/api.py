@@ -1210,8 +1210,8 @@ class WebSocketClient(WebSocket):
             self.candles_1m.set_index(tsidx, inplace=True)
             self.candles_1m.index.name = "ts"
 
-            # keep last 300 candles
-            self.candles_1m = self.candles_1m.tail(300)
+            # keep last 300 candles per market
+            self.candles_1m.drop(self.candles_1m[self.candles_1m['market'] == df["market"].values[0]].head(len(self.candles_1m)-300).index, inplace=True)
 
             # print (f'{msg["time"]} {msg["product_id"]} {msg["price"]}')
             # print(json.dumps(msg, indent=4, sort_keys=True))
