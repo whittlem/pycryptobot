@@ -19,7 +19,7 @@ try:
     websocket = CWebSocketClient(
         [
             "ADA-GBP",
-            #"BCH-GBP",
+            # "BCH-GBP",
             # "BTC-GBP",
             # "ETH-GBP",
             # "LTC-GBP",
