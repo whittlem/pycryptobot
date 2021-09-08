@@ -1,7 +1,12 @@
+import os
 import sys
 import time
 import signal
 from models.exchange.coinbase_pro import WebSocketClient as CWebSocketClient
+
+
+def cls():
+    os.system("cls" if os.name == "nt" else "clear")
 
 
 def handler(signum, frame):
@@ -15,12 +20,12 @@ try:
         [
             "ADA-GBP",
             #"BCH-GBP",
-            #"BTC-GBP",
-            #"ETH-GBP",
-            #"LTC-GBP",
-            #"MATIC-GBP",
-            #"SOL-GBP",
-            #"XLM-EUR",
+            # "BTC-GBP",
+            # "ETH-GBP",
+            # "LTC-GBP",
+            # "MATIC-GBP",
+            # "SOL-GBP",
+            # "XLM-EUR",
         ]
     )
     websocket.start()
@@ -31,8 +36,9 @@ try:
                 message_count != websocket.message_count
                 and websocket.tickers is not None
             ):
+                cls()
                 print("\nMessageCount =", "%i \n" % websocket.message_count)
-                # output here
+                print(websocket.candles_1m)
                 message_count = websocket.message_count
                 time.sleep(5)  # output every 5 seconds, websocket is realtime
 
