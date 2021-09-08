@@ -1061,6 +1061,7 @@ class WebSocketClient(WebSocket):
         self.markets = markets
         self.tickers = None
         self.candles_1m = None
+        self.candles_5m = None
 
     def on_open(self):
         self.message_count = 0
@@ -1184,6 +1185,97 @@ class WebSocketClient(WebSocket):
                         candle["volume"].values[0]
                     ) + float(msg["size"])
 
+            if self.candles_5m is None:
+                resp = PublicAPI().getHistoricalData(df["market"].values[0], 300)
+
+                if len(resp) > 0:
+                    self.candles_5m = resp
+                else:
+                    # create dataframe from websocket message
+                    self.candles_5m = pd.DataFrame(
+                        columns=[
+                            "date",
+                            "market",
+                            "granularity",
+                            "open",
+                            "high",
+                            "close",
+                            "low",
+                            "volume",
+                        ],
+                        data=[
+                            [
+                                df["candle_5m"].values[0],
+                                df["market"].values[0],
+                                300,
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                msg["size"],
+                            ]
+                        ],
+                    )
+            else:
+                candle_exists = (
+                    (self.candles_5m["date"] == df["candle_5m"].values[0])
+                    & (self.candles_5m["market"] == df["market"].values[0])
+                ).any()
+                if not candle_exists:
+                    df_new_candle = pd.DataFrame(
+                        columns=[
+                            "date",
+                            "market",
+                            "granularity",
+                            "open",
+                            "high",
+                            "close",
+                            "low",
+                            "volume",
+                        ],
+                        data=[
+                            [
+                                df["candle_5m"].values[0],
+                                df["market"].values[0],
+                                300,
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                msg["size"],
+                            ]
+                        ],
+                    )
+                    self.candles_5m = self.candles_5m.append(df_new_candle)
+                else:
+                    candle = self.candles_5m[
+                        (
+                            (self.candles_5m["date"] == df["candle_5m"].values[0])
+                            & (self.candles_5m["market"] == df["market"].values[0])
+                        )
+                    ]
+
+                    # set high on high
+                    if float(df["price"].values[0]) > float(candle.high.values[0]):
+                        self.candles_5m.at[candle.index.values[0], "high"] = df[
+                            "price"
+                        ].values[0]
+
+                    self.candles_5m.at[candle.index.values[0], "close"] = df[
+                        "price"
+                    ].values[0]
+
+                    # set low on low
+                    if float(df["price"].values[0]) < float(candle.low.values[0]):
+                        self.candles_5m.at[candle.index.values[0], "low"] = df[
+                            "price"
+                        ].values[0]
+
+                    # increment candle base volume
+                    self.candles_5m.at[candle.index.values[0], "volume"] = float(
+                        candle["volume"].values[0]
+                    ) + float(msg["size"])
+
             # insert first entry
             if self.tickers is None and len(df) > 0:
                 self.tickers = df
@@ -1210,8 +1302,17 @@ class WebSocketClient(WebSocket):
             self.candles_1m.set_index(tsidx, inplace=True)
             self.candles_1m.index.name = "ts"
 
+            tsidx = pd.DatetimeIndex(
+                pd.to_datetime(self.candles_5m["date"]).dt.strftime(
+                    "%Y-%m-%dT%H:%M:%S.%Z"
+                )
+            )
+            self.candles_5m.set_index(tsidx, inplace=True)
+            self.candles_5m.index.name = "ts"
+
             # keep last 300 candles per market
             self.candles_1m.drop(self.candles_1m[self.candles_1m['market'] == df["market"].values[0]].head(len(self.candles_1m)-300).index, inplace=True)
+            self.candles_5m.drop(self.candles_5m[self.candles_5m['market'] == df["market"].values[0]].head(len(self.candles_5m)-300).index, inplace=True)
 
             # print (f'{msg["time"]} {msg["product_id"]} {msg["price"]}')
             # print(json.dumps(msg, indent=4, sort_keys=True))

@@ -38,7 +38,7 @@ try:
             ):
                 cls()
                 print("\nMessageCount =", "%i \n" % websocket.message_count)
-                print(websocket.candles_1m)
+                print(websocket.candles_5m)
                 message_count = websocket.message_count
                 time.sleep(5)  # output every 5 seconds, websocket is realtime
 
