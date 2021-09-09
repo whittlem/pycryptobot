@@ -130,7 +130,7 @@ class Stats():
                 else:
                     d_gain = '| ' + '{:.2f}'.format(pair['gain']) + ' %'
                 d_gain = d_gain + ' ' * (len(headers[6]) - len(d_gain) -1) + '|'
-                Logger.info(d_num + d_market + d_date + d_buy_size + d_sell_size + d_delta + d_gain)
+                Logger.info(f'{d_num}{d_market}{d_date}{d_buy_size}{d_sell_size}{d_delta}{d_gain}')
             Logger.info(border)
             sys.exit()
 

@@ -10,7 +10,7 @@ def isMarketValid(market) -> bool:
 
 def parseMarket(market):
     if not isMarketValid(market):
-        raise ValueError('Dummy market invalid: ' + market)
+        raise ValueError(f'Dummy market invalid: {market}')
 
     base_currency, quote_currency = market.split('-', 2)
     return market, base_currency, quote_currency

@@ -376,7 +376,7 @@ class TradingAccount:
             raise Exception("depositBaseCurrency() is for dummy account usage only!")
 
         if base_currency <= 0:
-            raise ValueError("Invalid base currency: " + str(base_currency))
+            raise ValueError(f"Invalid base currency: {str(base_currency)}")
 
         self.balance.loc[
             self.balance["currency"] == self.app.getBaseCurrency(), "balance"
@@ -398,7 +398,7 @@ class TradingAccount:
             raise Exception("depositBaseCurrency() is for dummy account usage only!")
 
         if quote_currency <= 0:
-            raise ValueError("Invalid quote currency: " + str(quote_currency))
+            raise ValueError(f"Invalid quote currency: {str(quote_currency)}")
 
         self.balance.loc[
             self.balance["currency"] == self.app.getQuoteCurrency(), "balance"
@@ -420,7 +420,7 @@ class TradingAccount:
             raise Exception("depositBaseCurrency() is for dummy account usage only!")
 
         if base_currency <= 0:
-            raise ValueError("Invalid base currency: " + str(base_currency))
+            raise ValueError(f"Invalid base currency: {str(base_currency)}")
 
         if (
             float(
@@ -453,7 +453,7 @@ class TradingAccount:
             raise Exception("depositBaseCurrency() is for dummy account usage only!")
 
         if quote_currency <= 0:
-            raise ValueError("Invalid quote currency: " + str(quote_currency))
+            raise ValueError(f"Invalid quote currency: {str(quote_currency)}")
 
         if (
             float(
@@ -492,14 +492,14 @@ class TradingAccount:
             raise Exception("depositBaseCurrency() is for dummy account usage only!")
 
         if price <= 0:
-            raise ValueError("Invalid price: " + str(price))
+            raise ValueError(f"Invalid price: {str(price)}")
 
         if market == "":
             market = self.app.getMarket()
 
         p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
         if not p.match(market):
-            raise ValueError("Invalid market: " + market)
+            raise ValueError(f"Invalid market: {market}")
 
         market_base_currency, market_quote_currency = market.split("-")
 
@@ -573,14 +573,14 @@ class TradingAccount:
             raise Exception("depositBaseCurrency() is for dummy account usage only!")
 
         if price <= 0:
-            raise ValueError("Invalid price: " + str(price))
+            raise ValueError(f"Invalid price: {str(price)}")
 
         if market == "":
             market = self.app.getMarket()
 
         p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
         if not p.match(market):
-            raise ValueError("Invalid market: " + market)
+            raise ValueError(f"Invalid market: {market}")
 
         market_base_currency, market_quote_currency = market.split("-")
 
@@ -780,4 +780,4 @@ class TradingAccount:
         try:
             df_sincebot.to_csv(save_file, index=False)
         except OSError:
-            raise SystemExit("Unable to save: ", save_file)
+            raise SystemExit(f"Unable to save: {save_file}")

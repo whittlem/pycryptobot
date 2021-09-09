@@ -11,7 +11,7 @@ class Github():
         self.die_on_api_error = False
 
     def getBranchCommits(self, branch=''):
-        return self.API('GET', '/repos/' + self.user + '/' + self.repo + '/commits/' + branch)
+        return self.API('GET', f'/repos/{self.user}/{self.repo}/commits/{branch}')
 
     def getBranchCommitStats(self, branch=''):
         return self.getBranchCommits(branch)['stats']
@@ -23,13 +23,13 @@ class Github():
             return -1
 
     def getCommits(self):
-        return self.API('GET', '/repos/' + self.user + '/' + self.repo + '/commits')
+        return self.API('GET', f'/repos/{self.user}/{self.repo}/commits')
 
     def getRepo(self):
-        return self.API('GET', '/repos/' + self.user + '/' + self.repo)
+        return self.API('GET', f'/repos/{self.user}/{self.repo}')
 
     def getRepoReleases(self):
-        return self.API('GET', '/repos/' + self.user + '/' + self.repo + '/releases')
+        return self.API('GET', f'/repos/{self.user}/{self.repo}/releases')
 
     def getLatestRelease(self):
         resp = self.getRepoReleases()
@@ -48,10 +48,10 @@ class Github():
 
             return resp[0]['name']
         except:
-            return ''             
+            return ''
 
     def getRepoTags(self):
-        return self.API('GET', '/repos/' + self.user + '/' + self.repo + '/tags')
+        return self.API('GET', f'/repos/{self.user}/{self.repo}/tags')
 
     def getLatestTag(self):
         resp = self.getRepoTags()
@@ -79,7 +79,7 @@ class Github():
 
             if resp.status_code != 200:
                 if self.die_on_api_error:
-                    raise Exception(method.upper() + 'GET (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
+                    raise Exception(f"{method.upper()}GET ({resp.status_code}) {self.api_url}{uri} - {resp.json()['message']}")
                 else:
                     #print('error:', method.upper() + ' (' + '{}'.format(resp.status_code) + ') ' + self.api_url + uri + ' - ' + '{}'.format(resp.json()['message']))
                     return []
@@ -97,9 +97,9 @@ class Github():
                     return None
             else:
                 if self.die_on_api_error:
-                    raise SystemExit('ConnectionError: ' + self.api_url)
+                    raise SystemExit(f'ConnectionError: {self.api_url}')
                 else:
-                    print('ConnectionError: ' + self.api_url)
+                    print(f'ConnectionError: {self.api_url}')
                     return None
 
         except requests.exceptions.HTTPError as err:
@@ -111,9 +111,9 @@ class Github():
                     return None
             else:
                 if self.die_on_api_error:
-                    raise SystemExit('HTTPError: ' + self.api_url)
+                    raise SystemExit(f'HTTPError: {self.api_url}')
                 else:
-                    print('HTTPError: ' + self.api_url)
+                    print(f'HTTPError: {self.api_url}')
                     return None
 
         except requests.Timeout as err:
@@ -125,7 +125,7 @@ class Github():
                     return None
             else:
                 if self.die_on_api_error:
-                    raise SystemExit('Timeout: ' + self.api_url)
+                    raise SystemExit(f'Timeout: { self.api_url}')
                 else:
-                    print('Timeout: ' + self.api_url)
+                    print(f'Timeout: {self.api_url}')
                     return None
