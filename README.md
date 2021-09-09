@@ -148,7 +148,8 @@ To run using the config.json in template folder,
 
 By default, docker-compose will use the config inside `./market/template`. We provide this as a template for any market config.
 
-For each market you want to trade, create a copy of this folder under market
+For each market you want to trade, create a copy of this folder under market. 
+Also create either a coinbase.key or binance.key file to each folder depending which trading platform is being used.
 For example, if you are trading `BTCEUR` and `ETHEUR` your market folder should look like this:
 
     ├── market
@@ -171,6 +172,7 @@ modify docker-compose.yaml
           context: .
         container_name: btceur
         volumes:
+          - ./market/BTCEUR/coinbase.key:/app/coinbase.key.json
           - ./market/BTCEUR/config.json:/app/config.json
           - ./market/BTCEUR/pycryptobot.log:/app/pycryptobot.log
           - ./market/BTCEUR/graphs:/app/graphs
@@ -186,6 +188,7 @@ modify docker-compose.yaml
           context: .
         container_name: etheur
         volumes:
+          - ./market/ETHEUR/coinbase.key:/app/coinbase.key.json
           - ./market/ETHEUR/config.json:/app/config.json
           - ./market/ETHEUR/pycryptobot.log:/app/pycryptobot.log
           - ./market/ETHEUR/graphs:/app/graphs
@@ -418,7 +421,7 @@ Coinbase Pro basic (using smart switching)
 
     {
         "api_url" : "https://api.pro.coinbase.com",
-        "api_key_file" : "coinbase.key"
+        "api_key_file" : "coinbase.key",
         "config" : {
             "cryptoMarket" : "BTC",
             "fiatMarket" : "GBP",
@@ -431,7 +434,7 @@ Coinbase Pro basic (specific granularity, no smart switching)
 
     {
         "api_url" : "https://api.pro.coinbase.com",
-        "api_key_file" : "coinbase.key"
+        "api_key_file" : "coinbase.key",
         "config" : {
             "cryptoMarket" : "BCH",
             "fiatMarket" : "GBP",
@@ -446,7 +449,7 @@ Coinbase Pro only (new format)
     {
         "coinbasepro" : {
             "api_url" : "https://api.pro.coinbase.com",
-            "api_key_file" : "coinbase.key"
+            "api_key_file" : "coinbase.key",
             "config" : {
                 "base_currency" : "BTC",
                 "quote_currency" : "GBP",
@@ -462,7 +465,7 @@ Binance only (new format)
     {
         "binance" : {
             "api_url" : "https://api.binance.com",
-            "api_key_file" : "binance.key"
+            "api_key_file" : "binance.key",
             "config" : {
                 "base_currency" : "BTC",
                 "quote_currency" : "ZAR",
@@ -478,7 +481,7 @@ Coinbase Pro and Binance (new format)
     {
         "binance" : {
             "api_url" : "https://api.binance.com",
-            "api_key_file" : "binance.key"
+            "api_key_file" : "binance.key",
             "config" : {
                 "base_currency" : "BTC",
                 "quote_currency" : "ZAR",
@@ -489,7 +492,7 @@ Coinbase Pro and Binance (new format)
         },
         "coinbasepro" : {
             "api_url" : "https://api.pro.coinbase.com",
-            "api_key_file" : "coinbase.key"
+            "api_key_file" : "coinbase.key",
             "config" : {
                 "base_currency" : "BTC",
                 "quote_currency" : "GBP",
