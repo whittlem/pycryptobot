@@ -148,7 +148,8 @@ To run using the config.json in template folder,
 
 By default, docker-compose will use the config inside `./market/template`. We provide this as a template for any market config.
 
-For each market you want to trade, create a copy of this folder under market
+For each market you want to trade, create a copy of this folder under market. 
+Also create either a coinbase.key or binance.key file to each folder depending which trading platform is being used.
 For example, if you are trading `BTCEUR` and `ETHEUR` your market folder should look like this:
 
     ├── market
@@ -171,6 +172,7 @@ modify docker-compose.yaml
           context: .
         container_name: btceur
         volumes:
+          - ./market/BTCEUR/coinbase.key:/app/coinbase.key.json
           - ./market/BTCEUR/config.json:/app/config.json
           - ./market/BTCEUR/pycryptobot.log:/app/pycryptobot.log
           - ./market/BTCEUR/graphs:/app/graphs
@@ -186,6 +188,7 @@ modify docker-compose.yaml
           context: .
         container_name: etheur
         volumes:
+          - ./market/ETHEUR/coinbase.key:/app/coinbase.key.json
           - ./market/ETHEUR/config.json:/app/config.json
           - ./market/ETHEUR/pycryptobot.log:/app/pycryptobot.log
           - ./market/ETHEUR/graphs:/app/graphs
