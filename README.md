@@ -412,7 +412,7 @@ Coinbase Pro basic (using smart switching)
 
     {
         "api_url" : "https://api.pro.coinbase.com",
-        "api_key_file" : "coinbase.key"
+        "api_key_file" : "coinbase.key",
         "config" : {
             "cryptoMarket" : "BTC",
             "fiatMarket" : "GBP",
@@ -425,7 +425,7 @@ Coinbase Pro basic (specific granularity, no smart switching)
 
     {
         "api_url" : "https://api.pro.coinbase.com",
-        "api_key_file" : "coinbase.key"
+        "api_key_file" : "coinbase.key",
         "config" : {
             "cryptoMarket" : "BCH",
             "fiatMarket" : "GBP",
@@ -440,7 +440,7 @@ Coinbase Pro only (new format)
     {
         "coinbasepro" : {
             "api_url" : "https://api.pro.coinbase.com",
-            "api_key_file" : "coinbase.key"
+            "api_key_file" : "coinbase.key",
             "config" : {
                 "base_currency" : "BTC",
                 "quote_currency" : "GBP",
@@ -456,7 +456,7 @@ Binance only (new format)
     {
         "binance" : {
             "api_url" : "https://api.binance.com",
-            "api_key_file" : "binance.key"
+            "api_key_file" : "binance.key",
             "config" : {
                 "base_currency" : "BTC",
                 "quote_currency" : "ZAR",
@@ -472,7 +472,7 @@ Coinbase Pro and Binance (new format)
     {
         "binance" : {
             "api_url" : "https://api.binance.com",
-            "api_key_file" : "binance.key"
+            "api_key_file" : "binance.key",
             "config" : {
                 "base_currency" : "BTC",
                 "quote_currency" : "ZAR",
@@ -483,7 +483,7 @@ Coinbase Pro and Binance (new format)
         },
         "coinbasepro" : {
             "api_url" : "https://api.pro.coinbase.com",
-            "api_key_file" : "coinbase.key"
+            "api_key_file" : "coinbase.key",
             "config" : {
                 "base_currency" : "BTC",
                 "quote_currency" : "GBP",
