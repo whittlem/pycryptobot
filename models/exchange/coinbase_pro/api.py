@@ -74,7 +74,7 @@ class AuthAPI(AuthAPIBase):
             api_url = api_url + "/"
 
         # validates the api key is syntactically correct
-        p = re.compile(r"^[a-f0-9]{32,32}$")
+        p = re.compile(r"^[a-f0-9]{32}$")
         if not p.match(api_key):
             self.handle_init_error("Coinbase Pro API key is invalid")
 
@@ -83,8 +83,8 @@ class AuthAPI(AuthAPIBase):
         if not p.match(api_secret):
             self.handle_init_error("Coinbase Pro API secret is invalid")
 
-        # validates the api passphase is syntactically correct
-        p = re.compile(r"^[a-z0-9]{10,12}$")
+        # validates the api passphrase is syntactically correct
+        p = re.compile(r"^[A-z0-9#$%=@!{},`~&*()<>?.:;_|^/+\[\]]{8,32}$")
         if not p.match(api_passphrase):
             self.handle_init_error("Coinbase Pro API passphrase is invalid")
 
