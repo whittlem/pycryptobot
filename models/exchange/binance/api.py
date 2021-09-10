@@ -1129,15 +1129,22 @@ class WebSocket(AuthAPIBase):
         elif not isinstance(self.markets, list):
             self.markets = [self.markets]
 
-        #self.ws = create_connection('wss://stream.binance.com:9443/ws/btcusdt@depth')
+        params = []
+        for market in self.markets:
+            params.append(f"{market.lower()}@miniTicker")
+            params.append(f"{market.lower()}@kline_1m")
+            params.append(f"{market.lower()}@kline_5m")
+            params.append(f"{market.lower()}@kline_15m")
+            params.append(f"{market.lower()}@kline_1h")
+            params.append(f"{market.lower()}@kline_6h")
+            params.append(f"{market.lower()}@kline_1d")
+
         self.ws = create_connection('wss://stream.binance.com:9443/ws')
-        #self.ws = create_connection(self._ws_url)
         self.ws.send(
             json.dumps(
                 {
                     "method": "SUBSCRIBE",
-                    #"params": ["btcusdt@ticker"],
-                    "params": ["btcgbp@kline_1m"],
+                    "params": params,
                     "id": 1,
                 }
             )
@@ -1193,7 +1200,7 @@ class WebSocket(AuthAPIBase):
         print("{} - data: {}".format(e, data))
 
 
-class WebSocketClient(WebSocket):
+class WebSocketClient(WebSocket, AuthAPIBase):
     def __init__(
         self,
         markets: list = [],
@@ -1235,11 +1242,64 @@ class WebSocketClient(WebSocket):
 
         self._ws_url = ws_url
         self.markets = markets
+        self.tickers = None
+        self.candles_1m = None
+        self.candles_5m = None
+        self.candles_15m = None
+        self.candles_1h = None
+        self.candles_6h = None
+        self.candles_1d = None
 
     def on_open(self):
         self.message_count = 0
 
     def on_message(self, msg):
+        if 'e' in msg:
+            df = None
+            if msg["e"] == "24hrMiniTicker" and "E" in msg and "s" in msg and "c" in msg:
+                # create dataframe from websocket message
+                df = pd.DataFrame(
+                    columns=["date", "market", "price"],
+                    data=[
+                        [
+                            self.convert_time(msg["E"]),
+                            msg["s"],
+                            msg["c"],
+                        ]
+                    ],
+                )
+
+                # set column types
+                df["date"] = df["date"].astype("datetime64[ns]")
+                df["price"] = df["price"].astype("float64")
+
+                # form candles
+                df["candle_1m"] = df["date"].dt.floor(freq="1T")
+                df["candle_5m"] = df["date"].dt.floor(freq="5T")
+                df["candle_15m"] = df["date"].dt.floor(freq="15T")
+                df["candle_1h"] = df["date"].dt.floor(freq="1H")
+                df["candle_6h"] = df["date"].dt.floor(freq="6H")
+                df["candle_1d"] = df["date"].dt.floor(freq="1D")
+
+            if df is not None:
+                # insert first entry
+                if self.tickers is None and len(df) > 0:
+                    self.tickers = df
+                # append future entries without duplicates
+                elif self.tickers is not None and len(df) > 0:
+                    self.tickers = (
+                        pd.concat([self.tickers, df])
+                        .drop_duplicates(subset="market", keep="last")
+                        .reset_index(drop=True)
+                    )
+
+                # convert dataframes to a time series
+                tsidx = pd.DatetimeIndex(
+                    pd.to_datetime(self.tickers["date"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z")
+                )
+                self.tickers.set_index(tsidx, inplace=True)
+                self.tickers.index.name = "ts"
+
         # print (f'{msg["time"]} {msg["product_id"]} {msg["price"]}')
-        print(json.dumps(msg, indent=4, sort_keys=True))
+        # print(json.dumps(msg, indent=4, sort_keys=True))
         self.message_count += 1

@@ -19,13 +19,13 @@ try:
     websocket = CWebSocketClient(
         [
             "ADA-GBP",
-            "BCH-GBP",
-            "BTC-GBP",
-            "ETH-GBP",
-            "LTC-GBP",
-            "MATIC-GBP",
-            "SOL-GBP",
-            "XLM-EUR",
+            #"BCH-GBP",
+            #"BTC-GBP",
+            #"ETH-GBP",
+            #"LTC-GBP",
+            #"MATIC-GBP",
+            #"SOL-GBP",
+            #"XLM-EUR",
         ]
     )
     websocket.start()
@@ -40,7 +40,7 @@ try:
                 print("\nMessageCount =", "%i \n" % websocket.message_count)
                 print(websocket.tickers)
                 message_count = websocket.message_count
-                time.sleep(5)  # output every 5 seconds, websocket is realtime
+                time.sleep(5) # output every 5 seconds, websocket is realtime
 
 # catches a keyboard break of app, exits gracefully
 except KeyboardInterrupt:

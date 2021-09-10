@@ -18,7 +18,10 @@ def signal_handler(signum, frame):
 try:
     websocket = BWebSocketClient(
         [
-            "BTCGBP"
+            "BTCUSDT",
+            #"BTCEUR",
+            #"BTCGBP",
+            #"BTCZAR",
         ]
     )
     websocket.start()
@@ -27,17 +30,17 @@ try:
         if websocket:
             if (
                 message_count != websocket.message_count
-                #and websocket.tickers is not None
+                and websocket.tickers is not None
             ):
                 cls()
                 print("\nMessageCount =", "%i \n" % websocket.message_count)
-                #print(websocket.tickers)
+                print(websocket.tickers)
                 message_count = websocket.message_count
-                time.sleep(5)  # output every 5 seconds, websocket is realtime
+                time.sleep(5) # output every 5 seconds, websocket is realtime
 
 # catches a keyboard break of app, exits gracefully
 except KeyboardInterrupt:
-    #signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
     print("\nPlease wait while threads complete gracefully.")
     websocket.close()
     sys.exit(0)
