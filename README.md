@@ -148,7 +148,7 @@ To run using the config.json in template folder,
 
 By default, docker-compose will use the config inside `./market/template`. We provide this as a template for any market config.
 
-For each market you want to trade, create a copy of this folder under market. 
+For each market you want to trade, create a copy of this folder under market.
 Also create either a coinbase.key or binance.key file to each folder depending which trading platform is being used.
 For example, if you are trading `BTCEUR` and `ETHEUR` your market folder should look like this:
 
@@ -331,7 +331,7 @@ The bot will only trade in a bull market to minimise losses! (you can disable th
 
 Special buy cases:
 
-* "buynearhighpcnt" to specify the percentage from high that the bot should not buy if "disablebuynearhigh" is not specified.
+* "nobuynearhighpcnt" to specify the percentage from high that the bot should not buy if "disablebuynearhigh" is not specified.
 
 Sell signal:
 
@@ -394,7 +394,7 @@ In order to trade live you need to authenticate with the Coinbase Pro or Binance
 
 By default, when running a simulation, if there are any orders,  a file called `trades.csv` with all BUYS and SELLS will be created.
 
-With `--tradesfile` you can control the name and where file is stored, eg `--tradesfile BTSUDC-trades.csv`  
+With `--tradesfile` you can control the name and where file is stored, eg `--tradesfile BTSUDC-trades.csv`
 
 ## API key / secret / password storage
 

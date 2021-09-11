@@ -15,7 +15,7 @@ Upgrade library dependencies (if required):
 -- fixed williams %r indicator and added it to the websvc dashboard
 -- added adx14 indicator and added it to the websvc dashboard
 -- fix for sim index "IndexError('index 0 is out of bounds for axis 0 with size 0')"
--- fix for DF High not tracking the sim date in use, this stopped buynearhighpcnt working fully
+-- fix for DF High not tracking the sim date in use, this stopped nobuynearhighpcnt working fully
 -- moved trades csv file to CSV folder
 
 ## [3.5.0] - 2021-09-05
@@ -48,7 +48,7 @@ Upgrade library dependencies (if required):
 
 ### Changed
 
--- added "buynearhighpcnt" to specify the percentage from high that the bot should not buy if "disablebuynearhigh" is not specified.
+-- added "nobuynearhighpcnt" to specify the percentage from high that the bot should not buy if "disablebuynearhigh" is not specified.
 -- added a catch and display of exception message for getTime()
 
 ## [3.2.15] - 2021-08-24

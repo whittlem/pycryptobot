@@ -48,7 +48,7 @@ class Strategy:
             and self.app.disableBuyNearHigh() is True
             and (
                 price
-                > (self._df["close"].max() * (1 - self.app.buyNearHighPcnt() / 100))
+                > (self._df["close"].max() * (1 - self.app.noBuyNearHighPcnt() / 100))
             )
         ):
             log_text = (
@@ -60,7 +60,7 @@ class Strategy:
                 + " | Ignoring Buy Signal (price "
                 + str(price)
                 + " within "
-                + str(self.app.buyNearHighPcnt())
+                + str(self.app.noBuyNearHighPcnt())
                 + "% of high "
                 + str(self._df["close"].max())
                 + ")"

@@ -61,7 +61,7 @@ class BotConfig:
         self.statgroup = None
         self.statstartdate = None
         self.statdetail = False
-        self.buynearhighpcnt = 3
+        self.nobuynearhighpcnt = 3
 
         self.disablebullonly = False
         self.disablebuynearhigh = False
@@ -386,7 +386,7 @@ class BotConfig:
         )
         parser.add_argument("--buymaxsize", type=float, help="maximum size on buy")
         parser.add_argument(
-            "--buynearhighpcnt",
+            "--nobuynearhighpcnt",
             type=float,
             help="optionally set the percent of the high for buying near high if enabled",
         )
