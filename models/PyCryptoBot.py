@@ -189,7 +189,7 @@ class PyCryptoBot(BotConfig):
         return datetime.strptime(new_date_str, "%Y-%m-%d %H:%M:%S")
 
     def getHistoricalData(
-        self, market, granularity: int, iso8601start="", iso8601end=""
+        self, market, granularity: int, websocket, iso8601start="", iso8601end=""
     ):
         if self.exchange == "binance":
             api = BPublicAPI(api_url=self.getAPIURL())
@@ -198,30 +198,35 @@ class PyCryptoBot(BotConfig):
                 return api.getHistoricalData(
                     market,
                     to_binance_granularity(granularity),
+                    websocket,
                     iso8601start,
                     iso8601end,
                 )
             else:
                 return api.getHistoricalData(
-                    market, to_binance_granularity(granularity)
+                    market, to_binance_granularity(granularity), websocket
                 )
         else:  # returns data from coinbase if not specified
             api = CBPublicAPI()
 
             if iso8601start != "" and iso8601end == "":
                 return api.getHistoricalData(
-                    market, to_coinbase_pro_granularity(granularity), iso8601start
+                    market,
+                    to_coinbase_pro_granularity(granularity),
+                    websocket,
+                    iso8601start,
                 )
             elif iso8601start != "" and iso8601end != "":
                 return api.getHistoricalData(
                     market,
                     to_coinbase_pro_granularity(granularity),
+                    websocket,
                     iso8601start,
                     iso8601end,
                 )
             else:
                 return api.getHistoricalData(
-                    market, to_coinbase_pro_granularity(granularity)
+                    market, to_coinbase_pro_granularity(granularity), websocket
                 )
 
     def getSmartSwitchDataFrame(
@@ -402,7 +407,7 @@ class PyCryptoBot(BotConfig):
     def getHistoricalDataChained(
         self, market, granularity: int, max_interations: int = 1
     ) -> pd.DataFrame:
-        df1 = self.getHistoricalData(market, granularity)
+        df1 = self.getHistoricalData(market, granularity, None)
 
         if max_interations == 1:
             return df1
@@ -416,7 +421,7 @@ class PyCryptoBot(BotConfig):
         result_df = pd.DataFrame()
         while iterations < (max_interations - 1):
             start_date, end_date = getPreviousDateRange(df1)
-            df2 = self.getHistoricalData(market, granularity, start_date, end_date)
+            df2 = self.getHistoricalData(market, granularity, None, start_date, end_date)
             result_df = pd.concat([df2, df1]).drop_duplicates()
             df1 = result_df
             iterations = iterations + 1
@@ -569,13 +574,13 @@ class PyCryptoBot(BotConfig):
         except Exception:
             return False
 
-    def getTicker(self, market):
+    def getTicker(self, market, websocket):
         if self.exchange == "binance":
             api = BPublicAPI(api_url=self.getAPIURL())
-            return api.getTicker(market)
+            return api.getTicker(market, websocket)
         else:  # returns data from coinbase if not specified
             api = CBPublicAPI()
-            return api.getTicker(market)
+            return api.getTicker(market, websocket)
 
     def getTime(self):
         if self.exchange == "coinbasepro":
@@ -680,6 +685,9 @@ class PyCryptoBot(BotConfig):
 
     def enableML(self) -> bool:
         return self.enableml
+
+    def enableWebsocket(self) -> bool:
+        return self.websocket
 
     def setGranularity(self, granularity: int):
         if granularity in [60, 300, 900, 3600, 21600, 86400]:

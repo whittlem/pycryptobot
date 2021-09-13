@@ -384,6 +384,13 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("enableml must be of type int")
 
+    if "websocket" in config:
+        if isinstance(config["websocket"], int):
+            if bool(config["websocket"]):
+                app.websocket = True
+        else:
+            raise TypeError("websocket must be of type int")
+
     # backward compatibility
     if "nosellatloss" in config:
         if isinstance(config["nosellatloss"], int):

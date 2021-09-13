@@ -683,6 +683,7 @@ class PublicAPI(AuthAPIBase):
         self,
         market: str = DEFAULT_MARKET,
         granularity: int = MAX_GRANULARITY,
+        websocket=None,
         iso8601start: str = "",
         iso8601end: str = "",
     ) -> pd.DataFrame:
@@ -765,8 +766,23 @@ class PublicAPI(AuthAPIBase):
 
         return df
 
-    def getTicker(self, market: str = DEFAULT_MARKET) -> tuple:
+    def getTicker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
         """Retrives the market ticker"""
+
+        if websocket is not None and websocket.tickers is not None:
+            try:
+                row = websocket.tickers.loc[websocket.tickers["market"] == market]
+                return (
+                    datetime.strptime(
+                        re.sub(r".0*$", "", str(row["date"].values[0])),
+                        "%Y-%m-%dT%H:%M:%S",
+                    ).strftime("%Y-%m-%d %H:%M:%S"),
+                    float(row["price"].values[0]),
+                )
+
+            except:
+                now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+                return (now, 0.0)
 
         # validates the market is syntactically correct
         if not self._isMarketValid(market):
@@ -1932,6 +1948,38 @@ class WebSocketClient(WebSocket):
             )
             self.candles_5m.set_index(tsidx, inplace=True)
             self.candles_5m.index.name = "ts"
+
+            tsidx = pd.DatetimeIndex(
+                pd.to_datetime(self.candles_15m["date"]).dt.strftime(
+                    "%Y-%m-%dT%H:%M:%S.%Z"
+                )
+            )
+            self.candles_15m.set_index(tsidx, inplace=True)
+            self.candles_15m.index.name = "ts"
+
+            tsidx = pd.DatetimeIndex(
+                pd.to_datetime(self.candles_1h["date"]).dt.strftime(
+                    "%Y-%m-%dT%H:%M:%S.%Z"
+                )
+            )
+            self.candles_1h.set_index(tsidx, inplace=True)
+            self.candles_1h.index.name = "ts"
+
+            tsidx = pd.DatetimeIndex(
+                pd.to_datetime(self.candles_6h["date"]).dt.strftime(
+                    "%Y-%m-%dT%H:%M:%S.%Z"
+                )
+            )
+            self.candles_6h.set_index(tsidx, inplace=True)
+            self.candles_6h.index.name = "ts"
+
+            tsidx = pd.DatetimeIndex(
+                pd.to_datetime(self.candles_1d["date"]).dt.strftime(
+                    "%Y-%m-%dT%H:%M:%S.%Z"
+                )
+            )
+            self.candles_1d.set_index(tsidx, inplace=True)
+            self.candles_1d.index.name = "ts"
 
             # keep last 300 candles per market
             self.candles_1m = self.candles_1m.groupby("market").tail(300)

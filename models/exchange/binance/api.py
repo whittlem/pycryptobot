@@ -574,7 +574,7 @@ class AuthAPI(AuthAPIBase):
         except:
             return DEFAULT_TRADE_FEE_RATE
 
-    def getTicker(self, market: str = DEFAULT_MARKET) -> tuple:
+    def getTicker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
         """Retrieves the market ticker"""
 
         # validates the market is syntactically correct
@@ -850,7 +850,7 @@ class PublicAPI(AuthAPIBase):
         except:
             return pd.DataFrame()
 
-    def getTicker(self, market: str = DEFAULT_MARKET) -> tuple:
+    def getTicker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
         """Retrives the market ticker"""
 
         # validates the market is syntactically correct
@@ -871,6 +871,7 @@ class PublicAPI(AuthAPIBase):
         self,
         market: str = DEFAULT_MARKET,
         granularity: str = DEFAULT_GRANULARITY,
+        websocket=None,
         iso8601start: str = "",
         iso8601end: str = "",
     ) -> pd.DataFrame:

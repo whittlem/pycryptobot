@@ -77,6 +77,7 @@ class BotConfig:
         self.disablelog = False
         self.disabletracker = False
         self.enableml = False
+        self.websocket = False
 
         self.filelog = True
         self.logfile = (
@@ -481,6 +482,9 @@ class BotConfig:
         )
         parser.add_argument(
             "--enableml", action="store_true", help="Enable Machine Learning E.g. seasonal ARIMA model for predictions"
+        )
+        parser.add_argument(
+            "--websocket", action="store_true", help="Enable websocket"
         )
 
         # pylint: disable=unused-variable
