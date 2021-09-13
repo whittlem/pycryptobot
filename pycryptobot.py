@@ -256,7 +256,7 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
         two_black_gapping = bool(df_last['two_black_gapping'].values[0])
 
         if app.isSimulation():
-            # Reset the Strategy so that the last record is the current sim date 
+            # Reset the Strategy so that the last record is the current sim date
             # To allow for calculations to be done on the sim date being processed
             sdf = df[df["date"] <= current_sim_date].tail(300)
             strategy = Strategy(app, state, sdf, sdf.index.get_loc(str(current_sim_date) ) + 1)
@@ -529,13 +529,14 @@ def executeJob(sc=None, app: PyCryptoBot=None, state: AppState=None, trading_dat
 
                 Logger.info(output_text)
 
-                # Seasonal Autoregressive Integrated Moving Average (ARIMA) model (ML prediction for 3 intervals from now)
-                if not app.isSimulation():
-                    try:
-                        prediction = technical_analysis.seasonalARIMAModelPrediction(int(app.getGranularity() / 60) * 3) # 3 intervals from now
-                        Logger.info(f'Seasonal ARIMA model predicts the closing price will be {str(round(prediction[1], 2))} at {prediction[0]} (delta: {round(prediction[1] - price, 2)})')
-                    except:
-                        pass
+                if app.enableML():
+                    # Seasonal Autoregressive Integrated Moving Average (ARIMA) model (ML prediction for 3 intervals from now)
+                    if not app.isSimulation():
+                        try:
+                            prediction = technical_analysis.seasonalARIMAModelPrediction(int(app.getGranularity() / 60) * 3) # 3 intervals from now
+                            Logger.info(f'Seasonal ARIMA model predicts the closing price will be {str(round(prediction[1], 2))} at {prediction[0]} (delta: {round(prediction[1] - price, 2)})')
+                        except:
+                            pass
 
                 if state.last_action == 'BUY':
                     # display support, resistance and fibonacci levels

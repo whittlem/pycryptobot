@@ -76,6 +76,7 @@ class BotConfig:
         self.disabletelegram = False
         self.disablelog = False
         self.disabletracker = False
+        self.enableml = False
 
         self.filelog = True
         self.logfile = (
@@ -477,6 +478,9 @@ class BotConfig:
             "--recvWindow",
             type=int,
             help="binance exchange api recvWindow, integer between 5000 and 60000",
+        )
+        parser.add_argument(
+            "--enableml", action="store_true", help="Enable Machine Learning E.g. seasonal ARIMA model for predictions"
         )
 
         # pylint: disable=unused-variable

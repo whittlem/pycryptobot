@@ -678,6 +678,9 @@ class PyCryptoBot(BotConfig):
     def disableTracker(self) -> bool:
         return self.disabletracker
 
+    def enableML(self) -> bool:
+        return self.enableml
+
     def setGranularity(self, granularity: int):
         if granularity in [60, 300, 900, 3600, 21600, 86400]:
             self.granularity = granularity

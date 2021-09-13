@@ -377,6 +377,13 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("disabletracker must be of type int")
 
+    if "enableml" in config:
+        if isinstance(config["enableml"], int):
+            if bool(config["enableml"]):
+                app.enableml = True
+        else:
+            raise TypeError("enableml must be of type int")
+
     # backward compatibility
     if "nosellatloss" in config:
         if isinstance(config["nosellatloss"], int):

@@ -8,6 +8,13 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [3.6.1] - 2021-09-13
+
+### Added
+
+-- Websockets POC scripts for Coinbase Pro and Binance
+-- Seasonal ARIMA model predictions are not optional --enableml
+
 ## [3.6.0] - 2021-09-06
 
 ### Added

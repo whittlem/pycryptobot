@@ -1576,37 +1576,49 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                         # keep last 300 candles per market
                         self.candles_1m = self.candles_1m.groupby("market").tail(300)
                         # sort columns by date
-                        self.candles_1m = self.candles_1m.copy().sort_values(by=['date'])
+                        self.candles_1m = self.candles_1m.copy().sort_values(
+                            by=["date"]
+                        )
 
                     if self.candles_5m is not None:
                         # keep last 300 candles per market
                         self.candles_5m = self.candles_5m.groupby("market").tail(300)
                         # sort columns by date
-                        self.candles_5m = self.candles_5m.copy().sort_values(by=['date'])
+                        self.candles_5m = self.candles_5m.copy().sort_values(
+                            by=["date"]
+                        )
 
                     if self.candles_15m is not None:
                         # keep last 300 candles per market
                         self.candles_15m = self.candles_15m.groupby("market").tail(300)
                         # sort columns by date
-                        self.candles_15m = self.candles_15m.copy().sort_values(by=['date'])
+                        self.candles_15m = self.candles_15m.copy().sort_values(
+                            by=["date"]
+                        )
 
                     if self.candles_1h is not None:
                         # keep last 300 candles per market
                         self.candles_1h = self.candles_1h.groupby("market").tail(300)
                         # sort columns by date
-                        self.candles_1h = self.candles_1h.copy().sort_values(by=['date'])
+                        self.candles_1h = self.candles_1h.copy().sort_values(
+                            by=["date"]
+                        )
 
                     if self.candles_6h is not None:
                         # keep last 300 candles per market
                         self.candles_6h = self.candles_6h.groupby("market").tail(300)
                         # sort columns by date
-                        self.candles_6h = self.candles_6h.copy().sort_values(by=['date'])
+                        self.candles_6h = self.candles_6h.copy().sort_values(
+                            by=["date"]
+                        )
 
                     if self.candles_1d is not None:
                         # keep last 300 candles per market
                         self.candles_1d = self.candles_1d.groupby("market").tail(300)
                         # sort columns by date
-                        self.candles_1d = self.candles_1d.copy().sort_values(by=['date'])
+                        self.candles_1d = self.candles_1d.copy().sort_values(
+                            by=["date"]
+                        )
 
         # print (f'{msg["time"]} {msg["product_id"]} {msg["price"]}')
         # print(json.dumps(msg, indent=4, sort_keys=True))
