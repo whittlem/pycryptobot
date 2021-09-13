@@ -625,9 +625,13 @@ class AuthAPI(AuthAPIBase):
                     # disable traceback
                     sys.tracebacklimit = 0
 
-                    raise Exception(f"{method.upper()} ({resp.status_code}) {self._api_url}{uri} - {resp_message}")
+                    raise Exception(
+                        f"{method.upper()} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
+                    )
                 else:
-                    Logger.error(f"error: {method.upper()} ({resp.status_code}) {self._api_url}{uri} - {resp_message}")
+                    Logger.error(
+                        f"error: {method.upper()} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
+                    )
                     return pd.DataFrame()
 
             resp.raise_for_status()
@@ -1932,6 +1936,10 @@ class WebSocketClient(WebSocket):
             # keep last 300 candles per market
             self.candles_1m = self.candles_1m.groupby("market").tail(300)
             self.candles_5m = self.candles_5m.groupby("market").tail(300)
+            self.candles_15m = self.candles_15m.groupby("market").tail(300)
+            self.candles_1h = self.candles_1h.groupby("market").tail(300)
+            self.candles_6h = self.candles_6h.groupby("market").tail(300)
+            self.candles_1d = self.candles_1d.groupby("market").tail(300)
 
             # print (f'{msg["time"]} {msg["product_id"]} {msg["price"]}')
             # print(json.dumps(msg, indent=4, sort_keys=True))
