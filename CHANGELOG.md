@@ -8,6 +8,14 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+
+## [3.6.2] - 2021-09-13
+
+### Changed
+
+-- Updating Dockerfile to python:3.9-slim-bullseye
+-- switching to multistage venv Dockerfile and adding build-essentials in 1st stage to minimize Image size and build dependencies from source like numpy or statsmodels on arm64
+
 ## [3.6.0] - 2021-09-06
 
 ### Added
