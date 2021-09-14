@@ -1257,10 +1257,16 @@ class WebSocketClient(WebSocket, AuthAPIBase):
         if api_url[-1] != "/":
             api_url = api_url + "/"
 
-        valid_ws_urls = [
-            "wss://stream.binance.com:9443",
-            "wss://stream.binance.com:9443/",
-        ]
+        if api_url == 'https://api.binance.us':
+            valid_ws_urls = [
+                "wss://stream.binance.us:9443",
+                "wss://stream.binance.us:9443/",
+            ]
+        else:
+            valid_ws_urls = [
+                "wss://stream.binance.com:9443",
+                "wss://stream.binance.com:9443/",
+            ]
 
         # validate Binance Websocket URL
         if ws_url not in valid_ws_urls:
