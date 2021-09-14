@@ -6,6 +6,7 @@ from models.PyCryptoBot import PyCryptoBot
 from models.TradingAccount import TradingAccount
 from models.exchange.binance import AuthAPI as BAuthAPI
 from models.exchange.coinbase_pro import AuthAPI as CAuthAPI
+from models.exchange.kucoin import AuthAPI as KAuthAPI
 from models.helper.LogHelper import Logger
 
 
@@ -20,6 +21,13 @@ class AppState:
             )
         elif app.getExchange() == "coinbasepro":
             self.api = CAuthAPI(
+                app.getAPIKey(),
+                app.getAPISecret(),
+                app.getAPIPassphrase(),
+                app.getAPIURL(),
+            )
+        elif app.getExchange() == "kucoin":
+            self.api = KAuthAPI(
                 app.getAPIKey(),
                 app.getAPISecret(),
                 app.getAPIPassphrase(),
@@ -89,6 +97,21 @@ class AppState:
                 raise Exception(
                     f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})"
                 )
+        elif self.app.getExchange() == 'kucoin':
+            resp = self.api.authAPI('GET', f'api/v1/symbols')
+            product = resp[resp['symbol'] == self.app.getMarket()]
+            if len(product) == 0:
+                sys.tracebacklimit = 0
+                raise Exception(f'Market not found! ({self.app.getMarket()})')
+
+            price = self.app.getTicker(self.app.getMarket())[1]
+            quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
+            base_min = '{:f}'.format(float(product['baseMinSize']))
+
+            if (quote / price) < float(base_min):
+                sys.tracebacklimit = 0
+                raise Exception(f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})'
+                )
 
     def minimumOrderQuote(self):
         if self.app.getExchange() == "binance":
@@ -127,6 +150,23 @@ class AppState:
                 sys.tracebacklimit = 0
                 raise Exception(
                     f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})'
+                )
+
+        elif self.app.getExchange() == 'kucoin':
+            resp = self.api.authAPI('GET', f'api/v1/symbols')
+            product = resp[resp['symbol'] == self.app.getMarket()]
+            if len(product) == 0:
+                sys.tracebacklimit = 0
+                raise Exception(f'Market not found! ({self.app.getMarket()})')
+
+
+            price = self.app.getTicker(self.app.getMarket())[1]
+            quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
+            base_min = '{:f}'.format(float(product['baseMinSize']))
+
+            if (quote / price) < float(base_min):
+                sys.tracebacklimit = 0
+                raise Exception(f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})'
                 )
 
     def getLastOrder(self):
