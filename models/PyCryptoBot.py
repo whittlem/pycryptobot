@@ -198,7 +198,7 @@ class PyCryptoBot(BotConfig):
                 return api.getHistoricalData(
                     market,
                     to_binance_granularity(granularity),
-                    websocket,
+                    None,
                     iso8601start,
                     iso8601end,
                 )
@@ -213,14 +213,14 @@ class PyCryptoBot(BotConfig):
                 return api.getHistoricalData(
                     market,
                     to_coinbase_pro_granularity(granularity),
-                    websocket,
+                    None,
                     iso8601start,
                 )
             elif iso8601start != "" and iso8601end != "":
                 return api.getHistoricalData(
                     market,
                     to_coinbase_pro_granularity(granularity),
-                    websocket,
+                    None,
                     iso8601start,
                     iso8601end,
                 )
@@ -272,6 +272,7 @@ class PyCryptoBot(BotConfig):
                 df1 = self.getHistoricalData(
                     market,
                     granularity,
+                    None,
                     str(df_first.isoformat()),
                     str(simend.isoformat()),
                 )
@@ -297,6 +298,7 @@ class PyCryptoBot(BotConfig):
                     df2 = self.getHistoricalData(
                         market,
                         granularity,
+                        None,
                         str(df_first.isoformat()),
                         str(end_date.isoformat()),
                     )
@@ -434,7 +436,7 @@ class PyCryptoBot(BotConfig):
     def getSmartSwitch(self):
         return self.smart_switch
 
-    def is1hEMA1226Bull(self, iso8601end: str = ""):
+    def is1hEMA1226Bull(self, iso8601end: str = "", websocket=None):
         try:
             if self.isSimulation() and isinstance(self.ema1226_1h_cache, pd.DataFrame):
                 df_data = self.ema1226_1h_cache.loc[
@@ -442,11 +444,11 @@ class PyCryptoBot(BotConfig):
                 ].copy()
             elif self.exchange == "coinbasepro":
                 api = CBPublicAPI()
-                df_data = api.getHistoricalData(self.market, 3600)
+                df_data = api.getHistoricalData(self.market, 3600, websocket)
                 self.ema1226_1h_cache = df_data
             elif self.exchange == "binance":
                 api = BPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(self.market, "1h")
+                df_data = api.getHistoricalData(self.market, "1h", websocket)
                 self.ema1226_1h_cache = df_data
             else:
                 return False
@@ -466,7 +468,7 @@ class PyCryptoBot(BotConfig):
         except Exception:
             return False
 
-    def is1hSMA50200Bull(self, iso8601end: str = ""):
+    def is1hSMA50200Bull(self, iso8601end: str = "", websocket=None):
         try:
             if self.isSimulation() and isinstance(self.sma50200_1h_cache, pd.DataFrame):
                 df_data = self.sma50200_1h_cache.loc[
@@ -474,11 +476,11 @@ class PyCryptoBot(BotConfig):
                 ].copy()
             elif self.exchange == "coinbasepro":
                 api = CBPublicAPI()
-                df_data = api.getHistoricalData(self.market, 3600)
+                df_data = api.getHistoricalData(self.market, 3600, websocket)
                 self.sma50200_1h_cache = df_data
             elif self.exchange == "binance":
                 api = BPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(self.market, "1h")
+                df_data = api.getHistoricalData(self.market, "1h", websocket)
                 self.sma50200_1h_cache = df_data
             else:
                 return False
@@ -498,14 +500,14 @@ class PyCryptoBot(BotConfig):
         except Exception:
             return False
 
-    def isCryptoRecession(self):
+    def isCryptoRecession(self, websocket=None):
         try:
             if self.exchange == "coinbasepro":
                 api = CBPublicAPI()
-                df_data = api.getHistoricalData(self.market, 86400)
+                df_data = api.getHistoricalData(self.market, 86400, websocket)
             elif self.exchange == "binance":
                 api = BPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(self.market, "1d")
+                df_data = api.getHistoricalData(self.market, "1d", websocket)
             else:
                 return False  # if there is an API issue, default to False to avoid hard sells
 
@@ -522,7 +524,7 @@ class PyCryptoBot(BotConfig):
         except Exception:
             return False
 
-    def is6hEMA1226Bull(self, iso8601end: str = ""):
+    def is6hEMA1226Bull(self, iso8601end: str = "", websocket=None):
         try:
             if self.isSimulation() and isinstance(self.ema1226_6h_cache, pd.DataFrame):
                 df_data = self.ema1226_6h_cache[
@@ -530,11 +532,11 @@ class PyCryptoBot(BotConfig):
                 ].copy()
             elif self.exchange == "coinbasepro":
                 api = CBPublicAPI()
-                df_data = api.getHistoricalData(self.market, 21600)
+                df_data = api.getHistoricalData(self.market, 21600, websocket)
                 self.ema1226_6h_cache = df_data
             elif self.exchange == "binance":
                 api = BPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(self.market, "6h")
+                df_data = api.getHistoricalData(self.market, "6h", websocket)
                 self.ema1226_6h_cache = df_data
             else:
                 return False
@@ -554,14 +556,14 @@ class PyCryptoBot(BotConfig):
         except Exception:
             return False
 
-    def is6hSMA50200Bull(self):
+    def is6hSMA50200Bull(self, websocket):
         try:
             if self.exchange == "coinbasepro":
                 api = CBPublicAPI()
-                df_data = api.getHistoricalData(self.market, 21600)
+                df_data = api.getHistoricalData(self.market, 21600, websocket)
             elif self.exchange == "binance":
                 api = BPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(self.market, "6h")
+                df_data = api.getHistoricalData(self.market, "6h", websocket)
             else:
                 return False
 

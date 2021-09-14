@@ -711,63 +711,108 @@ class PublicAPI(AuthAPIBase):
         if not isinstance(iso8601end, str):
             raise TypeError("ISO8601 end integer as string required.")
 
-        if iso8601start != "" and iso8601end == "":
-            resp = self.authAPI(
-                "GET",
-                f"products/{market}/candles?granularity={granularity}&start={iso8601start}",
-            )
-        elif iso8601start != "" and iso8601end != "":
-            resp = self.authAPI(
-                "GET",
-                f"products/{market}/candles?granularity={granularity}&start={iso8601start}&end={iso8601end}",
-            )
-        else:
-            resp = self.authAPI(
-                "GET", f"products/{market}/candles?granularity={granularity}"
-            )
+        if websocket is not None:
+            if granularity == 60:
+                if websocket.candles_1m is not None:
+                    try:
+                        df = websocket.candles_1m.loc[websocket.candles_1m["market"] == market]
+                    except:
+                        pass
+            elif granularity == 300:
+                if websocket.candles_5m is not None:
+                    try:
+                        df = websocket.candles_5m.loc[websocket.candles_5m["market"] == market]
+                    except:
+                        pass
+            elif granularity == 900:
+                if websocket.candles_15m is not None:
+                    try:
+                        df = websocket.candles_15m.loc[websocket.candles_15m["market"] == market]
+                    except:
+                        pass
+            elif granularity == 3600:
+                if websocket.candles_1h is not None:
+                    try:
+                        df = websocket.candles_1h.loc[websocket.candles_1h["market"] == market]
+                    except:
+                        pass
+            elif granularity == 21600:
+                if websocket.candles_6h is not None:
+                    try:
+                        df = websocket.candles_6h.loc[websocket.candles_6h["market"] == market]
+                    except:
+                        pass
+            elif granularity == 86400:
+                if websocket.candles_6h is not None:
+                    try:
+                        df = websocket.candles_6h.loc[websocket.candles_6h["market"] == market]
+                    except:
+                        pass
 
-        # convert the API response into a Pandas DataFrame
-        df = pd.DataFrame(
-            resp, columns=["epoch", "low", "high", "open", "close", "volume"]
-        )
-        # reverse the order of the response with earliest last
-        df = df.iloc[::-1].reset_index()
+        if websocket is None or (websocket is not None and websocket.candles_1h is None):
+            if iso8601start != "" and iso8601end == "":
+                resp = self.authAPI(
+                    "GET",
+                    f"products/{market}/candles?granularity={granularity}&start={iso8601start}",
+                )
+            elif iso8601start != "" and iso8601end != "":
+                resp = self.authAPI(
+                    "GET",
+                    f"products/{market}/candles?granularity={granularity}&start={iso8601start}&end={iso8601end}",
+                )
+            else:
+                resp = self.authAPI(
+                    "GET", f"products/{market}/candles?granularity={granularity}"
+                )
 
-        try:
-            freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity)]
-        except:
-            freq = "D"
-
-        # convert the DataFrame into a time series with the date as the index/key
-        try:
-            tsidx = pd.DatetimeIndex(
-                pd.to_datetime(df["epoch"], unit="s"), dtype="datetime64[ns]", freq=freq
+            # convert the API response into a Pandas DataFrame
+            df = pd.DataFrame(
+                resp, columns=["epoch", "low", "high", "open", "close", "volume"]
             )
-            df.set_index(tsidx, inplace=True)
-            df = df.drop(columns=["epoch", "index"])
-            df.index.names = ["ts"]
-            df["date"] = tsidx
-        except ValueError:
-            tsidx = pd.DatetimeIndex(
-                pd.to_datetime(df["epoch"], unit="s"), dtype="datetime64[ns]"
-            )
-            df.set_index(tsidx, inplace=True)
-            df = df.drop(columns=["epoch", "index"])
-            df.index.names = ["ts"]
-            df["date"] = tsidx
+            # reverse the order of the response with earliest last
+            df = df.iloc[::-1].reset_index()
 
-        df["market"] = market
-        df["granularity"] = granularity
+            try:
+                freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity)]
+            except:
+                freq = "D"
 
-        # re-order columns
-        df = df[
-            ["date", "market", "granularity", "low", "high", "open", "close", "volume"]
-        ]
+            # convert the DataFrame into a time series with the date as the index/key
+            try:
+                tsidx = pd.DatetimeIndex(
+                    pd.to_datetime(df["epoch"], unit="s"), dtype="datetime64[ns]", freq=freq
+                )
+                df.set_index(tsidx, inplace=True)
+                df = df.drop(columns=["epoch", "index"])
+                df.index.names = ["ts"]
+                df["date"] = tsidx
+            except ValueError:
+                tsidx = pd.DatetimeIndex(
+                    pd.to_datetime(df["epoch"], unit="s"), dtype="datetime64[ns]"
+                )
+                df.set_index(tsidx, inplace=True)
+                df = df.drop(columns=["epoch", "index"])
+                df.index.names = ["ts"]
+                df["date"] = tsidx
+
+            df["market"] = market
+            df["granularity"] = granularity
+
+            # re-order columns
+            df = df[
+                ["date", "market", "granularity", "low", "high", "open", "close", "volume"]
+            ]
 
         return df
 
     def getTicker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
         """Retrives the market ticker"""
+
+        # validates the market is syntactically correct
+        if not self._isMarketValid(market):
+            raise TypeError("Coinbase Pro market required.")
+
+        now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
         if websocket is not None and websocket.tickers is not None:
             try:
@@ -781,12 +826,7 @@ class PublicAPI(AuthAPIBase):
                 )
 
             except:
-                now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
                 return (now, 0.0)
-
-        # validates the market is syntactically correct
-        if not self._isMarketValid(market):
-            raise TypeError("Coinbase Pro market required.")
 
         resp = self.authAPI("GET", f"products/{market}/ticker")
 
@@ -798,7 +838,6 @@ class PublicAPI(AuthAPIBase):
                 float(resp["price"]),
             )
 
-        now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
         return (now, 0.0)
 
     def getTime(self) -> datetime:
@@ -1980,6 +2019,38 @@ class WebSocketClient(WebSocket):
             )
             self.candles_1d.set_index(tsidx, inplace=True)
             self.candles_1d.index.name = "ts"
+
+            # set correct column types
+            self.candles_1m["open"] = self.candles_1m["open"].astype("float64")
+            self.candles_1m["high"] = self.candles_1m["high"].astype("float64")
+            self.candles_1m["close"] = self.candles_1m["close"].astype("float64")
+            self.candles_1m["low"] = self.candles_1m["low"].astype("float64")
+            self.candles_1m["volume"] = self.candles_1m["volume"].astype("float64")
+            self.candles_5m["open"] = self.candles_5m["open"].astype("float64")
+            self.candles_5m["high"] = self.candles_5m["high"].astype("float64")
+            self.candles_5m["close"] = self.candles_5m["close"].astype("float64")
+            self.candles_5m["low"] = self.candles_5m["low"].astype("float64")
+            self.candles_5m["volume"] = self.candles_15m["volume"].astype("float64")
+            self.candles_15m["open"] = self.candles_15m["open"].astype("float64")
+            self.candles_15m["high"] = self.candles_15m["high"].astype("float64")
+            self.candles_15m["close"] = self.candles_15m["close"].astype("float64")
+            self.candles_15m["low"] = self.candles_15m["low"].astype("float64")
+            self.candles_15m["volume"] = self.candles_15m["volume"].astype("float64")
+            self.candles_1h["open"] = self.candles_1h["open"].astype("float64")
+            self.candles_1h["high"] = self.candles_1h["high"].astype("float64")
+            self.candles_1h["close"] = self.candles_1h["close"].astype("float64")
+            self.candles_1h["low"] = self.candles_1h["low"].astype("float64")
+            self.candles_1h["volume"] = self.candles_1h["volume"].astype("float64")
+            self.candles_6h["open"] = self.candles_6h["open"].astype("float64")
+            self.candles_6h["high"] = self.candles_6h["high"].astype("float64")
+            self.candles_6h["close"] = self.candles_6h["close"].astype("float64")
+            self.candles_6h["low"] = self.candles_6h["low"].astype("float64")
+            self.candles_6h["volume"] = self.candles_6h["volume"].astype("float64")
+            self.candles_1d["open"] = self.candles_1d["open"].astype("float64")
+            self.candles_1d["high"] = self.candles_1d["high"].astype("float64")
+            self.candles_1d["close"] = self.candles_1d["close"].astype("float64")
+            self.candles_1d["low"] = self.candles_1d["low"].astype("float64")
+            self.candles_1d["volume"] = self.candles_1d["volume"].astype("float64")
 
             # keep last 300 candles per market
             self.candles_1m = self.candles_1m.groupby("market").tail(300)

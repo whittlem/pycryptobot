@@ -295,17 +295,17 @@ class Pages:
             api = CPublicAPI()
         ticker = api.getTicker(market)
 
-        ta = TechnicalAnalysis(api.getHistoricalData(market, g1))
+        ta = TechnicalAnalysis(api.getHistoricalData(market, g1, None))
         ta.addAll()
         df_15m = ta.getDataFrame()
         df_15m_last = df_15m.tail(1)
 
-        ta = TechnicalAnalysis(api.getHistoricalData(market, g2))
+        ta = TechnicalAnalysis(api.getHistoricalData(market, g2, None))
         ta.addAll()
         df_1h = ta.getDataFrame()
         df_1h_last = df_1h.tail(1)
 
-        ta = TechnicalAnalysis(api.getHistoricalData(market, g3))
+        ta = TechnicalAnalysis(api.getHistoricalData(market, g3, None))
         ta.addAll()
         df_6h = ta.getDataFrame()
         df_6h_last = df_6h.tail(1)

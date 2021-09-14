@@ -516,7 +516,7 @@ class AuthAPI(AuthAPIBase):
         try:
             # GET /api/v3/time
             resp = self.authAPI("GET", "/api/v3/time")
-            return self.convert_time(int(resp["serverTime"]))
+            return self.convert_time(int(resp["serverTime"])) - timedelta(hours=1)
         except Exception as e:
             Logger.error(f"Error: {e}")
             return None
@@ -582,6 +582,20 @@ class AuthAPI(AuthAPIBase):
             raise TypeError("Binance market required.")
 
         now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+
+        if websocket is not None and websocket.tickers is not None:
+            try:
+                row = websocket.tickers.loc[websocket.tickers["market"] == market]
+                return (
+                    datetime.strptime(
+                        re.sub(r".0*$", "", str(row["date"].values[0])),
+                        "%Y-%m-%dT%H:%M:%S",
+                    ).strftime("%Y-%m-%d %H:%M:%S"),
+                    float(row["price"].values[0]),
+                )
+
+            except:
+                return (now, 0.0)
 
         try:
             # GET /api/v3/ticker/price
@@ -837,7 +851,7 @@ class PublicAPI(AuthAPIBase):
         try:
             # GET /api/v3/time
             resp = self.authAPI("GET", "/api/v3/time")
-            return self.convert_time(int(resp["serverTime"]))
+            return self.convert_time(int(resp["serverTime"])) - timedelta(hours=1)
         except Exception as e:
             Logger.error(f"Error: {e}")
             return None
@@ -857,10 +871,24 @@ class PublicAPI(AuthAPIBase):
         if not self._isMarketValid(market):
             raise TypeError("Binance market required.")
 
+        now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+
+        if websocket is not None and websocket.tickers is not None:
+            try:
+                row = websocket.tickers.loc[websocket.tickers["market"] == market]
+                return (
+                    datetime.strptime(
+                        re.sub(r".0*$", "", str(row["date"].values[0])),
+                        "%Y-%m-%dT%H:%M:%S",
+                    ).strftime("%Y-%m-%d %H:%M:%S"),
+                    float(row["price"].values[0]),
+                )
+
+            except:
+                return (now, 0.0)
+
         # GET /api/v3/ticker/price
         resp = self.authAPI("GET", "/api/v3/ticker/price", {"symbol": market})
-
-        now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
         if "price" in resp:
             return (str(self.getTime()), float(resp["price"]))
@@ -1580,6 +1608,12 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                         self.candles_1m = self.candles_1m.copy().sort_values(
                             by=["date"]
                         )
+                        # set correct column types
+                        self.candles_1m["open"] = self.candles_1m["open"].astype("float64")
+                        self.candles_1m["high"] = self.candles_1m["high"].astype("float64")
+                        self.candles_1m["close"] = self.candles_1m["close"].astype("float64")
+                        self.candles_1m["low"] = self.candles_1m["low"].astype("float64")
+                        self.candles_1m["volume"] = self.candles_1m["volume"].astype("float64")
 
                     if self.candles_5m is not None:
                         # keep last 300 candles per market
@@ -1588,6 +1622,12 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                         self.candles_5m = self.candles_5m.copy().sort_values(
                             by=["date"]
                         )
+                        # set correct column types
+                        self.candles_5m["open"] = self.candles_5m["open"].astype("float64")
+                        self.candles_5m["high"] = self.candles_5m["high"].astype("float64")
+                        self.candles_5m["close"] = self.candles_5m["close"].astype("float64")
+                        self.candles_5m["low"] = self.candles_5m["low"].astype("float64")
+                        self.candles_5m["volume"] = self.candles_15m["volume"].astype("float64")
 
                     if self.candles_15m is not None:
                         # keep last 300 candles per market
@@ -1596,6 +1636,12 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                         self.candles_15m = self.candles_15m.copy().sort_values(
                             by=["date"]
                         )
+                        # set correct column types
+                        self.candles_15m["open"] = self.candles_15m["open"].astype("float64")
+                        self.candles_15m["high"] = self.candles_15m["high"].astype("float64")
+                        self.candles_15m["close"] = self.candles_15m["close"].astype("float64")
+                        self.candles_15m["low"] = self.candles_15m["low"].astype("float64")
+                        self.candles_15m["volume"] = self.candles_15m["volume"].astype("float64")
 
                     if self.candles_1h is not None:
                         # keep last 300 candles per market
@@ -1604,6 +1650,12 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                         self.candles_1h = self.candles_1h.copy().sort_values(
                             by=["date"]
                         )
+                        # set correct column types
+                        self.candles_1h["open"] = self.candles_1h["open"].astype("float64")
+                        self.candles_1h["high"] = self.candles_1h["high"].astype("float64")
+                        self.candles_1h["close"] = self.candles_1h["close"].astype("float64")
+                        self.candles_1h["low"] = self.candles_1h["low"].astype("float64")
+                        self.candles_1h["volume"] = self.candles_1h["volume"].astype("float64")
 
                     if self.candles_6h is not None:
                         # keep last 300 candles per market
@@ -1612,6 +1664,13 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                         self.candles_6h = self.candles_6h.copy().sort_values(
                             by=["date"]
                         )
+                        # set correct column types
+                        self.candles_6h["open"] = self.candles_6h["open"].astype("float64")
+                        self.candles_6h["high"] = self.candles_6h["high"].astype("float64")
+                        self.candles_6h["close"] = self.candles_6h["close"].astype("float64")
+                        self.candles_6h["low"] = self.candles_6h["low"].astype("float64")
+                        self.candles_6h["volume"] = self.candles_6h["volume"].astype("float64")
+
 
                     if self.candles_1d is not None:
                         # keep last 300 candles per market
@@ -1620,6 +1679,12 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                         self.candles_1d = self.candles_1d.copy().sort_values(
                             by=["date"]
                         )
+                        # set correct column types
+                        self.candles_1d["open"] = self.candles_1d["open"].astype("float64")
+                        self.candles_1d["high"] = self.candles_1d["high"].astype("float64")
+                        self.candles_1d["close"] = self.candles_1d["close"].astype("float64")
+                        self.candles_1d["low"] = self.candles_1d["low"].astype("float64")
+                        self.candles_1d["volume"] = self.candles_1d["volume"].astype("float64")
 
         # print (f'{msg["time"]} {msg["product_id"]} {msg["price"]}')
         # print(json.dumps(msg, indent=4, sort_keys=True))

@@ -199,8 +199,8 @@ def executeJob(
     if (
         app.getSmartSwitch() == 1
         and app.getGranularity() == 3600
-        and app.is1hEMA1226Bull(current_sim_date) is True
-        and app.is6hEMA1226Bull(current_sim_date) is True
+        and app.is1hEMA1226Bull(current_sim_date, websocket) is True
+        and app.is6hEMA1226Bull(current_sim_date, websocket) is True
     ):
         Logger.info(
             "*** smart switch from granularity 3600 (1 hour) to 900 (15 min) ***"
@@ -222,8 +222,8 @@ def executeJob(
     if (
         app.getSmartSwitch() == 1
         and app.getGranularity() == 900
-        and app.is1hEMA1226Bull(current_sim_date) is False
-        and app.is6hEMA1226Bull(current_sim_date) is False
+        and app.is1hEMA1226Bull(current_sim_date, websocket) is False
+        and app.is6hEMA1226Bull(current_sim_date, websocket) is False
     ):
         Logger.info(
             "*** smart switch from granularity 900 (15 min) to 3600 (1 hour) ***"
@@ -300,7 +300,7 @@ def executeJob(
 
         # if simulation, set goldencross based on actual sim date
         if app.isSimulation():
-            goldencross = app.is1hSMA50200Bull(current_sim_date)
+            goldencross = app.is1hSMA50200Bull(current_sim_date, websocket)
 
         # candlestick detection
         hammer = bool(df_last["hammer"].values[0])
