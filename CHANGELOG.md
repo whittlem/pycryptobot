@@ -14,6 +14,8 @@ Upgrade library dependencies (if required):
 
 -- Websockets POC scripts for Coinbase Pro and Binance
 -- Seasonal ARIMA model predictions are not optional --enableml
+-- Updating Dockerfile to python:3.9-slim-bullseye
+-- switching to multistage venv Dockerfile and adding build-essentials in 1st stage to minimize Image size and build dependencies from source like numpy or statsmodels on arm64
 
 ## [3.6.0] - 2021-09-06
 
