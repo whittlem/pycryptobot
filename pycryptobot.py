@@ -1426,6 +1426,7 @@ def main(websocket):
             if app.enableWebsocket():
                 print("Opening websocket to Binance...")
                 websocket = BWebSocketClient([app.getMarket()])
+                websocket.start()
 
         smartSwitchStatus = "enabled" if app.getSmartSwitch() else "disabled"
         message += f" for {app.getMarket()} using granularity {app.printGranularity()}. Smartswitch {smartSwitchStatus}"
