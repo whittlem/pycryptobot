@@ -295,17 +295,17 @@ class Pages:
             api = CPublicAPI()
         ticker = api.getTicker(market)
 
-        ta = TechnicalAnalysis(api.getHistoricalData(market, g1))
+        ta = TechnicalAnalysis(api.getHistoricalData(market, g1, None))
         ta.addAll()
         df_15m = ta.getDataFrame()
         df_15m_last = df_15m.tail(1)
 
-        ta = TechnicalAnalysis(api.getHistoricalData(market, g2))
+        ta = TechnicalAnalysis(api.getHistoricalData(market, g2, None))
         ta.addAll()
         df_1h = ta.getDataFrame()
         df_1h_last = df_1h.tail(1)
 
-        ta = TechnicalAnalysis(api.getHistoricalData(market, g3))
+        ta = TechnicalAnalysis(api.getHistoricalData(market, g3, None))
         ta.addAll()
         df_6h = ta.getDataFrame()
         df_6h_last = df_6h.tail(1)
@@ -398,30 +398,48 @@ class Pages:
 
         adx14_15m_class = 'table-normal'
         adx14_15m_desc = 'Normal Trend'
-        if df_15m_last['adx14'].values[0] > 25:
+        if df_15m_last['adx14'].values[0] > 25 and df_15m_last['ema12'].values[0] >= df_15m_last['ema26'].values[0]:
             adx14_15m_class = 'table-success'
-            adx14_15m_desc = 'Strong Trend'
-        elif df_15m_last['adx14'].values[0] < 20:
+            adx14_15m_desc = 'Strong Trend Up'
+        elif df_15m_last['adx14'].values[0] > 25 and df_15m_last['ema12'].values[0] < df_15m_last['ema26'].values[0]:
             adx14_15m_class = 'table-danger'
-            adx14_15m_desc = 'Weak Trend'
+            adx14_15m_desc = 'Strong Trend Down'
+        elif df_15m_last['adx14'].values[0] < 20 and df_15m_last['ema12'].values[0] >= df_15m_last['ema26'].values[0]:
+            adx14_15m_class = 'table-success'
+            adx14_15m_desc = 'Weak Trend Up'
+        elif df_15m_last['adx14'].values[0] < 20 and df_15m_last['ema12'].values[0] < df_15m_last['ema26'].values[0]:
+            adx14_15m_class = 'table-danger'
+            adx14_15m_desc = 'Weak Trend Up'
 
         adx14_1h_class = 'table-normal'
         adx14_1h_desc = 'Normal Trend'
-        if df_1h_last['adx14'].values[0] > 25:
+        if df_1h_last['adx14'].values[0] > 25 and df_1h_last['ema12'].values[0] >= df_1h_last['ema26'].values[0]:
             adx14_1h_class = 'table-success'
-            adx14_1h_desc = 'Strong Trend'
-        elif df_1h_last['adx14'].values[0] < 20:
+            adx14_1h_desc = 'Strong Trend Up'
+        elif df_1h_last['adx14'].values[0] > 25 and df_1h_last['ema12'].values[0] < df_1h_last['ema26'].values[0]:
             adx14_1h_class = 'table-danger'
-            adx14_1h_desc = 'Weak Trend'
+            adx14_1h_desc = 'Strong Trend Down'
+        elif df_1h_last['adx14'].values[0] < 20 and df_1h_last['ema12'].values[0] >= df_1h_last['ema26'].values[0]:
+            adx14_1h_class = 'table-success'
+            adx14_1h_desc = 'Weak Trend Up'
+        elif df_1h_last['adx14'].values[0] < 20 and df_1h_last['ema12'].values[0] < df_1h_last['ema26'].values[0]:
+            adx14_1h_class = 'table-danger'
+            adx14_1h_desc = 'Weak Trend Up'
 
         adx14_6h_class = 'table-normal'
         adx14_6h_desc = 'Normal Trend'
-        if df_6h_last['adx14'].values[0] > 25:
+        if df_6h_last['adx14'].values[0] > 25 and df_6h_last['ema12'].values[0] >= df_6h_last['ema26'].values[0]:
             adx14_6h_class = 'table-success'
-            adx14_6h_desc = 'Strong Trend'
-        elif df_6h_last['adx14'].values[0] < 20:
+            adx14_6h_desc = 'Strong Trend Up'
+        elif df_6h_last['adx14'].values[0] > 25 and df_6h_last['ema12'].values[0] < df_6h_last['ema26'].values[0]:
             adx14_6h_class = 'table-danger'
-            adx14_6h_desc = 'Weak Trend'
+            adx14_6h_desc = 'Strong Trend Down'
+        elif df_6h_last['adx14'].values[0] < 20 and df_6h_last['ema12'].values[0] >= df_6h_last['ema26'].values[0]:
+            adx14_6h_class = 'table-success'
+            adx14_6h_desc = 'Weak Trend Up'
+        elif df_6h_last['adx14'].values[0] < 20 and df_6h_last['ema12'].values[0] < df_6h_last['ema26'].values[0]:
+            adx14_6h_class = 'table-danger'
+            adx14_6h_desc = 'Weak Trend Up'
 
         def arima_predictions(even_rows: bool = True):
             results_ARIMA = ta.seasonalARIMAModel()
@@ -911,6 +929,8 @@ class Pages:
                         </tbody>
                     </table>
                 </div>
+            </div>
+            <div class="row">
                 <div class="col-sm">
                     <table class="table table-sm table-light table-hover table-striped">
                         <thead>
@@ -934,6 +954,8 @@ class Pages:
                         </tbody>
                     </table>
                 </div>
+            </div>
+            <div class="row">
                 <div class="col-sm">
                     <table class="table table-sm table-light table-hover table-striped">
                         <thead>
@@ -956,8 +978,6 @@ class Pages:
                             </tr>
                         </tbody>
                     </table>
-                </div>
-                <div class="col-sm">
                 </div>
             </div>
 

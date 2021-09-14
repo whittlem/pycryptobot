@@ -74,7 +74,7 @@ class TradingGraphs:
             if saveFile != "":
                 plt.savefig(saveFile)
         except OSError:
-            raise SystemExit("Unable to save: ", saveFile)
+            raise SystemExit(f"Unable to save: {saveFile}")
 
         if saveOnly is False:
             plt.show()
@@ -140,7 +140,7 @@ class TradingGraphs:
             if saveFile != "":
                 plt.savefig(saveFile)
         except OSError:
-            raise SystemExit("Unable to save: ", saveFile)
+            raise SystemExit(f"Unable to save: {saveFile}")
 
         if saveOnly is False:
             plt.show()
@@ -184,7 +184,7 @@ class TradingGraphs:
             if saveFile != "":
                 plt.savefig(saveFile)
         except OSError:
-            raise SystemExit("Unable to save: ", saveFile)
+            raise SystemExit(f"Unable to save: {saveFile}")
 
         if saveOnly is False:
             plt.show()
@@ -213,7 +213,7 @@ class TradingGraphs:
             if saveFile != "":
                 plt.savefig(saveFile)
         except OSError:
-            raise SystemExit("Unable to save: ", saveFile)
+            raise SystemExit(f"Unable to save: {saveFile}")
 
         if saveOnly is False:
             plt.show()
@@ -277,7 +277,7 @@ class TradingGraphs:
             if saveFile != "":
                 plt.savefig(saveFile)
         except OSError:
-            raise SystemExit("Unable to save: ", saveFile)
+            raise SystemExit(f"Unable to save: {saveFile}")
 
         if saveOnly is False:
             plt.show()
@@ -307,7 +307,7 @@ class TradingGraphs:
             if saveFile != "":
                 plt.savefig(saveFile)
         except OSError:
-            raise SystemExit("Unable to save: ", saveFile)
+            raise SystemExit(f"Unable to save: {saveFile}")
 
         if saveOnly is False:
             plt.show()
@@ -344,7 +344,7 @@ class TradingGraphs:
             if saveFile != "":
                 plt.savefig(saveFile)
         except OSError:
-            raise SystemExit("Unable to save: ", saveFile)
+            raise SystemExit(f"Unable to save: {saveFile}")
 
         if saveOnly is False:
             plt.show()
@@ -414,14 +414,14 @@ class TradingGraphs:
 
         try:
             Logger.info(
-                "creating: graphs/SAM_" + market + "_" + str(granularity) + ".png"
+                f"creating: graphs/SAM_{market}_{str(granularity)}.png"
             )
             plt.savefig(
-                "graphs/SAM_" + market + "_" + str(granularity) + ".png", dpi=300
+                f"graphs/SAM_{market}_{str(granularity)}.png", dpi=300
             )
         except OSError:
             raise SystemExit(
-                "Unable to save: graphs/SAM_" + market + "_" + str(granularity) + ".png"
+                f"Unable to save: graphs/SAM_{market}_{str(granularity)}.png"
             )
 
         if saveOnly is False:
@@ -478,14 +478,14 @@ class TradingGraphs:
 
         try:
             Logger.info(
-                "creating: graphs/CAP_" + market + "_" + str(granularity) + ".png"
+                f"creating: graphs/CAP_{market}_{str(granularity)}.png"
             )
             plt.savefig(
-                "graphs/CAP_" + market + "_" + str(granularity) + ".png", dpi=300
+                f"graphs/CAP_{market}_{str(granularity)}.png", dpi=300
             )
         except OSError:
             raise SystemExit(
-                "Unable to save: graphs/CAP_" + market + "_" + str(granularity) + ".png"
+                f"Unable to save: graphs/CAP_{market}_{str(granularity)}.png"
             )
 
         if saveOnly is False:
@@ -710,14 +710,14 @@ class TradingGraphs:
 
         try:
             Logger.info(
-                "creating: graphs/CSP_" + market + "_" + str(granularity) + ".png"
+                f"creating: graphs/CSP_{market}_{str(granularity)}.png"
             )
             plt.savefig(
-                "graphs/CSP_" + market + "_" + str(granularity) + ".png", dpi=300
+                f"graphs/CSP_{market}_{str(granularity)}.png", dpi=300
             )
         except OSError:
             raise SystemExit(
-                "Unable to save: graphs/CSP_" + market + "_" + str(granularity) + ".png"
+                f"Unable to save: graphs/CSP_{market}_{str(granularity)}.png"
             )
 
         if saveOnly is False:
@@ -770,14 +770,14 @@ class TradingGraphs:
 
         try:
             Logger.info(
-                "creating: graphs/FRL_" + market + "_" + str(granularity) + ".png"
+                f"creating: graphs/FRL_{market}_{str(granularity)}.png"
             )
             plt.savefig(
-                "graphs/FRL_" + market + "_" + str(granularity) + ".png", dpi=300
+                f"graphs/FRL_{market}_{str(granularity)}.png", dpi=300
             )
         except OSError:
             raise SystemExit(
-                "Unable to save: graphs/FRL_" + market + "_" + str(granularity) + ".png"
+                f"Unable to save: graphs/FRL_{market}_{str(granularity)}.png"
             )
 
         if saveOnly is False:
@@ -861,14 +861,14 @@ class TradingGraphs:
 
         try:
             Logger.info(
-                "creating: graphs/SRL_" + market + "_" + str(granularity) + ".png"
+                f"creating: graphs/SRL_{market}_{str(granularity)}.png"
             )
             plt.savefig(
-                "graphs/SRL_" + market + "_" + str(granularity) + ".png", dpi=300
+                f"graphs/SRL_{market}_{str(granularity)}.png", dpi=300
             )
         except OSError:
             raise SystemExit(
-                "Unable to save: graphs/SRL_" + market + "_" + str(granularity) + ".png"
+                f"Unable to save: graphs/SRL_{market}_{str(granularity)}.png"
             )
 
         if saveOnly is False:

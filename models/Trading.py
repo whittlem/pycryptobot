@@ -1120,26 +1120,11 @@ class TechnicalAnalysis:
             if len(df) > 0:
                 df_last = df.tail(1)
                 if float(df_last[0]) < price:
-                    Logger.info(
-                        " Support level of "
-                        + str(df_last[0])
-                        + " formed at "
-                        + str(df_last.index[0])
-                    )
+                    Logger.info(f" Support level of {str(df_last[0])} formed at {str(df_last.index[0])}")
                 elif float(df_last[0]) > price:
-                    Logger.info(
-                        " Resistance level of "
-                        + str(df_last[0])
-                        + " formed at "
-                        + str(df_last.index[0])
-                    )
+                    Logger.info(f" Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}")
                 else:
-                    Logger.info(
-                        " Support/Resistance level of "
-                        + str(df_last[0])
-                        + " formed at "
-                        + str(df_last.index[0])
-                    )
+                    Logger.info(f" Support/Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}")
 
     def getResistance(self, price: float = 0) -> float:
         if isinstance(price, int) or isinstance(price, float):
@@ -1194,16 +1179,7 @@ class TechnicalAnalysis:
                         l = price
                         for b in fb.values():
                             if b > price:
-                                return (
-                                    "support: "
-                                    + str(s)
-                                    + ", resistance: "
-                                    + str(r)
-                                    + ", fibonacci (l): "
-                                    + str(l)
-                                    + ", fibonacci (u): "
-                                    + str(b)
-                                )
+                                return (f"support: {str(s)}, resistance: {str(r)}, fibonacci (l): {str(l)}, fibonacci (u): {str(b)}")
                             else:
                                 l = b
 
@@ -1217,14 +1193,7 @@ class TechnicalAnalysis:
                     l = price
                     for b in fb.values():
                         if b > price:
-                            return (
-                                "support: "
-                                + str(sr.iloc[-1])
-                                + ", fibonacci (l): "
-                                + str(l)
-                                + ", fibonacci (u): "
-                                + str(b)
-                            )
+                            return (f"support: {str(sr.iloc[-1])}, fibonacci (l): {str(l)}, fibonacci (u): {str(b)}")
                         else:
                             l = b
 

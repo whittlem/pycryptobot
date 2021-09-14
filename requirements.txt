@@ -8,4 +8,6 @@ pytest==6.2.2
 pytest-mock==3.6.1
 responses==0.13.3
 pyyaml==5.4.1
+websocket-client==0.59.0
+websockets==8.1
 flask

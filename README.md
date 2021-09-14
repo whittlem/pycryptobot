@@ -1,6 +1,6 @@
 [![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg) [![Tests](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)
 
-# Python Crypto Bot v3.6.0 (pycryptobot)
+# Python Crypto Bot v3.7.0 (pycryptobot)
 
 ## Join our chat on Telegram
 
@@ -148,7 +148,8 @@ To run using the config.json in template folder,
 
 By default, docker-compose will use the config inside `./market/template`. We provide this as a template for any market config.
 
-For each market you want to trade, create a copy of this folder under market
+For each market you want to trade, create a copy of this folder under market.
+Also create either a coinbase.key or binance.key file to each folder depending which trading platform is being used.
 For example, if you are trading `BTCEUR` and `ETHEUR` your market folder should look like this:
 
     ├── market
@@ -171,6 +172,7 @@ modify docker-compose.yaml
           context: .
         container_name: btceur
         volumes:
+          - ./market/BTCEUR/coinbase.key:/app/coinbase.key.json
           - ./market/BTCEUR/config.json:/app/config.json
           - ./market/BTCEUR/pycryptobot.log:/app/pycryptobot.log
           - ./market/BTCEUR/graphs:/app/graphs
@@ -186,6 +188,7 @@ modify docker-compose.yaml
           context: .
         container_name: etheur
         volumes:
+          - ./market/ETHEUR/coinbase.key:/app/coinbase.key.json
           - ./market/ETHEUR/config.json:/app/config.json
           - ./market/ETHEUR/pycryptobot.log:/app/pycryptobot.log
           - ./market/ETHEUR/graphs:/app/graphs
@@ -328,7 +331,7 @@ The bot will only trade in a bull market to minimise losses! (you can disable th
 
 Special buy cases:
 
-* "buynearhighpcnt" to specify the percentage from high that the bot should not buy if "disablebuynearhigh" is not specified.
+* "nobuynearhighpcnt" to specify the percentage from high that the bot should not buy if "disablebuynearhigh" is not specified.
 
 Sell signal:
 
@@ -386,6 +389,12 @@ In order to trade live you need to authenticate with the Coinbase Pro or Binance
     --simenddate                               End date for sample simulation or 'now'
 
 `simstartdate` takes priority over `simenddate` if both are given
+
+### Simulation trades.csv
+
+By default, when running a simulation, if there are any orders,  a file called `trades.csv` with all BUYS and SELLS will be created.
+
+With `--tradesfile` you can control the name and where file is stored, eg `--tradesfile BTSUDC-trades.csv`
 
 ## API key / secret / password storage
 
