@@ -745,7 +745,7 @@ class PublicAPI(AuthAPIBase):
             elif granularity == 86400:
                 if websocket.candles_6h is not None:
                     try:
-                        df = websocket.candles_6h.loc[websocket.candles_6h["market"] == market]
+                        df = websocket.candles_1d.loc[websocket.candles_6h["market"] == market]
                     except:
                         pass
 
