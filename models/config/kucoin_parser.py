@@ -84,7 +84,7 @@ def parser(app, Kucoin_config, args={}):
             # validates the api passphrase is syntactically correct
             p = re.compile(r"^[A-z0-9#$%=@!{},`~&*()<>?.:;_|^/+\[\]]{8,32}$")
             if not p.match(Kucoin_config['api_passphrase']):
-                raise TypeError('Kucoin Pro API passphrase is invalid')
+                raise TypeError('Kucoin API passphrase is invalid')
 
             app.api_passphrase = Kucoin_config['api_passphrase']
 

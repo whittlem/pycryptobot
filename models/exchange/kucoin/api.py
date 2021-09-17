@@ -612,7 +612,7 @@ class AuthAPI(AuthAPIBase):
             elif method == "POST":
                 resp = requests.post(self._api_url + uri, json=payload, auth=self)
 
-            Logger.info(resp.json())
+            Logger.debug(resp.json())
             if resp.status_code != 200:
                 if self.die_on_api_error or resp.status_code == 401:
                     # disable traceback
@@ -873,7 +873,7 @@ class PublicAPI(AuthAPIBase):
             elif method == "POST":
                 resp = requests.post(self._api_url + uri, json=payload)
             
-            Logger.info(resp.json())
+            Logger.debug(resp.json())
             if resp.status_code != 200:
                 resp_message = resp.json()["msg"]
                 message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
