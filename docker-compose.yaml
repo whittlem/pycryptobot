@@ -47,3 +47,20 @@ services:
 #    deploy:
 #      restart_policy:
 #        condition: on-failure
+#
+# Uncomment to build and run Web Portal
+#  pycrypto-websvc:
+#      build:
+#        context: .
+#        dockerfile: Dockerfile-websvc
+#      container_name: pycrypto-websvc
+#      volumes:
+#        - ./market/:/app/market
+#        - /etc/localtime:/etc/localtime:ro
+#      ports:
+#        - 5000:5000
+#      environment:
+#        - PYTHONUNBUFFERED=1
+#      deploy:
+#        restart_policy:
+#          condition: on-failure

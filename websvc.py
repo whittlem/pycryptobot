@@ -26,7 +26,7 @@ parser.add_argument("--debug", action="store_true", help="enable debugging")
 args = parser.parse_args()
 
 # listen on local host
-http_host = "127.0.0.1"
+http_host = "0.0.0.0"
 if args.host is not None:
     p = re.compile(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
     if p.match(args.host):
