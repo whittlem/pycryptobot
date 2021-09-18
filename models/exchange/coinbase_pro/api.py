@@ -711,45 +711,64 @@ class PublicAPI(AuthAPIBase):
         if not isinstance(iso8601end, str):
             raise TypeError("ISO8601 end integer as string required.")
 
+        using_websocket = False
         if websocket is not None:
             if granularity == 60:
                 if websocket.candles_1m is not None:
                     try:
-                        df = websocket.candles_1m.loc[websocket.candles_1m["market"] == market]
+                        df = websocket.candles_1m.loc[
+                            websocket.candles_1m["market"] == market
+                        ]
+                        using_websocket = True
                     except:
                         pass
             elif granularity == 300:
                 if websocket.candles_5m is not None:
                     try:
-                        df = websocket.candles_5m.loc[websocket.candles_5m["market"] == market]
+                        df = websocket.candles_5m.loc[
+                            websocket.candles_5m["market"] == market
+                        ]
+                        using_websocket = True
                     except:
                         pass
             elif granularity == 900:
                 if websocket.candles_15m is not None:
                     try:
-                        df = websocket.candles_15m.loc[websocket.candles_15m["market"] == market]
+                        df = websocket.candles_15m.loc[
+                            websocket.candles_15m["market"] == market
+                        ]
+                        using_websocket = True
                     except:
                         pass
             elif granularity == 3600:
                 if websocket.candles_1h is not None:
                     try:
-                        df = websocket.candles_1h.loc[websocket.candles_1h["market"] == market]
+                        df = websocket.candles_1h.loc[
+                            websocket.candles_1h["market"] == market
+                        ]
+                        using_websocket = True
                     except:
                         pass
             elif granularity == 21600:
                 if websocket.candles_6h is not None:
                     try:
-                        df = websocket.candles_6h.loc[websocket.candles_6h["market"] == market]
+                        df = websocket.candles_6h.loc[
+                            websocket.candles_6h["market"] == market
+                        ]
+                        using_websocket = True
                     except:
                         pass
             elif granularity == 86400:
-                if websocket.candles_6h is not None:
+                if websocket.candles_1d is not None:
                     try:
-                        df = websocket.candles_1d.loc[websocket.candles_6h["market"] == market]
+                        df = websocket.candles_1d.loc[
+                            websocket.candles_1d["market"] == market
+                        ]
+                        using_websocket = True
                     except:
                         pass
 
-        if websocket is None or (websocket is not None and websocket.candles_1h is None):
+        if websocket is None or (websocket is not None and using_websocket is False):
             if iso8601start != "" and iso8601end == "":
                 resp = self.authAPI(
                     "GET",
@@ -780,7 +799,9 @@ class PublicAPI(AuthAPIBase):
             # convert the DataFrame into a time series with the date as the index/key
             try:
                 tsidx = pd.DatetimeIndex(
-                    pd.to_datetime(df["epoch"], unit="s"), dtype="datetime64[ns]", freq=freq
+                    pd.to_datetime(df["epoch"], unit="s"),
+                    dtype="datetime64[ns]",
+                    freq=freq,
                 )
                 df.set_index(tsidx, inplace=True)
                 df = df.drop(columns=["epoch", "index"])
@@ -800,7 +821,16 @@ class PublicAPI(AuthAPIBase):
 
             # re-order columns
             df = df[
-                ["date", "market", "granularity", "low", "high", "open", "close", "volume"]
+                [
+                    "date",
+                    "market",
+                    "granularity",
+                    "low",
+                    "high",
+                    "open",
+                    "close",
+                    "volume",
+                ]
             ]
 
         return df
@@ -1041,18 +1071,30 @@ class WebSocket(AuthAPIBase):
         self.thread.join()
 
     def on_open(self):
-        print("-- Subscribed! --\n")
+        Logger.info("-- Websocket Subscribed! --")
 
     def on_close(self):
-        print("\n-- Socket Closed --")
+        Logger.info("-- Websocket Closed --")
 
     def on_message(self, msg):
-        print(msg)
+        Logger.info(msg)
 
     def on_error(self, e, data=None):
-        print("Error", e)
+        Logger.error(e)
+        Logger.error("{} - data: {}".format(e, data))
+
         self.stop = True
-        print("{} - data: {}".format(e, data))
+        try:
+            self.ws = None
+            self.tickers = None
+            self.candles_1m = None
+            self.candles_5m = None
+            self.candles_15m = None
+            self.candles_1h = None
+            self.candles_6h = None
+            self.candles_1d = None
+        except:
+            pass
 
 
 class WebSocketClient(WebSocket):

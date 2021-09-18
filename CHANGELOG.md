@@ -8,6 +8,14 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [4.0.0] - 2021-09-18
+
+### Added
+
+-- Websockets available for Binance and Coinbase Pro --websocket
+-- Disabled Seasonal ARIMA Model ML by default --enableml
+-- Added websvc.py to Docker
+
 ## [3.6.1] - 2021-09-13
 
 ### Added

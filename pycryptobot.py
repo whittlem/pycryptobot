@@ -486,73 +486,37 @@ def executeJob(
                 log_text = '*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Bullish Pattern - Up")'
                 Logger.info(log_text)
 
-                app.notifyTelegram(
-                    app.getMarket() + " (" + app.printGranularity() + ") " + log_text
-                )
-
             if three_black_crows is True:
                 log_text = '* Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Pattern - Down")'
                 Logger.info(log_text)
-
-                app.notifyTelegram(
-                    app.getMarket() + " (" + app.printGranularity() + ") " + log_text
-                )
 
             if morning_star is True:
                 log_text = '*** Candlestick Detected: Morning Star ("Strong - Reversal - Bullish Pattern - Up")'
                 Logger.info(log_text)
 
-                app.notifyTelegram(
-                    app.getMarket() + " (" + app.printGranularity() + ") " + log_text
-                )
-
             if evening_star is True:
                 log_text = '*** Candlestick Detected: Evening Star ("Strong - Reversal - Bearish Pattern - Down")'
                 Logger.info(log_text)
-
-                app.notifyTelegram(
-                    app.getMarket() + " (" + app.printGranularity() + ") " + log_text
-                )
 
             if three_line_strike is True:
                 log_text = '** Candlestick Detected: Three Line Strike ("Reliable - Reversal - Bullish Pattern - Up")'
                 Logger.info(log_text)
 
-                app.notifyTelegram(
-                    app.getMarket() + " (" + app.printGranularity() + ") " + log_text
-                )
-
             if abandoned_baby is True:
                 log_text = '** Candlestick Detected: Abandoned Baby ("Reliable - Reversal - Bullish Pattern - Up")'
                 Logger.info(log_text)
-
-                app.notifyTelegram(
-                    app.getMarket() + " (" + app.printGranularity() + ") " + log_text
-                )
 
             if morning_doji_star is True:
                 log_text = '** Candlestick Detected: Morning Doji Star ("Reliable - Reversal - Bullish Pattern - Up")'
                 Logger.info(log_text)
 
-                app.notifyTelegram(
-                    app.getMarket() + " (" + app.printGranularity() + ") " + log_text
-                )
-
             if evening_doji_star is True:
                 log_text = '** Candlestick Detected: Evening Doji Star ("Reliable - Reversal - Bearish Pattern - Down")'
                 Logger.info(log_text)
 
-                app.notifyTelegram(
-                    app.getMarket() + " (" + app.printGranularity() + ") " + log_text
-                )
-
             if two_black_gapping is True:
                 log_text = '*** Candlestick Detected: Two Black Gapping ("Reliable - Reversal - Bearish Pattern - Down")'
                 Logger.info(log_text)
-
-                app.notifyTelegram(
-                    app.getMarket() + " (" + app.printGranularity() + ") " + log_text
-                )
 
             ema_co_prefix = ""
             ema_co_suffix = ""
@@ -1400,7 +1364,38 @@ def executeJob(
 
         else:
             list(map(s.cancel, s.queue))
-            if websocket is not None and websocket.tickers is not None:
+            if (
+                app.enableWebsocket()
+                and websocket is not None
+                and (
+                    isinstance(websocket.tickers, pd.DataFrame)
+                    and len(websocket.tickers) == 1
+                )
+                and (
+                    isinstance(websocket.candles_1m, pd.DataFrame)
+                    and len(websocket.candles_1m) == 300
+                )
+                and (
+                    isinstance(websocket.candles_5m, pd.DataFrame)
+                    and len(websocket.candles_5m) == 300
+                )
+                and (
+                    isinstance(websocket.candles_15m, pd.DataFrame)
+                    and len(websocket.candles_15m) == 300
+                )
+                and (
+                    isinstance(websocket.candles_1h, pd.DataFrame)
+                    and len(websocket.candles_1h) == 300
+                )
+                and (
+                    isinstance(websocket.candles_6h, pd.DataFrame)
+                    and len(websocket.candles_6h) == 300
+                )
+                and (
+                    isinstance(websocket.candles_1d, pd.DataFrame)
+                    and len(websocket.candles_1d) == 300
+                )
+            ):
                 # poll every 5 seconds (websocket)
                 s.enter(5, 1, executeJob, (sc, app, state, websocket))
             else:

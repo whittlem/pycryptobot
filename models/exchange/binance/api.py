@@ -923,118 +923,189 @@ class PublicAPI(AuthAPIBase):
         if not isinstance(iso8601end, str):
             raise TypeError("ISO8601 end integer as string required.")
 
-        if iso8601start != "" and iso8601end == "":
-            startTime = int(
-                datetime.timestamp(datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S"))
-                * 1000
+        using_websocket = False
+        if websocket is not None:
+            if granularity == "1m":
+                if websocket.candles_1m is not None:
+                    try:
+                        df = websocket.candles_1m.loc[
+                            websocket.candles_1m["market"] == market
+                        ]
+                        using_websocket = True
+                    except:
+                        pass
+            elif granularity == "5m":
+                if websocket.candles_5m is not None:
+                    try:
+                        df = websocket.candles_5m.loc[
+                            websocket.candles_5m["market"] == market
+                        ]
+                        using_websocket = True
+                    except:
+                        pass
+            elif granularity == "15m":
+                if websocket.candles_15m is not None:
+                    try:
+                        df = websocket.candles_15m.loc[
+                            websocket.candles_15m["market"] == market
+                        ]
+                        using_websocket = True
+                    except:
+                        pass
+            elif granularity == "1h":
+                if websocket.candles_1h is not None:
+                    try:
+                        df = websocket.candles_1h.loc[
+                            websocket.candles_1h["market"] == market
+                        ]
+                        using_websocket = True
+                    except:
+                        pass
+            elif granularity == "6h":
+                if websocket.candles_6h is not None:
+                    try:
+                        df = websocket.candles_6h.loc[
+                            websocket.candles_6h["market"] == market
+                        ]
+                        using_websocket = True
+                    except:
+                        pass
+            elif granularity == "1d":
+                if websocket.candles_1d is not None:
+                    try:
+                        df = websocket.candles_1d.loc[
+                            websocket.candles_1d["market"] == market
+                        ]
+                        using_websocket = True
+                    except:
+                        pass
+
+        if websocket is None or (websocket is not None and using_websocket is False):
+            if iso8601start != "" and iso8601end == "":
+                startTime = int(
+                    datetime.timestamp(
+                        datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")
+                    )
+                    * 1000
+                )
+
+                # GET /api/v3/klines
+                resp = self.authAPI(
+                    "GET",
+                    "/api/v3/klines",
+                    {
+                        "symbol": market,
+                        "interval": granularity,
+                        "startTime": startTime,
+                        "limit": 300,
+                    },
+                )
+            elif iso8601start != "" and iso8601end != "":
+                startTime = int(
+                    datetime.timestamp(
+                        datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")
+                    )
+                    * 1000
+                )
+
+                # GET /api/v3/klines
+                resp = self.authAPI(
+                    "GET",
+                    "/api/v3/klines",
+                    {
+                        "symbol": market,
+                        "interval": granularity,
+                        "startTime": startTime,
+                        "limit": 300,
+                    },
+                )
+            else:
+                # GET /api/v3/klines
+                resp = self.authAPI(
+                    "GET",
+                    "/api/v3/klines",
+                    {"symbol": market, "interval": granularity, "limit": 300},
+                )
+
+            # convert the API response into a Pandas DataFrame
+            df = pd.DataFrame(
+                resp,
+                columns=[
+                    "open_time",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "volume",
+                    "close_time",
+                    "quote_asset_volume",
+                    "number_of_trades",
+                    "taker_buy_base_asset_volume",
+                    "traker_buy_quote_asset_volume",
+                    "ignore",
+                ],
             )
 
-            # GET /api/v3/klines
-            resp = self.authAPI(
-                "GET",
-                "/api/v3/klines",
-                {
-                    "symbol": market,
-                    "interval": granularity,
-                    "startTime": startTime,
-                    "limit": 300,
-                },
-            )
-        elif iso8601start != "" and iso8601end != "":
-            startTime = int(
-                datetime.timestamp(datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S"))
-                * 1000
-            )
+            df["market"] = market
+            df["granularity"] = granularity
 
-            # GET /api/v3/klines
-            resp = self.authAPI(
-                "GET",
-                "/api/v3/klines",
-                {
-                    "symbol": market,
-                    "interval": granularity,
-                    "startTime": startTime,
-                    "limit": 300,
-                },
-            )
-        else:
-            # GET /api/v3/klines
-            resp = self.authAPI(
-                "GET",
-                "/api/v3/klines",
-                {"symbol": market, "interval": granularity, "limit": 300},
-            )
+            # binance epoch is too long
+            df["open_time"] = df["open_time"] + 1
+            df["open_time"] = df["open_time"].astype(str)
+            df["open_time"] = df["open_time"].str.replace(r"\d{3}$", "", regex=True)
 
-        # convert the API response into a Pandas DataFrame
-        df = pd.DataFrame(
-            resp,
-            columns=[
-                "open_time",
-                "open",
-                "high",
-                "low",
-                "close",
-                "volume",
-                "close_time",
-                "quote_asset_volume",
-                "number_of_trades",
-                "taker_buy_base_asset_volume",
-                "traker_buy_quote_asset_volume",
-                "ignore",
-            ],
-        )
+            try:
+                freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity)]
+            except:
+                freq = "D"
 
-        df["market"] = market
-        df["granularity"] = granularity
+            # convert the DataFrame into a time series with the date as the index/key
+            try:
+                tsidx = pd.DatetimeIndex(
+                    pd.to_datetime(df["open_time"], unit="s"),
+                    dtype="datetime64[ns]",
+                    freq=freq,
+                )
+                df.set_index(tsidx, inplace=True)
+                df = df.drop(columns=["open_time"])
+                df.index.names = ["ts"]
+                df["date"] = tsidx
+            except ValueError:
+                tsidx = pd.DatetimeIndex(
+                    pd.to_datetime(df["open_time"], unit="s"), dtype="datetime64[ns]"
+                )
+                df.set_index(tsidx, inplace=True)
+                df = df.drop(columns=["open_time"])
+                df.index.names = ["ts"]
+                df["date"] = tsidx
 
-        # binance epoch is too long
-        df["open_time"] = df["open_time"] + 1
-        df["open_time"] = df["open_time"].astype(str)
-        df["open_time"] = df["open_time"].str.replace(r"\d{3}$", "", regex=True)
+            # if specified, fix end time
+            if iso8601end != "":
+                df = df[df["date"] <= iso8601end]
 
-        try:
-            freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity)]
-        except:
-            freq = "D"
+            # re-order columns
+            df = df[
+                [
+                    "date",
+                    "market",
+                    "granularity",
+                    "low",
+                    "high",
+                    "open",
+                    "close",
+                    "volume",
+                ]
+            ]
 
-        # convert the DataFrame into a time series with the date as the index/key
-        try:
-            tsidx = pd.DatetimeIndex(
-                pd.to_datetime(df["open_time"], unit="s"),
-                dtype="datetime64[ns]",
-                freq=freq,
-            )
-            df.set_index(tsidx, inplace=True)
-            df = df.drop(columns=["open_time"])
-            df.index.names = ["ts"]
-            df["date"] = tsidx
-        except ValueError:
-            tsidx = pd.DatetimeIndex(
-                pd.to_datetime(df["open_time"], unit="s"), dtype="datetime64[ns]"
-            )
-            df.set_index(tsidx, inplace=True)
-            df = df.drop(columns=["open_time"])
-            df.index.names = ["ts"]
-            df["date"] = tsidx
+            # correct column types
+            df["low"] = df["low"].astype(float)
+            df["high"] = df["high"].astype(float)
+            df["open"] = df["open"].astype(float)
+            df["close"] = df["close"].astype(float)
+            df["volume"] = df["volume"].astype(float)
 
-        # if specified, fix end time
-        if iso8601end != "":
-            df = df[df["date"] <= iso8601end]
-
-        # re-order columns
-        df = df[
-            ["date", "market", "granularity", "low", "high", "open", "close", "volume"]
-        ]
-
-        # correct column types
-        df["low"] = df["low"].astype(float)
-        df["high"] = df["high"].astype(float)
-        df["open"] = df["open"].astype(float)
-        df["close"] = df["close"].astype(float)
-        df["volume"] = df["volume"].astype(float)
-
-        # reset pandas dataframe index
-        df.reset_index()
+            # reset pandas dataframe index
+            df.reset_index()
 
         return df
 
@@ -1215,18 +1286,30 @@ class WebSocket(AuthAPIBase):
         self.thread.join()
 
     def on_open(self):
-        print("-- Subscribed! --\n")
+        Logger.info("-- Websocket Subscribed! --")
 
     def on_close(self):
-        print("\n-- Socket Closed --")
+        Logger.info("-- Websocket Closed --")
 
     def on_message(self, msg):
-        print(msg)
+        Logger.info(msg)
 
     def on_error(self, e, data=None):
-        print("Error", e)
+        Logger.error(e)
+        Logger.error("{} - data: {}".format(e, data))
+
         self.stop = True
-        print("{} - data: {}".format(e, data))
+        try:
+            self.ws = None
+            self.tickers = None
+            self.candles_1m = None
+            self.candles_5m = None
+            self.candles_15m = None
+            self.candles_1h = None
+            self.candles_6h = None
+            self.candles_1d = None
+        except:
+            pass
 
 
 class WebSocketClient(WebSocket, AuthAPIBase):
@@ -1257,7 +1340,7 @@ class WebSocketClient(WebSocket, AuthAPIBase):
         if api_url[-1] != "/":
             api_url = api_url + "/"
 
-        if api_url == 'https://api.binance.us':
+        if api_url == "https://api.binance.us":
             valid_ws_urls = [
                 "wss://stream.binance.us:9443",
                 "wss://stream.binance.us:9443/",
@@ -1615,11 +1698,21 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                             by=["date"]
                         )
                         # set correct column types
-                        self.candles_1m["open"] = self.candles_1m["open"].astype("float64")
-                        self.candles_1m["high"] = self.candles_1m["high"].astype("float64")
-                        self.candles_1m["close"] = self.candles_1m["close"].astype("float64")
-                        self.candles_1m["low"] = self.candles_1m["low"].astype("float64")
-                        self.candles_1m["volume"] = self.candles_1m["volume"].astype("float64")
+                        self.candles_1m["open"] = self.candles_1m["open"].astype(
+                            "float64"
+                        )
+                        self.candles_1m["high"] = self.candles_1m["high"].astype(
+                            "float64"
+                        )
+                        self.candles_1m["close"] = self.candles_1m["close"].astype(
+                            "float64"
+                        )
+                        self.candles_1m["low"] = self.candles_1m["low"].astype(
+                            "float64"
+                        )
+                        self.candles_1m["volume"] = self.candles_1m["volume"].astype(
+                            "float64"
+                        )
 
                     if self.candles_5m is not None:
                         # keep last 300 candles per market
@@ -1629,11 +1722,21 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                             by=["date"]
                         )
                         # set correct column types
-                        self.candles_5m["open"] = self.candles_5m["open"].astype("float64")
-                        self.candles_5m["high"] = self.candles_5m["high"].astype("float64")
-                        self.candles_5m["close"] = self.candles_5m["close"].astype("float64")
-                        self.candles_5m["low"] = self.candles_5m["low"].astype("float64")
-                        self.candles_5m["volume"] = self.candles_15m["volume"].astype("float64")
+                        self.candles_5m["open"] = self.candles_5m["open"].astype(
+                            "float64"
+                        )
+                        self.candles_5m["high"] = self.candles_5m["high"].astype(
+                            "float64"
+                        )
+                        self.candles_5m["close"] = self.candles_5m["close"].astype(
+                            "float64"
+                        )
+                        self.candles_5m["low"] = self.candles_5m["low"].astype(
+                            "float64"
+                        )
+                        self.candles_5m["volume"] = self.candles_15m["volume"].astype(
+                            "float64"
+                        )
 
                     if self.candles_15m is not None:
                         # keep last 300 candles per market
@@ -1643,11 +1746,21 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                             by=["date"]
                         )
                         # set correct column types
-                        self.candles_15m["open"] = self.candles_15m["open"].astype("float64")
-                        self.candles_15m["high"] = self.candles_15m["high"].astype("float64")
-                        self.candles_15m["close"] = self.candles_15m["close"].astype("float64")
-                        self.candles_15m["low"] = self.candles_15m["low"].astype("float64")
-                        self.candles_15m["volume"] = self.candles_15m["volume"].astype("float64")
+                        self.candles_15m["open"] = self.candles_15m["open"].astype(
+                            "float64"
+                        )
+                        self.candles_15m["high"] = self.candles_15m["high"].astype(
+                            "float64"
+                        )
+                        self.candles_15m["close"] = self.candles_15m["close"].astype(
+                            "float64"
+                        )
+                        self.candles_15m["low"] = self.candles_15m["low"].astype(
+                            "float64"
+                        )
+                        self.candles_15m["volume"] = self.candles_15m["volume"].astype(
+                            "float64"
+                        )
 
                     if self.candles_1h is not None:
                         # keep last 300 candles per market
@@ -1657,11 +1770,21 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                             by=["date"]
                         )
                         # set correct column types
-                        self.candles_1h["open"] = self.candles_1h["open"].astype("float64")
-                        self.candles_1h["high"] = self.candles_1h["high"].astype("float64")
-                        self.candles_1h["close"] = self.candles_1h["close"].astype("float64")
-                        self.candles_1h["low"] = self.candles_1h["low"].astype("float64")
-                        self.candles_1h["volume"] = self.candles_1h["volume"].astype("float64")
+                        self.candles_1h["open"] = self.candles_1h["open"].astype(
+                            "float64"
+                        )
+                        self.candles_1h["high"] = self.candles_1h["high"].astype(
+                            "float64"
+                        )
+                        self.candles_1h["close"] = self.candles_1h["close"].astype(
+                            "float64"
+                        )
+                        self.candles_1h["low"] = self.candles_1h["low"].astype(
+                            "float64"
+                        )
+                        self.candles_1h["volume"] = self.candles_1h["volume"].astype(
+                            "float64"
+                        )
 
                     if self.candles_6h is not None:
                         # keep last 300 candles per market
@@ -1671,12 +1794,21 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                             by=["date"]
                         )
                         # set correct column types
-                        self.candles_6h["open"] = self.candles_6h["open"].astype("float64")
-                        self.candles_6h["high"] = self.candles_6h["high"].astype("float64")
-                        self.candles_6h["close"] = self.candles_6h["close"].astype("float64")
-                        self.candles_6h["low"] = self.candles_6h["low"].astype("float64")
-                        self.candles_6h["volume"] = self.candles_6h["volume"].astype("float64")
-
+                        self.candles_6h["open"] = self.candles_6h["open"].astype(
+                            "float64"
+                        )
+                        self.candles_6h["high"] = self.candles_6h["high"].astype(
+                            "float64"
+                        )
+                        self.candles_6h["close"] = self.candles_6h["close"].astype(
+                            "float64"
+                        )
+                        self.candles_6h["low"] = self.candles_6h["low"].astype(
+                            "float64"
+                        )
+                        self.candles_6h["volume"] = self.candles_6h["volume"].astype(
+                            "float64"
+                        )
 
                     if self.candles_1d is not None:
                         # keep last 300 candles per market
@@ -1686,11 +1818,21 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                             by=["date"]
                         )
                         # set correct column types
-                        self.candles_1d["open"] = self.candles_1d["open"].astype("float64")
-                        self.candles_1d["high"] = self.candles_1d["high"].astype("float64")
-                        self.candles_1d["close"] = self.candles_1d["close"].astype("float64")
-                        self.candles_1d["low"] = self.candles_1d["low"].astype("float64")
-                        self.candles_1d["volume"] = self.candles_1d["volume"].astype("float64")
+                        self.candles_1d["open"] = self.candles_1d["open"].astype(
+                            "float64"
+                        )
+                        self.candles_1d["high"] = self.candles_1d["high"].astype(
+                            "float64"
+                        )
+                        self.candles_1d["close"] = self.candles_1d["close"].astype(
+                            "float64"
+                        )
+                        self.candles_1d["low"] = self.candles_1d["low"].astype(
+                            "float64"
+                        )
+                        self.candles_1d["volume"] = self.candles_1d["volume"].astype(
+                            "float64"
+                        )
 
         # print (f'{msg["time"]} {msg["product_id"]} {msg["price"]}')
         # print(json.dumps(msg, indent=4, sort_keys=True))
