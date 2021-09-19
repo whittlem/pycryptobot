@@ -423,7 +423,9 @@ class PyCryptoBot(BotConfig):
         result_df = pd.DataFrame()
         while iterations < (max_interations - 1):
             start_date, end_date = getPreviousDateRange(df1)
-            df2 = self.getHistoricalData(market, granularity, None, start_date, end_date)
+            df2 = self.getHistoricalData(
+                market, granularity, None, start_date, end_date
+            )
             result_df = pd.concat([df2, df1]).drop_duplicates()
             df1 = result_df
             iterations = iterations + 1

@@ -19,8 +19,8 @@ try:
     websocket = BWebSocketClient(
         [
             "BTCUSDT",
-            # "BTCGBP",
-        ]
+        ],
+        "1m",
     )
     websocket.start()
     message_count = 0
@@ -32,12 +32,7 @@ try:
             ):
                 cls()
                 print("\nMessageCount =", "%i \n" % websocket.message_count)
-                # print(websocket.candles_1m)
-                # print(websocket.candles_5m)
-                # print(websocket.candles_15m)
-                print(websocket.candles_1h)
-                # print(websocket.candles_6h)
-                # print(websocket.candles_1d)
+                print(websocket.candles)
                 message_count = websocket.message_count
                 time.sleep(5)  # output every 5 seconds, websocket is realtime
 

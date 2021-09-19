@@ -42,6 +42,11 @@ class AuthAPIBase:
             epoch_str = str(epoch)[0:10]
             return datetime.fromtimestamp(int(epoch_str))
 
+    def to_binance_granularity(self, granularity: int) -> str:
+        return {60: "1m", 300: "5m", 900: "15m", 3600: "1h", 21600: "6h", 86400: "1d"}[
+            granularity
+        ]
+
 
 class AuthAPI(AuthAPIBase):
     def __init__(
@@ -925,60 +930,12 @@ class PublicAPI(AuthAPIBase):
 
         using_websocket = False
         if websocket is not None:
-            if granularity == "1m":
-                if websocket.candles_1m is not None:
-                    try:
-                        df = websocket.candles_1m.loc[
-                            websocket.candles_1m["market"] == market
-                        ]
-                        using_websocket = True
-                    except:
-                        pass
-            elif granularity == "5m":
-                if websocket.candles_5m is not None:
-                    try:
-                        df = websocket.candles_5m.loc[
-                            websocket.candles_5m["market"] == market
-                        ]
-                        using_websocket = True
-                    except:
-                        pass
-            elif granularity == "15m":
-                if websocket.candles_15m is not None:
-                    try:
-                        df = websocket.candles_15m.loc[
-                            websocket.candles_15m["market"] == market
-                        ]
-                        using_websocket = True
-                    except:
-                        pass
-            elif granularity == "1h":
-                if websocket.candles_1h is not None:
-                    try:
-                        df = websocket.candles_1h.loc[
-                            websocket.candles_1h["market"] == market
-                        ]
-                        using_websocket = True
-                    except:
-                        pass
-            elif granularity == "6h":
-                if websocket.candles_6h is not None:
-                    try:
-                        df = websocket.candles_6h.loc[
-                            websocket.candles_6h["market"] == market
-                        ]
-                        using_websocket = True
-                    except:
-                        pass
-            elif granularity == "1d":
-                if websocket.candles_1d is not None:
-                    try:
-                        df = websocket.candles_1d.loc[
-                            websocket.candles_1d["market"] == market
-                        ]
-                        using_websocket = True
-                    except:
-                        pass
+            if websocket.candles is not None:
+                try:
+                    df = websocket.candles.loc[websocket.candles["market"] == market]
+                    using_websocket = True
+                except:
+                    pass
 
         if websocket is None or (websocket is not None and using_websocket is False):
             if iso8601start != "" and iso8601end == "":
@@ -1168,7 +1125,8 @@ class PublicAPI(AuthAPIBase):
 class WebSocket(AuthAPIBase):
     def __init__(
         self,
-        markets=None,
+        market=None,
+        granularity=None,
         api_url="https://api.binance.com",
         ws_url: str = "wss://stream.binance.com:9443",
     ) -> None:
@@ -1204,6 +1162,7 @@ class WebSocket(AuthAPIBase):
         self._api_url = api_url
 
         self.markets = None
+        self.granularity = granularity
         self.type = "SUBSCRIBE"
         self.stop = True
         self.error = None
@@ -1232,14 +1191,21 @@ class WebSocket(AuthAPIBase):
         params = []
         for market in self.markets:
             params.append(f"{market.lower()}@miniTicker")
-            params.append(f"{market.lower()}@kline_1m")
-            params.append(f"{market.lower()}@kline_5m")
-            params.append(f"{market.lower()}@kline_15m")
-            params.append(f"{market.lower()}@kline_1h")
-            params.append(f"{market.lower()}@kline_6h")
-            params.append(f"{market.lower()}@kline_1d")
 
-        self.ws = create_connection("wss://stream.binance.com:9443/ws")
+            if self.granularity == "1m":
+                params.append(f"{market.lower()}@kline_1m")
+            elif self.granularity == "5m":
+                params.append(f"{market.lower()}@kline_5m")
+            elif self.granularity == "15m":
+                params.append(f"{market.lower()}@kline_15m")
+            elif self.granularity == "1h":
+                params.append(f"{market.lower()}@kline_1h")
+            elif self.granularity == "6h":
+                params.append(f"{market.lower()}@kline_6h")
+            elif self.granularity == "1d":
+                params.append(f"{market.lower()}@kline_1d")
+
+        self.ws = create_connection(f"{self._ws_url}ws")
         self.ws.send(
             json.dumps(
                 {
@@ -1302,12 +1268,7 @@ class WebSocket(AuthAPIBase):
         try:
             self.ws = None
             self.tickers = None
-            self.candles_1m = None
-            self.candles_5m = None
-            self.candles_15m = None
-            self.candles_1h = None
-            self.candles_6h = None
-            self.candles_1d = None
+            self.candles = None
         except:
             pass
 
@@ -1315,7 +1276,8 @@ class WebSocket(AuthAPIBase):
 class WebSocketClient(WebSocket, AuthAPIBase):
     def __init__(
         self,
-        markets: list = [],
+        markets: list = [DEFAULT_MARKET],
+        granularity: str = DEFAULT_GRANULARITY,
         api_url="https://api.binance.com",
         ws_url: str = "wss://stream.binance.com:9443",
     ) -> None:
@@ -1326,6 +1288,16 @@ class WebSocketClient(WebSocket, AuthAPIBase):
             # validates the market is syntactically correct
             if not self._isMarketValid(market):
                 raise ValueError("Binance market is invalid.")
+
+        # validates granularity is a string
+        if not isinstance(self.to_binance_granularity(granularity), str):
+            raise TypeError("Granularity string required.")
+
+        # validates the granularity is supported by Binance
+        if not self.to_binance_granularity(granularity) in SUPPORTED_GRANULARITY:
+            raise TypeError(
+                "Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY))
+            )
 
         valid_urls = [
             "https://api.binance.com",
@@ -1360,13 +1332,9 @@ class WebSocketClient(WebSocket, AuthAPIBase):
 
         self._ws_url = ws_url
         self.markets = markets
+        self.granularity = self.to_binance_granularity(granularity)
         self.tickers = None
-        self.candles_1m = None
-        self.candles_5m = None
-        self.candles_15m = None
-        self.candles_1h = None
-        self.candles_6h = None
-        self.candles_1d = None
+        self.candles = None
 
     def on_open(self):
         self.message_count = 0
@@ -1397,12 +1365,18 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                 df["price"] = df["price"].astype("float64")
 
                 # form candles
-                df["candle_1m"] = df["date"].dt.floor(freq="1T")
-                df["candle_5m"] = df["date"].dt.floor(freq="5T")
-                df["candle_15m"] = df["date"].dt.floor(freq="15T")
-                df["candle_1h"] = df["date"].dt.floor(freq="1H")
-                df["candle_6h"] = df["date"].dt.floor(freq="6H")
-                df["candle_1d"] = df["date"].dt.floor(freq="1D")
+                if self.granularity == "1m":
+                    df["candle"] = df["date"].dt.floor(freq="1T")
+                elif self.granularity == "5m":
+                    df["candle"] = df["date"].dt.floor(freq="5T")
+                elif self.granularity == "15m":
+                    df["candle"] = df["date"].dt.floor(freq="15T")
+                elif self.granularity == "1h":
+                    df["candle"] = df["date"].dt.floor(freq="1H")
+                elif self.granularity == "6h":
+                    df["candle"] = df["date"].dt.floor(freq="6H")
+                elif self.granularity == "1d":
+                    df["candle"] = df["date"].dt.floor(freq="1D")
 
             if df is not None:
                 # insert first entry
@@ -1462,14 +1436,14 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                         ],
                     )
 
-                    if self.candles_1m is None:
+                    if self.candles is None:
                         resp = PublicAPI().getHistoricalData(
-                            df["market"].values[0], "1m"
+                            df["market"].values[0], self.granularity
                         )
                         if len(resp) > 0:
-                            self.candles_1m = resp
+                            self.candles = resp
                         else:
-                            self.candles_1m = pd.DataFrame(
+                            self.candles = pd.DataFrame(
                                 columns=[
                                     "date",
                                     "market",
@@ -1483,354 +1457,34 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                                 data=[],
                             )
 
-                    if k["i"] == "1m" and k["x"] is True:
+                    if k["i"] == self.granularity and k["x"] is True:
                         # check if the current candle exists
                         candle_exists = (
-                            (self.candles_1m["date"] == df["date"].values[0])
-                            & (self.candles_1m["market"] == df["market"].values[0])
+                            (self.candles["date"] == df["date"].values[0])
+                            & (self.candles["market"] == df["market"].values[0])
                         ).any()
                         if not candle_exists:
-                            self.candles_1m = self.candles_1m.append(df)
+                            self.candles = self.candles.append(df)
 
                         tsidx = pd.DatetimeIndex(
-                            pd.to_datetime(self.candles_1m["date"]).dt.strftime(
+                            pd.to_datetime(self.candles["date"]).dt.strftime(
                                 "%Y-%m-%dT%H:%M:%S.%Z"
                             )
                         )
-                        self.candles_1m.set_index(tsidx, inplace=True)
-                        self.candles_1m.index.name = "ts"
+                        self.candles.set_index(tsidx, inplace=True)
+                        self.candles.index.name = "ts"
 
-                    if self.candles_5m is None:
-                        resp = PublicAPI().getHistoricalData(
-                            df["market"].values[0], "5m"
-                        )
-                        if len(resp) > 0:
-                            self.candles_5m = resp
-                        else:
-                            self.candles_5m = pd.DataFrame(
-                                columns=[
-                                    "date",
-                                    "market",
-                                    "granularity",
-                                    "low",
-                                    "high",
-                                    "open",
-                                    "close",
-                                    "volume",
-                                ],
-                                data=[],
-                            )
-
-                    if k["i"] == "5m" and k["x"] is True:
-                        # check if the current candle exists
-                        candle_exists = (
-                            (self.candles_5m["date"] == df["date"].values[0])
-                            & (self.candles_5m["market"] == df["market"].values[0])
-                        ).any()
-                        if not candle_exists:
-                            self.candles_5m = self.candles_5m.append(df)
-
-                        tsidx = pd.DatetimeIndex(
-                            pd.to_datetime(self.candles_5m["date"]).dt.strftime(
-                                "%Y-%m-%dT%H:%M:%S.%Z"
-                            )
-                        )
-                        self.candles_5m.set_index(tsidx, inplace=True)
-                        self.candles_5m.index.name = "ts"
-
-                    if self.candles_15m is None:
-                        resp = PublicAPI().getHistoricalData(
-                            df["market"].values[0], "15m"
-                        )
-                        if len(resp) > 0:
-                            self.candles_15m = resp
-                        else:
-                            self.candles_15m = pd.DataFrame(
-                                columns=[
-                                    "date",
-                                    "market",
-                                    "granularity",
-                                    "low",
-                                    "high",
-                                    "open",
-                                    "close",
-                                    "volume",
-                                ],
-                                data=[],
-                            )
-
-                    if k["i"] == "15m" and k["x"] is True:
-                        # check if the current candle exists
-                        candle_exists = (
-                            (self.candles_15m["date"] == df["date"].values[0])
-                            & (self.candles_15m["market"] == df["market"].values[0])
-                        ).any()
-                        if not candle_exists:
-                            self.candles_15m = self.candles_15m.append(df)
-
-                        tsidx = pd.DatetimeIndex(
-                            pd.to_datetime(self.candles_15m["date"]).dt.strftime(
-                                "%Y-%m-%dT%H:%M:%S.%Z"
-                            )
-                        )
-                        self.candles_15m.set_index(tsidx, inplace=True)
-                        self.candles_15m.index.name = "ts"
-
-                    if self.candles_1h is None:
-                        resp = PublicAPI().getHistoricalData(
-                            df["market"].values[0], "1h"
-                        )
-                        if len(resp) > 0:
-                            self.candles_1h = resp
-                        else:
-                            self.candles_1h = pd.DataFrame(
-                                columns=[
-                                    "date",
-                                    "market",
-                                    "granularity",
-                                    "low",
-                                    "high",
-                                    "open",
-                                    "close",
-                                    "volume",
-                                ],
-                                data=[],
-                            )
-
-                    if k["i"] == "1h" and k["x"] is True:
-                        # check if the current candle exists
-                        candle_exists = (
-                            (self.candles_1h["date"] == df["date"].values[0])
-                            & (self.candles_1h["market"] == df["market"].values[0])
-                        ).any()
-                        if not candle_exists:
-                            self.candles_1h = self.candles_1h.append(df)
-
-                        tsidx = pd.DatetimeIndex(
-                            pd.to_datetime(self.candles_1h["date"]).dt.strftime(
-                                "%Y-%m-%dT%H:%M:%S.%Z"
-                            )
-                        )
-                        self.candles_1h.set_index(tsidx, inplace=True)
-                        self.candles_1h.index.name = "ts"
-
-                    if self.candles_6h is None:
-                        resp = PublicAPI().getHistoricalData(
-                            df["market"].values[0], "6h"
-                        )
-                        if len(resp) > 0:
-                            self.candles_6h = resp
-                        else:
-                            self.candles_6h = pd.DataFrame(
-                                columns=[
-                                    "date",
-                                    "market",
-                                    "granularity",
-                                    "low",
-                                    "high",
-                                    "open",
-                                    "close",
-                                    "volume",
-                                ],
-                                data=[],
-                            )
-
-                    if k["i"] == "6h" and k["x"] is True:
-                        # check if the current candle exists
-                        candle_exists = (
-                            (self.candles_6h["date"] == df["date"].values[0])
-                            & (self.candles_6h["market"] == df["market"].values[0])
-                        ).any()
-                        if not candle_exists:
-                            self.candles_6h = self.candles_6h.append(df)
-
-                        tsidx = pd.DatetimeIndex(
-                            pd.to_datetime(self.candles_6h["date"]).dt.strftime(
-                                "%Y-%m-%dT%H:%M:%S.%Z"
-                            )
-                        )
-                        self.candles_6h.set_index(tsidx, inplace=True)
-                        self.candles_6h.index.name = "ts"
-
-                    if self.candles_1d is None:
-                        resp = PublicAPI().getHistoricalData(
-                            df["market"].values[0], "1d"
-                        )
-                        if len(resp) > 0:
-                            self.candles_1d = resp
-                        else:
-                            self.candles_1d = pd.DataFrame(
-                                columns=[
-                                    "date",
-                                    "market",
-                                    "granularity",
-                                    "low",
-                                    "high",
-                                    "open",
-                                    "close",
-                                    "volume",
-                                ],
-                                data=[],
-                            )
-
-                    if k["i"] == "1d" and k["x"] is True:
-                        # check if the current candle exists
-                        candle_exists = (
-                            (self.candles_1d["date"] == df["date"].values[0])
-                            & (self.candles_1d["market"] == df["market"].values[0])
-                        ).any()
-                        if not candle_exists:
-                            self.candles_1d = self.candles_1d.append(df)
-
-                        tsidx = pd.DatetimeIndex(
-                            pd.to_datetime(self.candles_1d["date"]).dt.strftime(
-                                "%Y-%m-%dT%H:%M:%S.%Z"
-                            )
-                        )
-                        self.candles_1d.set_index(tsidx, inplace=True)
-                        self.candles_1d.index.name = "ts"
-
-                    if self.candles_1m is not None:
+                    if self.candles is not None:
                         # keep last 300 candles per market
-                        self.candles_1m = self.candles_1m.groupby("market").tail(300)
+                        self.candles = self.candles.groupby("market").tail(300)
                         # sort columns by date
-                        self.candles_1m = self.candles_1m.copy().sort_values(
-                            by=["date"]
-                        )
+                        self.candles = self.candles.copy().sort_values(by=["date"])
                         # set correct column types
-                        self.candles_1m["open"] = self.candles_1m["open"].astype(
-                            "float64"
-                        )
-                        self.candles_1m["high"] = self.candles_1m["high"].astype(
-                            "float64"
-                        )
-                        self.candles_1m["close"] = self.candles_1m["close"].astype(
-                            "float64"
-                        )
-                        self.candles_1m["low"] = self.candles_1m["low"].astype(
-                            "float64"
-                        )
-                        self.candles_1m["volume"] = self.candles_1m["volume"].astype(
-                            "float64"
-                        )
-
-                    if self.candles_5m is not None:
-                        # keep last 300 candles per market
-                        self.candles_5m = self.candles_5m.groupby("market").tail(300)
-                        # sort columns by date
-                        self.candles_5m = self.candles_5m.copy().sort_values(
-                            by=["date"]
-                        )
-                        # set correct column types
-                        self.candles_5m["open"] = self.candles_5m["open"].astype(
-                            "float64"
-                        )
-                        self.candles_5m["high"] = self.candles_5m["high"].astype(
-                            "float64"
-                        )
-                        self.candles_5m["close"] = self.candles_5m["close"].astype(
-                            "float64"
-                        )
-                        self.candles_5m["low"] = self.candles_5m["low"].astype(
-                            "float64"
-                        )
-                        self.candles_5m["volume"] = self.candles_15m["volume"].astype(
-                            "float64"
-                        )
-
-                    if self.candles_15m is not None:
-                        # keep last 300 candles per market
-                        self.candles_15m = self.candles_15m.groupby("market").tail(300)
-                        # sort columns by date
-                        self.candles_15m = self.candles_15m.copy().sort_values(
-                            by=["date"]
-                        )
-                        # set correct column types
-                        self.candles_15m["open"] = self.candles_15m["open"].astype(
-                            "float64"
-                        )
-                        self.candles_15m["high"] = self.candles_15m["high"].astype(
-                            "float64"
-                        )
-                        self.candles_15m["close"] = self.candles_15m["close"].astype(
-                            "float64"
-                        )
-                        self.candles_15m["low"] = self.candles_15m["low"].astype(
-                            "float64"
-                        )
-                        self.candles_15m["volume"] = self.candles_15m["volume"].astype(
-                            "float64"
-                        )
-
-                    if self.candles_1h is not None:
-                        # keep last 300 candles per market
-                        self.candles_1h = self.candles_1h.groupby("market").tail(300)
-                        # sort columns by date
-                        self.candles_1h = self.candles_1h.copy().sort_values(
-                            by=["date"]
-                        )
-                        # set correct column types
-                        self.candles_1h["open"] = self.candles_1h["open"].astype(
-                            "float64"
-                        )
-                        self.candles_1h["high"] = self.candles_1h["high"].astype(
-                            "float64"
-                        )
-                        self.candles_1h["close"] = self.candles_1h["close"].astype(
-                            "float64"
-                        )
-                        self.candles_1h["low"] = self.candles_1h["low"].astype(
-                            "float64"
-                        )
-                        self.candles_1h["volume"] = self.candles_1h["volume"].astype(
-                            "float64"
-                        )
-
-                    if self.candles_6h is not None:
-                        # keep last 300 candles per market
-                        self.candles_6h = self.candles_6h.groupby("market").tail(300)
-                        # sort columns by date
-                        self.candles_6h = self.candles_6h.copy().sort_values(
-                            by=["date"]
-                        )
-                        # set correct column types
-                        self.candles_6h["open"] = self.candles_6h["open"].astype(
-                            "float64"
-                        )
-                        self.candles_6h["high"] = self.candles_6h["high"].astype(
-                            "float64"
-                        )
-                        self.candles_6h["close"] = self.candles_6h["close"].astype(
-                            "float64"
-                        )
-                        self.candles_6h["low"] = self.candles_6h["low"].astype(
-                            "float64"
-                        )
-                        self.candles_6h["volume"] = self.candles_6h["volume"].astype(
-                            "float64"
-                        )
-
-                    if self.candles_1d is not None:
-                        # keep last 300 candles per market
-                        self.candles_1d = self.candles_1d.groupby("market").tail(300)
-                        # sort columns by date
-                        self.candles_1d = self.candles_1d.copy().sort_values(
-                            by=["date"]
-                        )
-                        # set correct column types
-                        self.candles_1d["open"] = self.candles_1d["open"].astype(
-                            "float64"
-                        )
-                        self.candles_1d["high"] = self.candles_1d["high"].astype(
-                            "float64"
-                        )
-                        self.candles_1d["close"] = self.candles_1d["close"].astype(
-                            "float64"
-                        )
-                        self.candles_1d["low"] = self.candles_1d["low"].astype(
-                            "float64"
-                        )
-                        self.candles_1d["volume"] = self.candles_1d["volume"].astype(
+                        self.candles["open"] = self.candles["open"].astype("float64")
+                        self.candles["high"] = self.candles["high"].astype("float64")
+                        self.candles["close"] = self.candles["close"].astype("float64")
+                        self.candles["low"] = self.candles["low"].astype("float64")
+                        self.candles["volume"] = self.candles["volume"].astype(
                             "float64"
                         )
 

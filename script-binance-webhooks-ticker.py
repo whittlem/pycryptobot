@@ -16,14 +16,7 @@ def signal_handler(signum, frame):
 
 
 try:
-    websocket = BWebSocketClient(
-        [
-            "BTCUSDT",
-            #"BTCEUR",
-            #"BTCGBP",
-            #"BTCZAR",
-        ]
-    )
+    websocket = BWebSocketClient(["BTCUSDT"], "1m")
     websocket.start()
     message_count = 0
     while True:
@@ -36,7 +29,7 @@ try:
                 print("\nMessageCount =", "%i \n" % websocket.message_count)
                 print(websocket.tickers)
                 message_count = websocket.message_count
-                time.sleep(5) # output every 5 seconds, websocket is realtime
+                time.sleep(5)  # output every 5 seconds, websocket is realtime
 
 # catches a keyboard break of app, exits gracefully
 except KeyboardInterrupt:

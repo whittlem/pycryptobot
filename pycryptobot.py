@@ -1372,28 +1372,8 @@ def executeJob(
                     and len(websocket.tickers) == 1
                 )
                 and (
-                    isinstance(websocket.candles_1m, pd.DataFrame)
-                    and len(websocket.candles_1m) == 300
-                )
-                and (
-                    isinstance(websocket.candles_5m, pd.DataFrame)
-                    and len(websocket.candles_5m) == 300
-                )
-                and (
-                    isinstance(websocket.candles_15m, pd.DataFrame)
-                    and len(websocket.candles_15m) == 300
-                )
-                and (
-                    isinstance(websocket.candles_1h, pd.DataFrame)
-                    and len(websocket.candles_1h) == 300
-                )
-                and (
-                    isinstance(websocket.candles_6h, pd.DataFrame)
-                    and len(websocket.candles_6h) == 300
-                )
-                and (
-                    isinstance(websocket.candles_1d, pd.DataFrame)
-                    and len(websocket.candles_1d) == 300
+                    isinstance(websocket.candles, pd.DataFrame)
+                    and len(websocket.candles) == 300
                 )
             ):
                 # poll every 5 seconds (websocket)
@@ -1414,13 +1394,13 @@ def main(websocket):
             message += "Coinbase Pro bot"
             if app.enableWebsocket():
                 print("Opening websocket to Coinbase Pro...")
-                websocket = CWebSocketClient([app.getMarket()])
+                websocket = CWebSocketClient([app.getMarket()], app.getGranularity())
                 websocket.start()
         elif app.getExchange() == "binance":
             message += "Binance bot"
             if app.enableWebsocket():
                 print("Opening websocket to Binance...")
-                websocket = BWebSocketClient([app.getMarket()])
+                websocket = BWebSocketClient([app.getMarket()], app.getGranularity())
                 websocket.start()
 
         smartSwitchStatus = "enabled" if app.getSmartSwitch() else "disabled"
