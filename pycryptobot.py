@@ -1361,8 +1361,8 @@ def executeJob(
             # decrement ignored iteration
             state.iterations = state.iterations - 1
 
-        # if live
-        if not app.disableTracker() and app.isLive():
+        # if live but not websockets
+        if not app.disableTracker() and app.isLive() and not app.enableWebsocket():
             # update order tracker csv
             if app.getExchange() == "binance":
                 account.saveTrackerCSV(app.getMarket())
