@@ -72,6 +72,9 @@ def executeJob(
         healthcheck = True
     elif "kucoin" in app.getAPIURL() and requests.head("https://www.kucoin.com").status_code == 200:
         healthcheck = True
+    else:
+        Logger.warning("Healthcheck not working as expected!")
+        healthcheck = True
 
     # connectivity check (only when running live)
     if app.isLive() and healthcheck is False:
