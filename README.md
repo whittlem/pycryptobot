@@ -259,6 +259,33 @@ Or, for binance:
         XXXXXXXXXXXXXXXXXXXX
         YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
 
+Or, for kucoin:
+
+    config: >
+        {
+            "kucoin": {
+                "api_url": "https://api.kucoin.com",
+                "config": {
+                    "base_currency": "ETH",
+                    "quote_currency": "EUR",
+                    "live": 1,
+                    "sellatloss": 0,
+                    "disablelog": 1,
+                    "autorestart": 1
+                },
+                "api_key_file": "/app/keys/coinbasepro.key"
+            },
+            "telegram" : {
+                "token" : "<telegram_token>",
+                "client_id" : "<client_id>",
+            }
+        }
+
+    kucoin_key: |
+        XXXXXXXXXXXXXXXXXXXX
+        YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+        zzzzzzzzzzzz
+
 Or both:
 
     config: >
@@ -287,6 +314,18 @@ Or both:
                 },
                 "api_key_file": "/app/keys/binance.key"
             },
+            "kucoin": {
+                "api_url": "https://api.kucoin.com",
+                "config": {
+                    "base_currency": "ETH",
+                    "quote_currency": "EUR",
+                    "live": 1,
+                    "sellatloss": 0,
+                    "disablelog": 1,
+                    "autorestart": 1
+                },
+                "api_key_file": "/app/keys/kucoin.key"
+            },
             "telegram" : {
                 "token" : "<telegram_token>",
                 "client_id" : "<client_id>",
@@ -300,6 +339,10 @@ Or both:
     binance_key: |
         XXXXXXXXXXXXXXXXXXXX
         YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+    kucoin_key: |
+        XXXXXXXXXXXXXXXXXXXX
+        YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+        zzzzzzzzzzzz
 
 Then run:
 
@@ -400,15 +443,15 @@ With `--tradesfile` you can control the name and where file is stored, eg `--tra
 
 From now on it's recommended NOT to store the credentials in the config file because people share configs and may inadvertently share their API keys within.
 
-Instead, please, create `binance.key` or `coinbase.key` (or use your own names for the files) and refer to these files in the `config.json` file as:
+Instead, please, create `binance.key` or `coinbase.key` or `kucoin.key` (or use your own names for the files) and refer to these files in the `config.json` file as:
 
     "api_key_file" : "binance.key"
 
 Once you have done that, "api_key" and "api_secret" can be safely removed from your config file and you're free to share your configs without worrying of leaked credentials.
 
-### binance.key / conbase.key examples
+### binance.key / conbase.key / kucoin.key examples
 
-Actually it's pretty simple, these files are supposed to be a simple text files with the API key on the first line, API secret on the second line and in case of coinbase, probably the API password on the third. No comments or anything else is allowed, just the long string of numbers:
+Actually it's pretty simple, these files are supposed to be a simple text files with the API key on the first line, API secret on the second line and in case of coinbase and kucoin, probably the API password on the third. No comments or anything else is allowed, just the long string of numbers:
 
     0234238792873423...82736827638472
     68473847745876abscd9872...8237642
@@ -476,7 +519,19 @@ Binance only (new format)
         }
     }
 
-Coinbase Pro and Binance (new format)
+Kucoin (using smart switching)
+
+    {
+        "api_url" : "https://api.kucoin.com",
+        "api_key_file" : "kucoin.key",
+        "config" : {
+            "base_currency" : "BTC",
+            "quote_currency" : "GBP",
+            "live" : 1,
+            "sellatloss" : 0
+        }
+    }
+Coinbase Pro, Binance and Kucoin (new format)
 
     {
         "binance" : {
@@ -493,6 +548,17 @@ Coinbase Pro and Binance (new format)
         "coinbasepro" : {
             "api_url" : "https://api.pro.coinbase.com",
             "api_key_file" : "coinbase.key",
+            "config" : {
+                "base_currency" : "BTC",
+                "quote_currency" : "GBP",
+                "granularity" : "3600",
+                "live" : 0,
+                "verbose" : 0
+            }
+        },
+        "kucoin" : {
+            "api_url" : "https://api.kucoin.com",
+            "api_key_file" : "kucoin.key",
             "config" : {
                 "base_currency" : "BTC",
                 "quote_currency" : "GBP",

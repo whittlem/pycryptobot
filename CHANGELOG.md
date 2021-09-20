@@ -12,6 +12,7 @@ Upgrade library dependencies (if required):
 
 ### Added
 
+-- Kucoin exchange API (websockets not enabled)
 -- Websockets available for Binance and Coinbase Pro --websocket
 -- Disabled Seasonal ARIMA Model ML by default --enableml
 -- Added websvc.py to Docker
