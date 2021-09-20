@@ -8,14 +8,18 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-## [4.0.0] - 2021-09-18
+## [4.0.0] - 2021-09-20
 
 ### Added
 
 -- Kucoin exchange API (websockets not enabled)
 -- Websockets available for Binance and Coinbase Pro --websocket
--- Disabled Seasonal ARIMA Model ML by default --enableml
 -- Added websvc.py to Docker
+
+### Changed
+
+-- Updated healthcheck to use a basic HTTPS request instead of a getTime() API call
+-- Disabled Seasonal ARIMA Model ML by default --enableml
 
 ## [3.6.1] - 2021-09-13
 
