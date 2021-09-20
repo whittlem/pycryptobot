@@ -74,7 +74,7 @@ def executeJob(
         healthcheck = True
 
     # connectivity check (only when running live)
-    if app.isLive() and healthcheck is True:
+    if app.isLive() and healthcheck is False:
         Logger.warning(
             f"Bot for {app.getMarket()} has lost connection to the exchange (will retry in 1 minute)"
         )
