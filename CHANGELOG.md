@@ -8,7 +8,7 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-## [4.0.0] - 2021-09-20
+## [4.0.0] - 2021-09-21
 
 ### Added
 
@@ -20,6 +20,7 @@ Upgrade library dependencies (if required):
 
 -- Updated healthcheck to use a basic HTTPS request instead of a getTime() API call
 -- Disabled Seasonal ARIMA Model ML by default --enableml
+-- Removed healthcheck to reduce API calls for scaling
 
 ## [3.6.1] - 2021-09-13
 

@@ -61,36 +61,6 @@ def executeJob(
 
     global technical_analysis
 
-    healthcheck = False
-    if not app.isLive():
-        healthcheck = True
-    elif "binance.com" in app.getAPIURL() and requests.head("https://www.binance.com/en").status_code == 200:
-        healthcheck = True
-    elif "binance.com" in app.getAPIURL() and requests.head("https://www.binance.us/en/home").status_code == 200:
-        healthcheck = True
-    elif "coinbase" in app.getAPIURL() and requests.head("https://api.pro.coinbase.com/health").status_code == 200:
-        healthcheck = True
-    elif "kucoin" in app.getAPIURL() and requests.head("https://www.kucoin.com").status_code == 200:
-        healthcheck = True
-    else:
-        Logger.warning("Healthcheck not working as expected!")
-        healthcheck = True
-
-    # connectivity check (only when running live)
-    if app.isLive() and healthcheck is False:
-        Logger.warning(
-            f"Bot for {app.getMarket()} has lost connection to the exchange (will retry in 1 minute)"
-        )
-        app.notifyTelegram(
-            f"Bot for {app.getMarket()} has lost connection to the exchange (will retry in 1 minute)"
-        )
-        # poll every 1 minute
-        list(map(s.cancel, s.queue))
-        s.enter(60, 0.25, executeJob, (sc, app, state, websocket))
-        Logger.warning(f"Bot for {app.getMarket()} is attempting to reconnect!")
-        app.notifyTelegram(f"Bot for {app.getMarket()} is attempting to reconnect!")
-        return
-
     # increment state.iterations
     state.iterations = state.iterations + 1
 
