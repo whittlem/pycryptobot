@@ -395,8 +395,8 @@ def defaultConfigParse(app, config):
         if isinstance(config["disableinsufficientfunds"], int):
             if bool(config["disableinsufficientfunds"]):
                 app.disableinsufficientfunds = True
-            else:
-                raise TypeError("disableinsufficientfunds must be of type int")
+        else:
+            raise TypeError("disableinsufficientfunds must be of type int")
 
     # backward compatibility
     if "nosellatloss" in config:

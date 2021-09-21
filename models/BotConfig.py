@@ -80,7 +80,7 @@ class BotConfig:
         self.enableml = False
         self.websocket = False
 
-        self.disableInsufficientfunds = False
+        self.disableinsufficientfunds = False
 
         self.filelog = True
         self.logfile = (
