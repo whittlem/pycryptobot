@@ -78,7 +78,7 @@ class AppState:
                     return
 
                 if base < base_min:
-                    if self.app.disableInsufficientfunds:
+                    if self.app.disableinsufficientfunds:
                         Logger.warning(f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})")
                         return
 
@@ -109,7 +109,7 @@ class AppState:
             base_min = '{:f}'.format(float(product['baseMinSize']))
 
         if base < base_min:
-            if self.app.disableInsufficientfunds:
+            if self.app.disableinsufficientfunds:
                 Logger.warning(f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})")
                 return
                         
@@ -134,7 +134,7 @@ class AppState:
                     return
 
                 if quote < quote_min:
-                    if self.app.disableInsufficientfunds:
+                    if self.app.disableinsufficientfunds:
                         Logger.warning(f"Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})")
                         return
 
@@ -168,7 +168,7 @@ class AppState:
             base_min = '{:f}'.format(float(product['baseMinSize']))
 
         if (quote / price) < base_min:
-            if self.app.disableInsufficientfunds:
+            if self.app.disableinsufficientfunds:
                 Logger.warning(f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})')
                 return
                     
@@ -218,7 +218,7 @@ class AppState:
         else:
             # nil base or quote funds
             if base == 0.0 and quote == 0.0:
-                if self.app.disableInsufficientfunds:
+                if self.app.disableinsufficientfunds:
                     Logger.warning(f"Insufficient Funds! ({self.app.getBaseCurrency()}={str(base)}, {self.app.getQuoteCurrency()}={str(base)})")
                     self.last_action = "WAIT"
                     return
