@@ -13,6 +13,7 @@ from models.chat import Telegram
 from models.config import (
     binanceConfigParser,
     coinbaseProConfigParser,
+    kucoinConfigParser,
     dummyConfigParser,
     loggerConfigParser,
 )
@@ -61,7 +62,7 @@ class BotConfig:
         self.statgroup = None
         self.statstartdate = None
         self.statdetail = False
-        self.buynearhighpcnt = 3
+        self.nobuynearhighpcnt = 3
 
         self.disablebullonly = False
         self.disablebuynearhigh = False
@@ -76,6 +77,8 @@ class BotConfig:
         self.disabletelegram = False
         self.disablelog = False
         self.disabletracker = False
+        self.enableml = False
+        self.websocket = False
 
         self.filelog = True
         self.logfile = (
@@ -95,6 +98,10 @@ class BotConfig:
         self.recv_window = self._set_recv_window()
 
         self.config_file = kwargs.get("config_file", "config.json")
+
+        self.tradesfile = (
+            self.cli_args["tradesfile"] if self.cli_args["tradesfile"] else "trades.csv"
+        )
 
         self.config_provided = False
         self.config = {}
@@ -116,7 +123,7 @@ class BotConfig:
                             self.config = json.load(stream)
                         except json.decoder.JSONDecodeError as err:
                             sys.tracebacklimit = 0
-                            raise ValueError("Invalid config.json: " + str(err))
+                            raise ValueError(f"Invalid config.json: {str(err)}")
 
             except (ScannerError, ConstructorError) as err:
                 sys.tracebacklimit = 0
@@ -130,7 +137,7 @@ class BotConfig:
 
             except ValueError as err:
                 sys.tracebacklimit = 0
-                raise ValueError("Invalid config: " + str(err))
+                raise ValueError(f"Invalid config: {str(err)}")
 
             except:
                 raise
@@ -153,6 +160,9 @@ class BotConfig:
 
             elif self.exchange == "binance" and "binance" in self.config:
                 binanceConfigParser(self, self.config["binance"], self.cli_args)
+
+            elif self.exchange == "kucoin" and "kucoin" in self.config:
+                kucoinConfigParser(self, self.config["kucoin"], self.cli_args)
 
             elif self.exchange == "dummy" and "dummy" in self.config:
                 dummyConfigParser(self, self.config["dummy"], self.cli_args)
@@ -178,6 +188,8 @@ class BotConfig:
         else:
             if self.exchange == "binance":
                 binanceConfigParser(self, None, self.cli_args)
+            elif self.exchange == "kucoin":
+                kucoinConfigParser(self, None, self.cli_args)
             else:
                 coinbaseProConfigParser(self, None, self.cli_args)
 
@@ -194,7 +206,7 @@ class BotConfig:
         )
 
     def _set_exchange(self, exchange: str = None) -> str:
-        valid_exchanges = ["coinbasepro", "binance", "dummy"]
+        valid_exchanges = ["coinbasepro", "binance", "kucoin", "dummy"]
 
         if self.cli_args["exchange"] is not None:
             exchange = self.cli_args["exchange"]
@@ -207,6 +219,8 @@ class BotConfig:
                 exchange = "coinbasepro"
             elif "binance" in self.config:
                 exchange = "binance"
+            elif "kucoin" in self.config:
+                exchange = "kucoin"
             else:
                 exchange = "dummy"
 
@@ -231,6 +245,13 @@ class BotConfig:
                 "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
                 "api_passphrase": "00000000000",
                 "market": "BTC-GBP",
+            },
+            "kucoin": {
+                "api_url": "https://api.kucoin.com",
+                "api_key": "00000000000000000000000000000000",
+                "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+                "api_passphrase": "00000000000",
+                "market": "BTC-GBP"
             },
             "dummy": {
                 "api_url": "https://api.pro.coinbase.com",
@@ -288,12 +309,12 @@ class BotConfig:
 
         # optional arguments
         parser.add_argument(
-            "--exchange", type=str, help="'coinbasepro', 'binance', 'dummy'"
+            "--exchange", type=str, help="'coinbasepro', 'binance', 'kucoin', 'dummy'"
         )
         parser.add_argument(
             "--granularity",
             type=str,
-            help="coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6h,1d)",
+            help="coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6h,1d), kucoin: (1min,3min,5min,15min,30min,1hour,6hour,1day)",
         )
         parser.add_argument(
             "--graphs", type=int, help="save graphs=1, do not save graphs=0"
@@ -367,6 +388,11 @@ class BotConfig:
             help="Use the log file at the given location. e.g 'mymarket.log'",
         )
         parser.add_argument(
+            "--tradesfile",
+            type=str,
+            help="Path to file to log trades done during simulation. eg './trades/BTCBUSD-trades.csv",
+        )
+        parser.add_argument(
             "--buypercent", type=int, help="percentage of quote currency to buy"
         )
         parser.add_argument(
@@ -377,7 +403,7 @@ class BotConfig:
         )
         parser.add_argument("--buymaxsize", type=float, help="maximum size on buy")
         parser.add_argument(
-            "--buynearhighpcnt",
+            "--nobuynearhighpcnt",
             type=float,
             help="optionally set the percent of the high for buying near high if enabled",
         )
@@ -468,6 +494,12 @@ class BotConfig:
             "--recvWindow",
             type=int,
             help="binance exchange api recvWindow, integer between 5000 and 60000",
+        )
+        parser.add_argument(
+            "--enableml", action="store_true", help="Enable Machine Learning E.g. seasonal ARIMA model for predictions"
+        )
+        parser.add_argument(
+            "--websocket", action="store_true", help="Enable websocket"
         )
 
         # pylint: disable=unused-variable

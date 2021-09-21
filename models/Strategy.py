@@ -48,7 +48,7 @@ class Strategy:
             and self.app.disableBuyNearHigh() is True
             and (
                 price
-                > (self._df["close"].max() * (1 - self.app.buyNearHighPcnt() / 100))
+                > (self._df["close"].max() * (1 - self.app.noBuyNearHighPcnt() / 100))
             )
         ):
             log_text = (
@@ -60,7 +60,7 @@ class Strategy:
                 + " | Ignoring Buy Signal (price "
                 + str(price)
                 + " within "
-                + str(self.app.buyNearHighPcnt())
+                + str(self.app.noBuyNearHighPcnt())
                 + "% of high "
                 + str(self._df["close"].max())
                 + ")"
@@ -71,14 +71,7 @@ class Strategy:
 
         # if EMA, MACD are disabled, do not buy
         if self.app.disableBuyEMA() and self.app.disableBuyMACD():
-            log_text = (
-                str(now)
-                + " | "
-                + self.app.getMarket()
-                + " | "
-                + self.app.printGranularity()
-                + " | EMA, MACD indicators are disabled "
-            )
+            log_text = (f"{str(now)} | {self.app.getMarket()} | {self.app.printGranularity()} | EMA, MACD indicators are disabled")
             Logger.warning(log_text)
 
             return False
@@ -184,25 +177,34 @@ class Strategy:
     ) -> bool:
         # set to true for verbose debugging
         debug = False
+        
+        if debug:
+            Logger.warning("\n*** isSellTrigger ***\n")
+            Logger.warning("-- ignoring sell signal --")
+            Logger.warning(f"self.app.nosellminpcnt is None (nosellminpcnt: {self.app.nosellminpcnt})")
+            Logger.warning(f"margin >= self.app.nosellminpcnt (margin: {margin})")
+            Logger.warning(f"margin <= self.app.nosellmaxpcnt (nosellmaxpcnt: {self.app.nosellmaxpcnt})")
+            Logger.warning("\n")
+        
+        if (
+            ((self.app.nosellminpcnt is not None)
+                and (margin >= self.app.nosellminpcnt))
+                and ((self.app.nosellmaxpcnt is not None)
+                and (margin <= self.app.nosellmaxpcnt)
+            )):
+                log_text = "! Ignore Sell Signal (Within No-Sell Bounds)"
+                Logger.warning(log_text)
+                return False
 
         if debug:
             Logger.warning("\n*** isSellTrigger ***\n")
-
             Logger.warning("-- loss failsafe sell at fibonacci band --")
-            Logger.warning(
-                f"self.app.disableFailsafeFibonacciLow() is False (actual: {self.app.disableFailsafeFibonacciLow()})"
-            )
-            Logger.warning(
-                f"self.app.allowSellAtLoss() is True (actual: {self.app.allowSellAtLoss()})"
-            )
-            Logger.warning(
-                f"self.app.sellLowerPcnt() is None (actual: {self.app.sellLowerPcnt()})"
-            )
+            Logger.warning(f"self.app.disableFailsafeFibonacciLow() is False (actual: {self.app.disableFailsafeFibonacciLow()})")
+            Logger.warning(f"self.app.allowSellAtLoss() is True (actual: {self.app.allowSellAtLoss()})")
+            Logger.warning(f"self.app.sellLowerPcnt() is None (actual: {self.app.sellLowerPcnt()})")
             Logger.warning(f"self.state.fib_low {self.state.fib_low} > 0")
             Logger.warning(f"self.state.fib_low {self.state.fib_low} >= {float(price)}")
-            Logger.warning(
-                f"(self.app.allowSellAtLoss() is True (actual: {self.app.allowSellAtLoss()}) or margin ({margin}) > 0)"
-            )
+            Logger.warning(f"(self.app.allowSellAtLoss() is True (actual: {self.app.allowSellAtLoss()}) or margin ({margin}) > 0)")
             Logger.warning("\n")
 
         # loss failsafe sell at fibonacci band
@@ -214,35 +216,17 @@ class Strategy:
             and self.state.fib_low >= float(price)
             and (self.app.allowSellAtLoss() or margin > 0)
         ):
-            log_text = (
-                "! Loss Failsafe Triggered (Fibonacci Band: "
-                + str(self.state.fib_low)
-                + ")"
-            )
+            log_text = (f"! Loss Failsafe Triggered (Fibonacci Band: {str(self.state.fib_low)})")
             Logger.warning(log_text)
-            self.app.notifyTelegram(
-                self.app.getMarket()
-                + " ("
-                + self.app.printGranularity()
-                + ") "
-                + log_text
-            )
+            self.app.notifyTelegram(f"{self.app.getMarket()} ({self.app.printGranularity()}) {log_text}")
             return True
 
         if debug:
             Logger.warning("-- loss failsafe sell at trailing_stop_loss --")
-            Logger.warning(
-                f"self.app.trailingStopLoss() != None (actual: {self.app.trailingStopLoss()})"
-            )
-            Logger.warning(
-                f"change_pcnt_high ({change_pcnt_high}) < self.app.trailingStopLoss() ({self.app.trailingStopLoss()})"
-            )
-            Logger.warning(
-                f"margin ({margin}) > self.app.trailingStopLossTrigger() ({self.app.trailingStopLossTrigger()})"
-            )
-            Logger.warning(
-                f"(self.app.allowSellAtLoss() is True (actual: {self.app.allowSellAtLoss()}) or margin ({margin}) > 0)"
-            )
+            Logger.warning(f"self.app.trailingStopLoss() != None (actual: {self.app.trailingStopLoss()})")
+            Logger.warning(f"change_pcnt_high ({change_pcnt_high}) < self.app.trailingStopLoss() ({self.app.trailingStopLoss()})")
+            Logger.warning(f"margin ({margin}) > self.app.trailingStopLossTrigger() ({self.app.trailingStopLossTrigger()})")
+            Logger.warning(f"(self.app.allowSellAtLoss() is True (actual: {self.app.allowSellAtLoss()}) or margin ({margin}) > 0)")
             Logger.warning("\n")
 
         # loss failsafe sell at trailing_stop_loss
@@ -250,61 +234,32 @@ class Strategy:
             self.app.trailingStopLoss() != None
             and change_pcnt_high < self.app.trailingStopLoss()
             and margin > self.app.trailingStopLossTrigger()
-            and (self.app.allowSellAtLoss() or margin > 0)
-        ):
-            log_text = (
-                "! Trailing Stop Loss Triggered (< "
-                + str(self.app.trailingStopLoss())
-                + "%)"
-            )
+            and (self.app.allowSellAtLoss() or margin > 0)):
+            log_text = (f"! Trailing Stop Loss Triggered (< {str(self.app.trailingStopLoss())}%)")
             Logger.warning(log_text)
-            self.app.notifyTelegram(
-                self.app.getMarket()
-                + " ("
-                + self.app.printGranularity()
-                + ") "
-                + log_text
-            )
+            self.app.notifyTelegram(f"{self.app.getMarket()} ({self.app.printGranularity()}) {log_text}")
             return True
 
         if debug:
             Logger.warning("-- loss failsafe sell at sell_lower_pcnt --")
-            Logger.warning(
-                f"self.app.disableFailsafeLowerPcnt() is False (actual: {self.app.disableFailsafeLowerPcnt()})"
-            )
-            Logger.warning(
-                f"and self.app.allowSellAtLoss() is True (actual: {self.app.allowSellAtLoss()})"
-            )
-            Logger.warning(
-                f"and self.app.sellLowerPcnt() != None (actual: {self.app.sellLowerPcnt()})"
-            )
-            Logger.warning(
-                f"and margin ({margin}) < self.app.sellLowerPcnt() ({self.app.sellLowerPcnt()})"
-            )
-            Logger.warning(
-                f"(self.app.allowSellAtLoss() is True (actual: {self.app.allowSellAtLoss()}) or margin ({margin}) > 0)"
-            )
+            Logger.warning(f"self.app.disableFailsafeLowerPcnt() is False (actual: {self.app.disableFailsafeLowerPcnt()})")
+            Logger.warning(f"and self.app.allowSellAtLoss() is True (actual: {self.app.allowSellAtLoss()})")
+            Logger.warning(f"and self.app.sellLowerPcnt() != None (actual: {self.app.sellLowerPcnt()})")
+            Logger.warning(f"and margin ({margin}) < self.app.sellLowerPcnt() ({self.app.sellLowerPcnt()})")
+            Logger.warning(f"(self.app.allowSellAtLoss() is True (actual: {self.app.allowSellAtLoss()}) or margin ({margin}) > 0)")
             Logger.warning("\n")
 
         # loss failsafe sell at sell_lower_pcnt
-        elif (
+        if (
             self.app.disableFailsafeLowerPcnt() is False
             and self.app.allowSellAtLoss()
             and self.app.sellLowerPcnt() != None
             and margin < self.app.sellLowerPcnt()
             and (self.app.allowSellAtLoss() or margin > 0)
         ):
-            log_text = (
-                "! Loss Failsafe Triggered (< " + str(self.app.sellLowerPcnt()) + "%)"
-            )
+            log_text = ("! Loss Failsafe Triggered (< " + str(self.app.sellLowerPcnt()) + "%)")
             Logger.warning(log_text)
-            self.app.notifyTelegram(
-                self.app.getMarket()
-                + " ("
-                + self.app.printGranularity()
-                + ") "
-                + log_text
-            )
+            self.app.notifyTelegram(f"{self.app.getMarket()} ({self.app.printGranularity()}) {log_text}")
             return True
 
         if debug:
@@ -331,16 +286,10 @@ class Strategy:
             and (self.app.allowSellAtLoss() or margin > 0)
         ):
             log_text = (
-                "! Profit Bank Triggered (> " + str(self.app.sellUpperPcnt()) + "%)"
+                f"! Profit Bank Triggered (> {str(self.app.sellUpperPcnt())}%)"
             )
             Logger.warning(log_text)
-            self.app.notifyTelegram(
-                self.app.getMarket()
-                + " ("
-                + self.app.printGranularity()
-                + ") "
-                + log_text
-            )
+            self.app.notifyTelegram(f"{self.app.getMarket()} ({self.app.printGranularity()}) {log_text}")
             return True
 
         if debug:
@@ -366,13 +315,7 @@ class Strategy:
             log_text = "! Profit Bank Triggered (Selling At Resistance)"
             Logger.warning(log_text)
             if not (not self.app.allowSellAtLoss() and margin <= 0):
-                self.app.notifyTelegram(
-                    self.app.getMarket()
-                    + " ("
-                    + self.app.printGranularity()
-                    + ") "
-                    + log_text
-                )
+                self.app.notifyTelegram(f"{self.app.getMarket()} ({self.app.printGranularity()}) {log_text}")
             return True
 
         return False
@@ -385,13 +328,9 @@ class Strategy:
             Logger.warning("\n*** isWaitTrigger ***\n")
 
         if debug and self.state.action == "BUY":
-            Logger.warning(
-                "-- if bear market and bull only return true to abort buy --"
-            )
+            Logger.warning("-- if bear market and bull only return true to abort buy --")
             Logger.warning(f"self.state.action == 'BUY' (actual: {self.state.action})")
-            Logger.warning(
-                f"and self.app.disableBullOnly() is True (actual: {self.app.disableBullOnly()})"
-            )
+            Logger.warning(f"and self.app.disableBullOnly() is True (actual: {self.app.disableBullOnly()})")
             Logger.warning(f"and goldencross is False (actual: {goldencross})")
             Logger.warning("\n")
 
@@ -408,9 +347,7 @@ class Strategy:
         if debug and self.state.action == "SELL":
             Logger.warning("-- configuration specifies to not sell at a loss --")
             Logger.warning(f"self.state.action == 'SELL' (actual: {self.state.action})")
-            Logger.warning(
-                f"and self.app.allowSellAtLoss() is False (actual: {self.app.allowSellAtLoss()})"
-            )
+            Logger.warning(f"and self.app.allowSellAtLoss() is False (actual: {self.app.allowSellAtLoss()})")
             Logger.warning(f"and margin ({margin}) <= 0")
             Logger.warning("\n")
 

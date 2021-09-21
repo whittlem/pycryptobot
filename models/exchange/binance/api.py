@@ -17,6 +17,8 @@ from requests.auth import AuthBase
 from requests import Request, Session
 from models.helper.LogHelper import Logger
 from urllib.parse import urlencode
+from threading import Thread
+from websocket import create_connection, WebSocketConnectionClosedException
 
 DEFAULT_MAKER_FEE_RATE = 0.0015  # added 0.0005 to allow for price movements
 DEFAULT_TAKER_FEE_RATE = 0.0015  # added 0.0005 to allow for price movements
@@ -39,6 +41,11 @@ class AuthAPIBase:
         if math.isnan(epoch) is False:
             epoch_str = str(epoch)[0:10]
             return datetime.fromtimestamp(int(epoch_str))
+
+    def to_binance_granularity(self, granularity: int) -> str:
+        return {60: "1m", 300: "5m", 900: "15m", 3600: "1h", 21600: "6h", 86400: "1d"}[
+            granularity
+        ]
 
 
 class AuthAPI(AuthAPIBase):
@@ -409,7 +416,7 @@ class AuthAPI(AuthAPIBase):
 
                 if full_scan is True:
                     print(
-                        "add to order history to prevent full scan:", self.order_history
+                        f"add to order history to prevent full scan: {self.order_history}"
                     )
             else:
                 # GET /api/v3/allOrders
@@ -514,7 +521,7 @@ class AuthAPI(AuthAPIBase):
         try:
             # GET /api/v3/time
             resp = self.authAPI("GET", "/api/v3/time")
-            return self.convert_time(int(resp["serverTime"]))
+            return self.convert_time(int(resp["serverTime"])) - timedelta(hours=1)
         except Exception as e:
             Logger.error(f"Error: {e}")
             return None
@@ -572,7 +579,7 @@ class AuthAPI(AuthAPIBase):
         except:
             return DEFAULT_TRADE_FEE_RATE
 
-    def getTicker(self, market: str = DEFAULT_MARKET) -> tuple:
+    def getTicker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
         """Retrieves the market ticker"""
 
         # validates the market is syntactically correct
@@ -580,6 +587,20 @@ class AuthAPI(AuthAPIBase):
             raise TypeError("Binance market required.")
 
         now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+
+        if websocket is not None and websocket.tickers is not None:
+            try:
+                row = websocket.tickers.loc[websocket.tickers["market"] == market]
+                return (
+                    datetime.strptime(
+                        re.sub(r".0*$", "", str(row["date"].values[0])),
+                        "%Y-%m-%dT%H:%M:%S",
+                    ).strftime("%Y-%m-%d %H:%M:%S"),
+                    float(row["price"].values[0]),
+                )
+
+            except:
+                return (now, 0.0)
 
         try:
             # GET /api/v3/ticker/price
@@ -648,7 +669,7 @@ class AuthAPI(AuthAPIBase):
             return resp
         except Exception as err:
             ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-            Logger.error(ts + " Binance " + " marketBuy " + str(err))
+            Logger.error(f"{ts} Binance  marketBuy {str(err)}")
             return []
 
     def marketSell(
@@ -696,7 +717,7 @@ class AuthAPI(AuthAPIBase):
             return resp
         except Exception as err:
             ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-            Logger.error(ts + " Binance " + " marketSell " + str(err))
+            Logger.error(f"{ts} Binance  marketSell {str(err)}")
             return []
 
     def authAPI(self, method: str, uri: str, payload: str = {}) -> dict:
@@ -835,7 +856,7 @@ class PublicAPI(AuthAPIBase):
         try:
             # GET /api/v3/time
             resp = self.authAPI("GET", "/api/v3/time")
-            return self.convert_time(int(resp["serverTime"]))
+            return self.convert_time(int(resp["serverTime"])) - timedelta(hours=1)
         except Exception as e:
             Logger.error(f"Error: {e}")
             return None
@@ -848,17 +869,31 @@ class PublicAPI(AuthAPIBase):
         except:
             return pd.DataFrame()
 
-    def getTicker(self, market: str = DEFAULT_MARKET) -> tuple:
+    def getTicker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
         """Retrives the market ticker"""
 
         # validates the market is syntactically correct
         if not self._isMarketValid(market):
             raise TypeError("Binance market required.")
 
+        now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+
+        if websocket is not None and websocket.tickers is not None:
+            try:
+                row = websocket.tickers.loc[websocket.tickers["market"] == market]
+                return (
+                    datetime.strptime(
+                        re.sub(r".0*$", "", str(row["date"].values[0])),
+                        "%Y-%m-%dT%H:%M:%S",
+                    ).strftime("%Y-%m-%d %H:%M:%S"),
+                    float(row["price"].values[0]),
+                )
+
+            except:
+                return (now, 0.0)
+
         # GET /api/v3/ticker/price
         resp = self.authAPI("GET", "/api/v3/ticker/price", {"symbol": market})
-
-        now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
         if "price" in resp:
             return (str(self.getTime()), float(resp["price"]))
@@ -869,6 +904,7 @@ class PublicAPI(AuthAPIBase):
         self,
         market: str = DEFAULT_MARKET,
         granularity: str = DEFAULT_GRANULARITY,
+        websocket=None,
         iso8601start: str = "",
         iso8601end: str = "",
     ) -> pd.DataFrame:
@@ -892,118 +928,141 @@ class PublicAPI(AuthAPIBase):
         if not isinstance(iso8601end, str):
             raise TypeError("ISO8601 end integer as string required.")
 
-        if iso8601start != "" and iso8601end == "":
-            startTime = int(
-                datetime.timestamp(datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S"))
-                * 1000
+        using_websocket = False
+        if websocket is not None:
+            if websocket.candles is not None:
+                try:
+                    df = websocket.candles.loc[websocket.candles["market"] == market]
+                    using_websocket = True
+                except:
+                    pass
+
+        if websocket is None or (websocket is not None and using_websocket is False):
+            if iso8601start != "" and iso8601end == "":
+                startTime = int(
+                    datetime.timestamp(
+                        datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")
+                    )
+                    * 1000
+                )
+
+                # GET /api/v3/klines
+                resp = self.authAPI(
+                    "GET",
+                    "/api/v3/klines",
+                    {
+                        "symbol": market,
+                        "interval": granularity,
+                        "startTime": startTime,
+                        "limit": 300,
+                    },
+                )
+            elif iso8601start != "" and iso8601end != "":
+                startTime = int(
+                    datetime.timestamp(
+                        datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")
+                    )
+                    * 1000
+                )
+
+                # GET /api/v3/klines
+                resp = self.authAPI(
+                    "GET",
+                    "/api/v3/klines",
+                    {
+                        "symbol": market,
+                        "interval": granularity,
+                        "startTime": startTime,
+                        "limit": 300,
+                    },
+                )
+            else:
+                # GET /api/v3/klines
+                resp = self.authAPI(
+                    "GET",
+                    "/api/v3/klines",
+                    {"symbol": market, "interval": granularity, "limit": 300},
+                )
+
+            # convert the API response into a Pandas DataFrame
+            df = pd.DataFrame(
+                resp,
+                columns=[
+                    "open_time",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "volume",
+                    "close_time",
+                    "quote_asset_volume",
+                    "number_of_trades",
+                    "taker_buy_base_asset_volume",
+                    "traker_buy_quote_asset_volume",
+                    "ignore",
+                ],
             )
 
-            # GET /api/v3/klines
-            resp = self.authAPI(
-                "GET",
-                "/api/v3/klines",
-                {
-                    "symbol": market,
-                    "interval": granularity,
-                    "startTime": startTime,
-                    "limit": 300,
-                },
-            )
-        elif iso8601start != "" and iso8601end != "":
-            startTime = int(
-                datetime.timestamp(datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S"))
-                * 1000
-            )
+            df["market"] = market
+            df["granularity"] = granularity
 
-            # GET /api/v3/klines
-            resp = self.authAPI(
-                "GET",
-                "/api/v3/klines",
-                {
-                    "symbol": market,
-                    "interval": granularity,
-                    "startTime": startTime,
-                    "limit": 300,
-                },
-            )
-        else:
-            # GET /api/v3/klines
-            resp = self.authAPI(
-                "GET",
-                "/api/v3/klines",
-                {"symbol": market, "interval": granularity, "limit": 300},
-            )
+            # binance epoch is too long
+            df["open_time"] = df["open_time"] + 1
+            df["open_time"] = df["open_time"].astype(str)
+            df["open_time"] = df["open_time"].str.replace(r"\d{3}$", "", regex=True)
 
-        # convert the API response into a Pandas DataFrame
-        df = pd.DataFrame(
-            resp,
-            columns=[
-                "open_time",
-                "open",
-                "high",
-                "low",
-                "close",
-                "volume",
-                "close_time",
-                "quote_asset_volume",
-                "number_of_trades",
-                "taker_buy_base_asset_volume",
-                "traker_buy_quote_asset_volume",
-                "ignore",
-            ],
-        )
+            try:
+                freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity)]
+            except:
+                freq = "D"
 
-        df["market"] = market
-        df["granularity"] = granularity
+            # convert the DataFrame into a time series with the date as the index/key
+            try:
+                tsidx = pd.DatetimeIndex(
+                    pd.to_datetime(df["open_time"], unit="s"),
+                    dtype="datetime64[ns]",
+                    freq=freq,
+                )
+                df.set_index(tsidx, inplace=True)
+                df = df.drop(columns=["open_time"])
+                df.index.names = ["ts"]
+                df["date"] = tsidx
+            except ValueError:
+                tsidx = pd.DatetimeIndex(
+                    pd.to_datetime(df["open_time"], unit="s"), dtype="datetime64[ns]"
+                )
+                df.set_index(tsidx, inplace=True)
+                df = df.drop(columns=["open_time"])
+                df.index.names = ["ts"]
+                df["date"] = tsidx
 
-        # binance epoch is too long
-        df["open_time"] = df["open_time"] + 1
-        df["open_time"] = df["open_time"].astype(str)
-        df["open_time"] = df["open_time"].str.replace(r"\d{3}$", "", regex=True)
+            # if specified, fix end time
+            if iso8601end != "":
+                df = df[df["date"] <= iso8601end]
 
-        try:
-            freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity)]
-        except:
-            freq = "D"
+            # re-order columns
+            df = df[
+                [
+                    "date",
+                    "market",
+                    "granularity",
+                    "low",
+                    "high",
+                    "open",
+                    "close",
+                    "volume",
+                ]
+            ]
 
-        # convert the DataFrame into a time series with the date as the index/key
-        try:
-            tsidx = pd.DatetimeIndex(
-                pd.to_datetime(df["open_time"], unit="s"),
-                dtype="datetime64[ns]",
-                freq=freq,
-            )
-            df.set_index(tsidx, inplace=True)
-            df = df.drop(columns=["open_time"])
-            df.index.names = ["ts"]
-            df["date"] = tsidx
-        except ValueError:
-            tsidx = pd.DatetimeIndex(
-                pd.to_datetime(df["open_time"], unit="s"), dtype="datetime64[ns]"
-            )
-            df.set_index(tsidx, inplace=True)
-            df = df.drop(columns=["open_time"])
-            df.index.names = ["ts"]
-            df["date"] = tsidx
+            # correct column types
+            df["low"] = df["low"].astype(float)
+            df["high"] = df["high"].astype(float)
+            df["open"] = df["open"].astype(float)
+            df["close"] = df["close"].astype(float)
+            df["volume"] = df["volume"].astype(float)
 
-        # if specified, fix end time
-        if iso8601end != "":
-            df = df[df["date"] <= iso8601end]
-
-        # re-order columns
-        df = df[
-            ["date", "market", "granularity", "low", "high", "open", "close", "volume"]
-        ]
-
-        # correct column types
-        df["low"] = df["low"].astype(float)
-        df["high"] = df["high"].astype(float)
-        df["open"] = df["open"].astype(float)
-        df["close"] = df["close"].astype(float)
-        df["volume"] = df["volume"].astype(float)
-
-        # reset pandas dataframe index
-        df.reset_index()
+            # reset pandas dataframe index
+            df.reset_index()
 
         return df
 
@@ -1061,3 +1120,374 @@ class PublicAPI(AuthAPIBase):
             else:
                 Logger.info(f"{reason}: {self._api_url}")
                 return {}
+
+
+class WebSocket(AuthAPIBase):
+    def __init__(
+        self,
+        market=None,
+        granularity=None,
+        api_url="https://api.binance.com",
+        ws_url: str = "wss://stream.binance.com:9443",
+    ) -> None:
+        # options
+        self.debug = False
+
+        valid_urls = [
+            "https://api.binance.com",
+            "https://api.binance.us",
+            "https://testnet.binance.vision",
+        ]
+
+        # validate Binance API
+        if api_url not in valid_urls:
+            raise ValueError("Binance API URL is invalid")
+
+        if api_url[-1] != "/":
+            api_url = api_url + "/"
+
+        valid_ws_urls = [
+            "wss://stream.binance.com:9443",
+            "wss://stream.binance.com:9443/",
+        ]
+
+        # validate Binance Websocket URL
+        if ws_url not in valid_ws_urls:
+            raise ValueError("Binance WebSocket URL is invalid")
+
+        if ws_url[-1] != "/":
+            ws_url = ws_url + "/"
+
+        self._ws_url = ws_url
+        self._api_url = api_url
+
+        self.markets = None
+        self.granularity = granularity
+        self.type = "SUBSCRIBE"
+        self.stop = True
+        self.error = None
+        self.ws = None
+        self.thread = None
+
+    def start(self):
+        def _go():
+            self._connect()
+            self._listen()
+            self._disconnect()
+
+        self.stop = False
+        self.on_open()
+        self.thread = Thread(target=_go)
+        self.keepalive = Thread(target=self._keepalive)
+        self.thread.start()
+
+    def _connect(self):
+        if self.markets is None:
+            print("Error: no market specified!")
+            sys.exit()
+        elif not isinstance(self.markets, list):
+            self.markets = [self.markets]
+
+        params = []
+        for market in self.markets:
+            params.append(f"{market.lower()}@miniTicker")
+
+            if self.granularity == "1m":
+                params.append(f"{market.lower()}@kline_1m")
+            elif self.granularity == "5m":
+                params.append(f"{market.lower()}@kline_5m")
+            elif self.granularity == "15m":
+                params.append(f"{market.lower()}@kline_15m")
+            elif self.granularity == "1h":
+                params.append(f"{market.lower()}@kline_1h")
+            elif self.granularity == "6h":
+                params.append(f"{market.lower()}@kline_6h")
+            elif self.granularity == "1d":
+                params.append(f"{market.lower()}@kline_1d")
+
+        self.ws = create_connection(f"{self._ws_url}ws")
+        self.ws.send(
+            json.dumps(
+                {
+                    "method": "SUBSCRIBE",
+                    "params": params,
+                    "id": 1,
+                }
+            )
+        )
+
+    def _keepalive(self, interval=30):
+        while self.ws.connected:
+            self.ws.ping("keepalive")
+            time.sleep(interval)
+
+    def _listen(self):
+        self.keepalive.start()
+        while not self.stop:
+            try:
+                data = self.ws.recv()
+                if data != "":
+                    msg = json.loads(data)
+                else:
+                    msg = {}
+            except ValueError as e:
+                self.on_error(e)
+            except Exception as e:
+                self.on_error(e)
+            else:
+                self.on_message(msg)
+
+    def _disconnect(self):
+        try:
+            if self.ws:
+                self.ws.close()
+        except WebSocketConnectionClosedException:
+            pass
+        finally:
+            self.keepalive.join()
+
+    def close(self):
+        self.stop = True
+        self._disconnect()
+        self.thread.join()
+
+    def on_open(self):
+        Logger.info("-- Websocket Subscribed! --")
+
+    def on_close(self):
+        Logger.info("-- Websocket Closed --")
+
+    def on_message(self, msg):
+        Logger.info(msg)
+
+    def on_error(self, e, data=None):
+        Logger.error(e)
+        Logger.error("{} - data: {}".format(e, data))
+
+        self.stop = True
+        try:
+            self.ws = None
+            self.tickers = None
+            self.candles = None
+        except:
+            pass
+
+
+class WebSocketClient(WebSocket, AuthAPIBase):
+    def __init__(
+        self,
+        markets: list = [DEFAULT_MARKET],
+        granularity: str = DEFAULT_GRANULARITY,
+        api_url="https://api.binance.com",
+        ws_url: str = "wss://stream.binance.com:9443",
+    ) -> None:
+        if len(markets) == 0:
+            raise ValueError("A list of one or more markets is required.")
+
+        for market in markets:
+            # validates the market is syntactically correct
+            if not self._isMarketValid(market):
+                raise ValueError("Binance market is invalid.")
+
+        # validates granularity is a string
+        if not isinstance(self.to_binance_granularity(granularity), str):
+            raise TypeError("Granularity string required.")
+
+        # validates the granularity is supported by Binance
+        if not self.to_binance_granularity(granularity) in SUPPORTED_GRANULARITY:
+            raise TypeError(
+                "Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY))
+            )
+
+        valid_urls = [
+            "https://api.binance.com",
+            "https://api.binance.us",
+            "https://testnet.binance.vision",
+        ]
+
+        # validate Binance API
+        if api_url not in valid_urls:
+            raise ValueError("Binance API URL is invalid")
+
+        if api_url[-1] != "/":
+            api_url = api_url + "/"
+
+        if api_url == "https://api.binance.us":
+            valid_ws_urls = [
+                "wss://stream.binance.us:9443",
+                "wss://stream.binance.us:9443/",
+            ]
+        else:
+            valid_ws_urls = [
+                "wss://stream.binance.com:9443",
+                "wss://stream.binance.com:9443/",
+            ]
+
+        # validate Binance Websocket URL
+        if ws_url not in valid_ws_urls:
+            raise ValueError("Binance WebSocket URL is invalid")
+
+        if ws_url[-1] != "/":
+            ws_url = ws_url + "/"
+
+        self._ws_url = ws_url
+        self.markets = markets
+        self.granularity = self.to_binance_granularity(granularity)
+        self.tickers = None
+        self.candles = None
+
+    def on_open(self):
+        self.message_count = 0
+
+    def on_message(self, msg):
+        if "e" in msg:
+            df = None
+            if (
+                msg["e"] == "24hrMiniTicker"
+                and "E" in msg
+                and "s" in msg
+                and "c" in msg
+            ):
+                # create dataframe from websocket message
+                df = pd.DataFrame(
+                    columns=["date", "market", "price"],
+                    data=[
+                        [
+                            self.convert_time(msg["E"]),
+                            msg["s"],
+                            msg["c"],
+                        ]
+                    ],
+                )
+
+                # set column types
+                df["date"] = df["date"].astype("datetime64[ns]")
+                df["price"] = df["price"].astype("float64")
+
+                # form candles
+                if self.granularity == "1m":
+                    df["candle"] = df["date"].dt.floor(freq="1T")
+                elif self.granularity == "5m":
+                    df["candle"] = df["date"].dt.floor(freq="5T")
+                elif self.granularity == "15m":
+                    df["candle"] = df["date"].dt.floor(freq="15T")
+                elif self.granularity == "1h":
+                    df["candle"] = df["date"].dt.floor(freq="1H")
+                elif self.granularity == "6h":
+                    df["candle"] = df["date"].dt.floor(freq="6H")
+                elif self.granularity == "1d":
+                    df["candle"] = df["date"].dt.floor(freq="1D")
+
+            if df is not None:
+                # insert first entry
+                if self.tickers is None and len(df) > 0:
+                    self.tickers = df
+                # append future entries without duplicates
+                elif self.tickers is not None and len(df) > 0:
+                    self.tickers = (
+                        pd.concat([self.tickers, df])
+                        .drop_duplicates(subset="market", keep="last")
+                        .reset_index(drop=True)
+                    )
+
+                # convert dataframes to a time series
+                tsidx = pd.DatetimeIndex(
+                    pd.to_datetime(self.tickers["date"]).dt.strftime(
+                        "%Y-%m-%dT%H:%M:%S.%Z"
+                    )
+                )
+                self.tickers.set_index(tsidx, inplace=True)
+                self.tickers.index.name = "ts"
+
+            if msg["e"] == "kline" and "s" in msg and "k" in msg:
+                k = msg["k"]
+                if (
+                    "i" in k
+                    and "t" in k
+                    and "o" in k
+                    and "h" in k
+                    and "c" in k
+                    and "l" in k
+                    and "v" in k
+                ):
+                    # create dataframe from websocket message
+                    df = pd.DataFrame(
+                        columns=[
+                            "date",
+                            "market",
+                            "granularity",
+                            "low",
+                            "high",
+                            "open",
+                            "close",
+                            "volume",
+                        ],
+                        data=[
+                            [
+                                self.convert_time(k["t"]) - timedelta(hours=1),
+                                msg["s"],
+                                k["i"],
+                                float(k["l"]),
+                                float(k["h"]),
+                                float(k["o"]),
+                                float(k["c"]),
+                                float(k["V"]),
+                            ]
+                        ],
+                    )
+
+                    if self.candles is None:
+                        resp = PublicAPI().getHistoricalData(
+                            df["market"].values[0], self.granularity
+                        )
+                        if len(resp) > 0:
+                            self.candles = resp
+                        else:
+                            self.candles = pd.DataFrame(
+                                columns=[
+                                    "date",
+                                    "market",
+                                    "granularity",
+                                    "low",
+                                    "high",
+                                    "open",
+                                    "close",
+                                    "volume",
+                                ],
+                                data=[],
+                            )
+
+                    if k["i"] == self.granularity and k["x"] is True:
+                        # check if the current candle exists
+                        candle_exists = (
+                            (self.candles["date"] == df["date"].values[0])
+                            & (self.candles["market"] == df["market"].values[0])
+                        ).any()
+                        if not candle_exists:
+                            self.candles = self.candles.append(df)
+
+                        tsidx = pd.DatetimeIndex(
+                            pd.to_datetime(self.candles["date"]).dt.strftime(
+                                "%Y-%m-%dT%H:%M:%S.%Z"
+                            )
+                        )
+                        self.candles.set_index(tsidx, inplace=True)
+                        self.candles.index.name = "ts"
+
+                    if self.candles is not None:
+                        # keep last 300 candles per market
+                        self.candles = self.candles.groupby("market").tail(300)
+                        # sort columns by date
+                        self.candles = self.candles.copy().sort_values(by=["date"])
+                        # set correct column types
+                        self.candles["open"] = self.candles["open"].astype("float64")
+                        self.candles["high"] = self.candles["high"].astype("float64")
+                        self.candles["close"] = self.candles["close"].astype("float64")
+                        self.candles["low"] = self.candles["low"].astype("float64")
+                        self.candles["volume"] = self.candles["volume"].astype(
+                            "float64"
+                        )
+
+        # print (f'{msg["time"]} {msg["product_id"]} {msg["price"]}')
+        # print(json.dumps(msg, indent=4, sort_keys=True))
+        self.message_count += 1

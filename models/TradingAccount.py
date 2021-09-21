@@ -7,6 +7,7 @@ from datetime import datetime
 from models.PyCryptoBot import truncate
 from models.exchange.binance import AuthAPI as BAuthAPI
 from models.exchange.coinbase_pro import AuthAPI as CBAuthAPI
+from models.exchange.kucoin import AuthAPI as KAuthAPI
 
 
 class TradingAccount:
@@ -60,6 +61,10 @@ class TradingAccount:
             p = re.compile(r"^[A-Z]{5,12}$")
             if not p.match(market):
                 raise TypeError("Binance market is invalid.")
+        elif self.app.getExchange() == "kucoin":
+            p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
+            if not p.match(market):
+                raise TypeError("Kucoin market is invalid.")
 
     def getOrders(self, market="", action="", status="all"):
         """Retrieves orders either live or simulation
@@ -104,6 +109,25 @@ class TradingAccount:
                     return self.orders
                 else:
                     return self.orders[self.orders["market"] == market]
+
+        if self.app.getExchange() == 'kucoin':
+            if self.mode == 'live':
+                # if config is provided and live connect to Kucoin account portfolio
+                model = KAuthAPI(
+                    self.app.getAPIKey(), 
+                    self.app.getAPISecret(), 
+                    self.app.getAPIPassphrase(), 
+                    self.app.getAPIURL()
+                )
+                # retrieve orders from live Kucoin account portfolio
+                self.orders = model.getOrders(market, action, status)
+                return self.orders
+            else:
+                if market == '':
+                    return self.orders
+                else:
+                    return self.orders[self.orders['market'] == market]
+
         if self.app.getExchange() == "coinbasepro":
             if self.mode == "live":
                 # if config is provided and live connect to Coinbase Pro account portfolio
@@ -149,7 +173,61 @@ class TradingAccount:
             Filters orders by currency
         """
 
-        if self.app.getExchange() == "binance":
+        if self.app.getExchange() == 'kucoin':
+            if self.mode == 'live':
+                model = KAuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
+                df = model.getAccounts()
+                if isinstance(df, pd.DataFrame):
+                    if currency == '':
+                        # retrieve all balances
+                        return df
+                    else:
+                        # retrieve balance of specified currency
+                        df_filtered = df[df['currency'] == currency]['available']
+                        if len(df_filtered) == 0:
+                            # return nil balance if no positive balance was found
+                            return 0.0
+                        else:
+                            # return balance of specified currency (if positive)
+                            if currency in ['EUR', 'GBP', 'USD']:
+                                return float(truncate(float(df[df['currency'] == currency]['available'].values[0]), 2))
+                            else:
+                                return float(truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
+                else:
+                    return 0.0
+            else:
+                # return dummy balances
+                if currency == '':
+                    # retrieve all balances
+                    return self.balance
+                else:
+                    if self.app.getExchange() == 'kucoin':
+                        self.balance = self.balance.replace('QUOTE', currency)
+                    else:
+                        # replace QUOTE and BASE placeholders
+                        if currency in ['EUR','GBP','USD']:
+                            self.balance = self.balance.replace('QUOTE', currency)
+                        else:
+                            self.balance = self.balance.replace('BASE', currency)
+
+                    if self.balance.currency[self.balance.currency.isin([currency])].empty:
+                        self.balance.loc[len(self.balance)] = [currency, 0, 0, 0]
+
+                    # retrieve balance of specified currency
+                    df = self.balance
+                    df_filtered = df[df['currency'] == currency]['available']
+
+                    if len(df_filtered) == 0:
+                        # return nil balance if no positive balance was found
+                        return 0.0
+                    else:
+                        # return balance of specified currency (if positive)
+                        if currency in ['EUR', 'GBP', 'USD']:
+                            return float(truncate(float(df[df['currency'] == currency]['available'].values[0]), 2))
+                        else:
+                            return float(truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
+
+        elif self.app.getExchange() == "binance":
             if self.mode == "live":
                 model = BAuthAPI(
                     self.app.getAPIKey(),
@@ -376,7 +454,7 @@ class TradingAccount:
             raise Exception("depositBaseCurrency() is for dummy account usage only!")
 
         if base_currency <= 0:
-            raise ValueError("Invalid base currency: " + str(base_currency))
+            raise ValueError(f"Invalid base currency: {str(base_currency)}")
 
         self.balance.loc[
             self.balance["currency"] == self.app.getBaseCurrency(), "balance"
@@ -398,7 +476,7 @@ class TradingAccount:
             raise Exception("depositBaseCurrency() is for dummy account usage only!")
 
         if quote_currency <= 0:
-            raise ValueError("Invalid quote currency: " + str(quote_currency))
+            raise ValueError(f"Invalid quote currency: {str(quote_currency)}")
 
         self.balance.loc[
             self.balance["currency"] == self.app.getQuoteCurrency(), "balance"
@@ -420,7 +498,7 @@ class TradingAccount:
             raise Exception("depositBaseCurrency() is for dummy account usage only!")
 
         if base_currency <= 0:
-            raise ValueError("Invalid base currency: " + str(base_currency))
+            raise ValueError(f"Invalid base currency: {str(base_currency)}")
 
         if (
             float(
@@ -453,7 +531,7 @@ class TradingAccount:
             raise Exception("depositBaseCurrency() is for dummy account usage only!")
 
         if quote_currency <= 0:
-            raise ValueError("Invalid quote currency: " + str(quote_currency))
+            raise ValueError(f"Invalid quote currency: {str(quote_currency)}")
 
         if (
             float(
@@ -492,14 +570,14 @@ class TradingAccount:
             raise Exception("depositBaseCurrency() is for dummy account usage only!")
 
         if price <= 0:
-            raise ValueError("Invalid price: " + str(price))
+            raise ValueError(f"Invalid price: {str(price)}")
 
         if market == "":
             market = self.app.getMarket()
 
         p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
         if not p.match(market):
-            raise ValueError("Invalid market: " + market)
+            raise ValueError(f"Invalid market: {market}")
 
         market_base_currency, market_quote_currency = market.split("-")
 
@@ -573,14 +651,14 @@ class TradingAccount:
             raise Exception("depositBaseCurrency() is for dummy account usage only!")
 
         if price <= 0:
-            raise ValueError("Invalid price: " + str(price))
+            raise ValueError(f"Invalid price: {str(price)}")
 
         if market == "":
             market = self.app.getMarket()
 
         p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
         if not p.match(market):
-            raise ValueError("Invalid market: " + market)
+            raise ValueError(f"Invalid market: {market}")
 
         market_base_currency, market_quote_currency = market.split("-")
 
@@ -660,6 +738,9 @@ class TradingAccount:
             elif self.app.getExchange() == "binance":
                 # retrieve orders from live Binance account portfolio
                 df = self.getOrders(market, "", "done")
+            elif self.app.getExchange() == 'kucoin':
+                # retrieve orders from live Kucoin account portfolio
+                df = self.getOrders(market, '', 'done')
             else:
                 df = pd.DataFrame()
         else:
@@ -780,4 +861,4 @@ class TradingAccount:
         try:
             df_sincebot.to_csv(save_file, index=False)
         except OSError:
-            raise SystemExit("Unable to save: ", save_file)
+            raise SystemExit(f"Unable to save: {save_file}")

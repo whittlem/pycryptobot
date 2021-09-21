@@ -11,7 +11,7 @@ def isMarketValid(market) -> bool:
 
 def parseMarket(market):
     if not isMarketValid(market):
-        raise ValueError('Coinbase Pro market invalid: ' + market)
+        raise ValueError(f'Coinbase Pro market invalid: {market}')
 
     base_currency, quote_currency = market.split('-', 2)
     return market, base_currency, quote_currency
@@ -24,11 +24,11 @@ def parser(app, coinbase_config, args={}):
 
     if isinstance(coinbase_config, dict):
         if 'api_key' in coinbase_config or 'api_secret' in coinbase_config or 'api_passphrase' in coinbase_config:
-            print('>>> migrating api keys to coinbasepro.key <<<', "\n")
+            print(f'>>> migrating api keys to coinbasepro.key <<<\n')
 
             # create 'coinbasepro.key'
             fh = open('coinbasepro.key', 'w')
-            fh.write(coinbase_config['api_key'] + "\n" + coinbase_config['api_secret'] + "\n" + coinbase_config['api_passphrase'])
+            fh.write(f"{coinbase_config['api_key']}\n{coinbase_config['api_secret']}\n{coinbase_config['api_passphrase']}")
             fh.close()
 
             if os.path.isfile('config.json') and os.path.isfile('coinbasepro.key'):
@@ -58,7 +58,7 @@ def parser(app, coinbase_config, args={}):
                 coinbase_config['api_secret'] = secret
                 coinbase_config['api_passphrase'] = password
             except :
-                raise RuntimeError('Unable to read ' + coinbase_config['api_key_file'])
+                raise RuntimeError(f"Unable to read {coinbase_config['api_key_file']}")
 
         if 'api_key' in coinbase_config and 'api_secret' in coinbase_config and \
                 'api_passphrase' in coinbase_config and 'api_url' in coinbase_config:
