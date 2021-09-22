@@ -65,6 +65,7 @@ class AppState:
         self.buy_tracker = 0
 
     def minimumOrderBase(self):
+        self.app.insufficientfunds = False
         if self.app.getExchange() == "binance":
             df = self.api.getMarketInfoFilters(self.app.getMarket())
 
@@ -78,10 +79,17 @@ class AppState:
                     return
 
                 if base < base_min:
+                    if self.app.enableinsufficientfundslogging:
+                        self.app.insufficientfunds = True
+                        Logger.warning(f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})")
+                        return
+
                     sys.tracebacklimit = 0
                     raise Exception(
                         f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})"
                     )
+
+                return
 
         elif self.app.getExchange() == "coinbasepro":
             product = self.api.authAPI("GET", f"products/{self.app.getMarket()}")
@@ -92,11 +100,6 @@ class AppState:
             base = float(self.account.getBalance(self.app.getBaseCurrency()))
             base_min = float(product["base_min_size"])
 
-            if base < base_min:
-                sys.tracebacklimit = 0
-                raise Exception(
-                    f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})"
-                )
         elif self.app.getExchange() == 'kucoin':
             resp = self.api.authAPI('GET', f'api/v1/symbols')
             product = resp[resp['symbol'] == self.app.getMarket()]
@@ -104,16 +107,22 @@ class AppState:
                 sys.tracebacklimit = 0
                 raise Exception(f'Market not found! ({self.app.getMarket()})')
 
-            price = self.app.getTicker(self.app.getMarket())[1]
-            quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
+            base = float(self.account.getBalance(self.app.getBaseCurrency()))
             base_min = '{:f}'.format(float(product['baseMinSize']))
 
-            if (quote / price) < float(base_min):
-                sys.tracebacklimit = 0
-                raise Exception(f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})'
-                )
-
+        if base < base_min:
+            if self.app.enableinsufficientfundslogging:
+                self.app.insufficientfunds = True
+                Logger.warning(f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})")
+                return
+                        
+            sys.tracebacklimit = 0
+            raise Exception(
+                f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})"
+            )
+            
     def minimumOrderQuote(self):
+        self.app.insufficientfunds = False
         if self.app.getExchange() == "binance":
             df = self.api.getMarketInfoFilters(self.app.getMarket())
 
@@ -129,10 +138,16 @@ class AppState:
                     return
 
                 if quote < quote_min:
+                    if self.app.enableinsufficientfundslogging:
+                        self.app.insufficientfunds = True
+                        Logger.warning(f"Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})")
+                        return
+
                     sys.tracebacklimit = 0
                     raise Exception(
                         f"Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})"
                     )
+                return
 
         elif self.app.getExchange() == "coinbasepro":
             product = self.api.authAPI("GET", f"products/{self.app.getMarket()}")
@@ -146,12 +161,6 @@ class AppState:
             quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
             base_min = float(product["base_min_size"])
 
-            if (quote / price) < base_min:
-                sys.tracebacklimit = 0
-                raise Exception(
-                    f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})'
-                )
-
         elif self.app.getExchange() == 'kucoin':
             resp = self.api.authAPI('GET', f'api/v1/symbols')
             product = resp[resp['symbol'] == self.app.getMarket()]
@@ -159,15 +168,22 @@ class AppState:
                 sys.tracebacklimit = 0
                 raise Exception(f'Market not found! ({self.app.getMarket()})')
 
+            ticker = self.authAPI("GET", f"api/v1/market/orderbook/level1?symbol={self.app.getMarket()}")
 
-            price = self.app.getTicker(self.app.getMarket())[1]
+            price = float(ticker["price"])
             quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
             base_min = '{:f}'.format(float(product['baseMinSize']))
 
-            if (quote / price) < float(base_min):
-                sys.tracebacklimit = 0
-                raise Exception(f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})'
-                )
+        if (quote / price) < base_min:
+            if self.app.enableinsufficientfundslogging:
+                self.app.insufficientfunds = True
+                Logger.warning(f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})')
+                return
+                    
+            sys.tracebacklimit = 0
+            raise Exception(
+                f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})'
+            )
 
     def getLastOrder(self):
         # if not live
@@ -210,6 +226,12 @@ class AppState:
         else:
             # nil base or quote funds
             if base == 0.0 and quote == 0.0:
+                if self.app.enableinsufficientfundslogging:
+                    self.app.insufficientfunds = True
+                    Logger.warning(f"Insufficient Funds! ({self.app.getBaseCurrency()}={str(base)}, {self.app.getQuoteCurrency()}={str(base)})")
+                    self.last_action = "WAIT"
+                    return
+
                 sys.tracebacklimit = 0
                 raise Exception(
                     f"Insufficient Funds! ({self.app.getBaseCurrency()}={str(base)}, {self.app.getQuoteCurrency()}={str(base)})"

@@ -26,6 +26,8 @@ try:
                 and websocket.tickers is not None
             ):
                 cls()
+                print (f"Start time: {websocket.getStartTime()}")
+                print (f"Time elapsed: {websocket.getTimeElapsed()} seconds")
                 print("\nMessageCount =", "%i \n" % websocket.message_count)
                 print(websocket.tickers)
                 message_count = websocket.message_count

@@ -61,6 +61,17 @@ def executeJob(
 
     global technical_analysis
 
+    # reset websocket every 23 hours if applicable
+    if app.enableWebsocket():
+        if websocket.getTimeElapsed() > 82800:
+            Logger.info('Websocket requires a restart every 23 hours!')
+            Logger.info('Stopping websocket...')
+            websocket.close()
+            Logger.info('Starting websocket...')
+            websocket.start()
+            Logger.info('Restarting job in 30 seconds...')
+            s.enter(30, 1, executeJob, (sc, app, state, websocket))
+
     # increment state.iterations
     state.iterations = state.iterations + 1
 
@@ -880,53 +891,56 @@ def executeJob(
 
                 # if live
                 if app.isLive():
-                    app.notifyTelegram(
-                        app.getMarket()
-                        + " ("
-                        + app.printGranularity()
-                        + ") BUY at "
-                        + price_text
-                    )
+                    if not app.insufficientfunds:
+                        app.notifyTelegram(
+                            app.getMarket()
+                            + " ("
+                            + app.printGranularity()
+                            + ") BUY at "
+                            + price_text
+                        )
 
-                    if not app.isVerbose():
+                        if not app.isVerbose():
+                            Logger.info(
+                                f"{formatted_current_df_index} | {app.getMarket()} | {app.printGranularity()} | {price_text} | BUY"
+                            )
+                        else:
+                            textBox.singleLine()
+                            textBox.center("*** Executing LIVE Buy Order ***")
+                            textBox.singleLine()
+
+                        # display balances
                         Logger.info(
-                            f"{formatted_current_df_index} | {app.getMarket()} | {app.printGranularity()} | {price_text} | BUY"
+                            f"{app.getBaseCurrency()} balance before order: {str(account.getBalance(app.getBaseCurrency()))}"
+                        )
+                        Logger.info(
+                            f"{app.getQuoteCurrency()} balance before order: {str(account.getBalance(app.getQuoteCurrency()))}"
+                        )
+
+                        # execute a live market buy
+                        state.last_buy_size = float(
+                            account.getBalance(app.getQuoteCurrency())
+                        )
+                        if (
+                            app.getBuyMaxSize()
+                            and state.last_buy_size > app.getBuyMaxSize()
+                        ):
+                            state.last_buy_size = app.getBuyMaxSize()
+
+                        resp = app.marketBuy(
+                            app.getMarket(), state.last_buy_size, app.getBuyPercent()
+                        )
+                        Logger.debug(resp)
+
+                        # display balances
+                        Logger.info(
+                            f"{app.getBaseCurrency()} balance after order: {str(account.getBalance(app.getBaseCurrency()))}"
+                        )
+                        Logger.info(
+                            f"{app.getQuoteCurrency()} balance after order: {str(account.getBalance(app.getQuoteCurrency()))}"
                         )
                     else:
-                        textBox.singleLine()
-                        textBox.center("*** Executing LIVE Buy Order ***")
-                        textBox.singleLine()
-
-                    # display balances
-                    Logger.info(
-                        f"{app.getBaseCurrency()} balance before order: {str(account.getBalance(app.getBaseCurrency()))}"
-                    )
-                    Logger.info(
-                        f"{app.getQuoteCurrency()} balance before order: {str(account.getBalance(app.getQuoteCurrency()))}"
-                    )
-
-                    # execute a live market buy
-                    state.last_buy_size = float(
-                        account.getBalance(app.getQuoteCurrency())
-                    )
-                    if (
-                        app.getBuyMaxSize()
-                        and state.last_buy_size > app.getBuyMaxSize()
-                    ):
-                        state.last_buy_size = app.getBuyMaxSize()
-
-                    resp = app.marketBuy(
-                        app.getMarket(), state.last_buy_size, app.getBuyPercent()
-                    )
-                    Logger.debug(resp)
-
-                    # display balances
-                    Logger.info(
-                        f"{app.getBaseCurrency()} balance after order: {str(account.getBalance(app.getBaseCurrency()))}"
-                    )
-                    Logger.info(
-                        f"{app.getQuoteCurrency()} balance after order: {str(account.getBalance(app.getQuoteCurrency()))}"
-                    )
+                        Logger.warning("Unable to place order, insufficient funds")
                 # if not live
                 else:
                     app.notifyTelegram(
