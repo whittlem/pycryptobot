@@ -168,11 +168,11 @@ class AppState:
                 sys.tracebacklimit = 0
                 raise Exception(f'Market not found! ({self.app.getMarket()})')
 
-            ticker = self.authAPI("GET", f"api/v1/market/orderbook/level1?symbol={self.app.getMarket()}")
+            ticker = self.api.authAPI("GET", f"api/v1/market/orderbook/level1?symbol={self.app.getMarket()}")
 
             price = float(ticker["price"])
             quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
-            base_min = '{:f}'.format(float(product['baseMinSize']))
+            base_min = float(product['baseMinSize'])
 
         if (quote / price) < base_min:
             if self.app.enableinsufficientfundslogging:
