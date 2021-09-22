@@ -227,6 +227,7 @@ class AppState:
             # nil base or quote funds
             if base == 0.0 and quote == 0.0:
                 if self.app.enableinsufficientfundslogging:
+                    self.app.insufficientfunds = True
                     Logger.warning(f"Insufficient Funds! ({self.app.getBaseCurrency()}={str(base)}, {self.app.getQuoteCurrency()}={str(base)})")
                     self.last_action = "WAIT"
                     return
