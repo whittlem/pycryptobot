@@ -718,8 +718,8 @@ class PyCryptoBot(BotConfig):
     def disableTracker(self) -> bool:
         return self.disabletracker
 
-    def disableInsufficientFunds(self) -> bool:
-        return self.disableinsufficientfunds
+    def enableInsufficientFundsLogging(self) -> bool:
+        return self.enableinsufficientfundslogging
 
     def enableML(self) -> bool:
         return self.enableml

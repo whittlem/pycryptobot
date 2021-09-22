@@ -10,7 +10,7 @@ Upgrade library dependencies (if required):
 
 ## [4.0.1] - 2021-09-22
 
--- add option to disable insufficient funds exception and log as warning instead (--disableinsufficientfunds)
+-- add option to disable insufficient funds exception and log as warning instead (--enableinsufficientfundslogging)
 
 ## [4.0.0] - 2021-09-21
 
