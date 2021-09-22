@@ -163,7 +163,9 @@ class AppState:
                 sys.tracebacklimit = 0
                 raise Exception(f'Market not found! ({self.app.getMarket()})')
 
-            price = self.app.getTicker(self.app.getMarket())[1]
+            ticker = self.authAPI("GET", f"api/v1/market/orderbook/level1?symbol={self.app.getMarket()}")
+
+            price = float(ticker["price"])
             quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
             base_min = '{:f}'.format(float(product['baseMinSize']))
 
