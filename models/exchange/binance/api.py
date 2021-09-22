@@ -1168,6 +1168,8 @@ class WebSocket(AuthAPIBase):
         self.error = None
         self.ws = None
         self.thread = None
+        self.start_time = None
+        self.time_elapsed = 0
 
     def start(self):
         def _go():
@@ -1216,6 +1218,8 @@ class WebSocket(AuthAPIBase):
             )
         )
 
+        self.start_time = datetime.now()
+
     def _keepalive(self, interval=30):
         while self.ws.connected:
             self.ws.ping("keepalive")
@@ -1248,6 +1252,8 @@ class WebSocket(AuthAPIBase):
 
     def close(self):
         self.stop = True
+        self.start_time = None
+        self.time_elapsed = 0
         self._disconnect()
         self.thread.join()
 
@@ -1269,8 +1275,16 @@ class WebSocket(AuthAPIBase):
             self.ws = None
             self.tickers = None
             self.candles = None
+            self.start_time = None
+            self.time_elapsed = 0
         except:
             pass
+
+    def getStartTime(self) -> datetime:
+        return self.start_time
+
+    def getTimeElapsed(self) -> int:
+        return self.time_elapsed
 
 
 class WebSocketClient(WebSocket, AuthAPIBase):
@@ -1290,11 +1304,11 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                 raise ValueError("Binance market is invalid.")
 
         # validates granularity is a string
-        if not isinstance(self.to_binance_granularity(granularity), str):
+        if not isinstance(granularity, str):
             raise TypeError("Granularity string required.")
 
         # validates the granularity is supported by Binance
-        if not self.to_binance_granularity(granularity) in SUPPORTED_GRANULARITY:
+        if not granularity in SUPPORTED_GRANULARITY:
             raise TypeError(
                 "Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY))
             )
@@ -1332,14 +1346,22 @@ class WebSocketClient(WebSocket, AuthAPIBase):
 
         self._ws_url = ws_url
         self.markets = markets
-        self.granularity = self.to_binance_granularity(granularity)
+        self.granularity = granularity
         self.tickers = None
         self.candles = None
+        self.start_time = None
+        self.time_elapsed = 0
 
     def on_open(self):
+        self.start_time = datetime.now()
         self.message_count = 0
 
     def on_message(self, msg):
+        if self.start_time is not None:
+            self.time_elapsed = round(
+                (datetime.now() - self.start_time).total_seconds()
+            )
+
         if "e" in msg:
             df = None
             if (

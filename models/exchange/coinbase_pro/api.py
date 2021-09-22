@@ -959,6 +959,8 @@ class WebSocket(AuthAPIBase):
         self.error = None
         self.ws = None
         self.thread = None
+        self.start_time = None
+        self.time_elapsed = 0
 
     def start(self):
         def _go():
@@ -989,6 +991,8 @@ class WebSocket(AuthAPIBase):
                 }
             )
         )
+
+        self.start_time = datetime.now()
 
     def _keepalive(self, interval=30):
         while self.ws.connected:
@@ -1022,6 +1026,8 @@ class WebSocket(AuthAPIBase):
 
     def close(self):
         self.stop = True
+        self.start_time = None
+        self.time_elapsed = 0
         self._disconnect()
         self.thread.join()
 
@@ -1043,8 +1049,16 @@ class WebSocket(AuthAPIBase):
             self.ws = None
             self.tickers = None
             self.candles = None
+            self.start_time = None
+            self.time_elapsed = 0
         except:
             pass
+
+    def getStartTime(self) -> datetime:
+        return self.start_time
+
+    def getTimeElapsed(self) -> int:
+        return self.time_elapsed
 
 
 class WebSocketClient(WebSocket):
@@ -1105,11 +1119,18 @@ class WebSocketClient(WebSocket):
         self.granularity = granularity
         self.tickers = None
         self.candles = None
+        self.start_time = None
+        self.time_elapsed = 0
 
     def on_open(self):
         self.message_count = 0
 
     def on_message(self, msg):
+        if self.start_time is not None:
+            self.time_elapsed = round(
+                (datetime.now() - self.start_time).total_seconds()
+            )
+
         if "time" in msg and "product_id" in msg and "price" in msg:
             # create dataframe from websocket message
             df = pd.DataFrame(
