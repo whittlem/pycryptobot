@@ -61,6 +61,17 @@ def executeJob(
 
     global technical_analysis
 
+    # reset websocket every 23 hours if applicable
+    if app.enableWebsocket():
+        if websocket.getTimeElapsed() > 82800:
+            Logger.info('Websocket requires a restart every 23 hours!')
+            Logger.info('Stopping websocket...')
+            websocket.close()
+            Logger.info('Starting websocket...')
+            websocket.start()
+            Logger.info('Restarting job in 30 seconds...')
+            s.enter(30, 1, executeJob, (sc, app, state, websocket))
+
     # increment state.iterations
     state.iterations = state.iterations + 1
 

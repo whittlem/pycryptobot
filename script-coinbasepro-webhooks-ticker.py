@@ -27,7 +27,7 @@ try:
             ):
                 cls()
                 print (f"Start time: {websocket.getStartTime()}")
-                print (f"Elapsed: {websocket.getTimeElapsed()} seconds")
+                print (f"Time elapsed: {websocket.getTimeElapsed()} seconds")
                 print("\nMessageCount =", "%i \n" % websocket.message_count)
                 print(websocket.tickers)
                 message_count = websocket.message_count
