@@ -391,6 +391,13 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("websocket must be of type int")
 
+    if "enableinsufficientfundslogging" in config:
+        if isinstance(config["enableinsufficientfundslogging"], int):
+            if bool(config["enableinsufficientfundslogging"]):
+                app.enableinsufficientfundslogging = True
+        else:
+            raise TypeError("enableinsufficientfundslogging must be of type int")
+
     # backward compatibility
     if "nosellatloss" in config:
         if isinstance(config["nosellatloss"], int):
