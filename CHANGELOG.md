@@ -8,6 +8,10 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [4.0.2] - 2021-09-23
+
+-- fix for kucoin minimum order function raising an exception
+
 ## [4.0.1] - 2021-09-22
 
 -- add option to disable insufficient funds exception and log as warning instead (--enableinsufficientfundslogging)
