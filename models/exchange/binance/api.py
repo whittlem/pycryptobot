@@ -42,10 +42,17 @@ class AuthAPIBase:
             epoch_str = str(epoch)[0:10]
             return datetime.fromtimestamp(int(epoch_str))
 
-    def to_binance_granularity(self, granularity: int) -> str:
-        return {60: "1m", 300: "5m", 900: "15m", 3600: "1h", 21600: "6h", 86400: "1d"}[
-            granularity
-        ]
+    def to_binance_granularity(self, granularity) -> str:
+        if isinstance(granularity, int):
+            return {60: "1m", 300: "5m", 900: "15m", 3600: "1h", 21600: "6h", 86400: "1d"} [
+                granularity
+            ]
+        else:
+            # return string if conversion is not required
+            if granularity in [ "1m", "5m", "15m", "1h", "6h", "1d" ]:
+                return granularity
+            else:
+                raise ValueError(f"Invalid Binance granularity: {granularity}")
 
 
 class AuthAPI(AuthAPIBase):
@@ -1304,11 +1311,11 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                 raise ValueError("Binance market is invalid.")
 
         # validates granularity is a string
-        if not isinstance(granularity, str):
+        if not isinstance(self.to_binance_granularity(granularity), str):
             raise TypeError("Granularity string required.")
 
         # validates the granularity is supported by Binance
-        if not granularity in SUPPORTED_GRANULARITY:
+        if not self.to_binance_granularity(granularity) in SUPPORTED_GRANULARITY:
             raise TypeError(
                 "Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY))
             )
