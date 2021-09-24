@@ -9,8 +9,15 @@ from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_an
 def isMarketValid(market) -> bool:
     if market == None:
         return False
+
+    print(market)
     p = re.compile(r"^[0-9A-Z]{5,12}$")
-    return p.match(market) is not None
+    if p.match(market):
+        return True
+    p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
+    if p.match(market):
+        return True
+    return False
 
 def to_internal_granularity(granularity: str) -> int:
     return {'1m': 60, '5m': 300, '15m': 900, '1h': 3600, '6h': 21600, '1d': 86400}[granularity]
