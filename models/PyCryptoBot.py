@@ -1269,6 +1269,8 @@ class PyCryptoBot(BotConfig):
         textBox.line("Log", str(not self.disableLog()) + "  --disablelog")
         textBox.line("Tracker", str(not self.disableTracker()) + "  --disabletracker")
         textBox.line("Auto restart Bot", str(self.autoRestart()) + "  --autorestart")
+        textBox.line("Web Socket", str(self.websocket) + "  --websocket")
+        textBox.line("Insufficient Funds Logging", str(self.enableinsufficientfundslogging) + "  --enableinsufficientfundslogging")
 
         if self.getBuyMaxSize():
             textBox.line(
