@@ -1292,7 +1292,11 @@ def executeJob(
                     )
 
                 app.notifyTelegram(
-                    f"Simulation Summary\n   Buy Count: {state.buy_count}\n   Sell Count: {state.sell_count}\n   First Buy: {state.first_buy_size}\n   Last Buy: {state.last_buy_size}\n"
+                    f"{state.app.base_currency}{state.app.quote_currency}\nSimulation Summary\n" + \
+                    f"   Buy Count: {state.buy_count}\n" + \
+                    f"   Sell Count: {state.sell_count}\n" + \
+                    f"   First Buy: {state.first_buy_size}\n" + \
+                    f"   Last Buy: {state.last_buy_size}\n"
                 )
 
                 if state.sell_count > 0:
