@@ -12,6 +12,8 @@ Upgrade library dependencies (if required):
 
 -- Added Kucoin to --init (auto config)
 -- Added ability to parse --market in the same format as coinbase (ie ONT-USD)
+-- Added Websockets webhooks example script
+-- Added Coinbase Pro webhooks example script
 
 ## [4.0.3] - 2021-09-23
 
