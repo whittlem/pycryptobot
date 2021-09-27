@@ -15,6 +15,7 @@ Upgrade library dependencies (if required):
 -- Added Websockets webhooks example script
 -- Added Coinbase Pro webhooks example script
 -- Telegram output tweaks
+-- Print currency trading on dryrun simulation summary
 
 ## [4.0.3] - 2021-09-23
 
