@@ -29,6 +29,7 @@ from models.helper.LogHelper import Logger
 from models.helper.TextBoxHelper import TextBox
 from models.exchange.binance import WebSocketClient as BWebSocketClient
 from models.exchange.coinbase_pro import WebSocketClient as CWebSocketClient
+from models.helper.TelegramBotHelper import TelegramBotHelper
 
 # minimal traceback
 sys.tracebacklimit = 1
@@ -40,6 +41,8 @@ technical_analysis = None
 state = AppState(app, account)
 state.initLastAction()
 websocket = None
+
+telegram_bot = TelegramBotHelper(app)
 
 s = sched.scheduler(time.time, time.sleep)
 
@@ -400,6 +403,11 @@ def executeJob(
             if strategy.isWaitTrigger(margin, goldencross):
                 state.action = "WAIT"
                 immediate_action = False
+
+            if telegram_bot.checkmanualsell():
+                state.action = "SELL"
+                state.last_action = "BUY"
+                immediate_action = True
 
         bullbeartext = ""
         if app.disableBullOnly() is True or (
@@ -884,6 +892,12 @@ def executeJob(
                     textBox.line("Margin", margin_text)
                     textBox.doubleLine()
 
+            if state.action == 'SELL':
+                telegram_bot.deletemargin()
+                # telegram_output = formatted_current_df_index + "\n" + app.getMarket() + '\n Bought at ' + price_text + "\n"
+                # telegram_output = telegram_output + "Margin (" + margin_text + ")\n"
+                telegram_bot.closetrade(formatted_current_df_index, price_text, margin_text)
+
             # if a buy signal
             if state.action == "BUY":
                 state.last_buy_price = price
@@ -1346,10 +1360,15 @@ def executeJob(
                 Logger.info(
                     f"{now} | {app.getMarket()}{bullbeartext} | {app.printGranularity()} | Current Price: {str(price)} | Margin: {str(margin)} | Profit: {str(profit)}"
                 )
+                telegram_bot.addmargin(str(margin), str(profit))
             else:
                 Logger.info(
                     f'{now} | {app.getMarket()}{bullbeartext} | {app.printGranularity()} | Current Price: {str(price)} is {str(round(((price-df["close"].max()) / df["close"].max())*100, 2))}% away from DF HIGH'
                 )
+                
+            if state.last_action == 'BUY':
+                #update margin for telegram bot
+                telegram_bot.addmargin(str(_truncate(margin, 4) + "%"), str(_truncate(profit,2)))
 
             # decrement ignored iteration
             state.iterations = state.iterations - 1

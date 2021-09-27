@@ -137,7 +137,7 @@ class PyCryptoBot(BotConfig):
                 self.quote_currency = formatCheck[1]
             self.market = self.base_currency + self.quote_currency
 
-        Logger.info(self.market)
+        # Logger.info(self.market)
         return self.market
 
     def getGranularity(self) -> int:
