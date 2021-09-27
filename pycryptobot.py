@@ -1327,8 +1327,13 @@ def executeJob(
                     Logger.info("\n")
                     Logger.info("  ** non-live simulation, assuming highest fees")
                     Logger.info("  ** open trade excluded from margin calculation\n")
+
+                    ## Revised telegram notification to give total margin and in addition to last trade margin.
                     app.notifyTelegram(
-                        f"      Margin: {_truncate((((state.last_sell_size - state.first_buy_size) / state.first_buy_size) * 100), 4)}%\n  ** non-live simulation, assuming highest fees\n  ** open trade excluded from margin calculation\n"
+                        f"      Last Trade Margin: {_truncate((((state.last_sell_size - state.first_buy_size) / state.first_buy_size) * 100), 4)}%\n\n"
+                    )
+                    app.notifyTelegram(
+                        f"      All Trades Margin: {_truncate(state.margintracker, 4)}%\n  ** non-live simulation, assuming highest fees\n  ** open trade excluded from margin calculation\n"
                     )
         else:
             if (
