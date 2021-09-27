@@ -8,12 +8,13 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-## [4.0.4] - 2021-09-24
+## [4.0.4] - 2021-09-27
 
 -- Added Kucoin to --init (auto config)
 -- Added ability to parse --market in the same format as coinbase (ie ONT-USD)
 -- Added Websockets webhooks example script
 -- Added Coinbase Pro webhooks example script
+-- Telegram output tweaks
 
 ## [4.0.3] - 2021-09-23
 
