@@ -31,6 +31,7 @@ class TelegramBot():
     def __init__(self):
         self.token = ""
         self.userid = ""
+        self.wanttosell = ""
         
         parser = argparse.ArgumentParser(description="PyCryptoBot Telegram Bot")
         parser.add_argument(
@@ -74,9 +75,10 @@ class TelegramBot():
         helptext = "<b>Command List</b>\n\n"
         helptext += "<b>/margins</b> - <i>show margins for open trade</i>\n"
         helptext += "<b>/trades</b> - <i>show closed trades</i>\n"
-        helptext += "<b>/stats {market}</b> - <i>display stats for market</i>\n"
+        helptext += "<b>/stats {market} {exchange}</b> - <i>display stats for market</i>\n"
         helptext += "<b>/sell {market}</b> - <i>sell market pair on next iteration</i>\n"
         helptext += "<b>/showconfig {exchange}</b> - <i>show config for exchange</i>\n"
+        helptext += "<b>/stopbot {market}</b> - <i>stop the requested pair</i>\n"
 
         update.message.reply_text(helptext, parse_mode="HTML")
 
@@ -125,6 +127,8 @@ class TelegramBot():
         if not self.checkifallowed(context._user_id_and_data[0], update):
             return
 
+        self.wanttosell = context.args[0]
+
         keyboard = [
             [
                 InlineKeyboardButton("Yes", callback_data='sell'),
@@ -135,29 +139,35 @@ class TelegramBot():
 
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        update.message.reply_text('Please choose:', reply_markup=reply_markup)
+        update.message.reply_text('Are you sure you want to make a manual sell?', reply_markup=reply_markup)
 
-    def sellresponse(self, update: Update, context: CallbackContext):
+    def sellresponse(self, update, context):
 
         if not self.checkifallowed(context._user_id_and_data[0], update):
             return
 
         query = update.callback_query
 
-        if query.data == "sell":
+        if query.data == "nosell":
+            query.edit_message_text("No confimation received")
+        elif query.data == "cancel":
+            query.edit_message_text("User Cancelled Request")
+
+        elif query.data == "sell":
             self._read_data()
             alreadyadd = False
 
-            for m in self.data:
-                if m == "sell":
+            for m in self.data["sell"]:
+                if m == self.wanttosell:
                     alreadyadd = True
 
             if not alreadyadd:
-                self.data.update({"sell": {context.args[0] : {"sellnow": True}}})
+                self.data.update({"sell": {self.wanttosell : {"sellnow": True}}})
 
             self._write_data()
 
-            update.message.reply_text(f"Selling: {context.args[0]}, please wait for sale notification...")
+            query.edit_message_text(f"Selling: {self.wanttosell}\n<i>Please wait for sale notification...</i>", parse_mode="HTML")
+            self.wanttosell = ""
 
     def showconfig(self, update, context):
         if not self.checkifallowed(context._user_id_and_data[0], update):
@@ -165,6 +175,10 @@ class TelegramBot():
 
         pbot = self.config[context.args[0]]["config"]
         update.message.reply_text(json.dumps(pbot, indent=4))
+
+    def stopbot(self, update, context):
+        if not self.checkifallowed(context._user_id_and_data[0], update):
+            return
 
     def echo(update, context):
         """Echo the user message."""
@@ -195,6 +209,7 @@ def main():
     dp.add_handler(CallbackQueryHandler(bot.sellresponse))
     dp.add_handler(CommandHandler("stats", bot.stats, Filters.all))
     dp.add_handler(CommandHandler("showconfig", bot.showconfig, Filters.text))
+    dp.add_handler(CommandHandler("stopbot", bot.stopbot, Filters.text))
     # on noncommand i.e message - echo the message on Telegram
     # dp.add_handler(MessageHandler(Filters.text, echo))
 
