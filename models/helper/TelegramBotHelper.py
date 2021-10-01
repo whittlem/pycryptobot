@@ -30,8 +30,11 @@ class TelegramBotHelper:
 
         if os.path.isfile(os.path.join(self.app.telegramdatafolder, "telegram_data", "data.json")):
             self._read_data("data.json")
+            if not "markets" in self.data:
+                self.data.update({"markets": {}})
+                self._write_data("data.json")
         else:
-            ds = {"trades" : {}}
+            ds = {"trades" : {}, "markets": {}}
             self.data = ds
             self._write_data("data.json")
 
