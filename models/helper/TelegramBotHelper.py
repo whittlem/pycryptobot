@@ -1,90 +1,111 @@
 import os
 import json
-from re import S
 from models.PyCryptoBot import PyCryptoBot
+from models.helper.LogHelper import Logger
 
 
 class TelegramBotHelper:
-
     def __init__(self, app: PyCryptoBot) -> None:
         self.app = app
         self.market = app.getMarket()
         self.exchange = app.getExchange()
         self.botfolder = "telegram_data"
-        self.botpath = os.path.join(os.path.curdir, self.botfolder, self.market)
+        self.botpath = os.path.join(self.app.telegramdatafolder, self.botfolder, self.market)
+        self.filename = self.market + ".json"
 
         if not os.path.exists(self.botfolder):
             os.makedirs(self.botfolder)
 
         self.data = {}
 
-        if not os.path.exists(os.path.join(os.curdir, "telegram_data")):
-            os.mkdir(os.path.join(os.curdir, "telegram_data"))
+        if not os.path.exists(os.path.join(self.app.telegramdatafolder, "telegram_data")):
+            os.mkdir(os.path.join(self.app.telegramdatafolder, "telegram_data"))
 
-        if os.path.isfile(os.path.join(os.curdir, "telegram_data", "data.json")):
-            self.data = self._read_data()
+        if os.path.isfile(os.path.join(self.app.telegramdatafolder, "telegram_data", self.filename)):
+            self._read_data()
         else:
-            ds = {"margins" : {}, "trades" : {}, "sell" : {}}
+            ds = {'botcontrol' :  {"status":"active", "manualsell": False}}
             self.data = ds
             self._write_data()
 
-    def _read_data(self) -> None:
-        with open(os.path.join(os.curdir, 'telegram_data', 'data.json'), 'r') as json_file:
+        if os.path.isfile(os.path.join(self.app.telegramdatafolder, "telegram_data", "data.json")):
+            self._read_data("data.json")
+        else:
+            ds = {"trades" : {}}
+            self.data = ds
+            self._write_data("data.json")
+
+    def _read_data(self, name: str = "") -> None:
+        file = self.filename if name =="" else name
+        with open(os.path.join(self.app.telegramdatafolder, 'telegram_data', file), 'r') as json_file:
             self.data = json.load(json_file)
 
-    def _write_data(self) -> None:
-        with open(os.path.join(os.curdir, 'telegram_data', 'data.json'), 'w') as outfile:
-            json.dump(self.data, outfile, indent=4)
-
+    def _write_data(self, name: str = "") -> None:
+        file = self.filename if name =="" else name
+        try:
+            with open(os.path.join(self.app.telegramdatafolder, 'telegram_data', file), 'w') as outfile:
+                json.dump(self.data, outfile, indent=4)
+        except Exception as err:
+            Logger.critical(str(err))
+            with open(os.path.join(self.app.telegramdatafolder, 'telegram_data', file), 'w') as outfile:
+                json.dump(self.data, outfile, indent=4)
+        
     def addmargin(self, margin: str = "", delta: str = ""):
+        if self.app.enableTelegramBotControl():
+            self._read_data()
 
-        marketFound = False
-        self._read_data()
+            addmarket = {'exchange' : self.exchange, 'margin' : margin, 'delta' : delta}
+            self.data.update(addmarket)
+            self._write_data()
 
-        for m in self.data['margins']:
-            if m == self.market:
-                marketFound = True
-                self.data["margins"][self.market]["margin"] = margin
-                self.data["margins"][self.market]["delta"] = delta
-
-        if not marketFound:
-            addmarket = {self.market : {'exchange' : self.exchange, 'margin' : margin, 'delta' : delta}}
-            self.data['margins'].update(addmarket)
-
-        self._write_data()
-
+    def addinfo(self, message: str = "") -> None:
+        if self.app.enableTelegramBotControl():
+            self._read_data()
+            addmarket = {"message": message, "margin": " ", "delta": " "}
+            self.data.update(addmarket)
+            self._write_data()
+            
     def deletemargin(self):
-        self._read_data()
-
-        self.data["margins"].pop(self.market)
-
-        self._write_data()
+        if self.app.enableTelegramBotControl():
+            os.remove(os.path.join(self.app.telegramdatafolder, 'telegram_data', self.filename))
 
     def closetrade(self, ts, price, margin):
-
-        self._read_data
-
-        self.data['trades'].update({self.market : {"timestamp" : ts, "price" : price, "margin" : margin}})
-
-        self._write_data
+        if self.app.enableTelegramBotControl():
+            self._read_data("data.json")
+            self.data['trades'].update({self.market : {"timestamp" : ts, "price" : price, "margin" : margin}})
+            self._write_data("data.json")
 
     def checkmanualsell(self) -> bool:
-
-        self._read_data()
-
         result = False
-        for s in self.data:
-            if s == "sell":
-                for ps in self.data["sell"]:
-                    if ps == self.market:
-                        result = self.data["sell"][self.market]
-                        break
-        
-        if result:
-            self.data["sell"].pop(self.market)
+        if self.app.enableTelegramBotControl():
+            self._read_data()
 
+            if len(self.data['botcontrol']) > 0:
+                result = self.data["botcontrol"]["manualsell"]
 
-        self._write_data()
+            if result:
+                self.data["botcontrol"]["manualsell"] = False
+                self._write_data()
 
         return result
+
+    def checkbotcontrolstatus(self) -> str:
+        result = "active"
+        if self.app.enableTelegramBotControl():
+            self._read_data()
+            result = self.data["botcontrol"]["status"]
+            
+        return result
+
+    def updatebotstatus(self, status) -> None:
+        if self.app.enableTelegramBotControl():
+            self._read_data()
+            if not self.data["botcontrol"]["status"] == status:
+                self.data["botcontrol"]["status"] = status
+                self._write_data()
+
+    def removeactivebot(self) -> None:
+        if self.app.enableTelegramBotControl():
+            self.deletemargin()
+
 

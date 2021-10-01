@@ -57,6 +57,7 @@
     },
     "telegram": {
         "token": "",
-        "client_id": ""
+        "client_id": "",
+        "datafolder": ""
     }
 }

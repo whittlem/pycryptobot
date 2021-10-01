@@ -50,6 +50,7 @@ class BotConfig:
         self.sell_at_loss = 1
         self.smart_switch = 1
         self.telegram = False
+        self.telegramdatafolder = ""
         self.buypercent = 100
         self.sellpercent = 100
         self.last_action = None
@@ -82,6 +83,7 @@ class BotConfig:
 
         self.enableinsufficientfundslogging = False
         self.insufficientfunds = False
+        self.enabletelegrambotcontrol = False
 
         self.filelog = True
         self.logfile = (
@@ -178,6 +180,8 @@ class BotConfig:
             ):
                 telegram = self.config["telegram"]
                 self._chat_client = Telegram(telegram["token"], telegram["client_id"])
+                if "datafolder" in self.config["telegram"]:
+                    self.telegramdatafolder = telegram["datafolder"]
                 self.telegram = True
 
             if "logger" in self.config:
