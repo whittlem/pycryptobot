@@ -198,6 +198,7 @@ class TelegramBot(TelegramBotBase):
         """Send a message when the command /help is issued."""
 
         helptext = "<b>Command List</b>\n\n"
+        helptext += "<b>/setcommands</b> - <i>add all commands to bot for easy access</i>\n"
         helptext += "<b>/margins</b> - <i>show margins for open trade</i>\n"
         helptext += "<b>/trades</b> - <i>show closed trades</i>\n"
         helptext += "<b>/stats {market} {exchange}</b> - <i>display stats for market</i>\n"
