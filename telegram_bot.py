@@ -490,7 +490,7 @@ class TelegramBot(TelegramBotBase):
             query.edit_message_text("Starting all bots")
             for pair in self.data["markets"]:
                 overrides = self.data["markets"][pair]["overrides"]
-                subprocess.Popen(f"python3 pycryptobot.py {overrides}", creationflags=subprocess.CREATE_NEW_CONSOLE)
+                subprocess.Popen(f"python3 pycryptobot.py {overrides}", shell=True)
                 mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
                 mBot.send(f"Started {pair} crypto bot")
                 # query.edit_message_text(f"Started {pair} crypto bot")
