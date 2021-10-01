@@ -524,25 +524,25 @@ class TelegramBot(TelegramBotBase):
         if "all" in query.data:
             query.edit_message_text("Stopping all bots")
             for pair in self.data["markets"]:
-                if os.path.isfile(os.path.join(self.datafolder, "telegram_data", str(query.data).replace("stop_", "") + '.json')):
+                if os.path.isfile(os.path.join(self.datafolder, "telegram_data", "stop_" + pair + '.json')):
                     self.updatebotcontrol(pair + '.json', "exit")
                     mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
                     mBot.send(f"Stopping {pair} crypto bot")
         else:
-            self.updatebotcontrol(str(query.data).replace("stop_", "") + '.json', "exit")
+            self.updatebotcontrol(str(query.data).replace("stop_", ""), "exit")
             mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
-            mBot.send(f"Stopping {str(query.data).replace('stop', '')} crypto bot")
+            mBot.send(f"Stopping {str(query.data).replace('stop_', '').replace('.json', '')} crypto bot")
 
-        jsonfiles = os.listdir(os.path.join(self.datafolder, 'telegram_data'))
+        #jsonfiles = os.listdir(os.path.join(self.datafolder, 'telegram_data'))
 
-        for file in jsonfiles:
-            if not file == "data.json" and not file == "startbot_single.bat" and not file == "startbot_multi.bat":
-                self.updatebotcontrol(file, "exit")
+        #for file in jsonfiles:
+        #    if not file == "data.json" and not file == "startbot_single.bat" and not file == "startbot_multi.bat":
+         #       self.updatebotcontrol(file, "exit")
 
         # mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
-        query = update.callback_query
+        #query = update.callback_query
 
-        query.edit_message_text(f"Stopping all crypto bots")
+        #query.edit_message_text(f"Stopping all crypto bots")
 
     def startnewbotrequest(self, update, context):
 
