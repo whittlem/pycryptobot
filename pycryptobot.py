@@ -1292,7 +1292,11 @@ def executeJob(
                     )
 
                 app.notifyTelegram(
-                    f"Simulation Summary\n   Buy Count: {state.buy_count}\n   Sell Count: {state.sell_count}\n   First Buy: {state.first_buy_size}\n   Last Buy: {state.last_buy_size}\n"
+                    f"{state.app.base_currency}{state.app.quote_currency}\nSimulation Summary\n" + \
+                    f"   Buy Count: {state.buy_count}\n" + \
+                    f"   Sell Count: {state.sell_count}\n" + \
+                    f"   First Buy: {state.first_buy_size}\n" + \
+                    f"   Last Buy: {state.last_buy_size}\n"
                 )
 
                 if state.sell_count > 0:
@@ -1323,8 +1327,13 @@ def executeJob(
                     Logger.info("\n")
                     Logger.info("  ** non-live simulation, assuming highest fees")
                     Logger.info("  ** open trade excluded from margin calculation\n")
+
+                    ## Revised telegram notification to give total margin and in addition to last trade margin.
                     app.notifyTelegram(
-                        f"      Margin: {_truncate((((state.last_sell_size - state.first_buy_size) / state.first_buy_size) * 100), 4)}%\n  ** non-live simulation, assuming highest fees\n  ** open trade excluded from margin calculation\n"
+                        f"      Last Trade Margin: {_truncate((((state.last_sell_size - state.first_buy_size) / state.first_buy_size) * 100), 4)}%\n\n"
+                    )
+                    app.notifyTelegram(
+                        f"      All Trades Margin: {_truncate(state.margintracker, 4)}%\n  ** non-live simulation, assuming highest fees\n  ** open trade excluded from margin calculation\n"
                     )
         else:
             if (

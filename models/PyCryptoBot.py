@@ -87,7 +87,12 @@ class PyCryptoBot(BotConfig):
             return p.match(market)
         elif self.exchange == "binance":
             p = re.compile(r"^[A-Z0-9]{6,12}$")
-            return p.match(market)
+            if p.match(market):
+                return True
+            p =re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
+            if p.match(market):
+                return True
+            return False
 
         return False
 
@@ -125,6 +130,14 @@ class PyCryptoBot(BotConfig):
         return self.quote_currency
 
     def getMarket(self):
+        if self.exchange == "binance":
+            formatCheck = self.market.split("-") if self.market.find("-") != -1 else ""
+            if not formatCheck == "":
+                self.base_currency = formatCheck[0]
+                self.quote_currency = formatCheck[1]
+            self.market = self.base_currency + self.quote_currency
+
+        Logger.info(self.market)
         return self.market
 
     def getGranularity(self) -> int:
@@ -1256,6 +1269,8 @@ class PyCryptoBot(BotConfig):
         textBox.line("Log", str(not self.disableLog()) + "  --disablelog")
         textBox.line("Tracker", str(not self.disableTracker()) + "  --disabletracker")
         textBox.line("Auto restart Bot", str(self.autoRestart()) + "  --autorestart")
+        textBox.line("Web Socket", str(self.websocket) + "  --websocket")
+        textBox.line("Insufficient Funds Logging", str(self.enableinsufficientfundslogging) + "  --enableinsufficientfundslogging")
 
         if self.getBuyMaxSize():
             textBox.line(
