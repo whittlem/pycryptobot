@@ -1149,7 +1149,7 @@ def executeJob(
                         f"{app.getQuoteCurrency()} balance after order: {str(account.quotebalance)}"
                     )
 
-                    telegram_bot.closetrade(app.getDateFromISO8601Str(str(datetime.now())), price_text, margin_text)
+                    telegram_bot.closetrade(str(app.getDateFromISO8601Str(str(datetime.now()))), price_text, margin_text)
                 # if not live
                 else:
                     margin, profit, sell_fee = calculate_margin(

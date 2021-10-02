@@ -127,7 +127,10 @@ class TelegramBot(TelegramBotBase):
             os.mkdir(os.path.join(self.datafolder, "telegram_data"))
 
         if os.path.isfile(os.path.join(self.datafolder, "telegram_data", "data.json")):
-            self.data = self._read_data()
+            self._read_data()
+            if not "markets" in self.data:
+                self.data.update({"markets": {}})
+                self._write_data()
         else:
             ds = {"trades" : {}}
             self.data = ds
@@ -497,7 +500,7 @@ class TelegramBot(TelegramBotBase):
                 sleep(10)
         else:
             overrides = self.data["markets"][str(query.data).replace("start_", "")]["overrides"]
-            subprocess.Popen(f"python3 pycryptobot.py {overrides}", creationflags=subprocess.CREATE_NEW_CONSOLE)
+            subprocess.Popen(f"python3 pycryptobot.py {overrides}", shell=True)
             query.edit_message_text(f"Started {str(query.data).replace('start_', '')} crypto bots")
         # self._read_data()
 
@@ -523,11 +526,17 @@ class TelegramBot(TelegramBotBase):
 
         if "all" in query.data:
             query.edit_message_text("Stopping all bots")
-            for pair in self.data["markets"]:
-                if os.path.isfile(os.path.join(self.datafolder, "telegram_data", "stop_" + pair + '.json')):
-                    self.updatebotcontrol(pair + '.json', "exit")
+            
+            jsonfiles = os.listdir(os.path.join(self.datafolder, 'telegram_data'))
+
+            for file in jsonfiles:
+                if not file == "data.json" and not file == "startbot_single.bat" and not file == "startbot_multi.bat":
+                    self.updatebotcontrol(file, "exit")
+            #for pair in self.data["markets"]:
+             #   if os.path.isfile(os.path.join(self.datafolder, "telegram_data", "stop_" + pair + '.json')):
+            #        self.updatebotcontrol(pair + '.json', "exit")
                     mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
-                    mBot.send(f"Stopping {pair} crypto bot")
+                    mBot.send(f"Stopping {file.replace('.json', '')} crypto bot")
         else:
             self.updatebotcontrol(str(query.data).replace("stop_", ""), "exit")
             mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
@@ -574,7 +583,7 @@ class TelegramBot(TelegramBotBase):
         if query.data == "ok":
             query.edit_message_text("Starting Bot")
 
-            subprocess.Popen(f"python3 pycryptobot.py {self.cl_args}", creationflags=subprocess.CREATE_NEW_CONSOLE)
+            subprocess.Popen(f"python3 pycryptobot.py {self.cl_args}", shell=True)
 
             query.edit_message_text(f"{self.market} crypto bot Starting")
             keyboard = [
