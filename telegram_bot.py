@@ -230,7 +230,7 @@ class TelegramBot(TelegramBotBase):
         helptext += "<b>/restartbots</b> - <i>restart all or the selected bot</i>\n"
         helptext += "<b>/stopbots</b> - <i>stop all or the selected bots</i>\n\n"
         helptext += "<b>Optional Customisable Commands</b>\n\n"
-        helptext += "<b>/startnew {bot_variables}</b> - <i>start the requested pair</i>\n"
+        helptext += "<b>/startnew</b> - <i>start the requested pair</i>\n"
         helptext += "<b>/startbots</b> - <i>start all or the selected bots</i>\n"
 
         mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
