@@ -604,7 +604,7 @@ class TelegramBot(TelegramBotBase):
                 #subprocess.Popen(f"python3 pycryptobot.py {overrides}", creationflags=subprocess.CREATE_NEW_CONSOLE)
                 os.system(f"start powershell -NoExit -Command $host.UI.RawUI.WindowTitle = '{self.market}' ; python3 pycryptobot.py {self.cl_args}")
             else:
-                subprocess.Popen(f'python3 pycryptobot.py {overrides}', shell=True)
+                subprocess.Popen(f'python3 pycryptobot.py {self.cl_args}', shell=True)
                 # subprocess.call(['open', '-W', '-a', 'Terminal.app', f'python3 pycryptobot.py {self.cl_args}'])
             #subprocess.Popen(f"python3 pycryptobot.py {self.cl_args}", creationflags=subprocess.CREATE_NEW_CONSOLE)
 
