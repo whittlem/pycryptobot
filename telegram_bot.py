@@ -521,7 +521,7 @@ class TelegramBot(TelegramBotBase):
                     #subprocess.Popen(f"python3 pycryptobot.py {overrides}", creationflags=subprocess.CREATE_NEW_CONSOLE)
                     os.system(f"start powershell -NoExit -Command $host.UI.RawUI.WindowTitle = '{pair}' ; python3 pycryptobot.py {overrides}")
                 else:
-                    subprocess.call(['open', '-W', '-a', 'Terminal.app', f'python3 pycryptobot.py {overrides}'])
+                    subprocess.Popen(f'python3 pycryptobot.py {overrides}', shell=True)
                 mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
                 mBot.send(f"Started {pair} crypto bot")
                 sleep(10)
@@ -531,7 +531,8 @@ class TelegramBot(TelegramBotBase):
                 os.system(f"start powershell -NoExit -Command $host.UI.RawUI.WindowTitle = '{query.data.replace('start_', '')}' ; python3 pycryptobot.py {overrides}")
                 #subprocess.Popen(f"python3 pycryptobot.py {overrides}", creationflags=subprocess.CREATE_NEW_CONSOLE)
             else:
-                subprocess.call(['open', '-W', '-a', 'Terminal.app', f'python3 pycryptobot.py {overrides}'])
+                subprocess.Popen(f'python3 pycryptobot.py {overrides}', shell=True)
+                # subprocess.call(['open', '-W', '-a', 'Terminal.app', f'python3 pycryptobot.py {overrides}'])
             query.edit_message_text(f"Started {str(query.data).replace('start_', '')} crypto bots")
 
     def stopbotrequest(self, update, context) -> None:
@@ -603,7 +604,8 @@ class TelegramBot(TelegramBotBase):
                 #subprocess.Popen(f"python3 pycryptobot.py {overrides}", creationflags=subprocess.CREATE_NEW_CONSOLE)
                 os.system(f"start powershell -NoExit -Command $host.UI.RawUI.WindowTitle = '{self.market}' ; python3 pycryptobot.py {self.cl_args}")
             else:
-                subprocess.call(['open', '-W', '-a', 'Terminal.app', f'python3 pycryptobot.py {self.cl_args}'])
+                subprocess.Popen(f'python3 pycryptobot.py {overrides}', shell=True)
+                # subprocess.call(['open', '-W', '-a', 'Terminal.app', f'python3 pycryptobot.py {self.cl_args}'])
             #subprocess.Popen(f"python3 pycryptobot.py {self.cl_args}", creationflags=subprocess.CREATE_NEW_CONSOLE)
 
             query.edit_message_text(f"{self.market} crypto bot Starting")
