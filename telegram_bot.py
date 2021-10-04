@@ -14,14 +14,17 @@ import logging
 import os
 import json
 import subprocess
-from threading import Event
+import platform
 
 
 from warnings import filters
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 from telegram.bot import Bot, BotCommand
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, Filters, InlineQueryHandler
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, Filters, InlineQueryHandler, ConversationHandler, MessageHandler, RegexHandler
 from time import time, sleep
+from telegram.replykeyboardremove import ReplyKeyboardRemove
+
+from telegram.utils.helpers import DEFAULT_20
 from models.chat import Telegram
 
 # Enable logging
@@ -30,6 +33,13 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+ 
+CHOOSING, TYPING_REPLY, TYPING_CHOICE = range(3)
+ 
+reply_keyboard = [['Coinbase Pro', 'Binance', 'Kucoin']]
+
+markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
 
 class TelegramBotBase():
     def _read_data(self, name: str = "data.json") -> None:
@@ -96,7 +106,10 @@ class TelegramBot(TelegramBotBase):
         self.cl_args = ""
         self.market = ""
         self.data = {}
-        
+
+        self.statexchange = ""
+        self.statpair = ""
+
         parser = argparse.ArgumentParser(description="PyCryptoBot Telegram Bot")
         parser.add_argument(
             "--config", type=str, dest="config_file", help="pycryptobot config file", default="config.json")
@@ -309,9 +322,9 @@ class TelegramBot(TelegramBotBase):
 
         keyboard = [
             [
-                InlineKeyboardButton("Active Orders", callback_data='orders'),
-                InlineKeyboardButton("Active Pairs", callback_data='pairs'),
-                InlineKeyboardButton("All", callback_data='allactive'),
+                InlineKeyboardButton("Binance", callback_data='stats_binance'),
+                InlineKeyboardButton("Coinbase Pro", callback_data='stats_coinbasepro'),
+                InlineKeyboardButton("Kucoin", callback_data='stats_kucoin'),
             ],
             [
                 InlineKeyboardButton("Cancel", callback_data='cancel')
@@ -320,23 +333,33 @@ class TelegramBot(TelegramBotBase):
 
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        update.message.reply_text('Make your selection', reply_markup=reply_markup)
-        # update.bot.sendMessage(context._chat_id_and_data[0], 'Make your selection', reply_markup=reply_markup).then(def answerCallbacks[context._chat_id_and_data[0]] = function(answer) {
-        #             donateAmount = answer.text;
-        #             update.bot.sendMessage(opts.chat_id, f'Custom donation for ${donateAmount} requested.`);
-        # })
+        update.message.reply_text('Select the exchange', reply_markup=markup)
 
-    def stats(self, update, context):
+        return CHOOSING
 
-        if not self._checkifallowed(context._user_id_and_data[0], update):
+    def stats_exchange_received(self, update, context):
+        if update.message.text.lower() == 'done':
             return
+        self.statexchange = update.message.text.lower()
+        if update.message.text == 'Coinbase Pro':
+            self.statexchange = 'coinbasepro'
+
+        update.message.reply_text('Tell with market/pair you want stats for?', reply_markup=ReplyKeyboardRemove())
+ 
+        return TYPING_REPLY
+
+    def stats_pair_received(self, update, context):
+        self.statpair = update.message.text
 
         update.message.reply_text("<i>Gathering Stats, please wait...</i>", parse_mode='HTML')
 
-        output = subprocess.getoutput(f"python3 pycryptobot.py --stats --exchange {context.args[1]}  --market {context.args[0]}  ")
+        output = subprocess.getoutput(f"python3 pycryptobot.py --stats --exchange {self.statexchange}  --market {self.statpair}  ")
 
         mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
-        mBot.send(output, parsemode="HTML")
+        update.message.reply_text(output, parse_mode="HTML")
+    
+        # update.message.reply_text("Neat! Just so you know, this is what you already told me:")
+        return ConversationHandler.END
 
     def sellrequest(self, update, context):
         if not self._checkifallowed(context._user_id_and_data[0], update):
@@ -493,16 +516,22 @@ class TelegramBot(TelegramBotBase):
             query.edit_message_text("Starting all bots")
             for pair in self.data["markets"]:
                 overrides = self.data["markets"][pair]["overrides"]
-                subprocess.Popen(f"python3 pycryptobot.py {overrides}", shell=True)
+                if platform.system() == 'Windows':
+                    #subprocess.Popen(f"python3 pycryptobot.py {overrides}", creationflags=subprocess.CREATE_NEW_CONSOLE)
+                    os.system(f"start powershell -NoExit -Command $host.UI.RawUI.WindowTitle = '{pair}' ; python3 pycryptobot.py {overrides}")
+                else:
+                    subprocess.call(['open', '-W', '-a', 'Terminal.app', f'python3 pycryptobot.py {overrides}'])
                 mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
                 mBot.send(f"Started {pair} crypto bot")
-                # query.edit_message_text(f"Started {pair} crypto bot")
                 sleep(10)
         else:
             overrides = self.data["markets"][str(query.data).replace("start_", "")]["overrides"]
-            subprocess.Popen(f"python3 pycryptobot.py {overrides}", shell=True)
+            if platform.system() == 'Windows':
+                os.system(f"start powershell -NoExit -Command $host.UI.RawUI.WindowTitle = '{query.data.replace('start_', '')}' ; python3 pycryptobot.py {overrides}")
+                #subprocess.Popen(f"python3 pycryptobot.py {overrides}", creationflags=subprocess.CREATE_NEW_CONSOLE)
+            else:
+                subprocess.call(['open', '-W', '-a', 'Terminal.app', f'python3 pycryptobot.py {overrides}'])
             query.edit_message_text(f"Started {str(query.data).replace('start_', '')} crypto bots")
-        # self._read_data()
 
     def stopbotrequest(self, update, context) -> None:
         if not self._checkifallowed(context._user_id_and_data[0], update):
@@ -532,26 +561,12 @@ class TelegramBot(TelegramBotBase):
             for file in jsonfiles:
                 if not file == "data.json" and not file == "startbot_single.bat" and not file == "startbot_multi.bat":
                     self.updatebotcontrol(file, "exit")
-            #for pair in self.data["markets"]:
-             #   if os.path.isfile(os.path.join(self.datafolder, "telegram_data", "stop_" + pair + '.json')):
-            #        self.updatebotcontrol(pair + '.json', "exit")
                     mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
                     mBot.send(f"Stopping {file.replace('.json', '')} crypto bot")
         else:
             self.updatebotcontrol(str(query.data).replace("stop_", ""), "exit")
             mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
             mBot.send(f"Stopping {str(query.data).replace('stop_', '').replace('.json', '')} crypto bot")
-
-        #jsonfiles = os.listdir(os.path.join(self.datafolder, 'telegram_data'))
-
-        #for file in jsonfiles:
-        #    if not file == "data.json" and not file == "startbot_single.bat" and not file == "startbot_multi.bat":
-         #       self.updatebotcontrol(file, "exit")
-
-        # mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
-        #query = update.callback_query
-
-        #query.edit_message_text(f"Stopping all crypto bots")
 
     def startnewbotrequest(self, update, context):
 
@@ -566,7 +581,7 @@ class TelegramBot(TelegramBotBase):
         keyboard = [
             [
                 InlineKeyboardButton("OK", callback_data='ok'),
-                InlineKeyboardButton("Cancel", callback_data='no'),
+                InlineKeyboardButton("Cancel", callback_data='cancel'),
             ]
         ]
 
@@ -583,16 +598,19 @@ class TelegramBot(TelegramBotBase):
         if query.data == "ok":
             query.edit_message_text("Starting Bot")
 
-            subprocess.Popen(f"python3 pycryptobot.py {self.cl_args}", shell=True)
+            if platform.system() == 'Windows':
+                #subprocess.Popen(f"python3 pycryptobot.py {overrides}", creationflags=subprocess.CREATE_NEW_CONSOLE)
+                os.system(f"start powershell -NoExit -Command $host.UI.RawUI.WindowTitle = '{self.market}' ; python3 pycryptobot.py {self.cl_args}")
+            else:
+                subprocess.call(['open', '-W', '-a', 'Terminal.app', f'python3 pycryptobot.py {self.cl_args}'])
+            #subprocess.Popen(f"python3 pycryptobot.py {self.cl_args}", creationflags=subprocess.CREATE_NEW_CONSOLE)
 
             query.edit_message_text(f"{self.market} crypto bot Starting")
             keyboard = [
                         
                             [InlineKeyboardButton("Yes - (will be added to you bot startup list)", callback_data='add_ok')],
                             [InlineKeyboardButton("Cancel", callback_data='cancel')],
-                        
                     ]
-
             reply_markup = InlineKeyboardMarkup(keyboard)
             query.edit_message_text(f"Do you want to save this?", reply_markup=reply_markup)
         elif query.data == "cancel":
@@ -622,6 +640,9 @@ class TelegramBot(TelegramBotBase):
         """Log Errors caused by Updates."""
         logger.warning('Update "%s" caused error "%s"', update, context.error)
 
+    def done(self, update, context):
+        return ConversationHandler.END
+
 def main():
     """Start the bot."""
     # Create telegram bot configuration
@@ -636,13 +657,11 @@ def main():
     dp.add_handler(CommandHandler("help", botconfig.help))    
     dp.add_handler(CommandHandler("margins", botconfig.marginrequest, Filters.all))
     dp.add_handler(CommandHandler("trades", botconfig.trades, Filters.text))
-    dp.add_handler(CommandHandler("stats", botconfig.stats, Filters.all))
     dp.add_handler(CommandHandler("showconfig", botconfig.showconfigrequest, Filters.text))   
     dp.add_handler(CommandHandler("showinfo", botconfig.showbotinfo, Filters.text))  
 
     # General Action Command 
     dp.add_handler(CommandHandler("setcommands", botconfig.setcommands))
-    dp.add_handler(CommandHandler("start", botconfig.start))
     dp.add_handler(CommandHandler("sell", botconfig.sellrequest, Filters.text))
     dp.add_handler(CommandHandler("pausebots", botconfig.pausebotrequest, Filters.text))
     dp.add_handler(CommandHandler("restartbots", botconfig.restartbotrequest, Filters.text))
@@ -655,6 +674,24 @@ def main():
     # Response to Question handler
     dp.add_handler(CallbackQueryHandler(botconfig._responses))
 
+    conversation = ConversationHandler(
+        entry_points=[CommandHandler('stats', botconfig.statsrequest)],
+        states={
+
+            CHOOSING: [MessageHandler(Filters.text,
+                                           botconfig.stats_exchange_received,
+                                           pass_user_data=True),
+                            ],
+
+ 
+            TYPING_REPLY: [MessageHandler(Filters.text,
+                                          botconfig.stats_pair_received,
+                                          pass_user_data=True),
+                           ],
+        },
+        fallbacks=[('Done', botconfig.done)]
+    )
+    dp.add_handler(conversation)
     # log all errors
     dp.add_error_handler(botconfig.error)
 
