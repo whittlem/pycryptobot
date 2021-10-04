@@ -295,8 +295,9 @@ class TelegramBot(TelegramBotBase):
         openoutput = ''
         closeoutput = ""
         for file in jsonfiles:
-            if not file == "data.json" and not file == "startbot_single.bat" and not file == "startbot_multi.bat":
-                self._read_data(file)
+            #if not file == "data.json" and not file == "startbot_single.bat" and not file == "startbot_multi.bat":
+            self._read_data(file)
+            if 'margin' in self.data:
                 if self.data['margin'] == " ":
                     closeoutput = closeoutput + f"<b>{str(file).replace('.json', '')}</b>"
                     closeoutput = closeoutput + F"\n<i>{self.data['message']}</i>\n"
