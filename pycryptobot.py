@@ -141,7 +141,7 @@ def executeJob(
                         str(df.tail(1).index.format()[0])
                     )
 
-                simDate = app.getDateFromISO8601Str(str(df_last.index.format()[0]))
+                simDate = app.getDateFromISO8601Str(str(state.last_df_index))
 
                 trading_data = app.getSmartSwitchHistoricalDataChained(
                     app.getMarket(), app.getGranularity(), str(startDate), str(endDate)
@@ -156,14 +156,13 @@ def executeJob(
                     sim_rounded = pd.Series(simDate).dt.round("15min")
                     simDate = sim_rounded[0]
 
-                state.iterations = trading_data.index.get_loc(str(simDate))
+                state.iterations = trading_data.index.get_loc(str(simDate)) +1
+
+                if app.getDateFromISO8601Str(str(simDate)).isoformat() == app.getDateFromISO8601Str(str(state.last_df_index)).isoformat():
+                    state.iterations += 1
 
                 if state.iterations == 0:
                     state.iterations = 1
-                elif app.getGranularity() == 3600:
-                    state.iterations += 2
-                elif app.getGranularity() == 900:
-                    state.iterations -= 2
 
                 trading_dataCopy = trading_data.copy()
                 technical_analysis = TechnicalAnalysis(trading_dataCopy)
@@ -354,7 +353,7 @@ def executeJob(
         else:
             strategy = Strategy(app, state, df, state.iterations)
 
-        state.action = strategy.getAction(price)
+        state.action = strategy.getAction(price, current_sim_date)
 
         immediate_action = False
         margin, profit, sell_fee = 0, 0, 0
@@ -1408,7 +1407,8 @@ def executeJob(
                 telegram_bot.addmargin(str(_truncate(margin, 4) + "%"), str(_truncate(profit,2)))
 
             # decrement ignored iteration
-            state.iterations = state.iterations - 1
+            if app.isSimulation() and app.smart_switch:
+                state.iterations = state.iterations - 1
 
         # if live but not websockets
         if not app.disableTracker() and app.isLive() and not app.enableWebsocket():

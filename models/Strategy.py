@@ -392,8 +392,8 @@ class Strategy:
 
         return False
 
-    def getAction(self, price):
-        if self.isBuySignal(price):
+    def getAction(self, price, dt):
+        if self.isBuySignal(price, dt):
             return "BUY"
         elif self.isSellSignal():
             return "SELL"

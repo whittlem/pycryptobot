@@ -68,11 +68,13 @@ class TelegramBotBase():
             if not file == "data.json" and not file == "startbot_single.bat" and not file == "startbot_multi.bat":
                 self._read_data(file)
                 if callbacktag == "sell":
-                    if not self.data['margin'] == " ":
-                        buttons.append(InlineKeyboardButton(file.replace('.json', ''), callback_data=callbacktag + "_" + file))
+                    if 'margin' in self.data:
+                        if not self.data['margin'] == " ":
+                            buttons.append(InlineKeyboardButton(file.replace('.json', ''), callback_data=callbacktag + "_" + file))
                 else:
-                    if self.data['botcontrol']['status'] == state:
-                        buttons.append(InlineKeyboardButton(file.replace('.json', ''), callback_data=callbacktag + "_" + file))
+                    if 'botcontrol' in self.data:
+                        if self.data['botcontrol']['status'] == state:
+                            buttons.append(InlineKeyboardButton(file.replace('.json', ''), callback_data=callbacktag + "_" + file))
         
         if len(buttons) > 0:
             if len(buttons) > 1:
@@ -262,12 +264,13 @@ class TelegramBot(TelegramBotBase):
 
         output = ""
         for pair in self.data['trades']:
+            output = ""
             output = output + f"<b>{pair}</b>\n{self.data['trades'][pair]['timestamp']}"
-            output = output + F"\n<i>Bought at: {self.data['trades'][pair]['price']}   Margin: {self.data['trades'][pair]['margin']}</i>\n"
+            output = output + F"\n<i>Sold at: {self.data['trades'][pair]['price']}   Margin: {self.data['trades'][pair]['margin']}</i>\n"
 
-        if output != "":
-            mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
-            mBot.send(output, parsemode="HTML")
+            if output != "":
+                mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
+                mBot.send(output, parsemode="HTML")
             # update.message.reply_text(output, parse_mode="HTML")        
 
     def marginrequest(self, update, context):
@@ -381,11 +384,10 @@ class TelegramBot(TelegramBotBase):
         query = update.callback_query
 
         self._read_data(query.data.replace('sell_', ''))
-        self.data['botcontrol']['manualsell'] = True
-
-        self._write_data(query.data.replace('sell_', ''))
-
-        query.edit_message_text(f"Selling: {self.wanttosell}\n<i>Please wait for sale notification...</i>", parse_mode="HTML")
+        if 'botcontrol' in self.data:
+            self.data['botcontrol']['manualsell'] = True
+            self._write_data(query.data.replace('sell_', ''))
+            query.edit_message_text(f"Selling: {self.wanttosell}\n<i>Please wait for sale notification...</i>", parse_mode="HTML")
 
     def showconfigrequest(self, update, context):
         if not self._checkifallowed(context._user_id_and_data[0], update):
@@ -439,12 +441,11 @@ class TelegramBot(TelegramBotBase):
             jsonfiles = os.listdir(os.path.join(self.datafolder, 'telegram_data'))
         
             for file in jsonfiles:
-                if not file == "data.json" and not file == "startbot_single.bat" and not file == "startbot_multi.bat":
-                    self.updatebotcontrol(file, "pause")
+                if self.updatebotcontrol(file, "pause"):
+                    query.edit_message_text(f"<i>Pausing {file.replace('.json','')}</i>", parse_mode="HTML")
         else:
-            self.updatebotcontrol(query.data.replace('pause_', ''), 'pause')
-
-        query.edit_message_text(f"<i>Pausing {query.data.replace('pause_', '').replace('.json','')}</i>", parse_mode="HTML")
+            if self.updatebotcontrol(query.data.replace('pause_', ''), 'pause'):
+                query.edit_message_text(f"<i>Pausing {query.data.replace('pause_', '').replace('.json','')}</i>", parse_mode="HTML")
 
     def restartbotrequest(self, update, context) -> None:
         if not self._checkifallowed(context._user_id_and_data[0], update):
@@ -468,12 +469,11 @@ class TelegramBot(TelegramBotBase):
             jsonfiles = os.listdir(os.path.join(self.datafolder, 'telegram_data'))
         
             for file in jsonfiles:
-                if not file == "data.json" and not file == "startbot_single.bat" and not file == "startbot_multi.bat":
-                    self.updatebotcontrol(file, "start")
+                if self.updatebotcontrol(file, "start"):
+                    query.edit_message_text(f"Restarting {file.replace('.json','')}", parse_mode="HTML")
         else:
-            self.updatebotcontrol(query.data.replace('restart_', ''), "start")
-
-        query.edit_message_text(f"Restarting {query.data.replace('restart_', '').replace('.json','')}", parse_mode="HTML")
+            if self.updatebotcontrol(query.data.replace('restart_', ''), "start"):
+                query.edit_message_text(f"Restarting {query.data.replace('restart_', '').replace('.json','')}", parse_mode="HTML")
 
     def startallbotsrequest(self, update, context) -> None:
         if not self._checkifallowed(context._user_id_and_data[0], update):
@@ -561,14 +561,13 @@ class TelegramBot(TelegramBotBase):
             jsonfiles = os.listdir(os.path.join(self.datafolder, 'telegram_data'))
 
             for file in jsonfiles:
-                if not file == "data.json" and not file == "startbot_single.bat" and not file == "startbot_multi.bat":
-                    self.updatebotcontrol(file, "exit")
+                if self.updatebotcontrol(file, "exit"):
                     mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
                     mBot.send(f"Stopping {file.replace('.json', '')} crypto bot")
         else:
-            self.updatebotcontrol(str(query.data).replace("stop_", ""), "exit")
-            mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
-            mBot.send(f"Stopping {str(query.data).replace('stop_', '').replace('.json', '')} crypto bot")
+            if self.updatebotcontrol(str(query.data).replace("stop_", ""), "exit"):
+                mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
+                mBot.send(f"Stopping {str(query.data).replace('stop_', '').replace('.json', '')} crypto bot")
 
     def newbot_request(self, update: Updater, context):
         if not self._checkifallowed(context._user_id_and_data[0], update):
@@ -642,12 +641,15 @@ class TelegramBot(TelegramBotBase):
 
         query.edit_message_text(f"{self.pair} saved")
 
-    def updatebotcontrol(self, market, status):
+    def updatebotcontrol(self, market, status) -> bool:
         self._read_data(market)
 
-        self.data["botcontrol"]["status"] = status
+        if 'botcontrol' in self.data:
+            self.data["botcontrol"]["status"] = status
+            self._write_data(market)
+            return True
 
-        self._write_data(market)
+        return False
 
     def error(self, update, context):
         """Log Errors caused by Updates."""
