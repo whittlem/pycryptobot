@@ -35,7 +35,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
  
-CHOOSING, TYPING_REPLY, TYPING_CHOICE = range(3)
+CHOOSING, TYPING_REPLY = range(2)
+EXCHANGE, MARKET, OVERRIDES = range(3)
  
 reply_keyboard = [['Coinbase Pro', 'Binance', 'Kucoin']]
 
@@ -107,8 +108,9 @@ class TelegramBot(TelegramBotBase):
         self.market = ""
         self.data = {}
 
-        self.statexchange = ""
-        self.statpair = ""
+        self.exchange = ""
+        self.pair = ""
+        self.overrides = ""
 
         parser = argparse.ArgumentParser(description="PyCryptoBot Telegram Bot")
         parser.add_argument(
@@ -220,7 +222,7 @@ class TelegramBot(TelegramBotBase):
         helptext += "<b>/setcommands</b> - <i>add all commands to bot for easy access</i>\n"
         helptext += "<b>/margins</b> - <i>show margins for open trade</i>\n"
         helptext += "<b>/trades</b> - <i>show closed trades</i>\n"
-        helptext += "<b>/stats {market} {exchange}</b> - <i>display stats for market</i>\n"
+        helptext += "<b>/stats</b> - <i>display stats for market</i>\n"
         helptext += "<b>/showinfo</b> - <i>display bot(s) status</i>\n"
         helptext += "<b>/showconfig</b> - <i>show config for exchange</i>\n"
         helptext += "<b>/sell</b> - <i>sell market pair on next iteration</i>\n"
@@ -332,8 +334,6 @@ class TelegramBot(TelegramBotBase):
             ],
          ]
 
-        reply_markup = InlineKeyboardMarkup(keyboard)
-
         update.message.reply_text('Select the exchange', reply_markup=markup)
 
         return CHOOSING
@@ -341,20 +341,20 @@ class TelegramBot(TelegramBotBase):
     def stats_exchange_received(self, update, context):
         if update.message.text.lower() == 'done':
             return
-        self.statexchange = update.message.text.lower()
+        self.exchange = update.message.text.lower()
         if update.message.text == 'Coinbase Pro':
-            self.statexchange = 'coinbasepro'
+            self.exchange = 'coinbasepro'
 
-        update.message.reply_text('Tell with market/pair you want stats for?', reply_markup=ReplyKeyboardRemove())
+        update.message.reply_text('Which market/pair do you want stats for?', reply_markup=ReplyKeyboardRemove())
  
         return TYPING_REPLY
 
     def stats_pair_received(self, update, context):
-        self.statpair = update.message.text
+        self.pair = update.message.text
 
         update.message.reply_text("<i>Gathering Stats, please wait...</i>", parse_mode='HTML')
 
-        output = subprocess.getoutput(f"python3 pycryptobot.py --stats --exchange {self.statexchange}  --market {self.statpair}  ")
+        output = subprocess.getoutput(f"python3 pycryptobot.py --stats --exchange {self.exchange}  --market {self.pair}  ")
 
         mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
         update.message.reply_text(output, parse_mode="HTML")
@@ -570,54 +570,64 @@ class TelegramBot(TelegramBotBase):
             mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
             mBot.send(f"Stopping {str(query.data).replace('stop_', '').replace('.json', '')} crypto bot")
 
-    def startnewbotrequest(self, update, context):
-
-        i=0
-        self.cl_args = ""
-        while i <= len(context.args)-1:
-            if context.args[i] == "--market":
-                self.market = context.args[i+1]
-            self.cl_args = self.cl_args + f" {context.args[i]} {context.args[i+1]}" if i+1 <= len(context.args)-1 else self.cl_args +  f" {context.args[i]} "
-            i += 2
-
-        keyboard = [
-            [
-                InlineKeyboardButton("OK", callback_data='ok'),
-                InlineKeyboardButton("Cancel", callback_data='cancel'),
-            ]
-        ]
-
-        reply_markup = InlineKeyboardMarkup(keyboard)
-
-        update.message.reply_text(f'Starting new bot with the following CL overrides\n{self.cl_args}', reply_markup=reply_markup)   
-
-    def startnewbotresponse (self, update, context):
+    def newbot_request(self, update: Updater, context):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
 
-        query = update.callback_query
+        self.exchange = ""
+        self.market = ""
+        self.overrides = ""
 
-        if query.data == "ok":
-            query.edit_message_text("Starting Bot")
+        update.message.reply_text('Select the exchange', reply_markup=markup)
 
-            if platform.system() == 'Windows':
-                #subprocess.Popen(f"python3 pycryptobot.py {overrides}", creationflags=subprocess.CREATE_NEW_CONSOLE)
-                os.system(f"start powershell -NoExit -Command $host.UI.RawUI.WindowTitle = '{self.market}' ; python3 pycryptobot.py {self.cl_args}")
-            else:
-                subprocess.Popen(f'python3 pycryptobot.py {self.cl_args}', shell=True)
-                # subprocess.call(['open', '-W', '-a', 'Terminal.app', f'python3 pycryptobot.py {self.cl_args}'])
-            #subprocess.Popen(f"python3 pycryptobot.py {self.cl_args}", creationflags=subprocess.CREATE_NEW_CONSOLE)
+        return EXCHANGE
 
-            query.edit_message_text(f"{self.market} crypto bot Starting")
-            keyboard = [
+    def newbot_exchange(self, update, context):
+        if not self._checkifallowed(context._user_id_and_data[0], update):
+            return
+
+        if update.message.text.lower() == 'done':
+            return
+        self.exchange = update.message.text.lower()
+        if update.message.text == 'Coinbase Pro':
+            self.exchange = 'coinbasepro'
+
+        update.message.reply_text('Which market/pair do you want stats for?', reply_markup=ReplyKeyboardRemove())
+ 
+        return MARKET
+
+    def newbot_market(self, update, context):
+        if not self._checkifallowed(context._user_id_and_data[0], update):
+            return
+
+        self.pair = update.message.text
+
+        update.message.reply_text('Tell me any other commandline overrrides to use?', reply_markup=ReplyKeyboardRemove())
+ 
+        return OVERRIDES
+
+    def newbot_overrides(self, update, context):
+        if not self._checkifallowed(context._user_id_and_data[0], update):
+            return
+
+        self.overrides = update.message.text
+
+        if platform.system() == 'Windows':
+            #subprocess.Popen(f"python3 pycryptobot.py {overrides}", creationflags=subprocess.CREATE_NEW_CONSOLE)
+            os.system(f"start powershell -NoExit -Command $host.UI.RawUI.WindowTitle = '{self.pair}' ; python3 pycryptobot.py --exchange {self.exchange} --market {self.pair} {self.overrides}")
+        else:
+            subprocess.Popen(f'python3 pycryptobot.py --exchange {self.exchange} --market {self.pair} {self.overrides}', shell=True)
+
+        update.message.reply_text(f"{self.pair} crypto bot Starting")
+        keyboard = [
                         
-                            [InlineKeyboardButton("Yes - (will be added to you bot startup list)", callback_data='add_ok')],
-                            [InlineKeyboardButton("Cancel", callback_data='cancel')],
-                    ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            query.edit_message_text(f"Do you want to save this?", reply_markup=reply_markup)
-        elif query.data == "cancel":
-            query.edit_message_text("User Cancelled Request")
+                        [InlineKeyboardButton("Yes - (will be added to you bot startup list)", callback_data='add_ok')],
+                        [InlineKeyboardButton("Cancel", callback_data='cancel')],
+                ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        update.message.reply_text(f"Do you want to save this?", reply_markup=reply_markup)
+
+        return ConversationHandler.END
 
     def savenewbot(self, update, context):
 
@@ -627,10 +637,10 @@ class TelegramBot(TelegramBotBase):
         query = update.callback_query
 
         self._read_data()
-        self.data["markets"].update({self.market: {"overrides": self.cl_args}})
+        self.data["markets"].update({self.pair: {"overrides": f'--exchange {self.exchange} --market {self.pair} {self.overrides}'}})
         self._write_data()
 
-        query.edit_message_text(f"{self.market} saved")
+        query.edit_message_text(f"{self.pair} saved")
 
     def updatebotcontrol(self, market, status):
         self._read_data(market)
@@ -672,29 +682,31 @@ def main():
     # Custom Action Commands
     dp.add_handler(CommandHandler("startbots", botconfig.startallbotsrequest))
     dp.add_handler(CommandHandler("stopbots", botconfig.stopbotrequest))
-    dp.add_handler(CommandHandler("startnew", botconfig.startnewbotrequest, Filters.text))
 
     # Response to Question handler
     dp.add_handler(CallbackQueryHandler(botconfig._responses))
 
-    conversation = ConversationHandler(
+    conversation_stats = ConversationHandler(
         entry_points=[CommandHandler('stats', botconfig.statsrequest)],
         states={
-
-            CHOOSING: [MessageHandler(Filters.text,
-                                           botconfig.stats_exchange_received,
-                                           pass_user_data=True),
-                            ],
-
- 
-            TYPING_REPLY: [MessageHandler(Filters.text,
-                                          botconfig.stats_pair_received,
-                                          pass_user_data=True),
-                           ],
+            CHOOSING: [MessageHandler(Filters.text, botconfig.stats_exchange_received, pass_user_data=True)],
+            TYPING_REPLY: [MessageHandler(Filters.text, botconfig.stats_pair_received, pass_user_data=True)],
         },
         fallbacks=[('Done', botconfig.done)]
     )
-    dp.add_handler(conversation)
+
+    conversation_newbot = ConversationHandler(
+        entry_points=[CommandHandler('startnew', botconfig.newbot_request)],
+        states={
+            EXCHANGE: [MessageHandler(Filters.text, botconfig.newbot_exchange)],
+            MARKET: [MessageHandler(Filters.text, botconfig.newbot_market)],
+            OVERRIDES: [MessageHandler(Filters.text, botconfig.newbot_overrides)],
+        },
+        fallbacks=[('Done', botconfig.done)]
+    )
+
+    dp.add_handler(conversation_stats)
+    dp.add_handler(conversation_newbot)
     # log all errors
     dp.add_error_handler(botconfig.error)
 

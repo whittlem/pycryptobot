@@ -152,6 +152,9 @@ class AppState:
                         f"Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})"
                     )
                 return
+            else:
+                sys.tracebacklimit = 0
+                raise Exception(f"Market not found! ({self.app.getMarket()})")
 
         elif self.app.getExchange() == "coinbasepro":
             product = self.api.authAPI("GET", f"products/{self.app.getMarket()}")
