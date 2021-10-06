@@ -75,7 +75,7 @@ class TelegramBotHelper:
     def closetrade(self, ts, price, margin):
         if self.app.enableTelegramBotControl():
             self._read_data("data.json")
-            self.data['trades'].update({self.market : {"timestamp" : ts, "price" : price, "margin" : margin}})
+            self.data['trades'].update({ts : {"pair" : self.market, "price" : price, "margin" : margin}})
             self._write_data("data.json")
 
     def checkmanualsell(self) -> bool:
