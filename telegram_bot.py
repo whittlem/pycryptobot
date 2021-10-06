@@ -163,31 +163,31 @@ class TelegramBot(TelegramBotBase):
         if query.data == 'ok' or query.data == 'no':
             self.startnewbotresponse(update, context)
 
-        if query.data == "orders" or query.data == "pairs" or query.data == "allactive":
+        elif query.data == "orders" or query.data == "pairs" or query.data == "allactive":
             self.marginresponse(update, context)
 
-        if query.data == "binance" or query.data == "coinbasepro" or query.data == "kucoin":
+        elif query.data == "binance" or query.data == "coinbasepro" or query.data == "kucoin":
             self.showconfigresponse(update, context)
 
-        if "pause_" in query.data:
+        elif "pause_" in query.data:
             self.pausebotresponse(update, context)
 
-        if "restart_" in query.data:
+        elif "restart_" in query.data:
             self.restartbotresponse(update, context)
 
-        if 'sell_' in query.data:
+        elif 'sell_' in query.data:
             self.sellresponse(update, context)
 
-        if 'stop_' in query.data:
+        elif 'stop_' in query.data:
             self.stopbotresponse(update, context)
 
-        if 'add_' in query.data:
+        elif 'add_' in query.data:
             self.savenewbot(update, context)
 
-        if 'start_' in query.data:
+        elif 'start_' in query.data:
             self.startallbotsresponse(update, context)
 
-        if query.data == "cancel":
+        elif query.data == "cancel":
             query.edit_message_text("User Cancelled Request")
     # Define a few command handlers. These usually take the two arguments update and
     # context. Error handlers also receive the raised TelegramError object in error.
@@ -263,10 +263,10 @@ class TelegramBot(TelegramBotBase):
         self._read_data()
 
         output = ""
-        for pair in self.data['trades']:
+        for time in self.data['trades']:
             output = ""
-            output = output + f"<b>{pair}</b>\n{self.data['trades'][pair]['timestamp']}"
-            output = output + F"\n<i>Sold at: {self.data['trades'][pair]['price']}   Margin: {self.data['trades'][pair]['margin']}</i>\n"
+            output = output + f"<b>{self.data['trades'][time]['pair']}</b>\n{time}"
+            output = output + F"\n<i>Sold at: {self.data['trades'][time]['price']}   Margin: {self.data['trades'][time]['margin']}</i>\n"
 
             if output != "":
                 mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
@@ -518,7 +518,7 @@ class TelegramBot(TelegramBotBase):
             for pair in self.data["markets"]:
                 overrides = self.data["markets"][pair]["overrides"]
                 if platform.system() == 'Windows':
-                    #subprocess.Popen(f"python3 pycryptobot.py {overrides}", creationflags=subprocess.CREATE_NEW_CONSOLE)
+                    #subprocess.Popen(f"cmd /k python3 pycryptobot.py {overrides}", creationflags=subprocess.CREATE_NEW_CONSOLE)
                     os.system(f"start powershell -NoExit -Command $host.UI.RawUI.WindowTitle = '{pair}' ; python3 pycryptobot.py {overrides}")
                 else:
                     subprocess.Popen(f'python3 pycryptobot.py {overrides}', shell=True)
