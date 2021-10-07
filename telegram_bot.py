@@ -733,7 +733,7 @@ def main():
     )
 
     conversation_newbot = ConversationHandler(
-        entry_points=[CommandHandler('startnew', botconfig.newbot_request)],
+        entry_points=[CommandHandler('addnew', botconfig.newbot_request)],
         states={
             EXCHANGE: [MessageHandler(Filters.text, botconfig.newbot_exchange)],
             MARKET: [MessageHandler(Filters.text, botconfig.newbot_market)],
