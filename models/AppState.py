@@ -220,7 +220,7 @@ class AppState:
                 )
 
                 # binance orders do not show fees
-                if self.app.getExchange() == "coinbasepro":
+                if self.app.getExchange() == "coinbasepro" or self.app.getExchange() == "kucoin":
                     self.last_buy_fee = float(
                         last_order[last_order.action == "buy"]["fees"]
                     )

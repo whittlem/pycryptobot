@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
  
 CHOOSING, TYPING_REPLY = range(2)
-EXCHANGE, MARKET, OVERRIDES = range(3)
+EXCHANGE, MARKET, ANYOVERRIDES, OVERRIDES, SAVE, START = range(6)
  
 reply_keyboard = [['Coinbase Pro', 'Binance', 'Kucoin']]
 
@@ -591,16 +591,33 @@ class TelegramBot(TelegramBotBase):
         if update.message.text == 'Coinbase Pro':
             self.exchange = 'coinbasepro'
 
-        update.message.reply_text('Which market/pair do you want stats for?', reply_markup=ReplyKeyboardRemove())
+        update.message.reply_text('Which market/pair is this for?', reply_markup=ReplyKeyboardRemove())
  
+        return ANYOVERRIDES
+
+    def newbot_any_overrides(self, update, context) -> None:
+        if not self._checkifallowed(context._user_id_and_data[0], update):
+            return
+
+        reply_keyboard = [['Yes', 'No']]
+
+        markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+
+        update.message.reply_text('Do you want to use any commandline overrrides?', reply_markup=markup)
+
         return MARKET
 
     def newbot_market(self, update, context):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
 
-        self.pair = update.message.text
+        if update.message.text == 'No':
+            reply_keyboard = [['Yes', 'No']]
+            markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+            update.message.reply_text(f"Do you want to save this?", reply_markup=markup)
+            return SAVE
 
+        self.pair = update.message.text
         update.message.reply_text('Tell me any other commandline overrrides to use?', reply_markup=ReplyKeyboardRemove())
  
         return OVERRIDES
@@ -611,35 +628,49 @@ class TelegramBot(TelegramBotBase):
 
         self.overrides = update.message.text
 
-        if platform.system() == 'Windows':
-            #subprocess.Popen(f"python3 pycryptobot.py {overrides}", creationflags=subprocess.CREATE_NEW_CONSOLE)
-            os.system(f"start powershell -NoExit -Command $host.UI.RawUI.WindowTitle = '{self.pair}' ; python3 pycryptobot.py --exchange {self.exchange} --market {self.pair} {self.overrides}")
-        else:
-            subprocess.Popen(f'python3 pycryptobot.py --exchange {self.exchange} --market {self.pair} {self.overrides}', shell=True)
-
         update.message.reply_text(f"{self.pair} crypto bot Starting")
         keyboard = [
-                        
                         [InlineKeyboardButton("Yes - (will be added to you bot startup list)", callback_data='add_ok')],
-                        [InlineKeyboardButton("Cancel", callback_data='cancel')],
+                        [InlineKeyboardButton("No", callback_data='add_no')],
                 ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         update.message.reply_text(f"Do you want to save this?", reply_markup=reply_markup)
 
-        return ConversationHandler.END
+        return SAVE
 
-    def savenewbot(self, update, context):
+    def newbot_save(self, update, context):
 
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
 
-        query = update.callback_query
+        if update.message.text == 'Yes':
+            self._read_data()
+            self.data["markets"].update({self.pair: {"overrides": f'--exchange {self.exchange} --market {self.pair} {self.overrides}'}})
+            self._write_data()
 
-        self._read_data()
-        self.data["markets"].update({self.pair: {"overrides": f'--exchange {self.exchange} --market {self.pair} {self.overrides}'}})
-        self._write_data()
+            update.message.reply_text(f"{self.pair} saved")
 
-        query.edit_message_text(f"{self.pair} saved")
+        reply_keyboard = [['Yes', 'No']]
+        markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+        update.message.reply_text(f"Do you want to start this bot?", reply_markup=markup)
+
+        return START
+
+    def newbot_start(self, update, context) -> None:
+        if not self._checkifallowed(context._user_id_and_data[0], update):
+            return
+
+        if update.message.text == 'Yes':
+            if platform.system() == 'Windows':
+                #subprocess.Popen(f"python3 pycryptobot.py {overrides}", creationflags=subprocess.CREATE_NEW_CONSOLE)
+                os.system(f"start powershell -NoExit -Command $host.UI.RawUI.WindowTitle = '{self.pair}' ; python3 pycryptobot.py --exchange {self.exchange} --market {self.pair} {self.overrides}")
+            else:
+                subprocess.Popen(f'python3 pycryptobot.py --exchange {self.exchange} --market {self.pair} {self.overrides}', shell=True)
+
+            update.message.reply_text(f"{self.pair} crypto bot Starting", reply_markup=ReplyKeyboardRemove())
+
+        update.message.reply_text(f"Command Complete, have a nice day.", reply_markup=ReplyKeyboardRemove())
+        return ConversationHandler.END
 
     def updatebotcontrol(self, market, status) -> bool:
         self._read_data(market)
@@ -702,7 +733,10 @@ def main():
         states={
             EXCHANGE: [MessageHandler(Filters.text, botconfig.newbot_exchange)],
             MARKET: [MessageHandler(Filters.text, botconfig.newbot_market)],
+            ANYOVERRIDES: [MessageHandler(Filters.text, botconfig.newbot_any_overrides)],
             OVERRIDES: [MessageHandler(Filters.text, botconfig.newbot_overrides)],
+            SAVE: [MessageHandler(Filters.text, botconfig.newbot_save)],
+            START: [MessageHandler(Filters.text, botconfig.newbot_start)]
         },
         fallbacks=[('Done', botconfig.done)]
     )

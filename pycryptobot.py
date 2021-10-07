@@ -304,9 +304,9 @@ def executeJob(
         else:
             price = float(df_last["close"].values[0])
 
-        if price < 0.0001:
+        if price < 0.000001:
             raise Exception(
-                f"{app.getMarket()} is unsuitable for trading, quote price is less than 0.0001!"
+                f"{app.getMarket()} is unsuitable for trading, quote price is less than 0.000001!"
             )
 
         # technical indicators
@@ -403,7 +403,7 @@ def executeJob(
                     if state.last_buy_price != exchange_last_buy["price"]:
                         state.last_buy_price = exchange_last_buy["price"]
 
-                    if app.getExchange() == "coinbasepro":
+                    if app.getExchange() == "coinbasepro" or app.getExchange() == "kucoin":
                         if state.last_buy_fee != exchange_last_buy["fee"]:
                             state.last_buy_fee = exchange_last_buy["fee"]
 
@@ -1400,11 +1400,11 @@ def executeJob(
                 Logger.info(
                     f'{now} | {app.getMarket()}{bullbeartext} | {app.printGranularity()} | Current Price: {str(price)} is {str(round(((price-df["close"].max()) / df["close"].max())*100, 2))}% away from DF HIGH'
                 )
-                telegram_bot.addinfo(f'{now} | {app.getMarket()}{bullbeartext} | {app.printGranularity()} | Current Price: {str(price)} is {str(round(((price-df["close"].max()) / df["close"].max())*100, 2))}% away from DF HIGH')
+                telegram_bot.addinfo(f'{now} | {app.getMarket()}{bullbeartext} | {app.printGranularity()} | Current Price: {str(price)} is {str(round(((price-df["close"].max()) / df["close"].max())*100, 2))}% away from DF HIGH', price)
                 
             if state.last_action == 'BUY':
                 #update margin for telegram bot
-                telegram_bot.addmargin(str(_truncate(margin, 4) + "%"), str(_truncate(profit,2)))
+                telegram_bot.addmargin(str(_truncate(margin, 4) + "%"), str(_truncate(profit,2)), price)
 
             # decrement ignored iteration
             if app.isSimulation() and app.smart_switch:
@@ -1415,7 +1415,7 @@ def executeJob(
             # update order tracker csv
             if app.getExchange() == "binance":
                 account.saveTrackerCSV(app.getMarket())
-            elif app.getExchange() == "coinbasepro":
+            elif app.getExchange() == "coinbasepro" or app.getExchange() == "kucoin":
                 account.saveTrackerCSV()
 
         if app.isSimulation():

@@ -328,7 +328,7 @@ class BotConfig:
         )
         parser.add_argument("--live", type=int, help="live=1, test=0")
         parser.add_argument(
-            "--market", type=str, help="coinbasepro: BTC-GBP, binance: BTCGBP etc."
+            "--market", type=str, help="coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc."
         )
         parser.add_argument(
             "--sellatloss", type=int, help="toggle if bot should sell at a loss"

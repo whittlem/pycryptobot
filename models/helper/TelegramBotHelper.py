@@ -53,18 +53,18 @@ class TelegramBotHelper:
             with open(os.path.join(self.app.telegramdatafolder, 'telegram_data', file), 'w') as outfile:
                 json.dump(self.data, outfile, indent=4)
         
-    def addmargin(self, margin: str = "", delta: str = ""):
+    def addmargin(self, margin: str = "", delta: str = "", price: str = ""):
         if self.app.enableTelegramBotControl():
             self._read_data()
 
-            addmarket = {'exchange' : self.exchange, 'margin' : margin, 'delta' : delta}
+            addmarket = {'exchange' : self.exchange, 'margin' : margin, 'delta' : delta, 'price' : price}
             self.data.update(addmarket)
             self._write_data()
 
-    def addinfo(self, message: str = "") -> None:
+    def addinfo(self, message: str = "", price: str = "") -> None:
         if self.app.enableTelegramBotControl():
             self._read_data()
-            addmarket = {"message": message, "margin": " ", "delta": " "}
+            addmarket = {"message": message, "margin": " ", "delta": " ", "price" : price}
             self.data.update(addmarket)
             self._write_data()
             
