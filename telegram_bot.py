@@ -160,10 +160,10 @@ class TelegramBot(TelegramBotBase):
 
         query = update.callback_query
 
-        if query.data == 'ok' or query.data == 'no':
-            self.startnewbotresponse(update, context)
+        # if query.data == 'ok' or query.data == 'no':
+        #     self.startnewbotresponse(update, context)
 
-        elif query.data == "orders" or query.data == "pairs" or query.data == "allactive":
+        if query.data == "orders" or query.data == "pairs" or query.data == "allactive":
             self.marginresponse(update, context)
 
         elif query.data == "binance" or query.data == "coinbasepro" or query.data == "kucoin":
@@ -178,11 +178,11 @@ class TelegramBot(TelegramBotBase):
         elif 'sell_' in query.data:
             self.sellresponse(update, context)
 
+        elif 'buy_' in query.data:
+            self.buyresponse(update, context)
+
         elif 'stop_' in query.data:
             self.stopbotresponse(update, context)
-
-        # elif 'add_' in query.data:
-        #     self.newbot_save(update, context)
 
         elif 'start_' in query.data:
             self.startallbotsresponse(update, context)
@@ -208,7 +208,8 @@ class TelegramBot(TelegramBotBase):
         BotCommand("restartbots", "restart all or selected bot"),
         BotCommand("stopbots", "stop all or the selected bot"),
         BotCommand("startbots", "start all or selected bot"),
-        BotCommand("sell", "manually sell" ),
+        BotCommand("buy", "Manual buy"),
+        BotCommand("sell", "Manual sell" ),
         ]
 
         ubot = Bot(self.token)
@@ -234,6 +235,7 @@ class TelegramBot(TelegramBotBase):
         helptext += "<b>/stopbots</b> - <i>stop all or the selected bots</i>\n"
         helptext += "<b>/startbots</b> - <i>start all or the selected bots</i>\n"
         helptext += "<b>/sell</b> - <i>sell market pair on next iteration</i>\n"
+        helptext += "<b>/buy</b> - <i>buy market pair on next iteration</i>\n"
 
         mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
 
@@ -388,6 +390,30 @@ class TelegramBot(TelegramBotBase):
             self.data['botcontrol']['manualsell'] = True
             self._write_data(query.data.replace('sell_', ''))
             query.edit_message_text(f"Selling: {self.wanttosell}\n<i>Please wait for sale notification...</i>", parse_mode="HTML")
+
+    def buyrequest(self, update, context):
+        if not self._checkifallowed(context._user_id_and_data[0], update):
+            return
+
+        buttons = self.getoptions("buy", "")
+
+        if len(buttons) > 0:
+            reply_markup = InlineKeyboardMarkup(buttons)
+            update.message.reply_text('<b>What do you want to buy?</b>', reply_markup=reply_markup, parse_mode='HTML')
+        else:
+            update.message.reply_text('No active bots found.')
+
+    def buyresponse(self, update, context):
+        if not self._checkifallowed(context._user_id_and_data[0], update):
+            return
+
+        query = update.callback_query
+
+        self._read_data(query.data.replace('buy_', ''))
+        if 'botcontrol' in self.data:
+            self.data['botcontrol']['manualbuy'] = True
+            self._write_data(query.data.replace('buy_', ''))
+            query.edit_message_text(f"Buying: {self.wanttosell}\n<i>Please wait for buy notification...</i>", parse_mode="HTML")
 
     def showconfigrequest(self, update, context):
         if not self._checkifallowed(context._user_id_and_data[0], update):
@@ -711,10 +737,9 @@ def main():
     # General Action Command 
     dp.add_handler(CommandHandler("setcommands", botconfig.setcommands))
     dp.add_handler(CommandHandler("sell", botconfig.sellrequest, Filters.text))
+    dp.add_handler(CommandHandler("sell", botconfig.buyrequest, Filters.text))
     dp.add_handler(CommandHandler("pausebots", botconfig.pausebotrequest, Filters.text))
     dp.add_handler(CommandHandler("restartbots", botconfig.restartbotrequest, Filters.text))
-    
-    # Custom Action Commands
     dp.add_handler(CommandHandler("startbots", botconfig.startallbotsrequest))
     dp.add_handler(CommandHandler("stopbots", botconfig.stopbotrequest))
 

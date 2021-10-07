@@ -65,7 +65,7 @@ class AppState:
         self.feetracker = 0
         self.buy_tracker = 0
 
-        self.lastapicalldatetime = datetime.datetime.now() - datetime.timedelta(minutes=2)
+        self.last_api_call_datetime = datetime.datetime.now() - datetime.timedelta(minutes=2)
         self.exchange_last_buy = None
 
     def minimumOrderBase(self):

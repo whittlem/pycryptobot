@@ -60,9 +60,10 @@ def executeJob(
     """Trading bot job which runs at a scheduled interval"""
 
     # This is used to control some API calls when using websockets
-    lastapicalldatetime = datetime.now() - state.lastapicalldatetime
-    if lastapicalldatetime.seconds > 60:
-        state.lastapicalldatetime = datetime.now()
+    last_api_call_datetime = datetime.now() - state.last_api_call_datetime
+    if last_api_call_datetime.seconds > 60:
+        state.last_api_call_datetime = datetime.now()
+        
     # This is used by the telegram bot
     # If it not enabled in config while will always be False
     controlstatus = telegram_bot.checkbotcontrolstatus()
@@ -283,7 +284,7 @@ def executeJob(
             last_action_current = state.last_action
             #If using websockets make this call every minute instead of each iteration
             if app.enableWebsocket() and not app.isSimulation():
-                if lastapicalldatetime.seconds > 60:
+                if last_api_call_datetime.seconds > 60:
                     state.pollLastAction()
             else:
                 state.pollLastAction()
@@ -390,7 +391,7 @@ def executeJob(
             # if not a simulation, sync with exchange orders
             if not app.isSimulation():
                 if app.enableWebsocket():
-                    if lastapicalldatetime.seconds > 60:
+                    if last_api_call_datetime.seconds > 60:
                         state.exchange_last_buy = app.getLastBuy()
                 else:
                     state.exchange_last_buy = app.getLastBuy()
@@ -435,9 +436,10 @@ def executeJob(
                 state.action = "WAIT"
                 immediate_action = False
 
-            if telegram_bot.checkmanualsell():
-                state.action = "SELL"
-                state.last_action = "BUY"
+            manual_buy_sell = telegram_bot.checkmanualbuysell()
+            if not manual_buy_sell == "WAIT":
+                state.action = manual_buy_sell
+                state.last_action = "BUY" if state.action == "SELL" else "SELL"
                 immediate_action = True
 
         bullbeartext = ""

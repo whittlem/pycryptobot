@@ -24,7 +24,7 @@ class TelegramBotHelper:
         if os.path.isfile(os.path.join(self.app.telegramdatafolder, "telegram_data", self.filename)):
             self._read_data()
         else:
-            ds = {'botcontrol' :  {"status":"active", "manualsell": False}}
+            ds = {'botcontrol' : {"status":"active", "manualsell" : False, "manualbuy" : False}}
             self.data = ds
             self._write_data()
 
@@ -78,17 +78,36 @@ class TelegramBotHelper:
             self.data['trades'].update({ts : {"pair" : self.market, "price" : price, "margin" : margin}})
             self._write_data("data.json")
 
-    def checkmanualsell(self) -> bool:
-        result = False
+    # def checkmanualsell(self) -> bool:
+    #     result = False
+    #     if self.app.enableTelegramBotControl():
+    #         self._read_data()
+
+    #         if len(self.data['botcontrol']) > 0:
+    #             result = self.data["botcontrol"]["manualsell"]
+
+    #         if result:
+    #             self.data["botcontrol"]["manualsell"] = False
+    #             self._write_data()
+
+    #     return result
+
+    def checkmanualbuysell(self) -> str:
+        result = "WAIT"
         if self.app.enableTelegramBotControl():
             self._read_data()
 
             if len(self.data['botcontrol']) > 0:
-                result = self.data["botcontrol"]["manualsell"]
+                if self.data["botcontrol"]["manualsell"]:
+                    self.data["botcontrol"]["manualsell"] = False
+                    result = "SELL"
+                    self._write_data()
 
-            if result:
-                self.data["botcontrol"]["manualsell"] = False
-                self._write_data()
+            if len(self.data['botcontrol']) > 0:
+                if self.data["botcontrol"]["manualbuy"]:
+                    self.data["botcontrol"]["manualbuy"] = False
+                    result = "BUY"
+                    self._write_data()
 
         return result
 
@@ -110,5 +129,3 @@ class TelegramBotHelper:
     def removeactivebot(self) -> None:
         if self.app.enableTelegramBotControl():
             self.deletemargin()
-
-
