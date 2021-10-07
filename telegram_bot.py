@@ -203,12 +203,12 @@ class TelegramBot(TelegramBotBase):
         BotCommand("stats", "show exchange stats for market/pair"),
         BotCommand("showinfo", "show all running bots status"),
         BotCommand("showconfig", "show config for selected exchange"),
-        BotCommand("sell", "manually sell" ),
+        BotCommand("addnew", "add and start a new bot"),
         BotCommand("pausebots", "pause all or selected bot"),
         BotCommand("restartbots", "restart all or selected bot"),
         BotCommand("stopbots", "stop all or the selected bot"),
-        BotCommand("startnew", "start a new bot"),
-        BotCommand("startbots", "start all bots"),
+        BotCommand("startbots", "start all or selected bot"),
+        BotCommand("sell", "manually sell" ),
         ]
 
         ubot = Bot(self.token)
@@ -220,20 +220,20 @@ class TelegramBot(TelegramBotBase):
     def help(self, update: Updater, context):
         """Send a message when the command /help is issued."""
 
-        helptext = "<b>Command List</b>\n\n"
+        helptext = "<b>Information Command List</b>\n\n"
         helptext += "<b>/setcommands</b> - <i>add all commands to bot for easy access</i>\n"
         helptext += "<b>/margins</b> - <i>show margins for open trade</i>\n"
         helptext += "<b>/trades</b> - <i>show closed trades</i>\n"
         helptext += "<b>/stats</b> - <i>display stats for market</i>\n"
         helptext += "<b>/showinfo</b> - <i>display bot(s) status</i>\n"
-        helptext += "<b>/showconfig</b> - <i>show config for exchange</i>\n"
-        helptext += "<b>/sell</b> - <i>sell market pair on next iteration</i>\n"
+        helptext += "<b>/showconfig</b> - <i>show config for exchange</i>\n\n"
+        helptext += "<b>Interactive Command List</b>\n\n"
+        helptext += "<b>/addnew</b> - <i>start the requested pair</i>\n"
         helptext += "<b>/pausebots</b> - <i>pause all or the selected bot</i>\n"
         helptext += "<b>/restartbots</b> - <i>restart all or the selected bot</i>\n"
-        helptext += "<b>/stopbots</b> - <i>stop all or the selected bots</i>\n\n"
-        helptext += "<b>Optional Customisable Commands</b>\n\n"
-        helptext += "<b>/startnew</b> - <i>start the requested pair</i>\n"
+        helptext += "<b>/stopbots</b> - <i>stop all or the selected bots</i>\n"
         helptext += "<b>/startbots</b> - <i>start all or the selected bots</i>\n"
+        helptext += "<b>/sell</b> - <i>sell market pair on next iteration</i>\n"
 
         mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
 
@@ -645,7 +645,11 @@ class TelegramBot(TelegramBotBase):
 
         if update.message.text == 'Yes':
             self._read_data()
-            self.data["markets"].update({self.pair: {"overrides": f'--exchange {self.exchange} --market {self.pair} {self.overrides}'}})
+            if "markets" in self.data:
+                self.data["markets"].update({self.pair: {"overrides": f'--exchange {self.exchange} --market {self.pair} {self.overrides}'}})
+            else:
+                self.data.update({"markets": {}})
+                self.data["markets"].update({self.pair: {"overrides": f'--exchange {self.exchange} --market {self.pair} {self.overrides}'}})
             self._write_data()
 
             update.message.reply_text(f"{self.pair} saved")
