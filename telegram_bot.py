@@ -181,8 +181,8 @@ class TelegramBot(TelegramBotBase):
         elif 'stop_' in query.data:
             self.stopbotresponse(update, context)
 
-        elif 'add_' in query.data:
-            self.savenewbot(update, context)
+        # elif 'add_' in query.data:
+        #     self.newbot_save(update, context)
 
         elif 'start_' in query.data:
             self.startallbotsresponse(update, context)
@@ -599,6 +599,8 @@ class TelegramBot(TelegramBotBase):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
 
+        self.pair = update.message.text
+
         reply_keyboard = [['Yes', 'No']]
 
         markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
@@ -617,7 +619,6 @@ class TelegramBot(TelegramBotBase):
             update.message.reply_text(f"Do you want to save this?", reply_markup=markup)
             return SAVE
 
-        self.pair = update.message.text
         update.message.reply_text('Tell me any other commandline overrrides to use?', reply_markup=ReplyKeyboardRemove())
  
         return OVERRIDES
@@ -628,13 +629,10 @@ class TelegramBot(TelegramBotBase):
 
         self.overrides = update.message.text
 
-        update.message.reply_text(f"{self.pair} crypto bot Starting")
-        keyboard = [
-                        [InlineKeyboardButton("Yes - (will be added to you bot startup list)", callback_data='add_ok')],
-                        [InlineKeyboardButton("No", callback_data='add_no')],
-                ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        update.message.reply_text(f"Do you want to save this?", reply_markup=reply_markup)
+        # update.message.reply_text(f"{self.pair} crypto bot Starting")
+        reply_keyboard = [['Yes', 'No']]
+        markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+        update.message.reply_text(f"Do you want to save this?", reply_markup=markup)
 
         return SAVE
 
