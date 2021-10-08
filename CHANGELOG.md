@@ -15,6 +15,10 @@ Upgrade library dependencies (if required):
 -- Added option to enable the telegram bot this does not start it, just enables writing data required for the telegram bot (--enabletelegrambotcontrol)
 -- Added user_id to telegram section in config, this is used so that only you can control the bot
 -- Added datafolder to telegram section in config, this is used when running multiple bots from different folders
+-- Added Telegram Bot Setup instructions text file
+-- Removed some debug logging left in by mistake
+-- Fix issue with Kucoin margins not calculating correctly
+-- Added Kucoin to yaml files
 
 ## [4.0.4] - 2021-09-27
 
