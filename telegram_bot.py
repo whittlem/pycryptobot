@@ -71,6 +71,11 @@ class TelegramBotBase():
                     if 'margin' in self.data:
                         if not self.data['margin'] == " ":
                             buttons.append(InlineKeyboardButton(file.replace('.json', ''), callback_data=callbacktag + "_" + file))
+                elif callbacktag == "buy":
+                    if 'margin' in self.data:
+                        if self.data['margin'] == " ":
+                            buttons.append(InlineKeyboardButton(file.replace('.json', ''), callback_data=callbacktag + "_" + file))
+ 
                 else:
                     if 'botcontrol' in self.data:
                         if self.data['botcontrol']['status'] == state:
@@ -197,19 +202,19 @@ class TelegramBot(TelegramBotBase):
 
     def setcommands(self, update: Updater, context : Filters) -> None:
         command = [
-        BotCommand("help","show help text"),
-        BotCommand("margins","show margins for all open trades"),
-        BotCommand("trades", "show closed trades"),
-        BotCommand("stats", "show exchange stats for market/pair"),
-        BotCommand("showinfo", "show all running bots status"),
-        BotCommand("showconfig", "show config for selected exchange"),
-        BotCommand("addnew", "add and start a new bot"),
-        BotCommand("pausebots", "pause all or selected bot"),
-        BotCommand("restartbots", "restart all or selected bot"),
-        BotCommand("stopbots", "stop all or the selected bot"),
-        BotCommand("startbots", "start all or selected bot"),
-        BotCommand("buy", "Manual buy"),
-        BotCommand("sell", "Manual sell" ),
+            BotCommand("help","show help text"),
+            BotCommand("margins","show margins for all open trades"),
+            BotCommand("trades", "show closed trades"),
+            BotCommand("stats", "show exchange stats for market/pair"),
+            BotCommand("showinfo", "show all running bots status"),
+            BotCommand("showconfig", "show config for selected exchange"),
+            BotCommand("addnew", "add and start a new bot"),
+            BotCommand("startbots", "start all or selected bot"),
+            BotCommand("stopbots", "stop all or the selected bot"),
+            BotCommand("pausebots", "pause all or selected bot"),
+            BotCommand("restartbots", "restart all or selected bot"),
+            BotCommand("buy", "Manual buy"),
+            BotCommand("sell", "Manual sell" ),
         ]
 
         ubot = Bot(self.token)
@@ -371,7 +376,7 @@ class TelegramBot(TelegramBotBase):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
 
-        buttons = self.getoptions("sell", "")
+        buttons = self._getoptions("sell", "")
 
         if len(buttons) > 0:
             reply_markup = InlineKeyboardMarkup(buttons)
@@ -389,13 +394,13 @@ class TelegramBot(TelegramBotBase):
         if 'botcontrol' in self.data:
             self.data['botcontrol']['manualsell'] = True
             self._write_data(query.data.replace('sell_', ''))
-            query.edit_message_text(f"Selling: {self.wanttosell}\n<i>Please wait for sale notification...</i>", parse_mode="HTML")
+            query.edit_message_text(f"Selling: {query.data.replace('sell_', '').replace('.json','')}\n<i>Please wait for sale notification...</i>", parse_mode="HTML")
 
     def buyrequest(self, update, context):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
 
-        buttons = self.getoptions("buy", "")
+        buttons = self._getoptions("buy", "")
 
         if len(buttons) > 0:
             reply_markup = InlineKeyboardMarkup(buttons)
@@ -413,7 +418,7 @@ class TelegramBot(TelegramBotBase):
         if 'botcontrol' in self.data:
             self.data['botcontrol']['manualbuy'] = True
             self._write_data(query.data.replace('buy_', ''))
-            query.edit_message_text(f"Buying: {self.wanttosell}\n<i>Please wait for buy notification...</i>", parse_mode="HTML")
+            query.edit_message_text(f"Buying: {query.data.replace('buy_', '').replace('.json','')}\n<i>Please wait for buy notification...</i>", parse_mode="HTML")
 
     def showconfigrequest(self, update, context):
         if not self._checkifallowed(context._user_id_and_data[0], update):
@@ -493,10 +498,11 @@ class TelegramBot(TelegramBotBase):
 
         if query.data == 'restart_all':
             jsonfiles = os.listdir(os.path.join(self.datafolder, 'telegram_data'))
-        
+            query.edit_message_text(f"Restarting all bots", parse_mode="HTML")
             for file in jsonfiles:
                 if self.updatebotcontrol(file, "start"):
-                    query.edit_message_text(f"Restarting {file.replace('.json','')}", parse_mode="HTML")
+                    mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
+                    mBot.send(f"<i>Restarting {file.replace('.json','')}</i>", parse_mode="HTML")
         else:
             if self.updatebotcontrol(query.data.replace('restart_', ''), "start"):
                 query.edit_message_text(f"Restarting {query.data.replace('restart_', '').replace('.json','')}", parse_mode="HTML")
@@ -510,7 +516,8 @@ class TelegramBot(TelegramBotBase):
 
         self._read_data()
         for market in self.data["markets"]:
-            buttons.append(InlineKeyboardButton(market, callback_data="start_" + market))
+            if not os.path.isfile(os.path.join(self.datafolder, "telegram_data", market + ".json")):
+                buttons.append(InlineKeyboardButton(market, callback_data="start_" + market))
 
         if len(buttons) > 0:
             if len(buttons) > 1:
@@ -549,7 +556,7 @@ class TelegramBot(TelegramBotBase):
                 else:
                     subprocess.Popen(f'python3 pycryptobot.py {overrides}', shell=True)
                 mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
-                mBot.send(f"Started {pair} crypto bot")
+                mBot.send(f"<i>Starting {pair} crypto bot</i>", parse_mode="HTML")
                 sleep(10)
         else:
             overrides = self.data["markets"][str(query.data).replace("start_", "")]["overrides"]
@@ -559,14 +566,13 @@ class TelegramBot(TelegramBotBase):
             else:
                 subprocess.Popen(f'python3 pycryptobot.py {overrides}', shell=True)
                 # subprocess.call(['open', '-W', '-a', 'Terminal.app', f'python3 pycryptobot.py {overrides}'])
-            query.edit_message_text(f"Started {str(query.data).replace('start_', '')} crypto bots")
+            query.edit_message_text(f"<i>Starting {str(query.data).replace('start_', '')} crypto bots</i>", parse_mode="HTML")
 
     def stopbotrequest(self, update, context) -> None:
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
 
         buttons = self._getoptions("stop", 'active')
-        # buttons += self._getoptions("stop", 'paused')
 
         if len(buttons) > 0:
             reply_markup = InlineKeyboardMarkup(buttons)
@@ -592,8 +598,7 @@ class TelegramBot(TelegramBotBase):
                     mBot.send(f"Stopping {file.replace('.json', '')} crypto bot")
         else:
             if self.updatebotcontrol(str(query.data).replace("stop_", ""), "exit"):
-                mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
-                mBot.send(f"Stopping {str(query.data).replace('stop_', '').replace('.json', '')} crypto bot")
+                query.edit_message_text(f"Stopping {str(query.data).replace('stop_', '').replace('.json', '')} crypto bot")
 
     def newbot_request(self, update: Updater, context):
         if not self._checkifallowed(context._user_id_and_data[0], update):
@@ -645,7 +650,7 @@ class TelegramBot(TelegramBotBase):
             update.message.reply_text(f"Do you want to save this?", reply_markup=markup)
             return SAVE
 
-        update.message.reply_text('Tell me any other commandline overrrides to use?', reply_markup=ReplyKeyboardRemove())
+        update.message.reply_text('Tell me any other commandline overrides to use?', reply_markup=ReplyKeyboardRemove())
  
         return OVERRIDES
 
@@ -736,12 +741,14 @@ def main():
 
     # General Action Command 
     dp.add_handler(CommandHandler("setcommands", botconfig.setcommands))
+    dp.add_handler(CommandHandler("buy", botconfig.buyrequest, Filters.text))
     dp.add_handler(CommandHandler("sell", botconfig.sellrequest, Filters.text))
-    dp.add_handler(CommandHandler("sell", botconfig.buyrequest, Filters.text))
     dp.add_handler(CommandHandler("pausebots", botconfig.pausebotrequest, Filters.text))
     dp.add_handler(CommandHandler("restartbots", botconfig.restartbotrequest, Filters.text))
     dp.add_handler(CommandHandler("startbots", botconfig.startallbotsrequest))
     dp.add_handler(CommandHandler("stopbots", botconfig.stopbotrequest))
+    dp.add_handler(CommandHandler("buy", botconfig.buyrequest, Filters.text))
+    dp.add_handler(CommandHandler("sell", botconfig.sellrequest, Filters.text))
 
     # Response to Question handler
     dp.add_handler(CallbackQueryHandler(botconfig._responses))

@@ -63,7 +63,7 @@ def executeJob(
     last_api_call_datetime = datetime.now() - state.last_api_call_datetime
     if last_api_call_datetime.seconds > 60:
         state.last_api_call_datetime = datetime.now()
-        
+
     # This is used by the telegram bot
     # If it not enabled in config while will always be False
     controlstatus = telegram_bot.checkbotcontrolstatus()
@@ -436,6 +436,7 @@ def executeJob(
                 state.action = "WAIT"
                 immediate_action = False
 
+        if state.action == "WAIT":
             manual_buy_sell = telegram_bot.checkmanualbuysell()
             if not manual_buy_sell == "WAIT":
                 state.action = manual_buy_sell
