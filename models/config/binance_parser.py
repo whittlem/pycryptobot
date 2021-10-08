@@ -10,7 +10,6 @@ def isMarketValid(market) -> bool:
     if market == None:
         return False
 
-    print(market)
     p = re.compile(r"^[0-9A-Z]{5,12}$")
     if p.match(market):
         return True

@@ -9,7 +9,6 @@ import sched
 import sys
 import time
 import signal
-import requests
 from datetime import datetime, timedelta
 
 import pandas as pd
@@ -29,6 +28,7 @@ from models.helper.LogHelper import Logger
 from models.helper.TextBoxHelper import TextBox
 from models.exchange.binance import WebSocketClient as BWebSocketClient
 from models.exchange.coinbase_pro import WebSocketClient as CWebSocketClient
+from models.helper.TelegramBotHelper import TelegramBotHelper
 
 # minimal traceback
 sys.tracebacklimit = 1
@@ -41,14 +41,14 @@ state = AppState(app, account)
 state.initLastAction()
 websocket = None
 
-s = sched.scheduler(time.time, time.sleep)
+telegram_bot = TelegramBotHelper(app)
 
+s = sched.scheduler(time.time, time.sleep)
 
 def signal_handler(signum, frame):
     if signum == 2:
         print("Please be patient while websockets terminate!")
         return
-
 
 def executeJob(
     sc=None,
@@ -59,10 +59,36 @@ def executeJob(
 ):
     """Trading bot job which runs at a scheduled interval"""
 
+    # This is used to control some API calls when using websockets
+    last_api_call_datetime = datetime.now() - state.last_api_call_datetime
+    if last_api_call_datetime.seconds > 60:
+        state.last_api_call_datetime = datetime.now()
+
+    # This is used by the telegram bot
+    # If it not enabled in config while will always be False
+    controlstatus = telegram_bot.checkbotcontrolstatus()
+    while controlstatus == "pause" or controlstatus == "paused":
+        if controlstatus == "pause":
+            print(str(datetime.now()).format() + " - Bot is paused")
+            app.notifyTelegram(f"{app.getMarket()} bot is paused")
+            telegram_bot.updatebotstatus("paused")
+
+        time.sleep(30)
+        controlstatus = telegram_bot.checkbotcontrolstatus()
+
+    if controlstatus == "start":
+        print(str(datetime.now()).format() + " - Bot has restarted")
+        app.notifyTelegram(f"{app.getMarket()} bot has restarted")
+        telegram_bot.updatebotstatus("active")
+
+    if controlstatus == "exit":
+        app.notifyTelegram(f"{app.getMarket()} bot is stopping")
+        sys.exit(0)
+
     global technical_analysis
 
     # reset websocket every 23 hours if applicable
-    if app.enableWebsocket():
+    if app.enableWebsocket() and not app.isSimulation():
         if websocket.getTimeElapsed() > 82800:
             Logger.info('Websocket requires a restart every 23 hours!')
             Logger.info('Stopping websocket...')
@@ -116,7 +142,7 @@ def executeJob(
                         str(df.tail(1).index.format()[0])
                     )
 
-                simDate = app.getDateFromISO8601Str(str(df_last.index.format()[0]))
+                simDate = app.getDateFromISO8601Str(str(state.last_df_index))
 
                 trading_data = app.getSmartSwitchHistoricalDataChained(
                     app.getMarket(), app.getGranularity(), str(startDate), str(endDate)
@@ -131,14 +157,13 @@ def executeJob(
                     sim_rounded = pd.Series(simDate).dt.round("15min")
                     simDate = sim_rounded[0]
 
-                state.iterations = trading_data.index.get_loc(str(simDate))
+                state.iterations = trading_data.index.get_loc(str(simDate)) +1
+
+                if app.getDateFromISO8601Str(str(simDate)).isoformat() == app.getDateFromISO8601Str(str(state.last_df_index)).isoformat():
+                    state.iterations += 1
 
                 if state.iterations == 0:
                     state.iterations = 1
-                elif app.getGranularity() == 3600:
-                    state.iterations += 2
-                elif app.getGranularity() == 900:
-                    state.iterations -= 2
 
                 trading_dataCopy = trading_data.copy()
                 technical_analysis = TechnicalAnalysis(trading_dataCopy)
@@ -194,7 +219,8 @@ def executeJob(
 
     # use actual sim mode date to check smartchswitch
     if (
-        app.getSmartSwitch() == 1
+        last_api_call_datetime.seconds > 60
+        and app.getSmartSwitch() == 1
         and app.getGranularity() == 3600
         and app.is1hEMA1226Bull(current_sim_date, websocket) is True
         and app.is6hEMA1226Bull(current_sim_date, websocket) is True
@@ -217,7 +243,8 @@ def executeJob(
 
     # use actual sim mode date to check smartchswitch
     if (
-        app.getSmartSwitch() == 1
+        last_api_call_datetime.seconds > 60
+        and app.getSmartSwitch() == 1
         and app.getGranularity() == 900
         and app.is1hEMA1226Bull(current_sim_date, websocket) is False
         and app.is6hEMA1226Bull(current_sim_date, websocket) is False
@@ -257,7 +284,12 @@ def executeJob(
         # last_action polling if live
         if app.isLive():
             last_action_current = state.last_action
-            state.pollLastAction()
+            #If using websockets make this call every minute instead of each iteration
+            if app.enableWebsocket() and not app.isSimulation():
+                if last_api_call_datetime.seconds > 60:
+                    state.pollLastAction()
+            else:
+                state.pollLastAction()
             if last_action_current != state.last_action:
                 Logger.info(
                     f"last_action change detected from {last_action_current} to {state.last_action}"
@@ -275,9 +307,9 @@ def executeJob(
         else:
             price = float(df_last["close"].values[0])
 
-        if price < 0.0001:
+        if price < 0.000001:
             raise Exception(
-                f"{app.getMarket()} is unsuitable for trading, quote price is less than 0.0001!"
+                f"{app.getMarket()} is unsuitable for trading, quote price is less than 0.000001!"
             )
 
         # technical indicators
@@ -314,6 +346,19 @@ def executeJob(
         evening_doji_star = bool(df_last["evening_doji_star"].values[0])
         two_black_gapping = bool(df_last["two_black_gapping"].values[0])
 
+        # Log data for Telegram Bot
+        if not app.disableBuyElderRay():
+            telegram_bot.addindicators("ERI", elder_ray_buy or elder_ray_sell)
+        if (app.disableBullOnly() is True 
+            or (df_last["sma50"].values[0] == df_last["sma200"].values[0])):
+            telegram_bot.addindicators("BULL", goldencross)
+        if not app.disableBuyEMA():
+            telegram_bot.addindicators("EMA", ema12gtema26co or ema12ltema26co)
+        if not app.disableBuyMACD():
+            telegram_bot.addindicators("MACD", macdgtsignalco or macdltsignalco)
+        if not app.disableBuyOBV():
+            telegram_bot.addindicators("OBV", float(obv_pc) > 0)
+
         if app.isSimulation():
             # Reset the Strategy so that the last record is the current sim date
             # To allow for calculations to be done on the sim date being processed
@@ -324,7 +369,7 @@ def executeJob(
         else:
             strategy = Strategy(app, state, df, state.iterations)
 
-        state.action = strategy.getAction(price)
+        state.action = strategy.getAction(price, current_sim_date)
 
         immediate_action = False
         margin, profit, sell_fee = 0, 0, 0
@@ -360,7 +405,12 @@ def executeJob(
 
             # if not a simulation, sync with exchange orders
             if not app.isSimulation():
-                exchange_last_buy = app.getLastBuy()
+                if app.enableWebsocket():
+                    if last_api_call_datetime.seconds > 60:
+                        state.exchange_last_buy = app.getLastBuy()
+                else:
+                    state.exchange_last_buy = app.getLastBuy()
+                exchange_last_buy = state.exchange_last_buy
                 if exchange_last_buy is not None:
                     if state.last_buy_size != exchange_last_buy["size"]:
                         state.last_buy_size = exchange_last_buy["size"]
@@ -369,7 +419,7 @@ def executeJob(
                     if state.last_buy_price != exchange_last_buy["price"]:
                         state.last_buy_price = exchange_last_buy["price"]
 
-                    if app.getExchange() == "coinbasepro":
+                    if app.getExchange() == "coinbasepro" or app.getExchange() == "kucoin":
                         if state.last_buy_fee != exchange_last_buy["fee"]:
                             state.last_buy_fee = exchange_last_buy["fee"]
 
@@ -400,6 +450,13 @@ def executeJob(
             if strategy.isWaitTrigger(margin, goldencross):
                 state.action = "WAIT"
                 immediate_action = False
+
+        if state.action == "WAIT":
+            manual_buy_sell = telegram_bot.checkmanualbuysell()
+            if not manual_buy_sell == "WAIT":
+                state.action = manual_buy_sell
+                state.last_action = "BUY" if state.action == "SELL" else "SELL"
+                immediate_action = True
 
         bullbeartext = ""
         if app.disableBullOnly() is True or (
@@ -563,7 +620,7 @@ def executeJob(
                 if state.last_action != "":
                     # Not sure if this if is needed just preserving any exisitng functionality that may have been missed
                     # Updated to show over margin and profit
-                    if not app.isSimulation:
+                    if not app.isSimulation():
                         output_text = (
                             formatted_current_df_index
                             + " | "
@@ -884,6 +941,7 @@ def executeJob(
                     textBox.line("Margin", margin_text)
                     textBox.doubleLine()
 
+
             # if a buy signal
             if state.action == "BUY":
                 state.last_buy_price = price
@@ -909,18 +967,21 @@ def executeJob(
                             textBox.center("*** Executing LIVE Buy Order ***")
                             textBox.singleLine()
 
+                        account.basebalance = float(account.getBalance(app.getBaseCurrency()))
+                        account.quotebalance = float(account.getBalance(app.getQuoteCurrency()))
+
                         # display balances
                         Logger.info(
-                            f"{app.getBaseCurrency()} balance before order: {str(account.getBalance(app.getBaseCurrency()))}"
+                            f"{app.getBaseCurrency()} balance before order: {str(account.basebalance)}"
                         )
                         Logger.info(
-                            f"{app.getQuoteCurrency()} balance before order: {str(account.getBalance(app.getQuoteCurrency()))}"
+                            f"{app.getQuoteCurrency()} balance before order: {str(account.quotebalance)}"
                         )
 
                         # execute a live market buy
-                        state.last_buy_size = float(
-                            account.getBalance(app.getQuoteCurrency())
-                        )
+                        # state.last_buy_size = float(account.getBalance(app.getQuoteCurrency()))
+                        state.last_buy_size = float(account.quotebalance)
+
                         if (
                             app.getBuyMaxSize()
                             and state.last_buy_size > app.getBuyMaxSize()
@@ -933,11 +994,13 @@ def executeJob(
                         Logger.debug(resp)
 
                         # display balances
+                        account.basebalance = float(account.getBalance(app.getBaseCurrency()))
+                        account.quotebalance = float(account.getBalance(app.getQuoteCurrency()))
                         Logger.info(
-                            f"{app.getBaseCurrency()} balance after order: {str(account.getBalance(app.getBaseCurrency()))}"
+                            f"{app.getBaseCurrency()} balance after order: {str(account.basebalance)}"
                         )
                         Logger.info(
-                            f"{app.getQuoteCurrency()} balance after order: {str(account.getBalance(app.getQuoteCurrency()))}"
+                            f"{app.getQuoteCurrency()} balance after order: {str(account.quotebalance)}"
                         )
                     else:
                         Logger.warning("Unable to place order, insufficient funds")
@@ -1029,6 +1092,8 @@ def executeJob(
             elif state.action == "SELL":
                 # if live
                 if app.isLive():
+                    account.basebalance = float(account.getBalance(app.getBaseCurrency()))
+                    account.quotebalance = float(account.getBalance(app.getQuoteCurrency()))
                     app.notifyTelegram(
                         app.getMarket()
                         + " ("
@@ -1077,28 +1142,31 @@ def executeJob(
 
                     # display balances
                     Logger.info(
-                        f"{app.getBaseCurrency()} balance before order: {str(account.getBalance(app.getBaseCurrency()))}"
+                        f"{app.getBaseCurrency()} balance before order: {str(account.basebalance)}"
                     )
                     Logger.info(
-                        f"{app.getQuoteCurrency()} balance before order: {str(account.getBalance(app.getQuoteCurrency()))}"
+                        f"{app.getQuoteCurrency()} balance before order: {str(account.quotebalance)}"
                     )
 
                     # execute a live market sell
                     resp = app.marketSell(
                         app.getMarket(),
-                        float(account.getBalance(app.getBaseCurrency())),
+                        float(account.basebalance),
                         app.getSellPercent(),
                     )
                     Logger.debug(resp)
 
                     # display balances
+                    account.basebalance = float(account.getBalance(app.getBaseCurrency()))
+                    account.quotebalance = float(account.getBalance(app.getQuoteCurrency()))
                     Logger.info(
-                        f"{app.getBaseCurrency()} balance after order: {str(account.getBalance(app.getBaseCurrency()))}"
+                        f"{app.getBaseCurrency()} balance after order: {str(account.basebalance)}"
                     )
                     Logger.info(
-                        f"{app.getQuoteCurrency()} balance after order: {str(account.getBalance(app.getQuoteCurrency()))}"
+                        f"{app.getQuoteCurrency()} balance after order: {str(account.quotebalance)}"
                     )
 
+                    telegram_bot.closetrade(str(app.getDateFromISO8601Str(str(datetime.now()))), price_text, margin_text)
                 # if not live
                 else:
                     margin, profit, sell_fee = calculate_margin(
@@ -1350,16 +1418,22 @@ def executeJob(
                 Logger.info(
                     f'{now} | {app.getMarket()}{bullbeartext} | {app.printGranularity()} | Current Price: {str(price)} is {str(round(((price-df["close"].max()) / df["close"].max())*100, 2))}% away from DF HIGH'
                 )
+                telegram_bot.addinfo(f'{now} | {app.getMarket()}{bullbeartext} | {app.printGranularity()} | Current Price: {str(price)} is {str(round(((price-df["close"].max()) / df["close"].max())*100, 2))}% away from DF HIGH', price)
+                
+            if state.last_action == 'BUY':
+                #update margin for telegram bot
+                telegram_bot.addmargin(str(_truncate(margin, 4) + "%"), str(_truncate(profit,2)), price)
 
             # decrement ignored iteration
-            state.iterations = state.iterations - 1
+            if app.isSimulation() and app.smart_switch:
+                state.iterations = state.iterations - 1
 
         # if live but not websockets
         if not app.disableTracker() and app.isLive() and not app.enableWebsocket():
             # update order tracker csv
             if app.getExchange() == "binance":
                 account.saveTrackerCSV(app.getMarket())
-            elif app.getExchange() == "coinbasepro":
+            elif app.getExchange() == "coinbasepro" or app.getExchange() == "kucoin":
                 account.saveTrackerCSV()
 
         if app.isSimulation():
@@ -1390,7 +1464,7 @@ def executeJob(
                 # poll every 5 seconds (websocket)
                 s.enter(5, 1, executeJob, (sc, app, state, websocket))
             else:
-                if app.enableWebsocket():
+                if app.enableWebsocket() and not app.isSimulation():
                     # poll every 15 seconds (waiting for websocket)
                     s.enter(15, 1, executeJob, (sc, app, state, websocket))
                 else:
@@ -1403,13 +1477,13 @@ def main(websocket):
         message = "Starting "
         if app.getExchange() == "coinbasepro":
             message += "Coinbase Pro bot"
-            if app.enableWebsocket():
+            if app.enableWebsocket() and not app.isSimulation():
                 print("Opening websocket to Coinbase Pro...")
                 websocket = CWebSocketClient([app.getMarket()], app.getGranularity())
                 websocket.start()
         elif app.getExchange() == "binance":
             message += "Binance bot"
-            if app.enableWebsocket():
+            if app.enableWebsocket() and not app.isSimulation():
                 print("Opening websocket to Binance...")
                 websocket = BWebSocketClient([app.getMarket()], app.getGranularity())
                 websocket.start()
@@ -1435,7 +1509,7 @@ def main(websocket):
 
         try:
             runApp(websocket)
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, SystemExit):
             raise
         except (BaseException, Exception) as e:
             if app.autoRestart():
@@ -1456,8 +1530,8 @@ def main(websocket):
                 raise
 
     # catches a keyboard break of app, exits gracefully
-    except KeyboardInterrupt:
-        if app.enableWebsocket():
+    except (KeyboardInterrupt, SystemExit):
+        if app.enableWebsocket() and not app.isSimulation():
             signal.signal(signal.SIGINT, signal_handler)  # disable ctrl/cmd+c
             Logger.warning(
                 f"{str(datetime.now())} bot is closing via keyboard interrupt,"
@@ -1468,7 +1542,8 @@ def main(websocket):
                 f"{str(datetime.now())} bot is closed via keyboard interrupt..."
             )
         try:
-            if app.enableWebsocket():
+            telegram_bot.removeactivebot()
+            if app.enableWebsocket() and not app.isSimulation():
                 websocket.close()
             sys.exit(0)
         except SystemExit:

@@ -55,6 +55,8 @@ spec:
               path: binance.key
             - key: coinbasepro.key
               path: coinbasepro.key
+            - key: kucoin.key
+              path: kucoin.key
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

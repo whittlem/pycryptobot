@@ -8,6 +8,18 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [4.1.0] - 2021-10-01
+
+-- Fixed issue when websockets are enabled making to many API calls (for those that are still required they will be called once per minute instead of on every iteration).
+-- Added telegram bot (telegram_bot.py) this has to be run separately to pycryptobot.py
+-- Added option to enable the telegram bot this does not start it, just enables writing data required for the telegram bot (--enabletelegrambotcontrol)
+-- Added user_id to telegram section in config, this is used so that only you can control the bot
+-- Added datafolder to telegram section in config, this is used when running multiple bots from different folders
+-- Added Telegram Bot Setup instructions text file
+-- Removed some debug logging left in by mistake
+-- Fix issue with Kucoin margins not calculating correctly
+-- Added Kucoin to yaml files
+
 ## [4.0.4] - 2021-09-27
 
 -- Added Kucoin to --init (auto config)

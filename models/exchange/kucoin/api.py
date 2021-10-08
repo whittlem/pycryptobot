@@ -24,7 +24,7 @@ MINIMUM_TRADE_AMOUNT = 10
 SUPPORTED_GRANULARITY = ["1min", "3min", "5min", "15min", "30min", "1hour", "6hour", "1day"]
 FREQUENCY_EQUIVALENTS = ["T", "5T", "15T", "H", "6H", "D"]
 MAX_GRANULARITY = max(SUPPORTED_GRANULARITY)
-DEFAULT_MARKET = "BTC"
+DEFAULT_MARKET = "BTC-USDT"
 
 
 class AuthAPIBase:
@@ -416,6 +416,11 @@ class AuthAPI(AuthAPIBase):
         # reverse orders and reset index
         df = df.iloc[::-1].reset_index()
 
+        if len(df) > 0:
+            if df["type"][0] == "market":
+                if df["size"][0] == 0:
+                    df["size"] = df["funds"]
+
         # for sell orders size is filled
         df["size"] = df["size"].fillna(df["filled"])
 
@@ -465,7 +470,7 @@ class AuthAPI(AuthAPIBase):
             "funds": self.marketQuoteIncrement(market, quote_quantity),
         }
 
-        Logger.debug(order)
+        #Logger.debug(order)
 
         # connect to authenticated Kucoin api
         model = AuthAPI(
@@ -496,7 +501,7 @@ class AuthAPI(AuthAPIBase):
             "size": self.marketBaseIncrement(market, base_quantity),
         }
 
-        Logger.debug(order)
+        #Logger.debug(order)
 
         model = AuthAPI(
             self._api_key, self._api_secret, self._api_passphrase, self._api_url
@@ -525,7 +530,7 @@ class AuthAPI(AuthAPIBase):
             "price": future_price,
         }
 
-        Logger.debug(order)
+        #Logger.debug(order)
 
         model = AuthAPI(
             self._api_key, self._api_secret, self._api_passphrase, self._api_url
@@ -612,7 +617,7 @@ class AuthAPI(AuthAPIBase):
             elif method == "POST":
                 resp = requests.post(self._api_url + uri, json=payload, auth=self)
 
-            Logger.debug(resp.json())
+            #Logger.debug(resp.json())
             if resp.status_code != 200:
                 if self.die_on_api_error or resp.status_code == 401:
                     # disable traceback
@@ -626,7 +631,7 @@ class AuthAPI(AuthAPIBase):
                         + self._api_url
                         + uri
                         + " - "
-                        + "{}".format(resp.json()["message"])
+                        + "{}".format(resp.json()["msg"])
                     )
                 else:
                     Logger.error(
@@ -873,7 +878,7 @@ class PublicAPI(AuthAPIBase):
             elif method == "POST":
                 resp = requests.post(self._api_url + uri, json=payload)
             
-            Logger.debug(resp.json())
+            #Logger.debug(resp.json())
             if resp.status_code != 200:
                 resp_message = resp.json()["msg"]
                 message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
