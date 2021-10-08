@@ -219,7 +219,8 @@ def executeJob(
 
     # use actual sim mode date to check smartchswitch
     if (
-        app.getSmartSwitch() == 1
+        last_api_call_datetime.seconds > 60
+        and app.getSmartSwitch() == 1
         and app.getGranularity() == 3600
         and app.is1hEMA1226Bull(current_sim_date, websocket) is True
         and app.is6hEMA1226Bull(current_sim_date, websocket) is True
@@ -242,7 +243,8 @@ def executeJob(
 
     # use actual sim mode date to check smartchswitch
     if (
-        app.getSmartSwitch() == 1
+        last_api_call_datetime.seconds > 60
+        and app.getSmartSwitch() == 1
         and app.getGranularity() == 900
         and app.is1hEMA1226Bull(current_sim_date, websocket) is False
         and app.is6hEMA1226Bull(current_sim_date, websocket) is False
@@ -343,6 +345,17 @@ def executeJob(
         morning_doji_star = bool(df_last["morning_doji_star"].values[0])
         evening_doji_star = bool(df_last["evening_doji_star"].values[0])
         two_black_gapping = bool(df_last["two_black_gapping"].values[0])
+
+        # Log data for Telegram Bot
+        if not app.disableBuyElderRay():
+            telegram_bot.addindicators("ERI", elder_ray_buy or elder_ray_sell)
+        if (app.disableBullOnly() is True 
+            or (df_last["sma50"].values[0] == df_last["sma200"].values[0])):
+            telegram_bot.addindicators("BULL", goldencross)
+        if not app.disableBuyEMA():
+            telegram_bot.addindicators("EMA", ema12gtema26co or ema12ltema26co)
+        if not app.disableBuyMACD():
+            telegram_bot.addindicators("MACD", macdgtsignalco or macdltsignalco)
 
         if app.isSimulation():
             # Reset the Strategy so that the last record is the current sim date

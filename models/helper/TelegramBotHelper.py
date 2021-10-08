@@ -67,7 +67,17 @@ class TelegramBotHelper:
             addmarket = {"message": message, "margin": " ", "delta": " ", "price" : price}
             self.data.update(addmarket)
             self._write_data()
-            
+
+    def addindicators(self, indicator, state) -> None:
+        if self.app.enableTelegramBotControl():
+            self._read_data()
+            if not 'indicators' in self.data:
+                self.data.update({"indicators": {}})
+
+            self.data['indicators'].update({indicator : state})
+            self._write_data()
+
+
     def deletemargin(self):
         if self.app.enableTelegramBotControl():
             os.remove(os.path.join(self.app.telegramdatafolder, 'telegram_data', self.filename))
@@ -77,20 +87,6 @@ class TelegramBotHelper:
             self._read_data("data.json")
             self.data['trades'].update({ts : {"pair" : self.market, "price" : price, "margin" : margin}})
             self._write_data("data.json")
-
-    # def checkmanualsell(self) -> bool:
-    #     result = False
-    #     if self.app.enableTelegramBotControl():
-    #         self._read_data()
-
-    #         if len(self.data['botcontrol']) > 0:
-    #             result = self.data["botcontrol"]["manualsell"]
-
-    #         if result:
-    #             self.data["botcontrol"]["manualsell"] = False
-    #             self._write_data()
-
-    #     return result
 
     def checkmanualbuysell(self) -> str:
         result = "WAIT"

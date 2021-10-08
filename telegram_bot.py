@@ -317,8 +317,7 @@ class TelegramBot(TelegramBotBase):
                     openoutput = openoutput + f"<b>{str(file).replace('.json', '')}</b>"
                     openoutput = openoutput + F"\n<i>Current Margin: {self.data['margin']}   (P/L): {self.data['delta']}</i>\n"
         
-        mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
-        
+
         query = update.callback_query
 
         if query.data == "orders":
@@ -327,6 +326,7 @@ class TelegramBot(TelegramBotBase):
             query.edit_message_text(closeoutput, parse_mode="HTML")
         elif query.data == "allactive":
             query.edit_message_text(openoutput, parse_mode="HTML")
+            mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
             mBot.send(closeoutput, parsemode="HTML")
 
     def statsrequest(self, update: Updater, context):
@@ -366,10 +366,8 @@ class TelegramBot(TelegramBotBase):
 
         output = subprocess.getoutput(f"python3 pycryptobot.py --stats --exchange {self.exchange}  --market {self.pair}  ")
 
-        mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
         update.message.reply_text(output, parse_mode="HTML")
     
-        # update.message.reply_text("Neat! Just so you know, this is what you already told me:")
         return ConversationHandler.END
 
     def sellrequest(self, update, context):
@@ -442,12 +440,9 @@ class TelegramBot(TelegramBotBase):
 
         query = update.callback_query
 
-        # tempconfig = json.load(self.config_file)
         pbot = self.config[query.data]["config"]
-        mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
 
         query.edit_message_text(query.data + "\n" + json.dumps(pbot, indent=4))
-        # update.message.reply_text(json.dumps(pbot, indent=4))
 
     def pausebotrequest(self, update, context) -> None:
         if not self._checkifallowed(context._user_id_and_data[0], update):
@@ -502,7 +497,7 @@ class TelegramBot(TelegramBotBase):
             for file in jsonfiles:
                 if self.updatebotcontrol(file, "start"):
                     mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
-                    mBot.send(f"<i>Restarting {file.replace('.json','')}</i>", parse_mode="HTML")
+                    mBot.send(f"<i>Restarting {file.replace('.json','')}</i>", parsemode="HTML")
         else:
             if self.updatebotcontrol(query.data.replace('restart_', ''), "start"):
                 query.edit_message_text(f"Restarting {query.data.replace('restart_', '').replace('.json','')}", parse_mode="HTML")
@@ -551,21 +546,18 @@ class TelegramBot(TelegramBotBase):
             for pair in self.data["markets"]:
                 overrides = self.data["markets"][pair]["overrides"]
                 if platform.system() == 'Windows':
-                    #subprocess.Popen(f"cmd /k python3 pycryptobot.py {overrides}", creationflags=subprocess.CREATE_NEW_CONSOLE)
-                    os.system(f"start powershell -NoExit -Command $host.UI.RawUI.WindowTitle = '{pair}' ; python3 pycryptobot.py {overrides}")
+                    os.system(f"start powershell -Command $host.UI.RawUI.WindowTitle = '{pair}' ; python3 pycryptobot.py {overrides}")
                 else:
                     subprocess.Popen(f'python3 pycryptobot.py {overrides}', shell=True)
                 mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
-                mBot.send(f"<i>Starting {pair} crypto bot</i>", parse_mode="HTML")
+                mBot.send(f"<i>Starting {pair} crypto bot</i>", parsemode="HTML")
                 sleep(10)
         else:
             overrides = self.data["markets"][str(query.data).replace("start_", "")]["overrides"]
             if platform.system() == 'Windows':
                 os.system(f"start powershell -NoExit -Command $host.UI.RawUI.WindowTitle = '{query.data.replace('start_', '')}' ; python3 pycryptobot.py {overrides}")
-                #subprocess.Popen(f"python3 pycryptobot.py {overrides}", creationflags=subprocess.CREATE_NEW_CONSOLE)
             else:
                 subprocess.Popen(f'python3 pycryptobot.py {overrides}', shell=True)
-                # subprocess.call(['open', '-W', '-a', 'Terminal.app', f'python3 pycryptobot.py {overrides}'])
             query.edit_message_text(f"<i>Starting {str(query.data).replace('start_', '')} crypto bots</i>", parse_mode="HTML")
 
     def stopbotrequest(self, update, context) -> None:
