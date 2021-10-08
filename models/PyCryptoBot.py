@@ -56,6 +56,8 @@ class PyCryptoBot(BotConfig):
             filename=self.config_file, exchange=self.exchange
         )
 
+    takerfee = 0.0
+
     extraCandlesFound = False
 
     trade_tracker = pd.DataFrame(
@@ -137,7 +139,7 @@ class PyCryptoBot(BotConfig):
                 self.quote_currency = formatCheck[1]
             self.market = self.base_currency + self.quote_currency
 
-        Logger.info(self.market)
+        # Logger.info(self.market)
         return self.market
 
     def getGranularity(self) -> int:
@@ -734,6 +736,9 @@ class PyCryptoBot(BotConfig):
     def enableInsufficientFundsLogging(self) -> bool:
         return self.enableinsufficientfundslogging
 
+    def enableTelegramBotControl(self) -> bool:
+        return self.enabletelegrambotcontrol
+
     def enableML(self) -> bool:
         return self.enableml
 
@@ -870,6 +875,8 @@ class PyCryptoBot(BotConfig):
             return 0.001  # default lowest fee tier
         elif self.isSimulation() is True and self.exchange == "kucoin":
             return 0.0015  # default lowest fee tier
+        elif self.takerfee > 0.0:
+            return self.takerfee
         elif self.exchange == "coinbasepro":
             api = CBAuthAPI(
                 self.getAPIKey(),
@@ -877,7 +884,8 @@ class PyCryptoBot(BotConfig):
                 self.getAPIPassphrase(),
                 self.getAPIURL(),
             )
-            return api.getTakerFee()
+            self.takerfee = api.getTakerFee()
+            return self.takerfee
         elif self.exchange == "binance":
             api = BAuthAPI(
                 self.getAPIKey(),
@@ -885,7 +893,8 @@ class PyCryptoBot(BotConfig):
                 self.getAPIURL(),
                 recv_window=self.recv_window,
             )
-            return api.getTakerFee()
+            self.takerfee = api.getTakerFee()
+            return self.takerfee
         elif self.exchange == "kucoin":
             api = KAuthAPI(
                 self.getAPIKey(),
@@ -893,7 +902,8 @@ class PyCryptoBot(BotConfig):
                 self.getAPIPassphrase(),
                 self.getAPIURL(),
             )
-            return api.getTakerFee()
+            self.takerfee = api.getTakerFee()
+            return self.takerfee
         else:
             return 0.005
 

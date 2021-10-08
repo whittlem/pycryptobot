@@ -456,7 +456,9 @@ class AuthAPI(AuthAPIBase):
 
         # funding amount needs to be greater than 10
         if quote_quantity < MINIMUM_TRADE_AMOUNT:
-            raise ValueError(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).")
+            Logger.warning(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).")
+            return pd.DataFrame()
+            # raise ValueError(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).")
 
         try:
             order = {

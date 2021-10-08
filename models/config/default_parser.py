@@ -398,6 +398,13 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("enableinsufficientfundslogging must be of type int")
 
+    if "enabletelegrambotcontrol" in config:
+        if isinstance(config["enabletelegrambotcontrol"], int):
+            if bool(config["enabletelegrambotcontrol"]):
+                app.enabletelegrambotcontrol = True
+        else:
+            raise TypeError("enabletelegrambotcontrol must be of type int")
+
     # backward compatibility
     if "nosellatloss" in config:
         if isinstance(config["nosellatloss"], int):

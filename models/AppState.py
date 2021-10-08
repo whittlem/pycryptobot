@@ -1,6 +1,7 @@
 """Application state class"""
 
 import sys
+import datetime
 from numpy import array as np_array, min as np_min, ptp as np_ptp
 from models.PyCryptoBot import PyCryptoBot
 from models.TradingAccount import TradingAccount
@@ -64,6 +65,9 @@ class AppState:
         self.feetracker = 0
         self.buy_tracker = 0
 
+        self.last_api_call_datetime = datetime.datetime.now() - datetime.timedelta(minutes=2)
+        self.exchange_last_buy = None
+
     def minimumOrderBase(self):
         self.app.insufficientfunds = False
         if self.app.getExchange() == "binance":
@@ -74,7 +78,7 @@ class AppState:
                     base_min = float(
                         df[df["filterType"] == "LOT_SIZE"][["minQty"]].values[0][0]
                     )
-                    base = float(self.account.getBalance(self.app.getBaseCurrency()))
+                    base = float(self.account.basebalance)
                 except:
                     return
 
@@ -97,7 +101,7 @@ class AppState:
                 sys.tracebacklimit = 0
                 raise Exception(f"Market not found! ({self.app.getMarket()})")
 
-            base = float(self.account.getBalance(self.app.getBaseCurrency()))
+            base = float(self.account.basebalance)
             base_min = float(product["base_min_size"])
 
         elif self.app.getExchange() == 'kucoin':
@@ -107,7 +111,7 @@ class AppState:
                 sys.tracebacklimit = 0
                 raise Exception(f'Market not found! ({self.app.getMarket()})')
 
-            base = float(self.account.getBalance(self.app.getBaseCurrency()))
+            base = float(self.account.basebalance)
             base_min = '{:f}'.format(float(product['baseMinSize']))
 
         if base < base_min:
@@ -133,7 +137,7 @@ class AppState:
                             0
                         ][0]
                     )
-                    quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
+                    quote = float(self.account.quotebalance)
                 except:
                     return
 
@@ -148,6 +152,9 @@ class AppState:
                         f"Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})"
                     )
                 return
+            else:
+                sys.tracebacklimit = 0
+                raise Exception(f"Market not found! ({self.app.getMarket()})")
 
         elif self.app.getExchange() == "coinbasepro":
             product = self.api.authAPI("GET", f"products/{self.app.getMarket()}")
@@ -158,7 +165,7 @@ class AppState:
             ticker = self.api.authAPI("GET", f"products/{self.app.getMarket()}/ticker")
             price = float(ticker["price"])
 
-            quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
+            quote = float(self.account.quotebalance)
             base_min = float(product["base_min_size"])
 
         elif self.app.getExchange() == 'kucoin':
@@ -171,7 +178,7 @@ class AppState:
             ticker = self.api.authAPI("GET", f"api/v1/market/orderbook/level1?symbol={self.app.getMarket()}")
 
             price = float(ticker["price"])
-            quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
+            quote = float(self.account.quotebalance)
             base_min = float(product['baseMinSize'])
 
         if (quote / price) < base_min:
@@ -193,6 +200,8 @@ class AppState:
 
         base = float(self.account.getBalance(self.app.getBaseCurrency()))
         quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
+        #base = float(self.account.basebalance)
+        #quote = float(self.account.quotebalance)
 
         orders = self.account.getOrders(self.app.getMarket(), "", "done")
         if len(orders) > 0:
@@ -211,7 +220,7 @@ class AppState:
                 )
 
                 # binance orders do not show fees
-                if self.app.getExchange() == "coinbasepro":
+                if self.app.getExchange() == "coinbasepro" or self.app.getExchange() == "kucoin":
                     self.last_buy_fee = float(
                         last_order[last_order.action == "buy"]["fees"]
                     )

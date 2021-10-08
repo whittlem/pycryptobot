@@ -1169,7 +1169,7 @@ class WebSocket(AuthAPIBase):
         self._api_url = api_url
 
         self.markets = None
-        self.granularity = granularity
+        self.granularity = self.to_binance_granularity(granularity)
         self.type = "SUBSCRIBE"
         self.stop = True
         self.error = None
@@ -1353,7 +1353,7 @@ class WebSocketClient(WebSocket, AuthAPIBase):
 
         self._ws_url = ws_url
         self.markets = markets
-        self.granularity = granularity
+        self.granularity = self.to_binance_granularity(granularity)
         self.tickers = None
         self.candles = None
         self.start_time = None

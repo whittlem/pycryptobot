@@ -37,6 +37,9 @@ class TradingAccount:
         else:
             self.mode = "test"
 
+        self.quotebalance = self.getBalance(app.getQuoteCurrency())
+        self.basebalance = self.getBalance(app.getBaseCurrency())
+
         self.orders = pd.DataFrame()
 
     def __convertStatus(self, val):
