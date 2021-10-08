@@ -356,6 +356,8 @@ def executeJob(
             telegram_bot.addindicators("EMA", ema12gtema26co or ema12ltema26co)
         if not app.disableBuyMACD():
             telegram_bot.addindicators("MACD", macdgtsignalco or macdltsignalco)
+        if not app.disableBuyOBV():
+            telegram_bot.addindicators("OBV", float(obv_pc) > 0)
 
         if app.isSimulation():
             # Reset the Strategy so that the last record is the current sim date
