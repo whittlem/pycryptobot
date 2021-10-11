@@ -482,7 +482,7 @@ def executeJob(
             # work with this precision. It should save a couple of `precision` uses, one for each `truncate()` call.
             truncate = functools.partial(_truncate, n=precision)
 
-            price_text = "Close: " + truncate(price)
+            price_text = "Close: " + str(price)
             ema_text = ""
             if app.disableBuyEMA() is False:
                 ema_text = app.compare(
