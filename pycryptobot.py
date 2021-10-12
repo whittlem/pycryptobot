@@ -1403,6 +1403,7 @@ def executeJob(
                     app.notifyTelegram(
                         f"      All Trades Margin: {_truncate(state.margintracker, 4)}%\n  ** non-live simulation, assuming highest fees\n  ** open trade excluded from margin calculation\n"
                     )
+                    telegram_bot.removeactivebot()
         else:
             if (
                 state.last_buy_size > 0
