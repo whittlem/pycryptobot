@@ -503,7 +503,7 @@ class TelegramBot(TelegramBotBase):
             jsonfiles = os.listdir(os.path.join(self.datafolder, 'telegram_data'))
             query.edit_message_text(f"Restarting all bots", parse_mode="HTML")
             for file in jsonfiles:
-                if not os.path.isfile(os.path.join(self.datafolder, "telegram_data", file)):
+                if '.json' in file and not file == "data.json":
                     if self.updatebotcontrol(file, "start"):
                         mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
                         mBot.send(f"<i>Restarting {file.replace('.json','')}</i>", parsemode="HTML")
