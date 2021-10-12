@@ -597,7 +597,7 @@ For configuring logger, add a piece to the config.json as follows:
 "--disablelog" argument or "disablelog" config will disable to writing logfile as backwards compatibility.
 If you want to disable logging entirely, you can set "filelog" and "consolelog" to 0.
 
-"logfile" is overriden by '--logfile' console argument.
+"logfile" is overridden by '--logfile' console argument.
 If '--logfile' used when running bot "logfile": "pycryptobot.log" line in config file will be ignored.
 
 "fileloglevel" and "consoleloglevel" can get one of 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'NOTSET'

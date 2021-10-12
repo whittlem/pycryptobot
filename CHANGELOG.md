@@ -149,7 +149,7 @@ Upgrade library dependencies (if required):
 ### Changed
 
 -- 'stats' for binance was retuning incorrect percentage gains.
--- 'statdetail' was not working for binance as some values were sting instead of float
+-- 'statdetail' was not working for binance as some values were string instead of float
 
 ## [3.2.9] - 2021-08-16
 
