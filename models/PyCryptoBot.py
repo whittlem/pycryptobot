@@ -326,7 +326,7 @@ class PyCryptoBot(BotConfig):
                         str(end_date.isoformat()),
                     )
 
-                    # check to see if there are an extra 300 candles availble to be used, if not just use the original starting point
+                    # check to see if there are an extra 300 candles available to be used, if not just use the original starting point
                     if addingExtraCandles == True and len(df2) <= 0:
                         self.extraCandlesFound = False
                         simstart = originalSimStart
