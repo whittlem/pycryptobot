@@ -475,6 +475,7 @@ class TelegramBot(TelegramBotBase):
             jsonfiles = os.listdir(os.path.join(self.datafolder, 'telegram_data'))
         
             for file in jsonfiles:
+
                 if self.updatebotcontrol(file, "pause"):
                     query.edit_message_text(f"<i>Pausing {file.replace('.json','')}</i>", parse_mode="HTML")
         else:
@@ -596,9 +597,10 @@ class TelegramBot(TelegramBotBase):
             jsonfiles = os.listdir(os.path.join(self.datafolder, 'telegram_data'))
 
             for file in jsonfiles:
-                if self.updatebotcontrol(file, "exit"):
-                    mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
-                    mBot.send(f"Stopping {file.replace('.json', '')} crypto bot")
+                if '.json' in file and not file == "data.json":
+                    if self.updatebotcontrol(file, "exit"):
+                        mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
+                        mBot.send(f"Stopping {file.replace('.json', '')} crypto bot")
         else:
             if self.updatebotcontrol(str(query.data).replace("stop_", ""), "exit"):
                 query.edit_message_text(f"Stopping {str(query.data).replace('stop_', '').replace('.json', '')} crypto bot")
