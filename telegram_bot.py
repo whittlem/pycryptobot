@@ -298,14 +298,15 @@ class TelegramBot(TelegramBotBase):
         openoutput = ''
         closeoutput = ""
         for file in jsonfiles:
-            self._read_data(file)
-            if 'margin' in self.data:
-                if self.data['margin'] == " ":
-                    closeoutput = closeoutput + f"<b>{str(file).replace('.json', '')}</b>"
-                    closeoutput = closeoutput + F"\n<i>{self.data['message']}</i>\n"
-                elif len(self.data) > 2:
-                    openoutput = openoutput + f"<b>{str(file).replace('.json', '')}</b>"
-                    openoutput = openoutput + F"\n<i>Current Margin: {self.data['margin']}   (P/L): {self.data['delta']}</i>\n"
+            if '.json' in file and not file == "data.json":
+                self._read_data(file)
+                if 'margin' in self.data:
+                    if self.data['margin'] == " ":
+                        closeoutput = closeoutput + f"<b>{str(file).replace('.json', '')}</b>"
+                        closeoutput = closeoutput + F"\n<i>{self.data['message']}</i>\n"
+                    elif len(self.data) > 2:
+                        openoutput = openoutput + f"<b>{str(file).replace('.json', '')}</b>"
+                        openoutput = openoutput + F"\n<i>Current Margin: {self.data['margin']}   (P/L): {self.data['delta']}</i>\n"
 
         query = update.callback_query
 
