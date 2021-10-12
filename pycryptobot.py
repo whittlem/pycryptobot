@@ -9,7 +9,7 @@ import sched
 import sys
 import time
 import signal
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pandas as pd
 
@@ -1551,10 +1551,10 @@ def main(websocket):
     except (BaseException, Exception) as e:
         # catch all not managed exceptions and send a Telegram message if configured
         app.notifyTelegram(f"Bot for {app.getMarket()} got an exception: {repr(e)}")
-
+        telegram_bot.removeactivebot()
         Logger.critical(repr(e))
-
-        raise
+        os._exit(0)
+        # raise
 
 
 if __name__ == "__main__":
