@@ -591,12 +591,12 @@ class TelegramBot(TelegramBotBase):
         if query.data == "pause_all":
             jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
             for file in jsonfiles:
-
-                if self.updatebotcontrol(file, "pause"):
-                    mbot = Telegram(self.token, str(context._chat_id_and_data[0]))
-                    mbot.send(
-                        f"<i>Pausing {file.replace('.json','')}</i>", parsemode="HTML"
-                    )
+                if ".json" in file and not file == "data.json":
+                    if self.updatebotcontrol(file, "pause"):
+                        mbot = Telegram(self.token, str(context._chat_id_and_data[0]))
+                        mbot.send(
+                            f"<i>Pausing {file.replace('.json','')}</i>", parsemode="HTML"
+                        )
         else:
             if self.updatebotcontrol(query.data.replace("pause_", ""), "pause"):
                 update.message.reply_text(
