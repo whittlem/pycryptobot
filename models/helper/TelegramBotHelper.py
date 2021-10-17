@@ -64,7 +64,7 @@ class TelegramBotHelper:
     def addinfo(self, message: str = "", price: str = "") -> None:
         if self.app.enableTelegramBotControl():
             self._read_data()
-            addmarket = {"message": message, "margin": " ", "delta": " ", "price" : price}
+            addmarket = {"message": message, "margin": " ", "delta": " ", "price" : price, "exchange" : self.exchange}
             self.data.update(addmarket)
             self._write_data()
 
@@ -76,7 +76,6 @@ class TelegramBotHelper:
 
             self.data['indicators'].update({indicator : state})
             self._write_data()
-
 
     def deletemargin(self):
         if self.app.enableTelegramBotControl():
