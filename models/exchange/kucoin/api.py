@@ -563,7 +563,7 @@ class AuthAPI(AuthAPIBase):
         return model.authAPI("DELETE", "orders")
 
     def marketBaseIncrement(self, market, amount) -> float:
-        """Retrives the market base increment"""
+        """Retrieves the market base increment"""
         pMarket = market.split('-')[0]
         product = self.authAPI("GET", f"api/v1/symbols?{pMarket}")
 
@@ -829,7 +829,7 @@ class PublicAPI(AuthAPIBase):
         return df
 
     def getTicker(self, market: str = DEFAULT_MARKET) -> tuple:
-        """Retrives the market ticker"""
+        """Retrieves the market ticker"""
 
         # validates the market is syntactically correct
         if not self._isMarketValid(market):
