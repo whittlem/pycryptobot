@@ -326,7 +326,7 @@ class PyCryptoBot(BotConfig):
                         str(end_date.isoformat()),
                     )
 
-                    # check to see if there are an extra 300 candles availble to be used, if not just use the original starting point
+                    # check to see if there are an extra 300 candles available to be used, if not just use the original starting point
                     if addingExtraCandles == True and len(df2) <= 0:
                         self.extraCandlesFound = False
                         simstart = originalSimStart
@@ -382,6 +382,9 @@ class PyCryptoBot(BotConfig):
             self.ema1226_6h_cache = self.getSmartSwitchDataFrame(
                 self.ema1226_6h_cache, market, 21600, start, end
             )
+
+            if len(self.ema1226_15m_cache) == 0:
+                raise Exception(f"No data return for selected date range {start} - {end}")
 
             if self.extraCandlesFound == False:
                 if granularity == 900:
@@ -1069,8 +1072,7 @@ class PyCryptoBot(BotConfig):
                     )
 
                 else:
-                    endDate = datetime.now()
-                    endDate = self.getDateFromISO8601Str(str(endDate))
+                    endDate = self.getDateFromISO8601Str(str(pd.Series(datetime.now()).dt.round(freq="H")[0]))
                     if self.getExchange() == "coinbasepro":
                         endDate -= timedelta(
                             hours=random.randint(0, 8760 * 3)

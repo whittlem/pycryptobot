@@ -1,6 +1,6 @@
 [![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg) [![Tests](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)
 
-# Python Crypto Bot v4.1.0 (pycryptobot)
+# Python Crypto Bot v4.2.0 (pycryptobot)
 
 ## Join our chat on Telegram
 
@@ -597,7 +597,7 @@ For configuring logger, add a piece to the config.json as follows:
 "--disablelog" argument or "disablelog" config will disable to writing logfile as backwards compatibility.
 If you want to disable logging entirely, you can set "filelog" and "consolelog" to 0.
 
-"logfile" is overriden by '--logfile' console argument.
+"logfile" is overridden by '--logfile' console argument.
 If '--logfile' used when running bot "logfile": "pycryptobot.log" line in config file will be ignored.
 
 "fileloglevel" and "consoleloglevel" can get one of 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'NOTSET'

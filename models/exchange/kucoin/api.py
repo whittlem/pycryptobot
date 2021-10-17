@@ -21,7 +21,16 @@ DEFAULT_MAKER_FEE_RATE = 0.018
 DEFAULT_TAKER_FEE_RATE = 0.018
 DEFAULT_TRADE_FEE_RATE = 0.018  # added 0.0005 to allow for price movements
 MINIMUM_TRADE_AMOUNT = 10
-SUPPORTED_GRANULARITY = ["1min", "3min", "5min", "15min", "30min", "1hour", "6hour", "1day"]
+SUPPORTED_GRANULARITY = [
+    "1min",
+    "3min",
+    "5min",
+    "15min",
+    "30min",
+    "1hour",
+    "6hour",
+    "1day",
+]
 FREQUENCY_EQUIVALENTS = ["T", "5T", "15T", "H", "6H", "D"]
 MAX_GRANULARITY = max(SUPPORTED_GRANULARITY)
 DEFAULT_MARKET = "BTC-USDT"
@@ -33,6 +42,7 @@ class AuthAPIBase:
         if p.match(market):
             return True
         return False
+
 
 class AuthAPI(AuthAPIBase):
     def __init__(
@@ -110,16 +120,29 @@ class AuthAPI(AuthAPIBase):
         message = f"{timestamp}{request.method}{request.path_url}{body}"
 
         signature = base64.b64encode(
-                hmac.new(self._api_secret.encode('utf-8'), message.encode('utf-8'), hashlib.sha256).digest())
-        passphrase = base64.b64encode(hmac.new(self._api_secret.encode('utf-8'), self._api_passphrase.encode('utf-8'), hashlib.sha256).digest())
+            hmac.new(
+                self._api_secret.encode("utf-8"),
+                message.encode("utf-8"),
+                hashlib.sha256,
+            ).digest()
+        )
+        passphrase = base64.b64encode(
+            hmac.new(
+                self._api_secret.encode("utf-8"),
+                self._api_passphrase.encode("utf-8"),
+                hashlib.sha256,
+            ).digest()
+        )
 
-        request.headers.update({
+        request.headers.update(
+            {
                 "KC-API-SIGN": signature,
                 "KC-API-TIMESTAMP": str(timestamp),
                 "KC-API-KEY": self._api_key,
                 "KC-API-PASSPHRASE": passphrase,
                 "KC-API-KEY-VERSION": str("2"),
-            })
+            }
+        )
 
         return request
 
@@ -205,12 +228,10 @@ class AuthAPI(AuthAPIBase):
         # GET /api/v3/allOrders
         resp = self.authAPI("GET", f"api/v1/symbols")
 
-
         if isinstance(resp, list):
             df = pd.DataFrame.from_dict(resp)
         else:
             df = pd.DataFrame(resp)
-
 
         return df[df["enableTrading"] == True]
 
@@ -304,13 +325,14 @@ class AuthAPI(AuthAPIBase):
         df_tmp["fee"] = df_tmp["fee"].astype(float)
         df = df_tmp
 
-        df["isActive"] = df.copy().apply(lambda row: str("done") if not bool(row.isActive) else str("active"), axis=1)
+        df["isActive"] = df.copy().apply(
+            lambda row: str("done") if not bool(row.isActive) else str("active"), axis=1
+        )
 
         # calculates the price at the time of purchase
         if status != "active":
             df["price"] = df.copy().apply(
-                lambda row: (float(row.dealFunds) * 100)
-                / (float(row.dealSize) * 100)
+                lambda row: (float(row.dealFunds) * 100) / (float(row.dealSize) * 100)
                 if float(row.dealSize) > 0
                 else 0,
                 axis=1,
@@ -426,7 +448,7 @@ class AuthAPI(AuthAPIBase):
 
         return df
 
-    #def getTime(self) -> datetime:
+    # def getTime(self) -> datetime:
     #    """Retrieves the exchange time"""
 
     #    try:
@@ -459,7 +481,7 @@ class AuthAPI(AuthAPIBase):
         if quote_quantity < MINIMUM_TRADE_AMOUNT:
             raise ValueError(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).")
 
-        dt_obj = datetime.strptime(str(datetime.now()), '%Y-%m-%d %H:%M:%S.%f')
+        dt_obj = datetime.strptime(str(datetime.now()), "%Y-%m-%d %H:%M:%S.%f")
         millisec = dt_obj.timestamp() * 1000
 
         order = {
@@ -470,7 +492,7 @@ class AuthAPI(AuthAPIBase):
             "funds": self.marketQuoteIncrement(market, quote_quantity),
         }
 
-        #Logger.debug(order)
+        # Logger.debug(order)
 
         # connect to authenticated Kucoin api
         model = AuthAPI(
@@ -489,9 +511,8 @@ class AuthAPI(AuthAPIBase):
         if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
             raise TypeError("The crypto amount is not numeric.")
 
-        dt_obj = datetime.strptime(str(datetime.now()), '%Y-%m-%d %H:%M:%S.%f')
+        dt_obj = datetime.strptime(str(datetime.now()), "%Y-%m-%d %H:%M:%S.%f")
         millisec = dt_obj.timestamp() * 1000
-
 
         order = {
             "clientOid": str(millisec),
@@ -501,7 +522,7 @@ class AuthAPI(AuthAPIBase):
             "size": self.marketBaseIncrement(market, base_quantity),
         }
 
-        #Logger.debug(order)
+        # Logger.debug(order)
 
         model = AuthAPI(
             self._api_key, self._api_secret, self._api_passphrase, self._api_url
@@ -530,7 +551,7 @@ class AuthAPI(AuthAPIBase):
             "price": future_price,
         }
 
-        #Logger.debug(order)
+        # Logger.debug(order)
 
         model = AuthAPI(
             self._api_key, self._api_secret, self._api_passphrase, self._api_url
@@ -564,7 +585,7 @@ class AuthAPI(AuthAPIBase):
 
     def marketBaseIncrement(self, market, amount) -> float:
         """Retrives the market base increment"""
-        pMarket = market.split('-')[0]
+        pMarket = market.split("-")[0]
         product = self.authAPI("GET", f"api/v1/symbols?{pMarket}")
 
         if "baseIncrement" not in product:
@@ -612,12 +633,12 @@ class AuthAPI(AuthAPIBase):
             if method == "DELETE":
                 resp = requests.delete(self._api_url + uri, auth=self)
             elif method == "GET":
-                #resp = requests.request('GET', self._api_url + uri, headers=headers)
+                # resp = requests.request('GET', self._api_url + uri, headers=headers)
                 resp = requests.get(self._api_url + uri, auth=self)
             elif method == "POST":
                 resp = requests.post(self._api_url + uri, json=payload, auth=self)
 
-            #Logger.debug(resp.json())
+            # Logger.debug(resp.json())
             if resp.status_code != 200:
                 if self.die_on_api_error or resp.status_code == 401:
                     # disable traceback
@@ -703,7 +724,7 @@ class AuthAPI(AuthAPIBase):
 
 
 class PublicAPI(AuthAPIBase):
-    def __init__(self, api_url: str = 'https://openapi-sandbox.kucoin.com/') -> None:
+    def __init__(self, api_url: str = "https://openapi-sandbox.kucoin.com/") -> None:
         # options
         self.debug = False
         self.die_on_api_error = False
@@ -761,17 +782,20 @@ class PublicAPI(AuthAPIBase):
 
         if iso8601start != "" and iso8601end == "":
             startTime = int(
-                datetime.timestamp(datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")))
+                datetime.timestamp(datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S"))
+            )
             resp = self.authAPI(
                 "GET",
                 f"api/v1/market/candles?type={granularity}&symbol={market}&startAt={startTime}",
             )
         elif iso8601start != "" and iso8601end != "":
             startTime = int(
-                datetime.timestamp(datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")))
+                datetime.timestamp(datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S"))
+            )
 
             endTime = int(
-                datetime.timestamp(datetime.strptime(iso8601end, "%Y-%m-%dT%H:%M:%S")))
+                datetime.timestamp(datetime.strptime(iso8601end, "%Y-%m-%dT%H:%M:%S"))
+            )
             resp = self.authAPI(
                 "GET",
                 f"api/v1/market/candles?type={granularity}&symbol={market}&startAt={startTime}&endAt={endTime}",
@@ -783,7 +807,8 @@ class PublicAPI(AuthAPIBase):
 
         # convert the API response into a Pandas DataFrame
         df = pd.DataFrame(
-            resp['data'], columns=["epoch", "open", "close", "high", "low", "volume", "turnover"]
+            resp["data"],
+            columns=["epoch", "open", "close", "high", "low", "volume", "turnover"],
         )
         # reverse the order of the response with earliest last
         df = df.iloc[::-1].reset_index()
@@ -824,12 +849,12 @@ class PublicAPI(AuthAPIBase):
         df["open"] = pd.to_numeric(df["open"])
         df["close"] = pd.to_numeric(df["close"])
         df["volume"] = pd.to_numeric(df["volume"])
-        #convert_columns = {'close': float}
-        #resp.asType(convert_columns)
+        # convert_columns = {'close': float}
+        # resp.asType(convert_columns)
         return df
 
     def getTicker(self, market: str = DEFAULT_MARKET) -> tuple:
-        """Retrives the market ticker"""
+        """Retrieves the market ticker"""
 
         # validates the market is syntactically correct
         if not self._isMarketValid(market):
@@ -840,9 +865,10 @@ class PublicAPI(AuthAPIBase):
         if "time" in resp["data"] and "price" in resp["data"]:
             test = datetime.fromtimestamp(int(resp["data"]["time"]) / 1000)
             return (
-                datetime.strptime(str(datetime.fromtimestamp(int(resp["data"]["time"]) / 1000)), "%Y-%m-%d %H:%M:%S.%f").strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                ),
+                datetime.strptime(
+                    str(datetime.fromtimestamp(int(resp["data"]["time"]) / 1000)),
+                    "%Y-%m-%d %H:%M:%S.%f",
+                ).strftime("%Y-%m-%d %H:%M:%S"),
                 float(resp["data"]["price"]),
             )
 
@@ -877,8 +903,8 @@ class PublicAPI(AuthAPIBase):
                 resp = requests.get(self._api_url + uri)
             elif method == "POST":
                 resp = requests.post(self._api_url + uri, json=payload)
-            
-            #Logger.debug(resp.json())
+
+            # Logger.debug(resp.json())
             if resp.status_code != 200:
                 resp_message = resp.json()["msg"]
                 message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"

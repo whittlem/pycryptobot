@@ -20,6 +20,11 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.9
+    - name: Find typos with codespell
+      uses: codespell-project/actions-codespell@master
+      with:
+        ignore_words_list: hist
+        skip: "*.json"
     - uses: actions/cache@v2
       with:
         path: ${{ env.pythonLocation }}
