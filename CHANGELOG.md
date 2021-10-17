@@ -12,7 +12,7 @@ Upgrade library dependencies (if required):
 
 -- Added /deletebot will delete bot from /startbot list
 -- fixed issue with fast-sample with no date causing exception
--- fixed issue when bot throws an exception it doesnt exit
+-- fixed issue when bot throws an exception it does not exit
 -- fixed issue when exception is raised TG bot still thinks the bot is active
 -- fixed /startbots will only start bots that are not already running
 -- fixed when Telegram replaces -- with a long dash
