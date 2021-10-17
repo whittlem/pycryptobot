@@ -8,7 +8,7 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-## [4.1.1] - 2021-10-12
+## [4.2.0] - 2021-10-17
 
 -- Added /deletebot will delete bot from /startbot list
 -- fixed issue with fast-sample with no date causing exception
