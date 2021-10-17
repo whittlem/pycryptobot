@@ -557,7 +557,7 @@ class AuthAPI(AuthAPIBase):
             return pd.DataFrame()
 
     def marketBaseIncrement(self, market, amount) -> float:
-        """Retrives the market base increment"""
+        """Retrieves the market base increment"""
 
         product = self.authAPI("GET", f"products/{market}")
 
@@ -791,7 +791,7 @@ class PublicAPI(AuthAPIBase):
         return df
 
     def getTicker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
-        """Retrives the market ticker"""
+        """Retrieves the market ticker"""
 
         # validates the market is syntactically correct
         if not self._isMarketValid(market):

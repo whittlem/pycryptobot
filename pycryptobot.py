@@ -433,7 +433,7 @@ def executeJob(
                 sell_taker_fee=app.getTakerFee(),
             )
 
-            # handle immedate sell actions
+            # handle immediate sell actions
             if strategy.isSellTrigger(
                 price,
                 technical_analysis.getTradeExit(price),
@@ -618,7 +618,7 @@ def executeJob(
 
             if not app.isVerbose():
                 if state.last_action != "":
-                    # Not sure if this if is needed just preserving any exisitng functionality that may have been missed
+                    # Not sure if this if is needed just preserving any existing functionality that may have been missed
                     # Updated to show over margin and profit
                     if not app.isSimulation():
                         output_text = (

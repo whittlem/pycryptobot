@@ -108,7 +108,7 @@ class Strategy:
 
             return True
 
-        # criteria for buy signal 2 (optionally add additional buy singals)
+        # criteria for buy signal 2 (optionally add additional buy signals)
         elif (
             (
                 bool(self._df_last["ema12gtema26co"].values[0]) is True
