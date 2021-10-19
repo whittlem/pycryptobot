@@ -970,7 +970,7 @@ class TelegramBot(TelegramBotBase):
         return ConversationHandler.END
 
     def updatebotcontrol(self, market, status) -> bool:
-        """used to update bot json files for controling state"""
+        """used to update bot json files for controlling state"""
         self._read_data(market)
 
         if "botcontrol" in self.data:
