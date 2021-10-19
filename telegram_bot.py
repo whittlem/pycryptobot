@@ -898,7 +898,7 @@ class TelegramBot(TelegramBotBase):
 
         if update.message.text == "Yes":
             self._read_data()
-            if not "markets" in self.data:
+            if "markets" in self.data:
                 if not self.pair in self.data["markets"]:
                     self.data["markets"].update(
                         {
