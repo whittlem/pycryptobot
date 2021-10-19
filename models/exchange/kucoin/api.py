@@ -584,7 +584,7 @@ class AuthAPI(AuthAPIBase):
         return model.authAPI("DELETE", "orders")
 
     def marketBaseIncrement(self, market, amount) -> float:
-        """Retrives the market base increment"""
+        """Retrieves the market base increment"""
         pMarket = market.split("-")[0]
         product = self.authAPI("GET", f"api/v1/symbols?{pMarket}")
 
