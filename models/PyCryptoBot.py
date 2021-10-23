@@ -258,6 +258,7 @@ class PyCryptoBot(BotConfig):
 
     def getSmartSwitchDataFrame(
         self,
+        app,
         df: pd.DataFrame,
         market,
         granularity: int,
@@ -285,14 +286,16 @@ class PyCryptoBot(BotConfig):
                 result_df_cache = pd.DataFrame()
 
             if df_first is None and df_last is None:
-                textBox = TextBox(80, 26)
-                textBox.singleLine()
-                if self.smart_switch:
-                    textBox.center(
-                        f"*** Getting smartswitch ({str(granularity)}) market data ***"
-                    )
-                else:
-                    textBox.center(f"*** Getting ({str(granularity)}) market data ***")
+                text_box = TextBox(80, 26)
+
+                if not app.isSimulation() or (app.isSimulation() and not app.simResultOnly()):
+                    text_box.singleLine()
+                    if self.smart_switch:
+                        text_box.center(
+                            f"*** Getting smartswitch ({str(granularity)}) market data ***"
+                        )
+                    else:
+                        text_box.center(f"*** Getting ({str(granularity)}) market data ***")
 
                 df_first = simend
                 df_first -= timedelta(minutes=((granularity / 60)*200))
@@ -344,23 +347,23 @@ class PyCryptoBot(BotConfig):
                         addingExtraCandles = True
                         self.extraCandlesFound = True
 
-                textBox.doubleLine()
+                if not app.isSimulation() or (app.isSimulation() and not app.simResultOnly()):
+                    text_box.doubleLine()
 
             if len(result_df_cache) > 0 and "morning_star" not in result_df_cache:
-
                 result_df_cache.sort_values(by=["date"], ascending=True, inplace=True)
 
             if self.smart_switch == False:
                 if self.extraCandlesFound == False:
-                    textBox = TextBox(80, 26)
-                    textBox.singleLine()
-                    textBox.center(
+                    text_box = TextBox(80, 26)
+                    text_box.singleLine()
+                    text_box.center(
                         f"{str(self.exchange)} is not returning data for the requested start date."
                     )
-                    textBox.center(
+                    text_box.center(
                         f"Switching to earliest start date: {str(result_df_cache.head(1).index.format()[0])}"
                     )
-                    textBox.singleLine()
+                    text_box.singleLine()
                     self.simstartdate = str(result_df_cache.head(1).index.format()[0])
 
             return result_df_cache.copy()
@@ -374,13 +377,13 @@ class PyCryptoBot(BotConfig):
     ) -> pd.DataFrame:
         if self.isSimulation():
             self.ema1226_15m_cache = self.getSmartSwitchDataFrame(
-                self.ema1226_15m_cache, market, 900, start, end
+                app, self.ema1226_15m_cache, market, 900, start, end
             )
             self.ema1226_1h_cache = self.getSmartSwitchDataFrame(
-                self.ema1226_1h_cache, market, 3600, start, end
+                app, self.ema1226_1h_cache, market, 3600, start, end
             )
             self.ema1226_6h_cache = self.getSmartSwitchDataFrame(
-                self.ema1226_6h_cache, market, 21600, start, end
+                app, self.ema1226_6h_cache, market, 21600, start, end
             )
 
             if len(self.ema1226_15m_cache) == 0:
@@ -394,15 +397,15 @@ class PyCryptoBot(BotConfig):
                         ).isoformat()
                         != self.getDateFromISO8601Str(start).isoformat()
                     ):
-                        textBox = TextBox(80, 26)
-                        textBox.singleLine()
-                        textBox.center(
+                        text_box = TextBox(80, 26)
+                        text_box.singleLine()
+                        text_box.center(
                             f"{str(self.exchange)}is not returning data for the requested start date."
                         )
-                        textBox.center(
+                        text_box.center(
                             f"Switching to earliest start date: {str(self.ema1226_15m_cache.head(1).index.format()[0])}"
                         )
-                        textBox.singleLine()
+                        text_box.singleLine()
                         self.simstartdate = str(
                             self.ema1226_15m_cache.head(1).index.format()[0]
                         )
@@ -413,15 +416,15 @@ class PyCryptoBot(BotConfig):
                         ).isoformat()
                         != self.getDateFromISO8601Str(start).isoformat()
                     ):
-                        textBox = TextBox(80, 26)
-                        textBox.singleLine()
-                        textBox.center(
+                        text_box = TextBox(80, 26)
+                        text_box.singleLine()
+                        text_box.center(
                             f"{str(self.exchange)} is not returning data for the requested start date."
                         )
-                        textBox.center(
+                        text_box.center(
                             f"Switching to earliest start date: {str(self.ema1226_1h_cache.head(1).index.format()[0])}"
                         )
-                        textBox.singleLine()
+                        text_box.singleLine()
                         self.simstartdate = str(
                             self.ema1226_1h_cache.head(1).index.format()[0]
                         )
@@ -685,6 +688,9 @@ class PyCryptoBot(BotConfig):
     def allowSellAtLoss(self) -> bool:
         return self.sell_at_loss == 1
 
+    def simResultOnly(self) -> bool:
+        return self.simresultonly
+
     def showConfigBuilder(self) -> bool:
         return self.configbuilder
 
@@ -934,7 +940,7 @@ class PyCryptoBot(BotConfig):
                 self.getAPIPassphrase(),
                 self.getAPIURL(),
             )
-            return api.getMakerFee() 
+            return api.getMakerFee()
         else:
             return 0.005
 
@@ -954,9 +960,9 @@ class PyCryptoBot(BotConfig):
                 return api.marketBuy(market, float(truncate(quote_currency, 2)))
             elif self.exchange == 'kucoin':
                 api = KAuthAPI(
-                    self.getAPIKey(), 
-                    self.getAPISecret(), 
-                    self.getAPIPassphrase(), 
+                    self.getAPIKey(),
+                    self.getAPISecret(),
+                    self.getAPIPassphrase(),
                     self.getAPIURL()
                 )
                 return api.marketBuy(market, float(truncate(quote_currency, 2)))
@@ -994,9 +1000,9 @@ class PyCryptoBot(BotConfig):
                     return api.marketSell(market, base_currency)
                 elif self.exchange == 'kucoin':
                     api = KAuthAPI(
-                        self.getAPIKey(), 
-                        self.getAPISecret(), 
-                        self.getAPIPassphrase(), 
+                        self.getAPIKey(),
+                        self.getAPISecret(),
+                        self.getAPIPassphrase(),
                         self.getAPIURL()
                         )
                     return api.marketSell(market, base_currency)
@@ -1018,8 +1024,8 @@ class PyCryptoBot(BotConfig):
 
         elif self.exchange == 'kucoin':
             (
-                self.market, 
-                self.base_currency, 
+                self.market,
+                self.base_currency,
                 self.quote_currency
             ) = kucoinParseMarket(market)
 
@@ -1033,8 +1039,8 @@ class PyCryptoBot(BotConfig):
         if isinstance(flag, int) and flag in [0, 1]:
             self.sell_at_loss = flag
 
-    def startApp(self, account, last_action="", banner=True):
-        if banner:
+    def startApp(self, app, account, last_action="", banner=True):
+        if banner and not app.isSimulation() or (app.isSimulation() and not app.simResultOnly()):
             self._generate_banner()
 
         self.appStarted = True
@@ -1096,6 +1102,7 @@ class PyCryptoBot(BotConfig):
 
                     else:
                         tradingData = self.getSmartSwitchDataFrame(
+                            app,
                             tradingData,
                             self.market,
                             self.getGranularity(),
@@ -1121,15 +1128,15 @@ class PyCryptoBot(BotConfig):
                     )
 
                 if banner:
-                    textBox = TextBox(80, 26)
+                    text_box = TextBox(80, 26)
                     startDate = str(startDate.isoformat())
                     endDate = str(endDate.isoformat())
-                    textBox.line("Sampling start", str(startDate))
-                    textBox.line("Sampling end", str(endDate))
+                    text_box.line("Sampling start", str(startDate))
+                    text_box.line("Sampling end", str(endDate))
                     if self.simstartdate != None and len(tradingData) < 300:
-                        textBox.center("WARNING: Using less than 300 intervals")
-                        textBox.line("Interval size", str(len(tradingData)))
-                    textBox.doubleLine()
+                        text_box.center("WARNING: Using less than 300 intervals")
+                        text_box.line("Interval size", str(len(tradingData)))
+                    text_box.doubleLine()
 
             else:
                 tradingData = pd.DataFrame()
@@ -1145,6 +1152,7 @@ class PyCryptoBot(BotConfig):
                     endDate = datetime.now()
 
                 tradingData = self.getSmartSwitchDataFrame(
+                    app,
                     tradingData,
                     self.getMarket(),
                     self.getGranularity(),
@@ -1173,125 +1181,125 @@ class PyCryptoBot(BotConfig):
         self._chat_client.send(msg)
 
     def _generate_banner(self) -> None:
-        textBox = TextBox(80, 26)
-        textBox.singleLine()
-        textBox.center("Python Crypto Bot")
-        textBox.singleLine()
-        textBox.line("Release", self.getVersionFromREADME())
-        textBox.singleLine()
+        text_box = TextBox(80, 26)
+        text_box.singleLine()
+        text_box.center("Python Crypto Bot")
+        text_box.singleLine()
+        text_box.line("Release", self.getVersionFromREADME())
+        text_box.singleLine()
 
         if self.isVerbose():
-            textBox.line("Market", self.getMarket())
-            textBox.line("Granularity", str(self.getGranularity()) + " seconds")
-            textBox.singleLine()
+            text_box.line("Market", self.getMarket())
+            text_box.line("Granularity", str(self.getGranularity()) + " seconds")
+            text_box.singleLine()
 
         if self.isLive():
-            textBox.line("Bot Mode", "LIVE - live trades using your funds!")
+            text_box.line("Bot Mode", "LIVE - live trades using your funds!")
         else:
-            textBox.line("Bot Mode", "TEST - test trades using dummy funds :)")
+            text_box.line("Bot Mode", "TEST - test trades using dummy funds :)")
 
-        textBox.line("Bot Started", str(datetime.now()))
-        textBox.line("Exchange", str(self.exchange))
-        textBox.doubleLine()
+        text_box.line("Bot Started", str(datetime.now()))
+        text_box.line("Exchange", str(self.exchange))
+        text_box.doubleLine()
 
         if self.sellUpperPcnt() != None:
-            textBox.line(
+            text_box.line(
                 "Sell Upper", str(self.sellUpperPcnt()) + "%  --sellupperpcnt  <pcnt>"
             )
 
         if self.sellLowerPcnt() != None:
-            textBox.line(
+            text_box.line(
                 "Sell Lower", str(self.sellLowerPcnt()) + "%  --selllowerpcnt  <pcnt>"
             )
 
         if self.noSellMaxPercent() != None:
-            textBox.line(
+            text_box.line(
                 "No Sell Max",
                 str(self.noSellMaxPercent()) + "%  --nosellmaxpcnt  <pcnt>",
             )
 
         if self.noSellMinPercent() != None:
-            textBox.line(
+            text_box.line(
                 "No Sell Min",
                 str(self.noSellMinPercent()) + "%  --nosellminpcnt  <pcnt>",
             )
 
         if self.trailingStopLoss() != None:
-            textBox.line(
+            text_box.line(
                 "Trailing Stop Loss",
                 str(self.trailingStopLoss()) + "%  --trailingstoploss  <pcnt>",
             )
 
         if self.trailingStopLossTrigger() != None:
-            textBox.line(
+            text_box.line(
                 "Trailing Stop Loss Trg",
                 str(self.trailingStopLossTrigger()) + "%  --trailingstoplosstrigger",
             )
 
-        textBox.line("Sell At Loss", str(self.allowSellAtLoss()) + "  --sellatloss ")
-        textBox.line(
+        text_box.line("Sell At Loss", str(self.allowSellAtLoss()) + "  --sellatloss ")
+        text_box.line(
             "Sell At Resistance", str(self.sellAtResistance()) + "  --sellatresistance"
         )
-        textBox.line(
+        text_box.line(
             "Trade Bull Only", str(not self.disableBullOnly()) + "  --disablebullonly"
         )
-        textBox.line(
+        text_box.line(
             "Allow Buy Near High",
             str(not self.disableBuyNearHigh()) + "  --disablebuynearhigh",
         )
         if self.disableBuyNearHigh():
-            textBox.line(
+            text_box.line(
                 "No Buy Near High Pcnt",
                 str(self.noBuyNearHighPcnt()) + "%  --nobuynearhighpcnt <pcnt>",
             )
-        textBox.line(
+        text_box.line(
             "Use Buy MACD", str(not self.disableBuyMACD()) + "  --disablebuymacd"
         )
-        textBox.line("Use Buy EMA", str(not self.disableBuyEMA()) + "  --disablebuyema")
-        textBox.line("Use Buy OBV", str(not self.disableBuyOBV()) + "  --disablebuyobv")
-        textBox.line(
+        text_box.line("Use Buy EMA", str(not self.disableBuyEMA()) + "  --disablebuyema")
+        text_box.line("Use Buy OBV", str(not self.disableBuyOBV()) + "  --disablebuyobv")
+        text_box.line(
             "Use Buy Elder-Ray",
             str(not self.disableBuyElderRay()) + "  --disablebuyelderray",
         )
-        textBox.line(
+        text_box.line(
             "Sell Fibonacci Low",
             str(not self.disableFailsafeFibonacciLow())
             + "  --disablefailsafefibonaccilow",
         )
 
         if self.sellLowerPcnt() != None:
-            textBox.line(
+            text_box.line(
                 "Sell Lower Pcnt",
                 str(not self.disableFailsafeLowerPcnt())
                 + "  --disablefailsafelowerpcnt",
             )
 
         if self.sellUpperPcnt() != None:
-            textBox.line(
+            text_box.line(
                 "Sell Upper Pcnt",
                 str(not self.disableFailsafeLowerPcnt())
                 + "  --disableprofitbankupperpcnt",
             )
 
-        textBox.line(
+        text_box.line(
             "Candlestick Reversal",
             str(not self.disableProfitbankReversal()) + "  --disableprofitbankreversal",
         )
-        textBox.line("Telegram", str(not self.disabletelegram) + "  --disabletelegram")
-        textBox.line("Log", str(not self.disableLog()) + "  --disablelog")
-        textBox.line("Tracker", str(not self.disableTracker()) + "  --disabletracker")
-        textBox.line("Auto restart Bot", str(self.autoRestart()) + "  --autorestart")
-        textBox.line("Web Socket", str(self.websocket) + "  --websocket")
-        textBox.line("Insufficient Funds Logging", str(self.enableinsufficientfundslogging) + "  --enableinsufficientfundslogging")
+        text_box.line("Telegram", str(not self.disabletelegram) + "  --disabletelegram")
+        text_box.line("Log", str(not self.disableLog()) + "  --disablelog")
+        text_box.line("Tracker", str(not self.disableTracker()) + "  --disabletracker")
+        text_box.line("Auto restart Bot", str(self.autoRestart()) + "  --autorestart")
+        text_box.line("Web Socket", str(self.websocket) + "  --websocket")
+        text_box.line("Insufficient Funds Logging", str(self.enableinsufficientfundslogging) + "  --enableinsufficientfundslogging")
 
         if self.getBuyMaxSize():
-            textBox.line(
+            text_box.line(
                 "Max Buy Size", str(self.getBuyMaxSize()) + "  --buymaxsize <size>"
             )
 
         if self.disablebuyema and self.disablebuymacd:
-            textBox.center(
+            text_box.center(
                 "WARNING : EMA and MACD indicators disabled, no buy events will happen"
             )
 
-        textBox.doubleLine()
+        text_box.doubleLine()

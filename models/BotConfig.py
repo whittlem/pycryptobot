@@ -64,6 +64,7 @@ class BotConfig:
         self.statstartdate = None
         self.statdetail = False
         self.nobuynearhighpcnt = 3
+        self.simresultonly = False
 
         self.disablebullonly = False
         self.disablebuynearhigh = False
@@ -258,7 +259,7 @@ class BotConfig:
                 "api_key": "00000000000000000000000000000000",
                 "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
                 "api_passphrase": "00000000000",
-                "market": "BTC-GBP"
+                "market": "BTC-GBP",
             },
             "dummy": {
                 "api_url": "https://api.pro.coinbase.com",
@@ -328,7 +329,9 @@ class BotConfig:
         )
         parser.add_argument("--live", type=int, help="live=1, test=0")
         parser.add_argument(
-            "--market", type=str, help="coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc."
+            "--market",
+            type=str,
+            help="coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc.",
         )
         parser.add_argument(
             "--sellatloss", type=int, help="toggle if bot should sell at a loss"
@@ -442,6 +445,11 @@ class BotConfig:
             action="store_true",
             help="display detail of completed transactions for a given market",
         )
+        parser.add_argument(
+            "--simresultonly",
+            action="store_true",
+            help="show simulation result only",
+        )
 
         # disable defaults
         parser.add_argument(
@@ -503,11 +511,11 @@ class BotConfig:
             help="binance exchange api recvWindow, integer between 5000 and 60000",
         )
         parser.add_argument(
-            "--enableml", action="store_true", help="Enable Machine Learning E.g. seasonal ARIMA model for predictions"
+            "--enableml",
+            action="store_true",
+            help="Enable Machine Learning E.g. seasonal ARIMA model for predictions",
         )
-        parser.add_argument(
-            "--websocket", action="store_true", help="Enable websocket"
-        )
+        parser.add_argument("--websocket", action="store_true", help="Enable websocket")
 
         # pylint: disable=unused-variable
         args, unknown = parser.parse_known_args()

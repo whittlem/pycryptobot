@@ -279,6 +279,13 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("sellatloss must be of type int")
 
+    if "simresultonly" in config:
+        if isinstance(config["simresultonly"], int):
+            if bool(config["simresultonly"]):
+                app.simresultonly = True
+        else:
+            raise TypeError("simresultonly must be of type int")
+
     if "sellatresistance" in config:
         if isinstance(config["sellatresistance"], int):
             if config["sellatresistance"] in [0, 1]:

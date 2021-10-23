@@ -8,6 +8,10 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [4.3.0] - 2021-10-23
+
+- added --simresultonly option
+
 ## [4.2.1] - 2021-10-19
 
 - fixed TG BOT checking if market/pair already exists before saving
