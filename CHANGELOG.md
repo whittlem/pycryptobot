@@ -10,7 +10,7 @@ Upgrade library dependencies (if required):
 
 ## [4.3.0] - 2021-10-23
 
-- added --simresultonly option
+- formatting CHANGELOG.md
 
 ## [4.2.1] - 2021-10-19
 
