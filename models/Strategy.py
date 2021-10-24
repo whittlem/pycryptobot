@@ -294,7 +294,8 @@ class Strategy:
             log_text = (
                 f"! Profit Bank Triggered (> {str(self.app.sellUpperPcnt())}%)"
             )
-            Logger.warning(log_text)
+            if not app.isSimulation() or (app.isSimulation() and not app.simResultOnly()):
+                Logger.warning(log_text)
             self.app.notifyTelegram(f"{self.app.getMarket()} ({self.app.printGranularity()}) {log_text}")
             return True
 
@@ -319,7 +320,8 @@ class Strategy:
             and (self.app.allowSellAtLoss() or margin > 0)
         ):
             log_text = "! Profit Bank Triggered (Selling At Resistance)"
-            Logger.warning(log_text)
+            if not app.isSimulation() or (app.isSimulation() and not app.simResultOnly()):
+                Logger.warning(log_text)
             if not (not self.app.allowSellAtLoss() and margin <= 0):
                 self.app.notifyTelegram(f"{self.app.getMarket()} ({self.app.printGranularity()}) {log_text}")
             return True
