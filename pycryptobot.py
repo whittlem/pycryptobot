@@ -9,8 +9,8 @@ import sched
 import sys
 import time
 import signal
+import json
 from datetime import datetime
-
 import pandas as pd
 
 from models.AppState import AppState
@@ -47,22 +47,24 @@ s = sched.scheduler(time.time, time.sleep)
 def signal_handler(signum, frame):
     if signum == 2:
         print("Please be patient while websockets terminate!")
+        Logger.debug(frame)
         return
 
 
 def executeJob(
     sc=None,
-    app: PyCryptoBot = None,
-    state: AppState = None,
-    websocket=None,
-    trading_data=pd.DataFrame(),
+    _app: PyCryptoBot = None,
+    _state: AppState = None,
+    _technical_analysis=None,
+    _websocket=None,
+    trading_data=pd.DataFrame()
 ):
     """Trading bot job which runs at a scheduled interval"""
 
     # This is used to control some API calls when using websockets
-    last_api_call_datetime = datetime.now() - state.last_api_call_datetime
+    last_api_call_datetime = datetime.now() - _state.last_api_call_datetime
     if last_api_call_datetime.seconds > 60:
-        state.last_api_call_datetime = datetime.now()
+        _state.last_api_call_datetime = datetime.now()
 
     # This is used by the telegram bot
     # If it not enabled in config while will always be False
@@ -70,7 +72,7 @@ def executeJob(
     while controlstatus == "pause" or controlstatus == "paused":
         if controlstatus == "pause":
             print(str(datetime.now()).format() + " - Bot is paused")
-            app.notifyTelegram(f"{app.getMarket()} bot is paused")
+            _app.notifyTelegram(f"{_app.getMarket()} bot is paused")
             telegram_bot.updatebotstatus("paused")
 
         time.sleep(30)
@@ -78,33 +80,31 @@ def executeJob(
 
     if controlstatus == "start":
         print(str(datetime.now()).format() + " - Bot has restarted")
-        app.notifyTelegram(f"{app.getMarket()} bot has restarted")
+        _app.notifyTelegram(f"{_app.getMarket()} bot has restarted")
         telegram_bot.updatebotstatus("active")
 
     if controlstatus == "exit":
-        app.notifyTelegram(f"{app.getMarket()} bot is stopping")
+        _app.notifyTelegram(f"{_app.getMarket()} bot is stopping")
         sys.exit(0)
 
-    global technical_analysis
-
-    # reset websocket every 23 hours if applicable
-    if app.enableWebsocket() and not app.isSimulation():
-        if websocket.getTimeElapsed() > 82800:
+    # reset _websocket every 23 hours if applicable
+    if _app.enableWebsocket() and not _app.isSimulation():
+        if _websocket.getTimeElapsed() > 82800:
             Logger.info("Websocket requires a restart every 23 hours!")
-            Logger.info("Stopping websocket...")
-            websocket.close()
-            Logger.info("Starting websocket...")
-            websocket.start()
+            Logger.info("Stopping _websocket...")
+            _websocket.close()
+            Logger.info("Starting _websocket...")
+            _websocket.start()
             Logger.info("Restarting job in 30 seconds...")
-            s.enter(30, 1, executeJob, (sc, app, state, websocket))
+            s.enter(30, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
 
-    # increment state.iterations
-    state.iterations = state.iterations + 1
+    # increment _state.iterations
+    _state.iterations = _state.iterations + 1
 
-    if not app.isSimulation():
-        # retrieve the app.getMarket() data
-        trading_data = app.getHistoricalData(
-            app.getMarket(), app.getGranularity(), websocket
+    if not _app.isSimulation():
+        # retrieve the _app.getMarket() data
+        trading_data = _app.getHistoricalData(
+            _app.getMarket(), _app.getGranularity(), _websocket
         )
 
     else:
@@ -112,105 +112,106 @@ def executeJob(
             return None
 
     # analyse the market data
-    if app.isSimulation() and len(trading_data.columns) > 8:
+    if _app.isSimulation() and len(trading_data.columns) > 8:
         df = trading_data
-        if app.appStarted and app.simstartdate is not None:
+        if _app.appStarted and _app.simstartdate is not None:
             # On first run set the iteration to the start date entered
             # This sim mode now pulls 300 candles from before the entered start date
-            state.iterations = (
-                df.index.get_loc(str(app.getDateFromISO8601Str(app.simstartdate))) + 1
+            _state.iterations = (
+                df.index.get_loc(str(_app.getDateFromISO8601Str(_app.simstartdate))) + 1
             )
-            app.appStarted = False
+            _app.appStarted = False
         # if smartswitch then get the market data using new granularity
-        if app.sim_smartswitch:
-            df_last = app.getInterval(df, state.iterations)
+        if _app.sim_smartswitch:
+            df_last = _app.getInterval(df, _state.iterations)
             if len(df_last.index.format()) > 0:
-                if app.simstartdate is not None:
-                    startDate = app.getDateFromISO8601Str(app.simstartdate)
+                if _app.simstartdate is not None:
+                    startDate = _app.getDateFromISO8601Str(_app.simstartdate)
                 else:
-                    startDate = app.getDateFromISO8601Str(
+                    startDate = _app.getDateFromISO8601Str(
                         str(df.head(1).index.format()[0])
                     )
 
-                if app.simenddate is not None:
-                    if app.simenddate == "now":
-                        endDate = app.getDateFromISO8601Str(str(datetime.now()))
+                if _app.simenddate is not None:
+                    if _app.simenddate == "now":
+                        endDate = _app.getDateFromISO8601Str(str(datetime.now()))
                     else:
-                        endDate = app.getDateFromISO8601Str(app.simenddate)
+                        endDate = _app.getDateFromISO8601Str(_app.simenddate)
                 else:
-                    endDate = app.getDateFromISO8601Str(
+                    endDate = _app.getDateFromISO8601Str(
                         str(df.tail(1).index.format()[0])
                     )
 
-                simDate = app.getDateFromISO8601Str(str(state.last_df_index))
+                simDate = _app.getDateFromISO8601Str(str(_state.last_df_index))
 
-                trading_data = app.getSmartSwitchHistoricalDataChained(
-                    app.getMarket(), app.getGranularity(), str(startDate), str(endDate)
+                trading_data = _app.getSmartSwitchHistoricalDataChained(
+                    app,
+                    str(startDate),
+                    str(endDate),
                 )
 
-                if app.getGranularity() == 3600:
-                    simDate = app.getDateFromISO8601Str(str(simDate))
+                if _app.getGranularity() == 3600:
+                    simDate = _app.getDateFromISO8601Str(str(simDate))
                     sim_rounded = pd.Series(simDate).dt.round("60min")
                     simDate = sim_rounded[0]
-                elif app.getGranularity() == 900:
-                    simDate = app.getDateFromISO8601Str(str(simDate))
+                elif _app.getGranularity() == 900:
+                    simDate = _app.getDateFromISO8601Str(str(simDate))
                     sim_rounded = pd.Series(simDate).dt.round("15min")
                     simDate = sim_rounded[0]
 
-                state.iterations = trading_data.index.get_loc(str(simDate)) + 1
+                _state.iterations = trading_data.index.get_loc(str(simDate)) + 1
 
                 if (
-                    app.getDateFromISO8601Str(str(simDate)).isoformat()
-                    == app.getDateFromISO8601Str(str(state.last_df_index)).isoformat()
+                    _app.getDateFromISO8601Str(str(simDate)).isoformat()
+                    == _app.getDateFromISO8601Str(str(_state.last_df_index)).isoformat()
                 ):
-                    state.iterations += 1
+                    _state.iterations += 1
 
-                if state.iterations == 0:
-                    state.iterations = 1
+                if _state.iterations == 0:
+                    _state.iterations = 1
 
                 trading_dataCopy = trading_data.copy()
-                technical_analysis = TechnicalAnalysis(trading_dataCopy)
+                _technical_analysis = TechnicalAnalysis(trading_dataCopy)
 
                 # if 'morning_star' not in df:
-                technical_analysis.addAll()
+                _technical_analysis.addAll()
 
-                df = technical_analysis.getDataFrame()
+                df = _technical_analysis.getDataFrame()
 
-                app.sim_smartswitch = False
+                _app.sim_smartswitch = False
 
-        elif app.getSmartSwitch() == 1 and technical_analysis is None:
+        elif _app.getSmartSwitch() == 1 and _technical_analysis is None:
             trading_dataCopy = trading_data.copy()
-            technical_analysis = TechnicalAnalysis(trading_dataCopy)
+            _technical_analysis = TechnicalAnalysis(trading_dataCopy)
 
             if "morning_star" not in df:
-                technical_analysis.addAll()
+                _technical_analysis.addAll()
 
-            df = technical_analysis.getDataFrame()
+            df = _technical_analysis.getDataFrame()
 
     else:
-
         trading_dataCopy = trading_data.copy()
-        technical_analysis = TechnicalAnalysis(trading_dataCopy)
-        technical_analysis.addAll()
-        df = technical_analysis.getDataFrame()
+        _technical_analysis = TechnicalAnalysis(trading_dataCopy)
+        _technical_analysis.addAll()
+        df = _technical_analysis.getDataFrame()
 
-        if app.isSimulation() and app.appStarted:
+        if _app.isSimulation() and _app.appStarted:
             # On first run set the iteration to the start date entered
             # This sim mode now pulls 300 candles from before the entered start date
-            state.iterations = (
-                df.index.get_loc(str(app.getDateFromISO8601Str(app.simstartdate))) + 1
+            _state.iterations = (
+                df.index.get_loc(str(_app.getDateFromISO8601Str(_app.simstartdate))) + 1
             )
-            app.appStarted = False
+            _app.appStarted = False
 
-    if app.isSimulation():
-        df_last = app.getInterval(df, state.iterations)
+    if _app.isSimulation():
+        df_last = _app.getInterval(df, _state.iterations)
     else:
-        df_last = app.getInterval(df)
+        df_last = _app.getInterval(df)
 
     if len(df_last.index.format()) > 0:
         current_df_index = str(df_last.index.format()[0])
     else:
-        current_df_index = state.last_df_index
+        current_df_index = _state.last_df_index
 
     formatted_current_df_index = (
         f"{current_df_index} 00:00:00"
@@ -223,86 +224,88 @@ def executeJob(
     # use actual sim mode date to check smartchswitch
     if (
         last_api_call_datetime.seconds > 60
-        and app.getSmartSwitch() == 1
-        and app.getGranularity() == 3600
-        and app.is1hEMA1226Bull(current_sim_date, websocket) is True
-        and app.is6hEMA1226Bull(current_sim_date, websocket) is True
+        and _app.getSmartSwitch() == 1
+        and _app.getGranularity() == 3600
+        and _app.is1hEMA1226Bull(current_sim_date, _websocket) is True
+        and _app.is6hEMA1226Bull(current_sim_date, _websocket) is True
     ):
-        Logger.info(
-            "*** smart switch from granularity 3600 (1 hour) to 900 (15 min) ***"
-        )
+        if not _app.isSimulation() or (_app.isSimulation() and not _app.simResultOnly()):
+            Logger.info(
+                "*** smart switch from granularity 3600 (1 hour) to 900 (15 min) ***"
+            )
 
-        if app.isSimulation():
-            app.sim_smartswitch = True
+        if _app.isSimulation():
+            _app.sim_smartswitch = True
 
-        app.notifyTelegram(
-            app.getMarket()
+        _app.notifyTelegram(
+            _app.getMarket()
             + " smart switch from granularity 3600 (1 hour) to 900 (15 min)"
         )
 
-        app.setGranularity(900)
+        _app.setGranularity(900)
         list(map(s.cancel, s.queue))
-        s.enter(5, 1, executeJob, (sc, app, state, websocket))
+        s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
 
     # use actual sim mode date to check smartchswitch
     if (
         last_api_call_datetime.seconds > 60
-        and app.getSmartSwitch() == 1
-        and app.getGranularity() == 900
-        and app.is1hEMA1226Bull(current_sim_date, websocket) is False
-        and app.is6hEMA1226Bull(current_sim_date, websocket) is False
+        and _app.getSmartSwitch() == 1
+        and _app.getGranularity() == 900
+        and _app.is1hEMA1226Bull(current_sim_date, _websocket) is False
+        and _app.is6hEMA1226Bull(current_sim_date, _websocket) is False
     ):
-        Logger.info(
-            "*** smart switch from granularity 900 (15 min) to 3600 (1 hour) ***"
+        if not _app.isSimulation() or (_app.isSimulation() and not _app.simResultOnly()):
+            Logger.info(
+                "*** smart switch from granularity 900 (15 min) to 3600 (1 hour) ***"
+            )
+
+        if _app.isSimulation():
+            _app.sim_smartswitch = True
+
+        _app.notifyTelegram(
+            f"{_app.getMarket()} smart switch from granularity 900 (15 min) to 3600 (1 hour)"
         )
 
-        if app.isSimulation():
-            app.sim_smartswitch = True
-
-        app.notifyTelegram(
-            f"{app.getMarket()} smart switch from granularity 900 (15 min) to 3600 (1 hour)"
-        )
-
-        app.setGranularity(3600)
+        _app.setGranularity(3600)
         list(map(s.cancel, s.queue))
-        s.enter(5, 1, executeJob, (sc, app, state, websocket))
+        s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
 
-    if app.getExchange() == "binance" and app.getGranularity() == 86400:
+    if _app.getExchange() == "binance" and _app.getGranularity() == 86400:
         if len(df) < 250:
             # data frame should have 250 rows, if not retry
             Logger.error(f"error: data frame length is < 250 ({str(len(df))})")
             list(map(s.cancel, s.queue))
-            s.enter(300, 1, executeJob, (sc, app, state, websocket))
+            s.enter(300, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
     else:
         if len(df) < 300:
-            if not app.isSimulation():
+            if not _app.isSimulation():
                 # data frame should have 300 rows, if not retry
                 Logger.error(f"error: data frame length is < 300 ({str(len(df))})")
                 list(map(s.cancel, s.queue))
-                s.enter(300, 1, executeJob, (sc, app, state, websocket))
+                s.enter(300, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
 
     if len(df_last) > 0:
         now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
         # last_action polling if live
-        if app.isLive():
-            last_action_current = state.last_action
+        if _app.isLive():
+            last_action_current = _state.last_action
             # If using websockets make this call every minute instead of each iteration
-            if app.enableWebsocket() and not app.isSimulation():
+            if _app.enableWebsocket() and not _app.isSimulation():
                 if last_api_call_datetime.seconds > 60:
-                    state.pollLastAction()
+                    _state.pollLastAction()
             else:
-                state.pollLastAction()
-            if last_action_current != state.last_action:
+                _state.pollLastAction()
+            if last_action_current != _state.last_action:
                 Logger.info(
-                    f"last_action change detected from {last_action_current} to {state.last_action}"
+                    f"last_action change detected from {last_action_current} to {_state.last_action}"
                 )
-                app.notifyTelegram(
-                    f"{app.getMarket} last_action change detected from {last_action_current} to {state.last_action}"
+                _app.notifyTelegram(
+                    f"{_app.getMarket} last_action change detected from {last_action_current} to {_state.last_action}"
                 )
 
-        if not app.isSimulation():
-            ticker = app.getTicker(app.getMarket(), websocket)
+        if not _app.isSimulation():
+            ticker = _app.getTicker(_app.getMarket(), _websocket)
             now = ticker[0]
             price = ticker[1]
             if price < df_last["low"].values[0] or price == 0:
@@ -312,7 +315,7 @@ def executeJob(
 
         if price < 0.000001:
             raise Exception(
-                f"{app.getMarket()} is unsuitable for trading, quote price is less than 0.000001!"
+                f"{_app.getMarket()} is unsuitable for trading, quote price is less than 0.000001!"
             )
 
         # technical indicators
@@ -331,8 +334,8 @@ def executeJob(
         elder_ray_sell = bool(df_last["eri_sell"].values[0])
 
         # if simulation, set goldencross based on actual sim date
-        if app.isSimulation():
-            goldencross = app.is1hSMA50200Bull(current_sim_date, websocket)
+        if _app.isSimulation():
+            goldencross = _app.is1hSMA50200Bull(current_sim_date, _websocket)
 
         # candlestick detection
         hammer = bool(df_last["hammer"].values[0])
@@ -350,124 +353,125 @@ def executeJob(
         two_black_gapping = bool(df_last["two_black_gapping"].values[0])
 
         # Log data for Telegram Bot
-        if not app.disableBuyElderRay():
+        if not _app.disableBuyElderRay():
             telegram_bot.addindicators("ERI", elder_ray_buy)
-        if app.disableBullOnly() or (
+        if _app.disableBullOnly() or (
             df_last["sma50"].values[0] == df_last["sma200"].values[0]
         ):
             telegram_bot.addindicators("BULL", goldencross)
-        if not app.disableBuyEMA():
+        if not _app.disableBuyEMA():
             telegram_bot.addindicators("EMA", ema12gtema26co or ema12ltema26)
-        if not app.disableBuyMACD():
+        if not _app.disableBuyMACD():
             telegram_bot.addindicators("MACD", macdgtsignal or macdgtsignalco)
-        if not app.disableBuyOBV():
+        if not _app.disableBuyOBV():
             telegram_bot.addindicators("OBV", float(obv_pc) > 0)
 
-        if app.isSimulation():
+        if _app.isSimulation():
             # Reset the Strategy so that the last record is the current sim date
             # To allow for calculations to be done on the sim date being processed
             sdf = df[df["date"] <= current_sim_date].tail(300)
             strategy = Strategy(
-                app, state, sdf, sdf.index.get_loc(str(current_sim_date)) + 1
+                _app, _state, sdf, sdf.index.get_loc(str(current_sim_date)) + 1
             )
         else:
-            strategy = Strategy(app, state, df, state.iterations)
+            strategy = Strategy(_app, _state, df, _state.iterations)
 
-        state.action = strategy.getAction(app, price, current_sim_date)
+        _state.action = strategy.getAction(_app, price, current_sim_date)
 
         immediate_action = False
         margin, profit, sell_fee = 0, 0, 0
 
         # Reset the TA so that the last record is the current sim date
         # To allow for calculations to be done on the sim date being processed
-        if app.isSimulation():
+        if _app.isSimulation():
             trading_dataCopy = (
                 trading_data[trading_data["date"] <= current_sim_date].tail(300).copy()
             )
-            technical_analysis = TechnicalAnalysis(trading_dataCopy)
+            _technical_analysis = TechnicalAnalysis(trading_dataCopy)
 
         if (
-            state.last_buy_size > 0
-            and state.last_buy_price > 0
+            _state.last_buy_size > 0
+            and _state.last_buy_price > 0
             and price > 0
-            and state.last_action == "BUY"
+            and _state.last_action == "BUY"
         ):
             # update last buy high
-            if price > state.last_buy_high:
-                state.last_buy_high = price
+            if price > _state.last_buy_high:
+                _state.last_buy_high = price
 
-            if state.last_buy_high > 0:
-                change_pcnt_high = ((price / state.last_buy_high) - 1) * 100
+            if _state.last_buy_high > 0:
+                change_pcnt_high = ((price / _state.last_buy_high) - 1) * 100
             else:
                 change_pcnt_high = 0
 
             # buy and sell calculations
-            state.last_buy_fee = round(state.last_buy_size * app.getTakerFee(), 8)
-            state.last_buy_filled = round(
-                ((state.last_buy_size - state.last_buy_fee) / state.last_buy_price), 8
+            _state.last_buy_fee = round(_state.last_buy_size * _app.getTakerFee(), 8)
+            _state.last_buy_filled = round(
+                ((_state.last_buy_size - _state.last_buy_fee) / _state.last_buy_price),
+                8,
             )
 
             # if not a simulation, sync with exchange orders
-            if not app.isSimulation():
-                if app.enableWebsocket():
+            if not _app.isSimulation():
+                if _app.enableWebsocket():
                     if last_api_call_datetime.seconds > 60:
-                        state.exchange_last_buy = app.getLastBuy()
+                        _state.exchange_last_buy = _app.getLastBuy()
                 else:
-                    state.exchange_last_buy = app.getLastBuy()
-                exchange_last_buy = state.exchange_last_buy
+                    _state.exchange_last_buy = _app.getLastBuy()
+                exchange_last_buy = _state.exchange_last_buy
                 if exchange_last_buy is not None:
-                    if state.last_buy_size != exchange_last_buy["size"]:
-                        state.last_buy_size = exchange_last_buy["size"]
-                    if state.last_buy_filled != exchange_last_buy["filled"]:
-                        state.last_buy_filled = exchange_last_buy["filled"]
-                    if state.last_buy_price != exchange_last_buy["price"]:
-                        state.last_buy_price = exchange_last_buy["price"]
+                    if _state.last_buy_size != exchange_last_buy["size"]:
+                        _state.last_buy_size = exchange_last_buy["size"]
+                    if _state.last_buy_filled != exchange_last_buy["filled"]:
+                        _state.last_buy_filled = exchange_last_buy["filled"]
+                    if _state.last_buy_price != exchange_last_buy["price"]:
+                        _state.last_buy_price = exchange_last_buy["price"]
 
                     if (
-                        app.getExchange() == "coinbasepro"
-                        or app.getExchange() == "kucoin"
+                        _app.getExchange() == "coinbasepro"
+                        or _app.getExchange() == "kucoin"
                     ):
-                        if state.last_buy_fee != exchange_last_buy["fee"]:
-                            state.last_buy_fee = exchange_last_buy["fee"]
+                        if _state.last_buy_fee != exchange_last_buy["fee"]:
+                            _state.last_buy_fee = exchange_last_buy["fee"]
 
             margin, profit, sell_fee = calculate_margin(
-                buy_size=state.last_buy_size,
-                buy_filled=state.last_buy_filled,
-                buy_price=state.last_buy_price,
-                buy_fee=state.last_buy_fee,
-                sell_percent=app.getSellPercent(),
+                buy_size=_state.last_buy_size,
+                buy_filled=_state.last_buy_filled,
+                buy_price=_state.last_buy_price,
+                buy_fee=_state.last_buy_fee,
+                sell_percent=_app.getSellPercent(),
                 sell_price=price,
-                sell_taker_fee=app.getTakerFee(),
+                sell_taker_fee=_app.getTakerFee(),
             )
 
             # handle immediate sell actions
             if strategy.isSellTrigger(
-                app,
+                _app,
                 price,
-                technical_analysis.getTradeExit(price),
+                _technical_analysis.getTradeExit(price),
                 margin,
                 change_pcnt_high,
                 obv_pc,
                 macdltsignal,
             ):
-                state.action = "SELL"
-                state.last_action = "BUY"
+                _state.action = "SELL"
+                _state.last_action = "BUY"
                 immediate_action = True
 
             # handle overriding wait actions (e.g. do not sell if sell at loss disabled!, do not buy in bull if bull only)
-            if strategy.isWaitTrigger(app, margin, goldencross):
-                state.action = "WAIT"
+            if strategy.isWaitTrigger(_app, margin, goldencross):
+                _state.action = "WAIT"
                 immediate_action = False
 
-        if state.action == "WAIT":
+        if _state.action == "WAIT":
             manual_buy_sell = telegram_bot.checkmanualbuysell()
             if not manual_buy_sell == "WAIT":
-                state.action = manual_buy_sell
-                state.last_action = "BUY" if state.action == "SELL" else "SELL"
+                _state.action = manual_buy_sell
+                _state.last_action = "BUY" if _state.action == "SELL" else "SELL"
                 immediate_action = True
 
         bullbeartext = ""
-        if app.disableBullOnly() is True or (
+        if _app.disableBullOnly() is True or (
             df_last["sma50"].values[0] == df_last["sma200"].values[0]
         ):
             bullbeartext = ""
@@ -477,8 +481,8 @@ def executeJob(
             bullbeartext = " (BEAR)"
 
         # polling is every 5 minutes (even for hourly intervals), but only process once per interval
-        # Logger.debug("DateCheck: " + str(immediate_action) + ' ' + str(state.last_df_index) + ' ' + str(current_df_index))
-        if immediate_action is True or state.last_df_index != current_df_index:
+        # Logger.debug("DateCheck: " + str(immediate_action) + ' ' + str(_state.last_df_index) + ' ' + str(current_df_index))
+        if immediate_action is True or _state.last_df_index != current_df_index:
             text_box = TextBox(80, 22)
 
             precision = 4
@@ -492,8 +496,8 @@ def executeJob(
 
             price_text = "Close: " + str(price)
             ema_text = ""
-            if app.disableBuyEMA() is False:
-                ema_text = app.compare(
+            if _app.disableBuyEMA() is False:
+                ema_text = _app.compare(
                     df_last["ema12"].values[0],
                     df_last["ema26"].values[0],
                     "EMA12/26",
@@ -501,8 +505,8 @@ def executeJob(
                 )
 
             macd_text = ""
-            if app.disableBuyMACD() is False:
-                macd_text = app.compare(
+            if _app.disableBuyMACD() is False:
+                macd_text = _app.compare(
                     df_last["macd"].values[0],
                     df_last["signal"].values[0],
                     "MACD",
@@ -510,7 +514,7 @@ def executeJob(
                 )
 
             obv_text = ""
-            if app.disableBuyOBV() is False:
+            if _app.disableBuyOBV() is False:
                 obv_text = (
                     "OBV: "
                     + truncate(df_last["obv"].values[0])
@@ -519,109 +523,109 @@ def executeJob(
                     + "%)"
                 )
 
-            state.eri_text = ""
-            if app.disableBuyElderRay() is False:
+            _state.eri_text = ""
+            if _app.disableBuyElderRay() is False:
                 if elder_ray_buy is True:
-                    state.eri_text = "ERI: buy | "
+                    _state.eri_text = "ERI: buy | "
                 elif elder_ray_sell is True:
-                    state.eri_text = "ERI: sell | "
+                    _state.eri_text = "ERI: sell | "
                 else:
-                    state.eri_text = "ERI: | "
+                    _state.eri_text = "ERI: | "
 
             if hammer is True:
                 log_text = '* Candlestick Detected: Hammer ("Weak - Reversal - Bullish Signal - Up")'
-                if not app.isSimulation() or (
-                    app.isSimulation() and not app.simResultOnly()
+                if not _app.isSimulation() or (
+                    _app.isSimulation() and not _app.simResultOnly()
                 ):
                     Logger.info(log_text)
 
             if shooting_star is True:
                 log_text = '* Candlestick Detected: Shooting Star ("Weak - Reversal - Bearish Pattern - Down")'
-                if not app.isSimulation() or (
-                    app.isSimulation() and not app.simResultOnly()
+                if not _app.isSimulation() or (
+                    _app.isSimulation() and not _app.simResultOnly()
                 ):
                     Logger.info(log_text)
 
             if hanging_man is True:
                 log_text = '* Candlestick Detected: Hanging Man ("Weak - Continuation - Bearish Pattern - Down")'
-                if not app.isSimulation() or (
-                    app.isSimulation() and not app.simResultOnly()
+                if not _app.isSimulation() or (
+                    _app.isSimulation() and not _app.simResultOnly()
                 ):
                     Logger.info(log_text)
 
             if inverted_hammer is True:
                 log_text = '* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Pattern - Up")'
-                if not app.isSimulation() or (
-                    app.isSimulation() and not app.simResultOnly()
+                if not _app.isSimulation() or (
+                    _app.isSimulation() and not _app.simResultOnly()
                 ):
                     Logger.info(log_text)
 
             if three_white_soldiers is True:
                 log_text = '*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Bullish Pattern - Up")'
-                if not app.isSimulation() or (
-                    app.isSimulation() and not app.simResultOnly()
+                if not _app.isSimulation() or (
+                    _app.isSimulation() and not _app.simResultOnly()
                 ):
                     Logger.info(log_text)
 
             if three_black_crows is True:
                 log_text = '* Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Pattern - Down")'
-                if not app.isSimulation() or (
-                    app.isSimulation() and not app.simResultOnly()
+                if not _app.isSimulation() or (
+                    _app.isSimulation() and not _app.simResultOnly()
                 ):
                     Logger.info(log_text)
 
             if morning_star is True:
                 log_text = '*** Candlestick Detected: Morning Star ("Strong - Reversal - Bullish Pattern - Up")'
-                if not app.isSimulation() or (
-                    app.isSimulation() and not app.simResultOnly()
+                if not _app.isSimulation() or (
+                    _app.isSimulation() and not _app.simResultOnly()
                 ):
                     Logger.info(log_text)
 
             if evening_star is True:
                 log_text = '*** Candlestick Detected: Evening Star ("Strong - Reversal - Bearish Pattern - Down")'
-                if not app.isSimulation() or (
-                    app.isSimulation() and not app.simResultOnly()
+                if not _app.isSimulation() or (
+                    _app.isSimulation() and not _app.simResultOnly()
                 ):
                     Logger.info(log_text)
 
             if three_line_strike is True:
                 log_text = '** Candlestick Detected: Three Line Strike ("Reliable - Reversal - Bullish Pattern - Up")'
-                if not app.isSimulation() or (
-                    app.isSimulation() and not app.simResultOnly()
+                if not _app.isSimulation() or (
+                    _app.isSimulation() and not _app.simResultOnly()
                 ):
                     Logger.info(log_text)
 
             if abandoned_baby is True:
                 log_text = '** Candlestick Detected: Abandoned Baby ("Reliable - Reversal - Bullish Pattern - Up")'
-                if not app.isSimulation() or (
-                    app.isSimulation() and not app.simResultOnly()
+                if not _app.isSimulation() or (
+                    _app.isSimulation() and not _app.simResultOnly()
                 ):
                     Logger.info(log_text)
 
             if morning_doji_star is True:
                 log_text = '** Candlestick Detected: Morning Doji Star ("Reliable - Reversal - Bullish Pattern - Up")'
-                if not app.isSimulation() or (
-                    app.isSimulation() and not app.simResultOnly()
+                if not _app.isSimulation() or (
+                    _app.isSimulation() and not _app.simResultOnly()
                 ):
                     Logger.info(log_text)
 
             if evening_doji_star is True:
                 log_text = '** Candlestick Detected: Evening Doji Star ("Reliable - Reversal - Bearish Pattern - Down")'
-                if not app.isSimulation() or (
-                    app.isSimulation() and not app.simResultOnly()
+                if not _app.isSimulation() or (
+                    _app.isSimulation() and not _app.simResultOnly()
                 ):
                     Logger.info(log_text)
 
             if two_black_gapping is True:
                 log_text = '*** Candlestick Detected: Two Black Gapping ("Reliable - Reversal - Bearish Pattern - Down")'
-                if not app.isSimulation() or (
-                    app.isSimulation() and not app.simResultOnly()
+                if not _app.isSimulation() or (
+                    _app.isSimulation() and not _app.simResultOnly()
                 ):
                     Logger.info(log_text)
 
             ema_co_prefix = ""
             ema_co_suffix = ""
-            if app.disableBuyEMA() is False:
+            if _app.disableBuyEMA() is False:
                 if ema12gtema26co is True:
                     ema_co_prefix = "*^ "
                     ema_co_suffix = " ^* | "
@@ -637,7 +641,7 @@ def executeJob(
 
             macd_co_prefix = ""
             macd_co_suffix = ""
-            if app.disableBuyMACD() is False:
+            if _app.disableBuyMACD() is False:
                 if macdgtsignalco is True:
                     macd_co_prefix = "*^ "
                     macd_co_suffix = " ^* | "
@@ -653,7 +657,7 @@ def executeJob(
 
             obv_prefix = ""
             obv_suffix = ""
-            if app.disableBuyOBV() is False:
+            if _app.disableBuyOBV() is False:
                 if float(obv_pc) > 0:
                     obv_prefix = "^ "
                     obv_suffix = " ^ | "
@@ -663,18 +667,18 @@ def executeJob(
                 else:
                     obv_suffix = " | "
 
-            if not app.isVerbose():
-                if state.last_action != "":
+            if not _app.isVerbose():
+                if _state.last_action != "":
                     # Not sure if this if is needed just preserving any existing functionality that may have been missed
                     # Updated to show over margin and profit
-                    if not app.isSimulation():
+                    if not _app.isSimulation():
                         output_text = (
                             formatted_current_df_index
                             + " | "
-                            + app.getMarket()
+                            + _app.getMarket()
                             + bullbeartext
                             + " | "
-                            + app.printGranularity()
+                            + _app.printGranularity()
                             + " | "
                             + price_text
                             + " | "
@@ -687,10 +691,10 @@ def executeJob(
                             + obv_prefix
                             + obv_text
                             + obv_suffix
-                            + state.eri_text
-                            + state.action
+                            + _state.eri_text
+                            + _state.action
                             + " | Last Action: "
-                            + state.last_action
+                            + _state.last_action
                             + " | DF HIGH: "
                             + str(df["close"].max())
                             + " | "
@@ -729,10 +733,10 @@ def executeJob(
                         output_text = (
                             formatted_current_df_index
                             + " | "
-                            + app.getMarket()
+                            + _app.getMarket()
                             + bullbeartext
                             + " | "
-                            + app.printGranularity()
+                            + _app.printGranularity()
                             + " | "
                             + price_text
                             + " | "
@@ -745,10 +749,10 @@ def executeJob(
                             + obv_prefix
                             + obv_text
                             + obv_suffix
-                            + state.eri_text
-                            + state.action
+                            + _state.eri_text
+                            + _state.action
                             + " | Last Action: "
-                            + state.last_action
+                            + _state.last_action
                             + " | DF HIGH: "
                             + str(df_high)
                             + " | "
@@ -761,19 +765,19 @@ def executeJob(
                             + str(round(((price - df_high) / df_high) * 100, 2))
                             + "% "
                             + "away from DF HIGH | Range: "
-                            + str(df.iloc[state.iterations - 300, 0])
+                            + str(df.iloc[_state.iterations - 300, 0])
                             + " <--> "
-                            + str(df.iloc[state.iterations - 1, 0])
+                            + str(df.iloc[_state.iterations - 1, 0])
                         )
                 else:
-                    if not app.isSimulation:
+                    if not _app.isSimulation:
                         output_text = (
                             formatted_current_df_index
                             + " | "
-                            + app.getMarket()
+                            + _app.getMarket()
                             + bullbeartext
                             + " | "
-                            + app.printGranularity()
+                            + _app.printGranularity()
                             + " | "
                             + price_text
                             + " | "
@@ -786,8 +790,8 @@ def executeJob(
                             + obv_prefix
                             + obv_text
                             + obv_suffix
-                            + state.eri_text
-                            + state.action
+                            + _state.eri_text
+                            + _state.action
                             + " | DF HIGH: "
                             + str(df["close"].max())
                             + " | "
@@ -826,10 +830,10 @@ def executeJob(
                         output_text = (
                             formatted_current_df_index
                             + " | "
-                            + app.getMarket()
+                            + _app.getMarket()
                             + bullbeartext
                             + " | "
-                            + app.printGranularity()
+                            + _app.printGranularity()
                             + " | "
                             + price_text
                             + " | "
@@ -842,8 +846,8 @@ def executeJob(
                             + obv_prefix
                             + obv_text
                             + obv_suffix
-                            + state.eri_text
-                            + state.action
+                            + _state.eri_text
+                            + _state.action
                             + " | DF HIGH: "
                             + str(df_high)
                             + " | "
@@ -856,12 +860,12 @@ def executeJob(
                             + str(round(((price - df_high) / df_high) * 100, 2))
                             + "% "
                             + "away from DF HIGH | Range: "
-                            + str(df.iloc[state.iterations - 300, 0])
+                            + str(df.iloc[_state.iterations - 300, 0])
                             + " <--> "
-                            + str(df.iloc[state.iterations - 1, 0])
+                            + str(df.iloc[_state.iterations - 1, 0])
                         )
-                if state.last_action == "BUY":
-                    if state.last_buy_size > 0:
+                if _state.last_action == "BUY":
+                    if _state.last_buy_size > 0:
                         margin_text = truncate(margin) + "%"
                     else:
                         margin_text = "0%"
@@ -870,46 +874,47 @@ def executeJob(
                         " | "
                         + margin_text
                         + " (delta: "
-                        + str(round(price - state.last_buy_price, precision))
+                        + str(round(price - _state.last_buy_price, precision))
                         + ")"
                     )
 
-                if not app.isSimulation() or (
-                    app.isSimulation() and not app.simResultOnly()
+                if not _app.isSimulation() or (
+                    _app.isSimulation() and not _app.simResultOnly()
                 ):
                     Logger.info(output_text)
 
-                if app.enableML():
+                if _app.enableML():
                     # Seasonal Autoregressive Integrated Moving Average (ARIMA) model (ML prediction for 3 intervals from now)
-                    if not app.isSimulation():
+                    if not _app.isSimulation():
                         try:
                             prediction = (
-                                technical_analysis.seasonalARIMAModelPrediction(
-                                    int(app.getGranularity() / 60) * 3
+                                _technical_analysis.seasonalARIMAModelPrediction(
+                                    int(_app.getGranularity() / 60) * 3
                                 )
                             )  # 3 intervals from now
                             Logger.info(
                                 f"Seasonal ARIMA model predicts the closing price will be {str(round(prediction[1], 2))} at {prediction[0]} (delta: {round(prediction[1] - price, 2)})"
                             )
+                        # pylint: disable=bare-except
                         except:
                             pass
 
-                if state.last_action == "BUY":
+                if _state.last_action == "BUY":
                     # display support, resistance and fibonacci levels
-                    if not app.isSimulation() or (
-                        app.isSimulation() and not app.simResultOnly()
+                    if not _app.isSimulation() or (
+                        _app.isSimulation() and not _app.simResultOnly()
                     ):
                         Logger.info(
-                            technical_analysis.printSupportResistanceFibonacciLevels(
+                            _technical_analysis.printSupportResistanceFibonacciLevels(
                                 price
                             )
                         )
 
             else:
-                Logger.debug(f"-- Iteration: {str(state.iterations)} --{bullbeartext}")
+                Logger.debug(f"-- Iteration: {str(_state.iterations)} --{bullbeartext}")
 
-                if state.last_action == "BUY":
-                    if state.last_buy_size > 0:
+                if _state.last_action == "BUY":
+                    if _state.last_buy_size > 0:
                         margin_text = truncate(margin) + "%"
                     else:
                         margin_text = "0%"
@@ -931,12 +936,12 @@ def executeJob(
                 Logger.debug(f"macdltsignal: {str(macdltsignal)}")
                 Logger.debug(f"obv: {str(obv)}")
                 Logger.debug(f"obv_pc: {str(obv_pc)}")
-                Logger.debug(f"action: {state.action}")
+                Logger.debug(f"action: {_state.action}")
 
                 # informational output on the most recent entry
                 Logger.info("")
                 text_box.doubleLine()
-                text_box.line("Iteration", str(state.iterations) + bullbeartext)
+                text_box.line("Iteration", str(_state.iterations) + bullbeartext)
                 text_box.line("Timestamp", str(df_last.index.format()[0]))
                 text_box.singleLine()
                 text_box.line("Close", truncate(price))
@@ -998,34 +1003,34 @@ def executeJob(
                     text_box.line("Condition", "-")
 
                 text_box.singleLine()
-                text_box.line("Action", state.action)
+                text_box.line("Action", _state.action)
                 text_box.doubleLine()
-                if state.last_action == "BUY":
+                if _state.last_action == "BUY":
                     text_box.line("Margin", margin_text)
                     text_box.doubleLine()
 
             # if a buy signal
-            if state.action == "BUY":
-                state.last_buy_price = price
-                state.last_buy_high = state.last_buy_price
+            if _state.action == "BUY":
+                _state.last_buy_price = price
+                _state.last_buy_high = _state.last_buy_price
 
                 # if live
-                if app.isLive():
-                    if not app.insufficientfunds:
-                        app.notifyTelegram(
-                            app.getMarket()
+                if _app.isLive():
+                    if not _app.insufficientfunds:
+                        _app.notifyTelegram(
+                            _app.getMarket()
                             + " ("
-                            + app.printGranularity()
+                            + _app.printGranularity()
                             + ") BUY at "
                             + price_text
                         )
 
-                        if not app.isVerbose():
-                            if not app.isSimulation() or (
-                                app.isSimulation() and not app.simResultOnly()
+                        if not _app.isVerbose():
+                            if not _app.isSimulation() or (
+                                _app.isSimulation() and not _app.simResultOnly()
                             ):
                                 Logger.info(
-                                    f"{formatted_current_df_index} | {app.getMarket()} | {app.printGranularity()} | {price_text} | BUY"
+                                    f"{formatted_current_df_index} | {_app.getMarket()} | {_app.printGranularity()} | {price_text} | BUY"
                                 )
                         else:
                             text_box.singleLine()
@@ -1033,86 +1038,88 @@ def executeJob(
                             text_box.singleLine()
 
                         account.basebalance = float(
-                            account.getBalance(app.getBaseCurrency())
+                            account.getBalance(_app.getBaseCurrency())
                         )
                         account.quotebalance = float(
-                            account.getBalance(app.getQuoteCurrency())
+                            account.getBalance(_app.getQuoteCurrency())
                         )
 
                         # display balances
                         Logger.info(
-                            f"{app.getBaseCurrency()} balance before order: {str(account.basebalance)}"
+                            f"{_app.getBaseCurrency()} balance before order: {str(account.basebalance)}"
                         )
                         Logger.info(
-                            f"{app.getQuoteCurrency()} balance before order: {str(account.quotebalance)}"
+                            f"{_app.getQuoteCurrency()} balance before order: {str(account.quotebalance)}"
                         )
 
                         # execute a live market buy
-                        # state.last_buy_size = float(account.getBalance(app.getQuoteCurrency()))
-                        state.last_buy_size = float(account.quotebalance)
+                        # _state.last_buy_size = float(account.getBalance(_app.getQuoteCurrency()))
+                        _state.last_buy_size = float(account.quotebalance)
 
                         if (
-                            app.getBuyMaxSize()
-                            and state.last_buy_size > app.getBuyMaxSize()
+                            _app.getBuyMaxSize()
+                            and _state.last_buy_size > _app.getBuyMaxSize()
                         ):
-                            state.last_buy_size = app.getBuyMaxSize()
+                            _state.last_buy_size = _app.getBuyMaxSize()
 
-                        resp = app.marketBuy(
-                            app.getMarket(), state.last_buy_size, app.getBuyPercent()
+                        resp = _app.marketBuy(
+                            _app.getMarket(), _state.last_buy_size, _app.getBuyPercent()
                         )
                         # Logger.debug(resp)
 
                         # display balances
                         account.basebalance = float(
-                            account.getBalance(app.getBaseCurrency())
+                            account.getBalance(_app.getBaseCurrency())
                         )
                         account.quotebalance = float(
-                            account.getBalance(app.getQuoteCurrency())
+                            account.getBalance(_app.getQuoteCurrency())
                         )
                         Logger.info(
-                            f"{app.getBaseCurrency()} balance after order: {str(account.basebalance)}"
+                            f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance)}"
                         )
                         Logger.info(
-                            f"{app.getQuoteCurrency()} balance after order: {str(account.quotebalance)}"
+                            f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance)}"
                         )
                     else:
                         Logger.warning("Unable to place order, insufficient funds")
                 # if not live
                 else:
-                    app.notifyTelegram(
-                        f"{app.getMarket()} ({app.printGranularity()}) TEST BUY at {price_text}"
+                    _app.notifyTelegram(
+                        f"{_app.getMarket()} ({_app.printGranularity()}) TEST BUY at {price_text}"
                     )
-                    if state.last_buy_size == 0 and state.last_buy_filled == 0:
+                    if _state.last_buy_size == 0 and _state.last_buy_filled == 0:
                         # Sim mode can now use buymaxsize as the amount used for a buy
-                        if app.getBuyMaxSize() != None:
-                            state.last_buy_size = app.getBuyMaxSize()
-                            state.first_buy_size = app.getBuyMaxSize()
+                        if _app.getBuyMaxSize() != None:
+                            _state.last_buy_size = _app.getBuyMaxSize()
+                            _state.first_buy_size = _app.getBuyMaxSize()
                         else:
-                            state.last_buy_size = 1000
-                            state.first_buy_size = 1000
+                            _state.last_buy_size = 1000
+                            _state.first_buy_size = 1000
 
-                    state.buy_count = state.buy_count + 1
-                    state.buy_sum = state.buy_sum + state.last_buy_size
+                    _state.buy_count = _state.buy_count + 1
+                    _state.buy_sum = _state.buy_sum + _state.last_buy_size
 
-                    if not app.isVerbose():
-                        if not app.isSimulation() or (
-                            app.isSimulation() and not app.simResultOnly()
+                    if not _app.isVerbose():
+                        if not _app.isSimulation() or (
+                            _app.isSimulation() and not _app.simResultOnly()
                         ):
                             Logger.info(
-                                f"{formatted_current_df_index} | {app.getMarket()} | {app.printGranularity()} | {price_text} | BUY"
+                                f"{formatted_current_df_index} | {_app.getMarket()} | {_app.printGranularity()} | {price_text} | BUY"
                             )
 
-                        bands = technical_analysis.getFibonacciRetracementLevels(
+                        bands = _technical_analysis.getFibonacciRetracementLevels(
                             float(price)
                         )
 
-                        if not app.isSimulation() or (
-                            app.isSimulation() and not app.simResultOnly()
+                        if not _app.isSimulation() or (
+                            _app.isSimulation() and not _app.simResultOnly()
                         ):
-                            technical_analysis.printSupportResistanceLevel(float(price))
+                            _technical_analysis.printSupportResistanceLevel(
+                                float(price)
+                            )
 
-                        if not app.isSimulation() or (
-                            app.isSimulation() and not app.simResultOnly()
+                        if not _app.isSimulation() or (
+                            _app.isSimulation() and not _app.simResultOnly()
                         ):
                             Logger.info(f" Fibonacci Retracement Levels:{str(bands)}")
 
@@ -1120,33 +1127,33 @@ def executeJob(
                             if len(bands) == 1:
                                 first_key = list(bands.keys())[0]
                                 if first_key == "ratio1":
-                                    state.fib_low = 0
-                                    state.fib_high = bands[first_key]
+                                    _state.fib_low = 0
+                                    _state.fib_high = bands[first_key]
                                 if first_key == "ratio1_618":
-                                    state.fib_low = bands[first_key]
-                                    state.fib_high = bands[first_key] * 2
+                                    _state.fib_low = bands[first_key]
+                                    _state.fib_high = bands[first_key] * 2
                                 else:
-                                    state.fib_low = bands[first_key]
+                                    _state.fib_low = bands[first_key]
 
                             elif len(bands) == 2:
                                 first_key = list(bands.keys())[0]
                                 second_key = list(bands.keys())[1]
-                                state.fib_low = bands[first_key]
-                                state.fib_high = bands[second_key]
+                                _state.fib_low = bands[first_key]
+                                _state.fib_high = bands[second_key]
 
                     else:
                         text_box.singleLine()
                         text_box.center("*** Executing TEST Buy Order ***")
                         text_box.singleLine()
 
-                    app.trade_tracker = app.trade_tracker.append(
+                    _app.trade_tracker = _app.trade_tracker.append(
                         {
                             "Datetime": str(current_sim_date),
-                            "Market": app.getMarket(),
+                            "Market": _app.getMarket(),
                             "Action": "BUY",
                             "Price": price,
-                            "Quote": state.last_buy_size,
-                            "Base": float(state.last_buy_size) / float(price),
+                            "Quote": _state.last_buy_size,
+                            "Base": float(_state.last_buy_size) / float(price),
                             "DF_High": df[df["date"] <= current_sim_date][
                                 "close"
                             ].max(),
@@ -1155,14 +1162,12 @@ def executeJob(
                         ignore_index=True,
                     )
 
-                if app.shouldSaveGraphs():
-                    tradinggraphs = TradingGraphs(technical_analysis)
+                if _app.shouldSaveGraphs():
+                    tradinggraphs = TradingGraphs(_technical_analysis)
                     ts = datetime.now().timestamp()
-                    filename = (
-                        f"{app.getMarket()}_{app.printGranularity()}_buy_{str(ts)}.png"
-                    )
+                    filename = f"{_app.getMarket()}_{_app.printGranularity()}_buy_{str(ts)}.png"
                     # This allows graphs to be used in sim mode using the correct DF
-                    if app.isSimulation:
+                    if _app.isSimulation:
                         tradinggraphs.renderEMAandMACD(
                             len(trading_dataCopy), "graphs/" + filename, True
                         )
@@ -1172,39 +1177,39 @@ def executeJob(
                         )
 
             # if a sell signal
-            elif state.action == "SELL":
+            elif _state.action == "SELL":
                 # if live
-                if app.isLive():
+                if _app.isLive():
                     account.basebalance = float(
-                        account.getBalance(app.getBaseCurrency())
+                        account.getBalance(_app.getBaseCurrency())
                     )
                     account.quotebalance = float(
-                        account.getBalance(app.getQuoteCurrency())
+                        account.getBalance(_app.getQuoteCurrency())
                     )
-                    app.notifyTelegram(
-                        app.getMarket()
+                    _app.notifyTelegram(
+                        _app.getMarket()
                         + " ("
-                        + app.printGranularity()
+                        + _app.printGranularity()
                         + ") SELL at "
                         + price_text
                         + " (margin: "
                         + margin_text
                         + ", (delta: "
-                        + str(round(price - state.last_buy_price, precision))
+                        + str(round(price - _state.last_buy_price, precision))
                         + ")"
                     )
 
-                    if not app.isVerbose():
+                    if not _app.isVerbose():
                         Logger.info(
-                            f"{formatted_current_df_index} | {app.getMarket()} | {app.printGranularity()} | {price_text} | SELL"
+                            f"{formatted_current_df_index} | {_app.getMarket()} | {_app.printGranularity()} | {price_text} | SELL"
                         )
 
-                        bands = technical_analysis.getFibonacciRetracementLevels(
+                        bands = _technical_analysis.getFibonacciRetracementLevels(
                             float(price)
                         )
 
-                        if not app.isSimulation() or (
-                            app.isSimulation() and not app.simResultOnly()
+                        if not _app.isSimulation() or (
+                            _app.isSimulation() and not _app.simResultOnly()
                         ):
                             Logger.info(f" Fibonacci Retracement Levels:{str(bands)}")
 
@@ -1212,19 +1217,19 @@ def executeJob(
                             if len(bands) == 1:
                                 first_key = list(bands.keys())[0]
                                 if first_key == "ratio1":
-                                    state.fib_low = 0
-                                    state.fib_high = bands[first_key]
+                                    _state.fib_low = 0
+                                    _state.fib_high = bands[first_key]
                                 if first_key == "ratio1_618":
-                                    state.fib_low = bands[first_key]
-                                    state.fib_high = bands[first_key] * 2
+                                    _state.fib_low = bands[first_key]
+                                    _state.fib_high = bands[first_key] * 2
                                 else:
-                                    state.fib_low = bands[first_key]
+                                    _state.fib_low = bands[first_key]
 
                             elif len(bands) == 2:
                                 first_key = list(bands.keys())[0]
                                 second_key = list(bands.keys())[1]
-                                state.fib_low = bands[first_key]
-                                state.fib_high = bands[second_key]
+                                _state.fib_low = bands[first_key]
+                                _state.fib_high = bands[second_key]
 
                     else:
                         text_box.singleLine()
@@ -1233,105 +1238,105 @@ def executeJob(
 
                     # display balances
                     Logger.info(
-                        f"{app.getBaseCurrency()} balance before order: {str(account.basebalance)}"
+                        f"{_app.getBaseCurrency()} balance before order: {str(account.basebalance)}"
                     )
                     Logger.info(
-                        f"{app.getQuoteCurrency()} balance before order: {str(account.quotebalance)}"
+                        f"{_app.getQuoteCurrency()} balance before order: {str(account.quotebalance)}"
                     )
 
                     # execute a live market sell
-                    resp = app.marketSell(
-                        app.getMarket(),
+                    resp = _app.marketSell(
+                        _app.getMarket(),
                         float(account.basebalance),
-                        app.getSellPercent(),
+                        _app.getSellPercent(),
                     )
                     Logger.debug(resp)
 
                     # display balances
                     account.basebalance = float(
-                        account.getBalance(app.getBaseCurrency())
+                        account.getBalance(_app.getBaseCurrency())
                     )
                     account.quotebalance = float(
-                        account.getBalance(app.getQuoteCurrency())
+                        account.getBalance(_app.getQuoteCurrency())
                     )
                     Logger.info(
-                        f"{app.getBaseCurrency()} balance after order: {str(account.basebalance)}"
+                        f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance)}"
                     )
                     Logger.info(
-                        f"{app.getQuoteCurrency()} balance after order: {str(account.quotebalance)}"
+                        f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance)}"
                     )
 
                     telegram_bot.closetrade(
-                        str(app.getDateFromISO8601Str(str(datetime.now()))),
+                        str(_app.getDateFromISO8601Str(str(datetime.now()))),
                         price_text,
                         margin_text,
                     )
                 # if not live
                 else:
                     margin, profit, sell_fee = calculate_margin(
-                        buy_size=state.last_buy_size,
-                        buy_filled=state.last_buy_filled,
-                        buy_price=state.last_buy_price,
-                        buy_fee=state.last_buy_fee,
-                        sell_percent=app.getSellPercent(),
+                        buy_size=_state.last_buy_size,
+                        buy_filled=_state.last_buy_filled,
+                        buy_price=_state.last_buy_price,
+                        buy_fee=_state.last_buy_fee,
+                        sell_percent=_app.getSellPercent(),
                         sell_price=price,
-                        sell_taker_fee=app.getTakerFee(),
+                        sell_taker_fee=_app.getTakerFee(),
                     )
 
-                    if state.last_buy_size > 0:
+                    if _state.last_buy_size > 0:
                         margin_text = truncate(margin) + "%"
                     else:
                         margin_text = "0%"
 
-                    app.notifyTelegram(
-                        app.getMarket()
+                    _app.notifyTelegram(
+                        _app.getMarket()
                         + " ("
-                        + app.printGranularity()
+                        + _app.printGranularity()
                         + ") TEST SELL at "
                         + price_text
                         + " (margin: "
                         + margin_text
                         + ", (delta: "
-                        + str(round(price - state.last_buy_price, precision))
+                        + str(round(price - _state.last_buy_price, precision))
                         + ")"
                     )
 
                     # preserve next sell values for simulator
-                    state.sell_count = state.sell_count + 1
-                    sell_size = (app.getSellPercent() / 100) * (
-                        (price / state.last_buy_price)
-                        * (state.last_buy_size - state.last_buy_fee)
+                    _state.sell_count = _state.sell_count + 1
+                    sell_size = (_app.getSellPercent() / 100) * (
+                        (price / _state.last_buy_price)
+                        * (_state.last_buy_size - _state.last_buy_fee)
                     )
-                    state.last_sell_size = sell_size - sell_fee
-                    state.sell_sum = state.sell_sum + state.last_sell_size
+                    _state.last_sell_size = sell_size - sell_fee
+                    _state.sell_sum = _state.sell_sum + _state.last_sell_size
 
                     # Added to track profit and loss margins during sim runs
-                    state.margintracker += float(margin)
-                    state.profitlosstracker += float(profit)
-                    state.feetracker += float(sell_fee)
-                    state.buy_tracker += float(state.last_sell_size)
+                    _state.margintracker += float(margin)
+                    _state.profitlosstracker += float(profit)
+                    _state.feetracker += float(sell_fee)
+                    _state.buy_tracker += float(_state.last_sell_size)
 
-                    if not app.isVerbose():
+                    if not _app.isVerbose():
                         if price > 0:
                             margin_text = truncate(margin) + "%"
                         else:
                             margin_text = "0%"
 
-                        if not app.isSimulation() or (
-                            app.isSimulation() and not app.simResultOnly()
+                        if not _app.isSimulation() or (
+                            _app.isSimulation() and not _app.simResultOnly()
                         ):
                             Logger.info(
                                 formatted_current_df_index
                                 + " | "
-                                + app.getMarket()
+                                + _app.getMarket()
                                 + " | "
-                                + app.printGranularity()
+                                + _app.printGranularity()
                                 + " | SELL | "
                                 + str(price)
                                 + " | BUY | "
-                                + str(state.last_buy_price)
+                                + str(_state.last_buy_price)
                                 + " | DIFF | "
-                                + str(price - state.last_buy_price)
+                                + str(price - _state.last_buy_price)
                                 + " | DIFF | "
                                 + str(profit)
                                 + " | MARGIN NO FEES | "
@@ -1345,14 +1350,14 @@ def executeJob(
                         text_box.center("*** Executing TEST Sell Order ***")
                         text_box.singleLine()
 
-                    app.trade_tracker = app.trade_tracker.append(
+                    _app.trade_tracker = _app.trade_tracker.append(
                         {
                             "Datetime": str(current_sim_date),
-                            "Market": app.getMarket(),
+                            "Market": _app.getMarket(),
                             "Action": "SELL",
                             "Price": price,
-                            "Quote": state.last_sell_size,
-                            "Base": state.last_buy_filled,
+                            "Quote": _state.last_sell_size,
+                            "Base": _state.last_buy_filled,
                             "Margin": margin,
                             "Profit": profit,
                             "Fee": sell_fee,
@@ -1363,14 +1368,12 @@ def executeJob(
                         },
                         ignore_index=True,
                     )
-                if app.shouldSaveGraphs():
-                    tradinggraphs = TradingGraphs(technical_analysis)
+                if _app.shouldSaveGraphs():
+                    tradinggraphs = TradingGraphs(_technical_analysis)
                     ts = datetime.now().timestamp()
-                    filename = (
-                        f"{app.getMarket()}_{app.printGranularity()}_sell_{str(ts)}.png"
-                    )
+                    filename = f"{_app.getMarket()}_{_app.printGranularity()}_sell_{str(ts)}.png"
                     # This allows graphs to be used in sim mode using the correct DF
-                    if app.isSimulation():
+                    if _app.isSimulation():
                         tradinggraphs.renderEMAandMACD(
                             len(trading_dataCopy), "graphs/" + filename, True
                         )
@@ -1380,25 +1383,43 @@ def executeJob(
                         )
 
             # last significant action
-            if state.action in ["BUY", "SELL"]:
-                state.last_action = state.action
+            if _state.action in ["BUY", "SELL"]:
+                _state.last_action = _state.action
 
-            state.last_df_index = str(df_last.index.format()[0])
+            _state.last_df_index = str(df_last.index.format()[0])
 
-            if not app.isLive() and state.iterations == len(df):
-                simulation = {}
+            if not _app.isLive() and _state.iterations == len(df):
+                simulation = {
+                    "config": {},
+                    "data" : {
+                        'open_buy_excluded': 1,
+                        'buy_count': 0,
+                        'sell_count': 0,
+                        'first_trade': {
+                            'size': 0
+                        },
+                        'last_trade': {
+                            'size': 0
+                        },
+                        'margin': 0.0
+                    },
+                    "exchange": _app.getExchange()
+                }
 
-                if not app.simResultOnly():
+                if _app.getConfig() != "":
+                    simulation["config"] = _app.getConfig()
+
+                if not _app.simResultOnly():
                     Logger.info("\nSimulation Summary: ")
 
-                tradesfile = app.getTradesFile()
+                tradesfile = _app.getTradesFile()
 
-                if app.isVerbose():
-                    Logger.info("\n" + str(app.trade_tracker))
+                if _app.isVerbose():
+                    Logger.info("\n" + str(_app.trade_tracker))
                     start = str(df.head(1).index.format()[0]).replace(":", ".")
                     end = str(df.tail(1).index.format()[0]).replace(":", ".")
                     filename = (
-                        f"{app.getMarket()} {str(start)} - {str(end)}_{tradesfile}"
+                        f"{_app.getMarket()} {str(start)} - {str(end)}_{tradesfile}"
                     )
 
                 else:
@@ -1408,33 +1429,34 @@ def executeJob(
                         if not os.path.exists("csv"):
                             os.makedirs("csv")
                         filename = os.path.join(os.curdir, "csv", filename)
-                    app.trade_tracker.to_csv(filename)
+                    _app.trade_tracker.to_csv(filename)
                 except OSError:
                     Logger.critical(f"Unable to save: {filename}")
 
-                if state.buy_count == 0:
-                    state.last_buy_size = 0
-                    state.sell_sum = 0
+                if _state.buy_count == 0:
+                    _state.last_buy_size = 0
+                    _state.sell_sum = 0
                 else:
                     # calculate last sell size
-                    state.last_buy_size = (app.getSellPercent() / 100) * (
-                        (price / state.last_buy_price)
-                        * (state.last_buy_size - state.last_buy_fee)
+                    _state.last_buy_size = (_app.getSellPercent() / 100) * (
+                        (price / _state.last_buy_price)
+                        * (_state.last_buy_size - _state.last_buy_fee)
                     )
 
                     # reduce sell fee from last sell size
-                    state.last_buy_size = (
-                        state.last_buy_size - state.last_buy_price * app.getTakerFee()
+                    _state.last_buy_size = (
+                        _state.last_buy_size
+                        - _state.last_buy_price * _app.getTakerFee()
                     )
-                    state.sell_sum = state.sell_sum + state.last_buy_size
+                    _state.sell_sum = _state.sell_sum + _state.last_buy_size
 
                 remove_last_buy = False
-                if state.buy_count > state.sell_count:
+                if _state.buy_count > _state.sell_count:
                     remove_last_buy = True
-                    state.buy_count -= 1  # remove last buy as there has not been a corresponding sell yet
-                    simulation["open_buy_excluded"] = 1
+                    _state.buy_count -= 1  # remove last buy as there has not been a corresponding sell yet
+                    simulation["data"]["open_buy_excluded"] = 1
 
-                    if not app.simResultOnly():
+                    if not _app.simResultOnly():
                         Logger.info(
                             "\nWarning: simulation ended with an open trade and it will be excluded from the margin calculation."
                         )
@@ -1442,44 +1464,44 @@ def executeJob(
                             "         (it is not realistic to hard sell at the end of a simulation without a sell signal)"
                         )
                 else:
-                    simulation["open_buy_excluded"] = 0
+                    simulation["data"]["open_buy_excluded"] = 0
 
-                if not app.simResultOnly():
+                if not _app.simResultOnly():
                     Logger.info("\n")
 
                 if remove_last_buy is True:
-                    if not app.simResultOnly():
+                    if not _app.simResultOnly():
                         Logger.info(
-                            f"   Buy Count : {str(state.buy_count)} (open buy excluded)"
+                            f"   Buy Count : {str(_state.buy_count)} (open buy excluded)"
                         )
                     else:
-                        simulation["buy_count"] = state.buy_count
+                        simulation["data"]["buy_count"] = _state.buy_count
                 else:
-                    if not app.simResultOnly():
-                        Logger.info(f"   Buy Count : {str(state.buy_count)}")
+                    if not _app.simResultOnly():
+                        Logger.info(f"   Buy Count : {str(_state.buy_count)}")
                     else:
-                        simulation["buy_count"] = state.buy_count
+                        simulation["data"]["buy_count"] = _state.buy_count
 
-                if not app.simResultOnly():
-                    Logger.info(f"  Sell Count : {str(state.sell_count)}")
-                    Logger.info(f"   First Buy : {str(state.first_buy_size)}")
+                if not _app.simResultOnly():
+                    Logger.info(f"  Sell Count : {str(_state.sell_count)}")
+                    Logger.info(f"   First Buy : {str(_state.first_buy_size)}")
                 else:
-                    simulation["sell_count"] = state.sell_count
-                    simulation["first_trade"] = {}
-                    simulation["first_trade"]["size"] = state.first_buy_size
+                    simulation["data"]["sell_count"] = _state.sell_count
+                    simulation["data"]["first_trade"] = {}
+                    simulation["data"]["first_trade"]["size"] = _state.first_buy_size
 
-                if state.sell_count > 0:
-                    if not app.simResultOnly():
+                if _state.sell_count > 0:
+                    if not _app.simResultOnly():
                         Logger.info(
-                            f"   Last Sell : {_truncate(state.last_sell_size, 2)}\n"
+                            f"   Last Sell : {_truncate(_state.last_sell_size, 2)}\n"
                         )
                     else:
-                        simulation["last_trade"] = {}
-                        simulation["last_trade"]["size"] = float(
-                            _truncate(state.last_sell_size, 2)
+                        simulation["data"]["last_trade"] = {}
+                        simulation["data"]["last_trade"]["size"] = float(
+                            _truncate(_state.last_sell_size, 2)
                         )
                 else:
-                    if not app.simResultOnly():
+                    if not _app.simResultOnly():
                         Logger.info("\n")
                         Logger.info("      Margin : 0.00%")
                         Logger.info("\n")
@@ -1487,29 +1509,29 @@ def executeJob(
                             "  ** margin is nil as a sell as not occurred during the simulation\n"
                         )
                     else:
-                        simulation["margin"] = 0.0
+                        simulation["data"]["margin"] = 0.0
 
-                    app.notifyTelegram(
+                    _app.notifyTelegram(
                         "      Margin: 0.00%\n  ** margin is nil as a sell as not occurred during the simulation\n"
                     )
 
-                app.notifyTelegram(
-                    f"{state.app.base_currency}{state.app.quote_currency}\nSimulation Summary\n"
-                    + f"   Buy Count: {state.buy_count}\n"
-                    + f"   Sell Count: {state.sell_count}\n"
-                    + f"   First Buy: {state.first_buy_size}\n"
-                    + f"   Last Buy: {state.last_buy_size}\n"
+                _app.notifyTelegram(
+                    f"{_state.app.base_currency}{_state.app.quote_currency}\nSimulation Summary\n"
+                    + f"   Buy Count: {_state.buy_count}\n"
+                    + f"   Sell Count: {_state.sell_count}\n"
+                    + f"   First Buy: {_state.first_buy_size}\n"
+                    + f"   Last Buy: {_state.last_buy_size}\n"
                 )
 
-                if state.sell_count > 0:
-                    if not app.simResultOnly():
+                if _state.sell_count > 0:
+                    if not _app.simResultOnly():
                         Logger.info(
                             "   Last Trade Margin : "
                             + _truncate(
                                 (
                                     (
-                                        (state.last_sell_size - state.first_buy_size)
-                                        / state.first_buy_size
+                                        (_state.last_sell_size - _state.first_buy_size)
+                                        / _state.first_buy_size
                                     )
                                     * 100
                                 ),
@@ -1519,13 +1541,13 @@ def executeJob(
                         )
                         Logger.info("\n")
                         Logger.info(
-                            f"   All Trades Buys ({app.quote_currency}): {_truncate(state.buy_tracker, 2)}"
+                            f"   All Trades Buys ({_app.quote_currency}): {_truncate(_state.buy_tracker, 2)}"
                         )
                         Logger.info(
-                            f"   All Trades Profit/Loss ({app.quote_currency}): {_truncate(state.profitlosstracker, 2)} ({_truncate(state.feetracker,2)} in fees)"
+                            f"   All Trades Profit/Loss ({_app.quote_currency}): {_truncate(_state.profitlosstracker, 2)} ({_truncate(_state.feetracker,2)} in fees)"
                         )
                         Logger.info(
-                            f"   All Trades Margin : {_truncate(state.margintracker, 4)}%"
+                            f"   All Trades Margin : {_truncate(_state.margintracker, 4)}%"
                         )
                         Logger.info("\n")
                         Logger.info("  ** non-live simulation, assuming highest fees")
@@ -1533,132 +1555,132 @@ def executeJob(
                             "  ** open trade excluded from margin calculation\n"
                         )
                     else:
-                        simulation["last_trade"]["margin"] = _truncate(
+                        simulation["data"]["last_trade"]["margin"] = _truncate(
                             (
                                 (
-                                    (state.last_sell_size - state.first_buy_size)
-                                    / state.first_buy_size
+                                    (_state.last_sell_size - _state.first_buy_size)
+                                    / _state.first_buy_size
                                 )
                                 * 100
                             ),
                             4,
                         )
-                        simulation["all_trades"] = {}
-                        simulation["all_trades"]["quote_currency"] = app.quote_currency
-                        simulation["all_trades"]["value_buys"] = float(
-                            _truncate(state.buy_tracker, 2)
+                        simulation["data"]["all_trades"] = {}
+                        simulation["data"]["all_trades"]["quote_currency"] = _app.quote_currency
+                        simulation["data"]["all_trades"]["value_buys"] = float(
+                            _truncate(_state.buy_tracker, 2)
                         )
-                        simulation["all_trades"]["profit_loss"] = float(
-                            _truncate(state.profitlosstracker, 2)
+                        simulation["data"]["all_trades"]["profit_loss"] = float(
+                            _truncate(_state.profitlosstracker, 2)
                         )
-                        simulation["all_trades"]["fees"] = float(
-                            _truncate(state.feetracker, 2)
+                        simulation["data"]["all_trades"]["fees"] = float(
+                            _truncate(_state.feetracker, 2)
                         )
-                        simulation["all_trades"]["margin"] = float(
-                            _truncate(state.margintracker, 4)
+                        simulation["data"]["all_trades"]["margin"] = float(
+                            _truncate(_state.margintracker, 4)
                         )
 
                     ## Revised telegram notification to give total margin and in addition to last trade margin.
-                    app.notifyTelegram(
-                        f"      Last Trade Margin: {_truncate((((state.last_sell_size - state.first_buy_size) / state.first_buy_size) * 100), 4)}%\n\n"
+                    _app.notifyTelegram(
+                        f"      Last Trade Margin: {_truncate((((_state.last_sell_size - _state.first_buy_size) / _state.first_buy_size) * 100), 4)}%\n\n"
                     )
-                    app.notifyTelegram(
-                        f"      All Trades Margin: {_truncate(state.margintracker, 4)}%\n  ** non-live simulation, assuming highest fees\n  ** open trade excluded from margin calculation\n"
+                    _app.notifyTelegram(
+                        f"      All Trades Margin: {_truncate(_state.margintracker, 4)}%\n  ** non-live simulation, assuming highest fees\n  ** open trade excluded from margin calculation\n"
                     )
                     telegram_bot.removeactivebot()
 
-                if app.simResultOnly():
-                    Logger.info(simulation)
+                if _app.simResultOnly():
+                    Logger.info(json.dumps(simulation, sort_keys=True, indent=4))
 
         else:
             if (
-                state.last_buy_size > 0
-                and state.last_buy_price > 0
+                _state.last_buy_size > 0
+                and _state.last_buy_price > 0
                 and price > 0
-                and state.last_action == "BUY"
+                and _state.last_action == "BUY"
             ):
                 # show profit and margin if already bought
                 Logger.info(
-                    f"{now} | {app.getMarket()}{bullbeartext} | {app.printGranularity()} | Current Price: {str(price)} | Margin: {str(margin)} | Profit: {str(profit)}"
+                    f"{now} | {_app.getMarket()}{bullbeartext} | {_app.printGranularity()} | Current Price: {str(price)} | Margin: {str(margin)} | Profit: {str(profit)}"
                 )
             else:
                 Logger.info(
-                    f'{now} | {app.getMarket()}{bullbeartext} | {app.printGranularity()} | Current Price: {str(price)} is {str(round(((price-df["close"].max()) / df["close"].max())*100, 2))}% away from DF HIGH'
+                    f'{now} | {_app.getMarket()}{bullbeartext} | {_app.printGranularity()} | Current Price: {str(price)} is {str(round(((price-df["close"].max()) / df["close"].max())*100, 2))}% away from DF HIGH'
                 )
                 telegram_bot.addinfo(
-                    f'{now} | {app.getMarket()}{bullbeartext} | {app.printGranularity()} | Current Price: {str(price)} is {str(round(((price-df["close"].max()) / df["close"].max())*100, 2))}% away from DF HIGH',
+                    f'{now} | {_app.getMarket()}{bullbeartext} | {_app.printGranularity()} | Current Price: {str(price)} is {str(round(((price-df["close"].max()) / df["close"].max())*100, 2))}% away from DF HIGH',
                     price,
                 )
 
-            if state.last_action == "BUY":
+            if _state.last_action == "BUY":
                 # update margin for telegram bot
                 telegram_bot.addmargin(
                     str(_truncate(margin, 4) + "%"), str(_truncate(profit, 2)), price
                 )
 
             # decrement ignored iteration
-            if app.isSimulation() and app.smart_switch:
-                state.iterations = state.iterations - 1
+            if _app.isSimulation() and _app.smart_switch:
+                _state.iterations = _state.iterations - 1
 
         # if live but not websockets
-        if not app.disableTracker() and app.isLive() and not app.enableWebsocket():
+        if not _app.disableTracker() and _app.isLive() and not _app.enableWebsocket():
             # update order tracker csv
-            if app.getExchange() == "binance":
-                account.saveTrackerCSV(app.getMarket())
-            elif app.getExchange() == "coinbasepro" or app.getExchange() == "kucoin":
+            if _app.getExchange() == "binance":
+                account.saveTrackerCSV(_app.getMarket())
+            elif _app.getExchange() == "coinbasepro" or _app.getExchange() == "kucoin":
                 account.saveTrackerCSV()
 
-        if app.isSimulation():
-            if state.iterations < len(df):
-                if app.simuluationSpeed() in ["fast", "fast-sample"]:
+        if _app.isSimulation():
+            if _state.iterations < len(df):
+                if _app.simuluationSpeed() in ["fast", "fast-sample"]:
                     # fast processing
                     list(map(s.cancel, s.queue))
-                    s.enter(0, 1, executeJob, (sc, app, state, None, df))
+                    s.enter(0, 1, executeJob, (sc, _app, _state, _technical_analysis, None, df))
                 else:
                     # slow processing
                     list(map(s.cancel, s.queue))
-                    s.enter(1, 1, executeJob, (sc, app, state, None, df))
+                    s.enter(1, 1, executeJob, (sc, _app, _state, _technical_analysis, None, df))
 
         else:
             list(map(s.cancel, s.queue))
             if (
-                app.enableWebsocket()
-                and websocket is not None
+                _app.enableWebsocket()
+                and _websocket is not None
                 and (
-                    isinstance(websocket.tickers, pd.DataFrame)
-                    and len(websocket.tickers) == 1
+                    isinstance(_websocket.tickers, pd.DataFrame)
+                    and len(_websocket.tickers) == 1
                 )
                 and (
-                    isinstance(websocket.candles, pd.DataFrame)
-                    and len(websocket.candles) == 300
+                    isinstance(_websocket.candles, pd.DataFrame)
+                    and len(_websocket.candles) == 300
                 )
             ):
-                # poll every 5 seconds (websocket)
-                s.enter(5, 1, executeJob, (sc, app, state, websocket))
+                # poll every 5 seconds (_websocket)
+                s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
             else:
-                if app.enableWebsocket() and not app.isSimulation():
-                    # poll every 15 seconds (waiting for websocket)
-                    s.enter(15, 1, executeJob, (sc, app, state, websocket))
+                if _app.enableWebsocket() and not _app.isSimulation():
+                    # poll every 15 seconds (waiting for _websocket)
+                    s.enter(15, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
                 else:
-                    # poll every 1 minute (no websocket)
-                    s.enter(60, 1, executeJob, (sc, app, state, websocket))
+                    # poll every 1 minute (no _websocket)
+                    s.enter(60, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
 
 
-def main(websocket):
+def main(_websocket):
     try:
         message = "Starting "
         if app.getExchange() == "coinbasepro":
             message += "Coinbase Pro bot"
             if app.enableWebsocket() and not app.isSimulation():
-                print("Opening websocket to Coinbase Pro...")
-                websocket = CWebSocketClient([app.getMarket()], app.getGranularity())
-                websocket.start()
+                print("Opening _websocket to Coinbase Pro...")
+                _websocket = CWebSocketClient([app.getMarket()], app.getGranularity())
+                _websocket.start()
         elif app.getExchange() == "binance":
             message += "Binance bot"
             if app.enableWebsocket() and not app.isSimulation():
-                print("Opening websocket to Binance...")
-                websocket = BWebSocketClient([app.getMarket()], app.getGranularity())
-                websocket.start()
+                print("Opening _websocket to Binance...")
+                _websocket = BWebSocketClient([app.getMarket()], app.getGranularity())
+                _websocket.start()
         elif app.getExchange() == "kucoin":
             message += "Kucoin bot"
 
@@ -1670,12 +1692,12 @@ def main(websocket):
         # initialise and start application
         trading_data = app.startApp(app, account, state.last_action)
 
-        def runApp(websocket):
+        def runApp(_websocket):
             # run the first job immediately after starting
             if app.isSimulation():
-                executeJob(s, app, state, websocket, trading_data)
+                executeJob(s, app, state, technical_analysis, websocket, trading_data)
             else:
-                executeJob(s, app, state, websocket)
+                executeJob(s, app, state, technical_analysis, websocket)
 
             s.run()
 
@@ -1683,7 +1705,7 @@ def main(websocket):
             runApp(websocket)
         except (KeyboardInterrupt, SystemExit):
             raise
-        except (BaseException, Exception) as e:
+        except (BaseException, Exception) as e:  # pylint: disable=broad-except
             if app.autoRestart():
                 # Wait 30 second and try to relaunch application
                 time.sleep(30)
@@ -1708,7 +1730,7 @@ def main(websocket):
             Logger.warning(
                 f"{str(datetime.now())} bot is closing via keyboard interrupt,"
             )
-            Logger.warning(f"Please wait while threads complete gracefully....")
+            Logger.warning("Please wait while threads complete gracefully....")
         else:
             Logger.warning(
                 f"{str(datetime.now())} bot is closed via keyboard interrupt..."
@@ -1719,12 +1741,14 @@ def main(websocket):
                 websocket.close()
             sys.exit(0)
         except SystemExit:
+            # pylint: disable=protected-access
             os._exit(0)
-    except (BaseException, Exception) as e:
+    except (BaseException, Exception) as e:  # pylint: disable=broad-except
         # catch all not managed exceptions and send a Telegram message if configured
         app.notifyTelegram(f"Bot for {app.getMarket()} got an exception: {repr(e)}")
         telegram_bot.removeactivebot()
         Logger.critical(repr(e))
+        # pylint: disable=protected-access
         os._exit(0)
         # raise
 
