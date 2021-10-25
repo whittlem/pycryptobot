@@ -299,7 +299,6 @@ class PyCryptoBot(BotConfig):
         simstart: str = "",
         simend: str = "",
     ) -> pd.DataFrame:
-
         if self.isSimulation():
             result_df_cache = df
 
