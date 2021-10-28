@@ -1,31 +1,58 @@
+import sys
 import time
+import json
 import pandas as pd
 
 from models.Trading import TechnicalAnalysis
 from models.exchange.binance import PublicAPI as BPublicAPI
 from models.exchange.coinbase_pro import PublicAPI as CPublicAPI
+from models.exchange.kucoin import PublicAPI as KPublicAPI
 
-QUOTE_CURRENCY = "GBP"
+try:
+    with open("scanner.json") as json_file:
+        config = json.load(json_file)
+except IOError as err:
+    print (err)
+
+if config["exchange"] == "binance":
+    api = BPublicAPI()
+elif config["exchange"] == "coinbasepro":
+    api = CPublicAPI()
+elif config["exchange"] == "kucoin":
+    api = KPublicAPI()
+else:
+    raise ValueError(f"Invalid exchange: {config['exchange']}")
 
 markets = []
-api = CPublicAPI()
 resp = api.getMarkets24HrStats()
-for market in resp:
-    if market.endswith(f"-{QUOTE_CURRENCY}"):
-        resp[market]["stats_24hour"]["market"] = market
-        markets.append(resp[market]["stats_24hour"])
+if config["exchange"] == "binance":
+    for row in resp:
+        if row["symbol"].endswith(config['quote_currency']):
+            markets.append(row)
+elif config["exchange"] == "coinbasepro":
+    for market in resp:
+        if market.endswith(f"-{config['quote_currency']}"):
+            resp[market]["stats_24hour"]["market"] = market
+            markets.append(resp[market]["stats_24hour"])
+elif config["exchange"] == "kucoin":
+    # TODO: getMarket24HrStats needs to be added to PublicAPI
+    raise Exception("getMarket24HrStats needs to be added to PublicAPI")
 
 df_markets = pd.DataFrame(markets)
-df_markets = df_markets[["market", "last", "volume"]]
+
+if config["exchange"] == "binance":
+    df_markets = df_markets[["symbol", "lastPrice", "quoteVolume"]]
+elif config["exchange"] == "coinbasepro":
+    df_markets = df_markets[["market", "last", "volume"]]
+
 df_markets.columns = ["market", "price", "volume"]
 df_markets["price"] = df_markets["price"].astype(float)
 df_markets["volume"] = df_markets["volume"].astype(float).round(0).astype(int)
 df_markets.sort_values(by=["market"], ascending=True, inplace=True)
 df_markets.set_index("market", inplace=True)
 
-api = CPublicAPI()
-
 print("Processing, please wait...")
+
 row = 1
 for market, data in df_markets.T.iteritems():
     print(f"[{row}/{len(df_markets)}] {market} {round((row/len(df_markets))*100, 2)}%")
