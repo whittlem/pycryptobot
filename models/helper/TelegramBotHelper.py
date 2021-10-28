@@ -24,7 +24,7 @@ class TelegramBotHelper:
         if os.path.isfile(os.path.join(self.app.telegramdatafolder, "telegram_data", self.filename)):
             self._read_data()
         else:
-            ds = {'botcontrol' : {"status":"active", "manualsell" : False, "manualbuy" : False}}
+            ds = {'botcontrol' : {"status":"active", "manualsell" : False, "manualbuy" : False, "started": datetime.now().isoformat()}}
             self.data = ds
             self._write_data()
 
@@ -57,14 +57,14 @@ class TelegramBotHelper:
         if self.app.enableTelegramBotControl():
             self._read_data()
 
-            addmarket = {'exchange' : self.exchange, 'margin' : margin, 'delta' : delta, 'price' : price}
+            addmarket = {'exchange' : self.exchange, 'margin' : margin, 'delta' : delta, 'price' : price, "df_high": " ", "from_df_high": " "}
             self.data.update(addmarket)
             self._write_data()
 
-    def addinfo(self, message: str = "", price: str = "") -> None:
+    def addinfo(self, message: str = "", price: str = "", df_high: str="", from_df_high: str="") -> None:
         if self.app.enableTelegramBotControl():
             self._read_data()
-            addmarket = {"message": message, "margin": " ", "delta": " ", "price" : price, "exchange" : self.exchange}
+            addmarket = {"message": message, "margin": " ", "delta": " ", "price" : price, "exchange" : self.exchange, "df_high": df_high, "from_df_high": from_df_high}
             self.data.update(addmarket)
             self._write_data()
 

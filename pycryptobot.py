@@ -223,7 +223,7 @@ def executeJob(
 
     # use actual sim mode date to check smartchswitch
     if (
-        last_api_call_datetime.seconds > 60
+        (last_api_call_datetime.seconds > 60 or _app.isSimulation())
         and _app.getSmartSwitch() == 1
         and _app.getGranularity() == 3600
         and _app.is1hEMA1226Bull(current_sim_date, _websocket) is True
@@ -248,7 +248,7 @@ def executeJob(
 
     # use actual sim mode date to check smartchswitch
     if (
-        last_api_call_datetime.seconds > 60
+        (last_api_call_datetime.seconds > 60 or _app.isSimulation())
         and _app.getSmartSwitch() == 1
         and _app.getGranularity() == 900
         and _app.is1hEMA1226Bull(current_sim_date, _websocket) is False

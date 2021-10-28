@@ -10,10 +10,10 @@ import base64
 import sys
 import pandas as pd
 from numpy import floor
-from datetime import datetime, timedelta
-from requests.auth import AuthBase
+from datetime import datetime
+# from requests.auth import AuthBase
 from requests import Request
-from urllib3.exceptions import HeaderParsingError
+# from urllib3.exceptions import HeaderParsingError
 from models.helper.LogHelper import Logger
 
 MARGIN_ADJUSTMENT = 0.0025
@@ -109,8 +109,12 @@ class AuthAPI(AuthAPIBase):
 
         if self.debug:
             raise TypeError(err)
-        else:
+        elif self.die_on_api_error:
             raise SystemExit(err)
+        else:
+            Logger.error(
+                f"Initialization Error: {err}"
+            )
 
     def __call__(self, request) -> Request:
         """Signs the request"""
@@ -257,7 +261,7 @@ class AuthAPI(AuthAPIBase):
             raise ValueError("Invalid order status.")
 
         # GET /orders?status
-        resp = self.authAPI("GET", f"api/v1/orders")
+        resp = self.authAPI("GET", f"api/v1/orders?symbol={market}")
         if len(resp) > 0:
             if status == "active":
                 df = resp.copy()[
@@ -440,8 +444,8 @@ class AuthAPI(AuthAPIBase):
 
         if len(df) > 0:
             if df["type"][0] == "market":
-                if df["size"][0] == 0:
-                    df["size"] = df["funds"]
+                # if df["size"][0] == 0:
+                df["size"] = df["funds"]
 
         # for sell orders size is filled
         df["size"] = df["size"].fillna(df["filled"])
@@ -706,6 +710,11 @@ class AuthAPI(AuthAPIBase):
         except json.decoder.JSONDecodeError as err:
             return self.handle_api_error(err, "JSONDecodeError")
 
+        # temporary catch all for testing
+        except Exception as err:
+            Logger.info(f"Catch All Error - {err}: {self._api_url}")
+            return pd.DataFrame()
+
     def handle_api_error(self, err: str, reason: str) -> pd.DataFrame:
         """Handle API errors"""
 
@@ -730,7 +739,7 @@ class PublicAPI(AuthAPIBase):
         self.die_on_api_error = False
         self._api_url = api_url
 
-        self.debug = True
+        # self.debug = True
         self.die_on_api_error = False
 
         valid_urls = [

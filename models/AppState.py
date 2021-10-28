@@ -112,7 +112,7 @@ class AppState:
                 raise Exception(f'Market not found! ({self.app.getMarket()})')
 
             base = float(self.account.basebalance)
-            base_min = '{:f}'.format(float(product['baseMinSize']))
+            base_min = float(product['baseMinSize'])
 
         if base < base_min:
             if self.app.enableinsufficientfundslogging:
@@ -124,6 +124,9 @@ class AppState:
             raise Exception(
                 f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})"
             )
+        elif self.app.getExchange() == "kucoin":
+            # added for Kucoin last order check below
+            return True
             
     def minimumOrderQuote(self):
         self.app.insufficientfunds = False
@@ -252,7 +255,10 @@ class AppState:
                 order_pairs
             )
 
-            if order_pairs_normalised[0] < order_pairs_normalised[1]:
+            if self.app.getExchange() == "kucoin" and self.minimumOrderBase():
+                self.last_action = "WAIT"
+                Logger.warning('Kucoin temporary state set to "WAIT".') 
+            elif order_pairs_normalised[0] < order_pairs_normalised[1]:
                 self.minimumOrderQuote()
                 self.last_action = "SELL"
             elif order_pairs_normalised[0] > order_pairs_normalised[1]:
