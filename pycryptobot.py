@@ -1666,19 +1666,19 @@ def executeJob(
                     s.enter(60, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
 
 
-def main(_websocket):
+def main():
     try:
         message = "Starting "
         if app.getExchange() == "coinbasepro":
             message += "Coinbase Pro bot"
             if app.enableWebsocket() and not app.isSimulation():
-                print("Opening _websocket to Coinbase Pro...")
+                print("Opening websocket to Coinbase Pro...")
                 _websocket = CWebSocketClient([app.getMarket()], app.getGranularity())
                 _websocket.start()
         elif app.getExchange() == "binance":
             message += "Binance bot"
             if app.enableWebsocket() and not app.isSimulation():
-                print("Opening _websocket to Binance...")
+                print("Opening websocket to Binance...")
                 _websocket = BWebSocketClient([app.getMarket()], app.getGranularity())
                 _websocket.start()
         elif app.getExchange() == "kucoin":
@@ -1695,14 +1695,14 @@ def main(_websocket):
         def runApp(_websocket):
             # run the first job immediately after starting
             if app.isSimulation():
-                executeJob(s, app, state, technical_analysis, websocket, trading_data)
+                executeJob(s, app, state, technical_analysis, _websocket, trading_data)
             else:
-                executeJob(s, app, state, technical_analysis, websocket)
+                executeJob(s, app, state, technical_analysis, _websocket)
 
             s.run()
 
         try:
-            runApp(websocket)
+            runApp(_websocket)
         except (KeyboardInterrupt, SystemExit):
             raise
         except (BaseException, Exception) as e:  # pylint: disable=broad-except
@@ -1719,7 +1719,7 @@ def main(_websocket):
                 map(s.cancel, s.queue)
 
                 # Restart the app
-                runApp(websocket)
+                runApp(_websocket)
             else:
                 raise
 
@@ -1738,7 +1738,7 @@ def main(_websocket):
         try:
             telegram_bot.removeactivebot()
             if app.enableWebsocket() and not app.isSimulation():
-                websocket.close()
+                _websocket.close()
             sys.exit(0)
         except SystemExit:
             # pylint: disable=protected-access
@@ -1758,4 +1758,4 @@ if __name__ == "__main__":
         sys.stderr.write("You need python 3.6 or higher to run this script\n")
         exit(1)
 
-    main(websocket)
+    main()
