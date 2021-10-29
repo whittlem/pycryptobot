@@ -8,6 +8,13 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [4.3.1] - 2021-10-28
+
+- fix for Kucoin margin calculation
+- fix for Kucoin getOrders not always returning a response
+- fix for SIM smartswitching
+- Update for TG bot to show uptime with /showinfo
+
 ## [4.3.0] - 2021-10-23
 
 - formatting CHANGELOG.md

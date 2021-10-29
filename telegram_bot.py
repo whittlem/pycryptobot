@@ -16,6 +16,7 @@ import platform
 import re
 import urllib.request
 
+from datetime import datetime
 from time import sleep
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 from telegram.bot import Bot, BotCommand
@@ -205,6 +206,33 @@ class TelegramBot(TelegramBotBase):
             use_context=True,
         )
 
+    def _getUptime(date: str):
+        now = str(datetime.now())
+            # If date passed from datetime.now() remove milliseconds
+        if date.find(".") != -1:
+            dt = date.split(".")[0]
+            date = dt
+        if now.find(".") != -1:
+            dt = now.split(".")[0]
+            now = dt
+        
+        now = now.replace("T", " ")
+        now = f"{now}"
+        # Add time in case only a date is passed in
+        #new_date_str = f"{date} 00:00:00" if len(date) == 10 else date
+        date = date.replace("T", " ") if date.find("T") != -1 else date
+        # Add time in case only a date is passed in
+        new_date_str = f"{date} 00:00:00" if len(date) == 10 else date
+
+        started = datetime.strptime(new_date_str, "%Y-%m-%d %H:%M:%S")
+        now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
+        duration = now - started
+        duration_in_s = duration.total_seconds()
+        hours = divmod(duration_in_s, 3600)[0]
+        duration_in_s -= 3600*hours
+        minutes = divmod(duration_in_s, 60)[0]
+        return f"{round(hours)}h {round(minutes)}m"
+
     def responses(self, update, context):
 
         if not self._checkifallowed(context._user_id_and_data[0], update):
@@ -306,10 +334,10 @@ class TelegramBot(TelegramBotBase):
         for file in jsonfiles:
             if ".json" in file and not file == "data.json":
                 self._read_data(file)
-                output = output + f"<b>{file.replace('.json', '')}</b> - "
+                output = output + f"<b>{file.replace('.json', '')}</b>\n"
                 output = (
                     output
-                    + f"<i>Current Status: {self.data['botcontrol']['status']}</i>\n"
+                    + f"<b>Status</b>: <i>{self.data['botcontrol']['status']}</i>\n <b>Uptime</b>: <i>{self._getUptime(self.data['botcontrol']['started'])}</i>\n"
                 )
 
         if output != "":
