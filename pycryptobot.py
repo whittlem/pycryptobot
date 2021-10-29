@@ -74,6 +74,9 @@ def executeJob(
             print(str(datetime.now()).format() + " - Bot is paused")
             _app.notifyTelegram(f"{_app.getMarket()} bot is paused")
             telegram_bot.updatebotstatus("paused")
+            if _app.enableWebsocket():
+                Logger.info("Stopping _websocket...")
+                _websocket.close()
 
         time.sleep(30)
         controlstatus = telegram_bot.checkbotcontrolstatus()
@@ -82,6 +85,9 @@ def executeJob(
         print(str(datetime.now()).format() + " - Bot has restarted")
         _app.notifyTelegram(f"{_app.getMarket()} bot has restarted")
         telegram_bot.updatebotstatus("active")
+        if _app.enableWebsocket():
+            Logger.info("Starting _websocket...")
+            _websocket.start()
 
     if controlstatus == "exit":
         _app.notifyTelegram(f"{_app.getMarket()} bot is stopping")
@@ -353,18 +359,16 @@ def executeJob(
         two_black_gapping = bool(df_last["two_black_gapping"].values[0])
 
         # Log data for Telegram Bot
-        if not _app.disableBuyElderRay():
+        telegram_bot.addindicators("EMA", ema12gtema26co or ema12ltema26)
+        if not app.disableBuyElderRay():
             telegram_bot.addindicators("ERI", elder_ray_buy)
-        if _app.disableBullOnly() or (
-            df_last["sma50"].values[0] == df_last["sma200"].values[0]
-        ):
+        if app.disableBullOnly():
             telegram_bot.addindicators("BULL", goldencross)
-        if not _app.disableBuyEMA():
-            telegram_bot.addindicators("EMA", ema12gtema26co or ema12ltema26)
-        if not _app.disableBuyMACD():
+        if not app.disableBuyMACD():
             telegram_bot.addindicators("MACD", macdgtsignal or macdgtsignalco)
-        if not _app.disableBuyOBV():
+        if not app.disableBuyOBV():
             telegram_bot.addindicators("OBV", float(obv_pc) > 0)
+
 
         if _app.isSimulation():
             # Reset the Strategy so that the last record is the current sim date
@@ -1609,7 +1613,9 @@ def executeJob(
                 )
                 telegram_bot.addinfo(
                     f'{now} | {_app.getMarket()}{bullbeartext} | {_app.printGranularity()} | Current Price: {str(price)} is {str(round(((price-df["close"].max()) / df["close"].max())*100, 2))}% away from DF HIGH',
-                    price,
+                    round(price, 4),
+                    str(round(df["close"].max(), 4)),
+                    str(round(((price-df["close"].max()) / df["close"].max())*100, 2)) + '%'
                 )
 
             if _state.last_action == "BUY":
