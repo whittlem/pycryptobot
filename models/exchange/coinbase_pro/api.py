@@ -35,6 +35,16 @@ class AuthAPIBase:
             return True
         return False
 
+    def to_coinbasepro_granularity(self, granularity) -> str:
+        if isinstance(granularity, int):
+            if granularity in SUPPORTED_GRANULARITY:
+                return granularity
+            else:
+                raise ValueError(f"Invalid Binance granularity: {granularity}")
+        else:
+            return {"1min" : 60, "5min" : 300, "15min" : 900, "1hour" : 3600, "6hour" : 21600, "1day" : 86400} [
+                granularity
+            ]
 
 class AuthAPI(AuthAPIBase):
     def __init__(

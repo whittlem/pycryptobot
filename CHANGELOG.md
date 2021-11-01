@@ -8,6 +8,11 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [4.4.0] - 2021-11-01
+
+- Add /scanner to TG Bot to scan marks and start bots
+- add multiple market scanning to scanner.py
+
 ## [4.3.2] - 2021-11-02
 
 - fix for Kucoin multiple buys on same traded pair when API error occurs
