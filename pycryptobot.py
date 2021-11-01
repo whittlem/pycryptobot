@@ -37,7 +37,6 @@ Stats(app, account).show()
 technical_analysis = None
 state = AppState(app, account)
 state.initLastAction()
-websocket = None
 
 telegram_bot = TelegramBotHelper(app)
 
@@ -57,7 +56,7 @@ def executeJob(
     _state: AppState = None,
     _technical_analysis=None,
     _websocket=None,
-    trading_data=pd.DataFrame()
+    trading_data=pd.DataFrame(),
 ):
     """Trading bot job which runs at a scheduled interval"""
 
@@ -76,7 +75,7 @@ def executeJob(
             telegram_bot.updatebotstatus("paused")
             if _app.enableWebsocket():
                 Logger.info("Stopping _websocket...")
-                _websocket.close()
+                # _websocket.close()
 
         time.sleep(30)
         controlstatus = telegram_bot.checkbotcontrolstatus()
@@ -87,7 +86,7 @@ def executeJob(
         telegram_bot.updatebotstatus("active")
         if _app.enableWebsocket():
             Logger.info("Starting _websocket...")
-            _websocket.start()
+            # _websocket.start()
 
     if controlstatus == "exit":
         _app.notifyTelegram(f"{_app.getMarket()} bot is stopping")
@@ -102,7 +101,9 @@ def executeJob(
             Logger.info("Starting _websocket...")
             _websocket.start()
             Logger.info("Restarting job in 30 seconds...")
-            s.enter(30, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
+            s.enter(
+                30, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket)
+            )
 
     # increment _state.iterations
     _state.iterations = _state.iterations + 1
@@ -235,7 +236,9 @@ def executeJob(
         and _app.is1hEMA1226Bull(current_sim_date, _websocket) is True
         and _app.is6hEMA1226Bull(current_sim_date, _websocket) is True
     ):
-        if not _app.isSimulation() or (_app.isSimulation() and not _app.simResultOnly()):
+        if not _app.isSimulation() or (
+            _app.isSimulation() and not _app.simResultOnly()
+        ):
             Logger.info(
                 "*** smart switch from granularity 3600 (1 hour) to 900 (15 min) ***"
             )
@@ -260,7 +263,9 @@ def executeJob(
         and _app.is1hEMA1226Bull(current_sim_date, _websocket) is False
         and _app.is6hEMA1226Bull(current_sim_date, _websocket) is False
     ):
-        if not _app.isSimulation() or (_app.isSimulation() and not _app.simResultOnly()):
+        if not _app.isSimulation() or (
+            _app.isSimulation() and not _app.simResultOnly()
+        ):
             Logger.info(
                 "*** smart switch from granularity 900 (15 min) to 3600 (1 hour) ***"
             )
@@ -281,14 +286,21 @@ def executeJob(
             # data frame should have 250 rows, if not retry
             Logger.error(f"error: data frame length is < 250 ({str(len(df))})")
             list(map(s.cancel, s.queue))
-            s.enter(300, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
+            s.enter(
+                300, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket)
+            )
     else:
         if len(df) < 300:
             if not _app.isSimulation():
                 # data frame should have 300 rows, if not retry
                 Logger.error(f"error: data frame length is < 300 ({str(len(df))})")
                 list(map(s.cancel, s.queue))
-                s.enter(300, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
+                s.enter(
+                    300,
+                    1,
+                    executeJob,
+                    (sc, _app, _state, _technical_analysis, _websocket),
+                )
 
     if len(df_last) > 0:
         now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
@@ -368,7 +380,6 @@ def executeJob(
             telegram_bot.addindicators("MACD", macdgtsignal or macdgtsignalco)
         if not app.disableBuyOBV():
             telegram_bot.addindicators("OBV", float(obv_pc) > 0)
-
 
         if _app.isSimulation():
             # Reset the Strategy so that the last record is the current sim date
@@ -1395,19 +1406,15 @@ def executeJob(
             if not _app.isLive() and _state.iterations == len(df):
                 simulation = {
                     "config": {},
-                    "data" : {
-                        'open_buy_excluded': 1,
-                        'buy_count': 0,
-                        'sell_count': 0,
-                        'first_trade': {
-                            'size': 0
-                        },
-                        'last_trade': {
-                            'size': 0
-                        },
-                        'margin': 0.0
+                    "data": {
+                        "open_buy_excluded": 1,
+                        "buy_count": 0,
+                        "sell_count": 0,
+                        "first_trade": {"size": 0},
+                        "last_trade": {"size": 0},
+                        "margin": 0.0,
                     },
-                    "exchange": _app.getExchange()
+                    "exchange": _app.getExchange(),
                 }
 
                 if _app.getConfig() != "":
@@ -1570,7 +1577,9 @@ def executeJob(
                             4,
                         )
                         simulation["data"]["all_trades"] = {}
-                        simulation["data"]["all_trades"]["quote_currency"] = _app.quote_currency
+                        simulation["data"]["all_trades"][
+                            "quote_currency"
+                        ] = _app.quote_currency
                         simulation["data"]["all_trades"]["value_buys"] = float(
                             _truncate(_state.buy_tracker, 2)
                         )
@@ -1615,7 +1624,12 @@ def executeJob(
                     f'{now} | {_app.getMarket()}{bullbeartext} | {_app.printGranularity()} | Current Price: {str(price)} is {str(round(((price-df["close"].max()) / df["close"].max())*100, 2))}% away from DF HIGH',
                     round(price, 4),
                     str(round(df["close"].max(), 4)),
-                    str(round(((price-df["close"].max()) / df["close"].max())*100, 2)) + '%'
+                    str(
+                        round(
+                            ((price - df["close"].max()) / df["close"].max()) * 100, 2
+                        )
+                    )
+                    + "%",
                 )
 
             if _state.last_action == "BUY":
@@ -1641,11 +1655,21 @@ def executeJob(
                 if _app.simuluationSpeed() in ["fast", "fast-sample"]:
                     # fast processing
                     list(map(s.cancel, s.queue))
-                    s.enter(0, 1, executeJob, (sc, _app, _state, _technical_analysis, None, df))
+                    s.enter(
+                        0,
+                        1,
+                        executeJob,
+                        (sc, _app, _state, _technical_analysis, None, df),
+                    )
                 else:
                     # slow processing
                     list(map(s.cancel, s.queue))
-                    s.enter(1, 1, executeJob, (sc, _app, _state, _technical_analysis, None, df))
+                    s.enter(
+                        1,
+                        1,
+                        executeJob,
+                        (sc, _app, _state, _technical_analysis, None, df),
+                    )
 
         else:
             list(map(s.cancel, s.queue))
@@ -1662,18 +1686,34 @@ def executeJob(
                 )
             ):
                 # poll every 5 seconds (_websocket)
-                s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
+                s.enter(
+                    5,
+                    1,
+                    executeJob,
+                    (sc, _app, _state, _technical_analysis, _websocket),
+                )
             else:
                 if _app.enableWebsocket() and not _app.isSimulation():
                     # poll every 15 seconds (waiting for _websocket)
-                    s.enter(15, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
+                    s.enter(
+                        15,
+                        1,
+                        executeJob,
+                        (sc, _app, _state, _technical_analysis, _websocket),
+                    )
                 else:
                     # poll every 1 minute (no _websocket)
-                    s.enter(60, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
+                    s.enter(
+                        60,
+                        1,
+                        executeJob,
+                        (sc, _app, _state, _technical_analysis, _websocket),
+                    )
 
 
 def main():
     try:
+        _websocket = None
         message = "Starting "
         if app.getExchange() == "coinbasepro":
             message += "Coinbase Pro bot"
@@ -1690,8 +1730,8 @@ def main():
         elif app.getExchange() == "kucoin":
             message += "Kucoin bot"
 
-        smartSwitchStatus = "enabled" if app.getSmartSwitch() else "disabled"
-        message += f" for {app.getMarket()} using granularity {app.printGranularity()}. Smartswitch {smartSwitchStatus}"
+        smartswitchstatus = "enabled" if app.getSmartSwitch() else "disabled"
+        message += f" for {app.getMarket()} using granularity {app.printGranularity()}. Smartswitch {smartswitchstatus}"
 
         app.notifyTelegram(message)
 
