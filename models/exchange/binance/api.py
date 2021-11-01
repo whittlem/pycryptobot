@@ -32,7 +32,7 @@ DEFAULT_MARKET = "BTCGBP"
 
 class AuthAPIBase:
     def _isMarketValid(self, market: str) -> bool:
-        p = re.compile(r"^[A-Z0-9]{5,12}$")
+        p = re.compile(r"^[A-Z0-9]{5,13}$")
         if p.match(market):
             return True
         return False
@@ -922,11 +922,11 @@ class PublicAPI(AuthAPIBase):
             raise TypeError("Binance market required.")
 
         # validates granularity is a string
-        if not isinstance(granularity, str):
+        if not isinstance(self.to_binance_granularity(granularity), str):
             raise TypeError("Granularity string required.")
 
         # validates the granularity is supported by Binance
-        if not granularity in SUPPORTED_GRANULARITY:
+        if not self.to_binance_granularity(granularity) in SUPPORTED_GRANULARITY:
             raise TypeError(
                 "Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY))
             )

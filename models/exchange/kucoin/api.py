@@ -43,6 +43,18 @@ class AuthAPIBase:
             return True
         return False
 
+    def to_kucoin_granularity(self, granularity) -> str:
+        if isinstance(granularity, int):
+            return {60: "1min", 300: "5min", 900: "15min", 3600: "1hour", 21600: "6hour", 86400: "1day"} [
+                granularity
+            ]
+        else:
+            # return string if conversion is not required
+            if granularity in SUPPORTED_GRANULARITY:
+                return granularity
+            else:
+                raise ValueError(f"Invalid Kucoin granularity: {granularity}")
+
 
 class AuthAPI(AuthAPIBase):
     def __init__(
