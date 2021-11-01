@@ -1116,7 +1116,7 @@ class TelegramBot(TelegramBotBase):
                 f"<i>Gathering market data, please wait...</i> \u23F3", parse_mode="HTML"
             )
         # subprocess.Popen("python3 scanner.py", shell=True)
-        # output = subprocess.getoutput("python3 scanner.py")
+        output = subprocess.getoutput("python3 scanner.py")
 
         for ex in config:
             for quote in config[ex]["quote_currency"]:
