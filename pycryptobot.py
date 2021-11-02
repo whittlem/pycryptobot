@@ -67,30 +67,31 @@ def executeJob(
 
     # This is used by the telegram bot
     # If it not enabled in config while will always be False
-    controlstatus = telegram_bot.checkbotcontrolstatus()
-    while controlstatus == "pause" or controlstatus == "paused":
-        if controlstatus == "pause":
-            print(str(datetime.now()).format() + " - Bot is paused")
-            _app.notifyTelegram(f"{_app.getMarket()} bot is paused")
-            telegram_bot.updatebotstatus("paused")
-            if _app.enableWebsocket():
-                Logger.info("Stopping _websocket...")
-                # _websocket.close()
-
-        time.sleep(30)
+    if not app.isSimulation():
         controlstatus = telegram_bot.checkbotcontrolstatus()
+        while controlstatus == "pause" or controlstatus == "paused":
+            if controlstatus == "pause":
+                print(str(datetime.now()).format() + " - Bot is paused")
+                _app.notifyTelegram(f"{_app.getMarket()} bot is paused")
+                telegram_bot.updatebotstatus("paused")
+                if _app.enableWebsocket():
+                    Logger.info("Stopping _websocket...")
+                    # _websocket.close()
 
-    if controlstatus == "start":
-        print(str(datetime.now()).format() + " - Bot has restarted")
-        _app.notifyTelegram(f"{_app.getMarket()} bot has restarted")
-        telegram_bot.updatebotstatus("active")
-        if _app.enableWebsocket():
-            Logger.info("Starting _websocket...")
-            # _websocket.start()
+            time.sleep(30)
+            controlstatus = telegram_bot.checkbotcontrolstatus()
 
-    if controlstatus == "exit":
-        _app.notifyTelegram(f"{_app.getMarket()} bot is stopping")
-        sys.exit(0)
+        if controlstatus == "start":
+            print(str(datetime.now()).format() + " - Bot has restarted")
+            _app.notifyTelegram(f"{_app.getMarket()} bot has restarted")
+            telegram_bot.updatebotstatus("active")
+            if _app.enableWebsocket():
+                Logger.info("Starting _websocket...")
+                # _websocket.start()
+
+        if controlstatus == "exit":
+            _app.notifyTelegram(f"{_app.getMarket()} bot is stopping")
+            sys.exit(0)
 
     # reset _websocket every 23 hours if applicable
     if _app.enableWebsocket() and not _app.isSimulation():
@@ -1288,7 +1289,9 @@ def executeJob(
                     )
 
                     if _app.enableexitaftersell:
-                        sys.exit(0)
+                        time.sleep(900)
+                    #     Logger.info("Closing after sale..")
+                    #     sys.exit(0)
                 # if not live
                 else:
                     margin, profit, sell_fee = calculate_margin(
@@ -1386,6 +1389,11 @@ def executeJob(
                         },
                         ignore_index=True,
                     )
+                    # if _app.enableexitaftersell:
+                    #     time.sleep(900)
+                        # Logger.info("Closing after sale..")
+                        # sys.exit(0)
+
                 if _app.shouldSaveGraphs():
                     tradinggraphs = TradingGraphs(_technical_analysis)
                     ts = datetime.now().timestamp()
