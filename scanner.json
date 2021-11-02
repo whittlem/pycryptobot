@@ -1,4 +1,8 @@
 {
-    "exchange": "coinbasepro",
-    "quote_currency": "GBP"
+    "coinbasepro" : {
+        "quote_currency": ["GBP"]
+    },
+    "binance" : {
+        "quote_currency": ["USDT"]
+    }
 }

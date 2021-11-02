@@ -30,7 +30,6 @@ from telegram.ext import (
     ConversationHandler,
     MessageHandler,
 )
-from models.helper.TelegramBotHelper import TelegramScannerBotHelper
 from telegram.replykeyboardremove import ReplyKeyboardRemove
 
 # from telegram.utils.helpers import DEFAULT_20
@@ -184,10 +183,13 @@ class TelegramBot(TelegramBotBase):
         self.token = self.config["telegram"]["token"]
         self.userid = self.config["telegram"]["user_id"]
 
+        if "scanner" in self.config:
+            self.atr72pcnt = self.config["scanner"]["atr72_pcnt"] if "atr72_pcnt" in self.config["scanner"] else 2.0
+
         if "datafolder" in self.config["telegram"]:
             self.datafolder = self.config["telegram"]["datafolder"]
 
-        if not args.datafolder == "":
+        if args.datafolder != "":
             self.datafolder = args.datafolder
 
         if not os.path.exists(os.path.join(self.datafolder, "telegram_data")):
@@ -792,24 +794,23 @@ class TelegramBot(TelegramBotBase):
         if "allclose" in query.data:
             query.edit_message_text("Stopping bots")
             jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
+            telegram = Telegram(self.token, str(context._chat_id_and_data[0]))
             for file in jsonfiles:
                 if ".json" in file and not file == "data.json" and not file.__contains__("output.json"):
                     self._read_data(file)
                     if self.data["margin"] == " ":
                         if self.updatebotcontrol(file, "exit"):
-                            mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
-                            mBot.send(f"Stopping {file.replace('.json', '')} crypto bot")
+                            telegram.send(f"Stopping {file.replace('.json', '')} crypto bot")
 
         elif "all" in query.data:
             query.edit_message_text("Stopping all bots")
 
             jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
-
+            telegram = Telegram(self.token, str(context._chat_id_and_data[0]))
             for file in jsonfiles:
                 if ".json" in file and not file == "data.json" and not file.__contains__("output.json"):
                     if self.updatebotcontrol(file, "exit"):
-                        mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
-                        mBot.send(f"Stopping {file.replace('.json', '')} crypto bot")
+                        telegram.send(f"Stopping {file.replace('.json', '')} crypto bot")
         else:
             if self.updatebotcontrol(str(query.data).replace("stop_", ""), "exit"):
                 query.edit_message_text(
@@ -1131,7 +1132,7 @@ class TelegramBot(TelegramBotBase):
                 for row in data:
                     logger.info(f"{row}")
                     if data[row]['atr72_pcnt'] != None:
-                        if data[row]['atr72_pcnt'] > 4.0 and data[row]['buy_next']:
+                        if data[row]['atr72_pcnt'] >= self.atr72pcnt and data[row]['buy_next']:
                             update.message.reply_text(
                                 f"<i>{row}\natr72_pcnt: {data[row]['atr72_pcnt']}%\nbuy_next: {data[row]['buy_next']}</i>", parse_mode="HTML"
                             )
@@ -1140,6 +1141,10 @@ class TelegramBot(TelegramBotBase):
                             update.message.text = "Yes"
                             self.newbot_start(update, context)
                             sleep(10)
+
+            update.message.reply_text(
+                f"<i>Operation Complete.</i>", parse_mode="HTML"
+            )
 
         s = scheduler(time, sleep)
         s.enter(60, 1, self.scanmarkets, (update, context))

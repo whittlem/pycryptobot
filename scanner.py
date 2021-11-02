@@ -1,8 +1,6 @@
-import sys
 import time
 import json
 import pandas as pd
-import os
 
 from models.PyCryptoBot import PyCryptoBot
 from models.helper.TelegramBotHelper import TelegramBotHelper as TGBot
@@ -11,29 +9,27 @@ from models.exchange.binance import PublicAPI as BPublicAPI
 from models.exchange.coinbase_pro import PublicAPI as CPublicAPI
 from models.exchange.kucoin import PublicAPI as KPublicAPI
 
-app = PyCryptoBot()
-granularity = ""
+GRANULARITY = ""
 try:
-    with open("scanner.json") as json_file:
+    with open("scanner.json", encoding='utf8') as json_file:
         config = json.load(json_file)
 except IOError as err:
     print (err)
 
 for ex in config:
+    app = PyCryptoBot(exchange=ex)
     for quote in config[ex]["quote_currency"]:
         if ex == "binance":
             api = BPublicAPI()
-            granularity = api.to_binance_granularity(3600)
+            GRANULARITY = api.to_binance_granularity(3600)
         elif ex == "coinbasepro":
             api = CPublicAPI()
-            granularity = api.to_coinbasepro_granularity(3600)
+            GRANULARITY = api.to_coinbasepro_granularity(3600)
         elif ex:
             api = KPublicAPI()
-            granularity = api.to_kucoin_granularity(3600)
+            GRANULARITY = api.to_kucoin_granularity(3600)
         else:
             raise ValueError(f"Invalid exchange: {ex}")
-
-
 
         markets = []
         resp = api.getMarkets24HrStats()
@@ -47,7 +43,7 @@ for ex in config:
                     resp[market]["stats_24hour"]["market"] = market
                     markets.append(resp[market]["stats_24hour"])
         elif ex == "kucoin":
-            # TODO: getMarket24HrStats needs to be added to PublicAPI
+            #TODO: getMarket24HrStats needs to be added to PublicAPI
             raise Exception("getMarket24HrStats needs to be added to PublicAPI")
 
         df_markets = pd.DataFrame(markets)
@@ -65,12 +61,12 @@ for ex in config:
 
         print("Processing, please wait...")
 
-        row = 1
+        ROW = 1
         for market, data in df_markets.T.iteritems():
-            print(f"[{row}/{len(df_markets)}] {market} {round((row/len(df_markets))*100, 2)}%")
+            print(f"[{ROW}/{len(df_markets)}] {market} {round((ROW/len(df_markets))*100, 2)}%")
             try:
                 if int(data["volume"]) > 0:
-                    ta = TechnicalAnalysis(api.getHistoricalData(market, granularity, None))
+                    ta = TechnicalAnalysis(api.getHistoricalData(market, GRANULARITY, None))
                     ta.addEMA(12)
                     ta.addEMA(26)
                     ta.addATR(72)
@@ -93,7 +89,7 @@ for ex in config:
             time.sleep(1)
 
             # current position
-            row = row + 1
+            ROW += 1
 
         # clear screen
         print(chr(27) + "[2J")

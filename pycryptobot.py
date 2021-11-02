@@ -1286,6 +1286,9 @@ def executeJob(
                         price_text,
                         margin_text,
                     )
+
+                    if _app.enableexitaftersell:
+                        sys.exit(0)
                 # if not live
                 else:
                     margin, profit, sell_fee = calculate_margin(
