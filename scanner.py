@@ -23,13 +23,13 @@ for ex in config:
     for quote in config[ex]["quote_currency"]:
         if ex == "binance":
             api = BPublicAPI()
-            granularity = api.to_binance_granularity(app.granularity)
+            granularity = api.to_binance_granularity(3600)
         elif ex == "coinbasepro":
             api = CPublicAPI()
-            granularity = api.to_coinbasepro_granularity(app.granularity)
+            granularity = api.to_coinbasepro_granularity(3600)
         elif ex:
             api = KPublicAPI()
-            granularity = api.to_kucoin_granularity(app.granularity)
+            granularity = api.to_kucoin_granularity(3600)
         else:
             raise ValueError(f"Invalid exchange: {ex}")
 
