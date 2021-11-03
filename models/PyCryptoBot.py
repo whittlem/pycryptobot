@@ -797,6 +797,9 @@ class PyCryptoBot(BotConfig):
     def enableTelegramBotControl(self) -> bool:
         return self.enabletelegrambotcontrol
 
+    def enableImmediateBuy(self) -> bool:
+        return self.enableimmediatebuy
+
     def enableML(self) -> bool:
         return self.enableml
 

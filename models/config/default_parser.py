@@ -412,6 +412,13 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("enabletelegrambotcontrol must be of type int")
 
+    if "enableimmediatebuy" in config:
+        if isinstance(config["enableimmediatebuy"], int):
+            if bool(config["enableimmediatebuy"]):
+                app.enableimmediatebuy = True
+        else:
+            raise TypeError("enableimmediatebuy must be of type int")
+
     # backward compatibility
     if "nosellatloss" in config:
         if isinstance(config["nosellatloss"], int):

@@ -10,8 +10,9 @@ Upgrade library dependencies (if required):
 
 ## [4.4.0] - 2021-11-01
 
+- Dont create telegram_data folder when running sims
 - Add /scanner to TG Bot to scan marks and start bots
-- add multiple market scanning to scanner.py
+- Add multiple market scanning to scanner.py
 
 ## [4.3.1] - 2021-10-28
 
