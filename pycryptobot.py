@@ -481,6 +481,10 @@ def executeJob(
                 _state.action = "WAIT"
                 immediate_action = False
 
+        if app.enableImmediateBuy():
+            if _state.action == "BUY":
+                immediate_action = True
+
         if _state.action == "WAIT":
             manual_buy_sell = telegram_bot.checkmanualbuysell()
             if not manual_buy_sell == "WAIT":

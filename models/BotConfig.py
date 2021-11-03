@@ -90,6 +90,7 @@ class BotConfig:
         self.enableinsufficientfundslogging = False
         self.insufficientfunds = False
         self.enabletelegrambotcontrol = False
+        self.enableimmediatebuy = False
 
         self.filelog = True
         self.logfile = (
