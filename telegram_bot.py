@@ -182,7 +182,7 @@ class TelegramBot(TelegramBotBase):
 
         self.token = self.config["telegram"]["token"]
         self.userid = self.config["telegram"]["user_id"]
-
+        self.atr72pcnt = 4.0
         if "scanner" in self.config:
             self.atr72pcnt = self.config["scanner"]["atr72_pcnt"] if "atr72_pcnt" in self.config["scanner"] else 2.0
 
@@ -388,7 +388,7 @@ class TelegramBot(TelegramBotBase):
 
     def marginresponse(self, update: Updater, context):
         """Show current active orders/pairs or all margins or latest messages"""
-        if not self._checkifallowed(context._user_id_and_data[0], update):
+        if not self._checkifallowed(str(context._user_id_and_data[0]), update):
             return
 
         jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
@@ -415,13 +415,19 @@ class TelegramBot(TelegramBotBase):
         query = update.callback_query
 
         if query.data == "orders":
-            query.edit_message_text(openoutput, parse_mode="HTML")
+            if openoutput == "":
+                query.edit_message_text("<b>No open orders found.</b>", parse_mode="HTML")
+            else:
+                query.edit_message_text(f"<b>Open Order(s)</b>\n{openoutput}", parse_mode="HTML")
         elif query.data == "pairs":
-            query.edit_message_text(closeoutput, parse_mode="HTML")
+            if closeoutput == "":
+                query.edit_message_text("<b>No active pairs found.</b>", parse_mode="HTML")
+            else:
+                query.edit_message_text(f"<b>Active Pair(s)</b>\n{closeoutput}", parse_mode="HTML")
         elif query.data == "allactive":
-            query.edit_message_text(openoutput, parse_mode="HTML")
+            query.edit_message_text(f"<b>Open Order(s)</b>\n{openoutput}", parse_mode="HTML")
             mbot = Telegram(self.token, str(context._chat_id_and_data[0]))
-            mbot.send(closeoutput, parsemode="HTML")
+            mbot.send(f"<b>Active Pair(s)</b>\n{closeoutput}", parsemode="HTML")
 
     def statsrequest(self, update: Updater, context):
         """Ask which exchange stats are wanted for"""
@@ -1104,6 +1110,8 @@ class TelegramBot(TelegramBotBase):
 
     def scanmarkets(self, update, context):
 
+        debug = False
+
         try:
             with open("scanner.json") as json_file:
                 config = json.load(json_file)
@@ -1130,8 +1138,12 @@ class TelegramBot(TelegramBotBase):
                     f"<b>{ex} ({quote})</b> \u23F3", parse_mode="HTML"
                     )
                 for row in data:
-                    logger.info(f"{row}")
+                    if debug:
+                        logger.info("%s", row)
+                        
                     if data[row]['atr72_pcnt'] != None:
+                        if debug:
+                            logger.info(data[row])
                         if data[row]['atr72_pcnt'] >= self.atr72pcnt and data[row]['buy_next']:
                             update.message.reply_text(
                                 f"<i>{row}\natr72_pcnt: {data[row]['atr72_pcnt']}%\nbuy_next: {data[row]['buy_next']}</i>", parse_mode="HTML"
@@ -1147,7 +1159,7 @@ class TelegramBot(TelegramBotBase):
             )
 
         s = scheduler(time, sleep)
-        s.enter(60, 1, self.scanmarkets, (update, context))
+        s.enter(360, 1, self.scanmarkets, (update, context))
 
         # scheduler.enter(3600, 1, ,
         #             (scheduler, 3600, scanmarkets, actionargs))
