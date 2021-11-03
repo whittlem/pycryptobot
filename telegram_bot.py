@@ -90,7 +90,7 @@ class TelegramBotBase:
                 self._read_data(file)
                 if callbacktag == "sell":
                     if "margin" in self.data:
-                        if not self.data["margin"] == " ":
+                        if not "margin" in self.data and self.data["margin"] == " ":
                             buttons.append(
                                 InlineKeyboardButton(
                                     file.replace(".json", ""),
@@ -99,7 +99,7 @@ class TelegramBotBase:
                             )
                 elif callbacktag == "buy":
                     if "margin" in self.data:
-                        if self.data["margin"] == " ":
+                        if "margin" in self.data and self.data["margin"] == " ":
                             buttons.append(
                                 InlineKeyboardButton(
                                     file.replace(".json", ""),
@@ -338,11 +338,13 @@ class TelegramBot(TelegramBotBase):
         for file in jsonfiles:
             if ".json" in file and not file == "data.json" and not file.__contains__('output.json'):
                 self._read_data(file)
-                output = output + f"<b>{file.replace('.json', '')}</b> \U0001F4C8 \n"
-                output = (
-                    output
-                    + f" \u2611\uFE0F <b>Status</b>: <i>{self.data['botcontrol']['status']}</i>- -  \U0001F552 <b>Uptime</b>: <i>{self._getUptime(self.data['botcontrol']['started'])}</i>\n"
-                )
+                output = output + f"\U0001F4C8 <b>{file.replace('.json', '')}</b>  /--/ "
+                if "margin" in self.data:
+                    output = output + f" \u2705 <b>Status</b>: <i>{self.data['botcontrol']['status']}</i>  /--/ "
+                else:
+                    output = output + " \u274C <b>Status</b>: <i>stopped</i>  /--/ "
+                
+                output = output + f" \u23F1 <b>Uptime</b>: <i>{self._getUptime(self.data['botcontrol']['started'])}</i>\n"
 
         if output != "":
             mbot = Telegram(self.token, str(context._chat_id_and_data[0]))
@@ -398,7 +400,7 @@ class TelegramBot(TelegramBotBase):
             if ".json" in file and not file == "data.json":
                 self._read_data(file)
                 if "margin" in self.data:
-                    if self.data["margin"] == " ":
+                    if "margin" in self.data and self.data["margin"] == " ":
                         closeoutput = (
                             closeoutput + f"<b>{str(file).replace('.json', '')}</b>"
                         )
@@ -804,7 +806,7 @@ class TelegramBot(TelegramBotBase):
             for file in jsonfiles:
                 if ".json" in file and not file == "data.json" and not file.__contains__("output.json"):
                     self._read_data(file)
-                    if self.data["margin"] == " ":
+                    if "margin" in self.data and self.data["margin"] == " ":
                         if self.updatebotcontrol(file, "exit"):
                             telegram.send(f"Stopping {file.replace('.json', '')} crypto bot")
 
@@ -822,6 +824,8 @@ class TelegramBot(TelegramBotBase):
                 query.edit_message_text(
                     f"Stopping {str(query.data).replace('stop_', '').replace('.json', '')} crypto bot"
                 )
+
+        query.edit_message_text("Operation Complete")
 
     def newbot_request(self, update: Updater, context):
         """start new bot ask which exchange"""
@@ -1033,15 +1037,15 @@ class TelegramBot(TelegramBotBase):
 
     def error(self, update, context):
         """Log Errors"""
-        if "message" in context.error:
-            if "HTTPError" in context.error.message:
+        if "message" in context.error.args[0]:
+            if "HTTPError" in context.error.args[0]:
                 while self.checkconnection() == False:
                     logger.warning("No internet connection found")
                     self.updater.start_polling(poll_interval=30)
                     sleep(30)
                 self.updater.start_polling()
         else:
-            logger.warning('Update "%s" caused error "%s"', update, context.error)
+            logger.warning('Update caused error "%s"', context.error)
 
     def done(self, update, context):
         """added for conversations to end"""
@@ -1109,6 +1113,8 @@ class TelegramBot(TelegramBotBase):
             return False
 
     def scanmarkets(self, update, context):
+        if not self._checkifallowed(context._user_id_and_data[0], update):
+            return
 
         debug = False
 
@@ -1165,6 +1171,21 @@ class TelegramBot(TelegramBotBase):
         #             (scheduler, 3600, scanmarkets, actionargs))
         # action(*actionargs)
 
+    def cleandata(self, update, context) -> None:
+        if not self._checkifallowed(context._user_id_and_data[0], update):
+            return
+
+        jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
+        for jfile in jsonfiles:
+            if ".json" in jfile and jfile != "data.json" and jfile.__contains__("output.json") == False:
+                logger.info("checking %s", jfile)
+                self._read_data(jfile)
+                if "margin" not in self.data:
+                    logger.info("deleting %s", jfile)
+                    os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
+
+        self.showbotinfo(update, context)
+        update.message.reply_text("Operation Complete")
 
 def main():
     """Start the bot."""
@@ -1196,7 +1217,10 @@ def main():
     dp.add_handler(CommandHandler("buy", botconfig.buyrequest, Filters.text))
     dp.add_handler(CommandHandler("sell", botconfig.sellrequest, Filters.text))
     dp.add_handler(CommandHandler("deletebot", botconfig.deleterequest, Filters.text))
+
     dp.add_handler(CommandHandler("scanner", botconfig.scanmarkets, Filters.text))
+    dp.add_handler(CommandHandler("cleandata", botconfig.cleandata, Filters.text))
+
 
 
     # Response to Question handler
