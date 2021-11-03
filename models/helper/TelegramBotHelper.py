@@ -59,7 +59,7 @@ class TelegramBotHelper:
                 json.dump(self.data, outfile, indent=4)
         
     def addmargin(self, margin: str = "", delta: str = "", price: str = ""):
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl()():
+        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             self._read_data()
 
             addmarket = {'exchange' : self.exchange, 'margin' : margin, 'delta' : delta, 'price' : price, "df_high": " ", "from_df_high": " "}
@@ -67,14 +67,14 @@ class TelegramBotHelper:
             self._write_data()
 
     def addinfo(self, message: str = "", price: str = "", df_high: str="", from_df_high: str="") -> None:
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl()():
+        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             self._read_data()
             addmarket = {"message": message, "margin": " ", "delta": " ", "price" : price, "exchange" : self.exchange, "df_high": df_high, "from_df_high": from_df_high}
             self.data.update(addmarket)
             self._write_data()
 
     def addindicators(self, indicator, state) -> None:
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl()():
+        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             self._read_data()
             if not 'indicators' in self.data:
                 self.data.update({"indicators": {}})
@@ -83,18 +83,18 @@ class TelegramBotHelper:
             self._write_data()
 
     def deletemargin(self):
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl()():
+        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             os.remove(os.path.join(self.app.telegramdatafolder, 'telegram_data', self.filename))
 
     def closetrade(self, ts, price, margin):
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl()():
+        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             self._read_data("data.json")
             self.data['trades'].update({ts : {"pair" : self.market, "price" : price, "margin" : margin}})
             self._write_data("data.json")
 
     def checkmanualbuysell(self) -> str:
         result = "WAIT"
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl()():
+        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             self._read_data()
 
             if len(self.data['botcontrol']) > 0:
@@ -113,21 +113,21 @@ class TelegramBotHelper:
 
     def checkbotcontrolstatus(self) -> str:
         result = "active"
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl()():
+        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             self._read_data()
             result = self.data["botcontrol"]["status"]
             
         return result
 
     def updatebotstatus(self, status) -> None:
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl()():
+        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             self._read_data()
             if not self.data["botcontrol"]["status"] == status:
                 self.data["botcontrol"]["status"] = status
                 self._write_data()
 
     def removeactivebot(self) -> None:
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl()():
+        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             self.deletemargin()
 
     def save_scanner_output(self, exchange, quote, output: DataFrame) -> None:
