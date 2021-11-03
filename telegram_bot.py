@@ -333,22 +333,26 @@ class TelegramBot(TelegramBotBase):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
 
+        mbot = Telegram(self.token, str(context._chat_id_and_data[0]))
+
         jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
         output = ""
         for file in jsonfiles:
             if ".json" in file and not file == "data.json" and not file.__contains__('output.json'):
+                output = ""
                 self._read_data(file)
                 output = output + f"\U0001F4C8 <b>{file.replace('.json', '')}</b>  /--/ "
                 if "margin" in self.data:
                     output = output + f" \u2705 <b>Status</b>: <i>{self.data['botcontrol']['status']}</i>  /--/ "
                 else:
                     output = output + " \u274C <b>Status</b>: <i>stopped</i>  /--/ "
-                
                 output = output + f" \u23F1 <b>Uptime</b>: <i>{self._getUptime(self.data['botcontrol']['started'])}</i>\n"
+                mbot.send(output, parsemode="HTML")
+                sleep(0.2)
 
-        if output != "":
-            mbot = Telegram(self.token, str(context._chat_id_and_data[0]))
-            mbot.send(output, parsemode="HTML")
+        output = f"<b>Bot Count ({len(jsonfiles)})</b>"
+        print(output)
+        mbot.send(output, parsemode="HTML")
 
     def trades(self, update, context):
         """List trades"""
@@ -406,12 +410,13 @@ class TelegramBot(TelegramBotBase):
                         )
                         closeoutput = closeoutput + f"\n<i>{self.data['message']}</i>\n"
                     elif len(self.data) > 2:
+                        margin_icon = '\u2705' if '-' not in self.data['margin'] else '\u274C'
                         openoutput = (
-                            openoutput + f"<b>{str(file).replace('.json', '')}</b>"
+                            openoutput + f"\U0001F4C8 <b>{str(file).replace('.json', '')}</b> "
                         )
                         openoutput = (
                             openoutput
-                            + f"\n<i>Current Margin: {self.data['margin']}   (P/L): {self.data['delta']}</i>\n"
+                            + f" {margin_icon}<i>Current Margin: {self.data['margin']}  \U0001F4B0 (P/L): {self.data['delta']}</i>\n"
                         )
 
         query = update.callback_query
@@ -1186,6 +1191,7 @@ class TelegramBot(TelegramBotBase):
 
         self.showbotinfo(update, context)
         update.message.reply_text("Operation Complete")
+
 
 def main():
     """Start the bot."""
