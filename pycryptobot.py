@@ -1292,8 +1292,7 @@ def executeJob(
 
                     if _app.enableexitaftersell:
                         time.sleep(900)
-                    #     Logger.info("Closing after sale..")
-                    #     sys.exit(0)
+
                 # if not live
                 else:
                     margin, profit, sell_fee = calculate_margin(
