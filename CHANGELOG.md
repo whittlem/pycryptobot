@@ -10,7 +10,9 @@ Upgrade library dependencies (if required):
 
 ## [4.4.0] - 2021-11-01
 
-- Dont create telegram_data folder when running sims
+- Fixed error when {market}.json file might not be complete (bot stopped).
+- Add /cleandata to remove and {market}.json file are not complete (bot stopped)
+- Add not to create telegram_data folder when running sims
 - Add /scanner to TG Bot to scan marks and start bots
 - Add multiple market scanning to scanner.py
 
