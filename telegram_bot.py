@@ -289,7 +289,7 @@ class TelegramBot(TelegramBotBase):
             BotCommand("startbots", "start all or selected bot"),
             BotCommand("stopbots", "stop all or the selected bot"),
             BotCommand("pausebots", "pause all or selected bot"),
-            BotCommand("restartbots", "restart all or selected bot"),
+            BotCommand("resumebots", "resume paused bots"),
             BotCommand("buy", "Manual buy"),
             BotCommand("sell", "Manual sell"),
         ]
@@ -318,7 +318,7 @@ class TelegramBot(TelegramBotBase):
         helptext += "<b>Interactive Command List</b>\n\n"
         helptext += "<b>/addnew</b> - <i>start the requested pair</i>\n"
         helptext += "<b>/pausebots</b> - <i>pause all or the selected bot</i>\n"
-        helptext += "<b>/restartbots</b> - <i>restart all or the selected bot</i>\n"
+        helptext += "<b>/resumebots</b> - <i>resume paused bots</i>\n"
         helptext += "<b>/stopbots</b> - <i>stop all or the selected bots</i>\n"
         helptext += "<b>/startbots</b> - <i>start all or the selected bots</i>\n"
         helptext += "<b>/sell</b> - <i>sell market pair on next iteration</i>\n"
@@ -1216,7 +1216,7 @@ def main():
     dp.add_handler(CommandHandler("sell", botconfig.sellrequest, Filters.text))
     dp.add_handler(CommandHandler("pausebots", botconfig.pausebotrequest, Filters.text))
     dp.add_handler(
-        CommandHandler("restartbots", botconfig.restartbotrequest, Filters.text)
+        CommandHandler("resumebots", botconfig.restartbotrequest, Filters.text)
     )
     dp.add_handler(CommandHandler("startbots", botconfig.startallbotsrequest))
     dp.add_handler(CommandHandler("stopbots", botconfig.stopbotrequest))
