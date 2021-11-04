@@ -339,17 +339,30 @@ class TelegramBot(TelegramBotBase):
         output = ""
         for file in jsonfiles:
             if ".json" in file and not file == "data.json" and not file.__contains__('output.json'):
-                output = ""
+                # output = ""
                 self._read_data(file)
-                output = output + f"\U0001F4C8 <b>{file.replace('.json', '')}</b>  /--/ "
-                if "margin" in self.data:
-                    output = output + f" \u2705 <b>Status</b>: <i>{self.data['botcontrol']['status']}</i>  /--/ "
-                else:
-                    output = output + " \u274C <b>Status</b>: <i>stopped</i>  /--/ "
-                output = output + f" \u23F1 <b>Uptime</b>: <i>{self._getUptime(self.data['botcontrol']['started'])}</i>\n"
-                mbot.send(output, parsemode="HTML")
-                sleep(0.2)
+                output = output + f"\U0001F4C8 <b>{file.replace('.json', '')}</b> "
 
+                last_modified = datetime.now() - datetime.fromtimestamp(os.path.getmtime(os.path.join(self.datafolder, "telegram_data", file)))
+                # print(f"{file} {last_modified.seconds < 120} {last_modified} {last_modified.seconds}")
+
+                if "margin" in self.data:
+                    if self.data['botcontrol']['status'] == "active" and last_modified.seconds < 120 or last_modified.seconds == 86399:
+                        output = output + f" \U00002705 <b>Status</b>: <i>{self.data['botcontrol']['status']}</i> "
+                    elif self.data['botcontrol']['status'] == "paused":
+                        output = output + f" \U000023F8 <b>Status</b>: <i>{self.data['botcontrol']['status']}</i> "
+                    elif self.data['botcontrol']['status'] == "exit":
+                        output = output + f" \U0000274C <b>Status</b>: <i>{self.data['botcontrol']['status']}</i> "
+                    elif last_modified.seconds > 90:
+                        output = output + " \U0001F6D1	 <b>Status</b>: <i>defaulted</i> "
+                else:
+                    output = output + " \U0001F6D1	 <b>Status</b>: <i>stopped</i> "
+                output = output + f" \u23F1 <b>Uptime</b>: <i>{self._getUptime(self.data['botcontrol']['started'])}</i>\n"
+                # mbot.send(output, parsemode="HTML")
+                # sleep(0.2)
+
+        mbot.send(output, parsemode="HTML")
+        sleep(0.2)
         output = f"<b>Bot Count ({len(jsonfiles)})</b>"
         print(output)
         mbot.send(output, parsemode="HTML")
@@ -645,7 +658,7 @@ class TelegramBot(TelegramBotBase):
                         )
         else:
             if self.updatebotcontrol(query.data.replace("pause_", ""), "pause"):
-                update.message.reply_text(
+                query.edit_message_text(
                     f"<i>Pausing {query.data.replace('pause_', '').replace('.json','')}</i>",
                     parse_mode="HTML",
                 )
@@ -1188,6 +1201,14 @@ class TelegramBot(TelegramBotBase):
                 self._read_data(jfile)
                 if "margin" not in self.data:
                     logger.info("deleting %s", jfile)
+                    os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
+
+                last_modified = datetime.now() - datetime.fromtimestamp(os.path.getmtime(os.path.join(self.datafolder, "telegram_data", jfile)))
+                if self.data['botcontrol']['status'] == "active" and last_modified.seconds > 120 and last_modified.seconds != 86399:
+                    logger.info("deleting %s %s", jfile, str(last_modified))
+                    os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
+                elif self.data['botcontrol']['status'] == "exit" and last_modified.seconds > 120 and last_modified.seconds != 86399:
+                    logger.info("deleting %s %s", jfile, str(last_modified.seconds))
                     os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
 
         self.showbotinfo(update, context)
