@@ -803,6 +803,9 @@ class PyCryptoBot(BotConfig):
     def enableWebsocket(self) -> bool:
         return self.websocket
 
+    def enabledLogBuySellInJson(self) -> bool:
+        return self.logbuysellinjson
+
     def setGranularity(self, granularity: int):
         if granularity in [60, 300, 900, 3600, 21600, 86400]:
             self.granularity = granularity
@@ -1351,6 +1354,10 @@ class PyCryptoBot(BotConfig):
             "Insufficient Funds Logging",
             str(self.enableinsufficientfundslogging)
             + "  --enableinsufficientfundslogging",
+        )
+        text_box.line(
+            "Log Buy and Sell orders in JSON",
+            str(self.logbuysellinjson) + "  --logbuysellinjson"
         )
 
         if self.getBuyMaxSize():
