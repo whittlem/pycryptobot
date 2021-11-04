@@ -90,7 +90,7 @@ class TelegramBotBase:
                 self._read_data(file)
                 if callbacktag == "sell":
                     if "margin" in self.data:
-                        if not "margin" in self.data and self.data["margin"] == " ":
+                        if self.data["margin"] != " ":
                             buttons.append(
                                 InlineKeyboardButton(
                                     file.replace(".json", ""),
@@ -99,7 +99,7 @@ class TelegramBotBase:
                             )
                 elif callbacktag == "buy":
                     if "margin" in self.data:
-                        if "margin" in self.data and self.data["margin"] == " ":
+                        if self.data["margin"] == " ":
                             buttons.append(
                                 InlineKeyboardButton(
                                     file.replace(".json", ""),
