@@ -14,6 +14,7 @@ from datetime import datetime
 import pandas as pd
 
 from models.AppState import AppState
+from models.exchange.Granularity import Granularity
 from models.helper.LogHelper import Logger
 from models.helper.MarginHelper import calculate_margin
 from models.PyCryptoBot import PyCryptoBot
@@ -156,11 +157,11 @@ def executeJob(
                     str(endDate),
                 )
 
-                if _app.getGranularity() == 3600:
+                if _app.getGranularity() == Granularity.ONE_HOUR:
                     simDate = _app.getDateFromISO8601Str(str(simDate))
                     sim_rounded = pd.Series(simDate).dt.round("60min")
                     simDate = sim_rounded[0]
-                elif _app.getGranularity() == 900:
+                elif _app.getGranularity() == Granularity.FIFTEEN_MINUTES:
                     simDate = _app.getDateFromISO8601Str(str(simDate))
                     sim_rounded = pd.Series(simDate).dt.round("15min")
                     simDate = sim_rounded[0]
@@ -231,7 +232,7 @@ def executeJob(
     if (
         (last_api_call_datetime.seconds > 60 or _app.isSimulation())
         and _app.getSmartSwitch() == 1
-        and _app.getGranularity() == 3600
+        and _app.getGranularity() == Granularity.ONE_HOUR
         and _app.is1hEMA1226Bull(current_sim_date, _websocket) is True
         and _app.is6hEMA1226Bull(current_sim_date, _websocket) is True
     ):
@@ -248,7 +249,7 @@ def executeJob(
             + " smart switch from granularity 3600 (1 hour) to 900 (15 min)"
         )
 
-        _app.setGranularity(900)
+        _app.setGranularity(Granularity.FIFTEEN_MINUTES)
         list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
 
@@ -256,7 +257,7 @@ def executeJob(
     if (
         (last_api_call_datetime.seconds > 60 or _app.isSimulation())
         and _app.getSmartSwitch() == 1
-        and _app.getGranularity() == 900
+        and _app.getGranularity() == Granularity.FIFTEEN_MINUTES
         and _app.is1hEMA1226Bull(current_sim_date, _websocket) is False
         and _app.is6hEMA1226Bull(current_sim_date, _websocket) is False
     ):
@@ -272,11 +273,11 @@ def executeJob(
             f"{_app.getMarket()} smart switch from granularity 900 (15 min) to 3600 (1 hour)"
         )
 
-        _app.setGranularity(3600)
+        _app.setGranularity(Granularity.ONE_HOUR)
         list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
 
-    if _app.getExchange() == "binance" and _app.getGranularity() == 86400:
+    if _app.getExchange() == "binance" and _app.getGranularity() == Granularity.ONE_DAY:
         if len(df) < 250:
             # data frame should have 250 rows, if not retry
             Logger.error(f"error: data frame length is < 250 ({str(len(df))})")
@@ -893,7 +894,7 @@ def executeJob(
                         try:
                             prediction = (
                                 _technical_analysis.seasonalARIMAModelPrediction(
-                                    int(_app.getGranularity() / 60) * 3
+                                    int(_app.getGranularity().to_integer / 60) * 3
                                 )
                             )  # 3 intervals from now
                             Logger.info(
@@ -1674,12 +1675,13 @@ def executeJob(
 
 def main():
     try:
+        _websocket = None
         message = "Starting "
         if app.getExchange() == "coinbasepro":
             message += "Coinbase Pro bot"
             if app.enableWebsocket() and not app.isSimulation():
                 print("Opening websocket to Coinbase Pro...")
-                _websocket = CWebSocketClient([app.getMarket()], app.getGranularity())
+                _websocket = CWebSocketClient([app.getMarket()], app.getGranularity().to_integer)
                 _websocket.start()
         elif app.getExchange() == "binance":
             message += "Binance bot"

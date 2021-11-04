@@ -1,45 +1,25 @@
+import json
 import math
 import random
 import re
-import urllib3
-import json
-import pandas as pd
 from datetime import datetime, timedelta
 from typing import Union
+
+import pandas as pd
+import urllib3
 from urllib3.exceptions import ReadTimeoutError
+
+from models.BotConfig import BotConfig
 from models.Trading import TechnicalAnalysis
+from models.config import binanceParseMarket, coinbaseProParseMarket, kucoinParseMarket
+from models.exchange.Granularity import Granularity
 from models.exchange.binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
 from models.exchange.coinbase_pro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
 from models.exchange.kucoin import AuthAPI as KAuthAPI, PublicAPI as KPublicAPI
-from models.config import binanceParseMarket, coinbaseProParseMarket, kucoinParseMarket
-from models.helper.LogHelper import Logger
 from models.helper.TextBoxHelper import TextBox
-from models.BotConfig import BotConfig
 
 # disable insecure ssl warning
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-
-def to_coinbase_pro_granularity(granularity: int) -> int:
-    return granularity
-
-
-def to_binance_granularity(granularity: int) -> str:
-    return {60: "1m", 300: "5m", 900: "15m", 3600: "1h", 21600: "6h", 86400: "1d"}[
-        granularity
-    ]
-
-
-def to_kucoin_granularity(granularity: int) -> str:
-    return {
-        60: "1min",
-        300: "5min",
-        900: "15min",
-        1800: "30min",
-        3600: "1hour",
-        21600: "6hour",
-        86400: "1day",
-    }[granularity]
 
 
 #  pylint: disable=unsubscriptable-object
@@ -173,7 +153,7 @@ class PyCryptoBot(BotConfig):
         # Logger.info(self.market)
         return self.market
 
-    def getGranularity(self) -> int:
+    def getGranularity(self) -> Granularity:
         return self.granularity
 
     def getInterval(
@@ -191,13 +171,13 @@ class PyCryptoBot(BotConfig):
 
     def printGranularity(self) -> str:
         if self.exchange == "kucoin":
-            return to_kucoin_granularity(self.granularity)
+            return self.granularity.to_medium
         if self.exchange == "binance":
-            return to_binance_granularity(self.granularity)
+            return self.granularity.to_short
         if self.exchange == "coinbasepro":
-            return str(self.granularity)
+            return str(self.granularity.to_integer)
         if self.exchange == "dummy":
-            return str(self.granularity)
+            return str(self.granularity.to_integer)
         raise TypeError(f'Unknown exchange "{self.exchange}"')
 
     def getBuyPercent(self):
@@ -237,7 +217,7 @@ class PyCryptoBot(BotConfig):
         return datetime.strptime(new_date_str, "%Y-%m-%d %H:%M:%S")
 
     def getHistoricalData(
-        self, market, granularity: int, websocket, iso8601start="", iso8601end=""
+        self, market, granularity: Granularity, websocket, iso8601start="", iso8601end=""
     ):
         if self.exchange == "binance":
             api = BPublicAPI(api_url=self.getAPIURL())
@@ -245,49 +225,49 @@ class PyCryptoBot(BotConfig):
             if iso8601start != "" and iso8601end != "":
                 return api.getHistoricalData(
                     market,
-                    to_binance_granularity(granularity),
+                    granularity,
                     None,
                     iso8601start,
                     iso8601end,
                 )
             else:
                 return api.getHistoricalData(
-                    market, to_binance_granularity(granularity), websocket
+                    market, granularity, websocket
                 )
         elif self.exchange == "kucoin":  # returns data from coinbase if not specified
             api = KPublicAPI(api_url=self.getAPIURL())
 
             if iso8601start != "" and iso8601end == "":
                 return api.getHistoricalData(
-                    market, to_kucoin_granularity(granularity), iso8601start
+                    market, granularity.to_medium, iso8601start
                 )
             elif iso8601start != "" and iso8601end != "":
                 return api.getHistoricalData(
-                    market, to_kucoin_granularity(granularity), iso8601start, iso8601end
+                    market, granularity.to_medium, iso8601start, iso8601end
                 )
             else:
-                return api.getHistoricalData(market, to_kucoin_granularity(granularity))
+                return api.getHistoricalData(market, granularity.to_medium)
         else:  # returns data from coinbase if not specified
             api = CBPublicAPI()
 
             if iso8601start != "" and iso8601end == "":
                 return api.getHistoricalData(
                     market,
-                    to_coinbase_pro_granularity(granularity),
+                    granularity.to_integer,
                     None,
                     iso8601start,
                 )
             elif iso8601start != "" and iso8601end != "":
                 return api.getHistoricalData(
                     market,
-                    to_coinbase_pro_granularity(granularity),
+                    granularity.to_integer,
                     None,
                     iso8601start,
                     iso8601end,
                 )
             else:
                 return api.getHistoricalData(
-                    market, to_coinbase_pro_granularity(granularity), websocket
+                    market, granularity.to_integer, websocket
                 )
 
     def getSmartSwitchDataFrame(
@@ -295,7 +275,7 @@ class PyCryptoBot(BotConfig):
         app,
         df: pd.DataFrame,
         market,
-        granularity: int,
+        granularity: Granularity,
         simstart: str = "",
         simend: str = "",
     ) -> pd.DataFrame:
@@ -327,15 +307,15 @@ class PyCryptoBot(BotConfig):
                     text_box.singleLine()
                     if self.smart_switch:
                         text_box.center(
-                            f"*** Getting smartswitch ({str(granularity)}) market data ***"
+                            f"*** Getting smartswitch ({granularity.to_short}) market data ***"
                         )
                     else:
                         text_box.center(
-                            f"*** Getting ({str(granularity)}) market data ***"
+                            f"*** Getting ({granularity.to_short}) market data ***"
                         )
 
                 df_first = simend
-                df_first -= timedelta(minutes=((granularity / 60) * 200))
+                df_first -= timedelta(minutes=((granularity.to_integer / 60) * 200))
                 df1 = self.getHistoricalData(
                     market,
                     granularity,
@@ -356,7 +336,7 @@ class PyCryptoBot(BotConfig):
                 ):
 
                     end_date = df_first
-                    df_first -= timedelta(minutes=(300 * (granularity / 60)))
+                    df_first -= timedelta(minutes=(300 * (granularity.to_integer / 60)))
 
                     if df_first.isoformat(timespec="milliseconds") < simstart.isoformat(
                         timespec="milliseconds"
@@ -386,7 +366,7 @@ class PyCryptoBot(BotConfig):
                         timespec="milliseconds"
                     ) == simstart.isoformat(timespec="milliseconds"):
                         if addingExtraCandles == False:
-                            simstart -= timedelta(minutes=(300 * (granularity / 60)))
+                            simstart -= timedelta(minutes=(300 * (granularity.to_integer / 60)))
                         addingExtraCandles = True
                         self.extraCandlesFound = True
 
@@ -424,13 +404,13 @@ class PyCryptoBot(BotConfig):
 
         if self.isSimulation():
             self.ema1226_15m_cache = self.getSmartSwitchDataFrame(
-                _app, self.ema1226_15m_cache, market, 900, start, end
+                _app, self.ema1226_15m_cache, market, Granularity.FIFTEEN_MINUTES, start, end
             )
             self.ema1226_1h_cache = self.getSmartSwitchDataFrame(
-                _app, self.ema1226_1h_cache, market, 3600, start, end
+                _app, self.ema1226_1h_cache, market, Granularity.ONE_HOUR, start, end
             )
             self.ema1226_6h_cache = self.getSmartSwitchDataFrame(
-                _app, self.ema1226_6h_cache, market, 21600, start, end
+                _app, self.ema1226_6h_cache, market, Granularity.SIX_HOURS, start, end
             )
 
             if len(self.ema1226_15m_cache) == 0:
@@ -438,8 +418,8 @@ class PyCryptoBot(BotConfig):
                     f"No data return for selected date range {start} - {end}"
                 )
 
-            if self.extraCandlesFound == False:
-                if granularity == 900:
+            if not self.extraCandlesFound:
+                if granularity == Granularity.FIFTEEN_MINUTES:
                     if (
                         self.getDateFromISO8601Str(
                             str(self.ema1226_15m_cache.index.format()[0])
@@ -478,13 +458,13 @@ class PyCryptoBot(BotConfig):
                             self.ema1226_1h_cache.head(1).index.format()[0]
                         )
 
-            if granularity == 900:
+            if granularity == Granularity.FIFTEEN_MINUTES:
                 return self.ema1226_15m_cache
             else:
                 return self.ema1226_1h_cache
 
     def getHistoricalDataChained(
-        self, market, granularity: int, max_interations: int = 1
+        self, market, granularity: Granularity, max_interations: int = 1
     ) -> pd.DataFrame:
         df1 = self.getHistoricalData(market, granularity, None)
 
@@ -492,7 +472,7 @@ class PyCryptoBot(BotConfig):
             return df1
 
         def getPreviousDateRange(df: pd.DataFrame = None) -> tuple:
-            end_date = df["date"].min() - timedelta(seconds=(granularity / 60))
+            end_date = df["date"].min() - timedelta(seconds=(granularity.to_integer / 60))
             new_start = df["date"].min() - timedelta(hours=300)
             return (str(new_start).replace(" ", "T"), str(end_date).replace(" ", "T"))
 
@@ -523,15 +503,15 @@ class PyCryptoBot(BotConfig):
                 ].copy()
             elif self.exchange == "coinbasepro":
                 api = CBPublicAPI()
-                df_data = api.getHistoricalData(self.market, 3600, websocket)
+                df_data = api.getHistoricalData(self.market, Granularity.ONE_HOUR.to_integer, websocket)
                 self.ema1226_1h_cache = df_data
             elif self.exchange == "binance":
                 api = BPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(self.market, "1h", websocket)
+                df_data = api.getHistoricalData(self.market, Granularity.ONE_HOUR, websocket)
                 self.ema1226_1h_cache = df_data
             elif self.exchange == "kucoin":
                 api = KPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(self.market, "1hour")
+                df_data = api.getHistoricalData(self.market, Granularity.ONE_HOUR.to_medium)
                 self.ema1226_1h_cache = df_data
             else:
                 return False
@@ -559,15 +539,15 @@ class PyCryptoBot(BotConfig):
                 ].copy()
             elif self.exchange == "coinbasepro":
                 api = CBPublicAPI()
-                df_data = api.getHistoricalData(self.market, 3600, websocket)
+                df_data = api.getHistoricalData(self.market, Granularity.ONE_HOUR.to_integer, websocket)
                 self.sma50200_1h_cache = df_data
             elif self.exchange == "binance":
                 api = BPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(self.market, "1h", websocket)
+                df_data = api.getHistoricalData(self.market, Granularity.ONE_HOUR, websocket)
                 self.sma50200_1h_cache = df_data
             elif self.exchange == "kucoin":
                 api = KPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(self.market, "1hour")
+                df_data = api.getHistoricalData(self.market, Granularity.ONE_HOUR.to_medium)
                 self.sma50200_1h_cache = df_data
             else:
                 return False
@@ -591,13 +571,13 @@ class PyCryptoBot(BotConfig):
         try:
             if self.exchange == "coinbasepro":
                 api = CBPublicAPI()
-                df_data = api.getHistoricalData(self.market, 86400, websocket)
+                df_data = api.getHistoricalData(self.market, Granularity.ONE_DAY.to_integer, websocket)
             elif self.exchange == "binance":
                 api = BPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(self.market, "1d", websocket)
+                df_data = api.getHistoricalData(self.market, Granularity.ONE_DAY, websocket)
             elif self.exchange == "kucoin":
                 api = KPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(self.market, "1day")
+                df_data = api.getHistoricalData(self.market, Granularity.ONE_DAY.to_medium)
             else:
                 return False  # if there is an API issue, default to False to avoid hard sells
 
@@ -622,15 +602,15 @@ class PyCryptoBot(BotConfig):
                 ].copy()
             elif self.exchange == "coinbasepro":
                 api = CBPublicAPI()
-                df_data = api.getHistoricalData(self.market, 21600, websocket)
+                df_data = api.getHistoricalData(self.market, Granularity.SIX_HOURS.to_integer, websocket)
                 self.ema1226_6h_cache = df_data
             elif self.exchange == "binance":
                 api = BPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(self.market, "6h", websocket)
+                df_data = api.getHistoricalData(self.market, Granularity.SIX_HOURS, websocket)
                 self.ema1226_6h_cache = df_data
             elif self.exchange == "kucoin":
                 api = KPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(self.market, "6hour")
+                df_data = api.getHistoricalData(self.market, Granularity.SIX_HOURS.to_medium)
                 self.ema1226_6h_cache = df_data
             else:
                 return False
@@ -654,13 +634,13 @@ class PyCryptoBot(BotConfig):
         try:
             if self.exchange == "coinbasepro":
                 api = CBPublicAPI()
-                df_data = api.getHistoricalData(self.market, 21600, websocket)
+                df_data = api.getHistoricalData(self.market, Granularity.SIX_HOURS.to_integer, websocket)
             elif self.exchange == "binance":
                 api = BPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(self.market, "6h", websocket)
+                df_data = api.getHistoricalData(self.market, Granularity.SIX_HOURS, websocket)
             elif self.exchange == "kucoin":
                 api = KPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(self.market, "6hour")
+                df_data = api.getHistoricalData(self.market, Granularity.SIX_HOURS.to_medium)
             else:
                 return False
 
@@ -803,9 +783,8 @@ class PyCryptoBot(BotConfig):
     def enableWebsocket(self) -> bool:
         return self.websocket
 
-    def setGranularity(self, granularity: int):
-        if granularity in [60, 300, 900, 3600, 21600, 86400]:
-            self.granularity = granularity
+    def setGranularity(self, granularity: Granularity):
+        self.granularity = granularity
 
     def compare(self, val1, val2, label="", precision=2):
         if val1 > val2:
@@ -1115,7 +1094,7 @@ class PyCryptoBot(BotConfig):
                     # date = self.simstartdate.split('-')
                     startDate = self.getDateFromISO8601Str(self.simstartdate)
                     endDate = startDate + timedelta(
-                        minutes=(self.getGranularity() / 60) * 300
+                        minutes=(self.getGranularity().to_integer / 60) * 300
                     )
 
                 elif self.simenddate is not None and self.simstartdate is None:
@@ -1125,7 +1104,7 @@ class PyCryptoBot(BotConfig):
                         endDate = self.getDateFromISO8601Str(self.simenddate)
 
                     startDate = endDate - timedelta(
-                        minutes=(self.getGranularity() / 60) * 300
+                        minutes=(self.getGranularity().to_integer / 60) * 300
                     )
 
                 else:
@@ -1140,7 +1119,7 @@ class PyCryptoBot(BotConfig):
                         endDate -= timedelta(hours=random.randint(0, 8760 * 1))
 
                     startDate = self.getDateFromISO8601Str(str(endDate))
-                    startDate -= timedelta(minutes=(self.getGranularity() / 60) * 300)
+                    startDate -= timedelta(minutes=(self.getGranularity().to_integer / 60) * 300)
 
                 while len(tradingData) < 300 and attempts < 10:
                     if endDate.isoformat() > datetime.now().isoformat():
@@ -1195,11 +1174,11 @@ class PyCryptoBot(BotConfig):
                 tradingData = pd.DataFrame()
 
                 startDate = self.getDateFromISO8601Str(str(datetime.now()))
-                startDate -= timedelta(minutes=(self.getGranularity() / 60) * 2)
+                startDate -= timedelta(minutes=(self.getGranularity().to_integer / 60) * 2)
                 endDate = startDate
                 startDate = pd.Series(startDate).dt.round(freq="H")[0]
                 endDate = pd.Series(endDate).dt.round(freq="H")[0]
-                startDate -= timedelta(minutes=(self.getGranularity() / 60) * 300)
+                startDate -= timedelta(minutes=(self.getGranularity().to_integer / 60) * 300)
 
                 if endDate.isoformat() > datetime.now().isoformat():
                     endDate = datetime.now()
