@@ -410,9 +410,10 @@ class TelegramBot(TelegramBotBase):
                         )
                         closeoutput = closeoutput + f"\n<i>{self.data['message']}</i>\n"
                     elif len(self.data) > 2:
-                        margin_icon = '\u2705' if '-' not in self.data['margin'] else '\u274C'
+                        space = 20 - len(str(file).replace('.json', ''))
+                        margin_icon = '\U0001F7E2' if '-' not in self.data['margin'] else '\U0001F534'
                         openoutput = (
-                            openoutput + f"\U0001F4C8 <b>{str(file).replace('.json', '')}</b> "
+                            openoutput + f"\U0001F4C8 <b>{str(file).replace('.json', '')}</b> ".ljust(space)
                         )
                         openoutput = (
                             openoutput
