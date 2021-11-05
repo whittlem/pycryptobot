@@ -1,5 +1,4 @@
 import argparse
-import fileinput
 import json
 import os
 import re
@@ -9,6 +8,7 @@ import yaml
 from yaml.constructor import ConstructorError
 from yaml.scanner import ScannerError
 
+from models.ConfigBuilder import ConfigBuilder
 from models.chat import Telegram
 from models.config import (
     binanceConfigParser,
@@ -20,6 +20,7 @@ from models.config import (
 from models.ConfigBuilder import ConfigBuilder
 from models.exchange.Granularity import Granularity
 from models.helper.LogHelper import Logger
+from models.exchange.ExchangesEnum import Exchange
 
 
 class BotConfig:
@@ -162,16 +163,16 @@ class BotConfig:
         ) = self._set_default_api_info(self.exchange)
 
         if self.config_provided:
-            if self.exchange == "coinbasepro" and "coinbasepro" in self.config:
+            if self.exchange == Exchange.COINBASEPRO.value and "coinbasepro" in self.config:
                 coinbaseProConfigParser(self, self.config["coinbasepro"], self.cli_args)
 
-            elif self.exchange == "binance" and "binance" in self.config:
+            elif self.exchange == Exchange.BINANCE.value and "binance" in self.config:
                 binanceConfigParser(self, self.config["binance"], self.cli_args)
 
-            elif self.exchange == "kucoin" and "kucoin" in self.config:
+            elif self.exchange == Exchange.KUCOIN.value and "kucoin" in self.config:
                 kucoinConfigParser(self, self.config["kucoin"], self.cli_args)
 
-            elif self.exchange == "dummy" and "dummy" in self.config:
+            elif self.exchange == Exchange.DUMMY.value and "dummy" in self.config:
                 dummyConfigParser(self, self.config["dummy"], self.cli_args)
 
             if (
@@ -195,9 +196,9 @@ class BotConfig:
                 self.logfile == "/dev/null"
 
         else:
-            if self.exchange == "binance":
+            if self.exchange == Exchange.BINANCE.value:
                 binanceConfigParser(self, None, self.cli_args)
-            elif self.exchange == "kucoin":
+            elif self.exchange == Exchange.KUCOIN.value:
                 kucoinConfigParser(self, None, self.cli_args)
             else:
                 coinbaseProConfigParser(self, None, self.cli_args)
