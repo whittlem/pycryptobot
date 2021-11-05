@@ -85,6 +85,7 @@ def executeJob(
             print(str(datetime.now()).format() + " - Bot has restarted")
             _app.notifyTelegram(f"{_app.getMarket()} bot has restarted")
             telegram_bot.updatebotstatus("active")
+            _app.read_config(_app.getExchange())
             if _app.enableWebsocket():
                 Logger.info("Starting _websocket...")
                 _websocket.start()
