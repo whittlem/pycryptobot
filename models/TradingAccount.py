@@ -59,15 +59,15 @@ class TradingAccount:
         market : str
             market to check
         """
-        if self.app.getExchange() == Exchange.COINBASEPRO.value and market != "":
+        if self.app.getExchange() == Exchange.COINBASEPRO and market != "":
             p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
             if not p.match(market):
                 raise TypeError("Coinbase Pro market is invalid.")
-        elif self.app.getExchange() == Exchange.BINANCE.value:
+        elif self.app.getExchange() == Exchange.BINANCE:
             p = re.compile(r"^[A-Z]{5,12}$")
             if not p.match(market):
                 raise TypeError("Binance market is invalid.")
-        elif self.app.getExchange() == Exchange.KUCOIN.value:
+        elif self.app.getExchange() == Exchange.KUCOIN:
             p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
             if not p.match(market):
                 raise TypeError("Kucoin market is invalid.")
@@ -97,7 +97,7 @@ class TradingAccount:
         if not status in ["open", "pending", "done", "active", "all", "filled"]:
             raise ValueError("Invalid order status.")
 
-        if self.app.getExchange() == Exchange.BINANCE.value:
+        if self.app.getExchange() == Exchange.BINANCE:
             if self.mode == "live":
                 # if config is provided and live connect to Binance account portfolio
                 model = BAuthAPI(
@@ -116,7 +116,7 @@ class TradingAccount:
                 else:
                     return self.orders[self.orders["market"] == market]
 
-        if self.app.getExchange() == Exchange.KUCOIN.value:
+        if self.app.getExchange() == Exchange.KUCOIN:
             if self.mode == 'live':
                 # if config is provided and live connect to Kucoin account portfolio
                 model = KAuthAPI(
@@ -134,7 +134,7 @@ class TradingAccount:
                 else:
                     return self.orders[self.orders['market'] == market]
 
-        if self.app.getExchange() == Exchange.COINBASEPRO.value:
+        if self.app.getExchange() == Exchange.COINBASEPRO:
             if self.mode == "live":
                 # if config is provided and live connect to Coinbase Pro account portfolio
                 model = CBAuthAPI(
@@ -155,7 +155,7 @@ class TradingAccount:
                         return self.orders[self.orders["market"] == market]
                     else:
                         return pd.DataFrame()
-        if self.app.getExchange() == Exchange.DUMMY.value:
+        if self.app.getExchange() == Exchange.DUMMY:
             return self.orders[
                 [
                     "created_at",
@@ -179,7 +179,7 @@ class TradingAccount:
             Filters orders by currency
         """
 
-        if self.app.getExchange() == Exchange.KUCOIN.value:
+        if self.app.getExchange() == Exchange.KUCOIN:
             if self.mode == 'live':
                 model = KAuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
                 df = model.getAccounts()
@@ -207,7 +207,7 @@ class TradingAccount:
                     # retrieve all balances
                     return self.balance
                 else:
-                    if self.app.getExchange() == Exchange.KUCOIN.value:
+                    if self.app.getExchange() == Exchange.KUCOIN:
                         self.balance = self.balance.replace('QUOTE', currency)
                     else:
                         # replace QUOTE and BASE placeholders
@@ -233,7 +233,7 @@ class TradingAccount:
                         else:
                             return float(truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
 
-        elif self.app.getExchange() == Exchange.BINANCE.value:
+        elif self.app.getExchange() == Exchange.BINANCE:
             if self.mode == "live":
                 model = BAuthAPI(
                     self.app.getAPIKey(),
@@ -288,7 +288,7 @@ class TradingAccount:
                     # retrieve all balances
                     return self.balance
                 else:
-                    if self.app.getExchange() == Exchange.BINANCE.value:
+                    if self.app.getExchange() == Exchange.BINANCE:
                         self.balance = self.balance.replace("QUOTE", currency)
                     else:
                         # replace QUOTE and BASE placeholders
@@ -334,7 +334,7 @@ class TradingAccount:
                                 )
                             )
 
-        elif self.app.getExchange() == Exchange.COINBASEPRO.value:
+        elif self.app.getExchange() == Exchange.COINBASEPRO:
             if self.mode == "live":
                 # if config is provided and live connect to Coinbase Pro account portfolio
                 model = CBAuthAPI(
@@ -738,13 +738,13 @@ class TradingAccount:
         self._checkMarketSyntax(market)
 
         if self.mode == "live":
-            if self.app.getExchange() == Exchange.COINBASEPRO.value:
+            if self.app.getExchange() == Exchange.COINBASEPRO:
                 # retrieve orders from live Coinbase Pro account portfolio
                 df = self.getOrders(market, "", "done")
-            elif self.app.getExchange() == Exchange.BINANCE.value:
+            elif self.app.getExchange() == Exchange.BINANCE:
                 # retrieve orders from live Binance account portfolio
                 df = self.getOrders(market, "", "done")
-            elif self.app.getExchange() == Exchange.KUCOIN.value:
+            elif self.app.getExchange() == Exchange.KUCOIN:
                 # retrieve orders from live Kucoin account portfolio
                 df = self.getOrders(market, '', 'done')
             else:
