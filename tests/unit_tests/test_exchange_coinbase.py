@@ -5,12 +5,14 @@ import requests
 import sys
 import pandas
 
+from models.exchange.ExchangesEnum import Exchange
+
 sys.path.append('.')
 # pylint: disable=import-error
 from models.PyCryptoBot import PyCryptoBot
 from models.exchange.coinbase_pro import AuthAPI, PublicAPI
 
-app = PyCryptoBot(exchange='coinbasepro')
+app = PyCryptoBot(exchange= Exchange.COINBASEPRO)
 
 def test_instantiate_authapi_without_error():
     global app
