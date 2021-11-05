@@ -1676,7 +1676,6 @@ def executeJob(
 
 def main():
     try:
-        _websocket = None
         message = "Starting "
         if app.getExchange() == Exchange.COINBASEPRO.value:
             message += "Coinbase Pro bot"
