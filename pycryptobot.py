@@ -76,7 +76,7 @@ def executeJob(
                 telegram_bot.updatebotstatus("paused")
                 if _app.enableWebsocket():
                     Logger.info("Stopping _websocket...")
-                    # _websocket.close()
+                    _websocket.close()
 
             time.sleep(30)
             controlstatus = telegram_bot.checkbotcontrolstatus()
@@ -87,7 +87,7 @@ def executeJob(
             telegram_bot.updatebotstatus("active")
             if _app.enableWebsocket():
                 Logger.info("Starting _websocket...")
-                # _websocket.start()
+                _websocket.start()
 
         if controlstatus == "exit":
             _app.notifyTelegram(f"{_app.getMarket()} bot is stopping")
@@ -1293,7 +1293,7 @@ def executeJob(
                     )
 
                     if _app.enableexitaftersell:
-                        time.sleep(900)
+                        sys.exit(0)
 
                 # if not live
                 else:
