@@ -343,8 +343,10 @@ class TelegramBot(TelegramBotBase):
 
         jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
         output = ""
+        bots = 0
         for file in jsonfiles:
             if ".json" in file and not file == "data.json" and not file.__contains__('output.json'):
+                bots += 1
                 output = ""
                 self._read_data(file)
                 output = output + f"\U0001F4C8 <b>{file.replace('.json', '')}</b> "
@@ -367,7 +369,7 @@ class TelegramBot(TelegramBotBase):
                 mbot.send(output, parsemode="HTML")
                 sleep(0.2)
 
-        output = f"<b>Bot Count ({len(jsonfiles)})</b>"
+        output = f"<b>Bot Count ({bots})</b>"
         print(output)
         mbot.send(output, parsemode="HTML")
 
