@@ -24,6 +24,7 @@ from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
 from views.TradingGraphs import TradingGraphs
 from models.helper.TextBoxHelper import TextBox
+from models.exchange.ExchangesEnum import Exchange
 from models.exchange.binance import WebSocketClient as BWebSocketClient
 from models.exchange.coinbase_pro import WebSocketClient as CWebSocketClient
 from models.helper.TelegramBotHelper import TelegramBotHelper
@@ -276,7 +277,7 @@ def executeJob(
         list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
 
-    if _app.getExchange() == "binance" and _app.getGranularity() == 86400:
+    if _app.getExchange() == Exchange.BINANCE.value and _app.getGranularity() == 86400:
         if len(df) < 250:
             # data frame should have 250 rows, if not retry
             Logger.error(f"error: data frame length is < 250 ({str(len(df))})")
@@ -432,8 +433,8 @@ def executeJob(
                         _state.last_buy_price = exchange_last_buy["price"]
 
                     if (
-                        _app.getExchange() == "coinbasepro"
-                        or _app.getExchange() == "kucoin"
+                        _app.getExchange() == Exchange.COINBASEPRO.value
+                        or _app.getExchange() == Exchange.COINBASEPRO.value
                     ):
                         if _state.last_buy_fee != exchange_last_buy["fee"]:
                             _state.last_buy_fee = exchange_last_buy["fee"]
@@ -1631,9 +1632,9 @@ def executeJob(
         # if live but not websockets
         if not _app.disableTracker() and _app.isLive() and not _app.enableWebsocket():
             # update order tracker csv
-            if _app.getExchange() == "binance":
+            if _app.getExchange() == Exchange.BINANCE.value:
                 account.saveTrackerCSV(_app.getMarket())
-            elif _app.getExchange() == "coinbasepro" or _app.getExchange() == "kucoin":
+            elif _app.getExchange() == Exchange.COINBASEPRO.value or _app.getExchange() == Exchange.COINBASEPRO.value:
                 account.saveTrackerCSV()
 
         if _app.isSimulation():
@@ -1675,19 +1676,19 @@ def executeJob(
 def main():
     try:
         message = "Starting "
-        if app.getExchange() == "coinbasepro":
+        if app.getExchange() == Exchange.COINBASEPRO.value:
             message += "Coinbase Pro bot"
             if app.enableWebsocket() and not app.isSimulation():
                 print("Opening websocket to Coinbase Pro...")
                 _websocket = CWebSocketClient([app.getMarket()], app.getGranularity())
                 _websocket.start()
-        elif app.getExchange() == "binance":
+        elif app.getExchange() == Exchange.BINANCE.value:
             message += "Binance bot"
             if app.enableWebsocket() and not app.isSimulation():
                 print("Opening websocket to Binance...")
                 _websocket = BWebSocketClient([app.getMarket()], app.getGranularity())
                 _websocket.start()
-        elif app.getExchange() == "kucoin":
+        elif app.getExchange() == Exchange.COINBASEPRO.value:
             message += "Kucoin bot"
 
         smartSwitchStatus = "enabled" if app.getSmartSwitch() else "disabled"
