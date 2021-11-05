@@ -1394,6 +1394,11 @@ def executeJob(
 
             _state.last_df_index = str(df_last.index.format()[0])
 
+            if _app.enabledLogBuySellInJson() == True \
+                    and _state.action in ["BUY", "SELL"] \
+                    and len(_app.trade_tracker) > 0:
+                Logger.info( _app.trade_tracker.loc[len(_app.trade_tracker)-1].to_json())
+
             if not _app.isLive() and _state.iterations == len(df):
                 simulation = {
                     "config": {},
@@ -1676,6 +1681,7 @@ def executeJob(
 
 def main():
     try:
+        _websocket = None
         message = "Starting "
         if app.getExchange() == Exchange.COINBASEPRO.value:
             message += "Coinbase Pro bot"
