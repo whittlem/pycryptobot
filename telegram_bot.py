@@ -420,7 +420,7 @@ class TelegramBot(TelegramBotBase):
         openoutput = ""
         closeoutput = ""
         for file in jsonfiles:
-            if ".json" in file and not file == "data.json":
+            if ".json" in file and not file == "data.json" and not file.__contains__("output.json"):
                 self._read_data(file)
                 if "margin" in self.data:
                     if "margin" in self.data and self.data["margin"] == " ":
@@ -656,12 +656,13 @@ class TelegramBot(TelegramBotBase):
         if query.data == "pause_all":
             jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
             for file in jsonfiles:
-                if ".json" in file and not file == "data.json":
+                if ".json" in file and not file == "data.json" and not file.__contains__("output.json"):
                     if self.updatebotcontrol(file, "pause"):
                         mbot = Telegram(self.token, str(context._chat_id_and_data[0]))
                         mbot.send(
                             f"<i>Pausing {file.replace('.json','')}</i>", parsemode="HTML"
                         )
+                        sleep(1)
         else:
             if self.updatebotcontrol(query.data.replace("pause_", ""), "pause"):
                 query.edit_message_text(
@@ -697,7 +698,7 @@ class TelegramBot(TelegramBotBase):
             jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
             query.edit_message_text(f"Restarting all bots", parse_mode="HTML")
             for file in jsonfiles:
-                if ".json" in file and not file == "data.json":
+                if ".json" in file and not file == "data.json" and not file.__contains__("output.json"):
                     if self.updatebotcontrol(file, "start"):
                         mbot = Telegram(self.token, str(context._chat_id_and_data[0]))
                         mbot.send(
@@ -834,6 +835,7 @@ class TelegramBot(TelegramBotBase):
                     if "margin" in self.data and self.data["margin"] == " ":
                         if self.updatebotcontrol(file, "exit"):
                             telegram.send(f"Stopping {file.replace('.json', '')} crypto bot")
+                            sleep(1)
 
         elif "all" in query.data:
             query.edit_message_text("Stopping all bots")
@@ -844,6 +846,7 @@ class TelegramBot(TelegramBotBase):
                 if ".json" in file and not file == "data.json" and not file.__contains__("output.json"):
                     if self.updatebotcontrol(file, "exit"):
                         telegram.send(f"Stopping {file.replace('.json', '')} crypto bot")
+                        sleep(1)
         else:
             if self.updatebotcontrol(str(query.data).replace("stop_", ""), "exit"):
                 query.edit_message_text(
