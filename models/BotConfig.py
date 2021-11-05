@@ -122,11 +122,33 @@ class BotConfig:
             self.config_file = self.cli_args["config"]
             self.config_provided = True
 
-        # read and set config from file
+        self.exchange = self._set_exchange(kwargs["exchange"])
+
+        # set defaults
+        (
+            self.api_url,
+            self.api_key,
+            self.api_secret,
+            self.api_passphrase,
+            self.market,
+        ) = self._set_default_api_info(self.exchange)
+        
+        self.read_config(kwargs["exchange"])
+
+        Logger.configure(
+            filelog=self.filelog,
+            logfile=self.logfile,
+            fileloglevel=self.fileloglevel,
+            consolelog=self.consolelog,
+            consoleloglevel=self.consoleloglevel,
+        )
+
+# read and set config from file
+    def read_config(self, exchange):
         if os.path.isfile(self.config_file):
             self.config_provided = True
             try:
-                with open(self.config_file, "r") as stream:
+                with open(self.config_file, "r", encoding="utf8") as stream:
                     try:
                         self.config = yaml.safe_load(stream)
                     except:
@@ -154,10 +176,10 @@ class BotConfig:
             except:
                 raise
 
-        # set exchange platform
-        self.exchange = self._set_exchange(kwargs["exchange"])
+            # set exchange platform
+        self.exchange = self._set_exchange(exchange)
 
-        # set defaults
+            # set defaults
         (
             self.api_url,
             self.api_key,
@@ -214,13 +236,6 @@ class BotConfig:
             self.fileloglevel = "NOTSET"
             self.logfile == "/dev/null"
 
-        Logger.configure(
-            filelog=self.filelog,
-            logfile=self.logfile,
-            fileloglevel=self.fileloglevel,
-            consolelog=self.consolelog,
-            consoleloglevel=self.consoleloglevel,
-        )
 
     def _set_exchange(self, exchange: str = None) -> Exchange:
 
