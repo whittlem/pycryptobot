@@ -182,9 +182,15 @@ class TelegramBot(TelegramBotBase):
 
         self.token = self.config["telegram"]["token"]
         self.userid = self.config["telegram"]["user_id"]
+
+        # Config section for bot pair scanner
         self.atr72pcnt = 4.0
+        self.enableleverage = False
+        self.maxbotcount = 0
         if "scanner" in self.config:
-            self.atr72pcnt = self.config["scanner"]["atr72_pcnt"] if "atr72_pcnt" in self.config["scanner"] else 2.0
+            self.atr72pcnt = self.config["scanner"]["atr72_pcnt"] if "atr72_pcnt" in self.config["scanner"] else self.atr72pcnt
+            self.enableleverage = self.config["scanner"]["enableleverage"] if "enableleverage" in self.config["scanner"] else self.enableleverage
+            self.maxbotcount = self.config["scanner"]["maxbotcount"] if "maxbotcount" in self.config["scanner"] else self.maxbotcount
 
         if "datafolder" in self.config["telegram"]:
             self.datafolder = self.config["telegram"]["datafolder"]
@@ -339,7 +345,7 @@ class TelegramBot(TelegramBotBase):
         output = ""
         for file in jsonfiles:
             if ".json" in file and not file == "data.json" and not file.__contains__('output.json'):
-                # output = ""
+                output = ""
                 self._read_data(file)
                 output = output + f"\U0001F4C8 <b>{file.replace('.json', '')}</b> "
 
@@ -358,11 +364,9 @@ class TelegramBot(TelegramBotBase):
                 else:
                     output = output + " \U0001F6D1	 <b>Status</b>: <i>stopped</i> "
                 output = output + f" \u23F1 <b>Uptime</b>: <i>{self._getUptime(self.data['botcontrol']['started'])}</i>\n"
-                # mbot.send(output, parsemode="HTML")
-                # sleep(0.2)
+                mbot.send(output, parsemode="HTML")
+                sleep(0.2)
 
-        mbot.send(output, parsemode="HTML")
-        sleep(0.2)
         output = f"<b>Bot Count ({len(jsonfiles)})</b>"
         print(output)
         mbot.send(output, parsemode="HTML")
@@ -1151,7 +1155,7 @@ class TelegramBot(TelegramBotBase):
             )
         # subprocess.Popen("python3 scanner.py", shell=True)
         output = subprocess.getoutput("python3 scanner.py")
-
+        botcounter = 0
         for ex in config:
             for quote in config[ex]["quote_currency"]:
                 logger.info(f"{ex} {quote}")
@@ -1166,6 +1170,12 @@ class TelegramBot(TelegramBotBase):
                     if debug:
                         logger.info("%s", row)
                         
+                    if self.enableleverage == False and (str(row).__contains__("DOWN") or str(row).__contains__("UP")):
+                        continue
+
+                    if self.maxbotcount > 0 and botcounter > self.maxbotcount:
+                        continue
+
                     if data[row]['atr72_pcnt'] != None:
                         if debug:
                             logger.info(data[row])
@@ -1177,6 +1187,7 @@ class TelegramBot(TelegramBotBase):
                             self.pair = row
                             update.message.text = "Yes"
                             self.newbot_start(update, context)
+                            botcounter += 1
                             sleep(10)
 
             update.message.reply_text(
