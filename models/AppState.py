@@ -1,10 +1,13 @@
 """Application state class"""
 
-import sys
 import datetime
+import sys
+
 from numpy import array as np_array, min as np_min, ptp as np_ptp
+
 from models.PyCryptoBot import PyCryptoBot
 from models.TradingAccount import TradingAccount
+from models.exchange.ExchangesEnum import Exchange
 from models.exchange.binance import AuthAPI as BAuthAPI
 from models.exchange.coinbase_pro import AuthAPI as CAuthAPI
 from models.exchange.kucoin import AuthAPI as KAuthAPI
@@ -13,21 +16,21 @@ from models.helper.LogHelper import Logger
 
 class AppState:
     def __init__(self, app: PyCryptoBot, account: TradingAccount) -> None:
-        if app.getExchange() == "binance":
+        if app.getExchange() == Exchange.BINANCE.value:
             self.api = BAuthAPI(
                 app.getAPIKey(),
                 app.getAPISecret(),
                 app.getAPIURL(),
                 recv_window=app.getRecvWindow(),
             )
-        elif app.getExchange() == "coinbasepro":
+        elif app.getExchange() == Exchange.COINBASEPRO.value:
             self.api = CAuthAPI(
                 app.getAPIKey(),
                 app.getAPISecret(),
                 app.getAPIPassphrase(),
                 app.getAPIURL(),
             )
-        elif app.getExchange() == "kucoin":
+        elif app.getExchange() == Exchange.KUCOIN.value:
             self.api = KAuthAPI(
                 app.getAPIKey(),
                 app.getAPISecret(),
@@ -70,7 +73,7 @@ class AppState:
 
     def minimumOrderBase(self):
         self.app.insufficientfunds = False
-        if self.app.getExchange() == "binance":
+        if self.app.getExchange() == Exchange.BINANCE.value:
             df = self.api.getMarketInfoFilters(self.app.getMarket())
 
             if len(df) > 0:
@@ -95,7 +98,7 @@ class AppState:
 
                 return
 
-        elif self.app.getExchange() == "coinbasepro":
+        elif self.app.getExchange() == Exchange.COINBASEPRO.value:
             product = self.api.authAPI("GET", f"products/{self.app.getMarket()}")
             if len(product) == 0:
                 sys.tracebacklimit = 0
@@ -112,7 +115,7 @@ class AppState:
                 raise Exception(f'Market not found! ({self.app.getMarket()})')
 
             base = float(self.account.basebalance)
-            base_min = '{:f}'.format(float(product['baseMinSize']))
+            base_min = float(product['baseMinSize'])
 
         if base < base_min:
             if self.app.enableinsufficientfundslogging:
@@ -124,10 +127,13 @@ class AppState:
             raise Exception(
                 f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})"
             )
+        elif self.app.getExchange() == Exchange.KUCOIN.value:
+            # added for Kucoin last order check below
+            return True
             
     def minimumOrderQuote(self):
         self.app.insufficientfunds = False
-        if self.app.getExchange() == "binance":
+        if self.app.getExchange() == Exchange.BINANCE.value:
             df = self.api.getMarketInfoFilters(self.app.getMarket())
 
             if len(df) > 0:
@@ -156,7 +162,7 @@ class AppState:
                 sys.tracebacklimit = 0
                 raise Exception(f"Market not found! ({self.app.getMarket()})")
 
-        elif self.app.getExchange() == "coinbasepro":
+        elif self.app.getExchange() == Exchange.COINBASEPRO.value:
             product = self.api.authAPI("GET", f"products/{self.app.getMarket()}")
             if len(product) == 0:
                 sys.tracebacklimit = 0
@@ -220,7 +226,7 @@ class AppState:
                 )
 
                 # binance orders do not show fees
-                if self.app.getExchange() == "coinbasepro" or self.app.getExchange() == "kucoin":
+                if self.app.getExchange() == Exchange.COINBASEPRO.value or self.app.getExchange() == Exchange.KUCOIN.value:
                     self.last_buy_fee = float(
                         last_order[last_order.action == "buy"]["fees"]
                     )
@@ -252,7 +258,10 @@ class AppState:
                 order_pairs
             )
 
-            if order_pairs_normalised[0] < order_pairs_normalised[1]:
+            if self.app.getExchange() == Exchange.KUCOIN.value and self.minimumOrderBase():
+                self.last_action = "WAIT"
+                Logger.warning('Kucoin temporary state set to "WAIT".') 
+            elif order_pairs_normalised[0] < order_pairs_normalised[1]:
                 self.minimumOrderQuote()
                 self.last_action = "SELL"
             elif order_pairs_normalised[0] > order_pairs_normalised[1]:
