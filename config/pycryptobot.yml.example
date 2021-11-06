@@ -1,0 +1,46 @@
+### PyCryptoBot Configuration Settings
+---
+
+pycryptobot:
+
+### Toggle application level debug (does not toggle framework debugging)
+# debug: false
+
+### Where external (third-party) plugins are loaded from
+# plugin_dir: /var/lib/pycryptobot/plugins/
+
+### Where all plugin configurations are loaded from
+# plugin_config_dir: /etc/pycryptobot/plugins.d/
+
+### Where external templates are loaded from
+# template_dir: /var/lib/pycryptobot/templates/
+
+### The log handler label
+# log_handler: colorlog
+
+### The output handler label
+# output_handler: jinja2
+
+### sample foo option
+# foo: bar
+
+
+log.colorlog:
+
+### Where the log file lives (no log file by default)
+# file: null
+
+### The level for which to log.  One of: info, warning, error, fatal, debug
+# level: info
+
+### Whether or not to log to console
+# to_console: true
+
+### Whether or not to rotate the log file when it reaches `max_bytes`
+# rotate: false
+
+### Max size in bytes that a log file can grow until it is rotated.
+# max_bytes: 512000
+
+### The maximun number of log files to maintain when rotating
+# max_files: 4

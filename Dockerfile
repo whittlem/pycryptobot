@@ -14,7 +14,8 @@ ENV PATH="/app/bin:$PATH"
 COPY requirements.txt .
 
 RUN python -m pip install -U pip && \
-    python3 -m pip install --no-cache-dir -r requirements.txt
+    python3 -m pip install --no-cache-dir -r requirements.txt \
+    && python3 setup.py install
 
 COPY . /app
 
@@ -28,4 +29,4 @@ COPY --from=compile-image /app /app
 ENV PATH="/app/bin:$PATH"
 
 # Pass parameters to the container run or mount your config.json into /app/
-ENTRYPOINT [ "python3", "-u", "pycryptobot.py" ]
+ENTRYPOINT [ "python3", "-m", "pycryptobot.main" ]

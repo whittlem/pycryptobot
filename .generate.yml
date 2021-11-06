@@ -1,0 +1,44 @@
+---
+
+exclude:
+    - '^(.*)[\/\\\\]project[\/\\\\]pycryptobot[\/\\\\]templates[\/\\\\](.*)$'
+
+ignore:
+    - '^(.*)pyc(.*)$'
+    - '^(.*)pyo(.*)$'
+    - '^(.*)__pycache__(.*)$'
+
+variables:
+    -   name: label
+        prompt: "App Label"
+        case: "lower"
+        default: "myapp"
+
+    -   name: name
+        prompt: "App Name"
+        default: "My Application"
+
+    -   name: class_name
+        prompt: "App Class Name"
+        validate: "^[a-zA-Z0-9]+$"
+        default: "MyApp"
+
+    -   name: description
+        prompt: "App Description"
+        default: "MyApp Does Amazing Things!"
+
+    -   name: creator
+        prompt: "Creator Name"
+        default: "John Doe"
+
+    -   name: creator_email
+        prompt: "Creator Email"
+        default: "john.doe@example.com"
+
+    -   name: url
+        prompt: "Project URL"
+        default: "https://github.com/johndoe/myapp/"
+
+    -   name: license
+        prompt: "License"
+        default: "unlicensed"
