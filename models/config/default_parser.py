@@ -461,3 +461,10 @@ def defaultConfigParse(app, config):
                 app.buymaxsize = config["buymaxsize"]
         else:
             raise TypeError("buymaxsize must be of type int or float")
+
+    if "logbuysellinjson" in config:
+        if isinstance(config["logbuysellinjson"], int):
+            if bool(config["logbuysellinjson"]):
+                app.logbuysellinjson = True
+        else:
+            raise TypeError("logbuysellinjson must be of type int")

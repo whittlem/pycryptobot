@@ -266,8 +266,8 @@ class AppState:
                 if self.last_action == "BUY":
                     return
                 else:
-                self.last_action = "WAIT"
-                Logger.warning('Kucoin temporary state set to "WAIT".') 
+                    self.last_action = "WAIT"
+                    Logger.warning('Kucoin temporary state set to "WAIT".') 
             elif order_pairs_normalised[0] < order_pairs_normalised[1]:
                 self.minimumOrderQuote()
                 self.last_action = "SELL"
