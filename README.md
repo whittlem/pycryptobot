@@ -693,3 +693,75 @@ I've actually included this in the examples in how to start the bot that will do
 If you get stuck with anything email me or raise an issue in the repo and I'll help you sort it out. Raising an issue is probably better as the question and response may help others.
 
 Enjoy and happy trading! :)
+
+Readme from cement (ToDo: delete)
+
+# Crypto Bot
+
+## Installation
+
+```
+$ pip install -r requirements.txt
+
+$ pip install setup.py
+```
+
+## Development
+
+This project includes a number of helpers in the `Makefile` to streamline common development tasks.
+
+### Environment Setup
+
+The following demonstrates setting up and working with a development environment:
+
+```
+### create a virtualenv for development
+
+$ make virtualenv
+
+$ source env/bin/activate
+
+
+### run pycryptobot cli application
+
+$ pycryptobot --help
+
+
+### run pytest / coverage
+
+$ make test
+```
+
+
+### Releasing to PyPi
+
+Before releasing to PyPi, you must configure your login credentials:
+
+**~/.pypirc**:
+
+```
+[pypi]
+username = YOUR_USERNAME
+password = YOUR_PASSWORD
+```
+
+Then use the included helper function via the `Makefile`:
+
+```
+$ make dist
+
+$ make dist-upload
+```
+
+## Deployments
+
+### Docker
+
+Included is a basic `Dockerfile` for building and distributing `PyCryptoBot`,
+and can be built with the included `make` helper:
+
+```
+$ make docker
+
+$ docker run -it pycryptobot --help
+```

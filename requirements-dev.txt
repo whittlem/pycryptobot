@@ -1,0 +1,9 @@
+-r requirements.txt
+
+pytest==6.2.2
+pytest-mock==3.6.1
+pytest-cov
+coverage
+twine>=1.11.0
+setuptools>=38.6.0
+wheel>=0.31.0
