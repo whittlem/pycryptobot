@@ -116,6 +116,9 @@ class AppState:
 
             base = float(self.account.basebalance)
             base_min = float(product['baseMinSize'])
+            # additional check for last order type
+            if base > base_min: 
+                return True
 
         if base < base_min:
             if self.app.enableinsufficientfundslogging:
@@ -127,9 +130,6 @@ class AppState:
             raise Exception(
                 f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})"
             )
-        elif self.app.getExchange() == Exchange.KUCOIN.value:
-            # added for Kucoin last order check below
-            return True
             
     def minimumOrderQuote(self):
         self.app.insufficientfunds = False
@@ -186,6 +186,9 @@ class AppState:
             price = float(ticker["price"])
             quote = float(self.account.quotebalance)
             base_min = float(product['baseMinSize'])
+            # additional check for last order type
+            if (quote / price) > base_min: 
+                return True
 
         if (quote / price) < base_min:
             if self.app.enableinsufficientfundslogging:
@@ -258,9 +261,13 @@ class AppState:
                 order_pairs
             )
 
-            if self.app.getExchange() == Exchange.KUCOIN.value and self.minimumOrderBase():
-                self.last_action = "WAIT"
-                Logger.warning('Kucoin temporary state set to "WAIT".') 
+            # If Kucoin returns emoty response, on a shared trading account, could multiple buy same pair
+            if self.app.getExchange() == Exchange.KUCOIN.value and self.minimumOrderBase() and self.minimumOrderQuote():
+                if self.last_action == "BUY":
+                    return
+                else:
+                    self.last_action = "WAIT"
+                    Logger.warning('Kucoin temporary state set to "WAIT".') 
             elif order_pairs_normalised[0] < order_pairs_normalised[1]:
                 self.minimumOrderQuote()
                 self.last_action = "SELL"

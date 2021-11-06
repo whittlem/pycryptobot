@@ -8,6 +8,10 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [4.3.2] - 2021-11-02
+
+- fix for Kucoin multiple buys on same traded pair when API error occurs
+
 ## [4.3.1] - 2021-10-28
 
 - fix for Kucoin margin calculation
