@@ -17,6 +17,8 @@ from models.config import (
     dummyConfigParser,
     loggerConfigParser,
 )
+from models.ConfigBuilder import ConfigBuilder
+from models.exchange.Granularity import Granularity
 from models.helper.LogHelper import Logger
 from models.exchange.ExchangesEnum import Exchange
 
@@ -31,7 +33,7 @@ class BotConfig:
 
         self.configbuilder = False
 
-        self.granularity = 3600
+        self.granularity = Granularity.ONE_HOUR
         self.base_currency = "BTC"
         self.quote_currency = "GBP"
         self.is_live = 0
