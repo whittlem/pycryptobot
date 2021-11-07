@@ -414,6 +414,8 @@ Special sell cases:
     --disableprofitbankfibonaccihigh    Disable profit bank on fibonacci upper band
     --disableprofitbankreversal         Disable profit bank on strong candlestick reversal
     --disabletelegram                   Disable sending telegram messages
+    --disabletelegramerrormsgs          Disable sending error message to telegram (only trading info)
+    --telegramtradesonly                Toggle only sending trade messages to telegram - won't send smart switch and last action messages, will still send error messages unless disabling separately
     --disablelog                        Disable writing log entries
     --disabletracker                    Disable saving CSV on buy and sell events
 
