@@ -16,21 +16,21 @@ from models.helper.LogHelper import Logger
 
 class AppState:
     def __init__(self, app: PyCryptoBot, account: TradingAccount) -> None:
-        if app.getExchange() == Exchange.BINANCE.value:
+        if app.getExchange() == Exchange.BINANCE:
             self.api = BAuthAPI(
                 app.getAPIKey(),
                 app.getAPISecret(),
                 app.getAPIURL(),
                 recv_window=app.getRecvWindow(),
             )
-        elif app.getExchange() == Exchange.COINBASEPRO.value:
+        elif app.getExchange() == Exchange.COINBASEPRO:
             self.api = CAuthAPI(
                 app.getAPIKey(),
                 app.getAPISecret(),
                 app.getAPIPassphrase(),
                 app.getAPIURL(),
             )
-        elif app.getExchange() == Exchange.KUCOIN.value:
+        elif app.getExchange() == Exchange.KUCOIN:
             self.api = KAuthAPI(
                 app.getAPIKey(),
                 app.getAPISecret(),
@@ -73,7 +73,7 @@ class AppState:
 
     def minimumOrderBase(self):
         self.app.insufficientfunds = False
-        if self.app.getExchange() == Exchange.BINANCE.value:
+        if self.app.getExchange() == Exchange.BINANCE:
             df = self.api.getMarketInfoFilters(self.app.getMarket())
 
             if len(df) > 0:
@@ -98,7 +98,7 @@ class AppState:
 
                 return
 
-        elif self.app.getExchange() == Exchange.COINBASEPRO.value:
+        elif self.app.getExchange() == Exchange.COINBASEPRO:
             product = self.api.authAPI("GET", f"products/{self.app.getMarket()}")
             if len(product) == 0:
                 sys.tracebacklimit = 0
@@ -107,7 +107,7 @@ class AppState:
             base = float(self.account.basebalance)
             base_min = float(product["base_min_size"])
 
-        elif self.app.getExchange() == 'kucoin':
+        elif self.app.getExchange() == Exchange.KUCOIN:
             resp = self.api.authAPI('GET', f'api/v1/symbols')
             product = resp[resp['symbol'] == self.app.getMarket()]
             if len(product) == 0:
@@ -117,7 +117,7 @@ class AppState:
             base = float(self.account.basebalance)
             base_min = float(product['baseMinSize'])
             # additional check for last order type
-            if base > base_min: 
+            if base > base_min:
                 return True
 
         if base < base_min:
@@ -133,7 +133,7 @@ class AppState:
             
     def minimumOrderQuote(self):
         self.app.insufficientfunds = False
-        if self.app.getExchange() == Exchange.BINANCE.value:
+        if self.app.getExchange() == Exchange.BINANCE:
             df = self.api.getMarketInfoFilters(self.app.getMarket())
 
             if len(df) > 0:
@@ -162,7 +162,7 @@ class AppState:
                 sys.tracebacklimit = 0
                 raise Exception(f"Market not found! ({self.app.getMarket()})")
 
-        elif self.app.getExchange() == Exchange.COINBASEPRO.value:
+        elif self.app.getExchange() == Exchange.COINBASEPRO:
             product = self.api.authAPI("GET", f"products/{self.app.getMarket()}")
             if len(product) == 0:
                 sys.tracebacklimit = 0
@@ -174,7 +174,7 @@ class AppState:
             quote = float(self.account.quotebalance)
             base_min = float(product["base_min_size"])
 
-        elif self.app.getExchange() == 'kucoin':
+        elif self.app.getExchange() == Exchange.KUCOIN:
             resp = self.api.authAPI('GET', f'api/v1/symbols')
             product = resp[resp['symbol'] == self.app.getMarket()]
             if len(product) == 0:
@@ -187,7 +187,7 @@ class AppState:
             quote = float(self.account.quotebalance)
             base_min = float(product['baseMinSize'])
             # additional check for last order type
-            if (quote / price) > base_min: 
+            if (quote / price) > base_min:
                 return True
 
         if (quote / price) < base_min:
@@ -229,7 +229,7 @@ class AppState:
                 )
 
                 # binance orders do not show fees
-                if self.app.getExchange() == Exchange.COINBASEPRO.value or self.app.getExchange() == Exchange.KUCOIN.value:
+                if self.app.getExchange() == Exchange.COINBASEPRO or self.app.getExchange() == Exchange.KUCOIN:
                     self.last_buy_fee = float(
                         last_order[last_order.action == "buy"]["fees"]
                     )
@@ -262,12 +262,12 @@ class AppState:
             )
 
             # If Kucoin returns emoty response, on a shared trading account, could multiple buy same pair
-            if self.app.getExchange() == Exchange.KUCOIN.value and self.minimumOrderBase() and self.minimumOrderQuote():
+            if self.app.getExchange() == Exchange.KUCOIN and self.minimumOrderBase() and self.minimumOrderQuote():
                 if self.last_action == "BUY":
                     return
                 else:
                     self.last_action = "WAIT"
-                    Logger.warning('Kucoin temporary state set to "WAIT".') 
+                    Logger.warning('Kucoin temporary state set to "WAIT".')
             elif order_pairs_normalised[0] < order_pairs_normalised[1]:
                 self.minimumOrderQuote()
                 self.last_action = "SELL"
