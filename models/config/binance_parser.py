@@ -1,10 +1,11 @@
-import re
 import ast
 import json
 import os.path
-import sys
+import re
 
 from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
+from ..exchange.Granularity import Granularity
+
 
 def isMarketValid(market) -> bool:
     if market == None:
@@ -17,9 +18,6 @@ def isMarketValid(market) -> bool:
     if p.match(market):
         return True
     return False
-
-def to_internal_granularity(granularity: str) -> int:
-    return {'1m': 60, '5m': 300, '15m': 900, '1h': 3600, '6h': 21600, '1d': 86400}[granularity]
 
 def parseMarket(market):
     base_currency = 'BTC'
@@ -141,12 +139,5 @@ def parser(app, binance_config, args={}):
         app.market = app.base_currency + app.quote_currency
 
     if 'granularity' in config and config['granularity'] is not None:
-        if isinstance(config['granularity'], str):
-            if config['granularity'] in ['1m', '5m', '15m', '1h', '6h', '1d']:
-                app.granularity = to_internal_granularity(config['granularity'])
-                app.smart_switch = 0
-            else:
-                app.granularity = int(config['granularity'])
-                app.smart_switch = 0
-            # else:
-            #     raise ValueError('granularity supplied is not supported.')
+        app.granularity = Granularity.convert_to_enum(config['granularity'])
+        app.smart_switch = 0
