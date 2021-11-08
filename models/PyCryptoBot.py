@@ -778,6 +778,12 @@ class PyCryptoBot(BotConfig):
     def enableTelegramBotControl(self) -> bool:
         return self.enabletelegrambotcontrol
 
+    def telegramTradesOnly(self) -> bool:
+        return self.telegramtradesonly
+
+    def disableTelegramErrorMsgs(self) -> bool:
+        return self.disabletelegramerrormsgs
+
     def enableML(self) -> bool:
         return self.enableml
 
@@ -1326,6 +1332,19 @@ class PyCryptoBot(BotConfig):
             str(not self.disableProfitbankReversal()) + "  --disableprofitbankreversal",
         )
         text_box.line("Telegram", str(not self.disabletelegram) + "  --disabletelegram")
+
+        if not self.disabletelegram:
+            text_box.line(
+                "Telegram trades only",
+                str(self.telegramTradesOnly()) + " --telegramtradesonly",
+            )
+
+        if not self.disabletelegram:
+            text_box.line(
+                "Telegram error msgs",
+                str(not self.disableTelegramErrorMsgs()) + " --disabletelegramerrormsgs",
+            )
+
         text_box.line("Log", str(not self.disableLog()) + "  --disablelog")
         text_box.line("Tracker", str(not self.disableTracker()) + "  --disabletracker")
         text_box.line("Auto restart Bot", str(self.autoRestart()) + "  --autorestart")

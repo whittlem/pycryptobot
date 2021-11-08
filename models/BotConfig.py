@@ -87,6 +87,8 @@ class BotConfig:
         self.enableinsufficientfundslogging = False
         self.insufficientfunds = False
         self.enabletelegrambotcontrol = False
+        self.telegramtradesonly = False
+        self.disabletelegramerrormsgs = False
 
         self.filelog = True
         self.logfile = (
@@ -386,6 +388,11 @@ class BotConfig:
             help="Use the config file at the given location. e.g 'myconfig.json'",
         )
         parser.add_argument(
+            "--api_key_file",
+            type=str,
+            help="Use the API key file at the given location. e.g 'myapi.key'",
+        )
+        parser.add_argument(
             "--logfile",
             type=str,
             help="Use the log file at the given location. e.g 'mymarket.log'",
@@ -442,6 +449,16 @@ class BotConfig:
             "--simresultonly",
             action="store_true",
             help="show simulation result only",
+        )
+        parser.add_argument(
+            "--telegramtradesonly",
+            action="store_true",
+            help="Toggle Telegram trades only output"
+        )
+        parser.add_argument(
+            "--disabletelegramerrormsgs",
+            action="store_true",
+            help="Disable Telegram error message output"
         )
 
         # disable defaults
