@@ -17,6 +17,10 @@ Upgrade library dependencies (if required):
 - Add /scanner to TG Bot to scan marks and start bots
 - Add multiple market scanning to scanner.py
 
+## [4.3.2] - 2021-11-02
+
+- fix for Kucoin multiple buys on same traded pair when API error occurs
+
 ## [4.3.1] - 2021-10-28
 
 - fix for Kucoin margin calculation

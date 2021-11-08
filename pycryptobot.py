@@ -14,6 +14,7 @@ from datetime import datetime
 import pandas as pd
 
 from models.AppState import AppState
+from models.exchange.Granularity import Granularity
 from models.helper.LogHelper import Logger
 from models.helper.MarginHelper import calculate_margin
 from models.PyCryptoBot import PyCryptoBot
@@ -24,6 +25,7 @@ from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
 from views.TradingGraphs import TradingGraphs
 from models.helper.TextBoxHelper import TextBox
+from models.exchange.ExchangesEnum import Exchange
 from models.exchange.binance import WebSocketClient as BWebSocketClient
 from models.exchange.coinbase_pro import WebSocketClient as CWebSocketClient
 from models.helper.TelegramBotHelper import TelegramBotHelper
@@ -159,11 +161,11 @@ def executeJob(
                     str(endDate),
                 )
 
-                if _app.getGranularity() == 3600:
+                if _app.getGranularity() == Granularity.ONE_HOUR:
                     simDate = _app.getDateFromISO8601Str(str(simDate))
                     sim_rounded = pd.Series(simDate).dt.round("60min")
                     simDate = sim_rounded[0]
-                elif _app.getGranularity() == 900:
+                elif _app.getGranularity() == Granularity.FIFTEEN_MINUTES:
                     simDate = _app.getDateFromISO8601Str(str(simDate))
                     sim_rounded = pd.Series(simDate).dt.round("15min")
                     simDate = sim_rounded[0]
@@ -234,7 +236,7 @@ def executeJob(
     if (
         (last_api_call_datetime.seconds > 60 or _app.isSimulation())
         and _app.getSmartSwitch() == 1
-        and _app.getGranularity() == 3600
+        and _app.getGranularity() == Granularity.ONE_HOUR
         and _app.is1hEMA1226Bull(current_sim_date, _websocket) is True
         and _app.is6hEMA1226Bull(current_sim_date, _websocket) is True
     ):
@@ -253,7 +255,7 @@ def executeJob(
             + " smart switch from granularity 3600 (1 hour) to 900 (15 min)"
         )
 
-        _app.setGranularity(900)
+        _app.setGranularity(Granularity.FIFTEEN_MINUTES)
         list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
 
@@ -261,7 +263,7 @@ def executeJob(
     if (
         (last_api_call_datetime.seconds > 60 or _app.isSimulation())
         and _app.getSmartSwitch() == 1
-        and _app.getGranularity() == 900
+        and _app.getGranularity() == Granularity.FIFTEEN_MINUTES
         and _app.is1hEMA1226Bull(current_sim_date, _websocket) is False
         and _app.is6hEMA1226Bull(current_sim_date, _websocket) is False
     ):
@@ -279,11 +281,11 @@ def executeJob(
             f"{_app.getMarket()} smart switch from granularity 900 (15 min) to 3600 (1 hour)"
         )
 
-        _app.setGranularity(3600)
+        _app.setGranularity(Granularity.ONE_HOUR)
         list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
 
-    if _app.getExchange() == "binance" and _app.getGranularity() == 86400:
+    if _app.getExchange() == Exchange.BINANCE and _app.getGranularity() == Granularity.ONE_DAY:
         if len(df) < 250:
             # data frame should have 250 rows, if not retry
             Logger.error(f"error: data frame length is < 250 ({str(len(df))})")
@@ -445,8 +447,8 @@ def executeJob(
                         _state.last_buy_price = exchange_last_buy["price"]
 
                     if (
-                        _app.getExchange() == "coinbasepro"
-                        or _app.getExchange() == "kucoin"
+                        _app.getExchange() == Exchange.COINBASEPRO
+                        or _app.getExchange() == Exchange.COINBASEPRO
                     ):
                         if _state.last_buy_fee != exchange_last_buy["fee"]:
                             _state.last_buy_fee = exchange_last_buy["fee"]
@@ -910,7 +912,7 @@ def executeJob(
                         try:
                             prediction = (
                                 _technical_analysis.seasonalARIMAModelPrediction(
-                                    int(_app.getGranularity() / 60) * 3
+                                    int(_app.getGranularity().to_integer / 60) * 3
                                 )
                             )  # 3 intervals from now
                             Logger.info(
@@ -1418,6 +1420,11 @@ def executeJob(
 
             _state.last_df_index = str(df_last.index.format()[0])
 
+            if _app.enabledLogBuySellInJson() == True \
+                    and _state.action in ["BUY", "SELL"] \
+                    and len(_app.trade_tracker) > 0:
+                Logger.info( _app.trade_tracker.loc[len(_app.trade_tracker)-1].to_json())
+
             if not _app.isLive() and _state.iterations == len(df):
                 simulation = {
                     "config": {},
@@ -1660,9 +1667,9 @@ def executeJob(
         # if live but not websockets
         if not _app.disableTracker() and _app.isLive() and not _app.enableWebsocket():
             # update order tracker csv
-            if _app.getExchange() == "binance":
+            if _app.getExchange() == Exchange.BINANCE:
                 account.saveTrackerCSV(_app.getMarket())
-            elif _app.getExchange() == "coinbasepro" or _app.getExchange() == "kucoin":
+            elif _app.getExchange() == Exchange.COINBASEPRO or _app.getExchange() == Exchange.KUCOIN:
                 account.saveTrackerCSV()
 
         if _app.isSimulation():
@@ -1730,19 +1737,19 @@ def main():
     try:
         _websocket = None
         message = "Starting "
-        if app.getExchange() == "coinbasepro":
+        if app.getExchange() == Exchange.COINBASEPRO:
             message += "Coinbase Pro bot"
             if app.enableWebsocket() and not app.isSimulation():
                 print("Opening websocket to Coinbase Pro...")
-                _websocket = CWebSocketClient([app.getMarket()], app.getGranularity())
+                _websocket = CWebSocketClient([app.getMarket()], app.getGranularity().to_integer)
                 _websocket.start()
-        elif app.getExchange() == "binance":
+        elif app.getExchange() == Exchange.BINANCE:
             message += "Binance bot"
             if app.enableWebsocket() and not app.isSimulation():
                 print("Opening websocket to Binance...")
                 _websocket = BWebSocketClient([app.getMarket()], app.getGranularity())
                 _websocket.start()
-        elif app.getExchange() == "kucoin":
+        elif app.getExchange() == Exchange.KUCOIN:
             message += "Kucoin bot"
 
         smartswitchstatus = "enabled" if app.getSmartSwitch() else "disabled"

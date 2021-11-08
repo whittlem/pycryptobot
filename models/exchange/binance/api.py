@@ -1,32 +1,29 @@
 """Remotely control your Binance account via their API : https://binance-docs.github.io/apidocs/spot/en"""
 
-import re
-import json
-import hmac
 import hashlib
-import time
-import requests
-import base64
-import sys
+import hmac
+import json
 import math
-import pandas as pd
-import numpy as np
-from numpy import floor
+import re
+import sys
+import time
 from datetime import datetime, timedelta
-from requests.auth import AuthBase
-from requests import Request, Session
-from models.helper.LogHelper import Logger
-from urllib.parse import urlencode
 from threading import Thread
+from urllib.parse import urlencode
+
+import numpy as np
+import pandas as pd
+import requests
+from requests import Session
 from websocket import create_connection, WebSocketConnectionClosedException
+
+from models.exchange.Granularity import Granularity
+from models.helper.LogHelper import Logger
 
 DEFAULT_MAKER_FEE_RATE = 0.0015  # added 0.0005 to allow for price movements
 DEFAULT_TAKER_FEE_RATE = 0.0015  # added 0.0005 to allow for price movements
 DEFAULT_TRADE_FEE_RATE = 0.0015  # added 0.0005 to allow for price movements
-DEFAULT_GRANULARITY = "1h"
-SUPPORTED_GRANULARITY = ["1m", "5m", "15m", "1h", "6h", "1d"]
 MULTIPLIER_EQUIVALENTS = [1, 5, 15, 60, 360, 1440]
-FREQUENCY_EQUIVALENTS = ["T", "5T", "15T", "H", "6H", "D"]
 DEFAULT_MARKET = "BTCGBP"
 
 
@@ -41,18 +38,6 @@ class AuthAPIBase:
         if math.isnan(epoch) is False:
             epoch_str = str(epoch)[0:10]
             return datetime.fromtimestamp(int(epoch_str))
-
-    def to_binance_granularity(self, granularity) -> str:
-        if isinstance(granularity, int):
-            return {60: "1m", 300: "5m", 900: "15m", 3600: "1h", 21600: "6h", 86400: "1d"} [
-                granularity
-            ]
-        else:
-            # return string if conversion is not required
-            if granularity in [ "1m", "5m", "15m", "1h", "6h", "1d" ]:
-                return granularity
-            else:
-                raise ValueError(f"Invalid Binance granularity: {granularity}")
 
 
 class AuthAPI(AuthAPIBase):
@@ -910,7 +895,7 @@ class PublicAPI(AuthAPIBase):
     def getHistoricalData(
         self,
         market: str = DEFAULT_MARKET,
-        granularity: str = DEFAULT_GRANULARITY,
+        granularity: Granularity = Granularity.ONE_HOUR,
         websocket=None,
         iso8601start: str = "",
         iso8601end: str = "",
@@ -920,16 +905,6 @@ class PublicAPI(AuthAPIBase):
         # validates the market is syntactically correct
         if not self._isMarketValid(market):
             raise TypeError("Binance market required.")
-
-        # validates granularity is a string
-        if not isinstance(self.to_binance_granularity(granularity), str):
-            raise TypeError("Granularity string required.")
-
-        # validates the granularity is supported by Binance
-        if not self.to_binance_granularity(granularity) in SUPPORTED_GRANULARITY:
-            raise TypeError(
-                "Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY))
-            )
 
         # validates the ISO 8601 end date is a string (if provided)
         if not isinstance(iso8601end, str):
@@ -959,7 +934,7 @@ class PublicAPI(AuthAPIBase):
                     "/api/v3/klines",
                     {
                         "symbol": market,
-                        "interval": granularity,
+                        "interval": granularity.to_short,
                         "startTime": startTime,
                         "limit": 300,
                     },
@@ -978,7 +953,7 @@ class PublicAPI(AuthAPIBase):
                     "/api/v3/klines",
                     {
                         "symbol": market,
-                        "interval": granularity,
+                        "interval": granularity.to_short,
                         "startTime": startTime,
                         "limit": 300,
                     },
@@ -988,7 +963,7 @@ class PublicAPI(AuthAPIBase):
                 resp = self.authAPI(
                     "GET",
                     "/api/v3/klines",
-                    {"symbol": market, "interval": granularity, "limit": 300},
+                    {"symbol": market, "interval": granularity.to_short, "limit": 300},
                 )
 
             # convert the API response into a Pandas DataFrame
@@ -1011,7 +986,7 @@ class PublicAPI(AuthAPIBase):
             )
 
             df["market"] = market
-            df["granularity"] = granularity
+            df["granularity"] = granularity.to_short
 
             # binance epoch is too long
             df["open_time"] = df["open_time"] + 1
@@ -1019,7 +994,7 @@ class PublicAPI(AuthAPIBase):
             df["open_time"] = df["open_time"].str.replace(r"\d{3}$", "", regex=True)
 
             try:
-                freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity)]
+                freq = granularity.get_frequency
             except:
                 freq = "D"
 
@@ -1133,7 +1108,7 @@ class WebSocket(AuthAPIBase):
     def __init__(
         self,
         market=None,
-        granularity=None,
+        granularity: Granularity = None,
         api_url="https://api.binance.com",
         ws_url: str = "wss://stream.binance.com:9443",
     ) -> None:
@@ -1169,7 +1144,7 @@ class WebSocket(AuthAPIBase):
         self._api_url = api_url
 
         self.markets = None
-        self.granularity = self.to_binance_granularity(granularity)
+        self.granularity = granularity
         self.type = "SUBSCRIBE"
         self.stop = True
         self.error = None
@@ -1200,19 +1175,7 @@ class WebSocket(AuthAPIBase):
         params = []
         for market in self.markets:
             params.append(f"{market.lower()}@miniTicker")
-
-            if self.granularity == "1m":
-                params.append(f"{market.lower()}@kline_1m")
-            elif self.granularity == "5m":
-                params.append(f"{market.lower()}@kline_5m")
-            elif self.granularity == "15m":
-                params.append(f"{market.lower()}@kline_15m")
-            elif self.granularity == "1h":
-                params.append(f"{market.lower()}@kline_1h")
-            elif self.granularity == "6h":
-                params.append(f"{market.lower()}@kline_6h")
-            elif self.granularity == "1d":
-                params.append(f"{market.lower()}@kline_1d")
+            params.append(f"{market.lower()}@kline_{self.granularity.to_short}")
 
         self.ws = create_connection(f"{self._ws_url}ws")
         self.ws.send(
@@ -1298,7 +1261,7 @@ class WebSocketClient(WebSocket, AuthAPIBase):
     def __init__(
         self,
         markets: list = [DEFAULT_MARKET],
-        granularity: str = DEFAULT_GRANULARITY,
+        granularity: Granularity = Granularity.ONE_HOUR,
         api_url="https://api.binance.com",
         ws_url: str = "wss://stream.binance.com:9443",
     ) -> None:
@@ -1309,16 +1272,6 @@ class WebSocketClient(WebSocket, AuthAPIBase):
             # validates the market is syntactically correct
             if not self._isMarketValid(market):
                 raise ValueError("Binance market is invalid.")
-
-        # validates granularity is a string
-        if not isinstance(self.to_binance_granularity(granularity), str):
-            raise TypeError("Granularity string required.")
-
-        # validates the granularity is supported by Binance
-        if not self.to_binance_granularity(granularity) in SUPPORTED_GRANULARITY:
-            raise TypeError(
-                "Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY))
-            )
 
         valid_urls = [
             "https://api.binance.com",
@@ -1353,7 +1306,7 @@ class WebSocketClient(WebSocket, AuthAPIBase):
 
         self._ws_url = ws_url
         self.markets = markets
-        self.granularity = self.to_binance_granularity(granularity)
+        self.granularity = granularity
         self.tickers = None
         self.candles = None
         self.start_time = None
@@ -1392,20 +1345,7 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                 # set column types
                 df["date"] = df["date"].astype("datetime64[ns]")
                 df["price"] = df["price"].astype("float64")
-
-                # form candles
-                if self.granularity == "1m":
-                    df["candle"] = df["date"].dt.floor(freq="1T")
-                elif self.granularity == "5m":
-                    df["candle"] = df["date"].dt.floor(freq="5T")
-                elif self.granularity == "15m":
-                    df["candle"] = df["date"].dt.floor(freq="15T")
-                elif self.granularity == "1h":
-                    df["candle"] = df["date"].dt.floor(freq="1H")
-                elif self.granularity == "6h":
-                    df["candle"] = df["date"].dt.floor(freq="6H")
-                elif self.granularity == "1d":
-                    df["candle"] = df["date"].dt.floor(freq="1D")
+                df["candle"] = df["date"].dt.floor(freq=self.granularity.get_frequency)
 
             if df is not None:
                 # insert first entry
@@ -1516,7 +1456,4 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                         self.candles["volume"] = self.candles["volume"].astype(
                             "float64"
                         )
-
-        # print (f'{msg["time"]} {msg["product_id"]} {msg["price"]}')
-        # print(json.dumps(msg, indent=4, sort_keys=True))
         self.message_count += 1
