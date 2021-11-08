@@ -1164,7 +1164,7 @@ class TelegramBot(TelegramBotBase):
         def StartWindowsProcess() -> None:
             # subprocess.Popen(f"python3 pycryptobot.py {overrides}", creationflags=subprocess.CREATE_NEW_CONSOLE)
             os.system(
-                    f"start powershell -Command $host.UI.RawUI.WindowTitle = '{self.pair}' ; " /
+                    f"start powershell -Command $host.UI.RawUI.WindowTitle = '{self.pair}' ; "
                     f"python3 pycryptobot.py --exchange {self.exchange} --market {self.pair} {self.overrides}"
                 )
 
