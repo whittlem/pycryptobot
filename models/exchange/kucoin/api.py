@@ -788,42 +788,43 @@ class PublicAPI(AuthAPIBase):
                     Logger.warning(
                         f"Kucoin API Error for Historical Data - 'data' not in response - retrying - attempt {trycnt}"
                     )
-                    time.sleep(11)
-
-                if iso8601start != "" and iso8601end == "":
-                    startTime = int(
-                        datetime.timestamp(
-                            datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")
-                        )
-                    )
-                    resp = self.authAPI(
-                        "GET",
-                        f"api/v1/market/candles?type={granularity}&symbol={market}&startAt={startTime}",
-                    )
-                elif iso8601start != "" and iso8601end != "":
-                    startTime = int(
-                        datetime.timestamp(
-                            datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")
-                        )
-                    )
-
-                    endTime = int(
-                        datetime.timestamp(
-                            datetime.strptime(iso8601end, "%Y-%m-%dT%H:%M:%S")
-                        )
-                    )
-                    resp = self.authAPI(
-                        "GET",
-                        f"api/v1/market/candles?type={granularity}&symbol={market}&startAt={startTime}&endAt={endTime}",
-                    )
-                else:
-                    resp = self.authAPI(
-                        "GET",
-                        f"api/v1/market/candles?type={granularity}&symbol={market}",
-                    )
+                    time.sleep(15)
                 trycnt += 1
             else:
                 break
+
+            if iso8601start != "" and iso8601end == "":
+                startTime = int(
+                    datetime.timestamp(
+                        datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")
+                    )
+                )
+                resp = self.authAPI(
+                    "GET",
+                    f"api/v1/market/candles?type={granularity}&symbol={market}&startAt={startTime}",
+                )
+            elif iso8601start != "" and iso8601end != "":
+                startTime = int(
+                    datetime.timestamp(
+                        datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")
+                    )
+                )
+
+                endTime = int(
+                    datetime.timestamp(
+                        datetime.strptime(iso8601end, "%Y-%m-%dT%H:%M:%S")
+                    )
+                )
+                resp = self.authAPI(
+                    "GET",
+                    f"api/v1/market/candles?type={granularity}&symbol={market}&startAt={startTime}&endAt={endTime}",
+                )
+            else:
+                resp = self.authAPI(
+                    "GET",
+                    f"api/v1/market/candles?type={granularity}&symbol={market}",
+                )
+
         # convert the API response into a Pandas DataFrame
         df = pd.DataFrame(
             resp["data"],
@@ -895,7 +896,7 @@ class PublicAPI(AuthAPIBase):
                     Logger.warning(
                         f"Kucoin API Error for Get Ticker: time format not correct - retrying - attempt {trycnt}"
                     )
-                    time.sleep(11)
+                    time.sleep(15)
                     resp = self.authAPI(
                         "GET", f"api/v1/market/orderbook/level1?symbol={market}"
                     )
@@ -943,8 +944,8 @@ class PublicAPI(AuthAPIBase):
             elif method == "POST":
                 resp = requests.post(self._api_url + uri, json=payload)
 
-            # If API returns an error status code, retry request up to 3 times
-            trycnt, maxretry = (1, 3)
+            # If API returns an error status code, retry request up to 5 times
+            trycnt, maxretry = (1, 5)
             while trycnt <= maxretry:
                 if resp.status_code != 200:
                     resp_message = resp.json()["msg"]
@@ -955,14 +956,15 @@ class PublicAPI(AuthAPIBase):
                         Logger.warning(
                             f"Kucoin API request error - retry attempt {trycnt}: {message}"
                         )
-                    time.sleep(11)
-                    if method == "GET":
-                        resp = requests.get(self._api_url + uri)
-                    elif method == "POST":
-                        resp = requests.post(self._api_url + uri, json=payload)
+                    time.sleep(15)
                     trycnt += 1
                 else:
                     break
+
+                if method == "GET":
+                    resp = requests.get(self._api_url + uri)
+                elif method == "POST":
+                    resp = requests.post(self._api_url + uri, json=payload)
 
             resp.raise_for_status()
             return resp.json()
