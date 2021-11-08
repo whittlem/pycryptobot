@@ -451,6 +451,10 @@ Instead, please, create `binance.key` or `coinbase.key` or `kucoin.key` (or use 
 
 Once you have done that, "api_key" and "api_secret" can be safely removed from your config file and you're free to share your configs without worrying of leaked credentials.
 
+You may also specify API key file with a command line argument like:
+
+    --api_key_file binance.key
+
 ### binance.key / conbase.key / kucoin.key examples
 
 Actually it's pretty simple, these files are supposed to be a simple text files with the API key on the first line, API secret on the second line and in case of coinbase and kucoin, probably the API password on the third. No comments or anything else is allowed, just the long string of numbers:
