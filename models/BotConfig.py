@@ -241,16 +241,16 @@ class BotConfig:
 
         if self.cli_args["exchange"] is not None:
             exchange = Exchange(self.cli_args["exchange"])
-
-        # if not exchange:
-        if (Exchange.COINBASEPRO.value or "api_pass") in self.config:
-            exchange = Exchange.COINBASEPRO
-        elif Exchange.BINANCE.value in self.config:
-            exchange = Exchange.BINANCE
-        elif Exchange.KUCOIN.value in self.config:
-            exchange = Exchange.KUCOIN
-        else:
-            exchange = Exchange.DUMMY
+        
+        if not exchange:
+            if (Exchange.COINBASEPRO.value or "api_pass") in self.config:
+                exchange = Exchange.COINBASEPRO
+            elif Exchange.BINANCE.value in self.config:
+                exchange = Exchange.BINANCE
+            elif Exchange.KUCOIN.value in self.config:
+                exchange = Exchange.KUCOIN
+            else:
+                exchange = Exchange.DUMMY
         return exchange
 
     def _set_default_api_info(self, exchange: Exchange = Exchange.DUMMY) -> tuple:
