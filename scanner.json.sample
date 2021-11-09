@@ -4,5 +4,8 @@
     },
     "binance" : {
         "quote_currency": ["USDT"]
+    },
+    "kucoin" : {
+        "quote_currency": ["USD"]
     }
 }

@@ -1296,16 +1296,24 @@ class TelegramBot(TelegramBotBase):
             return False
 
     def StartScanning(self,update,context):
+        if not self._checkifallowed(context._user_id_and_data[0], update):
+            return
+
+        if self.autoscandelay > 0:
+            s.start()
+            s.add_job(self.StartMarketScan, args=(update, context), trigger='interval', minutes=self.autoscandelay*60, name='Volume Auto Scanner', misfire_grace_time=10)
+            update.message.reply_text(
+                f"<b>Scan job schedule created to run every {self.autoscandelay} hour(s)</b> \u2705", parse_mode="HTML"
+            )
         self.StartMarketScan(update,context)
-        s.start()
-        s.add_job(self.StartMarketScan, args=(update, context), trigger='interval', minutes=self.autoscandelay*60)
 
     def StopScanning(self,update,context):
         s.shutdown()
+        update.message.reply_text(
+                "<b>Scan job schedule has been removed</b> \u2705", parse_mode="HTML"
+            )
 
     def StartMarketScan(self, update, context):
-        if not self._checkifallowed(context._user_id_and_data[0], update):
-            return
 
         debug = False
 
@@ -1389,13 +1397,6 @@ class TelegramBot(TelegramBotBase):
 
             update.message.reply_text(f"<i>Operation Complete.</i>", parse_mode="HTML")
 
-    def StopMarketScan(self, update, context):
-        if not self._checkifallowed(context._user_id_and_data[0], update):
-            return
-
-        if not s.empty():
-            s.cancel(self.jobId)
-
     def cleandata(self, update, context) -> None:
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
@@ -1421,7 +1422,7 @@ class TelegramBot(TelegramBotBase):
                 if (
                     self.data["botcontrol"]["status"] == "active"
                     and last_modified.seconds > 120
-                    and last_modified.seconds != 86399
+                    and (last_modified.seconds != 86399 and last_modified.days != -1)
                 ):
                     logger.info("deleting %s %s", jfile, str(last_modified))
                     os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
