@@ -3,6 +3,7 @@ import ast
 import json
 import os.path
 import sys
+from cement import App
 
 from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
 

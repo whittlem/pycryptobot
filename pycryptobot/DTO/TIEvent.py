@@ -2,8 +2,11 @@ from dataclasses import dataclass
 import json
 import pandas
 
-@dataclass()
-class BaseEventDTO:
+from .EventInterface import EventAbstract
+
+
+@dataclass
+class TIBaseEvent:
     df_index: str
     market: str
     bullbeear: str
@@ -25,9 +28,10 @@ class BaseEventDTO:
     def reprJSON(self):
         return self.__dict__
 
-@dataclass()
-class EventDTO:
-    base_event: BaseEventDTO
+
+@dataclass
+class TIEvent(EventAbstract):
+    base_event: TIBaseEvent
     df_high: float
     df_low: float
     swing: float
@@ -36,6 +40,7 @@ class EventDTO:
     range_end: pandas.Timestamp
     margin: float = None
     delta: float = None
+    name: str = "TIEvent"
 
     def set_margin(self, margin: float):
         self.margin = margin
@@ -54,11 +59,5 @@ class EventDTO:
             'range_end': self.range_end.strftime('%Y-%m-%d %H:%M:%S'),
             'margin': self.margin,
             'delta': self.delta,
+            'name': self.name,
         }
-
-class ComplexEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if hasattr(obj,'reprJSON'):
-            return obj.reprJSON()
-        else:
-            return json.JSONEncoder.default(self, obj)

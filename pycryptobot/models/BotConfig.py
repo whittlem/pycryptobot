@@ -1,4 +1,5 @@
 from ..core.version import get_version
+from cement import App as CementApp
 
 import argparse
 import json
@@ -24,15 +25,9 @@ from pycryptobot.models.exchange.ExchangesEnum import Exchange
 
 
 class BotConfig:
-    def __init__(self, *args, **kwargs):
-        self.cli_args = self._parse_arguments()
-
-        if self.cli_args["init"]:
-            ConfigBuilder().init()
-            sys.exit()
-
+    def __init__(self, app: CementApp, exchange: str):
+        self.cli_args = app.pargs
         self.configbuilder = False
-
         self.granularity = 3600
         self.base_currency = "BTC"
         self.quote_currency = "GBP"
@@ -90,9 +85,7 @@ class BotConfig:
         self.enabletelegrambotcontrol = False
 
         self.filelog = True
-        self.logfile = (
-            self.cli_args["logfile"] if self.cli_args["logfile"] else "pycryptobot.log"
-        )
+        self.logfile = self.cli_args.logfile
         self.fileloglevel = "DEBUG"
         self.consolelog = True
         self.consoleloglevel = "INFO"
@@ -106,53 +99,18 @@ class BotConfig:
 
         self.recv_window = self._set_recv_window()
 
-        self.config_file = kwargs.get("config_file", "config.json")
+        # self.config_file = kwargs.get("config_file", "config.json") //TODO: get rid of it
+        self.config_file = "config.json"
 
         self.tradesfile = (
-            self.cli_args["tradesfile"] if self.cli_args["tradesfile"] else "trades.csv"
+            self.cli_args.tradesfile if self.cli_args.tradesfile else "trades.csv"
         )
 
-        self.config_provided = False
-        self.config = {}
-
-        if self.cli_args["config"] is not None:
-            self.config_file = self.cli_args["config"]
-            self.config_provided = True
-
-        # read and set config from file
-        if os.path.isfile(self.config_file):
-            self.config_provided = True
-            try:
-                with open(self.config_file, "r") as stream:
-                    try:
-                        self.config = yaml.safe_load(stream)
-                    except:
-                        try:
-                            stream.seek(0)
-                            self.config = json.load(stream)
-                        except json.decoder.JSONDecodeError as err:
-                            sys.tracebacklimit = 0
-                            raise ValueError(f"Invalid config.json: {str(err)}")
-
-            except (ScannerError, ConstructorError) as err:
-                sys.tracebacklimit = 0
-                raise ValueError(
-                    f"Invalid config: cannot parse config file: {str(err)}"
-                )
-
-            except (IOError, FileNotFoundError) as err:
-                sys.tracebacklimit = 0
-                raise ValueError(f"Invalid config: cannot open config file: {str(err)}")
-
-            except ValueError as err:
-                sys.tracebacklimit = 0
-                raise ValueError(f"Invalid config: {str(err)}")
-
-            except:
-                raise
+        self.config_provided = True
+        self.config = app.config.get_dict()
 
         # set exchange platform
-        self.exchange = self._set_exchange(kwargs["exchange"])
+        self.exchange = self._set_exchange(exchange)
 
         # set defaults
         (
@@ -177,10 +135,10 @@ class BotConfig:
                 dummyConfigParser(self, self.config["dummy"], self.cli_args)
 
             if (
-                not self.disabletelegram
-                and "telegram" in self.config
-                and "token" in self.config["telegram"]
-                and "client_id" in self.config["telegram"]
+                    not self.disabletelegram
+                    and "telegram" in self.config
+                    and "token" in self.config["telegram"]
+                    and "client_id" in self.config["telegram"]
             ):
                 telegram = self.config["telegram"]
                 self._chat_client = Telegram(telegram["token"], telegram["client_id"])
@@ -219,8 +177,8 @@ class BotConfig:
     def _set_exchange(self, exchange: str = None) -> str:
         valid_exchanges = ["coinbasepro", "binance", "kucoin", "dummy"]
 
-        if self.cli_args["exchange"] is not None:
-            exchange = self.cli_args["exchange"]
+        if self.cli_args.exchange is not None:
+            exchange = self.cli_args.exchange
 
         if exchange and exchange in valid_exchanges:
             return exchange
@@ -281,233 +239,15 @@ class BotConfig:
         )
 
     def getVersionFromREADME(self) -> str:
-       return get_version()
+        return get_version()
 
     def _set_recv_window(self):
         recv_window = 5000
-        if self.cli_args["recvWindow"] and isinstance(self.cli_args["recvWindow"], int):
-            if 5000 <= int(self.cli_args["recvWindow"]) <= 60000:
-                recv_window = int(self.cli_args["recvWindow"])
+        if self.cli_args.recvWindow and isinstance(self.cli_args.recvWindow, int):
+            if 5000 <= int(self.cli_args.recvWindow) <= 60000:
+                recv_window = int(self.cli_args.recvWindow)
             else:
                 raise ValueError(
                     "recvWindow out of bounds! Should be between 5000 and 60000."
                 )
         return recv_window
-
-    def _parse_arguments(self):
-        # instantiate the arguments parser
-        parser = argparse.ArgumentParser(
-            description="Python Crypto Bot using the Coinbase Pro or Binanace API"
-        )
-
-        # config builder
-        parser.add_argument(
-            "--init", action="store_true", help="config.json configuration builder"
-        )
-
-        # optional arguments
-        parser.add_argument(
-            "--exchange", type=str, help="'coinbasepro', 'binance', 'kucoin', 'dummy'"
-        )
-        parser.add_argument(
-            "--granularity",
-            type=str,
-            help="coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6h,1d), kucoin: (1min,3min,5min,15min,30min,1hour,6hour,1day)",
-        )
-        parser.add_argument(
-            "--graphs", type=int, help="save graphs=1, do not save graphs=0"
-        )
-        parser.add_argument("--live", type=int, help="live=1, test=0")
-        parser.add_argument(
-            "--market",
-            type=str,
-            help="coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc.",
-        )
-        parser.add_argument(
-            "--sellatloss", type=int, help="toggle if bot should sell at a loss"
-        )
-        parser.add_argument(
-            "--sellupperpcnt",
-            type=float,
-            help="optionally set sell upper percent limit",
-        )
-        parser.add_argument(
-            "--selllowerpcnt",
-            type=float,
-            help="optionally set sell lower percent limit",
-        )
-        parser.add_argument(
-            "--nosellminpcnt",
-            type=float,
-            help="optionally set minimum margin to not sell",
-        )
-        parser.add_argument(
-            "--nosellmaxpcnt",
-            type=float,
-            help="optionally set maximum margin to not sell",
-        )
-        parser.add_argument(
-            "--trailingstoploss",
-            type=float,
-            help="optionally set a trailing stop percent loss below last buy high",
-        )
-        parser.add_argument(
-            "--trailingstoplosstrigger",
-            type=float,
-            help="optionally set when the trailing stop loss should start",
-        )
-        parser.add_argument(
-            "--sim", type=str, help="simulation modes: fast, fast-sample, slow-sample"
-        )
-        parser.add_argument(
-            "--simstartdate",
-            type=str,
-            help="start date for sample simulation e.g '2021-01-15'",
-        )
-        parser.add_argument(
-            "--simenddate",
-            type=str,
-            help="end date for sample simulation e.g '2021-01-15' or 'now'",
-        )
-        parser.add_argument(
-            "--smartswitch",
-            type=int,
-            help="optionally smart switch between 1 hour and 15 minute intervals",
-        )
-        parser.add_argument(
-            "--verbose", type=int, help="verbose output=1, minimal output=0"
-        )
-        parser.add_argument(
-            "--config",
-            type=str,
-            help="Use the config file at the given location. e.g 'myconfig.json'",
-        )
-        parser.add_argument(
-            "--logfile",
-            type=str,
-            help="Use the log file at the given location. e.g 'mymarket.log'",
-        )
-        parser.add_argument(
-            "--tradesfile",
-            type=str,
-            help="Path to file to log trades done during simulation. eg './trades/BTCBUSD-trades.csv",
-        )
-        parser.add_argument(
-            "--buypercent", type=int, help="percentage of quote currency to buy"
-        )
-        parser.add_argument(
-            "--sellpercent", type=int, help="percentage of base currency to sell"
-        )
-        parser.add_argument(
-            "--lastaction", type=str, help="optionally set the last action (BUY, SELL)"
-        )
-        parser.add_argument("--buymaxsize", type=float, help="maximum size on buy")
-        parser.add_argument(
-            "--nobuynearhighpcnt",
-            type=float,
-            help="optionally set the percent of the high for buying near high if enabled",
-        )
-
-        # optional options
-        parser.add_argument(
-            "--sellatresistance",
-            action="store_true",
-            help="sell at resistance or upper fibonacci band",
-        )
-        parser.add_argument(
-            "--autorestart",
-            action="store_true",
-            help="Auto restart the bot in case of exception",
-        )
-        parser.add_argument(
-            "--stats", action="store_true", help="display summary of completed trades"
-        )
-        parser.add_argument(
-            "--statgroup", nargs="+", help="add multiple currency pairs to merge stats"
-        )
-        parser.add_argument(
-            "--statstartdate",
-            type=str,
-            help="trades before this date are ignored in stats function e.g 2021-01-15",
-        )
-        parser.add_argument(
-            "--statdetail",
-            action="store_true",
-            help="display detail of completed transactions for a given market",
-        )
-        parser.add_argument(
-            "--simresultonly",
-            action="store_true",
-            help="show simulation result only",
-        )
-
-        # disable defaults
-        parser.add_argument(
-            "--disablebullonly",
-            action="store_true",
-            help="disable only buying in bull market",
-        )
-        parser.add_argument(
-            "--disablebuynearhigh",
-            action="store_true",
-            help="disable buy within 3 percent of high",
-        )
-        parser.add_argument(
-            "--disablebuymacd", action="store_true", help="disable macd buy signal"
-        )
-        parser.add_argument(
-            "--disablebuyema", action="store_true", help="disable ema buy signal"
-        )
-        parser.add_argument(
-            "--disablebuyobv", action="store_true", help="disable obv buy signal"
-        )
-        parser.add_argument(
-            "--disablebuyelderray",
-            action="store_true",
-            help="disable elder ray buy signal",
-        )
-        parser.add_argument(
-            "--disablefailsafefibonaccilow",
-            action="store_true",
-            help="disable failsafe sell on fibonacci lower band",
-        )
-        parser.add_argument(
-            "--disablefailsafelowerpcnt",
-            action="store_true",
-            help="disable failsafe sell on 'selllowerpcnt'",
-        )
-        parser.add_argument(
-            "--disableprofitbankupperpcnt",
-            action="store_true",
-            help="disable profit bank on 'sellupperpcnt'",
-        )
-        parser.add_argument(
-            "--disableprofitbankreversal",
-            action="store_true",
-            help="disable profit bank on strong candlestick reversal",
-        )
-        parser.add_argument(
-            "--disabletelegram", action="store_true", help="disable telegram messages"
-        )
-        parser.add_argument(
-            "--disablelog", action="store_true", help="disable pycryptobot.log"
-        )
-        parser.add_argument(
-            "--disabletracker", action="store_true", help="disable tracker.csv"
-        )
-        parser.add_argument(
-            "--recvWindow",
-            type=int,
-            help="binance exchange api recvWindow, integer between 5000 and 60000",
-        )
-        parser.add_argument(
-            "--enableml",
-            action="store_true",
-            help="Enable Machine Learning E.g. seasonal ARIMA model for predictions",
-        )
-        parser.add_argument("--websocket", action="store_true", help="Enable websocket")
-        parser.add_argument("--logbuysellinjson", action="store_true", help="Enable logging orders in json format")
-
-        # pylint: disable=unused-variable
-        args, unknown = parser.parse_known_args()
-        return vars(args)

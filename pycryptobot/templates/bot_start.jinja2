@@ -1,0 +1,9 @@
+{% macro sentence_case(text) -%}
+{{ text[0]|upper}}{{text[1:] -}}
+{% endmacro -%}
+{% macro smartswitch_description(isEnabled) -%}
+{% if isEnabled == True %}Smartswitch enabled
+{% else %}Smartswitch disabled
+{% endif %}
+{% endmacro %}
+{{ action }} {{ sentence_case(exchange) }} bot for {{ market }} using granularity {{ granularity }}. {{ smartswitch_description(smartswitch) }}

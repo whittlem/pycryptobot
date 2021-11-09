@@ -17,6 +17,7 @@ from pycryptobot.models.exchange.binance import AuthAPI as BAuthAPI, PublicAPI a
 from pycryptobot.models.exchange.coinbase_pro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
 from pycryptobot.models.exchange.kucoin import AuthAPI as KAuthAPI, PublicAPI as KPublicAPI
 from pycryptobot.models.helper.TextBoxHelper import TextBox
+from cement import App as CementApp
 
 # disable insecure ssl warning
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -64,11 +65,10 @@ def truncate(f: Union[int, float], n: Union[int, float]) -> str:
 
 
 class PyCryptoBot(BotConfig):
-    def __init__(self, config_file: str = None, exchange: str = None):
-        self.config_file = config_file or "config.json"
+    def __init__(self, app: CementApp, exchange: str = None):
         self.exchange = exchange
         super(PyCryptoBot, self).__init__(
-            filename=self.config_file, exchange=self.exchange
+            app, exchange=self.exchange
         )
 
     takerfee = 0.0

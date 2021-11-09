@@ -5,10 +5,11 @@ from .core.exc import PyCryptoBotError
 from .controllers.base import Base
 
 # configuration defaults
+META = init_defaults('output.json')
+META['output.json']['overridable'] = True
 CONFIG = init_defaults('pycryptobot')
-CONFIG['pycryptobot']['foo'] = 'bar'
 CONFIG['plugin.plainlogger'] = {"enabled": True}
-CONFIG['plugin.jsonlogger'] = {"enabled": True}
+# CONFIG['plugin.jsonlogger'] = {"enabled": True}
 
 
 class PyCryptoBot(App):
@@ -19,6 +20,7 @@ class PyCryptoBot(App):
 
         # configuration defaults
         config_defaults = CONFIG
+        meta_defaults = META
 
         # call sys.exit() on close
         exit_on_close = True
@@ -29,11 +31,14 @@ class PyCryptoBot(App):
             'colorlog',
             'jinja2',
             'print',
+            'pycryptobot.ext.ext_telegramnotifications',
+            'pycryptobot.ext.ext_eventlogger',
         ]
 
         # configuration handler
         config_handler = 'json'
-
+        config_dirs = ['.']
+        config_files = ['./config.json', '../config.json']
         # configuration file suffix
         config_file_suffix = '.json'
 
@@ -48,7 +53,15 @@ class PyCryptoBot(App):
             Base
         ]
         define_hooks = [
-            'event_log_technical_indicators'
+            'event.bot.start',
+            'event.bot.paused',
+            'event.bot.restarted',
+            'event.bot.stop',
+            'event.granularity.change',
+            'event.action.change',
+            'event.order.buy',
+            'event.order.sell',
+            'event.log.technical.indicators',
         ]
 
 class PyCryptoBotTest(TestApp,PyCryptoBot):
