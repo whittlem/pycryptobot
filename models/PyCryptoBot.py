@@ -43,11 +43,11 @@ def truncate(f: Union[int, float], n: Union[int, float]) -> str:
 
 
 class PyCryptoBot(BotConfig):
-    def __init__(self, config_file: str = None, exchange: Exchange = Exchange.DUMMY):
+    def __init__(self, config_file: str = None, exchange: Exchange = None):
         self.config_file = config_file or "config.json"
         self.exchange = exchange
         super(PyCryptoBot, self).__init__(
-            filename=self.config_file, exchange=self.exchange.value
+            filename=self.config_file, exchange=self.exchange
         )
 
     takerfee = 0.0

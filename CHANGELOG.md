@@ -12,9 +12,12 @@ Upgrade library dependencies (if required):
 
 - Rename /restartbots to /resumebots
 - Fixed error when {market}.json file might not be complete (bot stopped).
-- Add /cleandata to remove and {market}.json file are not complete (bot stopped)
+- Add /cleandata to remove any {market}.json file which are not complete (bot stopped)
 - Add not to create telegram_data folder when running sims
-- Add /scanner to TG Bot to scan marks and start bots
+- Add /startscanner to TG Bot to scan marks and start bots (hourly schedule set in config)
+- Add /stopscanner to TG Bot to stop scanning markets
+- Add /addexception to TG Bot to add pair to exceptions list so wont be started by scanner process
+- Add /removeexception to TG Bot to remove a pair from exceptions list
 - Add multiple market scanning to scanner.py
 - Add exception list so that scanner.py doesnt pick a pair your dont want traded
 
