@@ -95,7 +95,7 @@ class TelegramBotHelper:
             self._read_data()
 
             addmarket = {
-                "exchange": self.exchange,
+                "exchange": self.exchange.value,
                 "margin": margin,
                 "delta": delta,
                 "price": price,
