@@ -934,7 +934,7 @@ class PublicAPI(AuthAPIBase):
                     "/api/v3/klines",
                     {
                         "symbol": market,
-                        "interval": granularity,
+                        "interval": granularity.to_short,
                         "startTime": startTime,
                         "limit": 300,
                     },
@@ -953,7 +953,7 @@ class PublicAPI(AuthAPIBase):
                     "/api/v3/klines",
                     {
                         "symbol": market,
-                        "interval": granularity,
+                        "interval": granularity.to_short,
                         "startTime": startTime,
                         "limit": 300,
                     },
@@ -963,7 +963,7 @@ class PublicAPI(AuthAPIBase):
                 resp = self.authAPI(
                     "GET",
                     "/api/v3/klines",
-                    {"symbol": market, "interval": granularity, "limit": 300},
+                    {"symbol": market, "interval": granularity.to_short, "limit": 300},
                 )
 
             # convert the API response into a Pandas DataFrame

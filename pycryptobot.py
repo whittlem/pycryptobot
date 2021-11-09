@@ -1040,14 +1040,6 @@ def executeJob(
                 # if live
                 if _app.isLive():
                     if not _app.insufficientfunds:
-                        _app.notifyTelegram(
-                            _app.getMarket()
-                            + " ("
-                            + _app.printGranularity()
-                            + ") BUY at "
-                            + price_text
-                        )
-
                         if not _app.isVerbose():
                             if not _app.isSimulation() or (
                                 _app.isSimulation() and not _app.simResultOnly()
@@ -1060,12 +1052,13 @@ def executeJob(
                             text_box.center("*** Executing LIVE Buy Order ***")
                             text_box.singleLine()
 
-                        account.basebalance = float(
-                            account.getBalance(_app.getBaseCurrency())
-                        )
-                        account.quotebalance = float(
-                            account.getBalance(_app.getQuoteCurrency())
-                        )
+                        ac = account.getBalance()
+
+                        df_base = ac[ac["currency"] == _app.getBaseCurrency()]["available"]
+                        account.basebalance = 0.0 if len(df_base) == 0 else float(truncate(float(ac[ac["currency"] == _app.getBaseCurrency()]["available"].values[0])))
+
+                        df_quote = ac[ac["currency"] == _app.getQuoteCurrency()]["available"]
+                        account.quotebalance = 0.0 if len(df_quote) == 0 else float(truncate(float(ac[ac["currency"] == _app.getQuoteCurrency()]["available"].values[0])))
 
                         # display balances
                         Logger.info(
@@ -1088,21 +1081,33 @@ def executeJob(
                         resp = _app.marketBuy(
                             _app.getMarket(), _state.last_buy_size, _app.getBuyPercent()
                         )
-                        # Logger.debug(resp)
+                        if not resp.empty:
+                            _app.notifyTelegram(
+                                _app.getMarket()
+                                + " ("
+                                + _app.printGranularity()
+                                + ") BUY at "
+                                + price_text
+                            )
+                            # Logger.debug(resp)
 
-                        # display balances
-                        account.basebalance = float(
-                            account.getBalance(_app.getBaseCurrency())
-                        )
-                        account.quotebalance = float(
-                            account.getBalance(_app.getQuoteCurrency())
-                        )
-                        Logger.info(
-                            f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance)}"
-                        )
-                        Logger.info(
-                            f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance)}"
-                        )
+                            # display balances
+                            ac = account.getBalance()
+
+                            df_base = ac[ac["currency"] == _app.getBaseCurrency()]["available"]
+                            account.basebalance = 0.0 if len(df_base) == 0 else float(truncate(float(df[df["currency"] == _app.getBaseCurrency()]["available"].values[0])))
+
+                            df_quote = ac[ac["currency"] == _app.getQuoteCurrency()]["available"]
+                            account.quotebalance = 0.0 if len(df_quote) == 0 else float(truncate(float(df[df["currency"] == _app.getQuoteCurrency()]["available"].values[0])))
+
+                            Logger.info(
+                                f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance)}"
+                            )
+                            Logger.info(
+                                f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance)}"
+                            )
+                        else:
+                            Logger.warning("Unable to place order")    
                     else:
                         Logger.warning("Unable to place order, insufficient funds")
                 # if not live

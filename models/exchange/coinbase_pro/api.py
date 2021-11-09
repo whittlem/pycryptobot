@@ -16,6 +16,7 @@ from requests import Request
 from threading import Thread
 from websocket import create_connection, WebSocketConnectionClosedException
 from models.helper.LogHelper import Logger
+from models.exchange.Granularity import Granularity
 
 MARGIN_ADJUSTMENT = 0.0025
 DEFAULT_MAKER_FEE_RATE = 0.005
@@ -695,7 +696,8 @@ class PublicAPI(AuthAPIBase):
     def getHistoricalData(
         self,
         market: str = DEFAULT_MARKET,
-        granularity: int = MAX_GRANULARITY,
+        # granularity: int = MAX_GRANULARITY,
+        granularity: Granularity = Granularity.ONE_HOUR,
         websocket=None,
         iso8601start: str = "",
         iso8601end: str = "",
@@ -707,11 +709,11 @@ class PublicAPI(AuthAPIBase):
             raise TypeError("Coinbase Pro market required.")
 
         # validates granularity is an integer
-        if not isinstance(granularity, int):
+        if not isinstance(granularity.to_integer, int):
             raise TypeError("Granularity integer required.")
 
         # validates the granularity is supported by Coinbase Pro
-        if not granularity in SUPPORTED_GRANULARITY:
+        if not granularity.to_integer in SUPPORTED_GRANULARITY:
             raise TypeError(
                 "Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY))
             )
@@ -737,16 +739,16 @@ class PublicAPI(AuthAPIBase):
             if iso8601start != "" and iso8601end == "":
                 resp = self.authAPI(
                     "GET",
-                    f"products/{market}/candles?granularity={granularity}&start={iso8601start}",
+                    f"products/{market}/candles?granularity={granularity.to_integer}&start={iso8601start}",
                 )
             elif iso8601start != "" and iso8601end != "":
                 resp = self.authAPI(
                     "GET",
-                    f"products/{market}/candles?granularity={granularity}&start={iso8601start}&end={iso8601end}",
+                    f"products/{market}/candles?granularity={granularity.to_integer}&start={iso8601start}&end={iso8601end}",
                 )
             else:
                 resp = self.authAPI(
-                    "GET", f"products/{market}/candles?granularity={granularity}"
+                    "GET", f"products/{market}/candles?granularity={granularity.to_integer}"
                 )
 
             # convert the API response into a Pandas DataFrame
@@ -757,7 +759,7 @@ class PublicAPI(AuthAPIBase):
             df = df.iloc[::-1].reset_index()
 
             try:
-                freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity)]
+                freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity.to_integer)]
             except:
                 freq = "D"
 
@@ -782,7 +784,7 @@ class PublicAPI(AuthAPIBase):
                 df["date"] = tsidx
 
             df["market"] = market
-            df["granularity"] = granularity
+            df["granularity"] = granularity.to_integer
 
             # re-order columns
             df = df[

@@ -11,7 +11,7 @@ from models.exchange.kucoin import PublicAPI as KPublicAPI
 from models.exchange.Granularity import Granularity
 from models.exchange.ExchangesEnum import Exchange
 
-GRANULARITY = ""
+GRANULARITY = Granularity(Granularity.ONE_HOUR)
 try:
     with open("scanner.json", encoding='utf8') as json_file:
         config = json.load(json_file)
@@ -24,13 +24,13 @@ for exchange in config:
     for quote in config[ex.value]["quote_currency"]:
         if ex == Exchange.BINANCE:
             api = BPublicAPI()
-            GRANULARITY = Granularity.convert_to_enum(3600).to_short
+            # GRANULARITY = Granularity.convert_to_enum(3600).to_short
         elif ex == Exchange.COINBASEPRO:
             api = CPublicAPI()
-            GRANULARITY = Granularity.convert_to_enum(3600).to_integer
+            # GRANULARITY = Granularity.convert_to_enum(3600).to_integer
         elif ex == Exchange.KUCOIN:
             api = KPublicAPI()
-            GRANULARITY = Granularity.convert_to_enum(3600).to_medium
+            # GRANULARITY = Granularity.convert_to_enum(3600).to_medium
         else:
             raise ValueError(f"Invalid exchange: {ex}")
 
