@@ -85,8 +85,8 @@ for exchange in config:
                     df_markets.at[market, "buy_next"] = df_1h_last[df_1h_last["market"] == market][
                         "ema12ltema26"
                     ].values[0]
-            except:
-                pass
+            except Exception as err:
+                print(err)
 
             # don't flood exchange, sleep 1 second
             time.sleep(1)
@@ -103,6 +103,6 @@ for exchange in config:
             )
         )
 
-        TGBot(app).save_scanner_output(ex.value, quote, df_markets.sort_values(
+        TGBot(app, scanner=True).save_scanner_output(ex.value, quote, df_markets.sort_values(
                 by=["buy_next", "atr72_pcnt"], ascending=[False, False], inplace=False))
 

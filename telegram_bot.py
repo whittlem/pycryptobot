@@ -401,7 +401,8 @@ class TelegramBot(TelegramBotBase):
             BotCommand("sell", "manual sell"),
             BotCommand("addexception", "add pair to scanner exception list"),
             BotCommand("removeexception", "remove pair from scanner exception list"),
-            BotCommand("startscanner", "scan high volumne markets and start bots")
+            BotCommand("startscanner", "start auto scan high volumne markets and start bots"),
+            BotCommand("stopscanner", "stop auto scan high volumne markets")
         ]
 
         ubot = Bot(self.token)
@@ -1359,9 +1360,10 @@ class TelegramBot(TelegramBotBase):
                     encoding="utf8",
                 ) as json_file:
                     data = json.load(json_file)
-                update.message.reply_text(
-                    f"<b>{ex} ({quote})</b> \u23F3", parse_mode="HTML"
-                )
+                # update.message.reply_text(
+                #     f"<b>{ex} ({quote})</b> \u23F3", parse_mode="HTML"
+                # )
+                outputmsg =  f"<b>{ex} ({quote})</b> \u23F3 \n"
                 for row in data:
                     if debug:
                         logger.info("%s", row)
@@ -1375,7 +1377,8 @@ class TelegramBot(TelegramBotBase):
                         continue
 
                     if row in self.data["scannerexceptions"]:
-                        update.message.reply_text(f"{row} found on scanner exception list")
+                        outputmsg = outputmsg + f"*** {row} found on scanner exception list ***\n"
+                        # update.message.reply_text(f"{row} found on scanner exception list")
                     else:
                         if data[row]["atr72_pcnt"] != None:
                             if debug:
@@ -1384,16 +1387,18 @@ class TelegramBot(TelegramBotBase):
                                 data[row]["atr72_pcnt"] >= self.atr72pcnt
                                 and data[row]["buy_next"]
                             ):
-                                update.message.reply_text(
-                                    f"<i><b>{row}</b>  //--//  <b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%  //--//  <b>buy_next:</b> {data[row]['buy_next']}</i>",
-                                    parse_mode="HTML",
-                                )
+                                outputmsg = outputmsg + f"<i><b>{row}</b>  //--//  <b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%  //--//  <b>buy_next:</b> {data[row]['buy_next']}</i>"
+                                # update.message.reply_text(
+                                #     f"<i><b>{row}</b>  //--//  <b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%  //--//  <b>buy_next:</b> {data[row]['buy_next']}</i>",
+                                #     parse_mode="HTML",
+                                # )
                                 self.exchange = ex
                                 self.pair = row
                                 update.message.text = "Auto_Yes"
                                 self.newbot_start(update, context)
                                 botcounter += 1
                                 sleep(10)
+                update.message.reply_text(f"{outputmsg}", parse_mode="HTML")
 
             update.message.reply_text(f"<i>Operation Complete.</i>", parse_mode="HTML")
 

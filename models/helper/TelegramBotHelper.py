@@ -9,7 +9,7 @@ from models.helper.LogHelper import Logger
 
 
 class TelegramBotHelper:
-    def __init__(self, app: PyCryptoBot) -> None:
+    def __init__(self, app: PyCryptoBot, scanner: bool = False) -> None:
         self.app = app
         self.market = app.getMarket()
         self.exchange = app.getExchange()
@@ -190,7 +190,15 @@ class TelegramBotHelper:
             self.deletemargin()
 
     def save_scanner_output(self, exchange, quote, output: DataFrame) -> None:
-
+        try:
+            os.remove(
+                    os.path.join(
+                        self.app.telegramdatafolder, "telegram_data", f"{exchange}_{quote}_output.json"
+                    )
+                )
+        except FileExistsError as err:
+            Logger.warning(f"Unable to delete previous scan data {err}")
+            
         output.to_json(
             os.path.join(
                 self.app.telegramdatafolder,

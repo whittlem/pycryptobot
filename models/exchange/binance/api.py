@@ -934,7 +934,7 @@ class PublicAPI(AuthAPIBase):
                     "/api/v3/klines",
                     {
                         "symbol": market,
-                        "interval": granularity.to_short,
+                        "interval": granularity,
                         "startTime": startTime,
                         "limit": 300,
                     },
@@ -953,7 +953,7 @@ class PublicAPI(AuthAPIBase):
                     "/api/v3/klines",
                     {
                         "symbol": market,
-                        "interval": granularity.to_short,
+                        "interval": granularity,
                         "startTime": startTime,
                         "limit": 300,
                     },
@@ -963,7 +963,7 @@ class PublicAPI(AuthAPIBase):
                 resp = self.authAPI(
                     "GET",
                     "/api/v3/klines",
-                    {"symbol": market, "interval": granularity.to_short, "limit": 300},
+                    {"symbol": market, "interval": granularity, "limit": 300},
                 )
 
             # convert the API response into a Pandas DataFrame
@@ -986,7 +986,7 @@ class PublicAPI(AuthAPIBase):
             )
 
             df["market"] = market
-            df["granularity"] = granularity.to_short
+            df["granularity"] = granularity
 
             # binance epoch is too long
             df["open_time"] = df["open_time"] + 1
