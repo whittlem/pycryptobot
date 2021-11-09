@@ -19,7 +19,7 @@ class TelegramBotHelper:
         )
         self.filename = self.market + ".json"
 
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
+        if not self.app.isSimulation() and self.app.enableTelegramBotControl() and not scanner:
             if not os.path.exists(self.botfolder):
                 os.makedirs(self.botfolder)
 
