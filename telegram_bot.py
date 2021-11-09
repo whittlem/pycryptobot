@@ -1387,7 +1387,7 @@ class TelegramBot(TelegramBotBase):
                                 data[row]["atr72_pcnt"] >= self.atr72pcnt
                                 and data[row]["buy_next"]
                             ):
-                                outputmsg = outputmsg + f"<i><b>{row}</b>  //--//  <b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%  //--//  <b>buy_next:</b> {data[row]['buy_next']}</i>"
+                                outputmsg = outputmsg + f"<i><b>{row}</b>  //--//  <b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%  //--//  <b>buy_next:</b> {data[row]['buy_next']}</i>\n"
                                 # update.message.reply_text(
                                 #     f"<i><b>{row}</b>  //--//  <b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%  //--//  <b>buy_next:</b> {data[row]['buy_next']}</i>",
                                 #     parse_mode="HTML",
