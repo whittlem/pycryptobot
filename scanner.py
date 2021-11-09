@@ -8,6 +8,8 @@ from models.Trading import TechnicalAnalysis
 from models.exchange.binance import PublicAPI as BPublicAPI
 from models.exchange.coinbase_pro import PublicAPI as CPublicAPI
 from models.exchange.kucoin import PublicAPI as KPublicAPI
+from models.exchange.Granularity import Granularity
+from models.exchange.ExchangesEnum import Exchange
 
 GRANULARITY = ""
 try:
@@ -16,41 +18,42 @@ try:
 except IOError as err:
     print (err)
 
-for ex in config:
+for exchange in config:
+    ex = Exchange(exchange)
     app = PyCryptoBot(exchange=ex)
-    for quote in config[ex]["quote_currency"]:
-        if ex == "binance":
+    for quote in config[ex.value]["quote_currency"]:
+        if ex == Exchange.BINANCE:
             api = BPublicAPI()
-            GRANULARITY = api.to_binance_granularity(3600)
-        elif ex == "coinbasepro":
+            GRANULARITY = Granularity.convert_to_enum(3600).to_short
+        elif ex == Exchange.COINBASEPRO:
             api = CPublicAPI()
-            GRANULARITY = api.to_coinbasepro_granularity(3600)
-        elif ex:
+            GRANULARITY = Granularity.convert_to_enum(3600).to_integer
+        elif ex == Exchange.KUCOIN:
             api = KPublicAPI()
-            GRANULARITY = api.to_kucoin_granularity(3600)
+            GRANULARITY = Granularity.convert_to_enum(3600).to_medium
         else:
             raise ValueError(f"Invalid exchange: {ex}")
 
         markets = []
         resp = api.getMarkets24HrStats()
-        if ex == "binance":
+        if ex == Exchange.BINANCE:
             for row in resp:
                 if row["symbol"].endswith(quote):
                     markets.append(row)
-        elif ex == "coinbasepro":
+        elif ex == Exchange.COINBASEPRO:
             for market in resp:
                 if market.endswith(f"-{quote}"):
                     resp[market]["stats_24hour"]["market"] = market
                     markets.append(resp[market]["stats_24hour"])
-        elif ex == "kucoin":
+        elif ex == Exchange.KUCOIN:
             #TODO: getMarket24HrStats needs to be added to PublicAPI
             raise Exception("getMarket24HrStats needs to be added to PublicAPI")
 
         df_markets = pd.DataFrame(markets)
 
-        if ex == "binance":
+        if ex == Exchange.BINANCE:
             df_markets = df_markets[["symbol", "lastPrice", "quoteVolume"]]
-        elif ex == "coinbasepro":
+        elif ex == Exchange.COINBASEPRO:
             df_markets = df_markets[["market", "last", "volume"]]
 
         df_markets.columns = ["market", "price", "volume"]
