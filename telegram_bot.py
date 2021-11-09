@@ -1393,7 +1393,7 @@ class TelegramBot(TelegramBotBase):
                                 update.message.text = "Auto_Yes"
                                 self.newbot_start(update, context)
                                 botcounter += 1
-                                sleep(1)
+                                sleep(10)
 
             update.message.reply_text(f"<i>Operation Complete.</i>", parse_mode="HTML")
 
