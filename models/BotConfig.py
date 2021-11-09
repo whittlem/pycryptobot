@@ -186,19 +186,19 @@ class BotConfig:
             self.api_secret,
             self.api_passphrase,
             self.market,
-        ) = self._set_default_api_info(self.exchange.value)
+        ) = self._set_default_api_info(self.exchange)
 
         if self.config_provided:
-            if self.exchange.value == Exchange.COINBASEPRO and self.exchange.value in self.config:
+            if self.exchange == Exchange.COINBASEPRO and self.exchange.value in self.config:
                 coinbaseProConfigParser(self, self.config[self.exchange.value], self.cli_args)
 
-            elif self.exchange.value == Exchange.BINANCE and self.exchange.value in self.config:
+            elif self.exchange == Exchange.BINANCE and self.exchange.value in self.config:
                 binanceConfigParser(self, self.config[self.exchange.value], self.cli_args)
 
-            elif self.exchange.value == Exchange.KUCOIN and self.exchange.value in self.config:
+            elif self.exchange == Exchange.KUCOIN and self.exchange.value in self.config:
                 kucoinConfigParser(self, self.config[self.exchange.value], self.cli_args)
 
-            elif self.exchange.value == Exchange.DUMMY and self.exchange.value in self.config:
+            elif self.exchange == Exchange.DUMMY and self.exchange.value in self.config:
                 dummyConfigParser(self, self.config[self.exchange.value], self.cli_args)
 
             if (
@@ -225,9 +225,9 @@ class BotConfig:
                 self.logfile == "/dev/null"
 
         else:
-            if self.exchange.value == Exchange.BINANCE:
+            if self.exchange == Exchange.BINANCE:
                 binanceConfigParser(self, None, self.cli_args)
-            elif self.exchange.value == Exchange.KUCOIN:
+            elif self.exchange == Exchange.KUCOIN:
                 kucoinConfigParser(self, None, self.cli_args)
             else:
                 coinbaseProConfigParser(self, None, self.cli_args)
@@ -242,15 +242,15 @@ class BotConfig:
         if self.cli_args["exchange"] is not None:
             exchange = Exchange(self.cli_args["exchange"])
 
-        if not exchange:
-            if (Exchange.COINBASEPRO.value or "api_pass") in self.config:
-                exchange = Exchange.COINBASEPRO
-            elif Exchange.BINANCE.value in self.config:
-                exchange = Exchange.BINANCE
-            elif Exchange.KUCOIN.value in self.config:
-                exchange = Exchange.KUCOIN
-            else:
-                exchange = Exchange.DUMMY
+        # if not exchange:
+        if (Exchange.COINBASEPRO.value or "api_pass") in self.config:
+            exchange = Exchange.COINBASEPRO
+        elif Exchange.BINANCE.value in self.config:
+            exchange = Exchange.BINANCE
+        elif Exchange.KUCOIN.value in self.config:
+            exchange = Exchange.KUCOIN
+        else:
+            exchange = Exchange.DUMMY
         return exchange
 
     def _set_default_api_info(self, exchange: Exchange = Exchange.DUMMY) -> tuple:
