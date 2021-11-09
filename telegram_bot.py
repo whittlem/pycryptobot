@@ -31,11 +31,12 @@ from telegram.ext import (
     MessageHandler,
 )
 from telegram.replykeyboardremove import ReplyKeyboardRemove
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # from telegram.utils.helpers import DEFAULT_20
 from models.chat import Telegram
 
-# s = scheduler(time, sleep)
+s = BackgroundScheduler(timezone='UTC')
 # jobId: Event
 
 # Enable logging
@@ -1294,6 +1295,14 @@ class TelegramBot(TelegramBotBase):
             print("No internet connection")
             return False
 
+    def StartScanning(self,update,context):
+        self.StartMarketScan(update,context)
+        s.start()
+        s.add_job(self.StartMarketScan, args=(update, context), trigger='interval', minutes=self.autoscandelay*60)
+
+    def StopScanning(self,update,context):
+        s.shutdown()
+
     def StartMarketScan(self, update, context):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
@@ -1376,12 +1385,9 @@ class TelegramBot(TelegramBotBase):
                                 update.message.text = "Auto_Yes"
                                 self.newbot_start(update, context)
                                 botcounter += 1
-                                sleep(10)
+                                sleep(1)
 
             update.message.reply_text(f"<i>Operation Complete.</i>", parse_mode="HTML")
-        
-        # self.jobId = s.enter(self.autoscandelay * 60, 1, self.StartMarketScan, (update, context))
-        # s.run()
 
     def StopMarketScan(self, update, context):
         if not self._checkifallowed(context._user_id_and_data[0], update):
@@ -1551,8 +1557,8 @@ def main():
     dp.add_handler(CommandHandler("sell", botconfig.sellrequest, Filters.text))
     dp.add_handler(CommandHandler("deletebot", botconfig.deleterequest, Filters.text))
 
-    dp.add_handler(CommandHandler("startscanner", botconfig.StartMarketScan, Filters.text))
-    dp.add_handler(CommandHandler("stopautoscan", botconfig.StopMarketScan, Filters.text))
+    dp.add_handler(CommandHandler("startscanner", botconfig.StartScanning, Filters.text))
+    dp.add_handler(CommandHandler("stopscanner", botconfig.StopScanning, Filters.text))
 
     dp.add_handler(CommandHandler("cleandata", botconfig.cleandata, Filters.text))
 

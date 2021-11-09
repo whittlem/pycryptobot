@@ -5,6 +5,7 @@ import os.path
 import sys
 
 from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
+from models.exchange.Granularity import Granularity
 
 def isMarketValid(market) -> bool:
     p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
@@ -126,12 +127,7 @@ def parser(app, Kucoin_config, args={}):
         app.market = app.base_currency + '-' + app.quote_currency
 
     if 'granularity' in config and config['granularity'] is not None:
-        if isinstance(config['granularity'], str):
-            if config['granularity'] in ['1min', '5min', '15min', '1hour', '6hour', '1day']:
-                app.granularity = to_internal_granularity(config['granularity'])
-                app.smart_switch = 0
-            else:
-                app.granularity = int(config['granularity'])
-                app.smart_switch = 0
-            # else:
-            #     raise ValueError('granularity supplied is not supported.')
+        if isinstance(config['granularity'], str) and config['granularity'].isnumeric() is True:
+            app.granularity = Granularity.convert_to_enum(int(config['granularity']))
+        elif isinstance(config['granularity'], int):
+            app.granularity = Granularity.convert_to_enum(config['granularity'])
