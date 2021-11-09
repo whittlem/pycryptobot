@@ -103,6 +103,6 @@ for exchange in config:
             )
         )
 
-        TGBot(app).save_scanner_output(ex, quote, df_markets.sort_values(
+        TGBot(app).save_scanner_output(ex.value, quote, df_markets.sort_values(
                 by=["buy_next", "atr72_pcnt"], ascending=[False, False], inplace=False))
 
