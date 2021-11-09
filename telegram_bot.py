@@ -1344,7 +1344,7 @@ class TelegramBot(TelegramBotBase):
                 self._read_data(file)
                 if "margin" in self.data and self.data["margin"] == " ":
                     if self.updatebotcontrol(file, "exit"):
-                        sleep(1)
+                        sleep(5)
         
         self._read_data()
         botcounter = 0
