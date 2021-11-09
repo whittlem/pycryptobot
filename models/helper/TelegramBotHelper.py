@@ -196,8 +196,8 @@ class TelegramBotHelper:
                         self.app.telegramdatafolder, "telegram_data", f"{exchange}_{quote}_output.json"
                     )
                 )
-        except FileNotFoundError as err:
-            Logger.warning(f"Unable to delete previous scan data {err}")
+        except FileNotFoundError:
+            pass
             
         output.to_json(
             os.path.join(
