@@ -1070,7 +1070,7 @@ class TelegramBot(TelegramBotBase):
         mark_up = ReplyKeyboardMarkup(r_keyboard, one_time_keyboard=True)
 
         update.message.reply_text(
-            "Do you want to use any commandline overrides?", r_markup=mark_up
+            "Do you want to use any commandline overrides?", reply_markup=mark_up
         )
 
         return MARKET
