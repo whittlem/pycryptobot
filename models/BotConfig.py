@@ -241,6 +241,9 @@ class BotConfig:
 
         if self.cli_args["exchange"] is not None:
             exchange = Exchange(self.cli_args["exchange"])
+
+        if isinstance(exchange, str):
+            exchange = Exchange(exchange)
         
         if not exchange:
             if (Exchange.COINBASEPRO.value or "api_pass") in self.config:
