@@ -201,6 +201,7 @@ class TelegramBot(TelegramBotBase):
         self.maxbotcount = 0
         self.autoscandelay = 0
         self.enable_buy_next = True
+        self.autostart = False
         if "scanner" in self.config:
             self.atr72pcnt = (
                 self.config["scanner"]["atr72_pcnt"]
@@ -227,6 +228,12 @@ class TelegramBot(TelegramBotBase):
                 if "enable_buy_next" in self.config["scanner"]
                 else True
             )
+
+            # self.autostart = (
+            #     self.config["scanner"]["autostart"]
+            #     if "autostart" in self.config["scanner"]
+            #     else True
+            # )
 
         if "datafolder" in self.config["telegram"]:
             self.datafolder = self.config["telegram"]["datafolder"]
@@ -1317,7 +1324,7 @@ class TelegramBot(TelegramBotBase):
             update.message.reply_text(
                 f"<b>Scan job schedule created to run every {self.autoscandelay} hour(s)</b> \u2705", parse_mode="HTML"
             )
-        self.StartMarketScan(update,context, True if context.args[0] == "debug" else False)
+        self.StartMarketScan(update,context, True if len(context.args) > 0 and context.args[0] == "debug" else False)
 
     def StopScanning(self,update,context):
         s.shutdown()
