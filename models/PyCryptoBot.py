@@ -254,21 +254,21 @@ class PyCryptoBot(BotConfig):
             if iso8601start != "" and iso8601end == "":
                 return api.getHistoricalData(
                     market,
-                    granularity.to_integer,
+                    granularity,
                     None,
                     iso8601start,
                 )
             elif iso8601start != "" and iso8601end != "":
                 return api.getHistoricalData(
                     market,
-                    granularity.to_integer,
+                    granularity,
                     None,
                     iso8601start,
                     iso8601end,
                 )
             else:
                 return api.getHistoricalData(
-                    market, granularity.to_integer, websocket
+                    market, granularity, websocket
                 )
 
     def getSmartSwitchDataFrame(
@@ -504,7 +504,7 @@ class PyCryptoBot(BotConfig):
                 ].copy()
             elif self.exchange == Exchange.COINBASEPRO:
                 api = CBPublicAPI()
-                df_data = api.getHistoricalData(self.market, Granularity.ONE_HOUR.to_integer, websocket)
+                df_data = api.getHistoricalData(self.market, Granularity.ONE_HOUR, websocket)
                 self.ema1226_1h_cache = df_data
             elif self.exchange == Exchange.BINANCE:
                 api = BPublicAPI(api_url=self.getAPIURL())
@@ -540,7 +540,7 @@ class PyCryptoBot(BotConfig):
                 ].copy()
             elif self.exchange == Exchange.COINBASEPRO:
                 api = CBPublicAPI()
-                df_data = api.getHistoricalData(self.market, Granularity.ONE_HOUR.to_integer, websocket)
+                df_data = api.getHistoricalData(self.market, Granularity.ONE_HOUR, websocket)
                 self.sma50200_1h_cache = df_data
             elif self.exchange == Exchange.BINANCE:
                 api = BPublicAPI(api_url=self.getAPIURL())
@@ -572,7 +572,7 @@ class PyCryptoBot(BotConfig):
         try:
             if self.exchange == Exchange.COINBASEPRO:
                 api = CBPublicAPI()
-                df_data = api.getHistoricalData(self.market, Granularity.ONE_DAY.to_integer, websocket)
+                df_data = api.getHistoricalData(self.market, Granularity.ONE_DAY, websocket)
             elif self.exchange == Exchange.BINANCE:
                 api = BPublicAPI(api_url=self.getAPIURL())
                 df_data = api.getHistoricalData(self.market, Granularity.ONE_DAY, websocket)
@@ -603,7 +603,7 @@ class PyCryptoBot(BotConfig):
                 ].copy()
             elif self.exchange == Exchange.COINBASEPRO:
                 api = CBPublicAPI()
-                df_data = api.getHistoricalData(self.market, Granularity.SIX_HOURS.to_integer, websocket)
+                df_data = api.getHistoricalData(self.market, Granularity.SIX_HOURS, websocket)
                 self.ema1226_6h_cache = df_data
             elif self.exchange == Exchange.BINANCE:
                 api = BPublicAPI(api_url=self.getAPIURL())
@@ -635,7 +635,7 @@ class PyCryptoBot(BotConfig):
         try:
             if self.exchange == Exchange.COINBASEPRO:
                 api = CBPublicAPI()
-                df_data = api.getHistoricalData(self.market, Granularity.SIX_HOURS.to_integer, websocket)
+                df_data = api.getHistoricalData(self.market, Granularity.SIX_HOURS, websocket)
             elif self.exchange == Exchange.BINANCE:
                 api = BPublicAPI(api_url=self.getAPIURL())
                 df_data = api.getHistoricalData(self.market, Granularity.SIX_HOURS, websocket)

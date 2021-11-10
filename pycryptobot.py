@@ -1746,7 +1746,7 @@ def main():
             message += "Coinbase Pro bot"
             if app.enableWebsocket() and not app.isSimulation():
                 print("Opening websocket to Coinbase Pro...")
-                _websocket = CWebSocketClient([app.getMarket()], app.getGranularity().to_integer)
+                _websocket = CWebSocketClient([app.getMarket()], app.getGranularity())
                 _websocket.start()
         elif app.getExchange() == Exchange.BINANCE:
             message += "Binance bot"

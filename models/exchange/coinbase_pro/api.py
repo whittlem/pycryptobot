@@ -930,7 +930,8 @@ class WebSocket(AuthAPIBase):
     def __init__(
         self,
         markets=None,
-        granularity=None,
+        # granularity=None,
+        granularity: Granularity = Granularity.ONE_HOUR,
         api_url="https://api.pro.coinbase.com",
         ws_url="wss://ws-feed.pro.coinbase.com",
     ) -> None:
@@ -1079,7 +1080,8 @@ class WebSocketClient(WebSocket):
     def __init__(
         self,
         markets: list = [DEFAULT_MARKET],
-        granularity: str = DEFAULT_GRANULARITY,
+        # granularity: str = DEFAULT_GRANULARITY,
+        granularity: Granularity = Granularity.ONE_HOUR,
         api_url="https://api.pro.coinbase.com/",
         ws_url: str = "wss://ws-feed.pro.coinbase.com",
     ) -> None:
@@ -1092,11 +1094,11 @@ class WebSocketClient(WebSocket):
                 raise ValueError("Coinbase Pro market is invalid.")
 
         # validates granularity is an integer
-        if not isinstance(granularity, int):
+        if not isinstance(granularity.to_integer, int):
             raise TypeError("Granularity integer required.")
 
         # validates the granularity is supported by Coinbase Pro
-        if not granularity in SUPPORTED_GRANULARITY:
+        if not granularity.to_integer in SUPPORTED_GRANULARITY:
             raise TypeError(
                 "Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY))
             )
@@ -1165,18 +1167,19 @@ class WebSocketClient(WebSocket):
             df["price"] = df["price"].astype("float64")
 
             # form candles
-            if self.granularity == 60:
-                df["candle"] = df["date"].dt.floor(freq="1T")
-            elif self.granularity == 300:
-                df["candle"] = df["date"].dt.floor(freq="5T")
-            elif self.granularity == 900:
-                df["candle"] = df["date"].dt.floor(freq="15T")
-            elif self.granularity == 3600:
-                df["candle"] = df["date"].dt.floor(freq="1H")
-            elif self.granularity == 21600:
-                df["candle"] = df["date"].dt.floor(freq="6H")
-            elif self.granularity == 86400:
-                df["candle"] = df["date"].dt.floor(freq="1D")
+            df["candle"] = df["date"].dt.floor(freq=self.granularity.frequency)
+            # if self.granularity.frequency == 60:
+            #     df["candle"] = df["date"].dt.floor(freq="1T")
+            # elif self.granularity == 300:
+            #     df["candle"] = df["date"].dt.floor(freq="5T")
+            # elif self.granularity == 900:
+            #     df["candle"] = df["date"].dt.floor(freq="15T")
+            # elif self.granularity == 3600:
+            #     df["candle"] = df["date"].dt.floor(freq="1H")
+            # elif self.granularity == 21600:
+            #     df["candle"] = df["date"].dt.floor(freq="6H")
+            # elif self.granularity == 86400:
+            #     df["candle"] = df["date"].dt.floor(freq="1D")
 
             # candles dataframe is empty
             if self.candles is None:
@@ -1202,7 +1205,7 @@ class WebSocketClient(WebSocket):
                             [
                                 df["candle"].values[0],
                                 df["market"].values[0],
-                                self.granularity,
+                                self.granularity.to_integer,
                                 df["price"].values[0],
                                 df["price"].values[0],
                                 df["price"].values[0],
@@ -1250,7 +1253,7 @@ class WebSocketClient(WebSocket):
                                     [
                                         df["candle"].values[0],
                                         df["market"].values[0],
-                                        self.granularity,
+                                        self.granularity.to_integer,
                                         df["price"].values[0],
                                         df["price"].values[0],
                                         df["price"].values[0],
@@ -1276,7 +1279,7 @@ class WebSocketClient(WebSocket):
                                 [
                                     df["candle"].values[0],
                                     df["market"].values[0],
-                                    self.granularity,
+                                    self.granularity.to_integer,
                                     df["price"].values[0],
                                     df["price"].values[0],
                                     df["price"].values[0],
