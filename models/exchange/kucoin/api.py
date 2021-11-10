@@ -783,7 +783,7 @@ class PublicAPI(AuthAPIBase):
         if not isinstance(iso8601end, str):
             raise TypeError("ISO8601 end integer as string required.")
 
-        trycnt, maxretry = (0, 3)
+        trycnt, maxretry = (0, 5)
         while trycnt <= maxretry:
             if trycnt == 0 or "data" not in resp:
                 if trycnt > 0:
@@ -886,7 +886,7 @@ class PublicAPI(AuthAPIBase):
 
         if "time" in resp["data"] and "price" in resp["data"]:
             # make sure the time format is correct, if not, pause and submit request again
-            trycnt, maxretry = (1, 3)
+            trycnt, maxretry = (1, 5)
             while trycnt <= maxretry:
                 resptime = ""
                 try:

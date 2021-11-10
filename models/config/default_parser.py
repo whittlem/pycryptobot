@@ -363,6 +363,20 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("disabletelegram must be of type int")
 
+    if "telegramtradesonly" in config:
+        if isinstance(config["telegramtradesonly"], int):
+            if bool(config["telegramtradesonly"]):
+                app.telegramtradesonly = True
+        else:
+            raise TypeError("telegramtradesonly must be of type int")
+
+    if "disabletelegramerrormsgs" in config:
+        if isinstance(config["disabletelegramerrormsgs"], int):
+            if bool(config["disabletelegramerrormsgs"]):
+                app.disabletelegramerrormsgs = True
+        else:
+            raise TypeError("disabletelegramerrormsgs must be of type int")
+
     if "disablelog" in config:
         if isinstance(config["disablelog"], int):
             if bool(config["disablelog"]):
