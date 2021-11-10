@@ -1,9 +1,10 @@
-import re
 import ast
 import json
 import os.path
+import re
 
 from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
+
 
 def isMarketValid(market) -> bool:
     p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
@@ -124,16 +125,3 @@ def parser(app, coinbase_config, args={}):
 
     if app.base_currency != '' and app.quote_currency != '':
         app.market = app.base_currency + '-' + app.quote_currency
-
-    if 'granularity' in config and config['granularity'] is not None:
-        granularity = 0
-        if isinstance(config['granularity'], str) and config['granularity'].isnumeric() is True:
-            granularity = int(config['granularity'])
-        elif isinstance(config['granularity'], int):
-            granularity = config['granularity']
-
-        if granularity in [60, 300, 900, 3600, 21600, 86400]:
-            app.granularity = granularity
-            app.smart_switch = 0
-        else:
-            raise ValueError('granularity supplied is not supported.')

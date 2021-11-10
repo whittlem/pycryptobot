@@ -10,9 +10,6 @@ def isMarketValid(market) -> bool:
     p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
     return p.match(market) is not None
 
-def to_internal_granularity(granularity: str) -> int:
-    return {'1min': 60, '5min': 300, '15min': 900, '1hour': 3600, '6hour': 21600, '1day': 86400}[granularity]
-
 def parseMarket(market):
     if not isMarketValid(market):
         raise ValueError('Kucoin market invalid: ' + market)
@@ -130,14 +127,3 @@ def parser(app, Kucoin_config, args={}):
 
     if app.base_currency != '' and app.quote_currency != '':
         app.market = app.base_currency + '-' + app.quote_currency
-
-    if 'granularity' in config and config['granularity'] is not None:
-        if isinstance(config['granularity'], str):
-            if config['granularity'] in ['1min', '5min', '15min', '1hour', '6hour', '1day']:
-                app.granularity = to_internal_granularity(config['granularity'])
-                app.smart_switch = 0
-            else:
-                app.granularity = int(config['granularity'])
-                app.smart_switch = 0
-            # else:
-            #     raise ValueError('granularity supplied is not supported.')
