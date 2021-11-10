@@ -1317,7 +1317,7 @@ class TelegramBot(TelegramBotBase):
             update.message.reply_text(
                 f"<b>Scan job schedule created to run every {self.autoscandelay} hour(s)</b> \u2705", parse_mode="HTML"
             )
-        self.StartMarketScan(update,context)
+        self.StartMarketScan(update,context, True if context.args[0] == "debug" else False)
 
     def StopScanning(self,update,context):
         s.shutdown()
@@ -1325,9 +1325,7 @@ class TelegramBot(TelegramBotBase):
                 "<b>Scan job schedule has been removed</b> \u2705", parse_mode="HTML"
             )
 
-    def StartMarketScan(self, update, context):
-
-        debug = False
+    def StartMarketScan(self, update, context, debug: bool = False):
 
         try:
             with open("scanner.json") as json_file:
@@ -1342,7 +1340,8 @@ class TelegramBot(TelegramBotBase):
             f"<i>Gathering market data, please wait...</i> \u23F3", parse_mode="HTML"
         )
         # subprocess.Popen("python3 scanner.py", shell=True)
-        output = subprocess.getoutput("python3 scanner.py")
+        if debug == False:
+            output = subprocess.getoutput("python3 scanner.py")
 
         telegram = Telegram(self.token, str(context._chat_id_and_data[0]))
         telegram.send("Stopping crypto bots")
@@ -1371,10 +1370,9 @@ class TelegramBot(TelegramBotBase):
                     encoding="utf8",
                 ) as json_file:
                     data = json.load(json_file)
-                # update.message.reply_text(
-                #     f"<b>{ex} ({quote})</b> \u23F3", parse_mode="HTML"
-                # )
+
                 outputmsg =  f"<b>{ex} ({quote})</b> \u23F3 \n"
+
                 for row in data:
                     if debug:
                         logger.info("%s", row)
@@ -1389,7 +1387,6 @@ class TelegramBot(TelegramBotBase):
 
                     if row in self.data["scannerexceptions"]:
                         outputmsg = outputmsg + f"*** {row} found on scanner exception list ***\n"
-                        # update.message.reply_text(f"{row} found on scanner exception list")
                     else:
                         if data[row]["atr72_pcnt"] != None:
                             if debug:
@@ -1400,16 +1397,20 @@ class TelegramBot(TelegramBotBase):
                                 update.message.text = "Auto_Yes"
                                 if self.enable_buy_next and data[row]["buy_next"]:
                                     outputmsg = outputmsg + f"<i><b>{row}</b>  //--//  <b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%  //--//  <b>buy_next:</b> {data[row]['buy_next']}</i>\n"
-                                    self.newbot_start(update, context, "scanner")
+                                    if debug == False:
+                                        self.newbot_start(update, context, "scanner")
+                                    botcounter += 1
                                 elif not self.enable_buy_next:
                                     outputmsg = outputmsg + f"<i><b>{row}</b>  //--//  <b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%</i>\n"
-                                    self.newbot_start(update, context, "scanner")
-                                botcounter += 1
-                                sleep(10)
+                                    if debug == False:
+                                        self.newbot_start(update, context, "scanner")
+                                    botcounter += 1
+                                if debug == False:
+                                    sleep(10)
 
                 update.message.reply_text(f"{outputmsg}", parse_mode="HTML")
 
-            update.message.reply_text(f"<i>Operation Complete.</i>", parse_mode="HTML")
+        update.message.reply_text(f"<i>Operation Complete.  ({botcounter-1} started)</i>", parse_mode="HTML")
 
     def cleandata(self, update, context) -> None:
         if not self._checkifallowed(context._user_id_and_data[0], update):
@@ -1418,7 +1419,6 @@ class TelegramBot(TelegramBotBase):
         jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
         for i in range(len(jsonfiles), 0, -1):
             jfile = jsonfiles[i-1]
-        # for jfile in jsonfiles:
             if (
                 ".json" in jfile
                 and jfile != "data.json"
