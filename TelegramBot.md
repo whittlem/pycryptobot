@@ -3,11 +3,11 @@ https://medium.com/coinmonks/pycryptobot-with-telegram-83eed5f230c2
 
 Once that is complete and working the following steps will get the Telegram Bot control working
 
-1, install requirements (python3 -m pip install -r requirements.txt -U), if this a new install/setup then you have probably already done this so can be skipped
+1, install requirements (python3 -m pip install -r requirements.txt -U), if this is a new install/setup then you have probably already done this so can be skipped
 
 2, add "enabletelegrambotcontrol" : 1 to config file
 
-3, add "user_id":  "xxxxxx" to telegram section of config (this is your telegram userid message IDBot if unsure)
+3, add "user_id":  "xxxxxx" to telegram section of config (this is your telegram userid message @myidbot if unsure)
 
 4, add "datafolder": "" to telegram section of config, if running multiple bots in different folders set a shared folder path for them all to access otherwise leave empty or remove from config
 
