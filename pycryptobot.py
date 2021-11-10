@@ -250,10 +250,11 @@ def executeJob(
         if _app.isSimulation():
             _app.sim_smartswitch = True
 
-        _app.notifyTelegram(
-            _app.getMarket()
-            + " smart switch from granularity 3600 (1 hour) to 900 (15 min)"
-        )
+        if not _app.telegramTradesOnly():
+            _app.notifyTelegram(
+                _app.getMarket()
+                + " smart switch from granularity 3600 (1 hour) to 900 (15 min)"
+            )
 
         _app.setGranularity(Granularity.FIFTEEN_MINUTES)
         list(map(s.cancel, s.queue))
@@ -277,9 +278,10 @@ def executeJob(
         if _app.isSimulation():
             _app.sim_smartswitch = True
 
-        _app.notifyTelegram(
-            f"{_app.getMarket()} smart switch from granularity 900 (15 min) to 3600 (1 hour)"
-        )
+        if not _app.telegramTradesOnly():
+            _app.notifyTelegram(
+                f"{_app.getMarket()} smart switch from granularity 900 (15 min) to 3600 (1 hour)"
+            )
 
         _app.setGranularity(Granularity.ONE_HOUR)
         list(map(s.cancel, s.queue))
@@ -322,9 +324,10 @@ def executeJob(
                 Logger.info(
                     f"last_action change detected from {last_action_current} to {_state.last_action}"
                 )
-                _app.notifyTelegram(
-                    f"{_app.getMarket} last_action change detected from {last_action_current} to {_state.last_action}"
-                )
+                if not _app.telegramTradesOnly():
+                    _app.notifyTelegram(
+                        f"{_app.getMarket} last_action change detected from {last_action_current} to {_state.last_action}"
+                    )
 
         if not _app.isSimulation():
             ticker = _app.getTicker(_app.getMarket(), _websocket)
@@ -1082,11 +1085,15 @@ def executeJob(
                             _app.getMarket(), _state.last_buy_size, _app.getBuyPercent()
                         )
                         if not resp.empty:
+                            now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
                             _app.notifyTelegram(
                                 _app.getMarket()
                                 + " ("
                                 + _app.printGranularity()
-                                + ") BUY at "
+                                + ") - "
+                                + now
+                                + "\n"
+                                + "BUY at "
                                 + price_text
                             )
                             # Logger.debug(resp)
@@ -1218,7 +1225,10 @@ def executeJob(
                         _app.getMarket()
                         + " ("
                         + _app.printGranularity()
-                        + ") SELL at "
+                        + ") - "
+                        + now
+                        + "\n"
+                        + "SELL at "
                         + price_text
                         + " (margin: "
                         + margin_text
@@ -1324,7 +1334,9 @@ def executeJob(
                         _app.getMarket()
                         + " ("
                         + _app.printGranularity()
-                        + ") TEST SELL at "
+                        + ") "
+                        + str(current_sim_date)
+                        + "\n - TEST SELL at "
                         + price_text
                         + " (margin: "
                         + margin_text
@@ -1555,6 +1567,7 @@ def executeJob(
 
                 _app.notifyTelegram(
                     f"{_state.app.base_currency}{_state.app.quote_currency}\nSimulation Summary\n"
+                    + f"   Market: {state.app.base_currency}-{state.app.quote_currency}\n"
                     + f"   Buy Count: {_state.buy_count}\n"
                     + f"   Sell Count: {_state.sell_count}\n"
                     + f"   First Buy: {_state.first_buy_size}\n"
@@ -1784,9 +1797,10 @@ def main():
                 time.sleep(30)
                 Logger.critical(f"Restarting application after exception: {repr(e)}")
 
-                app.notifyTelegram(
-                    f"Auto restarting bot for {app.getMarket()} after exception: {repr(e)}"
-                )
+                if not app.disableTelegramErrorMsgs():
+                    app.notifyTelegram(
+                        f"Auto restarting bot for {app.getMarket()} after exception: {repr(e)}"
+                    )
 
                 # Cancel the events queue
                 map(s.cancel, s.queue)
@@ -1818,7 +1832,8 @@ def main():
             os._exit(0)
     except (BaseException, Exception) as e:  # pylint: disable=broad-except
         # catch all not managed exceptions and send a Telegram message if configured
-        app.notifyTelegram(f"Bot for {app.getMarket()} got an exception: {repr(e)}")
+        if not app.disableTelegramErrorMsgs():
+            app.notifyTelegram(f"Bot for {app.getMarket()} got an exception: {repr(e)}")
         telegram_bot.removeactivebot()
         Logger.critical(repr(e))
         # pylint: disable=protected-access

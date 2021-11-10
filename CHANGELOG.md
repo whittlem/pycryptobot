@@ -8,6 +8,7 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+
 ## [4.4.0] - 2021-11-01
 
 - Rename /restartbots to /resumebots
@@ -20,6 +21,17 @@ Upgrade library dependencies (if required):
 - Add /removeexception to TG Bot to remove a pair from exceptions list
 - Add multiple market scanning to scanner.py
 - Add exception list so that scanner.py doesnt pick a pair your dont want traded
+
+## [4.3.3] - 2021-11-08
+
+- fix for Kucoin 429 errors, KeyError('data') and ValueError for time format
+- addition work on fix for Kucoin multiple buys for same pair when more Quote funds than Base funds in account
+- Kucoin API general tidying of error messages and logging
+- Kucoin runs without any regular re-occurring errors in log
+- added trade timestamps to Telegram output
+- added Telegram config option --telegramtradesonly: will show trades, but not smart switch or last action changed
+- added Telegram config option --disabletelegramerrormsgs: will not send Logger messages to telegram
+- added ability to specify api_key_file via command line arguments with --api_key_file
 
 ## [4.3.2] - 2021-11-02
 
