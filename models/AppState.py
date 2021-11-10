@@ -1,7 +1,8 @@
 """Application state class"""
 
-import sys
 import datetime
+import sys
+
 from numpy import array as np_array, min as np_min, ptp as np_ptp
 from models.PyCryptoBot import PyCryptoBot
 from models.TradingAccount import TradingAccount
@@ -112,7 +113,10 @@ class AppState:
                 raise Exception(f'Market not found! ({self.app.getMarket()})')
 
             base = float(self.account.basebalance)
-            base_min = '{:f}'.format(float(product['baseMinSize']))
+            base_min = float(product['baseMinSize'])
+            # additional check for last order type
+            if base > base_min:
+                return True
 
         if base < base_min:
             if self.app.enableinsufficientfundslogging:
@@ -180,6 +184,9 @@ class AppState:
             price = float(ticker["price"])
             quote = float(self.account.quotebalance)
             base_min = float(product['baseMinSize'])
+            # additional check for last order type
+            if (quote / price) > base_min:
+                return True
 
         if (quote / price) < base_min:
             if self.app.enableinsufficientfundslogging:
@@ -252,7 +259,14 @@ class AppState:
                 order_pairs
             )
 
-            if order_pairs_normalised[0] < order_pairs_normalised[1]:
+            # If Kucoin returns emoty response, on a shared trading account, could multiple buy same pair
+            if self.app.getExchange() == "kucoin" and self.minimumOrderBase() and self.minimumOrderQuote():
+                if self.last_action == "BUY":
+                    return
+                else:
+                    self.last_action = "WAIT"
+                    Logger.warning('Kucoin temporary state set to "WAIT".')
+            elif order_pairs_normalised[0] < order_pairs_normalised[1]:
                 self.minimumOrderQuote()
                 self.last_action = "SELL"
             elif order_pairs_normalised[0] > order_pairs_normalised[1]:

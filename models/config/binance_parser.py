@@ -77,15 +77,21 @@ def parser(app, binance_config, args={}):
             else:
                 print (f'migration failed (io error)\n')
 
-        if 'api_key_file' in binance_config:
+        api_key_file = None
+        if 'api_key_file' in args and args['api_key_file'] is not None:
+            api_key_file = args['api_key_file']
+        elif 'api_key_file' in binance_config:
+            api_key_file = binance_config['api_key_file']
+
+        if api_key_file is not None:
             try :
-                with open( binance_config['api_key_file'], 'r') as f :
+                with open( api_key_file, 'r') as f :
                     key = f.readline().strip()
                     secret = f.readline().strip()
                 binance_config['api_key'] = key
                 binance_config['api_secret'] = secret
             except :
-                raise RuntimeError(f"Unable to read {binance_config['api_key_file']}")
+                raise RuntimeError(f"Unable to read {api_key_file}")
 
         if 'api_key' in binance_config and 'api_secret' in binance_config and 'api_url' in binance_config:
             # validates the api key is syntactically correct

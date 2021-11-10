@@ -8,6 +8,30 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [4.3.3] - 2021-11-08
+
+- fix for Kucoin 429 errors, KeyError('data') and ValueError for time format
+- addition work on fix for Kucoin multiple buys for same pair when more Quote funds than Base funds in account
+- Kucoin API general tidying of error messages and logging
+- Kucoin runs without any regular re-occurring errors in log
+- added trade timestamps to Telegram output
+- added Telegram config option --telegramtradesonly: will show trades, but not smart switch or last action changed
+- added Telegram config option --disabletelegramerrormsgs: will not send Logger messages to telegram
+- added ability to specify api_key_file via command line arguments with --api_key_file
+
+## [4.3.2] - 2021-11-02
+
+- fix for Kucoin multiple buys on same traded pair when API error occurs
+
+## [4.3.1] - 2021-10-28
+
+- fix for Kucoin margin calculation
+- fix for Kucoin getOrders not always returning a response
+
+## [4.3.0] - 2021-10-23
+
+- formatting CHANGELOG.md
+
 ## [4.2.1] - 2021-10-19
 
 -- fixed TG BOT checking if market/pair already exists before saving
