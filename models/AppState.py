@@ -261,11 +261,7 @@ class AppState:
 
             # If Kucoin returns emoty response, on a shared trading account, could multiple buy same pair
             if self.app.getExchange() == "kucoin" and self.minimumOrderBase() and self.minimumOrderQuote():
-                if self.last_action == "BUY":
-                    return
-                else:
-                    self.last_action = "WAIT"
-                    Logger.warning('Kucoin temporary state set to "WAIT".')
+                self.last_action = "BUY"
             elif order_pairs_normalised[0] < order_pairs_normalised[1]:
                 self.minimumOrderQuote()
                 self.last_action = "SELL"
