@@ -1769,7 +1769,8 @@ def main():
         smartswitchstatus = "enabled" if app.getSmartSwitch() else "disabled"
         message += f" for {app.getMarket()} using granularity {app.printGranularity()}. Smartswitch {smartswitchstatus}"
 
-        app.notifyTelegram(message)
+        if app.startmethod not in ("standard", "telegram"):
+            app.notifyTelegram(message)
 
         # initialise and start application
         trading_data = app.startApp(app, account, state.last_action)
