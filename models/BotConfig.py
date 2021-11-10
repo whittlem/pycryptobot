@@ -128,6 +128,9 @@ class BotConfig:
 
         self.exchange = self._set_exchange(kwargs["exchange"])
 
+        self.startmethod = self.cli_args["startmethod"] if self.cli_args["startmethod"] else "standard"
+        # print(self.startmethod)
+
         # set defaults
         (
             self.api_url,
@@ -554,6 +557,7 @@ class BotConfig:
         )
         parser.add_argument("--websocket", action="store_true", help="Enable websocket")
         parser.add_argument("--logbuysellinjson", action="store_true", help="Enable logging orders in json format")
+        parser.add_argument("--startmethod", type=str, help="Enable logging orders in json format")
 
         # pylint: disable=unused-variable
         args, unknown = parser.parse_known_args()

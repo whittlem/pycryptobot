@@ -1310,7 +1310,7 @@ def executeJob(
                         margin_text,
                     )
 
-                    if _app.enableexitaftersell:
+                    if _app.enableexitaftersell and _app.startmethod not in ("standard", "telegram"):
                         sys.exit(0)
 
                 # if not live
@@ -1412,10 +1412,6 @@ def executeJob(
                         },
                         ignore_index=True,
                     )
-                    # if _app.enableexitaftersell:
-                    #     time.sleep(900)
-                        # Logger.info("Closing after sale..")
-                        # sys.exit(0)
 
                 if _app.shouldSaveGraphs():
                     tradinggraphs = TradingGraphs(_technical_analysis)
