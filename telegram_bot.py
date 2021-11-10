@@ -200,6 +200,7 @@ class TelegramBot(TelegramBotBase):
         self.enableleverage = False
         self.maxbotcount = 0
         self.autoscandelay = 0
+        self.enable_buy_next = True
         if "scanner" in self.config:
             self.atr72pcnt = (
                 self.config["scanner"]["atr72_pcnt"]
@@ -220,6 +221,11 @@ class TelegramBot(TelegramBotBase):
                 self.config["scanner"]["autoscandelay"]
                 if "autoscandelay" in self.config["scanner"]
                 else 0
+            )
+            self.enable_buy_next = (
+                self.config["scanner"]["enable_buy_next"]
+                if "enable_buy_next" in self.config["scanner"]
+                else True
             )
 
         if "datafolder" in self.config["telegram"]:
@@ -1388,21 +1394,19 @@ class TelegramBot(TelegramBotBase):
                         if data[row]["atr72_pcnt"] != None:
                             if debug:
                                 logger.info(data[row])
-                            if (
-                                data[row]["atr72_pcnt"] >= self.atr72pcnt
-                                and data[row]["buy_next"]
-                            ):
-                                outputmsg = outputmsg + f"<i><b>{row}</b>  //--//  <b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%  //--//  <b>buy_next:</b> {data[row]['buy_next']}</i>\n"
-                                # update.message.reply_text(
-                                #     f"<i><b>{row}</b>  //--//  <b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%  //--//  <b>buy_next:</b> {data[row]['buy_next']}</i>",
-                                #     parse_mode="HTML",
-                                # )
+                            if data[row]["atr72_pcnt"] >= self.atr72pcnt:
                                 self.exchange = ex
-                                self.pair = row
+                                self.pair = row 
                                 update.message.text = "Auto_Yes"
-                                self.newbot_start(update, context, "scanner")
+                                if self.enable_buy_next and data[row]["buy_next"]:
+                                    outputmsg = outputmsg + f"<i><b>{row}</b>  //--//  <b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%  //--//  <b>buy_next:</b> {data[row]['buy_next']}</i>\n"
+                                    self.newbot_start(update, context, "scanner")
+                                elif not self.enable_buy_next:
+                                    outputmsg = outputmsg + f"<i><b>{row}</b>  //--//  <b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%</i>\n"
+                                    self.newbot_start(update, context, "scanner")
                                 botcounter += 1
                                 sleep(10)
+
                 update.message.reply_text(f"{outputmsg}", parse_mode="HTML")
 
             update.message.reply_text(f"<i>Operation Complete.</i>", parse_mode="HTML")

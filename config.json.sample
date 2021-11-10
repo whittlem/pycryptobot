@@ -66,6 +66,7 @@
 		"enableexitaftersell" : 1,
 		"enableleverage" : 0,
 		"maxbotcount" : 5,
-        "autoscandelay" : 0
+        "autoscandelay" : 0,
+        "enable_buy_next": 1
 	}
 }

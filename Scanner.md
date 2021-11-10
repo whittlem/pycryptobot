@@ -18,6 +18,7 @@ There is a new section added to the config file (this can be found in the config
 	"enableleverage" : 0, - 1/0 allow coins with UP or DOWN prefix/suffixes.
 	"maxbotcount" : 5, - number of maximum bots running concurrently (not including an with open orders).
     "autoscandelay" : 0 - number of hours between auto scans, 0 is non scheduled.
+	"enable_buy_next": 1 - 1/0 enable/disable buy_next from scanner output, this taken from EMA(ema12ltema26), if disabled buy_next will be ignored
 }
 
 If you already have the Telegram Bot running you will need to run /setcommands to pull in the latest commands, this will give you the following commands:
@@ -27,6 +28,8 @@ If you already have the Telegram Bot running you will need to run /setcommands t
 /addexception - add a pair to the exception list, a pair on the exception list will not start if it is picked up as part of the scanning process (can be useful for HODL pairs)
 /removeexception - this will remove a pair from the exceptions list
 
-The scanning process can take a little bit of time and while that is processing "Gathering data.." your Telegram Bot wont respond to any other commands until it is complete, once the scanning process has complete any running bots that don't have an open order will be stopped and you will start to get notifications as the Telegram Bot begins to start-up bots
+The scanning process can take a little bit of time and while that is processing "Gathering data.." your Telegram Bot wont respond to any other commands until it is complete, once the scanning process has complete any running bots that don't have an open order will be stopped and you will start to get notifications as the Telegram Bot begins to start-up bots.
+
+*This is no guarantee of profits just an indication of pairs likely to be on an uptrend
 
 

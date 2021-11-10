@@ -97,12 +97,12 @@ for exchange in config:
         # clear screen
         print(chr(27) + "[2J")
         # markets sorted by next buy action, then by most volatile
+
         print(
             df_markets.sort_values(
                 by=["buy_next", "atr72_pcnt"], ascending=[False, False], inplace=False
             )
         )
 
-        TGBot(app, scanner=True).save_scanner_output(ex.value, quote, df_markets.sort_values(
-                by=["buy_next", "atr72_pcnt"], ascending=[False, False], inplace=False))
+        TGBot(app, scanner=True).save_scanner_output(ex.value, quote, df_markets)
 

@@ -129,6 +129,9 @@ class BotConfig:
         self.exchange = self._set_exchange(kwargs["exchange"])
 
         self.startmethod = self.cli_args["startmethod"] if self.cli_args["startmethod"] else "standard"
+        self.enable_atr72_pcnt = True
+        self.enable_buy_next = True
+        self.enable_volume = False
         # print(self.startmethod)
 
         # set defaults
@@ -222,6 +225,9 @@ class BotConfig:
 
             if "scanner" in self.config:
                 self.enableexitaftersell = self.config["scanner"]["enableexitaftersell"] if "enableexitaftersell" in self.config["scanner"] else False
+                self.enable_buy_next = True if "enable_buy_now" not in self.config["scanner"] else self.config["scanner"]["enable_buy_now"]
+                self.enable_atr72_pcnt = True if "enable_atr72_pcnt" not in self.config["scanner"] else self.config["scanner"]["enable_atr72_pcnt"]
+                self.enable_volume = False if "enable_volume" not in self.config["scanner"] else self.config["scanner"]["enable_volume"]
 
             if "logger" in self.config:
                 loggerConfigParser(self, self.config["logger"])
