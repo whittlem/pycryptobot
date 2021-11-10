@@ -4,7 +4,7 @@ from models.helper.LogHelper import Logger
 def calculate_margin(buy_size: float = 0.0, buy_filled: int = 0.0, buy_price: int = 0.0, buy_fee: float = 0.0,
                      sell_percent: float = 100, sell_price: float = 0.0, sell_fee: float = 0.0,
                      sell_taker_fee: float = 0.0) -> float:
-    precision = 8
+    precision = 4
 
     Logger.debug(f'buy_size: {buy_size}') # buy_size is quote currency (before fees)
     Logger.debug(f'buy_filled: {buy_filled}') # buy_filled is base currency (after fees)
