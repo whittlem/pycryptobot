@@ -78,6 +78,12 @@ class Strategy:
             Logger.warning(log_text)
             return False
 
+        ## if last_action was set to "WAIT" due to an API problem, do not buy
+        if ( self.state.last_action == "WAIT"):
+            return False
+            log_text = (f"{str(now)} | {self.app.getMarket()} | {self.app.printGranularity()} | last_action is WAIT, do not buy yet")
+            Logger.warning(log_text)
+
         # if EMA, MACD are disabled, do not buy
         if self.app.disableBuyEMA() and self.app.disableBuyMACD():
             log_text = f"{str(now)} | {self.app.getMarket()} | {self.app.printGranularity()} | EMA, MACD indicators are disabled"
