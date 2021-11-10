@@ -65,10 +65,13 @@ class TelegramBotBase:
     data = {}
 
     def _read_data(self, name: str = "data.json") -> None:
-        with open(
-            os.path.join(self.datafolder, "telegram_data", name), "r", encoding="utf8"
-        ) as json_file:
-            self.data = json.load(json_file)
+        try:
+            with open(
+                os.path.join(self.datafolder, "telegram_data", name), "r", encoding="utf8"
+            ) as json_file:
+                self.data = json.load(json_file)
+        except:
+            pass
 
     def _write_data(self, name: str = "data.json") -> None:
         try:
@@ -493,10 +496,12 @@ class TelegramBot(TelegramBotBase):
                         )
                 else:
                     output = output + " \U0001F6D1	 <b>Status</b>: <i>stopped</i> "
-                output = (
-                    output
-                    + f" \u23F1 <b>Uptime</b>: <i>{self._getUptime(self.data['botcontrol']['started'])}</i>\n"
-                )
+
+                if "botcontrol" in self.data and "started" in self.data['botcontrol']:
+                    output = (
+                        output
+                        + f" \u23F1 <b>Uptime</b>: <i>{self._getUptime(self.data['botcontrol']['started'])}</i>\n"
+                    )
                 mbot.send(output, parsemode="HTML")
                 sleep(0.2)
 
@@ -1407,7 +1412,9 @@ class TelegramBot(TelegramBotBase):
             return
 
         jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
-        for jfile in jsonfiles:
+        for i in range(len(jsonfiles), 0, -1):
+            jfile = jsonfiles[i-1]
+        # for jfile in jsonfiles:
             if (
                 ".json" in jfile
                 and jfile != "data.json"
@@ -1415,15 +1422,15 @@ class TelegramBot(TelegramBotBase):
             ):
                 logger.info("checking %s", jfile)
                 self._read_data(jfile)
-                if "margin" not in self.data:
-                    logger.info("deleting %s", jfile)
-                    os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
-
                 last_modified = datetime.now() - datetime.fromtimestamp(
                     os.path.getmtime(
                         os.path.join(self.datafolder, "telegram_data", jfile)
                     )
-                )
+                )                
+                if "margin" not in self.data:
+                    logger.info("deleting %s", jfile)
+                    os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
+                    continue
                 if (
                     self.data["botcontrol"]["status"] == "active"
                     and last_modified.seconds > 120
@@ -1431,6 +1438,7 @@ class TelegramBot(TelegramBotBase):
                 ):
                     logger.info("deleting %s %s", jfile, str(last_modified))
                     os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
+                    continue
                 elif (
                     self.data["botcontrol"]["status"] == "exit"
                     and last_modified.seconds > 120
