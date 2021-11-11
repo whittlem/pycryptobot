@@ -24,13 +24,10 @@ for exchange in config:
     for quote in config[ex.value]["quote_currency"]:
         if ex == Exchange.BINANCE:
             api = BPublicAPI()
-            # GRANULARITY = Granularity.convert_to_enum(3600).to_short
         elif ex == Exchange.COINBASEPRO:
             api = CPublicAPI()
-            # GRANULARITY = Granularity.convert_to_enum(3600).to_integer
         elif ex == Exchange.KUCOIN:
             api = KPublicAPI()
-            # GRANULARITY = Granularity.convert_to_enum(3600).to_medium
         else:
             raise ValueError(f"Invalid exchange: {ex}")
 

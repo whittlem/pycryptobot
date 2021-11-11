@@ -3,7 +3,7 @@
         "quote_currency": ["GBP", "USD"]
     },
     "binance" : {
-        "quote_currency": ["USDT"]
+        "quote_currency": ["BUSD"]
     },
     "kucoin" : {
         "quote_currency": ["USD"]
