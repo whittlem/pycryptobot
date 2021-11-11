@@ -36,16 +36,16 @@ class AuthAPIBase:
             return True
         return False
 
-    def to_coinbasepro_granularity(self, granularity) -> str:
-        if isinstance(granularity, int):
-            if granularity in SUPPORTED_GRANULARITY:
-                return granularity
-            else:
-                raise ValueError(f"Invalid Binance granularity: {granularity}")
-        else:
-            return {"1min" : 60, "5min" : 300, "15min" : 900, "1hour" : 3600, "6hour" : 21600, "1day" : 86400} [
-                granularity
-            ]
+    # def to_coinbasepro_granularity(self, granularity) -> str:
+    #     if isinstance(granularity, int):
+    #         if granularity in SUPPORTED_GRANULARITY:
+    #             return granularity
+    #         else:
+    #             raise ValueError(f"Invalid Binance granularity: {granularity}")
+    #     else:
+    #         return {"1min" : 60, "5min" : 300, "15min" : 900, "1hour" : 3600, "6hour" : 21600, "1day" : 86400} [
+    #             granularity
+    #         ]
 
 class AuthAPI(AuthAPIBase):
     def __init__(
@@ -1168,18 +1168,6 @@ class WebSocketClient(WebSocket):
 
             # form candles
             df["candle"] = df["date"].dt.floor(freq=self.granularity.frequency)
-            # if self.granularity.frequency == 60:
-            #     df["candle"] = df["date"].dt.floor(freq="1T")
-            # elif self.granularity == 300:
-            #     df["candle"] = df["date"].dt.floor(freq="5T")
-            # elif self.granularity == 900:
-            #     df["candle"] = df["date"].dt.floor(freq="15T")
-            # elif self.granularity == 3600:
-            #     df["candle"] = df["date"].dt.floor(freq="1H")
-            # elif self.granularity == 21600:
-            #     df["candle"] = df["date"].dt.floor(freq="6H")
-            # elif self.granularity == 86400:
-            #     df["candle"] = df["date"].dt.floor(freq="1D")
 
             # candles dataframe is empty
             if self.candles is None:

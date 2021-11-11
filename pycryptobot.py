@@ -1058,10 +1058,10 @@ def executeJob(
                         ac = account.getBalance()
 
                         df_base = ac[ac["currency"] == _app.getBaseCurrency()]["available"]
-                        account.basebalance = 0.0 if len(df_base) == 0 else float(truncate(float(ac[ac["currency"] == _app.getBaseCurrency()]["available"].values[0])))
+                        account.basebalance = 0.0 if len(df_base) == 0 else float(df_base.values[0])
 
                         df_quote = ac[ac["currency"] == _app.getQuoteCurrency()]["available"]
-                        account.quotebalance = 0.0 if len(df_quote) == 0 else float(truncate(float(ac[ac["currency"] == _app.getQuoteCurrency()]["available"].values[0])))
+                        account.quotebalance = 0.0 if len(df_quote) == 0 else float(df_quote.values[0])
 
                         # display balances
                         Logger.info(
@@ -1102,10 +1102,10 @@ def executeJob(
                             ac = account.getBalance()
 
                             df_base = ac[ac["currency"] == _app.getBaseCurrency()]["available"]
-                            account.basebalance = 0.0 if len(df_base) == 0 else float(truncate(float(df[df["currency"] == _app.getBaseCurrency()]["available"].values[0])))
+                            account.basebalance = 0.0 if len(df_base) == 0 else float(df_base.values[0])
 
                             df_quote = ac[ac["currency"] == _app.getQuoteCurrency()]["available"]
-                            account.quotebalance = 0.0 if len(df_quote) == 0 else float(truncate(float(df[df["currency"] == _app.getQuoteCurrency()]["available"].values[0])))
+                            account.quotebalance = 0.0 if len(df_quote) == 0 else float(df_quote.values[0])
 
                             Logger.info(
                                 f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance)}"
@@ -1114,7 +1114,7 @@ def executeJob(
                                 f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance)}"
                             )
                         else:
-                            Logger.warning("Unable to place order")    
+                            Logger.warning("Unable to place order")
                     else:
                         Logger.warning("Unable to place order, insufficient funds")
                 # if not live

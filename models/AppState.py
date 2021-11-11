@@ -210,16 +210,10 @@ class AppState:
         ac = self.account.getBalance()
 
         df_base = ac[ac["currency"] == self.app.getBaseCurrency()]["available"]
-        base = 0.0 if len(df_base) == 0 else float(ac[ac["currency"] == self.app.getBaseCurrency()]["available"].values[0])
+        base = 0.0 if len(df_base) == 0 else float(df_base.values[0])
 
         df_quote = ac[ac["currency"] == self.app.getQuoteCurrency()]["available"]
-        quote = 0.0 if len(df_quote) == 0 else float(ac[ac["currency"] == self.app.getQuoteCurrency()]["available"].values[0])
-
-
-        # base = float(self.account.getBalance(self.app.getBaseCurrency()))
-        # quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
-        #base = float(self.account.basebalance)
-        #quote = float(self.account.quotebalance)
+        quote = 0.0 if len(df_quote) == 0 else float(df_quote.values[0])
 
         orders = self.account.getOrders(self.app.getMarket(), "", "done")
         if len(orders) > 0:
