@@ -71,7 +71,7 @@ class AppState:
         self.last_api_call_datetime = datetime.datetime.now() - datetime.timedelta(minutes=2)
         self.exchange_last_buy = None
 
-    def minimumOrderBase(self):
+    def minimumOrderBase(self, base):
         self.app.insufficientfunds = False
         if self.app.getExchange() == Exchange.BINANCE:
             df = self.api.getMarketInfoFilters(self.app.getMarket())
@@ -81,7 +81,7 @@ class AppState:
                     base_min = float(
                         df[df["filterType"] == "LOT_SIZE"][["minQty"]].values[0][0]
                     )
-                    base = float(self.account.basebalance)
+                    base = float(base)
                 except:
                     return
 
@@ -104,7 +104,7 @@ class AppState:
                 sys.tracebacklimit = 0
                 raise Exception(f"Market not found! ({self.app.getMarket()})")
 
-            base = float(self.account.basebalance)
+            base = float(base)
             base_min = float(product["base_min_size"])
 
         elif self.app.getExchange() == Exchange.KUCOIN:
@@ -114,7 +114,7 @@ class AppState:
                 sys.tracebacklimit = 0
                 raise Exception(f'Market not found! ({self.app.getMarket()})')
 
-            base = float(self.account.basebalance)
+            base = float(base)
             base_min = float(product['baseMinSize'])
             # additional check for last order type
             if base > base_min:
@@ -131,7 +131,7 @@ class AppState:
                 f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})"
             )
             
-    def minimumOrderQuote(self):
+    def minimumOrderQuote(self, quote):
         self.app.insufficientfunds = False
         if self.app.getExchange() == Exchange.BINANCE:
             df = self.api.getMarketInfoFilters(self.app.getMarket())
@@ -143,7 +143,7 @@ class AppState:
                             0
                         ][0]
                     )
-                    quote = float(self.account.quotebalance)
+                    quote = float(quote)
                 except:
                     return
 
@@ -171,11 +171,11 @@ class AppState:
             ticker = self.api.authAPI("GET", f"products/{self.app.getMarket()}/ticker")
             price = float(ticker["price"])
 
-            quote = float(self.account.quotebalance)
+            quote = float(quote)
             base_min = float(product["base_min_size"])
 
         elif self.app.getExchange() == Exchange.KUCOIN:
-            resp = self.api.authAPI('GET', f'api/v1/symbols')
+            resp = self.api.authAPI('GET', 'api/v1/symbols')
             product = resp[resp['symbol'] == self.app.getMarket()]
             if len(product) == 0:
                 sys.tracebacklimit = 0
@@ -184,7 +184,7 @@ class AppState:
             ticker = self.api.authAPI("GET", f"api/v1/market/orderbook/level1?symbol={self.app.getMarket()}")
 
             price = float(ticker["price"])
-            quote = float(self.account.quotebalance)
+            quote = float(quote)
             base_min = float(product['baseMinSize'])
             # additional check for last order type
             if (quote / price) > base_min:
@@ -207,10 +207,13 @@ class AppState:
             self.last_action = "SELL"
             return
 
-        base = float(self.account.getBalance(self.app.getBaseCurrency()))
-        quote = float(self.account.getBalance(self.app.getQuoteCurrency()))
-        #base = float(self.account.basebalance)
-        #quote = float(self.account.quotebalance)
+        ac = self.account.getBalance()
+
+        df_base = ac[ac["currency"] == self.app.getBaseCurrency()]["available"]
+        base = 0.0 if len(df_base) == 0 else float(df_base.values[0])
+
+        df_quote = ac[ac["currency"] == self.app.getQuoteCurrency()]["available"]
+        quote = 0.0 if len(df_quote) == 0 else float(df_quote.values[0])
 
         orders = self.account.getOrders(self.app.getMarket(), "", "done")
         if len(orders) > 0:
@@ -237,7 +240,7 @@ class AppState:
                 self.last_action = "BUY"
                 return
             else:
-                self.minimumOrderQuote()
+                self.minimumOrderQuote(quote)
                 self.last_action = "SELL"
                 self.last_buy_price = 0.0
                 return
@@ -262,17 +265,17 @@ class AppState:
             )
 
             # If Kucoin returns emoty response, on a shared trading account, could multiple buy same pair
-            if self.app.getExchange() == Exchange.KUCOIN and self.minimumOrderBase() and self.minimumOrderQuote():
+            if self.app.getExchange() == Exchange.KUCOIN and self.minimumOrderBase(base) and self.minimumOrderQuote(quote):
                 if self.last_action == "BUY":
                     return
                 else:
                     self.last_action = "WAIT"
                     Logger.warning('Kucoin temporary state set to "WAIT".')
             elif order_pairs_normalised[0] < order_pairs_normalised[1]:
-                self.minimumOrderQuote()
+                self.minimumOrderQuote(quote)
                 self.last_action = "SELL"
             elif order_pairs_normalised[0] > order_pairs_normalised[1]:
-                self.minimumOrderBase()
+                self.minimumOrderBase(base)
                 self.last_action = "BUY"
 
             else:

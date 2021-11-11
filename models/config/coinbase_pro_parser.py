@@ -4,6 +4,7 @@ import os.path
 import re
 
 from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
+from models.exchange.Granularity import Granularity
 
 
 def isMarketValid(market) -> bool:
@@ -125,3 +126,10 @@ def parser(app, coinbase_config, args={}):
 
     if app.base_currency != '' and app.quote_currency != '':
         app.market = app.base_currency + '-' + app.quote_currency
+
+    if 'granularity' in config and config['granularity'] is not None:
+        if isinstance(config['granularity'], str) and config['granularity'].isnumeric() is True:
+            app.granularity = Granularity.convert_to_enum(int(config['granularity']))
+        elif isinstance(config['granularity'], int):
+            app.granularity = Granularity.convert_to_enum(config['granularity'])
+

@@ -29,7 +29,7 @@ DEFAULT_MARKET = "BTCGBP"
 
 class AuthAPIBase:
     def _isMarketValid(self, market: str) -> bool:
-        p = re.compile(r"^[A-Z0-9]{5,12}$")
+        p = re.compile(r"^[A-Z0-9]{5,13}$")
         if p.match(market):
             return True
         return False
@@ -986,7 +986,7 @@ class PublicAPI(AuthAPIBase):
             )
 
             df["market"] = market
-            df["granularity"] = granularity.to_short
+            df["granularity"] = granularity
 
             # binance epoch is too long
             df["open_time"] = df["open_time"] + 1

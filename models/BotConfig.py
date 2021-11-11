@@ -51,8 +51,10 @@ class BotConfig:
         self.sell_at_loss = 1
         self.smart_switch = 1
         self.telegram = False
-        self.telegramdatafolder = ""
+
         self.logbuysellinjson = False
+        self.telegramdatafolder = "."
+
         self.buypercent = 100
         self.sellpercent = 100
         self.last_action = None
@@ -83,12 +85,16 @@ class BotConfig:
         self.disabletracker = False
         self.enableml = False
         self.websocket = False
+        self.enableexitaftersell = False
 
         self.enableinsufficientfundslogging = False
         self.insufficientfunds = False
         self.enabletelegrambotcontrol = False
+        self.enableimmediatebuy = False
+
         self.telegramtradesonly = False
         self.disabletelegramerrormsgs = False
+
 
         self.filelog = True
         self.logfile = (
@@ -120,11 +126,39 @@ class BotConfig:
             self.config_file = self.cli_args["config"]
             self.config_provided = True
 
-        # read and set config from file
+        self.exchange = self._set_exchange(kwargs["exchange"])
+
+        self.startmethod = self.cli_args["startmethod"] if self.cli_args["startmethod"] else "standard"
+        self.enable_atr72_pcnt = True
+        self.enable_buy_next = True
+        self.enable_volume = False
+        # print(self.startmethod)
+
+        # set defaults
+        (
+            self.api_url,
+            self.api_key,
+            self.api_secret,
+            self.api_passphrase,
+            self.market,
+        ) = self._set_default_api_info(self.exchange)
+        
+        self.read_config(kwargs["exchange"])
+
+        Logger.configure(
+            filelog=self.filelog,
+            logfile=self.logfile,
+            fileloglevel=self.fileloglevel,
+            consolelog=self.consolelog,
+            consoleloglevel=self.consoleloglevel,
+        )
+
+# read and set config from file
+    def read_config(self, exchange):
         if os.path.isfile(self.config_file):
             self.config_provided = True
             try:
-                with open(self.config_file, "r") as stream:
+                with open(self.config_file, "r", encoding="utf8") as stream:
                     try:
                         self.config = yaml.safe_load(stream)
                     except:
@@ -152,10 +186,10 @@ class BotConfig:
             except:
                 raise
 
-        # set exchange platform
-        self.exchange = self._set_exchange(kwargs["exchange"])
+            # set exchange platform
+        self.exchange = self._set_exchange(exchange)
 
-        # set defaults
+            # set defaults
         (
             self.api_url,
             self.api_key,
@@ -185,9 +219,15 @@ class BotConfig:
             ):
                 telegram = self.config["telegram"]
                 self._chat_client = Telegram(telegram["token"], telegram["client_id"])
-                if "datafolder" in self.config["telegram"]:
+                if "datafolder" in telegram:
                     self.telegramdatafolder = telegram["datafolder"]
                 self.telegram = True
+
+            if "scanner" in self.config:
+                self.enableexitaftersell = self.config["scanner"]["enableexitaftersell"] if "enableexitaftersell" in self.config["scanner"] else False
+                self.enable_buy_next = True if "enable_buy_now" not in self.config["scanner"] else self.config["scanner"]["enable_buy_now"]
+                self.enable_atr72_pcnt = True if "enable_atr72_pcnt" not in self.config["scanner"] else self.config["scanner"]["enable_atr72_pcnt"]
+                self.enable_volume = False if "enable_volume" not in self.config["scanner"] else self.config["scanner"]["enable_volume"]
 
             if "logger" in self.config:
                 loggerConfigParser(self, self.config["logger"])
@@ -209,19 +249,15 @@ class BotConfig:
             self.fileloglevel = "NOTSET"
             self.logfile == "/dev/null"
 
-        Logger.configure(
-            filelog=self.filelog,
-            logfile=self.logfile,
-            fileloglevel=self.fileloglevel,
-            consolelog=self.consolelog,
-            consoleloglevel=self.consoleloglevel,
-        )
 
     def _set_exchange(self, exchange: str = None) -> Exchange:
 
         if self.cli_args["exchange"] is not None:
             exchange = Exchange(self.cli_args["exchange"])
 
+        if isinstance(exchange, str):
+            exchange = Exchange(exchange)
+        
         if not exchange:
             if (Exchange.COINBASEPRO.value or "api_pass") in self.config:
                 exchange = Exchange.COINBASEPRO
@@ -527,6 +563,7 @@ class BotConfig:
         )
         parser.add_argument("--websocket", action="store_true", help="Enable websocket")
         parser.add_argument("--logbuysellinjson", action="store_true", help="Enable logging orders in json format")
+        parser.add_argument("--startmethod", type=str, help="Enable logging orders in json format")
 
         # pylint: disable=unused-variable
         args, unknown = parser.parse_known_args()

@@ -8,6 +8,20 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+
+## [4.4.0] - 2021-11-01
+
+- Rename /restartbots to /resumebots
+- Fixed error when {market}.json file might not be complete (bot stopped).
+- Add /cleandata to remove any {market}.json file which are not complete (bot stopped)
+- Add not to create telegram_data folder when running sims
+- Add /startscanner to TG Bot to scan marks and start bots (hourly schedule set in config)
+- Add /stopscanner to TG Bot to stop scanning markets
+- Add /addexception to TG Bot to add pair to exceptions list so wont be started by scanner process
+- Add /removeexception to TG Bot to remove a pair from exceptions list
+- Add multiple market scanning to scanner.py
+- Add exception list so that scanner.py doesnt pick a pair your dont want traded
+
 ## [4.3.3] - 2021-11-08
 
 - fix for Kucoin 429 errors, KeyError('data') and ValueError for time format

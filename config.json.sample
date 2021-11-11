@@ -60,5 +60,13 @@
         "user_id": "",
         "client_id": "",
         "datafolder": ""
-    }
+    },
+	"scanner" : {
+		"atr72_pcnt" : 1.0,
+		"enableexitaftersell" : 1,
+		"enableleverage" : 0,
+		"maxbotcount" : 5,
+        "autoscandelay" : 0,
+        "enable_buy_next": 1
+	}
 }
