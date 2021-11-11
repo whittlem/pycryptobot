@@ -1318,7 +1318,7 @@ class TelegramBot(TelegramBotBase):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
 
-        if self.autoscandelay > 0:
+        if self.autoscandelay > 0 and len(s.get_jobs()) == 0:
             s.start()
             s.add_job(self.StartMarketScan, args=(update, context), trigger='interval', minutes=self.autoscandelay*60, name='Volume Auto Scanner', misfire_grace_time=10)
             update.message.reply_text(
@@ -1350,19 +1350,19 @@ class TelegramBot(TelegramBotBase):
         if debug == False:
             output = subprocess.getoutput("python3 scanner.py")
 
-        telegram = Telegram(self.token, str(context._chat_id_and_data[0]))
-        telegram.send("Stopping crypto bots")
-        jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
-        for file in jsonfiles:
-            if (
-                ".json" in file
-                and not file == "data.json"
-                and not file.__contains__("output.json")
-            ):
-                self._read_data(file)
-                if "margin" in self.data and self.data["margin"] == " ":
-                    if self.updatebotcontrol(file, "exit"):
-                        sleep(5)
+            telegram = Telegram(self.token, str(context._chat_id_and_data[0]))
+            telegram.send("Stopping crypto bots")
+            jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
+            for file in jsonfiles:
+                if (
+                    ".json" in file
+                    and not file == "data.json"
+                    and not file.__contains__("output.json")
+                ):
+                    self._read_data(file)
+                    if "margin" in self.data and self.data["margin"] == " ":
+                        if self.updatebotcontrol(file, "exit"):
+                            sleep(5)
         
         self._read_data()
         botcounter = 0
