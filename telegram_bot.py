@@ -1324,7 +1324,7 @@ class TelegramBot(TelegramBotBase):
             update.message.reply_text(
                 f"<b>Scan job schedule created to run every {self.autoscandelay} hour(s)</b> \u2705", parse_mode="HTML"
             )
-        self.StartMarketScan(update,context, True if len(context.args) > 0 and context.args[0] == "debug" else False)
+        self.StartMarketScan(update,context, True if len(context.args) > 0 and context.args[0] == "debug" else False, False if len(context.args) > 0 and context.args[0] == "noscan" else True)
 
     def StopScanning(self,update,context):
         s.shutdown()
@@ -1332,7 +1332,7 @@ class TelegramBot(TelegramBotBase):
                 "<b>Scan job schedule has been removed</b> \u2705", parse_mode="HTML"
             )
 
-    def StartMarketScan(self, update, context, debug: bool = False):
+    def StartMarketScan(self, update, context, debug: bool = False, scanmarkets: bool = True):
 
         try:
             with open("scanner.json") as json_file:
@@ -1348,7 +1348,11 @@ class TelegramBot(TelegramBotBase):
         )
         # subprocess.Popen("python3 scanner.py", shell=True)
         if debug == False:
-            output = subprocess.getoutput("python3 scanner.py")
+            if scanmarkets:
+                update.message.reply_text(
+                    f"<i>Gathering market data, please wait...</i> \u23F3", parse_mode="HTML"
+                )
+                output = subprocess.getoutput("python3 scanner.py")
 
             telegram = Telegram(self.token, str(context._chat_id_and_data[0]))
             telegram.send("Stopping crypto bots")
