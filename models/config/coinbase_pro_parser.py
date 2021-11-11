@@ -1,10 +1,11 @@
-import re
 import ast
 import json
 import os.path
+import re
 
 from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
 from models.exchange.Granularity import Granularity
+
 
 def isMarketValid(market) -> bool:
     p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
@@ -131,3 +132,4 @@ def parser(app, coinbase_config, args={}):
             app.granularity = Granularity.convert_to_enum(int(config['granularity']))
         elif isinstance(config['granularity'], int):
             app.granularity = Granularity.convert_to_enum(config['granularity'])
+

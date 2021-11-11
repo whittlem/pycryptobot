@@ -4,7 +4,6 @@ import os.path
 import re
 
 from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
-from ..exchange.Granularity import Granularity
 
 
 def isMarketValid(market) -> bool:
@@ -143,7 +142,3 @@ def parser(app, binance_config, args={}):
 
     if app.base_currency != '' and app.quote_currency != '':
         app.market = app.base_currency + app.quote_currency
-
-    if 'granularity' in config and config['granularity'] is not None:
-        app.granularity = Granularity.convert_to_enum(config['granularity'])
-        app.smart_switch = 0

@@ -11,9 +11,6 @@ def isMarketValid(market) -> bool:
     p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
     return p.match(market) is not None
 
-def to_internal_granularity(granularity: str) -> int:
-    return {'1min': 60, '5min': 300, '15min': 900, '1hour': 3600, '6hour': 21600, '1day': 86400}[granularity]
-
 def parseMarket(market):
     if not isMarketValid(market):
         raise ValueError('Kucoin market invalid: ' + market)
