@@ -2,7 +2,7 @@ import json, os, pytest, sys
 
 sys.path.append('.')
 # pylint: disable=import-error
-from models.PyCryptoBot import PyCryptoBot
+from pycryptobot.models.PyCryptoBot import PyCryptoBot
 
 def test_instantiate_model_without_error():
     if not os.path.exists('config.json'):

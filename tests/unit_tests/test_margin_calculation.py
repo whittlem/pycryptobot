@@ -1,8 +1,8 @@
 import sys
 
 sys.path.append('')
-from models.helper.MarginHelper import calculate_margin
-from models.helper.LogHelper import Logger
+from pycryptobot.models.helper.MarginHelper import calculate_margin
+from pycryptobot.models.helper.LogHelper import Logger
 Logger.configure()
 
 

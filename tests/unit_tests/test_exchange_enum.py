@@ -2,7 +2,7 @@ import sys
 
 import pytest
 
-from models.exchange.ExchangesEnum import Exchange
+from pycryptobot.models.exchange.ExchangesEnum import Exchange
 
 sys.path.append('')
 

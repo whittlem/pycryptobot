@@ -8,8 +8,6 @@ from .controllers.base import Base
 META = init_defaults('output.json')
 META['output.json']['overridable'] = True
 CONFIG = init_defaults('pycryptobot')
-CONFIG['plugin.plainlogger'] = {"enabled": True}
-# CONFIG['plugin.jsonlogger'] = {"enabled": True}
 
 
 class PyCryptoBot(App):

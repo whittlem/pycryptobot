@@ -4,7 +4,7 @@ import pytest
 
 sys.path.append('')
 # pylint: disable=import-error
-from models.PyCryptoBot import truncate
+from pycryptobot.models.PyCryptoBot import truncate
 
 @pytest.mark.parametrize(('f', 'n', 'expected'), [
     (1.234567,    4, '1.2345'),

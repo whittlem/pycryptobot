@@ -5,8 +5,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 sys.path.append('')
 # pylint: disable=import-error
-from models.exchange.binance import AuthAPI, PublicAPI
-from models.helper.LogHelper import Logger
+from pycryptobot.models.exchange.binance import AuthAPI, PublicAPI
+from pycryptobot.models.helper.LogHelper import Logger
 Logger.configure()
 
 
@@ -95,7 +95,7 @@ def test_getAccount():
     assert type(df) is pandas.core.frame.DataFrame
 
     actual = df.columns.to_list()
-    expected = ['currency', 'balance', 'hold', 'available']
+    expected = ['index', 'id', 'currency', 'balance', 'hold', 'available', 'profile_id', 'trading_enabled']
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
@@ -125,7 +125,7 @@ def test_getFeesWithoutMarket():
     df = exchange.getFees()
     assert type(df) is pandas.core.frame.DataFrame
 
-    assert len(df) > 1
+    assert len(df) >= 1
 
     actual = df.columns.to_list()
     expected = [ 'maker_fee_rate', 'taker_fee_rate', 'usd_volume', 'market' ]
@@ -189,8 +189,8 @@ def test_getTakerFeeWithoutMarket():
     assert type(exchange) is AuthAPI
 
     fees = exchange.getTakerFee()
-    assert type(fees) is pandas.core.frame.DataFrame
-    assert len(fees) > 0
+    assert type(fees) is float
+    assert fees > 0
 
 def test_getTakerFeeWithMarket():
     filename = 'config.json'
@@ -243,8 +243,8 @@ def test_getMakerFeeWithoutMarket():
     assert type(exchange) is AuthAPI
 
     fees = exchange.getMakerFee()
-    assert type(fees) is pandas.core.frame.DataFrame
-    assert len(fees) > 0
+    assert type(fees) is float
+    assert fees > 0
 
 def test_getMakerFeeWithMarket():
     filename = 'config.json'
@@ -301,7 +301,7 @@ def test_getOrders():
     assert len(df) > 0
 
     actual = df.columns.to_list()
-    expected = ['created_at', 'market', 'action', 'type', 'size', 'filled', 'status', 'price']
+    expected = ['created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'status', 'price']
     #  order is not important, but no duplicate
     assert len(actual) == len(expected)
     diff = set(actual) ^ set(expected)
@@ -331,7 +331,7 @@ def test_getOrdersInvalidMarket():
     assert type(exchange) is AuthAPI
 
     with pytest.raises(ValueError) as execinfo:
-        exchange.getOrders(market='ERROR')
+        exchange.getOrders(market='!ERROR!')
     assert str(execinfo.value) == 'Binance market is invalid.'
 
 def test_getOrdersValidMarket():
@@ -362,7 +362,7 @@ def test_getOrdersValidMarket():
     assert len(df) > 0
 
     actual = df.columns.to_list()
-    expected = ['created_at', 'market', 'action', 'type', 'size', 'filled', 'status', 'price']
+    expected = ['created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'status', 'price']
     #  order is not important, but no duplicate
     assert len(actual) == len(expected)
     diff = set(actual) ^ set(expected)
@@ -423,7 +423,7 @@ def test_getOrdersValidActionBuy():
     assert len(df) >= 0
 
     actual = df.columns.to_list()
-    expected = ['created_at', 'market', 'action', 'type', 'size', 'filled', 'status', 'price']
+    expected = ['created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'status', 'price']
     #  order is not important, but no duplicate
     assert len(actual) == len(expected)
     diff = set(actual) ^ set(expected)
@@ -457,7 +457,7 @@ def test_getOrdersValidActionSell():
     assert len(df) >= 0
 
     actual = df.columns.to_list()
-    expected = ['created_at', 'market', 'action', 'type', 'size', 'filled', 'status', 'price']
+    expected = ['created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'status', 'price']
     #  order is not important, but no duplicate
     assert len(actual) == len(expected)
     diff = set(actual) ^ set(expected)
@@ -519,7 +519,7 @@ def test_getOrdersValidStatusAll():
         pass
     else:
         actual = df.columns.to_list()
-        expected = ['created_at', 'market', 'action', 'type', 'size', 'filled', 'status', 'price']
+        expected = ['created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'status', 'price']
         #  order is not important, but no duplicate
         assert len(actual) == len(expected)
         diff = set(actual) ^ set(expected)
@@ -624,7 +624,7 @@ def test_getOrdersValidStatusDone():
         pass
     else:
         actual = df.columns.to_list()
-        expected = ['created_at', 'market', 'action', 'type', 'size', 'filled', 'status', 'price']
+        expected = ['created_at', 'market', 'action', 'type', 'size', 'filled', 'fees', 'status', 'price']
         #  order is not important, but no duplicate
         assert len(actual) == len(expected)
         diff = set(actual) ^ set(expected)
@@ -715,5 +715,5 @@ def test_marketBuyInvalidMarket():
     assert type(exchange) is AuthAPI
 
     with pytest.raises(ValueError) as execinfo:
-        exchange.marketBuy('ERROR', -1)
+        exchange.marketBuy('!ERROR!', -1)
     assert str(execinfo.value) == 'Binance market is invalid.'

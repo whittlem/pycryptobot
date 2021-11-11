@@ -85,7 +85,7 @@ class BotConfig:
         self.enabletelegrambotcontrol = False
 
         self.filelog = True
-        self.logfile = self.cli_args.logfile
+        self.logfile = self.cli_args.logfile if 'logfile' in self.cli_args else 'pycryptobot.log'
         self.fileloglevel = "DEBUG"
         self.consolelog = True
         self.consoleloglevel = "INFO"
@@ -103,7 +103,7 @@ class BotConfig:
         self.config_file = "config.json"
 
         self.tradesfile = (
-            self.cli_args.tradesfile if self.cli_args.tradesfile else "trades.csv"
+            self.cli_args.tradesfile if "tradesfile" in self.cli_args else "trades.csv"
         )
 
         self.config_provided = True
@@ -177,7 +177,7 @@ class BotConfig:
     def _set_exchange(self, exchange: str = None) -> str:
         valid_exchanges = ["coinbasepro", "binance", "kucoin", "dummy"]
 
-        if self.cli_args.exchange is not None:
+        if 'exchange' in self.cli_args and self.cli_args.exchange is not None:
             exchange = self.cli_args.exchange
 
         if exchange and exchange in valid_exchanges:
@@ -243,7 +243,7 @@ class BotConfig:
 
     def _set_recv_window(self):
         recv_window = 5000
-        if self.cli_args.recvWindow and isinstance(self.cli_args.recvWindow, int):
+        if 'recvWindow' in self.cli_args and isinstance(self.cli_args.recvWindow, int):
             if 5000 <= int(self.cli_args.recvWindow) <= 60000:
                 recv_window = int(self.cli_args.recvWindow)
             else:
