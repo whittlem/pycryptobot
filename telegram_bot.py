@@ -450,6 +450,11 @@ class TelegramBot(TelegramBotBase):
         helptext += "<b>/startbots</b> - <i>start all or the selected bots</i>\n"
         helptext += "<b>/sell</b> - <i>sell market pair on next iteration</i>\n"
         helptext += "<b>/buy</b> - <i>buy market pair on next iteration</i>\n"
+        helptext += "<b>Market Scanner Commands</b>\n\n"
+        helptext += "<b>/startscanner</b> - <i>start auto scan high volumne markets and start bots</i>\n"
+        helptext += "<b>/stopscanner</b> - <i>stop auto scan high volumne markets</i>\n"
+        helptext += "<b>/addexception</b> - <i>add pair to scanner exception list</i>\n"
+        helptext += "<b>/removeexception</b> - <i>remove pair from scanner exception list</i>\n"
 
         mbot = Telegram(self.token, str(context._chat_id_and_data[0]))
 
@@ -1350,7 +1355,7 @@ class TelegramBot(TelegramBotBase):
         if debug == False:
             if scanmarkets:
                 update.message.reply_text(
-                    f"<i>Gathering market data, please wait...</i> \u23F3", parse_mode="HTML"
+                    f"<i>Gathering market data\nThis can take some time depending on number of pairs\nplease wait...</i> \u23F3", parse_mode="HTML"
                 )
                 output = subprocess.getoutput("python3 scanner.py")
 
@@ -1371,6 +1376,7 @@ class TelegramBot(TelegramBotBase):
         self._read_data()
         botcounter = 0
         for ex in config:
+            update.message.reply_text(f"Starting {ex} ({quote}) bots...", parse_mode="HTML")
             for quote in config[ex]["quote_currency"]:
                 logger.info(f"{ex} {quote}")
                 with open(
