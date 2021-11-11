@@ -1372,8 +1372,8 @@ class TelegramBot(TelegramBotBase):
         self._read_data()
         botcounter = 0
         for ex in config:
-            update.message.reply_text(f"Starting {ex} ({quote}) bots...", parse_mode="HTML")
             for quote in config[ex]["quote_currency"]:
+                update.message.reply_text(f"Starting {ex} ({quote}) bots...", parse_mode="HTML")
                 logger.info(f"{ex} {quote}")
                 with open(
                     os.path.join(
