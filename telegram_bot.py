@@ -1347,10 +1347,6 @@ class TelegramBot(TelegramBotBase):
                 f"<i>scanner.json config error</i>\n{err}", parse_mode="HTML"
             )
             return
-
-        update.message.reply_text(
-            f"<i>Gathering market data, please wait...</i> \u23F3", parse_mode="HTML"
-        )
         # subprocess.Popen("python3 scanner.py", shell=True)
         if debug == False:
             if scanmarkets:
