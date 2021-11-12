@@ -2,7 +2,7 @@ import os
 import sys
 import time
 import signal
-from models.exchange.binance import WebSocketClient as BWebSocketClient
+from pycryptobot.models.exchange.binance import WebSocketClient as BWebSocketClient
 
 
 def cls():

@@ -3,10 +3,10 @@ import time
 import json
 import pandas as pd
 
-from models.Trading import TechnicalAnalysis
-from models.exchange.binance import PublicAPI as BPublicAPI
-from models.exchange.coinbase_pro import PublicAPI as CPublicAPI
-from models.exchange.kucoin import PublicAPI as KPublicAPI
+from pycryptobot.models.Trading import TechnicalAnalysis
+from pycryptobot.models.exchange.binance import PublicAPI as BPublicAPI
+from pycryptobot.models.exchange.coinbase_pro import PublicAPI as CPublicAPI
+from pycryptobot.models.exchange.kucoin import PublicAPI as KPublicAPI
 
 try:
     with open("scanner.json") as json_file:

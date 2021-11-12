@@ -26,7 +26,9 @@ class Base(Controller):
             app.cementApp = self.app
             main(app)
 
-    @ex()
+    @ex(
+        help='Init new config.json file'
+    )
     def init(self):
         ConfigBuilder().init()
 

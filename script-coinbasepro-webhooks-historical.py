@@ -2,7 +2,7 @@ import os
 import sys
 import time
 import signal
-from models.exchange.coinbase_pro import WebSocketClient as CWebSocketClient
+from pycryptobot.models.exchange.coinbase_pro import WebSocketClient as CWebSocketClient
 
 
 def cls():

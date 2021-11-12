@@ -1,5 +1,5 @@
 import json
-from models.TradingAccount import TradingAccount
+from pycryptobot.models.TradingAccount import TradingAccount
 
 with open('config.json') as config_file:
     config = json.load(config_file)

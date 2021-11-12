@@ -32,7 +32,7 @@ from telegram.ext import (
 from telegram.replykeyboardremove import ReplyKeyboardRemove
 
 # from telegram.utils.helpers import DEFAULT_20
-from models.chat import Telegram
+from pycryptobot.models.chat import Telegram
 
 # Enable logging
 logging.basicConfig(
@@ -490,7 +490,7 @@ class TelegramBot(TelegramBotBase):
             "<i>Gathering Stats, please wait...</i>", parse_mode="HTML"
         )
         output = subprocess.getoutput(
-            f"python3 pycryptobot.py --stats --exchange {self.exchange}  --market {self.pair}  "
+            f"python3 -m pycryptobot.main --stats --exchange {self.exchange}  --market {self.pair}  "
         )
         update.message.reply_text(output, parse_mode="HTML")
 

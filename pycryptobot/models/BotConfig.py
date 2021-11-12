@@ -99,7 +99,6 @@ class BotConfig:
 
         self.recv_window = self._set_recv_window()
 
-        # self.config_file = kwargs.get("config_file", "config.json") //TODO: get rid of it
         self.config_file = "config.json"
 
         self.tradesfile = (
