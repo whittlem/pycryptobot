@@ -17,15 +17,38 @@ templates = {
 }
 
 
+def _is_telegram_notifications_disabled(app: App) -> bool:
+    if not app.config.has_section('telegram'):
+        return True
+    if 'disable' in app.config.keys('telegram') and app.config.get('telegram', 'disable'):
+        return True
+    if 'disabletelegram' in app.pargs and app.pargs.disabletelegram:
+        return True
+    if app.config.has_section('binance') \
+            and 'disabletelegram' in app.config.keys('binance') \
+            and app.config.get('binance', 'disabletelegram'):
+        return True
+    if app.config.has_section('coinbasepro') \
+            and 'disabletelegram' in app.config.keys('coinbasepro') \
+            and app.config.get('coinbasepro', 'disabletelegram'):
+        return True
+    if app.config.has_section('kucoin') \
+            and 'disabletelegram' in app.config.keys('kucoin') \
+            and app.config.get('coinbasepro', 'disabletelegram'):
+        return True
+    return False
+
+
 class TelegramNotification():
     render = None
     _chat_client: Telegram = None
 
     def init(self, app: App):
+        if _is_telegram_notifications_disabled(app):
+            return
         token = app.config.get('telegram', 'token')
         client_id = app.config.get('telegram', 'client_id')
         self.render = app.render
-        # disabled = app.config.get('telegram', 'disabletelegram') #TODO: figure out how to get this value
         if token and client_id:
             self._chat_client = Telegram(token, client_id)
 
@@ -39,7 +62,7 @@ class TelegramNotification():
 
 def load(app: App):
     telegram = TelegramNotification()
-    app.hook.register('post_setup', telegram.init)
+    app.hook.register('post_argument_parsing', telegram.init)
     app.hook.register('event.bot.start', telegram.notify_telegram)
     app.hook.register('event.bot.paused', telegram.notify_telegram)
     app.hook.register('event.bot.stop', telegram.notify_telegram)
