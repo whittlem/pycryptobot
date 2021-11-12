@@ -1,5 +1,6 @@
 import re
-import sys
+
+from models.exchange.Granularity import Granularity
 
 
 def merge_config_and_args(exchange_config, args):
@@ -412,6 +413,13 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("enabletelegrambotcontrol must be of type int")
 
+    if "enableimmediatebuy" in config:
+        if isinstance(config["enableimmediatebuy"], int):
+            if bool(config["enableimmediatebuy"]):
+                app.enableimmediatebuy = True
+        else:
+            raise TypeError("enableimmediatebuy must be of type int")
+
     # backward compatibility
     if "nosellatloss" in config:
         if isinstance(config["nosellatloss"], int):
@@ -468,3 +476,10 @@ def defaultConfigParse(app, config):
                 app.logbuysellinjson = True
         else:
             raise TypeError("logbuysellinjson must be of type int")
+
+    if 'granularity' in config and config['granularity'] is not None:
+        app.smart_switch = 0
+        if isinstance(config['granularity'], str) and not config['granularity'].isnumeric() is True:
+            app.granularity = Granularity.convert_to_enum(config['granularity'])
+        else:
+            app.granularity = Granularity.convert_to_enum(int(config['granularity']))

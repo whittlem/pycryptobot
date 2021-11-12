@@ -1,11 +1,11 @@
-import re
 import ast
 import json
 import os.path
-import sys
+import re
 from cement import App
 
 from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
+
 
 def isMarketValid(market) -> bool:
     if market == None:
@@ -18,9 +18,6 @@ def isMarketValid(market) -> bool:
     if p.match(market):
         return True
     return False
-
-def to_internal_granularity(granularity: str) -> int:
-    return {'1m': 60, '5m': 300, '15m': 900, '1h': 3600, '6h': 21600, '1d': 86400}[granularity]
 
 def parseMarket(market):
     base_currency = 'BTC'
@@ -78,15 +75,21 @@ def parser(app, binance_config, args={}):
             else:
                 print (f'migration failed (io error)\n')
 
-        if 'api_key_file' in binance_config:
+        api_key_file = None
+        if 'api_key_file' in args and args['api_key_file'] is not None:
+            api_key_file = args['api_key_file']
+        elif 'api_key_file' in binance_config:
+            api_key_file = binance_config['api_key_file']
+
+        if api_key_file is not None:
             try :
-                with open( binance_config['api_key_file'], 'r') as f :
+                with open( api_key_file, 'r') as f :
                     key = f.readline().strip()
                     secret = f.readline().strip()
                 binance_config['api_key'] = key
                 binance_config['api_secret'] = secret
             except :
-                raise RuntimeError(f"Unable to read {binance_config['api_key_file']}")
+                raise RuntimeError(f"Unable to read {api_key_file}")
 
         if 'api_key' in binance_config and 'api_secret' in binance_config and 'api_url' in binance_config:
             # validates the api key is syntactically correct
@@ -140,14 +143,3 @@ def parser(app, binance_config, args={}):
 
     if app.base_currency != '' and app.quote_currency != '':
         app.market = app.base_currency + app.quote_currency
-
-    if 'granularity' in config and config['granularity'] is not None:
-        if isinstance(config['granularity'], str):
-            if config['granularity'] in ['1m', '5m', '15m', '1h', '6h', '1d']:
-                app.granularity = to_internal_granularity(config['granularity'])
-                app.smart_switch = 0
-            else:
-                app.granularity = int(config['granularity'])
-                app.smart_switch = 0
-            # else:
-            #     raise ValueError('granularity supplied is not supported.')

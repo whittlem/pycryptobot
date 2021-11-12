@@ -8,6 +8,35 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+
+## [4.4.0] - 2021-11-01
+
+- Rename /restartbots to /resumebots
+- Fixed error when {market}.json file might not be complete (bot stopped).
+- Add /cleandata to remove any {market}.json file which are not complete (bot stopped)
+- Add not to create telegram_data folder when running sims
+- Add /startscanner to TG Bot to scan marks and start bots (hourly schedule set in config)
+- Add /stopscanner to TG Bot to stop scanning markets
+- Add /addexception to TG Bot to add pair to exceptions list so wont be started by scanner process
+- Add /removeexception to TG Bot to remove a pair from exceptions list
+- Add multiple market scanning to scanner.py
+- Add exception list so that scanner.py doesnt pick a pair your dont want traded
+
+## [4.3.3] - 2021-11-08
+
+- fix for Kucoin 429 errors, KeyError('data') and ValueError for time format
+- addition work on fix for Kucoin multiple buys for same pair when more Quote funds than Base funds in account
+- Kucoin API general tidying of error messages and logging
+- Kucoin runs without any regular re-occurring errors in log
+- added trade timestamps to Telegram output
+- added Telegram config option --telegramtradesonly: will show trades, but not smart switch or last action changed
+- added Telegram config option --disabletelegramerrormsgs: will not send Logger messages to telegram
+- added ability to specify api_key_file via command line arguments with --api_key_file
+
+## [4.3.2] - 2021-11-02
+
+- fix for Kucoin multiple buys on same traded pair when API error occurs
+
 ## [4.3.1] - 2021-10-28
 
 - fix for Kucoin margin calculation

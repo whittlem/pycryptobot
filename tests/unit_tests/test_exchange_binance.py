@@ -6,12 +6,12 @@ import sys
 import pandas
 from cement import TestApp
 
+from pycryptobot.models.exchange.ExchangesEnum import Exchange
 
-sys.path.append("")
+sys.path.append(".")
 # pylint: disable=import-error
 from pycryptobot.models.PyCryptoBot import PyCryptoBot
 from pycryptobot.models.exchange.binance import AuthAPI, PublicAPI
-
 
 
 class Test:

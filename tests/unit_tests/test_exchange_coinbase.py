@@ -6,7 +6,9 @@ import sys
 import pandas
 from cement import TestApp
 
-sys.path.append('')
+from pycryptobot.models.exchange.ExchangesEnum import Exchange
+
+sys.path.append('.')
 # pylint: disable=import-error
 from pycryptobot.models.PyCryptoBot import PyCryptoBot
 from pycryptobot.models.exchange.coinbase_pro import AuthAPI, PublicAPI
@@ -18,7 +20,7 @@ class Test:
     def setup_class(self):
         with TestApp() as cementApp:
             cementApp.run()
-            self.app = PyCryptoBot(cementApp, exchange='coinbasepro')
+            self.app = PyCryptoBot(cementApp, exchange= Exchange.COINBASEPRO)
 
     def test_instantiate_authapi_without_error(self):
         api_key = self.app.getAPIKey()
