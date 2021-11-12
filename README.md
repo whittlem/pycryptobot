@@ -701,8 +701,6 @@ If you get stuck with anything email me or raise an issue in the repo and I'll h
 
 Enjoy and happy trading! :)
 
-Readme from cement (ToDo: delete)
-
 ## Development
 
 This project includes a number of helpers in the `Makefile` to streamline common development tasks.
