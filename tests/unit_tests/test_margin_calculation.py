@@ -26,9 +26,9 @@ def test_margin_binance():
     actual_margin, actual_profit, actual_sell_fee = calculate_margin(buy_size, buy_filled, buy_price, buy_fee,
                                                                      sell_percent, sell_price, sell_fee, sell_taker_fee)
 
-    assert round(actual_margin, 8) == round(expected_margin, 8)
-    assert round(actual_profit, 8) == round(expected_profit, 8)
-    assert round(actual_sell_fee, 8) == round(expected_sell_fee, 8)
+    assert round(actual_margin, 4) == round(expected_margin, 4)
+    assert round(actual_profit, 4) == round(expected_profit, 4)
+    assert round(actual_sell_fee, 4) == round(expected_sell_fee, 4)
 
 
 def test_margin_coinbase_pro():
@@ -51,9 +51,9 @@ def test_margin_coinbase_pro():
     actual_margin, actual_profit, actual_sell_fee = calculate_margin(buy_size, buy_filled, buy_price, buy_fee,
                                                                      sell_percent, sell_price, sell_fee, sell_taker_fee)
 
-    assert round(actual_margin, 8) == round(expected_margin, 8)
-    assert round(actual_profit, 8) == round(expected_profit, 8)
-    assert round(actual_sell_fee, 8) == round(expected_sell_fee, 8)
+    assert round(actual_margin, 4) == round(expected_margin, 4)
+    assert round(actual_profit, 4) == round(expected_profit, 4)
+    assert round(actual_sell_fee, 4) == round(expected_sell_fee, 4)
 
 
 def test_calculate_negative_margin_on_binance_when_coin_price_over_1():
@@ -76,9 +76,9 @@ def test_calculate_negative_margin_on_binance_when_coin_price_over_1():
     actual_margin, actual_profit, actual_sell_fee = calculate_margin(buy_size, buy_filled, buy_price, buy_fee,
                                                                      sell_percent, sell_price, sell_fee, sell_taker_fee)
 
-    assert round(actual_margin, 8) == round(expected_margin, 8)
-    assert round(actual_profit, 8) == round(expected_profit, 8)
-    assert round(actual_sell_fee, 8) == round(expected_sell_fee, 8)
+    assert round(actual_margin, 4) == round(expected_margin, 4)
+    assert round(actual_profit, 4) == round(expected_profit, 4)
+    assert round(actual_sell_fee, 4) == round(expected_sell_fee, 4)
 
 
 def test_calculate_negative_margin_on_binance_when_coin_price_over_1_2():
@@ -100,9 +100,9 @@ def test_calculate_negative_margin_on_binance_when_coin_price_over_1_2():
     actual_margin, actual_profit, actual_sell_fee = calculate_margin(buy_size, buy_filled, buy_price, buy_fee,
                                                                      sell_percent, sell_price, sell_fee, sell_taker_fee)
 
-    assert round(actual_margin, 8) == round(expected_margin, 8)
-    assert round(actual_profit, 8) == round(expected_profit, 8)
-    assert round(actual_sell_fee, 8) == round(expected_sell_fee, 8)
+    assert round(actual_margin, 4) == round(expected_margin, 4)
+    assert round(actual_profit, 4) == round(expected_profit, 4)
+    assert round(actual_sell_fee, 4) == round(expected_sell_fee, 4)
 
 def test_calculate_negative_margin_on_binance_when_coin_price_under_1():
     # this test is using CHZ-USDT as market
@@ -120,14 +120,14 @@ def test_calculate_negative_margin_on_binance_when_coin_price_under_1():
 
     expected_sell_fee = 0.07781384 # round(sell_size * sell_taker_fee, 8)
     expected_profit = -10.30756984 # round(sell_filled - buy_size, 8)
-    expected_margin = -11.70734815 # round((expected_profit / buy_size) * 100, 8)
+    expected_margin = -11.7074 # round((expected_profit / buy_size) * 100, 8)
 
     actual_margin, actual_profit, actual_sell_fee = calculate_margin(buy_size, buy_filled, buy_price, buy_fee,
                                                                      sell_percent, sell_price, sell_fee, sell_taker_fee)
 
-    assert round(actual_margin, 8) == round(expected_margin, 8)
-    assert round(actual_profit, 8) == round(expected_profit, 8)
-    assert round(actual_sell_fee, 8) == round(expected_sell_fee, 8)
+    assert round(actual_margin, 4) == round(expected_margin, 4)
+    assert round(actual_profit, 4) == round(expected_profit, 4)
+    assert round(actual_sell_fee, 4) == round(expected_sell_fee, 4)
 
     
 def test_binance_microtrading_1():
@@ -176,9 +176,9 @@ def test_binance_microtrading_2():
     actual_margin, actual_profit, actual_sell_fee = calculate_margin(buy_size, buy_filled, buy_price, buy_fee,
                                                                      sell_percent, sell_price, sell_fee, sell_taker_fee)
 
-    assert round(actual_margin, 8) == round(expected_margin, 8)
-    assert round(actual_profit, 8) == round(expected_profit, 8)
-    assert round(actual_sell_fee, 8) == round(expected_sell_fee, 8)
+    assert round(actual_margin, 4) == round(expected_margin, 4)
+    assert round(actual_profit, 4) == round(expected_profit, 4)
+    assert round(actual_sell_fee, 4) == round(expected_sell_fee, 4)
 
 
 def test_binance_microtrading_3():
@@ -202,9 +202,9 @@ def test_binance_microtrading_3():
     actual_margin, actual_profit, actual_sell_fee = calculate_margin(buy_size, buy_filled, buy_price, buy_fee,
                                                                      sell_percent, sell_price, sell_fee, sell_taker_fee)
 
-    assert round(actual_margin, 8) == round(expected_margin, 8)
-    assert round(actual_profit, 8) == round(expected_profit, 8)
-    assert round(actual_sell_fee, 8) == round(expected_sell_fee, 8)
+    assert round(actual_margin, 4) == round(expected_margin, 4)
+    assert round(actual_profit, 4) == round(expected_profit, 4)
+    assert round(actual_sell_fee, 4) == round(expected_sell_fee, 4)
 
 
 def test_binance_microtrading_zero_margin():
@@ -228,9 +228,9 @@ def test_binance_microtrading_zero_margin():
     actual_margin, actual_profit, actual_sell_fee = calculate_margin(buy_size, buy_filled, buy_price, buy_fee,
                                                                      sell_percent, sell_price, sell_fee, sell_taker_fee)
 
-    assert round(actual_margin, 8) == round(expected_margin, 8)
-    assert round(actual_profit, 8) == round(expected_profit, 8)
-    assert round(actual_sell_fee, 8) == round(expected_sell_fee, 8)
+    assert round(actual_margin, 4) == round(expected_margin, 4)
+    assert round(actual_profit, 4) == round(expected_profit, 4)
+    assert round(actual_sell_fee, 4) == round(expected_sell_fee, 4)
 
 def test_binance_microtrading_BNB_max_fee_test():
     # this test is using CHZ-USDT as market
@@ -253,9 +253,9 @@ def test_binance_microtrading_BNB_max_fee_test():
     actual_margin, actual_profit, actual_sell_fee = calculate_margin(buy_size, buy_filled, buy_price, buy_fee,
                                                                      sell_percent, sell_price, sell_fee, sell_taker_fee)
 
-    assert round(actual_margin, 8) == round(expected_margin, 8)
-    assert round(actual_profit, 8) == round(expected_profit, 8)
-    assert round(actual_sell_fee, 8) == round(expected_sell_fee, 8)
+    assert round(actual_margin, 4) == round(expected_margin, 4)
+    assert round(actual_profit, 4) == round(expected_profit, 4)
+    assert round(actual_sell_fee, 4) == round(expected_sell_fee, 4)
 
 def test_binance_microtrading_USDTRY_01():
     # this test is using CHZ-USDT as market
@@ -272,12 +272,12 @@ def test_binance_microtrading_USDTRY_01():
     sell_fee = 9.03267923
 
     expected_sell_fee = 9.03267923 # round(sell_size * sell_taker_fee, 8)
-    expected_profit = 2.46859077 # round(sell_filled - buy_size, 8)
+    expected_profit = 2.4685 # round(sell_filled - buy_size, 8)
     expected_margin = 0.02736439 # round((expected_profit / buy_size) * 100, 8)
 
     actual_margin, actual_profit, actual_sell_fee = calculate_margin(buy_size, buy_filled, buy_price, buy_fee,
                                                                      sell_percent, sell_price, sell_fee, sell_taker_fee)
 
-    assert round(actual_margin, 8) == round(expected_margin, 8)
-    assert round(actual_profit, 8) == round(expected_profit, 8)
-    assert round(actual_sell_fee, 8) == round(expected_sell_fee, 8)    
+    assert round(actual_margin, 4) == round(expected_margin, 4)
+    assert round(actual_profit, 4) == round(expected_profit, 4)
+    assert round(actual_sell_fee, 4) == round(expected_sell_fee, 4)

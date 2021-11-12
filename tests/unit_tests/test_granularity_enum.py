@@ -2,7 +2,7 @@ import sys
 
 import pytest
 
-from models.exchange.Granularity import Granularity
+from pycryptobot.models.exchange.Granularity import Granularity
 
 sys.path.append('.')
 

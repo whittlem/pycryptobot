@@ -241,8 +241,9 @@ class BotConfig:
 
     def _set_exchange(self, exchange: str = None) -> Exchange:
 
-        if self.cli_args["exchange"] is not None:
-            exchange = Exchange(self.cli_args["exchange"])
+        if 'exchange' in self.cli_args \
+                and self.cli_args.exchange is not None:
+            exchange = Exchange(self.cli_args.exchange)
 
         if isinstance(exchange, str):
             exchange = Exchange(exchange)

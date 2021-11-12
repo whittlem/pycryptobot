@@ -1,6 +1,6 @@
 import re
 
-from models.exchange.Granularity import Granularity
+from pycryptobot.models.exchange.Granularity import Granularity
 
 
 def merge_config_and_args(exchange_config, args):

@@ -5,7 +5,7 @@ import os.path
 import sys
 
 from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
-from models.exchange.Granularity import Granularity
+from pycryptobot.models.exchange.Granularity import Granularity
 
 def isMarketValid(market) -> bool:
     p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")

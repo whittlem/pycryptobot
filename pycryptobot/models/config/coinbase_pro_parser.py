@@ -4,7 +4,7 @@ import os.path
 import re
 
 from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
-from models.exchange.Granularity import Granularity
+from pycryptobot.models.exchange.Granularity import Granularity
 
 
 def isMarketValid(market) -> bool:
