@@ -17,6 +17,15 @@ templates = {
 }
 
 
+def _is_logging_disabled(app: App):
+    if 'sim' in app.pargs and app.pargs.sim is None:
+        return False
+    if 'simresultonly' in app.pargs and app.pargs.simresultonly:
+        return True
+
+    return False
+
+
 class PlainLogService():
     _app: App
 
@@ -24,6 +33,8 @@ class PlainLogService():
         self._app = app
 
     def print(self, evt: EventInterface):
+        if _is_logging_disabled(self._app):
+            return
         self._app.print(self._app.render(evt.reprJSON(), templates[evt.__class__.__name__], None))
 
 
@@ -41,6 +52,3 @@ def load(app: App):
     app.hook.register('event.order.sell', plain_logger.print)
 
 
-# if not _app.isSimulation() or (
-#                                 _app.isSimulation() and not _app.simResultOnly()
-#                         ):
