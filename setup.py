@@ -16,7 +16,7 @@ setup(
     long_description_content_type='text/markdown',
     author='Michael Whittle',
     author_email='john.doe@example.com',
-    url=' https://github.com/whittlem/pycryptobot',
+    url='https://github.com/whittlem/pycryptobot',
     license='Apache-2.0 License',
     packages=find_packages(exclude=['ez_setup', 'tests*']),
     package_data={'pycryptobot': ['templates/*']},

@@ -35,7 +35,7 @@ class PlainLogService():
     def print(self, evt: EventInterface):
         if _is_logging_disabled(self._app):
             return
-        self._app.print(self._app.render(evt.reprJSON(), templates[evt.__class__.__name__], None))
+        self._app.print(self._app.render(evt.repr_json(), templates[evt.__class__.__name__], None))
 
 
 def load(app: App):

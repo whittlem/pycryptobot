@@ -57,7 +57,7 @@ class TelegramNotification():
             return
 
         self._chat_client.send(
-            self.render(evt.reprJSON(), templates[evt.__class__.__name__], handler='jinja2', out=None))
+            self.render(evt.repr_json(), templates[evt.__class__.__name__], handler='jinja2', out=None))
 
 
 def load(app: App):

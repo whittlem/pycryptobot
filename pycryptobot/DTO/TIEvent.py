@@ -48,7 +48,7 @@ class TIEvent(EventAbstract):
     def set_delta(self, delta: float):
         self.delta = delta
 
-    def reprJSON(self):
+    def repr_json(self):
         return {
             'base_event': self.base_event.__dict__,
             'df_high': self.df_high,
