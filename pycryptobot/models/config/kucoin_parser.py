@@ -52,8 +52,8 @@ def parser(app, Kucoin_config, args={}):
                 print ('migration failed (io error)', "\n")
 
         api_key_file = None
-        if 'api_key_file' in args and args['api_key_file'] is not None:
-            api_key_file = args['api_key_file']
+        if 'api_key_file' in args and args.api_key_file is not None:
+            api_key_file = args.api_key_file
         elif 'api_key_file' in Kucoin_config:
             api_key_file = Kucoin_config['api_key_file']
 

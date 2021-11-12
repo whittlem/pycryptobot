@@ -51,8 +51,8 @@ def parser(app, coinbase_config, args={}):
                 fh.close()
 
         api_key_file = None
-        if 'api_key_file' in args and args['api_key_file'] is not None:
-            api_key_file = args['api_key_file']
+        if 'api_key_file' in args and args.api_key_file is not None:
+            api_key_file = args.api_key_file
         elif 'api_key_file' in coinbase_config:
             api_key_file = coinbase_config['api_key_file']
 

@@ -119,7 +119,7 @@ class BotConfig:
         # set exchange platform
         self.exchange = self._set_exchange(exchange)
 
-        self.startmethod = self.cli_args["startmethod"] if "startmethod" in self.cli_args and self.cli_args["startmethod"] else "standard"
+        self.startmethod = self.cli_args.startmethod if "startmethod" in self.cli_args and self.cli_args.startmethod else "standard"
         self.enable_atr72_pcnt = True
         self.enable_buy_next = True
         self.enable_volume = False
