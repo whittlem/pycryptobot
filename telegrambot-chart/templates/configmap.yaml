@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "telegrambot.fullname" . }}
+  labels:
+    {{- include "telegrambot.labels" . | nindent 4 }}
+data:
+  config.json: |-
+{{ .Values.config | indent 4 }}

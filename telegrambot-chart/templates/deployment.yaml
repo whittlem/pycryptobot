@@ -1,32 +1,35 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "pycryptobot.fullname" . }}
+  name: {{ include "telegrambot.fullname" . }}
   labels:
-    {{- include "pycryptobot.labels" . | nindent 4 }}
+    {{- include "telegrambot.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "pycryptobot.selectorLabels" . | nindent 6 }}
+      {{- include "telegrambot.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-    {{- with .Values.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
+        {{- with .Values.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") $ | sha256sum }}
       labels:
-        {{- include "pycryptobot.selectorLabels" . | nindent 8 }}
+        {{- include "telegrambot.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "pycryptobot.serviceAccountName" . }}
+      serviceAccountName: {{ include "telegrambot.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
+          command: ["python3", "telegram_bot.py"] # Docker entrypoint equivalent
+          workingDir: "/app" # Docker working_dir equivalent
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -40,16 +43,22 @@ spec:
             - name: api-keys
               mountPath: /app/keys
               readOnly: true
+          {{- if .Values.extraVolumeMounts }}
+            {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
+          {{- end }}
       volumes:
         - name: config
           configMap:
-            name: {{ include "pycryptobot.fullname" . }}
+            name: {{ include "telegrambot.fullname" . }}
             items:
             - key: config.json
               path: config.json
+        {{- if .Values.extraVolumes }}
+          {{ toYaml .Values.extraVolumes | nindent 8 }}
+        {{- end }}
         - name: api-keys
           secret:
-            secretName: {{ include "pycryptobot.fullname" . }}
+            secretName: {{ include "telegrambot.fullname" . }}
             items:
             - key: binance.key
               path: binance.key
