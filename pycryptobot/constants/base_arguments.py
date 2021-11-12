@@ -72,6 +72,10 @@ base_arguments = [
              dict(type=str,
                   help="Use the config file at the given location. e.g 'myconfig.json'"),
              ),
+             (["--api_key_file"],
+             dict(type=str,
+                  help="Use the API key file at the given location. e.g 'myapi.key'",
+             )),
             (['--logfile'],
              dict(default='pycryptobot.log',
                   help="Use the log file at the given location. e.g 'mymarket.log'")),
@@ -128,6 +132,12 @@ base_arguments = [
              dict(action="store_true",
                   help="show simulation result only",
                   )),
+            (["--telegramtradesonly"],
+             dict(action="store_true",
+                  help="Toggle Telegram trades only output")),
+            (["--disabletelegramerrormsgs"],
+             dict(action="store_true",
+                  help="Disable Telegram error message output")),
 
             # disable defaults
             (["--disablebullonly"],
@@ -193,4 +203,6 @@ base_arguments = [
             (["--websocket"],
              dict(action="store_true",
                   help="Enable websocket")),
+             (["--startmethod"], dict(type=str,
+                                 help="Enable logging orders in json format")),
         ]

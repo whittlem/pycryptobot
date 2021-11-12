@@ -1,5 +1,6 @@
 from cement import Controller
 from ..models.PyCryptoBot import PyCryptoBot
+from ..models.exchange.ExchangesEnum import Exchange
 
 
 class GetOrders(Controller):
@@ -18,13 +19,13 @@ class GetOrders(Controller):
     def _default(self):
         """Default action if no sub-command is passed."""
 
-        app = PyCryptoBot(self.app, exchange='coinbasepro')
+        app = PyCryptoBot(self.app, exchange= Exchange.COINBASEPRO)
         print(app.getExchange())
 
-        app = PyCryptoBot(self.app, exchange='binance')
+        app = PyCryptoBot(self.app, exchange= Exchange.BINANCE)
         print(app.getExchange())
 
-        app = PyCryptoBot(self.app, exchange='dummy')
+        app = PyCryptoBot(self.app, exchange= Exchange.DUMMY)
         print(app.getExchange())
 
         app = PyCryptoBot(self.app)
