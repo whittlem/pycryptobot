@@ -70,6 +70,7 @@ if running multiple bots and keeping track of their progress.
     % git clone https://github.com/whittlem/pycryptobot
     % cd pycryptobot
     % python3 -m pip install -r requirements.txt
+    % pip install setup.py
 
 ### Container
 
@@ -702,16 +703,6 @@ Enjoy and happy trading! :)
 
 Readme from cement (ToDo: delete)
 
-# Crypto Bot
-
-## Installation
-
-```
-$ pip install -r requirements.txt
-
-$ pip install setup.py
-```
-
 ## Development
 
 This project includes a number of helpers in the `Makefile` to streamline common development tasks.
@@ -736,38 +727,4 @@ $ pycryptobot --help
 ### run pytest / coverage
 
 $ make test
-```
-
-
-### Releasing to PyPi
-
-Before releasing to PyPi, you must configure your login credentials:
-
-**~/.pypirc**:
-
-```
-[pypi]
-username = YOUR_USERNAME
-password = YOUR_PASSWORD
-```
-
-Then use the included helper function via the `Makefile`:
-
-```
-$ make dist
-
-$ make dist-upload
-```
-
-## Deployments
-
-### Docker
-
-Included is a basic `Dockerfile` for building and distributing `PyCryptoBot`,
-and can be built with the included `make` helper:
-
-```
-$ make docker
-
-$ docker run -it pycryptobot --help
 ```
