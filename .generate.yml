@@ -12,24 +12,24 @@ variables:
     -   name: label
         prompt: "App Label"
         case: "lower"
-        default: "myapp"
+        default: "pycryptobot"
 
     -   name: name
         prompt: "App Name"
-        default: "My Application"
+        default: "PyCryptoBot"
 
     -   name: class_name
         prompt: "App Class Name"
         validate: "^[a-zA-Z0-9]+$"
-        default: "MyApp"
+        default: "PyCryptoBot"
 
     -   name: description
         prompt: "App Description"
-        default: "MyApp Does Amazing Things!"
+        default: "Python Crypto Bot consuming Coinbase Pro or Binance APIs"
 
     -   name: creator
         prompt: "Creator Name"
-        default: "John Doe"
+        default: "Michael Whittle"
 
     -   name: creator_email
         prompt: "Creator Email"
@@ -37,8 +37,8 @@ variables:
 
     -   name: url
         prompt: "Project URL"
-        default: "https://github.com/johndoe/myapp/"
+        default: "https://github.com/whittlem/pycryptobot"
 
     -   name: license
         prompt: "License"
-        default: "unlicensed"
+        default: " Apache-2.0 License"
