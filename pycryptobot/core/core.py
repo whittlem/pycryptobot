@@ -112,8 +112,8 @@ def executeJob(
     # Temporary override global variables
     Logger = _app.cementApp.log
     account = TradingAccount(_app)
-
     telegram_bot = TelegramBotHelper(_app)
+
     # This is used to control some API calls when using websockets
     last_api_call_datetime = datetime.now() - _state.last_api_call_datetime
     if last_api_call_datetime.seconds > 60:
@@ -121,7 +121,7 @@ def executeJob(
 
     # This is used by the telegram bot
     # If it not enabled in config while will always be False
-    if not app.isSimulation():
+    if not _app.isSimulation():
         controlstatus = telegram_bot.checkbotcontrolstatus()
         while controlstatus == "pause" or controlstatus == "paused":
             if controlstatus == "pause":
@@ -139,26 +139,26 @@ def executeJob(
             time.sleep(30)
             controlstatus = telegram_bot.checkbotcontrolstatus()
 
-    if controlstatus == "start":
-        for _ in _app.cementApp.hook.run('event.bot.restarted', StateChange(
-                action_text='Bot has restarted',
-                market=_app.getMarket(),
-                datetime=str(datetime.now()).format()
-        )):
-            pass
-        telegram_bot.updatebotstatus("active")
-        if _app.enableWebsocket():
-            Logger.info("Starting _websocket...")
-            _websocket.start()
+        if controlstatus == "start":
+            for _ in _app.cementApp.hook.run('event.bot.restarted', StateChange(
+                    action_text='Bot has restarted',
+                    market=_app.getMarket(),
+                    datetime=str(datetime.now()).format()
+            )):
+                pass
+            telegram_bot.updatebotstatus("active")
+            if _app.enableWebsocket():
+                Logger.info("Starting _websocket...")
+                _websocket.start()
 
-    if controlstatus == "exit":
-        for _ in _app.cementApp.hook.run('event.bot.stop', StateChange(
-                action_text='bot is stopping',
-                market=_app.getMarket(),
-                datetime=str(datetime.now()).format()
-        )):
-            pass
-        sys.exit(0)
+        if controlstatus == "exit":
+            for _ in _app.cementApp.hook.run('event.bot.stop', StateChange(
+                    action_text='bot is stopping',
+                    market=_app.getMarket(),
+                    datetime=str(datetime.now()).format()
+            )):
+                pass
+            sys.exit(0)
 
     # reset _websocket every 23 hours if applicable
     if _app.enableWebsocket() and not _app.isSimulation():
@@ -541,7 +541,7 @@ def executeJob(
                 _state.action = "WAIT"
                 immediate_action = False
 
-        if app.enableImmediateBuy():
+        if _app.enableImmediateBuy():
             if _state.action == "BUY":
                 immediate_action = True
 

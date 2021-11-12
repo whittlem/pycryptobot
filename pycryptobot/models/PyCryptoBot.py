@@ -1357,10 +1357,6 @@ class PyCryptoBot(BotConfig):
             str(self.enableinsufficientfundslogging)
             + "  --enableinsufficientfundslogging",
         )
-        text_box.line(
-            "Log Buy and Sell orders in JSON",
-            str(self.logbuysellinjson) + "  --logbuysellinjson"
-        )
 
         if self.getBuyMaxSize():
             text_box.line(
