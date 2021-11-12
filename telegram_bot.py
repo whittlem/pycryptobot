@@ -433,6 +433,11 @@ class TelegramBot(TelegramBotBase):
     def help(self, update, context):
         """Send a message when the command /help is issued."""
 
+        import subprocess
+        process = subprocess.Popen(["git", "pull"], stdout=subprocess.PIPE)
+        output = process.communicate()[0]
+
+
         helptext = "<b>Information Command List</b>\n\n"
         helptext += (
             "<b>/setcommands</b> - <i>add all commands to bot for easy access</i>\n"
