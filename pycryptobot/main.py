@@ -3,6 +3,11 @@ from cement import App, TestApp, init_defaults
 from cement.core.exc import CaughtSignal
 from .core.exc import PyCryptoBotError
 from .controllers.base import Base
+from .controllers.get_fees import GetFees
+from .controllers.get_orders import GetOrders
+from .controllers.get_time import GetTime
+from .controllers.technical_analysis import GetTechnicalAnalysis
+from .controllers.troubleshoot import Troubleshoot
 
 # configuration defaults
 META = init_defaults('output.json')
@@ -48,7 +53,12 @@ class PyCryptoBot(App):
 
         # register handlers
         handlers = [
-            Base
+            Base,
+            GetFees,
+            GetOrders,
+            GetTime,
+            GetTechnicalAnalysis,
+            Troubleshoot,
         ]
         define_hooks = [
             'event.bot.start',
