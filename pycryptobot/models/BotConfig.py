@@ -103,7 +103,7 @@ class BotConfig:
         self.config_file = "config.json"
 
         self.tradesfile = (
-            self.cli_args.tradesfile if "tradesfile" in self.cli_args else "trades.csv"
+            self.cli_args.tradesfile if "tradesfile" in self.cli_args and self.cli_args.tradesfile is not None else "trades.csv"
         )
 
         self.config_provided = True
