@@ -1450,7 +1450,7 @@ def executeJob(
 
                 _app.notifyTelegram(
                     f"{_state.app.base_currency}{_state.app.quote_currency}\nSimulation Summary\n"
-                    + f"   Market: {state.app.base_currency}-{state.app.quote_currency}\n"
+                    + f"   Market: {_state.app.base_currency}-{_state.app.quote_currency}\n"
                     + f"   Buy Count: {_state.buy_count}\n"
                     + f"   Sell Count: {_state.sell_count}\n"
                     + f"   First Buy: {_state.first_buy_size}\n"

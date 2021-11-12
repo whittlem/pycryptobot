@@ -203,6 +203,7 @@ base_arguments = [
             (["--websocket"],
              dict(action="store_true",
                   help="Enable websocket")),
-             (["--startmethod"], dict(type=str,
-                                 help="Enable logging orders in json format")),
+             (["--startmethod"],
+              dict(type=str,
+                   help="Enable logging orders in json format")),
         ]
