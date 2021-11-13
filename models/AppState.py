@@ -71,7 +71,7 @@ class AppState:
         self.last_api_call_datetime = datetime.datetime.now() - datetime.timedelta(minutes=2)
         self.exchange_last_buy = None
 
-    def minimumOrderBase(self, actionchk: bool=False):
+    def minimumOrderBase(self, base, actionchk: bool=False):
         self.app.insufficientfunds = False
         if self.app.getExchange() == Exchange.BINANCE:
             df = self.api.getMarketInfoFilters(self.app.getMarket())
