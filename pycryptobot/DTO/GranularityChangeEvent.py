@@ -1,12 +1,17 @@
 from dataclasses import dataclass
 from .EventInterface import EventAbstract
+from ..models.exchange.Granularity import Granularity
 
 
 @dataclass
 class GranularityChange(EventAbstract):
-    new: int
-    new_text: str
-    old: int
-    old_text: str
+    new: Granularity
+    old: Granularity
     name: str = 'GranularityChange'
 
+    def repr_json(self):
+        return {
+            "new": self.new.value,
+            "old": self.old.value,
+            "name": self.name,
+        }

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from .EventInterface import EventAbstract
+from ..models.exchange.Granularity import Granularity
 
 from pycryptobot.models.exchange.ExchangesEnum import Exchange
 
@@ -9,7 +10,7 @@ class StartEvent(EventAbstract):
     exchange: Exchange
     action: str
     market: str
-    granularity: int
+    granularity: Granularity
     smartswitch: bool
     name: str = "StartEvent"
 
@@ -18,7 +19,7 @@ class StartEvent(EventAbstract):
             'exchange': self.exchange.value,
             'action': self.action,
             'market': self.market,
-            'granularity': self.granularity,
+            'granularity': self.granularity.value,
             'smartswitch': self.smartswitch,
             'name': self.name
         }

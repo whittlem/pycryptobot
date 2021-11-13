@@ -307,9 +307,7 @@ def executeJob(
         if not _app.isSimulation() or (_app.isSimulation() and not _app.simResultOnly()):
             for _ in _app.cementApp.hook.run('event.granularity.change', GranularityChange(
                     old=Granularity.ONE_HOUR,
-                    old_text='1 hour',
                     new=Granularity.FIFTEEN_MINUTES,
-                    new_text='15 min',
             )):
                 pass
 
@@ -331,9 +329,7 @@ def executeJob(
         if not _app.isSimulation() or (_app.isSimulation() and not _app.simResultOnly()):
             for _ in _app.cementApp.hook.run('event.granularity.change', GranularityChange(
                     old=Granularity.FIFTEEN_MINUTES,
-                    old_text='15 min',
                     new=Granularity.ONE_HOUR,
-                    new_text='1 hour',
             )):
                 pass
 
@@ -753,7 +749,7 @@ def executeJob(
                     df_index=formatted_current_df_index,
                     market=_app.getMarket(),
                     bullbeear=bullbeartext,
-                    granularity=_app.printGranularity(),
+                    granularity=_app.getGranularity(),
                     price=price,
                     ema_co_prefix=ema_co_prefix,
                     ema_text=ema_text,
@@ -1025,7 +1021,7 @@ def executeJob(
                             for _ in _app.cementApp.hook.run('event.order.buy', BuyEvent(
                                     current_df_index=formatted_current_df_index,
                                     market=_app.getMarket(),
-                                    granularity=_app.printGranularity(),
+                                    granularity=_app.getGranularity(),
                                     price=price,
                                     action='BUY',
                             )):
@@ -1056,7 +1052,7 @@ def executeJob(
                     for _ in _app.cementApp.hook.run('event.order.buy', BuyEvent(
                             current_df_index=formatted_current_df_index,
                             market=_app.getMarket(),
-                            granularity=_app.printGranularity(),
+                            granularity=_app.getGranularity(),
                             price=price,
                             action='TEST BUY',
                     )):
@@ -1157,7 +1153,7 @@ def executeJob(
                     for _ in _app.cementApp.hook.run('event.order.sell', SellEvent(
                             current_df_index=formatted_current_df_index,
                             market=_app.getMarket(),
-                            granularity=_app.printGranularity(),
+                            granularity=_app.getGranularity(),
                             price=price,
                             margin=margin,
                             delta=round(price - _state.last_buy_price, precision),
@@ -1255,7 +1251,7 @@ def executeJob(
                     for _ in _app.cementApp.hook.run('event.order.sell', SellEvent(
                             current_df_index=formatted_current_df_index,
                             market=_app.getMarket(),
-                            granularity=_app.printGranularity(),
+                            granularity=_app.getGranularity(),
                             price=price,
                             margin=margin,
                             delta=round(price - _state.last_buy_price, precision),
