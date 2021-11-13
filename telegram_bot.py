@@ -433,11 +433,6 @@ class TelegramBot(TelegramBotBase):
     def help(self, update, context):
         """Send a message when the command /help is issued."""
 
-        import subprocess
-        process = subprocess.Popen(["git", "pull"], stdout=subprocess.PIPE)
-        output = process.communicate()[0]
-
-
         helptext = "<b>Information Command List</b>\n\n"
         helptext += (
             "<b>/setcommands</b> - <i>add all commands to bot for easy access</i>\n"
@@ -454,7 +449,7 @@ class TelegramBot(TelegramBotBase):
         helptext += "<b>/stopbots</b> - <i>stop all or the selected bots</i>\n"
         helptext += "<b>/startbots</b> - <i>start all or the selected bots</i>\n"
         helptext += "<b>/sell</b> - <i>sell market pair on next iteration</i>\n"
-        helptext += "<b>/buy</b> - <i>buy market pair on next iteration</i>\n"
+        helptext += "<b>/buy</b> - <i>buy market pair on next iteration</i>\n\n"
         helptext += "<b>Market Scanner Commands</b>\n\n"
         helptext += "<b>/startscanner</b> - <i>start auto scan high volumne markets and start bots</i>\n"
         helptext += "<b>/stopscanner</b> - <i>stop auto scan high volumne markets</i>\n"
