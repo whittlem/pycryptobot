@@ -70,8 +70,8 @@ class TelegramBotBase:
                 os.path.join(self.datafolder, "telegram_data", name), "r", encoding="utf8"
             ) as json_file:
                 self.data = json.load(json_file)
-        except:
-            pass
+        except FileNotFoundError as err:
+            logger.warning(err)
 
     def _write_data(self, name: str = "data.json") -> None:
         try:
@@ -81,7 +81,7 @@ class TelegramBotBase:
                 encoding="utf8",
             ) as outfile:
                 json.dump(self.data, outfile, indent=4)
-        except Exception as err:
+        except:
             with open(
                 os.path.join(self.datafolder, "telegram_data", name),
                 "w",
