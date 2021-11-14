@@ -8,6 +8,11 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [4.4.1] - 2021-11-12
+
+- Fix for binance candles not incrementing with websockets
+- Add bypass FileNotFoundException for pairs.json file
+- Fix for double buys when using websockets
 
 ## [4.4.0] - 2021-11-01
 
