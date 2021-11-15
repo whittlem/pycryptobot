@@ -1120,7 +1120,7 @@ def executeJob(
                 # if not live
                 else:
                     _app.notifyTelegram(
-                        f"{_app.getMarket()} ({_app.printGranularity()}) TEST BUY at {price_text}"
+                        f"{_app.getMarket()} ({_app.printGranularity()}) - {str(current_sim_date)}\n - TEST BUY at {price_text}"
                     )
                     if _state.last_buy_size == 0 and _state.last_buy_filled == 0:
                         # Sim mode can now use buymaxsize as the amount used for a buy
