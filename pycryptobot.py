@@ -1681,10 +1681,7 @@ def executeJob(
         # if live but not websockets
         if not _app.disableTracker() and _app.isLive() and not _app.enableWebsocket():
             # update order tracker csv
-            if _app.getExchange() == Exchange.BINANCE:
-                account.saveTrackerCSV(_app.getMarket())
-            elif _app.getExchange() == Exchange.COINBASEPRO or _app.getExchange() == Exchange.KUCOIN:
-                account.saveTrackerCSV()
+            account.saveTrackerCSV(_app.getMarket())
 
         if _app.isSimulation():
             if _state.iterations < len(df):
