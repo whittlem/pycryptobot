@@ -25,7 +25,7 @@ Upgrade library dependencies (if required):
 - Add not to create telegram_data folder when running sims
 - Add /startscanner to TG Bot to scan marks and start bots (hourly schedule set in config)
 - Add /stopscanner to TG Bot to stop scanning markets
-- Add /addexception to TG Bot to add pair to exceptions list so wont be started by scanner process
+- Add /addexception to TG Bot to add pair to exceptions list so won't be started by scanner process
 - Add /removeexception to TG Bot to remove a pair from exceptions list
 - Add multiple market scanning to scanner.py
 - Add exception list so that scanner.py doesn't pick a pair your don't want traded
