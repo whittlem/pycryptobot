@@ -28,7 +28,7 @@ Upgrade library dependencies (if required):
 - Add /addexception to TG Bot to add pair to exceptions list so wont be started by scanner process
 - Add /removeexception to TG Bot to remove a pair from exceptions list
 - Add multiple market scanning to scanner.py
-- Add exception list so that scanner.py doesnt pick a pair your dont want traded
+- Add exception list so that scanner.py doesn't pick a pair your don't want traded
 
 ## [4.3.3] - 2021-11-08
 
