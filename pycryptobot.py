@@ -1122,7 +1122,7 @@ def executeJob(
                 # if not live
                 else:
                     _app.notifyTelegram(
-                        f"{_app.getMarket()} ({_app.printGranularity()}) TEST BUY at {price_text}"
+                        f"{_app.getMarket()} ({_app.printGranularity()}) - {str(current_sim_date)}\n - TEST BUY at {price_text}"
                     )
                     if _state.last_buy_size == 0 and _state.last_buy_filled == 0:
                         # Sim mode can now use buymaxsize as the amount used for a buy
@@ -1686,10 +1686,7 @@ def executeJob(
         # if live but not websockets
         if not _app.disableTracker() and _app.isLive() and not _app.enableWebsocket():
             # update order tracker csv
-            if _app.getExchange() == Exchange.BINANCE:
-                account.saveTrackerCSV(_app.getMarket())
-            elif _app.getExchange() == Exchange.COINBASEPRO or _app.getExchange() == Exchange.KUCOIN:
-                account.saveTrackerCSV()
+            account.saveTrackerCSV(_app.getMarket())
 
         if _app.isSimulation():
             if _state.iterations < len(df):

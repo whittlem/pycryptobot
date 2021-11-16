@@ -8,11 +8,14 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-## [4.4.1] - 2021-11-12
+## [4.4.1] - 2021-11-16
 
 - Fix for binance candles not incrementing with websockets
 - Add bypass FileNotFoundException for pairs.json file
 - Fix for double buys when using websockets
+- Fix bug for Tracker CSV function
+- Fix missing code for Telegram output options
+- Add timestamp to Sim buy message output for Telegram
 
 ## [4.4.0] - 2021-11-01
 
