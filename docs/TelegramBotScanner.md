@@ -28,7 +28,7 @@ If you already have the Telegram Bot running you will need to run /setcommands t
 /addexception - add a pair to the exception list, a pair on the exception list will not start if it is picked up as part of the scanning process (can be useful for HODL pairs)
 /removeexception - this will remove a pair from the exceptions list
 
-The scanning process can take a little bit of time and while that is processing "Gathering data.." your Telegram Bot wont respond to any other commands until it is complete, once the scanning process has complete any running bots that don't have an open order will be stopped and you will start to get notifications as the Telegram Bot begins to start-up bots.
+The scanning process can take a little bit of time and while that is processing "Gathering data.." your Telegram Bot won't respond to any other commands until it is complete, once the scanning process has complete any running bots that don't have an open order will be stopped and you will start to get notifications as the Telegram Bot begins to start-up bots.
 
 *This is no guarantee of profits just an indication of pairs likely to be on an uptrend
 

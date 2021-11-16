@@ -268,7 +268,7 @@ class AppState:
                 order_pairs
             )
 
-            # If Kucoin returns emoty response, on a shared trading account, could multiple buy same pair
+            # If Kucoin returns empty response, on a shared trading account, could multiple buy same pair
             if self.app.getExchange() == Exchange.KUCOIN and self.minimumOrderBase(base, actionchk=True) and self.minimumOrderQuote(quote, actionchk=True):
                 self.last_action = "BUY"
             elif order_pairs_normalised[0] < order_pairs_normalised[1]:

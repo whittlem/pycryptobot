@@ -417,8 +417,8 @@ class TelegramBot(TelegramBotBase):
             BotCommand("sell", "manual sell"),
             BotCommand("addexception", "add pair to scanner exception list"),
             BotCommand("removeexception", "remove pair from scanner exception list"),
-            BotCommand("startscanner", "start auto scan high volumne markets and start bots"),
-            BotCommand("stopscanner", "stop auto scan high volumne markets")
+            BotCommand("startscanner", "start auto scan high volume markets and start bots"),
+            BotCommand("stopscanner", "stop auto scan high volume markets")
         ]
 
         ubot = Bot(self.token)
@@ -451,8 +451,8 @@ class TelegramBot(TelegramBotBase):
         helptext += "<b>/sell</b> - <i>sell market pair on next iteration</i>\n"
         helptext += "<b>/buy</b> - <i>buy market pair on next iteration</i>\n\n"
         helptext += "<b>Market Scanner Commands</b>\n\n"
-        helptext += "<b>/startscanner</b> - <i>start auto scan high volumne markets and start bots</i>\n"
-        helptext += "<b>/stopscanner</b> - <i>stop auto scan high volumne markets</i>\n"
+        helptext += "<b>/startscanner</b> - <i>start auto scan high volume markets and start bots</i>\n"
+        helptext += "<b>/stopscanner</b> - <i>stop auto scan high volume markets</i>\n"
         helptext += "<b>/addexception</b> - <i>add pair to scanner exception list</i>\n"
         helptext += "<b>/removeexception</b> - <i>remove pair from scanner exception list</i>\n"
 
