@@ -183,7 +183,7 @@ class TradingAccount:
             if self.mode == 'live':
                 model = KAuthAPI(self.app.getAPIKey(), self.app.getAPISecret(), self.app.getAPIPassphrase(), self.app.getAPIURL())
                 df = model.getAccounts()
-                if isinstance(df, pd.DataFrame):
+                if isinstance(df, pd.DataFrame) and len(df) > 0:
                     if currency == '':
                         # retrieve all balances
                         return df

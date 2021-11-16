@@ -15,7 +15,6 @@ import subprocess
 import platform
 import re
 import urllib.request
-from sched import scheduler
 
 from datetime import datetime
 from time import sleep, time

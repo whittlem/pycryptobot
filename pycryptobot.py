@@ -28,6 +28,7 @@ from models.helper.TextBoxHelper import TextBox
 from models.exchange.ExchangesEnum import Exchange
 from models.exchange.binance import WebSocketClient as BWebSocketClient
 from models.exchange.coinbase_pro import WebSocketClient as CWebSocketClient
+from models.exchange.kucoin import WebSocketClient as KWebSocketClient
 from models.helper.TelegramBotHelper import TelegramBotHelper
 
 # minimal traceback
@@ -1055,14 +1056,18 @@ def executeJob(
                             text_box.center("*** Executing LIVE Buy Order ***")
                             text_box.singleLine()
 
+                        account.basebalance = 0.0
+                        account.quotebalance = 0.0
+
                         ac = account.getBalance()
+                        try:
+                            df_base = ac[ac["currency"] == app.getBaseCurrency()]["available"]
+                            account.basebalance = 0.0 if len(df_base) == 0 else float(df_base.values[0])
 
-                        df_base = ac[ac["currency"] == _app.getBaseCurrency()]["available"]
-                        account.basebalance = 0.0 if len(df_base) == 0 else float(df_base.values[0])
-
-                        df_quote = ac[ac["currency"] == _app.getQuoteCurrency()]["available"]
-                        account.quotebalance = 0.0 if len(df_quote) == 0 else float(df_quote.values[0])
-
+                            df_quote = ac[ac["currency"] == app.getQuoteCurrency()]["available"]
+                            account.quotebalance = 0.0 if len(df_quote) == 0 else float(df_quote.values[0])
+                        except:
+                            pass
                         # display balances
                         Logger.info(
                             f"{_app.getBaseCurrency()} balance before order: {str(account.basebalance)}"
@@ -1100,12 +1105,14 @@ def executeJob(
 
                             # display balances
                             ac = account.getBalance()
+                            try:
+                                df_base = ac[ac["currency"] == app.getBaseCurrency()]["available"]
+                                account.basebalance = 0.0 if len(df_base) == 0 else float(df_base.values[0])
 
-                            df_base = ac[ac["currency"] == _app.getBaseCurrency()]["available"]
-                            account.basebalance = 0.0 if len(df_base) == 0 else float(df_base.values[0])
-
-                            df_quote = ac[ac["currency"] == _app.getQuoteCurrency()]["available"]
-                            account.quotebalance = 0.0 if len(df_quote) == 0 else float(df_quote.values[0])
+                                df_quote = ac[ac["currency"] == app.getQuoteCurrency()]["available"]
+                                account.quotebalance = 0.0 if len(df_quote) == 0 else float(df_quote.values[0])
+                            except:
+                                pass
 
                             Logger.info(
                                 f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance)}"
@@ -1770,6 +1777,10 @@ def main():
                 _websocket.start()
         elif app.getExchange() == Exchange.KUCOIN:
             message += "Kucoin bot"
+            if app.enableWebsocket() and not app.isSimulation():
+                print("Opening websocket to Kucoin...")
+                _websocket = KWebSocketClient([app.getMarket()], app.getGranularity())
+                _websocket.start()
 
         smartswitchstatus = "enabled" if app.getSmartSwitch() else "disabled"
         message += f" for {app.getMarket()} using granularity {app.printGranularity()}. Smartswitch {smartswitchstatus}"
