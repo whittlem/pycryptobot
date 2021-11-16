@@ -8,6 +8,11 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [4.4.1] - 2021-11-01
+
+- Fix bug for Tracker CSV function
+- Fix missing code for Telegram output options
+- Add timestamp to Sim buy message output for Telegram
 
 ## [4.4.0] - 2021-11-01
 
