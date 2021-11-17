@@ -194,6 +194,9 @@ class AppState:
 
         if actionchk:
             return
+        elif quote < 10:
+            if self.app.enableinsufficientfundslogging:
+                self.app.insufficientfunds = True
         elif (quote / price) < base_min:
             if self.app.enableinsufficientfundslogging:
                 self.app.insufficientfunds = True
@@ -253,6 +256,8 @@ class AppState:
                 self.last_buy_price = 0.0
                 return
         else:
+            if quote > 0.0:
+                self.minimumOrderQuote(quote)
             # nil base or quote funds
             if base == 0.0 and quote == 0.0:
                 if self.app.enableinsufficientfundslogging:

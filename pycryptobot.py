@@ -1120,12 +1120,13 @@ def executeJob(
                             Logger.info(
                                 f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance)}"
                             )
-
                             state.last_api_call_datetime -= timedelta(seconds=60)
                         except:
                             Logger.warning("Unable to place order")
+                            state.last_api_call_datetime -= timedelta(seconds=60)
                     else:
                         Logger.warning("Unable to place order, insufficient funds")
+                        state.last_api_call_datetime -= timedelta(seconds=60)
                 # if not live
                 else:
                     _app.notifyTelegram(
