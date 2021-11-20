@@ -1,5 +1,4 @@
 import argparse
-import fileinput
 import json
 import os
 import re
@@ -9,6 +8,7 @@ import yaml
 from yaml.constructor import ConstructorError
 from yaml.scanner import ScannerError
 
+from models.ConfigBuilder import ConfigBuilder
 from models.chat import Telegram
 from models.config import (
     binanceConfigParser,
@@ -17,7 +17,8 @@ from models.config import (
     dummyConfigParser,
     loggerConfigParser,
 )
-from models.ConfigBuilder import ConfigBuilder
+from models.exchange.Granularity import Granularity
+from models.exchange.ExchangesEnum import Exchange
 from models.helper.LogHelper import Logger
 
 
@@ -31,7 +32,7 @@ class BotConfig:
 
         self.configbuilder = False
 
-        self.granularity = 3600
+        self.granularity = Granularity.ONE_HOUR
         self.base_currency = "BTC"
         self.quote_currency = "GBP"
         self.is_live = 0
@@ -50,7 +51,10 @@ class BotConfig:
         self.sell_at_loss = 1
         self.smart_switch = 1
         self.telegram = False
-        self.telegramdatafolder = ""
+
+        self.logbuysellinjson = False
+        self.telegramdatafolder = "."
+
         self.buypercent = 100
         self.sellpercent = 100
         self.last_action = None
@@ -64,6 +68,7 @@ class BotConfig:
         self.statstartdate = None
         self.statdetail = False
         self.nobuynearhighpcnt = 3
+        self.simresultonly = False
 
         self.disablebullonly = False
         self.disablebuynearhigh = False
@@ -80,10 +85,16 @@ class BotConfig:
         self.disabletracker = False
         self.enableml = False
         self.websocket = False
+        self.enableexitaftersell = False
 
         self.enableinsufficientfundslogging = False
         self.insufficientfunds = False
         self.enabletelegrambotcontrol = False
+        self.enableimmediatebuy = False
+
+        self.telegramtradesonly = False
+        self.disabletelegramerrormsgs = False
+
 
         self.filelog = True
         self.logfile = (
@@ -115,11 +126,39 @@ class BotConfig:
             self.config_file = self.cli_args["config"]
             self.config_provided = True
 
-        # read and set config from file
+        self.exchange = self._set_exchange(kwargs["exchange"])
+
+        self.startmethod = self.cli_args["startmethod"] if self.cli_args["startmethod"] else "standard"
+        self.enable_atr72_pcnt = True
+        self.enable_buy_next = True
+        self.enable_volume = False
+        # print(self.startmethod)
+
+        # set defaults
+        (
+            self.api_url,
+            self.api_key,
+            self.api_secret,
+            self.api_passphrase,
+            self.market,
+        ) = self._set_default_api_info(self.exchange)
+        
+        self.read_config(kwargs["exchange"])
+
+        Logger.configure(
+            filelog=self.filelog,
+            logfile=self.logfile,
+            fileloglevel=self.fileloglevel,
+            consolelog=self.consolelog,
+            consoleloglevel=self.consoleloglevel,
+        )
+
+# read and set config from file
+    def read_config(self, exchange):
         if os.path.isfile(self.config_file):
             self.config_provided = True
             try:
-                with open(self.config_file, "r") as stream:
+                with open(self.config_file, "r", encoding="utf8") as stream:
                     try:
                         self.config = yaml.safe_load(stream)
                     except:
@@ -147,10 +186,10 @@ class BotConfig:
             except:
                 raise
 
-        # set exchange platform
-        self.exchange = self._set_exchange(kwargs["exchange"])
+            # set exchange platform
+        self.exchange = self._set_exchange(exchange)
 
-        # set defaults
+            # set defaults
         (
             self.api_url,
             self.api_key,
@@ -160,17 +199,17 @@ class BotConfig:
         ) = self._set_default_api_info(self.exchange)
 
         if self.config_provided:
-            if self.exchange == "coinbasepro" and "coinbasepro" in self.config:
-                coinbaseProConfigParser(self, self.config["coinbasepro"], self.cli_args)
+            if self.exchange == Exchange.COINBASEPRO and self.exchange.value in self.config:
+                coinbaseProConfigParser(self, self.config[self.exchange.value], self.cli_args)
 
-            elif self.exchange == "binance" and "binance" in self.config:
-                binanceConfigParser(self, self.config["binance"], self.cli_args)
+            elif self.exchange == Exchange.BINANCE and self.exchange.value in self.config:
+                binanceConfigParser(self, self.config[self.exchange.value], self.cli_args)
 
-            elif self.exchange == "kucoin" and "kucoin" in self.config:
-                kucoinConfigParser(self, self.config["kucoin"], self.cli_args)
+            elif self.exchange == Exchange.KUCOIN and self.exchange.value in self.config:
+                kucoinConfigParser(self, self.config[self.exchange.value], self.cli_args)
 
-            elif self.exchange == "dummy" and "dummy" in self.config:
-                dummyConfigParser(self, self.config["dummy"], self.cli_args)
+            elif self.exchange == Exchange.DUMMY and self.exchange.value in self.config:
+                dummyConfigParser(self, self.config[self.exchange.value], self.cli_args)
 
             if (
                 not self.disabletelegram
@@ -180,9 +219,15 @@ class BotConfig:
             ):
                 telegram = self.config["telegram"]
                 self._chat_client = Telegram(telegram["token"], telegram["client_id"])
-                if "datafolder" in self.config["telegram"]:
+                if "datafolder" in telegram:
                     self.telegramdatafolder = telegram["datafolder"]
                 self.telegram = True
+
+            if "scanner" in self.config:
+                self.enableexitaftersell = self.config["scanner"]["enableexitaftersell"] if "enableexitaftersell" in self.config["scanner"] else False
+                self.enable_buy_next = True if "enable_buy_now" not in self.config["scanner"] else self.config["scanner"]["enable_buy_now"]
+                self.enable_atr72_pcnt = True if "enable_atr72_pcnt" not in self.config["scanner"] else self.config["scanner"]["enable_atr72_pcnt"]
+                self.enable_volume = False if "enable_volume" not in self.config["scanner"] else self.config["scanner"]["enable_volume"]
 
             if "logger" in self.config:
                 loggerConfigParser(self, self.config["logger"])
@@ -193,9 +238,9 @@ class BotConfig:
                 self.logfile == "/dev/null"
 
         else:
-            if self.exchange == "binance":
+            if self.exchange == Exchange.BINANCE:
                 binanceConfigParser(self, None, self.cli_args)
-            elif self.exchange == "kucoin":
+            elif self.exchange == Exchange.KUCOIN:
                 kucoinConfigParser(self, None, self.cli_args)
             else:
                 coinbaseProConfigParser(self, None, self.cli_args)
@@ -204,40 +249,27 @@ class BotConfig:
             self.fileloglevel = "NOTSET"
             self.logfile == "/dev/null"
 
-        Logger.configure(
-            filelog=self.filelog,
-            logfile=self.logfile,
-            fileloglevel=self.fileloglevel,
-            consolelog=self.consolelog,
-            consoleloglevel=self.consoleloglevel,
-        )
 
-    def _set_exchange(self, exchange: str = None) -> str:
-        valid_exchanges = ["coinbasepro", "binance", "kucoin", "dummy"]
+    def _set_exchange(self, exchange: str = None) -> Exchange:
 
         if self.cli_args["exchange"] is not None:
-            exchange = self.cli_args["exchange"]
+            exchange = Exchange(self.cli_args["exchange"])
 
-        if exchange and exchange in valid_exchanges:
-            return exchange
-
+        if isinstance(exchange, str):
+            exchange = Exchange(exchange)
+        
         if not exchange:
-            if ("coinbasepro" or "api_pass") in self.config:
-                exchange = "coinbasepro"
-            elif "binance" in self.config:
-                exchange = "binance"
-            elif "kucoin" in self.config:
-                exchange = "kucoin"
+            if (Exchange.COINBASEPRO.value or "api_pass") in self.config:
+                exchange = Exchange.COINBASEPRO
+            elif Exchange.BINANCE.value in self.config:
+                exchange = Exchange.BINANCE
+            elif Exchange.KUCOIN.value in self.config:
+                exchange = Exchange.KUCOIN
             else:
-                exchange = "dummy"
-
-        if exchange not in valid_exchanges:
-            raise TypeError(
-                f"Invalid exchange: {exchange}. Valid choices: {valid_exchanges}"
-            )
+                exchange = Exchange.DUMMY
         return exchange
 
-    def _set_default_api_info(self, exchange: str = "dummy") -> tuple:
+    def _set_default_api_info(self, exchange: Exchange = Exchange.DUMMY) -> tuple:
         conf = {
             "binance": {
                 "api_url": "https://api.binance.com",
@@ -258,7 +290,7 @@ class BotConfig:
                 "api_key": "00000000000000000000000000000000",
                 "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
                 "api_passphrase": "00000000000",
-                "market": "BTC-GBP"
+                "market": "BTC-GBP",
             },
             "dummy": {
                 "api_url": "https://api.pro.coinbase.com",
@@ -269,11 +301,11 @@ class BotConfig:
             },
         }
         return (
-            conf[exchange]["api_url"],
-            conf[exchange]["api_key"],
-            conf[exchange]["api_secret"],
-            conf[exchange]["api_passphrase"],
-            conf[exchange]["market"],
+            conf[exchange.value]["api_url"],
+            conf[exchange.value]["api_key"],
+            conf[exchange.value]["api_secret"],
+            conf[exchange.value]["api_passphrase"],
+            conf[exchange.value]["market"],
         )
 
     def getVersionFromREADME(self) -> str:
@@ -328,7 +360,9 @@ class BotConfig:
         )
         parser.add_argument("--live", type=int, help="live=1, test=0")
         parser.add_argument(
-            "--market", type=str, help="coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc."
+            "--market",
+            type=str,
+            help="coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc.",
         )
         parser.add_argument(
             "--sellatloss", type=int, help="toggle if bot should sell at a loss"
@@ -390,6 +424,11 @@ class BotConfig:
             help="Use the config file at the given location. e.g 'myconfig.json'",
         )
         parser.add_argument(
+            "--api_key_file",
+            type=str,
+            help="Use the API key file at the given location. e.g 'myapi.key'",
+        )
+        parser.add_argument(
             "--logfile",
             type=str,
             help="Use the log file at the given location. e.g 'mymarket.log'",
@@ -441,6 +480,21 @@ class BotConfig:
             "--statdetail",
             action="store_true",
             help="display detail of completed transactions for a given market",
+        )
+        parser.add_argument(
+            "--simresultonly",
+            action="store_true",
+            help="show simulation result only",
+        )
+        parser.add_argument(
+            "--telegramtradesonly",
+            action="store_true",
+            help="Toggle Telegram trades only output"
+        )
+        parser.add_argument(
+            "--disabletelegramerrormsgs",
+            action="store_true",
+            help="Disable Telegram error message output"
         )
 
         # disable defaults
@@ -503,11 +557,13 @@ class BotConfig:
             help="binance exchange api recvWindow, integer between 5000 and 60000",
         )
         parser.add_argument(
-            "--enableml", action="store_true", help="Enable Machine Learning E.g. seasonal ARIMA model for predictions"
+            "--enableml",
+            action="store_true",
+            help="Enable Machine Learning E.g. seasonal ARIMA model for predictions",
         )
-        parser.add_argument(
-            "--websocket", action="store_true", help="Enable websocket"
-        )
+        parser.add_argument("--websocket", action="store_true", help="Enable websocket")
+        parser.add_argument("--logbuysellinjson", action="store_true", help="Enable logging orders in json format")
+        parser.add_argument("--startmethod", type=str, help="Enable logging orders in json format")
 
         # pylint: disable=unused-variable
         args, unknown = parser.parse_known_args()

@@ -1,6 +1,6 @@
 [![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg) [![Tests](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)
 
-# Python Crypto Bot v4.2.1 (pycryptobot)
+# Python Crypto Bot v4.4.1 (pycryptobot)
 
 ## Join our chat on Telegram
 
@@ -414,6 +414,8 @@ Special sell cases:
     --disableprofitbankfibonaccihigh    Disable profit bank on fibonacci upper band
     --disableprofitbankreversal         Disable profit bank on strong candlestick reversal
     --disabletelegram                   Disable sending telegram messages
+    --disabletelegramerrormsgs          Disable sending error message to telegram (only trading info)
+    --telegramtradesonly                Toggle only sending trade messages to telegram - won't send smart switch and last action messages, will still send error messages unless disabling separately
     --disablelog                        Disable writing log entries
     --disabletracker                    Disable saving CSV on buy and sell events
 
@@ -448,6 +450,10 @@ Instead, please, create `binance.key` or `coinbase.key` or `kucoin.key` (or use 
     "api_key_file" : "binance.key"
 
 Once you have done that, "api_key" and "api_secret" can be safely removed from your config file and you're free to share your configs without worrying of leaked credentials.
+
+You may also specify API key file with a command line argument like:
+
+    --api_key_file binance.key
 
 ### binance.key / conbase.key / kucoin.key examples
 

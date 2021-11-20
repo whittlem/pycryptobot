@@ -140,19 +140,19 @@ class ConfigBuilder():
             if choice == '1':
                 while 'api_key' not in config['kucoin']:
                     api_key = input("What is your Kucoin API Key? ")
-                    p = re_compile(r"^[a-f0-9]{32,32}$")
+                    p = re_compile(r"^[a-f0-9]{24,24}$")
                     if p.match(api_key):
                         config['kucoin']['api_key'] = api_key
 
                 while 'api_secret' not in config['kucoin']:
                     api_secret = input("What is your Kucoin API Secret? ")
-                    p = re_compile(r"^[A-z0-9+\/]+==$")
+                    p = re_compile(r"^[A-z0-9-]{36,36}$")
                     if p.match(api_secret):
                         config['kucoin']['api_secret'] = api_secret
 
                 while 'api_passphrase' not in config['kucoin']:
                     api_passphrase = input("What is your Kucoin API Passphrase? ")
-                    p = re_compile(r"^[a-z0-9]{10,11}$")
+                    p = re_compile(r"^[A-z0-9#$%=@!{},`~&*()<>?.:;_|^/+\[\]]{8,32}$")
                     if p.match(api_passphrase):
                         config['kucoin']['api_passphrase'] = api_passphrase
             else:
