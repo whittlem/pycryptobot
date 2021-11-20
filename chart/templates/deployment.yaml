@@ -11,10 +11,11 @@ spec:
       {{- include "pycryptobot.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-    {{- with .Values.podAnnotations }}
       annotations:
+    {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
     {{- end }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") $ | sha256sum }}
       labels:
         {{- include "pycryptobot.selectorLabels" . | nindent 8 }}
     spec:

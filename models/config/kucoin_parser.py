@@ -5,13 +5,11 @@ import os.path
 import sys
 
 from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
+from models.exchange.Granularity import Granularity
 
 def isMarketValid(market) -> bool:
     p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
     return p.match(market) is not None
-
-def to_internal_granularity(granularity: str) -> int:
-    return {'1min': 60, '5min': 300, '15min': 900, '1hour': 3600, '6hour': 21600, '1day': 86400}[granularity]
 
 def parseMarket(market):
     if not isMarketValid(market):
@@ -53,9 +51,15 @@ def parser(app, Kucoin_config, args={}):
             else:
                 print ('migration failed (io error)', "\n")
 
-        if 'api_key_file' in Kucoin_config:
+        api_key_file = None
+        if 'api_key_file' in args and args['api_key_file'] is not None:
+            api_key_file = args['api_key_file']
+        elif 'api_key_file' in Kucoin_config:
+            api_key_file = Kucoin_config['api_key_file']
+
+        if api_key_file is not None:
             try :
-                with open( Kucoin_config['api_key_file'], 'r') as f :
+                with open( api_key_file, 'r') as f :
                     key = f.readline().strip()
                     secret = f.readline().strip()
                     password = f.readline().strip()
@@ -63,7 +67,7 @@ def parser(app, Kucoin_config, args={}):
                 Kucoin_config['api_secret'] = secret
                 Kucoin_config['api_passphrase'] = password
             except :
-                raise RuntimeError('Unable to read ' + Kucoin_config['api_key_file'])
+                raise RuntimeError(f"Unable to read {api_key_file}")
 
         if 'api_key' in Kucoin_config and 'api_secret' in Kucoin_config and \
                 'api_passphrase' in Kucoin_config and 'api_url' in Kucoin_config:
@@ -126,12 +130,7 @@ def parser(app, Kucoin_config, args={}):
         app.market = app.base_currency + '-' + app.quote_currency
 
     if 'granularity' in config and config['granularity'] is not None:
-        if isinstance(config['granularity'], str):
-            if config['granularity'] in ['1min', '5min', '15min', '1hour', '6hour', '1day']:
-                app.granularity = to_internal_granularity(config['granularity'])
-                app.smart_switch = 0
-            else:
-                app.granularity = int(config['granularity'])
-                app.smart_switch = 0
-            # else:
-            #     raise ValueError('granularity supplied is not supported.')
+        if isinstance(config['granularity'], str) and config['granularity'].isnumeric() is True:
+            app.granularity = Granularity.convert_to_enum(int(config['granularity']))
+        elif isinstance(config['granularity'], int):
+            app.granularity = Granularity.convert_to_enum(config['granularity'])

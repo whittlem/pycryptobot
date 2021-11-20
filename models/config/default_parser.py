@@ -1,5 +1,6 @@
 import re
-import sys
+
+from models.exchange.Granularity import Granularity
 
 
 def merge_config_and_args(exchange_config, args):
@@ -279,6 +280,13 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("sellatloss must be of type int")
 
+    if "simresultonly" in config:
+        if isinstance(config["simresultonly"], int):
+            if bool(config["simresultonly"]):
+                app.simresultonly = True
+        else:
+            raise TypeError("simresultonly must be of type int")
+
     if "sellatresistance" in config:
         if isinstance(config["sellatresistance"], int):
             if config["sellatresistance"] in [0, 1]:
@@ -363,6 +371,20 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("disabletelegram must be of type int")
 
+    if "telegramtradesonly" in config:
+        if isinstance(config["telegramtradesonly"], int):
+            if bool(config["telegramtradesonly"]):
+                app.telegramtradesonly = True
+        else:
+            raise TypeError("telegramtradesonly must be of type int")
+
+    if "disabletelegramerrormsgs" in config:
+        if isinstance(config["disabletelegramerrormsgs"], int):
+            if bool(config["disabletelegramerrormsgs"]):
+                app.disabletelegramerrormsgs = True
+        else:
+            raise TypeError("disabletelegramerrormsgs must be of type int")
+
     if "disablelog" in config:
         if isinstance(config["disablelog"], int):
             if bool(config["disablelog"]):
@@ -404,6 +426,13 @@ def defaultConfigParse(app, config):
                 app.enabletelegrambotcontrol = True
         else:
             raise TypeError("enabletelegrambotcontrol must be of type int")
+
+    if "enableimmediatebuy" in config:
+        if isinstance(config["enableimmediatebuy"], int):
+            if bool(config["enableimmediatebuy"]):
+                app.enableimmediatebuy = True
+        else:
+            raise TypeError("enableimmediatebuy must be of type int")
 
     # backward compatibility
     if "nosellatloss" in config:
@@ -454,3 +483,17 @@ def defaultConfigParse(app, config):
                 app.buymaxsize = config["buymaxsize"]
         else:
             raise TypeError("buymaxsize must be of type int or float")
+
+    if "logbuysellinjson" in config:
+        if isinstance(config["logbuysellinjson"], int):
+            if bool(config["logbuysellinjson"]):
+                app.logbuysellinjson = True
+        else:
+            raise TypeError("logbuysellinjson must be of type int")
+
+    if 'granularity' in config and config['granularity'] is not None:
+        app.smart_switch = 0
+        if isinstance(config['granularity'], str) and not config['granularity'].isnumeric() is True:
+            app.granularity = Granularity.convert_to_enum(config['granularity'])
+        else:
+            app.granularity = Granularity.convert_to_enum(int(config['granularity']))

@@ -5,12 +5,14 @@ import requests
 import sys
 import pandas
 
+from models.exchange.ExchangesEnum import Exchange
+
 sys.path.append(".")
 # pylint: disable=import-error
 from models.PyCryptoBot import PyCryptoBot
 from models.exchange.binance import AuthAPI, PublicAPI
 
-app = PyCryptoBot(exchange="binance")
+app = PyCryptoBot(exchange=Exchange.BINANCE)
 
 
 @responses.activate

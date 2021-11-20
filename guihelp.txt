@@ -1,0 +1,7 @@
+Pycryptobot Simple GUI V0.2
+
+This simple GUI works hand in hand with the Telegram control by reading the data as it's refreshed from the "telegram_data" folder.
+
+Start the gui.py after all the bots have been started. It will will take about 6-7 seconds to fully load and run through the initial scan. After that just sit back and watch the colors change in real time (+/- 5 second scan refresh interval).  
+
+Colors can be changed to by the menu by inputing simple color names or the #XXXXX (Hex color values). If want to change the the positive and negative color values you can manually edit them for now. Will be adding this as an option in the future.
