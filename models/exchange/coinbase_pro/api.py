@@ -828,6 +828,10 @@ class PublicAPI(AuthAPIBase):
         resp = self.authAPI("GET", f"products/{market}/ticker")
 
         if "time" in resp and "price" in resp:
+
+            """Check if milliseconds (%f) are more then 6 digits. If so truncate for datetime which doesn't support more"""
+            if len(resp["time"].split('.')[1]) > 7: resp["time"]=resp["time"][:26] + 'Z'
+
             return (
                 datetime.strptime(resp["time"], "%Y-%m-%dT%H:%M:%S.%fZ").strftime(
                     "%Y-%m-%d %H:%M:%S"
