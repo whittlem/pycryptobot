@@ -10,7 +10,7 @@ import sys
 import time
 import signal
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 
 from ..models.AppState import AppState
@@ -298,11 +298,11 @@ def executeJob(
 
     # use actual sim mode date to check smartchswitch
     if (
-            (last_api_call_datetime.seconds > 60 or _app.isSimulation())
-            and _app.getSmartSwitch() == 1
-            and _app.getGranularity() == Granularity.ONE_HOUR
-            and _app.is1hEMA1226Bull(current_sim_date, _websocket) is True
-            and _app.is6hEMA1226Bull(current_sim_date, _websocket) is True
+        (last_api_call_datetime.seconds > 60 or _app.isSimulation())
+        and _app.getSmartSwitch() == 1
+        and _app.getGranularity() == Granularity.ONE_HOUR
+        and _app.is1hEMA1226Bull(current_sim_date, _websocket) is True
+        and _app.is6hEMA1226Bull(current_sim_date, _websocket) is True
     ):
         if not _app.isSimulation() or (_app.isSimulation() and not _app.simResultOnly()):
             for _ in _app.cementApp.hook.run('event.granularity.change', GranularityChange(
@@ -320,11 +320,11 @@ def executeJob(
 
     # use actual sim mode date to check smartchswitch
     if (
-            (last_api_call_datetime.seconds > 60 or _app.isSimulation())
-            and _app.getSmartSwitch() == 1
-            and _app.getGranularity() == Granularity.FIFTEEN_MINUTES
-            and _app.is1hEMA1226Bull(current_sim_date, _websocket) is False
-            and _app.is6hEMA1226Bull(current_sim_date, _websocket) is False
+        (last_api_call_datetime.seconds > 60 or _app.isSimulation())
+        and _app.getSmartSwitch() == 1
+        and _app.getGranularity() == Granularity.FIFTEEN_MINUTES
+        and _app.is1hEMA1226Bull(current_sim_date, _websocket) is False
+        and _app.is6hEMA1226Bull(current_sim_date, _websocket) is False
     ):
         if not _app.isSimulation() or (_app.isSimulation() and not _app.simResultOnly()):
             for _ in _app.cementApp.hook.run('event.granularity.change', GranularityChange(
@@ -464,10 +464,10 @@ def executeJob(
             _technical_analysis = TechnicalAnalysis(trading_dataCopy)
 
         if (
-                _state.last_buy_size > 0
-                and _state.last_buy_price > 0
-                and price > 0
-                and _state.last_action == "BUY"
+            _state.last_buy_size > 0
+            and _state.last_buy_price > 0
+            and price > 0
+            and _state.last_action == "BUY"
         ):
             # update last buy high
             if price > _state.last_buy_high:
@@ -502,8 +502,8 @@ def executeJob(
                         _state.last_buy_price = exchange_last_buy["price"]
 
                     if (
-                            _app.getExchange() == Exchange.COINBASEPRO
-                            or _app.getExchange() == Exchange.COINBASEPRO
+                        _app.getExchange() == Exchange.COINBASEPRO
+                        or _app.getExchange() == Exchange.COINBASEPRO
                     ):
                         if _state.last_buy_fee != exchange_last_buy["fee"]:
                             _state.last_buy_fee = exchange_last_buy["fee"]
@@ -867,7 +867,7 @@ def executeJob(
                 if _state.last_action == "BUY":
                     # display support, resistance and fibonacci levels
                     if not _app.isSimulation() or (
-                            _app.isSimulation() and not _app.simResultOnly()
+                        _app.isSimulation() and not _app.simResultOnly()
                     ):
                         Logger.info(
                             _technical_analysis.printSupportResistanceFibonacciLevels(
@@ -1013,10 +1013,10 @@ def executeJob(
                         ):
                             _state.last_buy_size = _app.getBuyMaxSize()
 
-                        resp = _app.marketBuy(
-                            _app.getMarket(), _state.last_buy_size, _app.getBuyPercent()
-                        )
-                        if not resp.empty:
+                        try:
+                            resp = _app.marketBuy(
+                                _app.getMarket(), _state.last_buy_size, _app.getBuyPercent())
+
                             now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
                             for _ in _app.cementApp.hook.run('event.order.buy', BuyEvent(
                                     current_df_index=formatted_current_df_index,
@@ -1043,7 +1043,9 @@ def executeJob(
                             Logger.info(
                                 f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance)}"
                             )
-                        else:
+
+                            _state.last_api_call_datetime -= timedelta(seconds=60)
+                        except:
                             Logger.warning("Unable to place order")
                     else:
                         Logger.warning("Unable to place order, insufficient funds")
@@ -1125,6 +1127,8 @@ def executeJob(
                         },
                         ignore_index=True,
                     )
+
+                    _state.last_api_call_datetime -= timedelta(seconds=60)
 
                 if _app.shouldSaveGraphs():
                     tradinggraphs = TradingGraphs(_technical_analysis)
@@ -1236,6 +1240,7 @@ def executeJob(
                     if _app.enableexitaftersell and _app.startmethod not in ("standard", "telegram"):
                         sys.exit(0)
 
+                    _state.last_api_call_datetime -= timedelta(seconds=60)
                 # if not live
                 else:
                     margin, profit, sell_fee = calculate_margin(
@@ -1300,7 +1305,7 @@ def executeJob(
                         },
                         ignore_index=True,
                     )
-
+                    _state.last_api_call_datetime -= timedelta(seconds=60)
                 if _app.shouldSaveGraphs():
                     tradinggraphs = TradingGraphs(_technical_analysis)
                     ts = datetime.now().timestamp()
@@ -1564,10 +1569,7 @@ def executeJob(
         # if live but not websockets
         if not _app.disableTracker() and _app.isLive() and not _app.enableWebsocket():
             # update order tracker csv
-            if _app.getExchange() == Exchange.BINANCE:
-                account.saveTrackerCSV(_app.getMarket())
-            elif _app.getExchange() == Exchange.COINBASEPRO or _app.getExchange() == Exchange.KUCOIN:
-                account.saveTrackerCSV()
+            account.saveTrackerCSV(_app.getMarket())
 
         if _app.isSimulation():
             if _state.iterations < len(df):

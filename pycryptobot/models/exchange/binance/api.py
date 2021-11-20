@@ -986,7 +986,7 @@ class PublicAPI(AuthAPIBase):
             )
 
             df["market"] = market
-            df["granularity"] = granularity
+            df["granularity"] = granularity.to_short
 
             # binance epoch is too long
             df["open_time"] = df["open_time"] + 1
@@ -1393,7 +1393,7 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                         ],
                         data=[
                             [
-                                self.convert_time(k["t"]) - timedelta(hours=1),
+                                self.convert_time(k["t"]), # - timedelta(hours=1),
                                 msg["s"],
                                 k["i"],
                                 float(k["l"]),
@@ -1426,7 +1426,7 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                                 data=[],
                             )
 
-                    if k["i"] == self.granularity and k["x"] is True:
+                    if k["i"] == self.granularity.to_short and k["x"] is True:
                         # check if the current candle exists
                         candle_exists = (
                             (self.candles["date"] == df["date"].values[0])

@@ -71,7 +71,7 @@ class AppState:
         self.last_api_call_datetime = datetime.datetime.now() - datetime.timedelta(minutes=2)
         self.exchange_last_buy = None
 
-    def minimumOrderBase(self, base):
+    def minimumOrderBase(self, base, actionchk: bool=False):
         self.app.insufficientfunds = False
         if self.app.getExchange() == Exchange.BINANCE:
             df = self.api.getMarketInfoFilters(self.app.getMarket())
@@ -120,7 +120,9 @@ class AppState:
             if base > base_min:
                 return True
 
-        if base < base_min:
+        if actionchk:
+            return
+        elif base < base_min:
             if self.app.enableinsufficientfundslogging:
                 self.app.insufficientfunds = True
                 Logger.warning(f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})")
@@ -131,7 +133,7 @@ class AppState:
                 f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})"
             )
             
-    def minimumOrderQuote(self, quote):
+    def minimumOrderQuote(self, quote, actionchk: bool=False):
         self.app.insufficientfunds = False
         if self.app.getExchange() == Exchange.BINANCE:
             df = self.api.getMarketInfoFilters(self.app.getMarket())
@@ -190,7 +192,9 @@ class AppState:
             if (quote / price) > base_min:
                 return True
 
-        if (quote / price) < base_min:
+        if actionchk:
+            return
+        elif (quote / price) < base_min:
             if self.app.enableinsufficientfundslogging:
                 self.app.insufficientfunds = True
                 Logger.warning(f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})')
@@ -264,13 +268,9 @@ class AppState:
                 order_pairs
             )
 
-            # If Kucoin returns emoty response, on a shared trading account, could multiple buy same pair
-            if self.app.getExchange() == Exchange.KUCOIN and self.minimumOrderBase(base) and self.minimumOrderQuote(quote):
-                if self.last_action == "BUY":
-                    return
-                else:
-                    self.last_action = "WAIT"
-                    Logger.warning('Kucoin temporary state set to "WAIT".')
+            # If Kucoin returns empty response, on a shared trading account, could multiple buy same pair
+            if self.app.getExchange() == Exchange.KUCOIN and self.minimumOrderBase(base, actionchk=True) and self.minimumOrderQuote(quote, actionchk=True):
+                self.last_action = "BUY"
             elif order_pairs_normalised[0] < order_pairs_normalised[1]:
                 self.minimumOrderQuote(quote)
                 self.last_action = "SELL"

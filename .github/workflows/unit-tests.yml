@@ -24,7 +24,7 @@ jobs:
       uses: codespell-project/actions-codespell@master
       with:
         ignore_words_list: hist
-        skip: "*.json"
+        skip: "*.json,./tests/unit_tests/responses"
     - uses: actions/cache@v2
       with:
         path: ${{ env.pythonLocation }}
