@@ -36,6 +36,8 @@ class PyCryptoBot(App):
             'print',
             'pycryptobot.ext.ext_telegramnotifications',
             'pycryptobot.ext.ext_eventlogger',
+            'pycryptobot.ext.ext_telegrambot',
+            'pycryptobot.ext.ext_signalhandler',
         ]
 
         # configuration handler

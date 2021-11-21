@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from .EventInterface import EventAbstract
 from ..models.exchange.Granularity import Granularity
+from ..models.PyCryptoBot import PyCryptoBot
 
 from pycryptobot.models.exchange.ExchangesEnum import Exchange
 
@@ -12,6 +13,8 @@ class StartEvent(EventAbstract):
     market: str
     granularity: Granularity
     smartswitch: bool
+    pycryptobot_app: PyCryptoBot
+    websocket: None
     name: str = "StartEvent"
 
     def repr_json(self):

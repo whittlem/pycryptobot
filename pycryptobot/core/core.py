@@ -12,6 +12,7 @@ import signal
 import json
 from datetime import datetime, timedelta
 import pandas as pd
+from cement import CaughtSignal
 
 from ..models.AppState import AppState
 from ..models.exchange.Granularity import Granularity
@@ -63,6 +64,8 @@ def main(app):
                 market=app.getMarket(),
                 smartswitch=app.getSmartSwitch(),
                 granularity=app.getGranularity(),
+                pycryptobot_app=app,
+                websocket=_websocket,
         )):
             pass
 
@@ -80,7 +83,7 @@ def main(app):
 
         try:
             runApp(_websocket)
-        except (KeyboardInterrupt, SystemExit):
+        except (KeyboardInterrupt, SystemExit, CaughtSignal):
             raise
         except (BaseException, Exception) as e:  # pylint: disable=broad-except
             if app.autoRestart():

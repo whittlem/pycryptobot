@@ -1,3 +1,5 @@
+from typing import Dict, Any
+
 from cement import App
 
 from ..DTO.ChangeActionEvent import ChangeActionEvent
@@ -15,6 +17,21 @@ templates = {
     SellEvent.__name__: 'order_sell.jinja2',
     StateChange.__name__: 'state_change.jinja2',
 }
+
+
+def _trades_only(app: App) -> bool:
+    if app.config.has_section('telegram') \
+            and 'tradesonly' in app.config.keys('telegram') \
+            and app.config.get('telegram', 'tradesonly'):
+        return True
+    return False
+
+
+def filters(app: App):
+    return {
+        GranularityChange.__name__: _trades_only(app),
+        ChangeActionEvent.__name__: _trades_only(app),
+    }
 
 
 def _is_telegram_notifications_disabled(app: App) -> bool:
@@ -40,6 +57,7 @@ def _is_telegram_notifications_disabled(app: App) -> bool:
 
 
 class TelegramNotification():
+    enabled_filters: dict[str, bool]
     render = None
     _chat_client: Telegram = None
 
@@ -51,13 +69,17 @@ class TelegramNotification():
         self.render = app.render
         if token and client_id:
             self._chat_client = Telegram(token, client_id)
+        self.enabled_filters = filters(app)
 
     def notify_telegram(self, evt: EventInterface):
-        if self._chat_client is None and evt.__name__ not in templates.keys():
+        event_name = evt.__class__.__name__
+        if self._chat_client is None and event_name not in templates.keys():
+            return
+        if event_name in self.enabled_filters and self.enabled_filters[event_name] is True:
             return
 
         self._chat_client.send(
-            self.render(evt.repr_json(), templates[evt.__class__.__name__], handler='jinja2', out=None))
+            self.render(evt.repr_json(), templates[event_name], handler='jinja2', out=None))
 
 
 def load(app: App):

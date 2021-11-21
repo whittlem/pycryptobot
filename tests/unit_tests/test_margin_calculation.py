@@ -120,7 +120,7 @@ def test_calculate_negative_margin_on_binance_when_coin_price_under_1():
 
     expected_sell_fee = 0.07781384 # round(sell_size * sell_taker_fee, 8)
     expected_profit = -10.30756984 # round(sell_filled - buy_size, 8)
-    expected_margin = -11.7074 # round((expected_profit / buy_size) * 100, 8)
+    expected_margin = -11.7073 # round((expected_profit / buy_size) * 100, 8)
 
     actual_margin, actual_profit, actual_sell_fee = calculate_margin(buy_size, buy_filled, buy_price, buy_fee,
                                                                      sell_percent, sell_price, sell_fee, sell_taker_fee)
@@ -272,7 +272,7 @@ def test_binance_microtrading_USDTRY_01():
     sell_fee = 9.03267923
 
     expected_sell_fee = 9.03267923 # round(sell_size * sell_taker_fee, 8)
-    expected_profit = 2.4685 # round(sell_filled - buy_size, 8)
+    expected_profit = 2.4686 # round(sell_filled - buy_size, 8)
     expected_margin = 0.02736439 # round((expected_profit / buy_size) * 100, 8)
 
     actual_margin, actual_profit, actual_sell_fee = calculate_margin(buy_size, buy_filled, buy_price, buy_fee,
