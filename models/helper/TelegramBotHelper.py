@@ -211,7 +211,7 @@ class TelegramBotHelper:
             sort_columns.append("volume")
             ascend.append(False)
 
-        output.sort_values(by=sort_columns, ascending=ascend, inplace=False)
+        output = output.sort_values(by=sort_columns, ascending=ascend, inplace=False)
 
         output.to_json(
             os.path.join(
