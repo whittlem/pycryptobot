@@ -6,6 +6,10 @@ metadata:
     {{- include "pycryptobot.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  {{- if .Values.telegramBot.persistence.enabled }}
+  strategy:
+    type: Recreate
+  {{- end }}
   selector:
     matchLabels:
       {{- include "pycryptobot.selectorLabels" . | nindent 6 }}
@@ -32,15 +36,29 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.command }}
+          command:
+            {{- toYaml .Values.command | nindent 12 }}
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
             - name: config
               mountPath: /app/config.json
               subPath: config.json
+            - name: config
+              mountPath: /app/scanner.json
+              subPath: scanner.json
             - name: api-keys
               mountPath: /app/keys
               readOnly: true
+            {{- if .Values.telegramBot.persistence.enabled }}
+            - name: tg-data
+              mountPath: /app/telegram_data
+            {{- end }}
+            {{- if .Values.extraVolumeMounts }}
+              {{- toYaml .Values.extraVolumeMounts | nindent 8 }}
+            {{- end }}
       volumes:
         - name: config
           configMap:
@@ -48,6 +66,8 @@ spec:
             items:
             - key: config.json
               path: config.json
+            - key: scanner.json
+              path: scanner.json
         - name: api-keys
           secret:
             secretName: {{ include "pycryptobot.fullname" . }}
@@ -58,6 +78,14 @@ spec:
               path: coinbasepro.key
             - key: kucoin.key
               path: kucoin.key
+        {{- if .Values.telegramBot.persistence.enabled }}
+        - name: tg-data
+          persistentVolumeClaim:
+            claimName: {{ template "pycryptobot.fullname" . }}-telegram-data
+        {{- end }}
+        {{- if .Values.extraVolumes }}
+          {{- toYaml .Values.extraVolumes | nindent 8 }}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

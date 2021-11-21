@@ -895,6 +895,38 @@ class TelegramBot(TelegramBotBase):
                     f"Restarting {query.data.replace('restart_', '').replace('.json','')}",
                     parse_mode="HTML",
                 )
+    def startallbotsoninit(self) -> None:
+        jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
+        data = self.data
+        mBot = Telegram(self.token, client_id=self.config['telegram']['client_id'])
+        mBot.send("Starting telegram bot")
+        for file in jsonfiles:
+            if (
+                    ".json" in file
+                    and not file == "data.json"
+                    and not file.__contains__("output.json")
+            ):
+                self._read_data(file)
+                if 'botcontrol' in  self.data \
+                        and 'status' in self.data["botcontrol"] \
+                        and self.data["botcontrol"]["status"] == "active":
+                    pair = file[:-5]
+                    overrides = data["markets"][pair]["overrides"] if 'markets' in data \
+                                                                      and pair in data["markets"] \
+                                                                      and 'overrides' in data["markets"][pair] \
+                        else f"--startmethod scanner --exchange {self.data['exchange']} --market {pair}"
+                    if platform.system() == "Windows":
+                        os.system(
+                            f"start powershell -Command $host.UI.RawUI.WindowTitle = '{pair}' ; python3 pycryptobot.py --startmethod telegram {overrides}"
+                        )
+                    else:
+                        subprocess.Popen(
+                            f"python3 pycryptobot.py --startmethod telegram {overrides}", shell=True
+                        )
+
+                    mBot.send(f"<i>Starting {pair} crypto bot</i>", parsemode="HTML")
+                    sleep(10)
+
 
     def startallbotsrequest(self, update, context) -> None:
         """Ask which bot to start from start list (or all)"""
@@ -1564,7 +1596,7 @@ def main():
 
     # Get the dispatcher to register handlers
     dp = botconfig.updater.dispatcher
-
+    dp.run_async(botconfig.startallbotsoninit)
     # Information commands
     dp.add_handler(CommandHandler("help", botconfig.help))
     dp.add_handler(CommandHandler("margins", botconfig.marginrequest, Filters.all))
