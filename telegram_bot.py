@@ -416,8 +416,8 @@ class TelegramBot(TelegramBotBase):
             BotCommand("sell", "manual sell"),
             BotCommand("addexception", "add pair to scanner exception list"),
             BotCommand("removeexception", "remove pair from scanner exception list"),
-            BotCommand("startscanner", "start auto scan high volumne markets and start bots"),
-            BotCommand("stopscanner", "stop auto scan high volumne markets")
+            BotCommand("startscanner", "start auto scan high volume markets and start bots"),
+            BotCommand("stopscanner", "stop auto scan high volume markets")
         ]
 
         ubot = Bot(self.token)
@@ -450,8 +450,8 @@ class TelegramBot(TelegramBotBase):
         helptext += "<b>/sell</b> - <i>sell market pair on next iteration</i>\n"
         helptext += "<b>/buy</b> - <i>buy market pair on next iteration</i>\n\n"
         helptext += "<b>Market Scanner Commands</b>\n\n"
-        helptext += "<b>/startscanner</b> - <i>start auto scan high volumne markets and start bots</i>\n"
-        helptext += "<b>/stopscanner</b> - <i>stop auto scan high volumne markets</i>\n"
+        helptext += "<b>/startscanner</b> - <i>start auto scan high volume markets and start bots</i>\n"
+        helptext += "<b>/stopscanner</b> - <i>stop auto scan high volume markets</i>\n"
         helptext += "<b>/addexception</b> - <i>add pair to scanner exception list</i>\n"
         helptext += "<b>/removeexception</b> - <i>remove pair from scanner exception list</i>\n"
 
@@ -1017,38 +1017,26 @@ class TelegramBot(TelegramBotBase):
 
         if "allclose" in query.data:
             query.edit_message_text("Stopping bots")
-            jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
+
             telegram = Telegram(self.token, str(context._chat_id_and_data[0]))
-            for file in jsonfiles:
-                if (
-                    ".json" in file
-                    and not file == "data.json"
-                    and not file.__contains__("output.json")
-                ):
-                    self._read_data(file)
-                    if "margin" in self.data and self.data["margin"] == " ":
-                        if self.updatebotcontrol(file, "exit"):
-                            telegram.send(
-                                f"Stopping {file.replace('.json', '')} crypto bot"
-                            )
-                            sleep(1)
+            jsonfiles = self.GetActiveBotList()
+            for pair in jsonfiles:
+                self._read_data(f"{pair}.json")
+                if "margin" in self.data and self.data["margin"] == " ":
+                    if self.updatebotcontrol(f"{pair}.json", "exit"):
+                        telegram.send(f"Stopping {pair} crypto bot")
+                        sleep(1)
 
         elif "all" in query.data:
             query.edit_message_text("Stopping all bots")
 
-            jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
             telegram = Telegram(self.token, str(context._chat_id_and_data[0]))
-            for file in jsonfiles:
-                if (
-                    ".json" in file
-                    and not file == "data.json"
-                    and not file.__contains__("output.json")
-                ):
-                    if self.updatebotcontrol(file, "exit"):
-                        telegram.send(
-                            f"Stopping {file.replace('.json', '')} crypto bot"
-                        )
-                        sleep(1)
+            jsonfiles = self.GetActiveBotList()
+            for pair in jsonfiles:
+                if self.updatebotcontrol(f"{pair}.json", "exit"):
+                    telegram.send(f"Stopping {pair} crypto bot")
+                    sleep(1)
+
         else:
             if self.updatebotcontrol(str(query.data).replace("stop_", ""), "exit"):
                 query.edit_message_text(
@@ -1389,7 +1377,7 @@ class TelegramBot(TelegramBotBase):
                     if debug:
                         logger.info("%s", row)
 
-                    if self.maxbotcount > 0 and botcounter > self.maxbotcount:
+                    if self.maxbotcount > 0 and botcounter >= self.maxbotcount:
                         continue
                     
                     if self.enableleverage == False and (
@@ -1555,6 +1543,43 @@ class TelegramBot(TelegramBotBase):
             parse_mode="HTML",
         )
 
+    def RestartBots(self, update, context):
+        bots = self.GetActiveBotList()
+        for bot in bots:
+            self._read_data(f"{bot}.json")
+            # if "margin" in self.data and self.data["margin"] == " ":
+            self.updatebotcontrol(f"{bot}.json", "exit")
+        
+        allstopped = False
+        while allstopped == False:
+            if len(self.GetActiveBotList()) == 0:
+                allstopped = True
+
+        bList = {}
+
+        # bots = self.GetActiveBotList()
+        for bot in bots:
+            self._read_data(f"{bot}.json")
+            bList.update({bot : self.data["exchange"]})
+
+        for bot in bList:
+            self.pair = bot
+            self.exchange = bList[bot]
+            self.newbot_start(update, context)
+
+        print(bList)
+
+
+    def GetActiveBotList(self):
+        jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
+
+        i=len(jsonfiles)-1
+        while i >= 0:
+            if jsonfiles[i] == "data.json" or jsonfiles[i].__contains__("output.json"):
+                jsonfiles.pop(i)
+            i -= 1
+
+        return [x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles]
 
 def main():
     """Start the bot."""
@@ -1593,6 +1618,8 @@ def main():
     dp.add_handler(CommandHandler("cleandata", botconfig.cleandata, Filters.text))
 
     dp.add_handler(CommandHandler("removeexception", botconfig.ExceptionRemove, Filters.text))
+
+    dp.add_handler(CommandHandler("reboot", botconfig.RestartBots))
 
     # Response to Question handler
     dp.add_handler(CallbackQueryHandler(botconfig.responses))
