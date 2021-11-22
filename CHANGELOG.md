@@ -8,6 +8,10 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [4.4.2] - 2021-11-21
+
+- Telegram scanner bugfix
+
 ## [4.4.1] - 2021-11-16
 
 - Fix for binance candles not incrementing with websockets
