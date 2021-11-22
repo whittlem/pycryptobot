@@ -8,11 +8,18 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-## [4.4.1] - 2021-11-12
+## [4.4.2] - 2021-11-21
+
+- Telegram scanner bugfix
+
+## [4.4.1] - 2021-11-16
 
 - Fix for binance candles not incrementing with websockets
 - Add bypass FileNotFoundException for pairs.json file
 - Fix for double buys when using websockets
+- Fix bug for Tracker CSV function
+- Fix missing code for Telegram output options
+- Add timestamp to Sim buy message output for Telegram
 
 ## [4.4.0] - 2021-11-01
 
@@ -22,10 +29,10 @@ Upgrade library dependencies (if required):
 - Add not to create telegram_data folder when running sims
 - Add /startscanner to TG Bot to scan marks and start bots (hourly schedule set in config)
 - Add /stopscanner to TG Bot to stop scanning markets
-- Add /addexception to TG Bot to add pair to exceptions list so wont be started by scanner process
+- Add /addexception to TG Bot to add pair to exceptions list so won't be started by scanner process
 - Add /removeexception to TG Bot to remove a pair from exceptions list
 - Add multiple market scanning to scanner.py
-- Add exception list so that scanner.py doesnt pick a pair your dont want traded
+- Add exception list so that scanner.py doesn't pick a pair your don't want traded
 
 ## [4.3.3] - 2021-11-08
 
