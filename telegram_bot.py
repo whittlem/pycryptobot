@@ -1545,29 +1545,26 @@ class TelegramBot(TelegramBotBase):
 
     def RestartBots(self, update, context):
         bots = self.GetActiveBotList()
+
+        bList = {}
         for bot in bots:
             self._read_data(f"{bot}.json")
+            bList.update({bot : {"exchange" : self.data["exchange"], "startmethod" : self.data["botcontrol"]["startmethod"]}})
             # if "margin" in self.data and self.data["margin"] == " ":
             self.updatebotcontrol(f"{bot}.json", "exit")
-        
+
         allstopped = False
         while allstopped == False:
             if len(self.GetActiveBotList()) == 0:
                 allstopped = True
 
-        bList = {}
-
-        # bots = self.GetActiveBotList()
-        for bot in bots:
-            self._read_data(f"{bot}.json")
-            bList.update({bot : self.data["exchange"]})
-
+        update.message.text = "Auto_Yes"
         for bot in bList:
             self.pair = bot
-            self.exchange = bList[bot]
-            self.newbot_start(update, context)
+            self.exchange = bList[bot]["exchange"]
+            self.newbot_start(update, context, bList[bot]["startmethod"])
 
-        print(bList)
+        # print(bList)
 
 
     def GetActiveBotList(self):
