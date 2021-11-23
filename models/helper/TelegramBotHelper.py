@@ -186,7 +186,9 @@ class TelegramBotHelper:
                 self._write_data()
 
     def removeactivebot(self) -> None:
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
+        if not self.app.isSimulation() \
+                and self.app.enableTelegramBotControl() \
+                and (not self.app.disableCleanFilesOnExit() or self.checkbotcontrolstatus() == "exit"):
             self.deletemargin()
 
     def save_scanner_output(self, exchange, quote, output: DataFrame) -> None:
