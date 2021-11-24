@@ -160,6 +160,7 @@ class TelegramBot(TelegramBotBase):
     """
 
     def __init__(self):
+        self.restart_on_init = False
         self.token = ""
         self.config_file = ""
 
@@ -184,10 +185,17 @@ class TelegramBot(TelegramBotBase):
             help="Use the datafolder at the given location, useful for multi bots running in different folders",
             default="",
         )
+        parser.add_argument(
+            "--restart-on-init",
+            action="store_true",
+            help="Restart all pycryptobots on starting Telegram bot",
+            default=False,
+        )
 
         args = parser.parse_args()
 
         self.config_file = args.config_file
+        self.restart_on_init = args.restart_on_init
 
         with open(os.path.join(self.config_file), "r", encoding="utf8") as json_file:
             self.config = json.load(json_file)
@@ -1600,7 +1608,8 @@ def main():
 
     # Get the dispatcher to register handlers
     dp = botconfig.updater.dispatcher
-    dp.run_async(botconfig.startallbotsoninit)
+    if botconfig.restart_on_init:
+        dp.run_async(botconfig.startallbotsoninit)
     # Information commands
     dp.add_handler(CommandHandler("help", botconfig.help))
     dp.add_handler(CommandHandler("margins", botconfig.marginrequest, Filters.all))
