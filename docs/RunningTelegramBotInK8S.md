@@ -13,7 +13,9 @@ command:
   - python3
   - -u
   - telegram_bot.py
+  - --restart-on-init
 ```
+Note: `--restart-on-init` is highly recommended to add because in other case some pairs will not have pycryptobots to run after pod restart   
 4. make sure you're allowing enough resources, eg:
 ```yaml
 resources:
