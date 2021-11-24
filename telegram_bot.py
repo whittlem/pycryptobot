@@ -1380,6 +1380,7 @@ class TelegramBot(TelegramBotBase):
             )
             return
         # subprocess.Popen("python3 scanner.py", shell=True)
+        running_bots = 0
         if debug == False:
             if scanmarkets:
                 update.message.reply_text(
@@ -1400,9 +1401,12 @@ class TelegramBot(TelegramBotBase):
                     if "margin" in self.data and self.data["margin"] == " ":
                         if self.updatebotcontrol(file, "exit"):
                             sleep(5)
-        
+                        else:
+                            running_bots += 1
         self._read_data()
-        botcounter = 0
+        non_scanner_bots = len(self.data["markets"]) if "markets" not in self.data else 0
+        botcounter = running_bots - non_scanner_bots if running_bots > non_scanner_bots else 0
+
         for ex in config:
             for quote in config[ex]["quote_currency"]:
                 update.message.reply_text(f"Starting {ex} ({quote}) bots...", parse_mode="HTML")
