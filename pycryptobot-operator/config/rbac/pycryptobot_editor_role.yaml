@@ -1,0 +1,24 @@
+# permissions for end users to edit pycryptobots.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: pycryptobot-editor-role
+rules:
+- apiGroups:
+  - charts.pycryptobot.org
+  resources:
+  - pycryptobots
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - charts.pycryptobot.org
+  resources:
+  - pycryptobots/status
+  verbs:
+  - get

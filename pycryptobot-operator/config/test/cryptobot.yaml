@@ -1,0 +1,12 @@
+---
+apiVersion: charts.pycryptobot.org/v1alpha1
+kind: PyCryptoBot
+metadata:
+  name: test
+spec:
+  telegramBot:
+    persistence:
+      enabled: true
+      existingClaimName: telegrambot-pycryptobot-telegram-data
+    existingConfig: telegrambot-pycryptobot
+    existingSecret: telegrambot-pycryptobot

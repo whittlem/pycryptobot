@@ -1,3 +1,4 @@
+{{- if not .Values.existingConfig }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -9,3 +10,6 @@ data:
 {{ .Values.config | indent 4 }}
   scanner.json: |-
 {{ .Values.scanner | indent 4 }}
+  operator.defaults.yaml: |
+{{ toYaml .Values.operatorDefaults | indent 4 }}
+{{- end }}

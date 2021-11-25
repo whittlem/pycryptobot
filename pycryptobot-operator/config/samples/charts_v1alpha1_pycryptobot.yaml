@@ -1,0 +1,66 @@
+apiVersion: charts.pycryptobot.org/v1alpha1
+kind: PyCryptoBot
+metadata:
+  name: pycryptobot-sample
+spec:
+  # Default values copied from <project_dir>/chart/values.yaml
+  affinity: {}
+  binance_key: |
+    0000000000000000000000000000000000000000000000000000000000000000
+    0000000000000000000000000000000000000000000000000000000000000000
+  coinbasepro_key: |
+    0000000000000000000000000000000000000000000000000000000000000000
+    0000000000000000000000000000000000000000000000000000000000000000
+    0000000000000000000000000000000000000000000000000000000000000000
+  command: []
+  config: |
+    {
+        "api_url" : "https://api.pro.coinbase.com",
+        "api_key_file" : "/app/keys/coinbase.key"
+        "config" : {
+            "cryptoMarket" : "BTC",
+            "fiatMarket" : "GBP",
+            "live" : 1,
+            "sellatloss" : 0
+        }
+    }
+  extraVolumeMounts: []
+  extraVolumes: []
+  fullnameOverride: ""
+  image:
+    pullPolicy: Always
+    repository: ghcr.io/whittlem/pycryptobot/pycryptobot
+    tag: latest
+  imagePullSecrets: []
+  kucoin_key: |-
+    0000000000000000000000000000000000000000000000000000000000000000
+    0000000000000000000000000000000000000000000000000000000000000000
+    0000000000000000000000000000000000000000000000000000000000000000
+  nameOverride: ""
+  nodeSelector: {}
+  podAnnotations: {}
+  podSecurityContext: {}
+  replicaCount: 1
+  resources: {}
+  scanner: |
+    {
+        "coinbasepro" : {
+            "quote_currency": ["GBP"]
+        },
+        "binance" : {
+            "quote_currency": ["USDT"]
+        }
+    }
+  securityContext: {}
+  serviceAccount:
+    annotations: {}
+    create: true
+    name: ""
+  telegramBot:
+    persistence:
+      accessMode: ReadWriteOnce
+      enabled: false
+      size: 1Gi
+  tolerations: []
+  
+  

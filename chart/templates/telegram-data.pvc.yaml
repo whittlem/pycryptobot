@@ -1,4 +1,4 @@
-{{- if .Values.telegramBot.persistence.enabled }}
+{{- if and .Values.telegramBot.persistence.enabled (not .Values.telegramBot.persistence.existingClaimName) }}
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:

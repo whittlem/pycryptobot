@@ -22,7 +22,7 @@ serviceAccount:
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""
-
+annotations: {}
 podAnnotations: {}
 
 podSecurityContext: {}
@@ -54,6 +54,7 @@ telegramBot:
   persistence:
     enabled: false
     accessMode: ReadWriteOnce
+    existingClaimName:
     size: 1Gi
 
 nodeSelector: {}
@@ -62,6 +63,8 @@ tolerations: []
 
 affinity: {}
 
+existingConfig:
+existingSecret:
 config: >
   {
       "api_url" : "https://api.pro.coinbase.com",
@@ -96,3 +99,8 @@ kucoin_key: |
   0000000000000000000000000000000000000000000000000000000000000000
   0000000000000000000000000000000000000000000000000000000000000000
   0000000000000000000000000000000000000000000000000000000000000000
+  
+
+operatorDefaults:
+useK8SOperator: false
+isJob: false

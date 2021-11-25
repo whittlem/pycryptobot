@@ -17,6 +17,7 @@ on:
 
 env:
   IMAGE_NAME: pycryptobot
+  OPERATOR_IMAGE_NAME: pycryptobot-operator
 
 jobs:
   # Build and push image to GitHub Packages.
@@ -30,6 +31,11 @@ jobs:
 
       - name: Build image
         run: docker build . --file Dockerfile --tag $IMAGE_NAME
+
+      - name: Build operator image
+        run: |
+          cd pycryptobot-operator
+          make docker-build IMG=$OPERATOR_IMAGE_NAME
 
       - name: Log into registry
         run: echo "${{ secrets.PACKAGE_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -51,4 +57,23 @@ jobs:
           echo VERSION=$VERSION
 
           docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
+
+      - name: Push Operator image
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository }}/$OPERATOR_IMAGE_NAME
+
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "main" ] && VERSION=latest
+
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+
+          docker tag $OPERATOR_IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION

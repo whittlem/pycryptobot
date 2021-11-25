@@ -1,0 +1,7 @@
+# Use the 'create api' subcommand to add watches to this file.
+- group: charts.pycryptobot.org
+  version: v1alpha1
+  kind: PyCryptoBot
+  chart: helm-charts/pycryptobot
+  reconcilePeriod: 1h
+#+kubebuilder:scaffold:watch

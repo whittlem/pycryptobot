@@ -1,10 +1,20 @@
+{{- if .Values.isJob }}
+apiVersion: batch/v1
+kind: Job
+{{- else }}
 apiVersion: apps/v1
 kind: Deployment
+{{- end }}
 metadata:
   name: {{ include "pycryptobot.fullname" . }}
   labels:
     {{- include "pycryptobot.labels" . | nindent 4 }}
+  annotations:
+    {{- with .Values.annotations }}
+        {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
+  {{- if not .Values.isJob }}
   replicas: {{ .Values.replicaCount }}
   {{- if .Values.telegramBot.persistence.enabled }}
   strategy:
@@ -12,7 +22,11 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "pycryptobot.selectorLabels" . | nindent 6 }}
+        {{- include "pycryptobot.selectorLabels" . | nindent 6 }}
+  {{- else }}
+  parallelism: 1
+  completions: 1
+  {{- end }}
   template:
     metadata:
       annotations:
@@ -23,6 +37,9 @@ spec:
       labels:
         {{- include "pycryptobot.selectorLabels" . | nindent 8 }}
     spec:
+      {{- if .Values.isJob }}
+      restartPolicy: OnFailure
+      {{- end }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -52,6 +69,9 @@ spec:
             - name: api-keys
               mountPath: /app/keys
               readOnly: true
+            - name: config
+              mountPath: /app/operator.defaults.yaml
+              subPath: operator.defaults.yaml
             {{- if .Values.telegramBot.persistence.enabled }}
             - name: tg-data
               mountPath: /app/telegram_data
@@ -62,15 +82,17 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: {{ include "pycryptobot.fullname" . }}
+            name: {{ default (include "pycryptobot.fullname" .) .Values.existingConfig }}
             items:
             - key: config.json
               path: config.json
             - key: scanner.json
               path: scanner.json
+            - key: operator.defaults.yaml
+              path: operator.defaults.yaml
         - name: api-keys
           secret:
-            secretName: {{ include "pycryptobot.fullname" . }}
+            secretName: {{ default (include "pycryptobot.fullname" .) .Values.existingSecret }}
             items:
             - key: binance.key
               path: binance.key
@@ -81,7 +103,11 @@ spec:
         {{- if .Values.telegramBot.persistence.enabled }}
         - name: tg-data
           persistentVolumeClaim:
+            {{- if .Values.telegramBot.persistence.existingClaimName }}
+            claimName: {{ .Values.telegramBot.persistence.existingClaimName }}
+            {{- else }}
             claimName: {{ template "pycryptobot.fullname" . }}-telegram-data
+            {{- end }}
         {{- end }}
         {{- if .Values.extraVolumes }}
           {{- toYaml .Values.extraVolumes | nindent 8 }}
