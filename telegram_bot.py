@@ -988,9 +988,18 @@ class TelegramBot(TelegramBotBase):
                                                                       and pair in data["markets"] \
                                                                       and 'overrides' in data["markets"][pair] \
                         else f"--startmethod scanner --exchange {self.data['exchange']} --market {pair}"
-                    self._start_process(pair, f"python3 pycryptobot.py --startmethod telegram {overrides}")
-                    mBot.send(f"<i>Starting {pair} crypto bot</i>", parsemode="HTML")
-                    sleep(10)
+                    done = False
+                    retries = 0
+                    while not done or retries < 10:
+                        try:
+                            self._start_process(pair, f"python3 pycryptobot.py --startmethod telegram {overrides}")
+                            mBot.send(f"<i>Starting {pair} crypto bot</i>", parsemode="HTML")
+                            done = True
+                        except Exception as e:
+                            print(repr(e))
+                            retries += 1
+                        finally:
+                            sleep(10)
 
     def startallbotsrequest(self, update, context) -> None:
         """Ask which bot to start from start list (or all)"""
