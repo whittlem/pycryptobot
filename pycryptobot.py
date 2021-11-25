@@ -1843,7 +1843,7 @@ def main():
                 pass
         Logger.critical(repr(e))
         # pylint: disable=protected-access
-        os._exit(0)
+        os._exit(1)
         # raise
 
 
