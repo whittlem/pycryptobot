@@ -26,7 +26,7 @@ resources:
    cpu: 2
    memory: 2.5Gi
 ```
-5. It's highly recommend to set `"disablecleanfilesonexit": 1`, in other case if pod gracefully restart you'll lose running crypto-bots
+5. It's highly recommend to set `"disablecleanfilesonexit": 1`(in config.json -> marker(binance|coinbasepro) section), in other case if pod gracefully restart you'll lose running crypto-bots
 
 
 ## Running Telegram bot with K8S operator
