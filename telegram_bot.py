@@ -990,7 +990,7 @@ class TelegramBot(TelegramBotBase):
                         else f"--startmethod scanner --exchange {self.data['exchange']} --market {pair}"
                     done = False
                     retries = 0
-                    while not done or retries < 10:
+                    while not done and retries < 10:
                         try:
                             self._start_process(pair, f"python3 pycryptobot.py --startmethod telegram {overrides}")
                             mBot.send(f"<i>Starting {pair} crypto bot</i>", parsemode="HTML")
