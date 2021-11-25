@@ -34,10 +34,11 @@ K8S Operator is build on top of [Operator SDK](https://sdk.operatorframework.io/
 It's required to have RWX(ReadWriteMany) Persistent Volume for correct working, telegram-bot is controlling pycryptobots with `telegram_data` folder so this folder should be shared across all pods 
 
 1. Build and deploy operator
-   1. if you plan to use your own image run ```make docker-build docker-push IMG=gcr.io/your-project/pycryptobot-operator:latest``` (it supports any docker registry)
-   2. install operator, `make install deploy IMG=gcr.io/your-project/pycryptobot-operator:latest`
-   3. check if CRD is created, run `kubectl get crd | grep pycryptobot`
-   4. check if operator manager is running `kubectl get pod -A -l control-plane=controller-manager`
+   1. go to `pycryptobot-operator` folder, `cd pycryptobot-operator`
+   2. if you plan to use your own image run ```make docker-build docker-push IMG=gcr.io/your-project/pycryptobot-operator:latest``` (it supports any docker registry)
+   3. install operator, `make install deploy IMG=gcr.io/your-project/pycryptobot-operator:latest`
+   4. check if CRD is created, run `kubectl get crd | grep pycryptobot`
+   5. check if operator manager is running `kubectl get pod -A -l control-plane=controller-manager`
 2. Deploy Telegram bot as described above with few changes:
    1. Change command to:
    ```yaml 
