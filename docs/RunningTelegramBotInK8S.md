@@ -28,6 +28,64 @@ resources:
 ```
 5. It's highly recommend to set `"disablecleanfilesonexit": 1`(in config.json -> marker(binance|coinbasepro) section), in other case if pod gracefully restart you'll lose running crypto-bots
 
+### Example values file:
+```yaml
+config: >
+  {
+    "binance": {
+      "api_url": "https://api.binance.com",
+      "config": {
+        ...
+        "enabletelegrambotcontrol": 1,
+        "disablecleanfilesonexit": 1
+      },
+      "api_key_file": "/app/keys/binance.key"
+    },
+    "telegram": {
+      "token": "...",
+      "client_id": "...",
+      "user_id": "..."
+    },
+    "scanner": {
+      "atr72_pcnt" : 3.0,
+      "enableexitaftersell" : 1,
+      "enableleverage" : 0,
+      "maxbotcount" : 10,
+      "autoscandelay" : 1,
+      "enable_buy_next": 1
+    }
+  }
+scanner: >
+  {
+      "binance" : {
+          "quote_currency": ["USDT"]
+      }
+  }
+binance_key: |
+  XXXXXXXXxXXXXXXXXXXXXXX
+  YYYYYYYYYYYYYYYYYYYYYYY
+  
+telegramBot:
+  persistence:
+    enabled: true
+    storageClass: some-storage-class
+    accessMode: ReadWriteMany|ReadWriteOnce
+command:
+  - python3
+  - -u
+  - telegram_bot.py
+  - --restart-on-init
+
+resources: #For approx 20 bots
+ requests:
+   cpu: 500m
+   memory: 1Gi
+ limits:
+   cpu: 2
+   memory: 3.5Gi
+```
+
+
 
 ## Running Telegram bot with K8S operator
 K8S Operator is build on top of [Operator SDK](https://sdk.operatorframework.io/docs/building-operators/helm/tutorial/)
@@ -64,3 +122,77 @@ It's required to have RWX(ReadWriteMany) Persistent Volume for correct working, 
         existingSecret: telegrambot-test-pycryptobot #Recomended be the same secret that TG bod is using
     useK8SOperator: true
     ```
+   
+### Example values file:
+```yaml
+config: >
+  {
+    "binance": {
+      "api_url": "https://api.binance.com",
+      "config": {
+        ...
+        "enabletelegrambotcontrol": 1,
+        "disablecleanfilesonexit": 1
+      },
+      "api_key_file": "/app/keys/binance.key"
+    },
+    "telegram": {
+      "token": "...",
+      "client_id": "...",
+      "user_id": "..."
+    },
+    "scanner": {
+      "atr72_pcnt" : 3.0,
+      "enableexitaftersell" : 1,
+      "enableleverage" : 0,
+      "maxbotcount" : 10,
+      "autoscandelay" : 1,
+      "enable_buy_next": 1
+    }
+  }
+scanner: >
+  {
+      "binance" : {
+          "quote_currency": ["USDT"]
+      }
+  }
+binance_key: |
+  XXXXXXXXxXXXXXXXXXXXXXX
+  YYYYYYYYYYYYYYYYYYYYYYY
+  
+telegramBot:
+  persistence:
+    enabled: true
+    storageClass: some-storage-class
+    accessMode: ReadWriteMany # important to use RWX
+command:
+  - python3
+  - -u
+  - telegram_bot.py
+  - --restart-on-init
+  - --use-k8s-operator
+
+
+resources:
+ requests:
+   cpu: 50m
+   memory: 100Mi
+   
+operatorDefaults:
+  metadata:
+    namespace: cryptobot
+  spec:
+    telegramBot:
+      persistence:
+        enabled: true
+        existingClaimName: telegrambot-pycryptobot-telegram-data
+    existingConfig: telegrambot-pycryptobot
+    existingSecret: telegrambot-pycryptobot
+    image: #Optionaly you can use your own image
+      repository: gcr.io/<repository>/pycryptobot
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+useK8SOperator: true
+```
