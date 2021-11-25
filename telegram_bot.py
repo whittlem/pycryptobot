@@ -15,6 +15,7 @@ import subprocess
 import platform
 import re
 import urllib.request
+from json import JSONDecodeError
 from sched import scheduler
 
 import yaml
@@ -979,27 +980,34 @@ class TelegramBot(TelegramBotBase):
                     and not file == "data.json"
                     and not file.__contains__("output.json")
             ):
-                self._read_data(file)
-                if 'botcontrol' in self.data \
-                        and 'status' in self.data["botcontrol"] \
-                        and self.data["botcontrol"]["status"] == "active":
-                    pair = file[:-5]
-                    overrides = data["markets"][pair]["overrides"] if 'markets' in data \
-                                                                      and pair in data["markets"] \
-                                                                      and 'overrides' in data["markets"][pair] \
-                        else f"--startmethod scanner --exchange {self.data['exchange']} --market {pair}"
-                    done = False
-                    retries = 0
-                    while not done and retries < 10:
-                        try:
-                            self._start_process(pair, f"python3 pycryptobot.py --startmethod telegram {overrides}")
-                            mBot.send(f"<i>Starting {pair} crypto bot</i>", parsemode="HTML")
-                            done = True
-                        except Exception as e:
-                            print(repr(e))
-                            retries += 1
-                        finally:
-                            sleep(10)
+                try:
+                    broken_config = False
+                    try:
+                        self._read_data(file)
+                    except JSONDecodeError:
+                        broken_config = True
+                    if broken_config or ('botcontrol' in self.data
+                                         and 'status' in self.data["botcontrol"]
+                                         and self.data["botcontrol"]["status"] == "active"):
+                        pair = file[:-5]
+                        overrides = data["markets"][pair]["overrides"] if 'markets' in data \
+                                                                          and pair in data["markets"] \
+                                                                          and 'overrides' in data["markets"][pair] \
+                            else f"--startmethod scanner --exchange {self.data['exchange']} --market {pair}"
+                        done = False
+                        retries = 0
+                        while not done and retries < 10:
+                            try:
+                                self._start_process(pair, f"python3 pycryptobot.py --startmethod telegram {overrides}")
+                                mBot.send(f"<i>Starting {pair} crypto bot</i>", parsemode="HTML")
+                                done = True
+                            except Exception as e:
+                                print(repr(e))
+                                retries += 1
+                            finally:
+                                sleep(10)
+                except Exception as e:
+                    print(f"Issue with {file}: {repr(e)}")
 
     def startallbotsrequest(self, update, context) -> None:
         """Ask which bot to start from start list (or all)"""
