@@ -962,7 +962,7 @@ class TelegramBot(TelegramBotBase):
                         )
                     else:
                         subprocess.Popen(
-                            f"lxterminal -c 'python3 pycryptobot.py --startmethod telegram {overrides}'", shell=True
+                            f"python3 pycryptobot.py --startmethod telegram {overrides}", shell=True
                         )
                     mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
                     mBot.send(f"<i>Starting {pair} crypto bot</i>", parsemode="HTML")
@@ -977,7 +977,7 @@ class TelegramBot(TelegramBotBase):
                 )
                 # os.system(f"start powershell -NoExit -Command $host.UI.RawUI.WindowTitle = '{query.data.replace('start_', '')}' ; python3 pycryptobot.py {overrides}")
             else:
-                subprocess.Popen(f"lxterminal -c 'python3 pycryptobot.py --startmethod telegram {overrides}'", shell=True)
+                subprocess.Popen(f"python3 pycryptobot.py --startmethod telegram {overrides}", shell=True)
             query.edit_message_text(
                 f"<i>Starting {str(query.data).replace('start_', '')} crypto bots</i>",
                 parse_mode="HTML",
@@ -1185,7 +1185,7 @@ class TelegramBot(TelegramBotBase):
 
         def StartLinuxProcess() -> None:
             subprocess.Popen(
-                    f"lxterminal -e 'python3 pycryptobot.py --startmethod {startmethod} --exchange {self.exchange} --market {self.pair} {self.overrides}'",
+                    f"python3 pycryptobot.py --startmethod {startmethod} --exchange {self.exchange} --market {self.pair} {self.overrides}",
                     shell=True,
                 )
 
