@@ -159,6 +159,7 @@ class TelegramBot(TelegramBotBase):
     """
 
     def __init__(self):
+        self.restart_on_init = False
         self.token = ""
         self.config_file = ""
 
@@ -183,10 +184,17 @@ class TelegramBot(TelegramBotBase):
             help="Use the datafolder at the given location, useful for multi bots running in different folders",
             default="",
         )
+        parser.add_argument(
+            "--restart-on-init",
+            action="store_true",
+            help="Restart all pycryptobots on starting Telegram bot",
+            default=False,
+        )
 
         args = parser.parse_args()
 
         self.config_file = args.config_file
+        self.restart_on_init = args.restart_on_init
 
         with open(os.path.join(self.config_file), "r", encoding="utf8") as json_file:
             self.config = json.load(json_file)
@@ -894,6 +902,38 @@ class TelegramBot(TelegramBotBase):
                     f"Restarting {query.data.replace('restart_', '').replace('.json','')}",
                     parse_mode="HTML",
                 )
+    def startallbotsoninit(self) -> None:
+        jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
+        data = self.data
+        mBot = Telegram(self.token, client_id=self.config['telegram']['client_id'])
+        mBot.send("Starting telegram bot")
+        for file in jsonfiles:
+            if (
+                    ".json" in file
+                    and not file == "data.json"
+                    and not file.__contains__("output.json")
+            ):
+                self._read_data(file)
+                if 'botcontrol' in  self.data \
+                        and 'status' in self.data["botcontrol"] \
+                        and self.data["botcontrol"]["status"] == "active":
+                    pair = file[:-5]
+                    overrides = data["markets"][pair]["overrides"] if 'markets' in data \
+                                                                      and pair in data["markets"] \
+                                                                      and 'overrides' in data["markets"][pair] \
+                        else f"--startmethod scanner --exchange {self.data['exchange']} --market {pair}"
+                    if platform.system() == "Windows":
+                        os.system(
+                            f"start powershell -Command $host.UI.RawUI.WindowTitle = '{pair}' ; python3 pycryptobot.py --startmethod telegram {overrides}"
+                        )
+                    else:
+                        subprocess.Popen(
+                            f"python3 pycryptobot.py --startmethod telegram {overrides}", shell=True
+                        )
+
+                    mBot.send(f"<i>Starting {pair} crypto bot</i>", parsemode="HTML")
+                    sleep(10)
+
 
     def startallbotsrequest(self, update, context) -> None:
         """Ask which bot to start from start list (or all)"""
@@ -1335,6 +1375,7 @@ class TelegramBot(TelegramBotBase):
             )
             return
         # subprocess.Popen("python3 scanner.py", shell=True)
+        running_bots = 0
         if debug == False:
             if scanmarkets:
                 update.message.reply_text(
@@ -1355,9 +1396,12 @@ class TelegramBot(TelegramBotBase):
                     if "margin" in self.data and self.data["margin"] == " ":
                         if self.updatebotcontrol(file, "exit"):
                             sleep(5)
-        
+                        else:
+                            running_bots += 1
         self._read_data()
-        botcounter = 0
+        non_scanner_bots = len(self.data["markets"]) if "markets" not in self.data else 0
+        botcounter = running_bots - non_scanner_bots if running_bots > non_scanner_bots else 0
+
         for ex in config:
             for quote in config[ex]["quote_currency"]:
                 update.message.reply_text(f"Starting {ex} ({quote}) bots...", parse_mode="HTML")
@@ -1585,7 +1629,8 @@ def main():
 
     # Get the dispatcher to register handlers
     dp = botconfig.updater.dispatcher
-
+    if botconfig.restart_on_init:
+        dp.run_async(botconfig.startallbotsoninit)
     # Information commands
     dp.add_handler(CommandHandler("help", botconfig.help))
     dp.add_handler(CommandHandler("margins", botconfig.marginrequest, Filters.all))
