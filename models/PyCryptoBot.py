@@ -778,9 +778,6 @@ class PyCryptoBot(BotConfig):
     def enableTelegramBotControl(self) -> bool:
         return self.enabletelegrambotcontrol
 
-    def disableCleanFilesOnExit(self) -> bool:
-        return self.disablecleanfilesonexit
-
     def enableImmediateBuy(self) -> bool:
         return self.enableimmediatebuy
 

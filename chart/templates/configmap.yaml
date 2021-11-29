@@ -7,5 +7,3 @@ metadata:
 data:
   config.json: |-
 {{ .Values.config | indent 4 }}
-  scanner.json: |-
-{{ .Values.scanner | indent 4 }}

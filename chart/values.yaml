@@ -9,7 +9,7 @@ image:
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
-command: []
+
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
@@ -48,14 +48,6 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
-extraVolumeMounts: []
-extraVolumes: []
-telegramBot:
-  persistence:
-    enabled: false
-    accessMode: ReadWriteOnce
-    size: 1Gi
-
 nodeSelector: {}
 
 tolerations: []
@@ -71,15 +63,6 @@ config: >
           "fiatMarket" : "GBP",
           "live" : 1,
           "sellatloss" : 0
-      }
-  }
-scanner: >
-  {
-      "coinbasepro" : {
-          "quote_currency": ["GBP"]
-      },
-      "binance" : {
-          "quote_currency": ["USDT"]
       }
   }
 
