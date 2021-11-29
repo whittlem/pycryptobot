@@ -85,6 +85,11 @@ class Strategy:
 
             return False
 
+        # initial funds check
+        if self.app.enableinsufficientfundslogging and self.app.insufficientfunds:
+            # Logger.warning(f"{str(now)} | Insufficient funds, ignoring buy signal.")
+            return False
+
         # criteria for a buy signal 1
         if (
             (

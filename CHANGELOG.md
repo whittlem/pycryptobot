@@ -8,6 +8,11 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [4.5.1] - 2021-11-22
+
+- Added Kucoin websockets
+- Fixed Kucoin failing when using scanner
+
 ## [4.4.2] - 2021-11-21
 
 - Telegram scanner bugfix
