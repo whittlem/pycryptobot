@@ -427,6 +427,13 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("enabletelegrambotcontrol must be of type int")
 
+    if "disablecleanfilesonexit" in config:
+        if isinstance(config["disablecleanfilesonexit"], int):
+            if bool(config["disablecleanfilesonexit"]):
+                app.disablecleanfilesonexit = True
+        else:
+            raise TypeError("disablecleanfilesonexit must be of type int")
+
     if "enableimmediatebuy" in config:
         if isinstance(config["enableimmediatebuy"], int):
             if bool(config["enableimmediatebuy"]):
