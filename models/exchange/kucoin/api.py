@@ -5,6 +5,7 @@ import json
 import hmac
 import hashlib
 import time
+import math
 import requests
 import base64
 import sys
@@ -13,6 +14,10 @@ from numpy import floor
 from datetime import datetime
 from requests import Request
 from models.helper.LogHelper import Logger
+from requests import Request
+from threading import Thread
+from websocket import create_connection, WebSocketConnectionClosedException
+from models.exchange.Granularity import Granularity
 
 MARGIN_ADJUSTMENT = 0.0025
 DEFAULT_MAKER_FEE_RATE = 0.018
@@ -41,18 +46,10 @@ class AuthAPIBase:
             return True
         return False
 
-#     def to_kucoin_granularity(self, granularity) -> str:
-#         if isinstance(granularity, int):
-#             return {60: "1min", 300: "5min", 900: "15min", 3600: "1hour", 21600: "6hour", 86400: "1day"} [
-#                 granularity
-#             ]
-#         else:
-#             # return string if conversion is not required
-#             if granularity in SUPPORTED_GRANULARITY:
-#                 return granularity
-#             else:
-#                 raise ValueError(f"Invalid Kucoin granularity: {granularity}")
-# 
+    def convert_time(self, epoch: int = 0):
+        if math.isnan(epoch) is False:
+            epoch_str = str(epoch)[0:10]
+            return datetime.fromtimestamp(int(epoch_str))
 
 class AuthAPI(AuthAPIBase):
     def __init__(
@@ -740,7 +737,7 @@ class AuthAPI(AuthAPIBase):
 
 
 class PublicAPI(AuthAPIBase):
-    def __init__(self, api_url: str = "https://openapi-sandbox.kucoin.com/") -> None:
+    def __init__(self, api_url: str = "https://api.kucoin.com") -> None:
         # options
         self.debug = False
         self.die_on_api_error = False
@@ -765,7 +762,8 @@ class PublicAPI(AuthAPIBase):
     def getHistoricalData(
         self,
         market: str = DEFAULT_MARKET,
-        granularity: int = MAX_GRANULARITY,
+        granularity: Granularity = Granularity.ONE_HOUR,
+        websocket=None,
         iso8601start: str = "",
         iso8601end: str = "",
     ) -> pd.DataFrame:
@@ -776,11 +774,11 @@ class PublicAPI(AuthAPIBase):
             raise TypeError("Kucoin market required.")
 
         # validates granularity is an integer
-        if not isinstance(granularity, str):
+        if not isinstance(granularity.to_medium, str):
             raise TypeError("Granularity string required.")
 
         # validates the granularity is supported by Kucoin
-        if not granularity in SUPPORTED_GRANULARITY:
+        if not granularity.to_medium in SUPPORTED_GRANULARITY:
             raise TypeError(
                 "Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY))
             )
@@ -793,97 +791,108 @@ class PublicAPI(AuthAPIBase):
         if not isinstance(iso8601end, str):
             raise TypeError("ISO8601 end integer as string required.")
 
-        resp = {}
-        trycnt, maxretry = (0, 3)
-        while trycnt <= maxretry:
-            if trycnt == 0 or "data" not in resp:
-                if trycnt > 0:
-                    Logger.warning(
-                        f"Kucoin API Error for Historical Data - 'data' not in response - retrying - attempt {trycnt}"
+        using_websocket = False
+        if websocket is not None:
+            if websocket.candles is not None:
+                try:
+                    df = websocket.candles.loc[websocket.candles["market"] == market]
+                    using_websocket = True
+                except:
+                    pass
+
+        if websocket is None or (websocket is not None and using_websocket is False):
+
+            resp = {}
+            trycnt, maxretry = (0, 3)
+            while trycnt <= maxretry:
+                if trycnt == 0 or "data" not in resp:
+                    if trycnt > 0:
+                        Logger.warning(
+                            f"Kucoin API Error for Historical Data - 'data' not in response - retrying - attempt {trycnt}"
+                        )
+                        time.sleep(15)
+                    trycnt += 1
+                else:
+                    break
+
+                if iso8601start != "" and iso8601end == "":
+                    startTime = int(
+                        datetime.timestamp(
+                            datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")
+                        )
                     )
-                    time.sleep(15)
-                trycnt += 1
-            else:
-                break
-
-            if iso8601start != "" and iso8601end == "":
-                startTime = int(
-                    datetime.timestamp(
-                        datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")
+                    resp = self.authAPI(
+                        "GET",
+                        f"api/v1/market/candles?type={granularity.to_medium}&symbol={market}&startAt={startTime}",
                     )
-                )
-                resp = self.authAPI(
-                    "GET",
-                    f"api/v1/market/candles?type={granularity}&symbol={market}&startAt={startTime}",
-                )
-            elif iso8601start != "" and iso8601end != "":
-                startTime = int(
-                    datetime.timestamp(
-                        datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")
+                elif iso8601start != "" and iso8601end != "":
+                    startTime = int(
+                        datetime.timestamp(
+                            datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")
+                        )
                     )
-                )
 
-                endTime = int(
-                    datetime.timestamp(
-                        datetime.strptime(iso8601end, "%Y-%m-%dT%H:%M:%S")
+                    endTime = int(
+                        datetime.timestamp(
+                            datetime.strptime(iso8601end, "%Y-%m-%dT%H:%M:%S")
+                        )
                     )
-                )
-                resp = self.authAPI(
-                    "GET",
-                    f"api/v1/market/candles?type={granularity}&symbol={market}&startAt={startTime}&endAt={endTime}",
-                )
-            else:
-                resp = self.authAPI(
-                    "GET",
-                    f"api/v1/market/candles?type={granularity}&symbol={market}",
-                )
+                    resp = self.authAPI(
+                        "GET",
+                        f"api/v1/market/candles?type={granularity.to_medium}&symbol={market}&startAt={startTime}&endAt={endTime}",
+                    )
+                else:
+                    resp = self.authAPI(
+                        "GET",
+                        f"api/v1/market/candles?type={granularity.to_medium}&symbol={market}",
+                    )
 
-        # convert the API response into a Pandas DataFrame
-        df = pd.DataFrame(
-            resp["data"],
-            columns=["epoch", "open", "close", "high", "low", "volume", "turnover"],
-        )
-        # reverse the order of the response with earliest last
-        df = df.iloc[::-1].reset_index()
-
-        try:
-            freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity)]
-        except:
-            freq = "D"
-
-        # convert the DataFrame into a time series with the date as the index/key
-        try:
-            tsidx = pd.DatetimeIndex(
-                pd.to_datetime(df["epoch"], unit="s"), dtype="datetime64[ns]", freq=freq
+            # convert the API response into a Pandas DataFrame
+            df = pd.DataFrame(
+                resp["data"],
+                columns=["epoch", "open", "close", "high", "low", "volume", "turnover"],
             )
-            df.set_index(tsidx, inplace=True)
-            df = df.drop(columns=["epoch", "index"])
-            df.index.names = ["ts"]
-            df["date"] = tsidx
-        except ValueError:
-            tsidx = pd.DatetimeIndex(
-                pd.to_datetime(df["epoch"], unit="s"), dtype="datetime64[ns]"
-            )
-            df.set_index(tsidx, inplace=True)
-            df = df.drop(columns=["epoch", "index"])
-            df.index.names = ["ts"]
-            df["date"] = tsidx
+            # reverse the order of the response with earliest last
+            df = df.iloc[::-1].reset_index()
 
-        df["market"] = market
-        df["granularity"] = granularity
+            try:
+                freq = granularity.get_frequency
+            except:
+                freq = "D"
 
-        # re-order columns
-        df = df[
-            ["date", "market", "granularity", "low", "high", "open", "close", "volume"]
-        ]
+            # convert the DataFrame into a time series with the date as the index/key
+            try:
+                tsidx = pd.DatetimeIndex(
+                    pd.to_datetime(df["epoch"], unit="s"), dtype="datetime64[ns]", freq=freq
+                )
+                df.set_index(tsidx, inplace=True)
+                df = df.drop(columns=["epoch", "index"])
+                df.index.names = ["ts"]
+                df["date"] = tsidx
+            except ValueError:
+                tsidx = pd.DatetimeIndex(
+                    pd.to_datetime(df["epoch"], unit="s", origin='1970-01-01'), dtype="datetime64[ns]"
+                )
+                df.set_index(tsidx, inplace=True)
+                df = df.drop(columns=["epoch", "index"])
+                df.index.names = ["ts"]
+                df["date"] = tsidx
 
-        df["low"] = pd.to_numeric(df["low"])
-        df["high"] = pd.to_numeric(df["high"])
-        df["open"] = pd.to_numeric(df["open"])
-        df["close"] = pd.to_numeric(df["close"])
-        df["volume"] = pd.to_numeric(df["volume"])
-        # convert_columns = {'close': float}
-        # resp.asType(convert_columns)
+            df["market"] = market
+            df["granularity"] = granularity.to_medium
+
+            # re-order columns
+            df = df[
+                ["date", "market", "granularity", "low", "high", "open", "close", "volume"]
+            ]
+
+            df["low"] = pd.to_numeric(df["low"])
+            df["high"] = pd.to_numeric(df["high"])
+            df["open"] = pd.to_numeric(df["open"])
+            df["close"] = pd.to_numeric(df["close"])
+            df["volume"] = pd.to_numeric(df["volume"])
+            # convert_columns = {'close': float}
+            # resp.asType(convert_columns)
         return df
 
     def getTicker(self, market: str = DEFAULT_MARKET) -> tuple:
@@ -933,11 +942,22 @@ class PublicAPI(AuthAPIBase):
 
         try:
             resp = self.authAPI("GET", "api/v1/timestamp")
-            epoch = int(resp["data"] / 1000)
-
-            return datetime.fromtimestamp(epoch)
+            # epoch = int(resp["data"] / 1000)
+            return self.convert_time(int(resp["data"]))
+            # return datetime.fromtimestamp(epoch)
         except:
             return None
+
+    def getSocketToken(self):
+        return self.authAPI("POST", f"api/v1/bullet-public")
+
+    def getMarkets24HrStats(self) -> pd.DataFrame():
+        """Retrieves exchange markets 24hr stats"""
+
+        try:
+            return self.authAPI("GET", "api/v1/market/allTickers")
+        except:
+            return pd.DataFrame()
 
     def authAPI(self, method: str, uri: str, payload: str = "") -> dict:
         """Initiates a REST API call"""
@@ -1009,3 +1029,424 @@ class PublicAPI(AuthAPIBase):
             else:
                 Logger.error(f"{reason}: {self._api_url}")
                 return {}
+
+class WebSocket(AuthAPIBase):
+    def __init__(
+        self,
+        markets=None,
+        # granularity=None,
+        granularity: Granularity = Granularity.ONE_HOUR,
+        api_url="https://api.kucoin.com",
+        ws_url="wss://ws-api.kucoin.com",
+    ) -> None:
+        # options
+        self.debug = False
+
+        valid_urls = [
+            "https://api.kucoin.com",
+            "https://api.kucoin.com/",
+            "https://openapi-sandbox.kucoin.com",
+        ]
+
+        # validate Coinbase Pro API
+        if api_url not in valid_urls:
+            raise ValueError("Coinbase Pro API URL is invalid")
+
+        if api_url[-1] != "/":
+            api_url = api_url + "/"
+
+        valid_ws_urls = [
+            "wss://ws-api.kucoin.com",
+        ]
+
+        # validate Coinbase Pro Websocket URL
+        if ws_url not in valid_ws_urls:
+            raise ValueError("Kucoin WebSocket URL is invalid")
+
+        # if ws_url[-1] != "/":
+        #     ws_url = ws_url + "/"
+
+        self._ws_url = ws_url
+        self._api_url = api_url
+
+        self.markets = None
+        self.granularity = granularity
+        self.type = "subscribe"
+        self.stop = True
+        self.error = None
+        self.ws = None
+        self.thread = None
+        self.start_time = None
+        self.time_elapsed = 0
+
+    def start(self):
+        def _go():
+            self._connect()
+            self._listen()
+            self._disconnect()
+
+        self.stop = False
+        self.on_open()
+        self.thread = Thread(target=_go)
+        self.keepalive = Thread(target=self._keepalive)
+        self.thread.start()
+
+    def _connect(self):
+        if self.markets is None:
+            print("Error: no market specified!")
+            sys.exit()
+        elif not isinstance(self.markets, list):
+            self.markets = [self.markets]
+
+        self.ws = create_connection(self._ws_url + f"/endpoint?token={self.token}")
+        self.ws.send(
+            json.dumps(
+                {
+                    "type": "subscribe",
+                    "topic": f"/market/ticker:{','.join(self.markets)}",
+                    "privateChannel": "false",
+                    "response": "true"
+                }
+            )
+        )
+
+        self.start_time = datetime.now()
+
+    def _keepalive(self, interval=30):
+        while self.ws.connected:
+            self.ws.ping("keepalive")
+            time.sleep(interval)
+
+    def _listen(self):
+        self.keepalive.start()
+        while not self.stop:
+            try:
+                data = self.ws.recv()
+                if data != "":
+                    msg = json.loads(data)
+                else:
+                    msg = {}
+            except ValueError as e:
+                self.on_error(e)
+            except Exception as e:
+                self.on_error(e)
+            else:
+                self.on_message(msg)
+
+    def _disconnect(self):
+        try:
+            if self.ws:
+                self.ws.close()
+        except WebSocketConnectionClosedException:
+            pass
+        finally:
+            self.keepalive.join()
+
+    def close(self):
+        self.stop = True
+        self.start_time = None
+        self.time_elapsed = 0
+        self._disconnect()
+        self.thread.join()
+
+    def on_open(self):
+        Logger.info("-- Websocket Subscribed! --")
+
+    def on_close(self):
+        Logger.info("-- Websocket Closed --")
+
+    def on_message(self, msg):
+        Logger.info(msg)
+
+    def on_error(self, e, data=None):
+        Logger.error(e)
+        Logger.error("{} - data: {}".format(e, data))
+
+        self.stop = True
+        try:
+            self.ws = None
+            self.tickers = None
+            self.candles = None
+            self.start_time = None
+            self.time_elapsed = 0
+        except:
+            pass
+
+    def getStartTime(self) -> datetime:
+        return self.start_time
+
+    def getTimeElapsed(self) -> int:
+        return self.time_elapsed
+
+
+class WebSocketClient(WebSocket):
+    def __init__(
+        self,
+        markets: list = [DEFAULT_MARKET],
+        granularity: Granularity = Granularity.ONE_HOUR,
+        api_url="https://api.kucoin.com/",
+        ws_url: str = "wss://ws-api.kucoin.com",
+    ) -> None:
+        if len(markets) == 0:
+            raise ValueError("A list of one or more markets is required.")
+
+        for market in markets:
+            # validates the market is syntactically correct
+            if not self._isMarketValid(market):
+                raise ValueError("Kucoin market is invalid.")
+
+        # validates granularity is an integer
+        if not isinstance(granularity.to_medium, str):
+            raise TypeError("Granularity string required.")
+
+        # validates the granularity is supported by Coinbase Pro
+        if not granularity.to_medium in SUPPORTED_GRANULARITY:
+            raise TypeError(
+                "Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY))
+            )
+
+        valid_urls = [
+            "https://api.kucoin.com",
+            "https://api.kucoin.com/",
+            "https://openapi-sandbox.kucoin.com",
+            "https://openapi-sandbox.kucoin.com/",
+        ]
+
+        # validate Coinbase Pro API
+        if api_url not in valid_urls:
+            raise ValueError("Kucoin API URL is invalid")
+
+        if api_url[-1] != "/":
+            api_url = api_url + "/"
+
+        valid_ws_urls = [
+            "wss://ws-api.kucoin.com",
+        ]
+
+        # validate Coinbase Pro Websocket URL
+        if ws_url not in valid_ws_urls:
+            raise ValueError("Coinbase Pro WebSocket URL is invalid")
+
+        # if ws_url[-1] != "/":
+        #     ws_url = ws_url + "/"
+
+        self._ws_url = ws_url
+
+        self.markets = markets
+        self.granularity = granularity
+        self.tickers = None
+        self.candles = None
+        self.start_time = None
+        self.time_elapsed = 0
+
+        api = PublicAPI(api_url)
+        ts = api.getSocketToken()
+        # print("token: " + ts["data"]["token"])
+        self.token = ts["data"]["token"]
+
+    def on_open(self):
+        self.message_count = 0
+
+    def on_message(self, msg):
+        if self.start_time is not None:
+            self.time_elapsed = round(
+                (datetime.now() - self.start_time).total_seconds()
+            )
+
+        if "data" in msg and "time" in msg["data"] and "price" in msg["data"]:
+            # create dataframe from websocket message
+            df = pd.DataFrame(
+                columns=["date", "market", "price"],
+                data=[
+                    [
+                        # pd.to_datetime(msg["data"]["time"], origin="1970-01-01"), #.dt.strftime("%Y-%m-%d %H:%M:%S"),
+                        self.convert_time(msg["data"]["time"]),
+                        self.markets[0],
+                        msg["data"]["price"],
+                    ]
+                ],
+            )
+
+            # set column types
+
+            df["date"] = df["date"].astype("datetime64[ns]")
+            df["price"] = df["price"].astype("float64")
+
+            # form candles
+            df["candle"] = df["date"].dt.floor(freq=self.granularity.frequency)
+
+            # candles dataframe is empty
+            if self.candles is None:
+                resp = PublicAPI().getHistoricalData(
+                    str(df["market"].values[0]), self.granularity
+                )
+                if len(resp) > 0:
+                    self.candles = resp
+                else:
+                    # create dataframe from websocket message
+                    self.candles = pd.DataFrame(
+                        columns=[
+                            "date",
+                            "market",
+                            "granularity",
+                            "open",
+                            "high",
+                            "close",
+                            "low",
+                            "volume",
+                        ],
+                        data=[
+                            [
+                                self.convert_time(df["candle"].values[0]),
+                                df["market"].values[0],
+                                self.granularity.to_integer,
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                msg["data"]["size"],
+                            ]
+                        ],
+                    )
+            # candles dataframe contains some data
+            else:
+                # check if the current candle exists
+                candle_exists = (
+                    (self.candles["date"] == df["candle"].values[0])
+                    & (self.candles["market"] == df["market"].values[0])
+                ).any()
+                if not candle_exists:
+                    # populate historical data via api if it does not exist
+                    if (
+                        len(
+                            self.candles[
+                                self.candles["market"] == df["market"].values[0]
+                            ]
+                        )
+                        == 0
+                    ):
+                        resp = PublicAPI().getHistoricalData(
+                            df["market"].values[0], self.granularity
+                        )
+                        if len(resp) > 0:
+                            df_new_candle = resp
+                        else:
+                            # create dataframe from websocket message
+                            df_new_candle = pd.DataFrame(
+                                columns=[
+                                    "date",
+                                    "market",
+                                    "granularity",
+                                    "open",
+                                    "high",
+                                    "close",
+                                    "low",
+                                    "volume",
+                                ],
+                                data=[
+                                    [
+                                        self.convert_time(df["candle"].values[0]),
+                                        df["market"].values[0],
+                                        self.granularity.to_integer,
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        msg["data"]["size"],
+                                    ]
+                                ],
+                            )
+
+                    else:
+                        df_new_candle = pd.DataFrame(
+                            columns=[
+                                "date",
+                                "market",
+                                "granularity",
+                                "open",
+                                "high",
+                                "close",
+                                "low",
+                                "volume",
+                            ],
+                            data=[
+                                [
+                                    df["candle"].values[0],
+                                    df["market"].values[0],
+                                    self.granularity.to_integer,
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    msg["data"]["size"],
+                                ]
+                            ],
+                        )
+                    self.candles = self.candles.append(df_new_candle)
+                else:
+                    candle = self.candles[
+                        (
+                            (self.candles["date"] == df["candle"].values[0])
+                            & (self.candles["market"] == df["market"].values[0])
+                        )
+                    ]
+
+                    # set high on high
+                    if float(df["price"].values[0]) > float(candle.high.values[0]):
+                        self.candles.at[candle.index.values[0], "high"] = df[
+                            "price"
+                        ].values[0]
+
+                    self.candles.at[candle.index.values[0], "close"] = df[
+                        "price"
+                    ].values[0]
+
+                    # set low on low
+                    if float(df["price"].values[0]) < float(candle.low.values[0]):
+                        self.candles.at[candle.index.values[0], "low"] = df[
+                            "price"
+                        ].values[0]
+
+                    # increment candle base volume
+                    self.candles.at[candle.index.values[0], "volume"] = float(
+                        candle["volume"].values[0]
+                    ) + float(msg["data"]["size"])
+
+            # insert first entry
+            if self.tickers is None and len(df) > 0:
+                self.tickers = df
+            # append future entries without duplicates
+            elif self.tickers is not None and len(df) > 0:
+                self.tickers = (
+                    pd.concat([self.tickers, df])
+                    .drop_duplicates(subset="market", keep="last")
+                    .reset_index(drop=True)
+                )
+
+            # convert dataframes to a time series
+            tsidx = pd.DatetimeIndex(
+                pd.to_datetime(self.tickers["date"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z")
+            )
+            self.tickers.set_index(tsidx, inplace=True)
+            self.tickers.index.name = "ts"
+
+            tsidx = pd.DatetimeIndex(
+                pd.to_datetime(self.candles["date"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z")
+            )
+            self.candles.set_index(tsidx, inplace=True)
+            self.candles.index.name = "ts"
+
+            # set correct column types
+            self.candles["open"] = self.candles["open"].astype("float64")
+            self.candles["high"] = self.candles["high"].astype("float64")
+            self.candles["close"] = self.candles["close"].astype("float64")
+            self.candles["low"] = self.candles["low"].astype("float64")
+            self.candles["volume"] = self.candles["volume"].astype("float64")
+
+            # keep last 300 candles per market
+            self.candles = self.candles.groupby("market").tail(300)
+
+            # print (f'{msg["time"]} {msg["product_id"]} {msg["price"]}')
+            # print(json.dumps(msg, indent=4, sort_keys=True))
+
+        self.message_count += 1

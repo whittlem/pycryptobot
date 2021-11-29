@@ -90,7 +90,6 @@ class BotConfig:
         self.enableinsufficientfundslogging = False
         self.insufficientfunds = False
         self.enabletelegrambotcontrol = False
-        self.disablecleanfilesonexit = False
         self.enableimmediatebuy = False
 
         self.telegramtradesonly = False
