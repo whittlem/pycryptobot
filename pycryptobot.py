@@ -233,6 +233,15 @@ def executeJob(
 
     current_sim_date = formatted_current_df_index
 
+    if _state.iterations == 2:
+        # check if bot has open or closed order
+        # update data.json "opentrades"
+        if _state.last_action == "BUY":
+            telegram_bot.add_open_order()
+        else:
+            telegram_bot.remove_open_order()
+
+
     # use actual sim mode date to check smartchswitch
     if (
         (last_api_call_datetime.seconds > 60 or _app.isSimulation())
@@ -1121,11 +1130,12 @@ def executeJob(
                                 f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance)}"
                             )
                             state.last_api_call_datetime -= timedelta(seconds=60)
+                            telegram_bot.add_open_order()
                         except:
                             Logger.warning("Unable to place order")
                             state.last_api_call_datetime -= timedelta(seconds=60)
                     else:
-                        Logger.warning("Unable to place order, insufficient funds")
+                        Logger.warning("Unable to place order, insufficient funds or buyminsize has not been reached")
                         state.last_api_call_datetime -= timedelta(seconds=60)
                 # if not live
                 else:
@@ -1293,11 +1303,12 @@ def executeJob(
                     Logger.info(
                         f"{_app.getQuoteCurrency()} balance before order: {str(account.quotebalance)}"
                     )
-
+                    # state.last_buy_size
                     # execute a live market sell
+                    baseamounttosell = float(account.basebalance) if _app.sellfullbaseamount == True else float(state.last_buy_filled)
                     resp = _app.marketSell(
                         _app.getMarket(),
-                        float(account.basebalance),
+                        baseamounttosell,
                         _app.getSellPercent(),
                     )
                     Logger.debug(resp)

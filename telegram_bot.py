@@ -34,6 +34,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 # from telegram.utils.helpers import DEFAULT_20
 from models.chat import Telegram
+# import models.helper.UpdateConfigHelper
 
 s = BackgroundScheduler(timezone='UTC')
 # jobId: Event
@@ -417,7 +418,9 @@ class TelegramBot(TelegramBotBase):
             BotCommand("addexception", "add pair to scanner exception list"),
             BotCommand("removeexception", "remove pair from scanner exception list"),
             BotCommand("startscanner", "start auto scan high volume markets and start bots"),
-            BotCommand("stopscanner", "stop auto scan high volume markets")
+            # BotCommand("startscanner", "start auto scan high volume markets and start bots", _kwargs=["noscan","noscan"]),
+            BotCommand("stopscanner", "stop auto scan high volume markets"),
+            BotCommand("cleandata", "clean JSON data files")
         ]
 
         ubot = Bot(self.token)
@@ -959,7 +962,7 @@ class TelegramBot(TelegramBotBase):
                         )
                     else:
                         subprocess.Popen(
-                            f"python3 pycryptobot.py --startmethod telegram {overrides}", shell=True
+                            f"lxterminal -c 'python3 pycryptobot.py --startmethod telegram {overrides}'", shell=True
                         )
                     mBot = Telegram(self.token, str(context._chat_id_and_data[0]))
                     mBot.send(f"<i>Starting {pair} crypto bot</i>", parsemode="HTML")
@@ -974,7 +977,7 @@ class TelegramBot(TelegramBotBase):
                 )
                 # os.system(f"start powershell -NoExit -Command $host.UI.RawUI.WindowTitle = '{query.data.replace('start_', '')}' ; python3 pycryptobot.py {overrides}")
             else:
-                subprocess.Popen(f"python3 pycryptobot.py --startmethod telegram {overrides}", shell=True)
+                subprocess.Popen(f"lxterminal -c 'python3 pycryptobot.py --startmethod telegram {overrides}'", shell=True)
             query.edit_message_text(
                 f"<i>Starting {str(query.data).replace('start_', '')} crypto bots</i>",
                 parse_mode="HTML",
@@ -1182,7 +1185,7 @@ class TelegramBot(TelegramBotBase):
 
         def StartLinuxProcess() -> None:
             subprocess.Popen(
-                    f"python3 pycryptobot.py --startmethod {startmethod} --exchange {self.exchange} --market {self.pair} {self.overrides}",
+                    f"lxterminal -e 'python3 pycryptobot.py --startmethod {startmethod} --exchange {self.exchange} --market {self.pair} {self.overrides}'",
                     shell=True,
                 )
 
@@ -1231,15 +1234,17 @@ class TelegramBot(TelegramBotBase):
 
     def error(self, update, context):
         """Log Errors"""
-        if len(context.error.args) > 0 or "message" in context.error:
-            if "HTTPError" in context.error.args[0]: # if "HTTPError" in context.error[0] or 
+
+        try:
+            if "HTTPError" in context.error.args[0]: 
                 while self.checkconnection() == False:
                     logger.warning("No internet connection found")
                     self.updater.start_polling(poll_interval=30)
                     sleep(30)
                 self.updater.start_polling()
-            else:
-                logger.warning('Update caused error "%s"', context.error.args[0])
+                return
+        except:
+            pass
 
     def done(self, update, context):
         """added for conversations to end"""
@@ -1316,6 +1321,7 @@ class TelegramBot(TelegramBotBase):
             update.message.reply_text(
                 f"<b>Scan job schedule created to run every {self.autoscandelay} hour(s)</b> \u2705", parse_mode="HTML"
             )
+        
         self.StartMarketScan(update,context, True if len(context.args) > 0 and context.args[0] == "debug" else False, False if len(context.args) > 0 and context.args[0] == "noscan" else True)
 
     def StopScanning(self,update,context):
@@ -1344,18 +1350,13 @@ class TelegramBot(TelegramBotBase):
 
             telegram = Telegram(self.token, str(context._chat_id_and_data[0]))
             telegram.send("Stopping crypto bots")
-            jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
+            jsonfiles = self.GetActiveBotList()
             for file in jsonfiles:
-                if (
-                    ".json" in file
-                    and not file == "data.json"
-                    and not file.__contains__("output.json")
-                ):
-                    self._read_data(file)
-                    if "margin" in self.data and self.data["margin"] == " ":
-                        if self.updatebotcontrol(file, "exit"):
-                            sleep(5)
-        
+                self._read_data(f"{file}.json")
+                if "margin" in self.data and self.data["margin"] == " ":
+                    self.updatebotcontrol(f"{file}.json", "exit")
+                    sleep(5)
+
         self._read_data()
         botcounter = 0
         for ex in config:
@@ -1544,6 +1545,9 @@ class TelegramBot(TelegramBotBase):
         )
 
     def RestartBots(self, update, context):
+        if not self._checkifallowed(context._user_id_and_data[0], update):
+            return None
+
         bots = self.GetActiveBotList()
 
         bList = {}
@@ -1563,9 +1567,9 @@ class TelegramBot(TelegramBotBase):
             self.pair = bot
             self.exchange = bList[bot]["exchange"]
             self.newbot_start(update, context, bList[bot]["startmethod"])
+            sleep(10)
 
         # print(bList)
-
 
     def GetActiveBotList(self):
         jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
@@ -1577,6 +1581,77 @@ class TelegramBot(TelegramBotBase):
             i -= 1
 
         return [x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles]
+
+    def StartOpenOrderBots(self, update, context):
+        if not self._checkifallowed(context._user_id_and_data[0], update):
+            return None
+
+        self._read_data()
+        update.message.text = "Auto_Yes"
+        for bot in self.data["opentrades"]:
+            self.pair = bot
+            self.exchange = self.data["opentrades"][bot]["exchange"]
+            self.newbot_start(update, context, "scanner")
+            sleep(10)
+
+    def statstwo(self, update, context):
+
+        jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
+        for file in jsonfiles:
+            exchange = "coinbasepro"
+            if file.__contains__("output.json"):
+                if file.__contains__("coinbasepro"):
+                    exchange = "coinbasepro"
+                if file.__contains__("binance"):
+                    exchange = "binance"
+                if file.__contains__("kucoin"):
+                    exchange = "kucoin"
+
+                update.message.reply_text(
+                    "<i>Gathering Stats, please wait...</i>", parse_mode="HTML"
+                )
+
+                with open(
+                    os.path.join(self.datafolder, "telegram_data", file),
+                    "r",
+                    encoding="utf8",
+                ) as json_file:
+                    data = json.load(json_file)
+
+                pairs = ""
+                count = 0
+                for pair in data:
+                    if pair.__contains__("DOWN") or pair.__contains__("UP"):
+                        continue
+
+                    # count += 1
+                    pairs = pairs + pair + " "
+
+                output = subprocess.getoutput(
+                    f"python3 pycryptobot.py --stats --exchange {exchange}  --statgroup {pairs}  "
+                )
+                update.message.reply_text(output, parse_mode="HTML")
+
+    def UpdateBuyMaxSize(self, update, context):
+
+        # t = models.helper.UpdateConfigHelper.UpdateConfigFile(context.args)
+
+
+        self._read_data("config.json")
+
+        with open(os.path.join(self.config_file), "r", encoding="utf8") as json_file:
+            self.config = json.load(json_file)
+
+        if len(context.args) > 0:
+            for ex in self.config:
+                if ex in ("coinbasepro", "binance", "kucoin"):
+                    self.config[ex]["config"].update({"buymaxsize": context.args[0]})
+
+        with open(os.path.join(self.config_file), "w", encoding="utf8") as outfile:
+                json.dump(self.config, outfile, indent=4)
+
+        update.message.reply_text("Config Updated")
+
 
 def main():
     """Start the bot."""
@@ -1618,6 +1693,10 @@ def main():
 
     dp.add_handler(CommandHandler("reboot", botconfig.RestartBots))
 
+    dp.add_handler(CommandHandler("reopen", botconfig.StartOpenOrderBots))
+
+    # dp.add_handler(CommandHandler("updatebuymax", botconfig.UpdateBuyMaxSize))
+    dp.add_handler(CommandHandler("statsgroup", botconfig.statstwo))
     # Response to Question handler
     dp.add_handler(CallbackQueryHandler(botconfig.responses))
 
@@ -1676,8 +1755,8 @@ def main():
     # log all errors
     dp.add_error_handler(botconfig.error)
 
-    while botconfig.checkconnection() is False:
-        sleep(30)
+    # while botconfig.checkconnection() is False:
+    #     sleep(10)
 
     # Start the Bot
     botconfig.updater.start_polling()

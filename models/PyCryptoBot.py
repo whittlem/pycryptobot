@@ -199,6 +199,12 @@ class PyCryptoBot(BotConfig):
         except Exception:  # pylint: disable=broad-except
             return None
 
+    def getBuyMinSize(self):
+        try:
+            return float(self.buyminsize)
+        except Exception:  # pylint: disable=broad-except
+            return None
+
     def getBuyNearHighPcnt(self):
         try:
             return float(self.nobuynearhighpcnt)
@@ -1365,6 +1371,11 @@ class PyCryptoBot(BotConfig):
         if self.getBuyMaxSize():
             text_box.line(
                 "Max Buy Size", str(self.getBuyMaxSize()) + "  --buymaxsize <size>"
+            )
+
+        if self.getBuyMinSize():
+            text_box.line(
+                "Min Buy Size", str(self.getBuyMinSize()) + "  --buyminsize <size>"
             )
 
         if self.disablebuyema and self.disablebuymacd:

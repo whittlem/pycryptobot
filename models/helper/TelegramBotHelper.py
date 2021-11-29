@@ -55,12 +55,15 @@ class TelegramBotHelper:
                 self._read_data("data.json")
                 if "markets" not in self.data:
                     self.data.update({"markets": {}})
-                    self._write_data()
+                    self._write_data("data.json")
                 if "scannerexceptions" not in self.data:
                     self.data.update({"scannerexceptions": {}})
-                    self._write_data()
+                    self._write_data("data.json")
+                if "opentrades" not in self.data:
+                    self.data.update({"opentrades": {}})
+                    self._write_data("data.json")
             else:
-                ds = {"trades": {}, "markets": {}, "scannerexceptions": {}}
+                ds = {"trades": {}, "markets": {}, "scannerexceptions": {}, "opentrades": {}}
                 self.data = ds
                 self._write_data("data.json")
 
@@ -152,6 +155,9 @@ class TelegramBotHelper:
             )
             self._write_data("data.json")
 
+            self.remove_open_order()
+
+
     def checkmanualbuysell(self) -> str:
         result = "WAIT"
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
@@ -222,3 +228,25 @@ class TelegramBotHelper:
             ),
             orient="index",
         )
+
+    def add_open_order(self):
+        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
+            self._read_data("data.json")
+
+        if self.market in self.data["opentrades"]:
+            if self.exchange != self.data["opentrades"][self.market]:
+                return
+
+        self.data["opentrades"].update({self.market : {"exchange": self.exchange.value}})
+        self._write_data("data.json")
+
+    def remove_open_order(self):
+        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
+            self._read_data("data.json")
+
+        if self.market not in self.data["opentrades"]:
+            return
+
+        self.data["opentrades"].pop(self.market)
+        self._write_data("data.json")
+

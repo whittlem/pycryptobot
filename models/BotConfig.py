@@ -60,6 +60,8 @@ class BotConfig:
         self.last_action = None
         self._chat_client = None
         self.buymaxsize = None
+        self.buyminsize = 0
+        self.sellfullbaseamount = True
 
         self.sellatresistance = False
         self.autorestart = False
@@ -441,6 +443,7 @@ class BotConfig:
         parser.add_argument(
             "--buypercent", type=int, help="percentage of quote currency to buy"
         )
+
         parser.add_argument(
             "--sellpercent", type=int, help="percentage of base currency to sell"
         )
@@ -448,6 +451,8 @@ class BotConfig:
             "--lastaction", type=str, help="optionally set the last action (BUY, SELL)"
         )
         parser.add_argument("--buymaxsize", type=float, help="maximum size on buy")
+        parser.add_argument("--buyminsize", type=float, help="minimum size on buy")
+
         parser.add_argument(
             "--nobuynearhighpcnt",
             type=float,

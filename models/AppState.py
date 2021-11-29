@@ -152,7 +152,7 @@ class AppState:
                 if quote < quote_min:
                     if self.app.enableinsufficientfundslogging:
                         self.app.insufficientfunds = True
-                        Logger.warning(f"Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})")
+                        Logger.warning(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})")
                         return
 
                     sys.tracebacklimit = 0
@@ -194,7 +194,7 @@ class AppState:
 
         if actionchk:
             return
-        elif quote < 10:
+        elif quote < self.app.buyminsize:
             if self.app.enableinsufficientfundslogging:
                 self.app.insufficientfunds = True
         elif (quote / price) < base_min:
