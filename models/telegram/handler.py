@@ -9,10 +9,13 @@ from models.telegram.actions import TelegramActions
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Updater
 from telegram.ext.callbackcontext import CallbackContext
+from apscheduler.schedulers.background import BackgroundScheduler
 
 helper = None
 control = None
 actions = None
+
+scannerSchedule = BackgroundScheduler(timezone='UTC')
 
 class TelegramHandler():
     def __init__(self, datafolder, authuserid, tg_helper: TelegramHelper) -> None:
@@ -142,6 +145,7 @@ class TelegramHandler():
             actions.deleteresponse(update)
 
         elif query.data == "startmarket":
+            self._checkScheduledJob(update)
             actions.StartMarketScan(update)
 
     def askMarginType(self, update):
@@ -295,3 +299,12 @@ class TelegramHandler():
             query.edit_message_text(f"<b>Are you sure you want to {query.data.replace('_', ' ')}?</b>", reply_markup=reply_markup, parse_mode="HTML")
         except:
             update.message.reply_text(f"<b>Are you sure you want to {query.data.replace('_', ' ')}?</b>", reply_markup=reply_markup, parse_mode="HTML")
+
+    def _checkScheduledJob(self, update):
+        if helper.config["scanner"]["autoscandelay"] > 0 and len(scannerSchedule.get_jobs()) == 0:
+            scannerSchedule.start()
+            scannerSchedule.add_job(actions.StartMarketScan, args=(update, False, True), trigger='interval', minutes=helper.config["scanner"]["autoscandelay"]*60, name='Volume Auto Scanner', misfire_grace_time=10)
+            # scannerSchedule.start()
+            update.effective_message.reply_html(
+                f"<b>Scan job schedule created to run every {helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705"
+            )

@@ -86,11 +86,14 @@ class TelegramActions():
             if scanmarkets:
                 update.effective_message.reply_html(
                     f"<i>Gathering market data\nThis can take some time depending on number of pairs\nplease wait...</i> \u23F3")
-                output = subprocess.getoutput("python3 scanner.py")
+                try:
+                    output = subprocess.getoutput("python3 scanner.py")
+                    update.effective_message.reply_html("<b>scan complete, stopping bots..</b>")
+                except:
+                    update.effective_message.reply_html("<b>scanning failed.</b>")
+                    raise
 
-            update.effective_message.reply_html("Stopping crypto bots")
-            jsonfiles = helper.getActiveBotList()
-            for file in jsonfiles:
+            for file in helper.getActiveBotList():
                 helper.stopRunningBot(file)
                 sleep(5)
 
@@ -129,12 +132,10 @@ class TelegramActions():
                                 if helper.config["scanner"]["enable_buy_next"] and data[row]["buy_next"]:
                                     outputmsg = outputmsg + f"<i><b>{row}</b>  //--//  <b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%  //--//  <b>buy_next:</b> {data[row]['buy_next']}</i>\n"
                                     helper.startProcess(row, ex, "", "scanner")
-                                    # self.newbot_start(update, context, "scanner")
                                     botcounter += 1
                                 elif not helper.config["scanner"]["enable_buy_next"]:
                                     outputmsg = outputmsg + f"<i><b>{row}</b>  //--//  <b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%</i>\n"
                                     helper.startProcess(row, ex, "", "scanner")
-                                    # self.newbot_start(update, context, "scanner")
                                     botcounter += 1
                                 if debug == False:
                                     sleep(10)
