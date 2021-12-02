@@ -1006,6 +1006,9 @@ class TelegramBot(TelegramBotBase):
                 parse_mode="HTML",
             )
 
+    def ExitBot(self, update, context):
+        os._exit()
+
 def main():
     """Start the bot."""
     # Create telegram bot configuration
@@ -1048,6 +1051,7 @@ def main():
 
     dp.add_handler(CommandHandler("reopen", botconfig.StartOpenOrderBots))
 
+    dp.add_handler(CommandHandler("exit", botconfig.ExitBot))
     # dp.add_handler(CommandHandler("updatebuymax", botconfig.UpdateBuyMaxSize))
     dp.add_handler(CommandHandler("statsgroup", botconfig.statstwo))
     # Response to Question handler
