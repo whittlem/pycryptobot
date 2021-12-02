@@ -1007,7 +1007,7 @@ class TelegramBot(TelegramBotBase):
             )
 
     def ExitBot(self, update, context):
-        os._exit()
+        os._exit(0)
 
 def main():
     """Start the bot."""
