@@ -267,33 +267,33 @@ class TelegramBot(TelegramBotBase):
         self.handler = TelegramHandler(self.datafolder, self.userid, self.helper)
         self.control = TelegramControl(self.datafolder, self.helper)
         self.actions = TelegramActions(self.datafolder, self.helper)
-
-    def _getUptime(self, date: str):
-        now = str(datetime.now())
-        # If date passed from datetime.now() remove milliseconds
-        if date.find(".") != -1:
-            dt = date.split(".")[0]
-            date = dt
-        if now.find(".") != -1:
-            dt = now.split(".", maxsplit=1)[0]
-            now = dt
-
-        now = now.replace("T", " ")
-        now = f"{now}"
-        # Add time in case only a date is passed in
-        # new_date_str = f"{date} 00:00:00" if len(date) == 10 else date
-        date = date.replace("T", " ") if date.find("T") != -1 else date
-        # Add time in case only a date is passed in
-        new_date_str = f"{date} 00:00:00" if len(date) == 10 else date
-
-        started = datetime.strptime(new_date_str, "%Y-%m-%d %H:%M:%S")
-        now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
-        duration = now - started
-        duration_in_s = duration.total_seconds()
-        hours = divmod(duration_in_s, 3600)[0]
-        duration_in_s -= 3600 * hours
-        minutes = divmod(duration_in_s, 60)[0]
-        return f"{round(hours)}h {round(minutes)}m"
+# 
+#     def _getUptime(self, date: str):
+#         now = str(datetime.now())
+#         # If date passed from datetime.now() remove milliseconds
+#         if date.find(".") != -1:
+#             dt = date.split(".")[0]
+#             date = dt
+#         if now.find(".") != -1:
+#             dt = now.split(".", maxsplit=1)[0]
+#             now = dt
+# 
+#         now = now.replace("T", " ")
+#         now = f"{now}"
+#         # Add time in case only a date is passed in
+#         # new_date_str = f"{date} 00:00:00" if len(date) == 10 else date
+#         date = date.replace("T", " ") if date.find("T") != -1 else date
+#         # Add time in case only a date is passed in
+#         new_date_str = f"{date} 00:00:00" if len(date) == 10 else date
+# 
+#         started = datetime.strptime(new_date_str, "%Y-%m-%d %H:%M:%S")
+#         now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
+#         duration = now - started
+#         duration_in_s = duration.total_seconds()
+#         hours = divmod(duration_in_s, 3600)[0]
+#         duration_in_s -= 3600 * hours
+#         minutes = divmod(duration_in_s, 60)[0]
+#         return f"{round(hours)}h {round(minutes)}m"
 
     def _question_which_exchange(self, update):
         """start new bot ask which exchange"""
@@ -767,53 +767,6 @@ class TelegramBot(TelegramBotBase):
             return
 
         self.control.askDeleteBotList(update)
-        return
-        buttons = []
-        keyboard = []
-
-        self._read_data()
-        for market in self.data["markets"]:
-            buttons.append(
-                InlineKeyboardButton(market, callback_data="delete_" + market)
-            )
-
-        if len(buttons) > 0:
-            i = 0
-            while i <= len(buttons) - 1:
-                if len(buttons) - 1 >= i + 2:
-                    keyboard.append([buttons[i], buttons[i + 1], buttons[i + 2]])
-                elif len(buttons) - 1 >= i + 1:
-                    keyboard.append([buttons[i], buttons[i + 1]])
-                else:
-                    keyboard.append([buttons[i]])
-                i += 3
-            keyboard.append([InlineKeyboardButton("Cancel", callback_data="cancel")])
-
-        reply_markup = InlineKeyboardMarkup(keyboard)
-
-        update.message.reply_text(
-            "<b>What crypto bots do you want to delete?</b>",
-            reply_markup=reply_markup,
-            parse_mode="HTML",
-        )
-
-#     def deleteresponse(self, update, context):
-#         """delete selected bot"""
-#         if not self._checkifallowed(context._user_id_and_data[0], update):
-#             return
-# 
-#         self._read_data()
-# 
-#         query = update.callback_query
-# 
-#         self.data["markets"].pop(str(query.data).replace("delete_", ""))
-# 
-#         self._write_data()
-# 
-#         query.edit_message_text(
-#             f"<i>Deleted {str(query.data).replace('delete_', '')} crypto bot</i>",
-#             parse_mode="HTML",
-#         )
 
     def checkconnection(self) -> bool:
         """internet connection check"""
@@ -828,21 +781,13 @@ class TelegramBot(TelegramBotBase):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
 
-        if self.autoscandelay > 0 and len(scannerSchedule.get_jobs()) == 0:
-            scannerSchedule.start()
-            scannerSchedule.add_job(self.actions.StartMarketScan, args=(update, context), trigger='interval', minutes=self.autoscandelay*60, name='Volume Auto Scanner', misfire_grace_time=10)
-            update.message.reply_text(
-                f"<b>Scan job schedule created to run every {self.autoscandelay} hour(s)</b> \u2705", parse_mode="HTML"
-            )
-        
+        self.handler._checkScheduledJob(update)
         self.actions.StartMarketScan(update, True if len(context.args) > 0 and context.args[0] == "debug" else False, False if len(context.args) > 0 and context.args[0] == "noscan" else True)
 
     def StopScanning(self,update,context):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
-
-        scannerSchedule.shutdown()
-        update.message.reply_text("<b>Scan job schedule has been removed</b> \u2705", parse_mode="HTML")
+        self.handler._removeScheduledJob(update)
 
     def cleandata(self, update, context) -> None:
         if not self._checkifallowed(context._user_id_and_data[0], update):
@@ -981,9 +926,9 @@ class TelegramBot(TelegramBotBase):
 
         self.control.askRestartBot(update)
 
-    def GetActiveBotList(self):
-
-        return self.helper.getActiveBotList(self.datafolder)
+#     def GetActiveBotList(self):
+# 
+#         return self.helper.getActiveBotList(self.datafolder)
 
     def StartOpenOrderBots(self, update, context):
         if not self._checkifallowed(context._user_id_and_data[0], update):

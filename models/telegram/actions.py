@@ -89,12 +89,11 @@ class TelegramActions():
                 try:
                     logger.info("Starting Market Scanner")
                     output = subprocess.getoutput("python3 scanner.py")
-                    update.effective_message.reply_html("<b>scan complete, stopping bots..</b>")
                 except Exception as err:
                     update.effective_message.reply_html("<b>scanning failed.</b>")
                     logger.error(err)
                     raise
-
+            update.effective_message.reply_html("<b>scan complete, stopping bots..</b>")
             for file in helper.getActiveBotList():
                 helper.stopRunningBot(file)
                 sleep(5)

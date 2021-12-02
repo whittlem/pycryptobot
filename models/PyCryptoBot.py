@@ -676,7 +676,7 @@ class PyCryptoBot(BotConfig):
         if self.exchange == Exchange.COINBASEPRO:
             return CBPublicAPI().getTime()
         elif self.exchange == Exchange.KUCOIN:
-            return KPublicAPI(api_url=self.getAPIURL()).getTime()
+            return KPublicAPI().getTime()
         elif self.exchange == Exchange.BINANCE:
             try:
                 return BPublicAPI().getTime()

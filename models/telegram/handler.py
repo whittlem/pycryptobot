@@ -35,40 +35,42 @@ class TelegramHandler():
     def getRequest(self) -> InlineKeyboardMarkup:
         keyboard = [
             [
-                InlineKeyboardButton("\U0001F4C8 Margins", callback_data="margin"),
-                InlineKeyboardButton("\U00002139 Bot Status", callback_data="status"),
+                InlineKeyboardButton("Cancel", callback_data="cancel")
             ],
             [
                 InlineKeyboardButton("\U0001F4D6 View configuration", callback_data="showconfig"),
+            ],
+            [
+                InlineKeyboardButton("\U0001F4B0 Sell", callback_data="sell"),
+            ],
+            [
+                InlineKeyboardButton("\U0001FA99 Buy", callback_data="buy"),
+            ],
+            [
+                InlineKeyboardButton("Scanner Exceptions", callback_data="exception"),
+            ],
+            [
+                InlineKeyboardButton("\U0001F50E Start Market Scanner", callback_data="startmarket"),
+            ],
+            [
+                InlineKeyboardButton("Stop Market Scanner", callback_data="stopmarket"),
             ],
             [
                 InlineKeyboardButton("\U0001F9FE Restart open orders", callback_data="reopen"),
             ],
             [
                 InlineKeyboardButton("\U0001F7E2 startbot(s)", callback_data="start"),
+                InlineKeyboardButton("stopbot(s) \U0001F534", callback_data="stop"),
                 InlineKeyboardButton("\U000023F8 pausebot(s)", callback_data="pause"),
             ],
             [
-                InlineKeyboardButton("\U0000267B resumebot(s)", callback_data="resume"),
-                InlineKeyboardButton("\U0001F534 stopbot(s)", callback_data="stop"),
+                InlineKeyboardButton("\U000023F8 pausebot(s)", callback_data="pause"),
+                InlineKeyboardButton("resumebot(s) \U0000267B", callback_data="resume"),
             ],
             [
-                InlineKeyboardButton("\U0001FA99 Buy", callback_data="buy"),
+                InlineKeyboardButton("\U0001F4C8 Margins", callback_data="margin"),
+                InlineKeyboardButton("\U00002139 Bot Status", callback_data="status"),
             ],
-            [
-                InlineKeyboardButton("\U0001F4B0 Sell", callback_data="sell"),
-            ],
-                        [
-                InlineKeyboardButton("\U0001F50E Start Market Scanner", callback_data="startmarket"),
-            ],
-            [
-                InlineKeyboardButton("Scanner Exceptions", callback_data="startmarket"),
-                # InlineKeyboardButton("Remove\nscanner exception", callback_data="startmarket"),
-            ],
-            [
-                InlineKeyboardButton("Stop Market Scanner", callback_data="stopmarket"),
-            ],
-            [InlineKeyboardButton("Cancel", callback_data="cancel")],
         ]
 
         return InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
@@ -147,6 +149,13 @@ class TelegramHandler():
         elif query.data == "startmarket":
             self._checkScheduledJob(update)
             actions.StartMarketScan(update)
+        elif query.data == "stopmarket":
+            self._removeScheduledJob(update)
+
+        elif query.data == "exception":
+            self._checkScheduledJob(update)
+            actions.StartMarketScan(update)
+
 
     def askMarginType(self, update):
         """Ask what user wants to see active order/pairs or all"""
@@ -308,3 +317,7 @@ class TelegramHandler():
             update.effective_message.reply_html(
                 f"<b>Scan job schedule created to run every {helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705"
             )
+
+    def _removeScheduledJob(self, update):
+        scannerSchedule.shutdown()
+        update.message.reply_text("<b>Scan job schedule has been removed</b> \u2705", parse_mode="HTML")
