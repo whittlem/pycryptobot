@@ -12,7 +12,7 @@ import logging
 import os
 import json
 import subprocess
-import platform
+import sys
 import re
 import urllib.request
 
@@ -1007,7 +1007,7 @@ class TelegramBot(TelegramBotBase):
             )
 
     def ExitBot(self, update, context):
-        os._exit(0)
+        sys.exit(0)
 
 def main():
     """Start the bot."""
