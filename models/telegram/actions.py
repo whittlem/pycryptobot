@@ -95,7 +95,7 @@ class TelegramActions():
                     raise
             update.effective_message.reply_html("<b>scan complete, stopping bots..</b>")
             for file in helper.getActiveBotList():
-                helper.stopRunningBot(file)
+                helper.stopRunningBot(file, "exit")
                 sleep(5)
 
         helper.read_data()
