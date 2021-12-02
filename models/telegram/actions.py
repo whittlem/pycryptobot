@@ -87,10 +87,12 @@ class TelegramActions():
                 update.effective_message.reply_html(
                     f"<i>Gathering market data\nThis can take some time depending on number of pairs\nplease wait...</i> \u23F3")
                 try:
+                    logger.info("Starting Market Scanner")
                     output = subprocess.getoutput("python3 scanner.py")
                     update.effective_message.reply_html("<b>scan complete, stopping bots..</b>")
-                except:
+                except Exception as err:
                     update.effective_message.reply_html("<b>scanning failed.</b>")
+                    logger.error(err)
                     raise
 
             for file in helper.getActiveBotList():
