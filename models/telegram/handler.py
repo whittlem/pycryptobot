@@ -42,18 +42,16 @@ class TelegramHandler():
             ],
             [
                 InlineKeyboardButton("\U0001F4B0 Sell", callback_data="sell"),
-            ],
-            [
                 InlineKeyboardButton("\U0001FA99 Buy", callback_data="buy"),
             ],
             [
                 InlineKeyboardButton("Scanner Exceptions", callback_data="exception"),
             ],
             [
-                InlineKeyboardButton("\U0001F50E Start Market Scanner", callback_data="startmarket"),
+                InlineKeyboardButton("Stop Market Scanner", callback_data="stopmarket"),
             ],
             [
-                InlineKeyboardButton("Stop Market Scanner", callback_data="stopmarket"),
+                InlineKeyboardButton("\U0001F50E Start Market Scanner", callback_data="startmarket"),
             ],
             [
                 InlineKeyboardButton("\U0001F9FE Restart open orders", callback_data="reopen"),
@@ -61,7 +59,6 @@ class TelegramHandler():
             [
                 InlineKeyboardButton("\U0001F7E2 startbot(s)", callback_data="start"),
                 InlineKeyboardButton("stopbot(s) \U0001F534", callback_data="stop"),
-                InlineKeyboardButton("\U000023F8 pausebot(s)", callback_data="pause"),
             ],
             [
                 InlineKeyboardButton("\U000023F8 pausebot(s)", callback_data="pause"),
@@ -69,7 +66,7 @@ class TelegramHandler():
             ],
             [
                 InlineKeyboardButton("\U0001F4C8 Margins", callback_data="margin"),
-                InlineKeyboardButton("\U00002139 Bot Status", callback_data="status"),
+                InlineKeyboardButton("Bot Status \U00002139", callback_data="status"),
             ],
         ]
 
