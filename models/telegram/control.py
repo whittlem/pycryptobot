@@ -65,7 +65,10 @@ class TelegramControl():
                     f"<b>What do you want to {callbackTag}?</b>",
                     reply_markup=self._sortInlineButtons(buttons, f"{callbackTag}"))
         else:
-            update.message.reply_text("No active bots found.")
+            try:
+                query.edit_message_text("No active bots found.")
+            except:
+                update.effective_message.reply_html("<b>No active bots found.</b>")
 
     def _actionBotResponse(self, update: Updater, callbackTag, state, status: str = "active"):
         query = update.callback_query
@@ -73,17 +76,18 @@ class TelegramControl():
             query.answer()
         except:
             pass
-
-        if query.data in ("allclose", "all"):
-            query.edit_message_text("%s bots", "Stopping" if callbackTag == "stop" else "Pausing")
+        
+        mode = "Stopping" if callbackTag == "stop" else "Pausing"
+        if query.data.__contains__("allclose") or query.data.__contains__("all"):
+            query.edit_message_text(f"{mode} bots")
 
             for pair in helper.getActiveBotList(status):
-                helper.stopRunningBot(pair, state, False if "allclose" in query.data else True)
+                helper.stopRunningBot(pair, state, False if query.data.__contains__("allclose") else True)
                 sleep(1)
         else:
             helper.stopRunningBot(str(query.data).replace(f"{callbackTag}_", ""), state, True)
             query.edit_message_text(
-                    f"{'Stopping' if callbackTag == 'stop' else 'Pausing'} {str(query.data).replace(f'{callbackTag}_', '')} crypto bot"
+                    f"{mode} {str(query.data).replace(f'{callbackTag}_', '')} crypto bot"
                 )
 
         query.edit_message_text("Operation Complete")
@@ -165,7 +169,15 @@ class TelegramControl():
     def resumeBotResponse(self, update: Updater):
         self._actionBotResponse(update, "resume", "start", "pause")
 
-    def askRestartBot(self, update: Updater):
+    def askSellBotList(self, update):
+        """Manual sell request (asks which coin to sell)"""
+        self._askBotList(update, "sell", "active")
+
+    def askBuyBotList(self, update):
+        """Manual buy request"""
+        self._askBotList(update, "buy", "active")
+
+    def askRestartBotList(self, update: Updater):
         self._askBotList(update, "restart", "active")
 
     def restartBotResponse(self, update: Updater):
@@ -197,3 +209,34 @@ class TelegramControl():
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         update.message.reply_text("Select exchange", reply_markup=reply_markup)
+
+    def askDeleteBotList(self, update: Updater):
+        """ask which bot to delete"""
+        buttons = []
+        keyboard = []
+
+        helper.read_data()
+        for market in helper.data["markets"]:
+            buttons.append(
+                InlineKeyboardButton(market, callback_data="delete_" + market)
+            )
+
+        if len(buttons) > 0:
+            i = 0
+            while i <= len(buttons) - 1:
+                if len(buttons) - 1 >= i + 2:
+                    keyboard.append([buttons[i], buttons[i + 1], buttons[i + 2]])
+                elif len(buttons) - 1 >= i + 1:
+                    keyboard.append([buttons[i], buttons[i + 1]])
+                else:
+                    keyboard.append([buttons[i]])
+                i += 3
+            keyboard.append([InlineKeyboardButton("Cancel", callback_data="cancel")])
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        update.message.reply_text(
+            "<b>What crypto bots do you want to delete?</b>",
+            reply_markup=reply_markup,
+            parse_mode="HTML",
+        )

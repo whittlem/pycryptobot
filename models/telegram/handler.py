@@ -115,7 +115,7 @@ class TelegramHandler():
             control.resumeBotResponse(update)
 
         elif query.data == "restart":
-            control.askRestartBot(update)
+            control.askRestartBotList(update)
         elif query.data.__contains__("restart_"):
             control.restartBotResponse(update)
 
@@ -123,16 +123,26 @@ class TelegramHandler():
             actions.startOpenOrders(update)
 
         elif query.data == "buy":
-            control._askBotList(update, "buy", "active")
-        elif query.data.__contains__("buy_"):
+            control.askBuyBotList(update)
+        elif query.data.__contains__("confirm_buy_"):
             actions.buyresponse(update)
+        elif query.data.__contains__("buy_"):
+            self.askConfimation(update)
 
         elif query.data == "sell":
-            control._askBotList(update, "sell", "active")
-        elif query.data.__contains__("sell_"):
+            control.askSellBotList(update)
+        elif query.data.__contains__("confirm_sell_"):
             actions.sellresponse(update)
+        elif query.data.__contains__("sell_"):
+            self.askConfimation(update)
 
-        
+        elif query.data == "delete":
+            control.askDeleteBotList(update)
+        elif query.data.__contains__("delete_"):
+            actions.deleteresponse(update)
+
+        elif query.data == "startmarket":
+            actions.StartMarketScan(update)
 
     def askMarginType(self, update):
         """Ask what user wants to see active order/pairs or all"""
@@ -258,7 +268,6 @@ class TelegramHandler():
 
     def askConfigOptions(self, update: Updater):
         keyboard = []
-        # print(helper.config.config)
         for exchange in helper.config:
             if not exchange == "telegram":
                 keyboard.append(
@@ -270,10 +279,19 @@ class TelegramHandler():
         query.answer()
         query.edit_message_text("Select exchange", reply_markup=reply_markup)
 
-    def sellrequest(self, update):
-        """Manual sell request (asks which coin to sell)"""
-        control._askBotList(update, "sell", "active")
+    def askConfimation(self, update):
 
-    def buyrequest(self, update):
-        """Manual buy request"""
-        control._askBotList(update, "buy", "active")
+        query = update.callback_query
+        keyboard = [
+            [
+                InlineKeyboardButton("Confirm", callback_data=f"confirm_{query.data}"),
+            ],
+            [InlineKeyboardButton("Cancel", callback_data="cancel")],
+        ]
+
+        reply_markup = InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
+
+        try:
+            query.edit_message_text(f"<b>Are you sure you want to {query.data.replace('_', ' ')}?</b>", reply_markup=reply_markup, parse_mode="HTML")
+        except:
+            update.message.reply_text(f"<b>Are you sure you want to {query.data.replace('_', ' ')}?</b>", reply_markup=reply_markup, parse_mode="HTML")

@@ -33,9 +33,9 @@ from telegram.replykeyboardremove import ReplyKeyboardRemove
 from apscheduler.schedulers.background import BackgroundScheduler
 from models.chat import Telegram
 
-from models.telegram import TelegramControl, TelegramHelper, TelegramHandler, TelegramActions, control
+from models.telegram import TelegramControl, TelegramHelper, TelegramHandler, TelegramActions
 
-s = BackgroundScheduler(timezone='UTC')
+scannerSchedule = BackgroundScheduler(timezone='UTC')
 
 # Enable logging
 logging.basicConfig(
@@ -369,11 +369,8 @@ class TelegramBot(TelegramBotBase):
             return
 
         query = update.callback_query
-
-        if "delete_" in query.data:
-            self.deleteresponse(update, context)
             
-        elif "delexcep_" in query.data:
+        if "delexcep_" in query.data:
             self.ExceptionRemoveCallBack(update, context)
 
         elif query.data == "cancel":
@@ -559,7 +556,7 @@ class TelegramBot(TelegramBotBase):
 
     def sellrequest(self, update, context):
         """Manual sell request (asks which coin to sell)"""
-        self.handler.sellrequest(update)
+        self.control.askSellBotList(update)
         return
 
     def buyrequest(self, update, context):
@@ -567,7 +564,7 @@ class TelegramBot(TelegramBotBase):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
 
-        self.handler.buyrequest(update)
+        self.control.askBuyBotList(update)
         return
 
     def showconfigrequest(self, update, context):
@@ -577,34 +574,6 @@ class TelegramBot(TelegramBotBase):
 
         self.handler.askConfigOptions(update)
         return
-
-        keyboard = []
-        for exchange in self.config:
-            if not exchange == "telegram":
-                keyboard.append(
-                    [InlineKeyboardButton(exchange, callback_data=exchange)]
-                )
-
-        reply_markup = InlineKeyboardMarkup(keyboard)
-
-        update.message.reply_text("Select exchange", reply_markup=reply_markup)
-
-#     def showconfigresponse(self, update, context):
-#         """display config settings based on exchanged selected"""
-#         if not self._checkifallowed(context._user_id_and_data[0], update):
-#             return
-# 
-#         with open(os.path.join(self.config_file), "r", encoding="utf8") as json_file:
-#             self.config = json.load(json_file)
-# 
-#         query = update.callback_query
-# 
-#         if query.data == "scanner":
-#             pbot = self.config[query.data]
-#         else:
-#             pbot = self.config[query.data]["config"]
-# 
-#         query.edit_message_text(query.data + "\n" + json.dumps(pbot, indent=4))
 
     def pausebotrequest(self, update, context) -> None:
         """Ask which bots to pause"""
@@ -797,6 +766,8 @@ class TelegramBot(TelegramBotBase):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
 
+        self.control.askDeleteBotList(update)
+        return
         buttons = []
         keyboard = []
 
@@ -826,23 +797,23 @@ class TelegramBot(TelegramBotBase):
             parse_mode="HTML",
         )
 
-    def deleteresponse(self, update, context):
-        """delete selected bot"""
-        if not self._checkifallowed(context._user_id_and_data[0], update):
-            return
-
-        self._read_data()
-
-        query = update.callback_query
-
-        self.data["markets"].pop(str(query.data).replace("delete_", ""))
-
-        self._write_data()
-
-        query.edit_message_text(
-            f"<i>Deleted {str(query.data).replace('delete_', '')} crypto bot</i>",
-            parse_mode="HTML",
-        )
+#     def deleteresponse(self, update, context):
+#         """delete selected bot"""
+#         if not self._checkifallowed(context._user_id_and_data[0], update):
+#             return
+# 
+#         self._read_data()
+# 
+#         query = update.callback_query
+# 
+#         self.data["markets"].pop(str(query.data).replace("delete_", ""))
+# 
+#         self._write_data()
+# 
+#         query.edit_message_text(
+#             f"<i>Deleted {str(query.data).replace('delete_', '')} crypto bot</i>",
+#             parse_mode="HTML",
+#         )
 
     def checkconnection(self) -> bool:
         """internet connection check"""
@@ -857,101 +828,21 @@ class TelegramBot(TelegramBotBase):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
 
-        if self.autoscandelay > 0 and len(s.get_jobs()) == 0:
-            s.start()
-            s.add_job(self.StartMarketScan, args=(update, context), trigger='interval', minutes=self.autoscandelay*60, name='Volume Auto Scanner', misfire_grace_time=10)
+        if self.autoscandelay > 0 and len(scannerSchedule.get_jobs()) == 0:
+            scannerSchedule.start()
+            scannerSchedule.add_job(self.actions.StartMarketScan, args=(update, context), trigger='interval', minutes=self.autoscandelay*60, name='Volume Auto Scanner', misfire_grace_time=10)
             update.message.reply_text(
                 f"<b>Scan job schedule created to run every {self.autoscandelay} hour(s)</b> \u2705", parse_mode="HTML"
             )
         
-        self.StartMarketScan(update,context, True if len(context.args) > 0 and context.args[0] == "debug" else False, False if len(context.args) > 0 and context.args[0] == "noscan" else True)
+        self.actions.StartMarketScan(update, True if len(context.args) > 0 and context.args[0] == "debug" else False, False if len(context.args) > 0 and context.args[0] == "noscan" else True)
 
     def StopScanning(self,update,context):
-        s.shutdown()
-        update.message.reply_text(
-                "<b>Scan job schedule has been removed</b> \u2705", parse_mode="HTML"
-            )
-
-    def StartMarketScan(self, update, context, debug: bool = False, scanmarkets: bool = True):
-
-        try:
-            with open("scanner.json") as json_file:
-                config = json.load(json_file)
-        except IOError as err:
-            update.message.reply_text(
-                f"<i>scanner.json config error</i>\n{err}", parse_mode="HTML"
-            )
+        if not self._checkifallowed(context._user_id_and_data[0], update):
             return
 
-        if debug == False:
-            if scanmarkets:
-                update.message.reply_text(
-                    f"<i>Gathering market data\nThis can take some time depending on number of pairs\nplease wait...</i> \u23F3", parse_mode="HTML"
-                )
-                output = subprocess.getoutput("python3 scanner.py")
-
-            telegram = Telegram(self.token, str(context._chat_id_and_data[0]))
-            telegram.send("Stopping crypto bots")
-            jsonfiles = self.helper._getActiveBotList()
-            for file in jsonfiles:
-                self.helper._stopRunningBot(file)
-                sleep(5)
-
-        self._read_data()
-        botcounter = 0
-        for ex in config:
-            for quote in config[ex]["quote_currency"]:
-                update.message.reply_text(f"Starting {ex} ({quote}) bots...", parse_mode="HTML")
-                logger.info(f"{ex} {quote}")
-                with open(
-                    os.path.join(
-                        self.datafolder, "telegram_data", f"{ex}_{quote}_output.json"
-                    ),
-                    "r",
-                    encoding="utf8",
-                ) as json_file:
-                    data = json.load(json_file)
-
-                outputmsg =  f"<b>{ex} ({quote})</b> \u23F3 \n"
-
-                for row in data:
-                    if debug:
-                        logger.info("%s", row)
-
-                    if self.maxbotcount > 0 and botcounter >= self.maxbotcount:
-                        continue
-                    
-                    if self.enableleverage == False and (
-                        str(row).__contains__("DOWN") or str(row).__contains__("UP")
-                    ):
-                        continue
-
-                    if row in self.data["scannerexceptions"]:
-                        outputmsg = outputmsg + f"*** {row} found on scanner exception list ***\n"
-                    else:
-                        if data[row]["atr72_pcnt"] != None:
-                            if debug:
-                                logger.info(data[row])
-                            if data[row]["atr72_pcnt"] >= self.atr72pcnt:
-                                self.exchange = ex
-                                self.pair = row 
-                                update.message.text = "Auto_Yes"
-                                if self.enable_buy_next and data[row]["buy_next"]:
-                                    outputmsg = outputmsg + f"<i><b>{row}</b>  //--//  <b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%  //--//  <b>buy_next:</b> {data[row]['buy_next']}</i>\n"
-                                    if debug == False:
-                                        self.newbot_start(update, context, "scanner")
-                                    botcounter += 1
-                                elif not self.enable_buy_next:
-                                    outputmsg = outputmsg + f"<i><b>{row}</b>  //--//  <b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%</i>\n"
-                                    if debug == False:
-                                        self.newbot_start(update, context, "scanner")
-                                    botcounter += 1
-                                if debug == False:
-                                    sleep(10)
-
-                update.message.reply_text(f"{outputmsg}", parse_mode="HTML")
-
-        update.message.reply_text(f"<i>Operation Complete.  ({botcounter-1} started)</i>", parse_mode="HTML")
+        scannerSchedule.shutdown()
+        update.message.reply_text("<b>Scan job schedule has been removed</b> \u2705", parse_mode="HTML")
 
     def cleandata(self, update, context) -> None:
         if not self._checkifallowed(context._user_id_and_data[0], update):
@@ -1283,7 +1174,6 @@ def main():
     # Run the bot until you press Ctrl-C
     # since start_polling() is non-blocking and will stop the bot gracefully.
     botconfig.updater.idle()
-
 
 if __name__ == "__main__":
     main()
