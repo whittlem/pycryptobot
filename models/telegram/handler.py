@@ -179,25 +179,33 @@ class TelegramHandler():
         query = response.callback_query
         query.answer()
 
-        closeoutput = "" 
-        openoutput = ""
+        # closeoutput = "" 
+        output = ""
         closedbotCount = 0
         openbotCount = 0
         for file in helper.getActiveBotList():
             helper.read_data(file)
+            output = ""
             if "margin" in helper.data:
                 if "margin" in helper.data and helper.data["margin"] == " ":
-                    # closeoutput = (closeoutput + f"<b>{file}</b>")
-                    # closeoutput = closeoutput + f"\n<i>{helper.data['message']}</i>\n"
-                    query.edit_message_text(f"<b>Active Pair(s)</b>\n<b>{file}</b>\n<i>{helper.data['message']}</i>\n", parse_mode="HTML")
+                    output = (output + f"<b>{file}</b>")
+                    output = output + f"\n<i>{helper.data['message']}</i>\n"
+                    # query.edit_message_text(f"<b>Active Pair(s)</b>\n<b>{file}</b>\n<i>{helper.data['message']}</i>\n", parse_mode="HTML")
                     closedbotCount += 1
                 elif len(helper.data) > 2:
                     space = 20 - len(file)
                     margin_icon = ("\U0001F7E2" if "-" not in helper.data["margin"]else "\U0001F534")
-                    openoutput = (openoutput + f"\U0001F4C8 <b>{file}</b> ".ljust(space))
-                    openoutput = (openoutput + f" {margin_icon}<i>Current Margin: {helper.data['margin']}\n \U0001F4B0 (TSL Trg): {helper.data['trailingstoplosstriggered']}</i>\n (TSL Change): {helper.data['change_pcnt_high']}\n")
-                    query.edit_message_text(f"<b>Open Order(s)</b>\n{openoutput}", parse_mode="HTML")
+                    output = (output + f"\U0001F4C8 <b>{file}</b> ".ljust(space))
+                    output = (output + f" {margin_icon}<i>Current Margin: {helper.data['margin']}\n \U0001F4B0 (TSL Trg): {helper.data['trailingstoplosstriggered']}</i> -- (TSL Change): {helper.data['change_pcnt_high']}\n")
+                    # query.edit_message_text(f"<b>Open Order(s)</b>\n{openoutput}", parse_mode="HTML")
                     openbotCount += 1
+                if closedbotCount + openbotCount == 1:
+                    try:
+                        query.edit_message_text(f"{output}", parse_mode="HTML")
+                    except:
+                        response.effective_message.reply_html(f"{output}")
+                else:
+                    response.effective_message.reply_html(f"{output}")
 
         if (query.data.__contains__("orders") or query.data.__contains__("all")) and openbotCount == 0:
             query.edit_message_text("<b>No open orders found.</b>", parse_mode="HTML")
