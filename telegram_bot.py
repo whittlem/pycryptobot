@@ -380,7 +380,7 @@ class TelegramBot(TelegramBotBase):
 
     def setcommands(self, update, context) -> None:
         command = [
-            BotCommand("controlPanel", "show command buttons"),
+            BotCommand("controlpanel", "show command buttons"),
             BotCommand("cleandata", "clean JSON data files"),
             BotCommand("addexception", "add pair to scanner exception list"),
             BotCommand("removeexception", "remove pair from scanner exception list"),
@@ -391,7 +391,7 @@ class TelegramBot(TelegramBotBase):
             BotCommand("margins", "show margins for all open trades"),
             BotCommand("trades", "show closed trades"),
             BotCommand("stats", "show exchange stats for market/pair"),
-            BotCommand("help", "show help text"),
+            BotCommand("help", "show help text")
             # BotCommand("showinfo", "show all running bots status"),
             # BotCommand("showconfig", "show config for selected exchange"),
             # BotCommand("startbots", "start all or selected bot"),

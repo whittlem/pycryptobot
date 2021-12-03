@@ -36,7 +36,7 @@ class TelegramHandler():
         keyboard = [
             [
                 InlineKeyboardButton("\U0001F4D6 View config", callback_data="showconfig"),
-                InlineKeyboardButton("Coming Soon) Edit config \U00002699", callback_data="editconfig"),
+                InlineKeyboardButton("\U0001F510 Edit config \U00002699", callback_data="editconfig"),
             ],
             [
                 InlineKeyboardButton("\U0001F4B0 Sell", callback_data="sell"),
@@ -253,4 +253,6 @@ class TelegramHandler():
 
     def _removeScheduledJob(self, update):
         scannerSchedule.shutdown()
-        update.message.reply_text("<b>Scan job schedule has been removed</b> \u2705", parse_mode="HTML")
+        query = update.callback_query
+        query.answer()
+        query.edit_message_text("<b>Scan job schedule has been removed</b> \u2705", parse_mode="HTML")
