@@ -380,27 +380,26 @@ class TelegramBot(TelegramBotBase):
 
     def setcommands(self, update, context) -> None:
         command = [
-            BotCommand("showcommands", "show inline command buttons"),
-            BotCommand("help", "show help text"),
-            BotCommand("margins", "show margins for all open trades"),
-            BotCommand("trades", "show closed trades"),
-            BotCommand("stats", "show exchange stats for market/pair"),
-            BotCommand("showinfo", "show all running bots status"),
-            BotCommand("showconfig", "show config for selected exchange"),
-            BotCommand("addnew", "add and start a new bot"),
-            BotCommand("deletebot", "delete bot from startbot list"),
-            BotCommand("startbots", "start all or selected bot"),
-            BotCommand("stopbots", "stop all or the selected bot"),
-            BotCommand("pausebots", "pause all or selected bot"),
-            BotCommand("resumebots", "resume paused bots"),
-            BotCommand("buy", "manual buy"),
-            BotCommand("sell", "manual sell"),
+            BotCommand("controlPanel", "show command buttons"),
+            BotCommand("cleandata", "clean JSON data files"),
             BotCommand("addexception", "add pair to scanner exception list"),
             BotCommand("removeexception", "remove pair from scanner exception list"),
             BotCommand("startscanner", "start auto scan high volume markets and start bots"),
-            # BotCommand("startscanner", "start auto scan high volume markets and start bots", _kwargs=["noscan","noscan"]),
             BotCommand("stopscanner", "stop auto scan high volume markets"),
-            BotCommand("cleandata", "clean JSON data files")
+            BotCommand("addnew", "add and start a new bot"),
+            BotCommand("deletebot", "delete bot from startbot list"),
+            BotCommand("margins", "show margins for all open trades"),
+            BotCommand("trades", "show closed trades"),
+            BotCommand("stats", "show exchange stats for market/pair"),
+            BotCommand("help", "show help text"),
+            # BotCommand("showinfo", "show all running bots status"),
+            # BotCommand("showconfig", "show config for selected exchange"),
+            # BotCommand("startbots", "start all or selected bot"),
+            # BotCommand("stopbots", "stop all or the selected bot"),
+            # BotCommand("pausebots", "pause all or selected bot"),
+            # BotCommand("resumebots", "resume paused bots"),
+            # BotCommand("buy", "manual buy"),
+            # BotCommand("sell", "manual sell"),
         ]
 
         ubot = Bot(self.token)
@@ -1026,7 +1025,7 @@ def main():
     dp.add_handler(
         CommandHandler("showconfig", botconfig.showconfigrequest, Filters.text)
     )
-    dp.add_handler(CommandHandler("showinfo", botconfig.showbotinfo, Filters.text))
+    # dp.add_handler(CommandHandler("showinfo", botconfig.showbotinfo, Filters.text))
 
     # General Action Command
     dp.add_handler(CommandHandler("setcommands", botconfig.setcommands))
@@ -1038,8 +1037,8 @@ def main():
     )
     dp.add_handler(CommandHandler("startbots", botconfig.startallbotsrequest))
     dp.add_handler(CommandHandler("stopbots", botconfig.stopbotrequest))
-    dp.add_handler(CommandHandler("buy", botconfig.buyrequest, Filters.text))
-    dp.add_handler(CommandHandler("sell", botconfig.sellrequest, Filters.text))
+    # dp.add_handler(CommandHandler("buy", botconfig.buyrequest, Filters.text))
+    # dp.add_handler(CommandHandler("sell", botconfig.sellrequest, Filters.text))
     dp.add_handler(CommandHandler("deletebot", botconfig.deleterequest, Filters.text))
 
     dp.add_handler(CommandHandler("startscanner", botconfig.StartScanning, Filters.text))
@@ -1059,7 +1058,7 @@ def main():
     # Response to Question handler
     dp.add_handler(CallbackQueryHandler(botconfig.handler.getResponse))
 
-    dp.add_handler(CommandHandler("showcommands", botconfig.Request))
+    dp.add_handler(CommandHandler("controlPanel", botconfig.Request))
 
     conversation_exception = ConversationHandler(
         entry_points=[CommandHandler("addexception", botconfig.ExceptionExchange)],

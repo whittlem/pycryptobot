@@ -35,7 +35,8 @@ class TelegramHandler():
     def getRequest(self) -> InlineKeyboardMarkup:
         keyboard = [
             [
-                InlineKeyboardButton("\U0001F4D6 View configuration", callback_data="showconfig"),
+                InlineKeyboardButton("\U0001F4D6 View config", callback_data="showconfig"),
+                InlineKeyboardButton("Coming Soon) Edit config \U00002699", callback_data="editconfig"),
             ],
             [
                 InlineKeyboardButton("\U0001F4B0 Sell", callback_data="sell"),
@@ -195,7 +196,7 @@ class TelegramHandler():
                     space = 20 - len(file)
                     margin_icon = ("\U0001F7E2" if "-" not in helper.data["margin"]else "\U0001F534")
                     output = (output + f"\U0001F4C8 <b>{file}</b> ".ljust(space))
-                    output = (output + f" {margin_icon}  <i>Current Margin: {helper.data['margin']} \U0001F4B0 (P/L): {helper.data['delta']}\n    (TSL Trg): {helper.data['trailingstoplosstriggered']}</i>  --  (TSL Change): {helper.data['change_pcnt_high']}\n")
+                    output = (output + f" {margin_icon}  <i>Current Margin: {helper.data['margin']} \U0001F4B0 (P/L): {helper.data['delta']}</i>\n      (TSL Trg): {helper.data['trailingstoplosstriggered']}  --  (TSL Change): {helper.data['change_pcnt_high']}\n")
                     openbotCount += 1
                 if closedbotCount + openbotCount == 1:
                     try:
