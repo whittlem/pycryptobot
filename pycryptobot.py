@@ -1695,7 +1695,7 @@ def executeJob(
             if _state.last_action == "BUY":
                 # update margin for telegram bot
                 telegram_bot.addmargin(
-                    str(_truncate(margin, 4) + "%"), str(_truncate(profit, 2)), price
+                    str(_truncate(margin, 4) + "%"), str(_truncate(profit, 2)), price, change_pcnt_high
                 )
 
             # decrement ignored iteration

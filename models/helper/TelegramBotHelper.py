@@ -94,7 +94,7 @@ class TelegramBotHelper:
             ) as outfile:
                 json.dump(self.data, outfile, indent=4)
 
-    def addmargin(self, margin: str = "", delta: str = "", price: str = ""):
+    def addmargin(self, margin: str = "", delta: str = "", price: str = "", change_pcnt_high: float = 0.0):
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             self._read_data()
 
@@ -105,6 +105,8 @@ class TelegramBotHelper:
                 "price": price,
                 "df_high": " ",
                 "from_df_high": " ",
+                "trailingstoplosstriggered" : margin > self.app.trailingStopLossTrigger(),
+                "change_pcnt_high" : change_pcnt_high
             }
             self.data.update(addmarket)
             self._write_data()

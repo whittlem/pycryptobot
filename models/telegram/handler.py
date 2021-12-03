@@ -191,7 +191,7 @@ class TelegramHandler():
                     space = 20 - len(file)
                     margin_icon = ("\U0001F7E2" if "-" not in helper.data["margin"]else "\U0001F534")
                     openoutput = (openoutput + f"\U0001F4C8 <b>{file}</b> ".ljust(space))
-                    openoutput = (openoutput + f" {margin_icon}<i>Current Margin: {helper.data['margin']}  \U0001F4B0 (P/L): {helper.data['delta']}</i>\n")
+                    openoutput = (openoutput + f" {margin_icon}<i>Current Margin: {helper.data['margin']}\n  \U0001F4B0 (S/L Trg): {helper.data['trailingstoplosstriggered']}</i> Change: {helper.data['change_pcnt_high']}\n")
         
         if query.data.__contains__("orders"):
             query.edit_message_text("<b>No open orders found.</b>" if openoutput == "" else f"<b>Open Order(s)</b>\n{openoutput}", parse_mode="HTML")

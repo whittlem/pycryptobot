@@ -99,7 +99,7 @@ class TelegramActions():
                 sleep(5)
 
         helper.read_data()
-        botcounter = 0
+        botcounter = len(helper.getActiveBotList())
         for ex in config:
             if helper.config["scanner"]["maxbotcount"] > 0 and botcounter >= helper.config["scanner"]["maxbotcount"]:
                 break
