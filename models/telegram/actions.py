@@ -179,8 +179,8 @@ class TelegramActions():
                 helper.stopRunningBot(file, "exit")
                 sleep(5)
 
-        helper.read_data()
         botcounter = len(helper.getActiveBotList())
+        helper.read_data()
         for ex in config:
             if helper.config["scanner"]["maxbotcount"] > 0 and botcounter >= helper.config["scanner"]["maxbotcount"]:
                 break
