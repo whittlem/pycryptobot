@@ -181,27 +181,29 @@ class TelegramHandler():
 
         closeoutput = "" 
         openoutput = ""
+        closedbotCount = 0
+        openbotCount = 0
         for file in helper.getActiveBotList():
             helper.read_data(file)
             if "margin" in helper.data:
                 if "margin" in helper.data and helper.data["margin"] == " ":
-                    closeoutput = (closeoutput + f"<b>{file}</b>")
-                    closeoutput = closeoutput + f"\n<i>{helper.data['message']}</i>\n"
+                    # closeoutput = (closeoutput + f"<b>{file}</b>")
+                    # closeoutput = closeoutput + f"\n<i>{helper.data['message']}</i>\n"
+                    query.edit_message_text(f"<b>Active Pair(s)</b>\n<b>{file}</b>\n<i>{helper.data['message']}</i>\n", parse_mode="HTML")
+                    closedbotCount += 1
                 elif len(helper.data) > 2:
                     space = 20 - len(file)
                     margin_icon = ("\U0001F7E2" if "-" not in helper.data["margin"]else "\U0001F534")
                     openoutput = (openoutput + f"\U0001F4C8 <b>{file}</b> ".ljust(space))
-                    openoutput = (openoutput + f" {margin_icon}<i>Current Margin: {helper.data['margin']} \U0001F4B0 (TSL Trg): {helper.data['trailingstoplosstriggered']}</i>\n (TSL Change): {helper.data['change_pcnt_high']}\n")
-        
-        if query.data.__contains__("orders"):
-            query.edit_message_text("<b>No open orders found.</b>" if openoutput == "" else f"<b>Open Order(s)</b>\n{openoutput}", parse_mode="HTML")
+                    openoutput = (openoutput + f" {margin_icon}<i>Current Margin: {helper.data['margin']}\n \U0001F4B0 (TSL Trg): {helper.data['trailingstoplosstriggered']}</i>\n (TSL Change): {helper.data['change_pcnt_high']}\n")
+                    query.edit_message_text(f"<b>Open Order(s)</b>\n{openoutput}", parse_mode="HTML")
+                    openbotCount += 1
 
-        elif query.data.__contains__("pairs"):
-            query.edit_message_text("<b>No active pairs found.</b>" if closeoutput == "" else f"<b>Active Pair(s)</b>\n{closeoutput}", parse_mode="HTML")
+        if (query.data.__contains__("orders") or query.data.__contains__("all")) and openbotCount == 0:
+            query.edit_message_text("<b>No open orders found.</b>", parse_mode="HTML")
 
-        elif query.data.__contains__("all"):
-            query.edit_message_text(f"<b>Open Order(s)</b>\n{openoutput}", parse_mode="HTML")
-            response.effective_message.reply_html(f"<b>Active Pair(s)</b>\n{closeoutput}")
+        elif (query.data.__contains__("pairs") or query.data.__contains__("all")) and closedbotCount == 0:
+            query.edit_message_text("<b>No active pairs found.</b>", parse_mode="HTML")
 
     def askConfigOptions(self, update: Updater):
         keyboard = []
