@@ -90,20 +90,20 @@ class PyCryptoBot(BotConfig):
             or self.exchange == Exchange.BINANCE
             or self.exchange == Exchange.KUCOIN
         ):
-            p = re.compile(r"^[1-9A-Z]{2,20}$")
+            p = re.compile(r"^[1-9A-Z]{2,5}$")
             return p.match(currency)
 
         return False
 
     def _isMarketValid(self, market):
         if self.exchange == Exchange.COINBASEPRO or self.exchange == Exchange.KUCOIN:
-            p = re.compile(r"^[1-9A-Z]{2,20}\-[1-9A-Z]{2,20}$")
+            p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
             return p.match(market)
         elif self.exchange == Exchange.BINANCE:
             p = re.compile(r"^[A-Z0-9]{6,12}$")
             if p.match(market):
                 return True
-            p = re.compile(r"^[1-9A-Z]{2,20}\-[1-9A-Z]{2,20}$")
+            p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
             if p.match(market):
                 return True
             return False

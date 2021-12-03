@@ -13,7 +13,7 @@ def isMarketValid(market) -> bool:
     p = re.compile(r"^[0-9A-Z]{5,12}$")
     if p.match(market):
         return True
-    p = re.compile(r"^[1-9A-Z]{2,20}\-[1-9A-Z]{2,20}$")
+    p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
     if p.match(market):
         return True
     return False
