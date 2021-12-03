@@ -190,14 +190,12 @@ class TelegramHandler():
                 if "margin" in helper.data and helper.data["margin"] == " ":
                     output = (output + f"<b>{file}</b>")
                     output = output + f"\n<i>{helper.data['message']}</i>\n"
-                    # query.edit_message_text(f"<b>Active Pair(s)</b>\n<b>{file}</b>\n<i>{helper.data['message']}</i>\n", parse_mode="HTML")
                     closedbotCount += 1
                 elif len(helper.data) > 2:
                     space = 20 - len(file)
                     margin_icon = ("\U0001F7E2" if "-" not in helper.data["margin"]else "\U0001F534")
                     output = (output + f"\U0001F4C8 <b>{file}</b> ".ljust(space))
-                    output = (output + f" {margin_icon}<i>Current Margin: {helper.data['margin']}\n \U0001F4B0 (TSL Trg): {helper.data['trailingstoplosstriggered']}</i> -- (TSL Change): {helper.data['change_pcnt_high']}\n")
-                    # query.edit_message_text(f"<b>Open Order(s)</b>\n{openoutput}", parse_mode="HTML")
+                    output = (output + f" {margin_icon}  <i>Current Margin: {helper.data['margin']} \U0001F4B0 (P/L): {helper.data['delta']}\n    (TSL Trg): {helper.data['trailingstoplosstriggered']}</i>  --  (TSL Change): {helper.data['change_pcnt_high']}\n")
                     openbotCount += 1
                 if closedbotCount + openbotCount == 1:
                     try:
