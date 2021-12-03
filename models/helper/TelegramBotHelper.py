@@ -105,7 +105,7 @@ class TelegramBotHelper:
                 "price": price,
                 "df_high": " ",
                 "from_df_high": " ",
-                "trailingstoplosstriggered" : margin > self.app.trailingStopLossTrigger(),
+                "trailingstoplosstriggered" : float(margin) > self.app.trailingStopLossTrigger(),
                 "change_pcnt_high" : change_pcnt_high
             }
             self.data.update(addmarket)
