@@ -43,7 +43,8 @@ class TelegramBotHelper:
                         "manualsell": False,
                         "manualbuy": False,
                         "started": datetime.now().isoformat(),
-                        "startmethod" : self.app.startmethod
+                        "startmethod" : self.app.startmethod,
+                        "trailingstoplosstriggered" : False
                     }
                 }
                 self.data = ds
