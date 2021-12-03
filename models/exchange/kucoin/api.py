@@ -897,7 +897,7 @@ class PublicAPI(AuthAPIBase):
 
         if "time" in resp["data"] and "price" in resp["data"]:
             # make sure the time format is correct, if not, pause and submit request again
-            trycnt, maxretry = (1, 3)
+            trycnt, maxretry = (1, 5)
             while trycnt <= maxretry:
                 resptime = ""
                 try:
