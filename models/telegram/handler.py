@@ -89,7 +89,7 @@ class TelegramHandler():
             self.getMargins(update)
 
         elif query.data == "status":
-            self.getBotInfo(update)
+            actions.getBotInfo(update)
 
         elif query.data == "showconfig":
             self.askConfigOptions(update)
@@ -202,79 +202,6 @@ class TelegramHandler():
         elif query.data.__contains__("all"):
             query.edit_message_text(f"<b>Open Order(s)</b>\n{openoutput}", parse_mode="HTML")
             response.effective_message.reply_html(f"<b>Active Pair(s)</b>\n{closeoutput}")
-
-    def _getUptime(self, date: str):
-        now = str(datetime.now())
-        # If date passed from datetime.now() remove milliseconds
-        if date.find(".") != -1:
-            dt = date.split(".")[0]
-            date = dt
-        if now.find(".") != -1:
-            dt = now.split(".", maxsplit=1)[0]
-            now = dt
-
-        now = now.replace("T", " ")
-        now = f"{now}"
-        # Add time in case only a date is passed in
-        # new_date_str = f"{date} 00:00:00" if len(date) == 10 else date
-        date = date.replace("T", " ") if date.find("T") != -1 else date
-        # Add time in case only a date is passed in
-        new_date_str = f"{date} 00:00:00" if len(date) == 10 else date
-
-        started = datetime.strptime(new_date_str, "%Y-%m-%d %H:%M:%S")
-        now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
-        duration = now - started
-        duration_in_s = duration.total_seconds()
-        hours = divmod(duration_in_s, 3600)[0]
-        duration_in_s -= 3600 * hours
-        minutes = divmod(duration_in_s, 60)[0]
-        return f"{round(hours)}h {round(minutes)}m"
-
-    def getBotInfo(self, update):
-        query = update.callback_query
-        try:
-            query.answer()
-        except:
-            pass
-        count = 0
-        for file in helper.getActiveBotList():
-            output = ""
-            count += 1
-            helper.read_data(file)
-
-            output = output + f"\U0001F4C8 <b>{file}</b> "
-
-            last_modified = datetime.now() - datetime.fromtimestamp(
-                os.path.getmtime(
-                    os.path.join(self.datafolder, "telegram_data", f"{file}.json")
-                )
-            )
-
-            icon = "\U0001F6D1" # red dot
-            if last_modified.seconds > 90 and last_modified.seconds != 86399:
-                output = f"{output} {icon} <b>Status</b>: <i>defaulted</i>"
-            elif "botcontrol" in helper.data and "status" in helper.data["botcontrol"]:
-                if helper.data["botcontrol"]["status"] == "active":
-                    icon = "\U00002705" # green tick
-                if helper.data["botcontrol"]["status"] == "paused":
-                    icon = "\U000023F8" # pause icon
-                if helper.data["botcontrol"]["status"] == "exit":
-                    icon = "\U0000274C" # stop icon
-                output = f"{output} {icon} <b>Status</b>: <i>{helper.data['botcontrol']['status']}</i>"
-                output = f"{output} \u23F1 <b>Uptime</b>: <i>{self._getUptime(helper.data['botcontrol']['started'])}</i>\n"
-            else:
-                output = f"{output} {icon} <b>Status</b>: <i>stopped</i> "
-
-            if count == 1:
-                try:
-                    query.edit_message_text(f"{output}", parse_mode="HTML")
-                except:
-                    update.effective_message.reply_html(f"{output}")
-            else:
-                update.effective_message.reply_html(f"{output}")
-            sleep(0.2)
-
-        update.effective_message.reply_html(f"<b>Bot Count ({count})</b>")
 
     def askConfigOptions(self, update: Updater):
         keyboard = []
