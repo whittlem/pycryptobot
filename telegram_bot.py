@@ -446,7 +446,7 @@ class TelegramBot(TelegramBotBase):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
 
-        self.handler.getBotInfo(update)
+        self.actions.getBotInfo(update)
         return
 
     def trades(self, update, context):
