@@ -35,18 +35,15 @@ class TelegramHandler():
     def getRequest(self) -> InlineKeyboardMarkup:
         keyboard = [
             [
-                InlineKeyboardButton("Cancel", callback_data="cancel")
-            ],
-            [
                 InlineKeyboardButton("\U0001F4D6 View configuration", callback_data="showconfig"),
             ],
             [
                 InlineKeyboardButton("\U0001F4B0 Sell", callback_data="sell"),
                 InlineKeyboardButton("\U0001FA99 Buy", callback_data="buy"),
             ],
-            [
-                InlineKeyboardButton("Scanner Exceptions", callback_data="exception"),
-            ],
+            # [
+            #     InlineKeyboardButton("Scanner Exceptions", callback_data="exception"),
+            # ],
             [
                 InlineKeyboardButton("Stop Market Scanner", callback_data="stopmarket"),
             ],
@@ -57,16 +54,19 @@ class TelegramHandler():
                 InlineKeyboardButton("\U0001F9FE Restart open orders", callback_data="reopen"),
             ],
             [
-                InlineKeyboardButton("\U0001F7E2 startbot(s)", callback_data="start"),
-                InlineKeyboardButton("stopbot(s) \U0001F534", callback_data="stop"),
-            ],
-            [
                 InlineKeyboardButton("\U000023F8 pausebot(s)", callback_data="pause"),
                 InlineKeyboardButton("resumebot(s) \U0000267B", callback_data="resume"),
             ],
             [
-                InlineKeyboardButton("\U0001F4C8 Margins", callback_data="margin"),
-                InlineKeyboardButton("Bot Status \U00002139", callback_data="status"),
+                InlineKeyboardButton("\U0001F7E2 startbot(s)", callback_data="start"),
+                InlineKeyboardButton("stopbot(s) \U0001F534", callback_data="stop"),
+            ],
+            [
+                InlineKeyboardButton("\U00002139 Bot Status", callback_data="status"),
+                InlineKeyboardButton("Margins \U0001F4C8", callback_data="margin"),
+            ],
+            [
+                InlineKeyboardButton("Cancel", callback_data="cancel")
             ],
         ]
 
@@ -148,10 +148,10 @@ class TelegramHandler():
             actions.StartMarketScan(update)
         elif query.data == "stopmarket":
             self._removeScheduledJob(update)
-
-        elif query.data == "exception":
-            self._checkScheduledJob(update)
-            actions.StartMarketScan(update)
+# 
+#         elif query.data == "exception":
+#             # self._checkScheduledJob(update)
+#             actions.StartMarketScan(update)
 
 
     def askMarginType(self, update):
