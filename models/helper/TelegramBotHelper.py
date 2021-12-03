@@ -200,19 +200,7 @@ class TelegramBotHelper:
         except FileNotFoundError:
             pass
 
-        sort_columns = []
-        ascend = []
-        if self.app.enable_buy_next:
-            sort_columns.append("buy_next")
-            ascend.append(False)
-        if self.app.enable_atr72_pcnt:
-            sort_columns.append("atr72_pcnt")
-            ascend.append(False)
-        if self.app.enable_volume:
-            sort_columns.append("volume")
-            ascend.append(False)
-
-        output = output.sort_values(by=sort_columns, ascending=ascend, inplace=False)
+        output = output.sort_values(by=["buy_next", "volume"], ascending=[False, False], inplace=False)
 
         output.to_json(
             os.path.join(

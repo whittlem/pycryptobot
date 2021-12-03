@@ -1,112 +1,207 @@
 import time
 import json
 import pandas as pd
-
+import re
+from decimal import Decimal
 from models.PyCryptoBot import PyCryptoBot
 from models.exchange import kucoin
 from models.helper.TelegramBotHelper import TelegramBotHelper as TGBot
-from models.Trading import TechnicalAnalysis
+# from models.Trading import TechnicalAnalysis
 from models.exchange.binance import PublicAPI as BPublicAPI
 from models.exchange.coinbase_pro import PublicAPI as CPublicAPI
 from models.exchange.kucoin import PublicAPI as KPublicAPI
 from models.exchange.Granularity import Granularity
-from models.exchange.ExchangesEnum import Exchange
-
-GRANULARITY = Granularity(Granularity.ONE_HOUR)
-try:
-    with open("scanner.json", encoding='utf8') as json_file:
-        config = json.load(json_file)
-except IOError as err:
-    print (err)
-
-for exchange in config:
-    ex = Exchange(exchange)
-    app = PyCryptoBot(exchange=ex)
-    for quote in config[ex.value]["quote_currency"]:
-        if ex == Exchange.BINANCE:
-            api = BPublicAPI()
-        elif ex == Exchange.COINBASEPRO:
-            api = CPublicAPI()
-        elif ex == Exchange.KUCOIN:
-            api = KPublicAPI()
-        else:
-            raise ValueError(f"Invalid exchange: {ex}")
-
-        markets = []
-        resp = api.getMarkets24HrStats()
-        if ex == Exchange.BINANCE:
-            for row in resp:
-                if row["symbol"].endswith(quote):
-                    markets.append(row)
-        elif ex == Exchange.COINBASEPRO:
-            for market in resp:
-                if market.endswith(f"-{quote}"):
-                    resp[market]["stats_24hour"]["market"] = market
-                    markets.append(resp[market]["stats_24hour"])
-        elif ex == Exchange.KUCOIN:
-            results = resp["data"]["ticker"]
-            for result in results:
-                if result["symbol"].endswith(f"-{quote}"):
-                    markets.append(result)
+from models.exchange.ExchangesEnum import Exchange as CryptoExchange
+from tradingview_ta import *
 
 
-        df_markets = pd.DataFrame(markets)
+def volatility_calculator(bollinger_band_upper, bollinger_band_lower):
+    """
+    A break away from traditional volatility calcuations. Based entirely
+    on the proportionate price gap between bollinger upper and lower bands.
+    """
 
-        if ex == Exchange.BINANCE:
-            df_markets = df_markets[["symbol", "lastPrice", "quoteVolume"]]
-        elif ex == Exchange.COINBASEPRO:
-            df_markets = df_markets[["market", "last", "volume"]]
-        elif ex == Exchange.KUCOIN:
-            df_markets = df_markets[["symbol", "last", "volValue"]]
+    try:
+        b_spread = Decimal(bollinger_band_upper) - Decimal(bollinger_band_lower)
+    except TypeError:
+        return 0
+    
+    return abs(b_spread / Decimal(bollinger_band_lower)) * 100
 
+def load_configs():
+    exchanges_loaded = []
+    try:
+        with open("scanner.json", encoding='utf8') as json_file:
+            config = json.load(json_file)
+    except IOError as err:
+        raise(err)
+    try:
+        for exchange in config:
+            ex = CryptoExchange(exchange)
+            exchange_config = config[ex.value]
+            if ex == CryptoExchange.BINANCE:
+                binance_app = PyCryptoBot(exchange=ex)
+                binance_app.public_api = BPublicAPI()
+                binance_app.scanner_quote_currencies = exchange_config.get('quote_currency', ['USDT'])
+                binance_app.granularity = Granularity(Granularity.convert_to_enum(config.get('granularity', '1h')))
+                binance_app.adx_threshold = config.get('adx_threshold', 25)
+                binance_app.volatility_threshold = config.get('volatility_threshold', 9)
+                binance_app.volume_threshold = config.get('volume_threshold', 20000)
+                binance_app.tv_screener_ratings = [rating.upper() for rating in config.get('tv_screener_ratings', ['STRONG_BUY'])]
+                exchanges_loaded.append(binance_app)
+            elif ex == CryptoExchange.COINBASEPRO:
+                coinbase_app = PyCryptoBot(exchange=ex)
+                coinbase_app.public_api = CPublicAPI()
+                coinbase_app.scanner_quote_currencies = exchange_config.get('quote_currency', ['USDT'])
+                coinbase_app.granularity = Granularity(Granularity.convert_to_enum(int(config.get('granularity', '3600'))))
+                coinbase_app.adx_threshold = config.get('adx_threshold', 25)
+                coinbase_app.volatility_threshold = config.get('volatility_threshold', 9)
+                coinbase_app.volume_threshold = config.get('volume_threshold', 20000)
+                coinbase_app.tv_screener_ratings = [rating.upper() for rating in config.get('tv_screener_ratings', ['STRONG_BUY'])]
+                exchanges_loaded.append(coinbase_app)
+            elif ex == CryptoExchange.KUCOIN:
+                kucoin_app = PyCryptoBot(exchange=ex)
+                kucoin_app.public_api = KPublicAPI()
+                kucoin_app.scanner_quote_currencies = exchange_config.get('quote_currency', ['USDT'])
+                kucoin_app.granularity = Granularity(Granularity.convert_to_enum(config.get('granularity', '1h')))
+                kucoin_app.adx_threshold = config.get('adx_threshold', 25)
+                kucoin_app.volatility_threshold = config.get('volatility_threshold', 9)
+                kucoin_app.volume_threshold = config.get('volume_threshold', 20000)
+                kucoin_app.tv_screener_ratings = [rating.upper() for rating in config.get('tv_screener_ratings', ['STRONG_BUY'])]
+                exchanges_loaded.append(kucoin_app)
+            else:
+                raise ValueError(f"Invalid exchange found in config: {ex}")
+    except AttributeError as e:
+        print(f"Invalid exchange: {e}...ignoring.")
 
-        df_markets.columns = ["market", "price", "volume"]
-        df_markets["price"] = df_markets["price"].astype(float)
+    return exchanges_loaded
+
+def get_markets(app, quote_currency):
+    markets = []
+    quote_currency = quote_currency.upper()
+    api = app.public_api
+    resp = api.getMarkets24HrStats()
+    if app.exchange == CryptoExchange.BINANCE:
+        for row in resp:
+            if row["symbol"].endswith(quote_currency):
+                markets.append(row['symbol'])
+    elif app.exchange == CryptoExchange.COINBASEPRO:
+        for market in resp:
+            market = str(market)
+            if market.endswith(f"-{quote_currency}"):
+                markets.append(market)
+    elif app.exchange == CryptoExchange.KUCOIN:
+        results = resp["data"]["ticker"]
+        for result in results:
+            if result["symbol"].endswith(f"-{quote_currency}"):
+                markets.append(result['symbol'])
+    
+    return markets
+
+def process_screener_data(app, markets, quote_currency):
+    """
+    Hit TradingView up for the goods so we don't waste unnecessary time/compute resources (brandon's top picks)
+    """
+    
+    ta_screener_list = [f"{re.sub('PRO', '', app.exchange.name, re.IGNORECASE)}:{re.sub('-', '', market)}" for market in markets]
+    screener_analysis = [a for a in get_multiple_analysis(screener='crypto', interval=app.granularity.short, symbols=ta_screener_list).values()]
+    # Take what we need and do magic, ditch the rest.
+    formatted_ta = []
+    for ta in screener_analysis:
+        try:
+            recommend = ta.summary.get('RECOMMENDATION')
+            volatility = Decimal(volatility_calculator(ta.indicators['BB.upper'], ta.indicators['BB.lower']))
+            adx = abs(Decimal(ta.indicators['ADX']))
+            adx_posi_di = Decimal(ta.indicators['ADX+DI'])
+            adx_neg_di = Decimal(ta.indicators['ADX-DI'])
+            volume = Decimal(ta.indicators['volume'])
+            macd = Decimal(ta.indicators['MACD.macd'])
+            macd_signal = Decimal(ta.indicators['MACD.signal'])
+            bollinger_upper = Decimal(ta.indicators['BB.upper'])
+            bollinger_lower = Decimal(ta.indicators['BB.lower'])
+            score = 0
+            # print('symbol\tvolume\tvvolatilith\tadx\tadx_posi_di\tadx_neg_di\tmacd\tmacd_signal\tbollinger_upper\tbollinger_lower\trecommend')
+            # print(ta.symbol, volume, volatility, adx, adx_posi_di, adx_neg_di, macd, macd_signal, bollinger_upper, bollinger_lower, recommend)
+            if recommend in app.tv_screener_ratings:
+                # print(ta.summary.get('RECOMMENDATION'))
+                score += 5
+            if (adx >= app.adx_threshold) and (adx_posi_di > adx_neg_di) and (adx_posi_di > adx):
+                # print(f"ADX({adx}) >= {app.adx_threshold}")
+                score += 2
+            if volume >= app.volume_threshold:
+                # print(f"Volume({volume}) >= {app.volume_threshold}")
+                score += 1
+            if abs(macd) > abs(macd_signal):
+                # print(f"MACD({macd}) above signal({macd_signal})")
+                score += 1
+            if volatility >= app.volatility_threshold:
+                # print(f"Volatility({volatility} is above {app.volatility_threshold}")
+                score += 1
+            if score >= 10:
+                relavent_ta = {}
+                if app.exchange == CryptoExchange.COINBASEPRO or app.exchange == CryptoExchange.KUCOIN:
+                    relavent_ta['market'] = re.sub(quote_currency,f"-{quote_currency}", ta.symbol)
+                else:
+                    relavent_ta['market'] = ta.symbol
+                #relavent_ta['market'] = ta.symbol
+                relavent_ta['volume'] = volume
+                relavent_ta['volatility'] = volatility
+                relavent_ta['adx'] = ta.indicators['ADX']
+                relavent_ta['adx+di'] = adx_posi_di
+                relavent_ta['adx-di'] = adx_neg_di
+                relavent_ta['macd'] = macd
+                relavent_ta['macd.signal'] = macd_signal
+                relavent_ta['bollinger_upper'] = bollinger_upper
+                relavent_ta['bollinger_lower'] = bollinger_lower
+                relavent_ta['rating'] = recommend
+                try:
+                    relavent_ta['buy_next'] = 'SEND IT!' if re.search('.*BUY', recommend).group() else False
+                except AttributeError:
+                    relavent_ta['buy_next'] = False
+                formatted_ta.append(relavent_ta)
+        except Exception as e:
+            continue
+    if formatted_ta:
+        # Stick it in a DF for the bots
+        df_markets = pd.DataFrame(formatted_ta)
+        df_markets = df_markets[["market", "volume", "volatility", "adx", "adx+di", "adx-di", "macd", "macd.signal", "bollinger_upper", "bollinger_lower", "rating", "buy_next"]]
+        df_markets.columns = ["market", "volume", "volatility", "adx", "adx+di", "adx-di", "macd", "macd.signal", "bollinger_upper", "bollinger_lower", "rating", "buy_next"]
         df_markets["volume"] = df_markets["volume"].astype(float).round(0).astype(int)
+        df_markets["volatility"] = df_markets["volatility"].astype(float)
+        df_markets["adx"] = df_markets["adx"].astype(float)
+        df_markets["adx+di"] = df_markets["adx+di"].astype(float)
+        df_markets["adx-di"] = df_markets["adx-di"].astype(float)
+        df_markets["macd"] = df_markets["macd"].astype(float)
+        df_markets["macd.signal"] = df_markets["macd.signal"].astype(float)
+        df_markets["bollinger_upper"] = df_markets["bollinger_upper"].astype(float)
+        df_markets["bollinger_lower"] = df_markets["bollinger_lower"].astype(float)
         df_markets.sort_values(by=["market"], ascending=True, inplace=True)
         df_markets.set_index("market", inplace=True)
 
-        print("Processing, please wait...")
+        print(df_markets.sort_values(by=["buy_next", "adx"], ascending=[False, False], inplace=False))
+        TGBot(app, scanner=True).save_scanner_output(app.exchange.value, quote_currency, df_markets)
+    else:
+        print('No pairs found!')
 
-        ROW = 1
-        for market, data in df_markets.T.iteritems():
-            print(f"[{ROW}/{len(df_markets)}] {market} {round((ROW/len(df_markets))*100, 2)}%")
+    return True
+
+
+if  __name__ == '__main__':
+    import time
+    from datetime import datetime
+
+
+    start_time = time.time()
+    print('Processing, please wait...')
+    bootstrap_exchanges = load_configs()
+    for app in bootstrap_exchanges:
+        print(f"\n\n{app.exchange.name}")
+        for quote_currency in app.scanner_quote_currencies:
+            markets =get_markets(app, quote_currency)
             try:
-                if int(data["volume"]) > 0:
-                    ta = TechnicalAnalysis(api.getHistoricalData(market, GRANULARITY, None))
-                    ta.addEMA(12)
-                    ta.addEMA(26)
-                    ta.addATR(72)
-                    df_1h = ta.getDataFrame()
-                    df_1h["ema12ltema26"] = df_1h.ema12 < df_1h.ema26
-                    df_1h_last = df_1h.tail(1)
-
-                    # volatility over the last 72 hours
-                    df_markets.at[market, "atr72"] = float(df_1h_last[["atr72"]].values[0][0])
-                    df_markets["atr72_pcnt"] = (
-                        df_markets["atr72"] / df_markets["price"] * 100
-                    ).round(2)
-                    df_markets.at[market, "buy_next"] = df_1h_last[df_1h_last["market"] == market][
-                        "ema12ltema26"
-                    ].values[0]
-            except Exception as err:
-                print(err)
-
-            # don't flood exchange, sleep 1 second
-            time.sleep(2)
-
-            # current position
-            ROW += 1
-
-        # clear screen
-        print(chr(27) + "[2J")
-        # markets sorted by next buy action, then by most volatile
-
-        print(
-            df_markets.sort_values(
-                by=["buy_next", "atr72_pcnt"], ascending=[False, False], inplace=False
-            )
-        )
-
-        TGBot(app, scanner=True).save_scanner_output(ex.value, quote, df_markets)
-
+                process_screener_data(app, markets, quote_currency)
+            except Exception as e:
+                print(e)
+    print("Scan run finished!")
+    print(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Total elapsed time: {time.time() - start_time} sec")

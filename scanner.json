@@ -1,8 +1,13 @@
 {
-    "coinbasepro" : {
-        "quote_currency": ["GBP"]
-    },
-    "binance" : {
-        "quote_currency": ["USDT"]
-    }
+	"coinbasepro" : {
+        	"quote_currency": ["USD"],
+	    	"tv_screener_ratings": ["STRONG_BUY", "BUY"],
+        	"volatility_treshold": 5,
+        	"volume_threshold": 20000,
+        	"adx_threshold": 25,
+        	"granularity": 300
+    	},
+	"kucoin": {
+		"quote_currency": ["USDT"]
+    	}
 }

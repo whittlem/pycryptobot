@@ -41,7 +41,7 @@ DEFAULT_MARKET = "BTC-USDT"
 
 class AuthAPIBase:
     def _isMarketValid(self, market: str) -> bool:
-        p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
+        p = re.compile(r"^[1-9A-Z]{2,20}\-[1-9A-Z]{2,20}$")
         if p.match(market):
             return True
         return False
@@ -92,7 +92,7 @@ class AuthAPI(AuthAPIBase):
             api_url = api_url + "/"
 
         # validates the api key is syntactically correct
-        p = re.compile(r"^[a-f0-9]{24,24}$")
+        p = re.compile(r"^[a-f0-9]{8,24}$")
         if not p.match(api_key):
             self.handle_init_error("Kucoin API key is invalid")
 
