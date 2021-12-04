@@ -60,6 +60,8 @@ class BotConfig:
         self.last_action = None
         self._chat_client = None
         self.buymaxsize = None
+        self.buylastsellsize = False
+        self.marketmultibuycheck = False
 
         self.sellatresistance = False
         self.autorestart = False
@@ -448,6 +450,8 @@ class BotConfig:
             "--lastaction", type=str, help="optionally set the last action (BUY, SELL)"
         )
         parser.add_argument("--buymaxsize", type=float, help="maximum size on buy")
+        parser.add_argument("--buylastsellsize", action="store_true", help="additional check for market multiple buys")
+        parser.add_argument("--marketmultibuycheck", action="store_true", help="")
         parser.add_argument(
             "--nobuynearhighpcnt",
             type=float,

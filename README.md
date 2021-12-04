@@ -1,6 +1,6 @@
 [![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg) [![Tests](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)
 
-# Python Crypto Bot v4.5.1 (pycryptobot)
+# Python Crypto Bot v4.5.2 (pycryptobot)
 
 ## Join our chat on Telegram
 
@@ -375,6 +375,11 @@ The bot will only trade in a bull market to minimise losses! (you can disable th
 Special buy cases:
 
 * "nobuynearhighpcnt" to specify the percentage from high that the bot should not buy if "disablebuynearhigh" is not specified.
+* "buymaxsize" specifies a fixed max amount of the quote currency to buy with.
+* "buylastsellsize" when enabled, bot will buy the same size as the last sell size for the current market.
+* "marketmultibuycheck" when enabled, bot will perform an additional check on base and quote balance to prevent multiple buys.
+        It has been determined that some market pairs have problem API responses which can create a multiple buy issue.
+        Please Note:  "marketmultibuycheck" will conflict with configurations that use "sellpercent".
 
 Sell signal:
 
@@ -383,7 +388,6 @@ Sell signal:
 
 Special sell cases:
 
-* "buymaxsize" specifies a fixed max amount of the quote currency to buy with
 * "nosellminpcnt" specifies the lower margin limit to not sell above
 * "nosellmaxpcnt" specifies the upper margin limit to not sell below
 * If "sellatloss" is on, bot will sell if price drops below the lower Fibonacci band
