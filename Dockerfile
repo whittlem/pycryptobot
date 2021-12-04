@@ -20,18 +20,18 @@ RUN python -m pip install -U pip && \
 
 COPY . /app
 
-FROM python:3.9-slim-bullseye
+# FROM python:3.9-slim-bullseye
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install -y libatlas-base-dev libopenjp2-7 && \
     rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+# WORKDIR /app
 
-COPY --from=compile-image /app /app
+# COPY --from=compile-image /app /app
 
 # Make sure we use the virtualenv:
-ENV PATH="/app/bin:$PATH"
+# ENV PATH="/app/bin:$PATH"
 
 # Pass parameters to the container run or mount your config.json into /app/
 ENTRYPOINT [ "python3", "-u", "pycryptobot.py" ]
