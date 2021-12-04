@@ -41,7 +41,7 @@ DEFAULT_MARKET = "BTC-USDT"
 
 class AuthAPIBase:
     def _isMarketValid(self, market: str) -> bool:
-        p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
+        p = re.compile(r"^[0-9A-Z]{1,10}\-[1-9A-Z]{2,5}$")
         if p.match(market):
             return True
         return False
@@ -50,6 +50,8 @@ class AuthAPIBase:
         if math.isnan(epoch) is False:
             epoch_str = str(epoch)[0:10]
             return datetime.fromtimestamp(int(epoch_str))
+        else:
+            return datetime.fromtimestamp(epoch)
 
 class AuthAPI(AuthAPIBase):
     def __init__(
@@ -904,9 +906,9 @@ class PublicAPI(AuthAPIBase):
 
         resp = self.authAPI("GET", f"api/v1/market/orderbook/level1?symbol={market}")
 
-        if "time" in resp["data"] and "price" in resp["data"]:
+        if "time" in resp["data"]:
             # make sure the time format is correct, if not, pause and submit request again
-            trycnt, maxretry = (1, 5)
+            trycnt, maxretry = (1, 3)
             while trycnt <= maxretry:
                 resptime = ""
                 try:
@@ -923,7 +925,21 @@ class PublicAPI(AuthAPIBase):
                         "GET", f"api/v1/market/orderbook/level1?symbol={market}"
                     )
                     trycnt += 1
-                if resptime != "":
+
+                respprice = ""
+                try:
+                    respprice = float(resp["data"]["price"])
+                except:
+                    Logger.warning(
+                        f"Kucoin API Error for Get Ticker: price KeyError - retrying - attempt {trycnt}"
+                    )
+                    time.sleep(15)
+                    resp = self.authAPI(
+                        "GET", f"api/v1/market/orderbook/level1?symbol={market}"
+                    )
+                    trycnt += 1
+
+                if resptime != "" and respprice != "":
                     break
 
             return (
@@ -931,7 +947,7 @@ class PublicAPI(AuthAPIBase):
                     str(datetime.fromtimestamp(int(resp["data"]["time"]) / 1000)),
                     "%Y-%m-%d %H:%M:%S.%f",
                 ).strftime("%Y-%m-%d %H:%M:%S"),
-                float(resp["data"]["price"]),
+                respprice,
             )
         else:
             now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")

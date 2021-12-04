@@ -73,12 +73,6 @@ class Strategy:
             return False
 
         ## if last_action was set to "WAIT" due to an API problem, do not buy
-        if self.state.last_action == "WAIT":
-            log_text = f"{str(now)} | {self.app.getMarket()} | {self.app.printGranularity()} | last_action is WAIT, do not buy yet"
-            Logger.warning(log_text)
-            return False
-
-        ## if last_action was set to "WAIT" due to an API problem, do not buy
         if ( self.state.last_action == "WAIT"):
             log_text = (f"{str(now)} | {self.app.getMarket()} | {self.app.printGranularity()} | last_action is WAIT, do not buy yet")
             Logger.warning(log_text)
