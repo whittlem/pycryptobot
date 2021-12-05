@@ -13,3 +13,4 @@ websockets==9.1
 flask
 python-telegram-bot==13.7
 kubernetes
+tradingview-ta
