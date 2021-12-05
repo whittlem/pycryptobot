@@ -3,10 +3,9 @@ import json
 import pandas as pd
 import re
 from decimal import Decimal
+from itertools import islice
 from models.PyCryptoBot import PyCryptoBot
-from models.exchange import kucoin
 from models.helper.TelegramBotHelper import TelegramBotHelper as TGBot
-# from models.Trading import TechnicalAnalysis
 from models.exchange.binance import PublicAPI as BPublicAPI
 from models.exchange.coinbase_pro import PublicAPI as CPublicAPI
 from models.exchange.kucoin import PublicAPI as KPublicAPI
@@ -76,6 +75,13 @@ def load_configs():
 
     return exchanges_loaded
 
+def chunker(market_list, chunk_size):
+    markets = iter(market_list)
+    market_chunk = list(islice(markets, chunk_size))
+    while market_chunk:
+        yield market_chunk
+        market_chunk = list(islice(markets, chunk_size))
+
 def get_markets(app, quote_currency):
     markets = []
     quote_currency = quote_currency.upper()
@@ -104,7 +110,10 @@ def process_screener_data(app, markets, quote_currency):
     """
     
     ta_screener_list = [f"{re.sub('PRO', '', app.exchange.name, re.IGNORECASE)}:{re.sub('-', '', market)}" for market in markets]
-    screener_analysis = [a for a in get_multiple_analysis(screener='crypto', interval=app.granularity.short, symbols=ta_screener_list).values()]
+    screener_staging = [p for p in chunker(ta_screener_list, 100)]
+    screener_analysis = []
+    for pair_list in screener_staging:
+        screener_analysis.extend([a for a in get_multiple_analysis(screener='crypto', interval=app.granularity.short, symbols=pair_list).values()])
     # Take what we need and do magic, ditch the rest.
     formatted_ta = []
     for ta in screener_analysis:
@@ -197,7 +206,7 @@ if  __name__ == '__main__':
     for app in bootstrap_exchanges:
         print(f"\n\n{app.exchange.name}")
         for quote_currency in app.scanner_quote_currencies:
-            markets =get_markets(app, quote_currency)
+            markets = get_markets(app, quote_currency)
             try:
                 process_screener_data(app, markets, quote_currency)
             except Exception as e:

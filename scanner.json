@@ -1,13 +1,20 @@
 {
-	"coinbasepro" : {
-        	"quote_currency": ["USD"],
-	    	"tv_screener_ratings": ["STRONG_BUY", "BUY"],
-        	"volatility_treshold": 5,
-        	"volume_threshold": 20000,
-        	"adx_threshold": 25,
-        	"granularity": 300
-    	},
+	"coinbasepro": {
+		"quote_currency": [
+			"USD"
+		],
+		"tv_screener_ratings": [
+			"STRONG_BUY",
+			"BUY"
+		],
+		"volatility_treshold": 9,
+		"volume_threshold": 20000,
+		"adx_threshold": 25,
+		"granularity": 900
+	},
 	"kucoin": {
-		"quote_currency": ["USDT"]
-    	}
+		"quote_currency": [
+			"USDT"
+		]
+	}
 }

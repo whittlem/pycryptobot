@@ -16,6 +16,14 @@ import platform
 import pandas as pd
 import re
 import urllib.request
+from json import JSONDecodeError
+from sched import scheduler
+import yaml
+from kubernetes import config, dynamic
+from kubernetes.client import api_client
+from kubernetes.dynamic import DynamicClient
+from kubernetes.dynamic.exceptions import ApiException, NotFoundError
+from kubernetes.watch import watch
 from datetime import datetime
 from time import sleep, time
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
@@ -355,7 +363,7 @@ class TelegramBot(TelegramBotBase):
             return ConversationHandler.END
 
         if self.exchange in ("coinbasepro", "kucoin"):
-            p = re.compile(r"^[1-9A-Z]{2,9}\-[1-9A-Z]{2,20}$")
+            p = re.compile(r"^[1-9A-Z]{2,20}\-[1-9A-Z]{2,10}$")
             if not p.match(update.message.text):
                 update.message.reply_text(
                     "Invalid market format", reply_markup=ReplyKeyboardRemove()
@@ -363,7 +371,7 @@ class TelegramBot(TelegramBotBase):
                 # self.newbot_exchange(update, context)
                 return False
         elif self.exchange == "binance":
-            p = re.compile(r"^[A-Z0-9]{5,13}$")
+            p = re.compile(r"^[A-Z0-9]{5,20}$")
             if not p.match(update.message.text):
                 update.message.reply_text(
                     "Invalid market format.", reply_markup=ReplyKeyboardRemove()
@@ -738,7 +746,7 @@ class TelegramBot(TelegramBotBase):
             return ConversationHandler.END
 
         if self.exchange == "coinbasepro" or self.exchange == "kucoin":
-            p = re.compile(r"^[1-9A-Z]{2,20}\-[1-9A-Z]{2,20}$")
+            p = re.compile(r"^[1-9A-Z]{2,20}\-[1-9A-Z]{2,10}$")
             if not p.match(update.message.text):
                 update.message.reply_text(
                     "Invalid market format", reply_markup=ReplyKeyboardRemove()
@@ -746,7 +754,7 @@ class TelegramBot(TelegramBotBase):
                 self.stats_exchange_received(update, context)
                 return None
         elif self.exchange == "binance":
-            p = re.compile(r"^[A-Z0-9]{5,12}$")
+            p = re.compile(r"^[A-Z0-9]{5,20}$")
             if not p.match(update.message.text):
                 update.message.reply_text(
                     "Invalid market format.", reply_markup=ReplyKeyboardRemove()
@@ -1260,19 +1268,6 @@ class TelegramBot(TelegramBotBase):
             
             return False
 
-        def StartWindowsProcess() -> None:
-            # subprocess.Popen(f"python3 pycryptobot.py {overrides}", creationflags=subprocess.CREATE_NEW_CONSOLE)
-            os.system(
-                    f"start powershell -Command $host.UI.RawUI.WindowTitle = '{self.pair}' ; "
-                    f"python3 pycryptobot.py --startmethod {startmethod} --exchange {self.exchange} --market {self.pair} --logfile './logs/{self.exchange}-{self.pair}-{datetime.now().date()}.log' {self.overrides}"
-                )
-
-        def StartLinuxProcess() -> None:
-            subprocess.Popen(
-                    f"python3 pycryptobot.py --startmethod {startmethod} --exchange {self.exchange} --market {self.pair} {self.overrides}",
-                    shell=True,
-                )
-
         if update.message.text == "Auto_Yes":
             if IsBotRunning():
                 update.message.reply_text(
@@ -1280,7 +1275,7 @@ class TelegramBot(TelegramBotBase):
                     reply_markup=ReplyKeyboardRemove())
                 return None
             self._start_process(self.pair,
-                                f"python3 pycryptobot.py --startmethod {startmethod} --exchange {self.exchange} --market {self.pair} --logfile './logs/{self.exchange}-{self.pair}-{datetime.now().date()}.log' {self.overrides}")
+                                f"python3 pycryptobot.py --startmethod {startmethod} --exchange {self.exchange} --market {self.pair} {self.overrides}")
 
         if update.message.text == "Yes":
 
@@ -1447,15 +1442,18 @@ class TelegramBot(TelegramBotBase):
             for quote in config[ex]["quote_currency"]:
                 update.message.reply_text(f"Starting {ex} ({quote}) bots...", parse_mode="HTML")
                 logger.info(f"{ex} {quote}")
-                with open(
-                    os.path.join(
-                        self.datafolder, "telegram_data", f"{ex}_{quote}_output.json"
-                    ),
-                    "r",
-                    encoding="utf8",
-                ) as json_file:
-                    data = json.load(json_file)
-
+                try:
+                    with open(os.path.join(
+                        self.datafolder, "telegram_data", f"{ex}_{quote}_output.json"),"r",
+                        encoding="utf8") as json_file:
+                        data = json.load(json_file)
+                except IOError:
+                    with open(os.path.join(
+                        self.datafolder, "telegram_data", f"{ex}_{quote}_output.json"),"w",
+                        encoding="utf8") as json_file:
+                        json_file.write('{}')
+                    data = {}
+                
                 outputmsg =  f"<b>{ex} ({quote})</b> \u23F3 \n"
 
                 for k,v in data.items():
