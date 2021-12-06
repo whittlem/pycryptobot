@@ -1,5 +1,5 @@
 import os, json
-from models.telegram.Helper import TelegramHelper
+from models.telegram.helper import TelegramHelper
 from telegram.replykeyboardremove import ReplyKeyboardRemove
 from telegram.ext import Updater
 
