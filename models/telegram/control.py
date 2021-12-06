@@ -4,7 +4,7 @@ from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Updater
 # from telegram.ext.callbackcontext import CallbackContext
 
-from .Helper import TelegramHelper
+from .helper import TelegramHelper
 
 helper = None
 

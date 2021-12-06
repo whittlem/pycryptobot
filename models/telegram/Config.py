@@ -15,6 +15,7 @@ class Editor():
         # if key == "buymaxsize":
         #     self.buy_max_size(value)
 
+
         update.message.reply_text(f"[{key}] Updated to: {value}")
 
     def ask_buy_max_size(self, update, context):

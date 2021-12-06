@@ -1,11 +1,12 @@
 # import os
 from time import sleep
+
 # from datetime import datetime
 
-from models.telegram.Control import TelegramControl
-from models.telegram.Helper import TelegramHelper
-from models.telegram.Actions import TelegramActions
-from models.telegram.Config import Editor
+from models.telegram.control import TelegramControl
+from models.telegram.helper import TelegramHelper
+from models.telegram.actions import TelegramActions
+from models.telegram.config import Editor
 
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Updater
@@ -17,16 +18,21 @@ control = None
 actions = None
 editor = None
 
-scannerSchedule = BackgroundScheduler(timezone='UTC')
+scannerSchedule = BackgroundScheduler(timezone="UTC")
 
-class TelegramHandler():
+
+class TelegramHandler:
     def __init__(self, datafolder, authuserid, tg_helper: TelegramHelper) -> None:
         self.authoriseduserid = authuserid
         self.datafolder = datafolder
-        global helper ; helper = tg_helper
-        global control ; control = TelegramControl(self.datafolder, tg_helper)
-        global actions ; actions = TelegramActions(self.datafolder, tg_helper)
-        global editor ; editor = Editor(self.datafolder, tg_helper)
+        global helper
+        helper = tg_helper
+        global control
+        control = TelegramControl(self.datafolder, tg_helper)
+        global actions
+        actions = TelegramActions(self.datafolder, tg_helper)
+        global editor
+        editor = Editor(self.datafolder, tg_helper)
 
     def _checkifallowed(self, userid, update) -> bool:
         if str(userid) != self.authoriseduserid:
@@ -38,8 +44,12 @@ class TelegramHandler():
     def getRequest(self, isCPanel: bool = True) -> InlineKeyboardMarkup:
         keyboard = [
             [
-                InlineKeyboardButton("\U0001F4D6 View config", callback_data="showconfig"),
-                InlineKeyboardButton("\U0001F510 Edit config \U00002699", callback_data="editconfig"),
+                InlineKeyboardButton(
+                    "\U0001F4D6 View config", callback_data="showconfig"
+                ),
+                InlineKeyboardButton(
+                    "\U0001F510 Edit config \U00002699", callback_data="editconfig"
+                ),
             ],
             [
                 InlineKeyboardButton("\U0001F4B0 Sell", callback_data="sell"),
@@ -52,10 +62,14 @@ class TelegramHandler():
                 InlineKeyboardButton("Stop Market Scanner", callback_data="stopmarket"),
             ],
             [
-                InlineKeyboardButton("\U0001F50E Start Market Scanner", callback_data="startmarket"),
+                InlineKeyboardButton(
+                    "\U0001F50E Start Market Scanner", callback_data="startmarket"
+                ),
             ],
             [
-                InlineKeyboardButton("\U0001F9FE Restart open orders", callback_data="reopen"),
+                InlineKeyboardButton(
+                    "\U0001F9FE Restart open orders", callback_data="reopen"
+                ),
             ],
             [
                 InlineKeyboardButton("\U000023F8 pausebot(s)", callback_data="pause"),
@@ -69,9 +83,7 @@ class TelegramHandler():
                 InlineKeyboardButton("\U00002139 Bot Status", callback_data="status"),
                 InlineKeyboardButton("Margins \U0001F4C8", callback_data="margin"),
             ],
-            [
-                InlineKeyboardButton("Cancel", callback_data="cancel")
-            ],
+            [InlineKeyboardButton("Cancel", callback_data="cancel")],
         ]
 
         return InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
@@ -85,15 +97,18 @@ class TelegramHandler():
         query.answer()
 
         if query.data == "cancel":
-            query.edit_message_text("\U00002757 User Cancelled Request", parse_mode='HTML')
+            query.edit_message_text(
+                "\U00002757 User Cancelled Request", parse_mode="HTML"
+            )
 
         if query.data == "back":
             key_markup = self.getRequest()
             query.edit_message_text(
                 "<b>PyCryptoBot Command Panel.</b>",
                 reply_markup=key_markup,
-                parse_mode="HTML")
-                
+                parse_mode="HTML",
+            )
+
         elif query.data == "margin":
             self.askMarginType(update)
         elif query.data in ("margin_orders", "margin_pairs", "margin_all"):
@@ -106,7 +121,7 @@ class TelegramHandler():
             self.askConfigOptions(update)
         elif query.data.__contains__("ex_"):
             actions.showconfigresponse(update)
-            
+
         elif query.data == "start":
             control.askStartBotList(update)
         elif query.data.__contains__("start_"):
@@ -162,8 +177,8 @@ class TelegramHandler():
 
         elif query.data == "editconfig":
             query.edit_message_text(
-                "\U000026A0 <b>Under Contruction</b> \U000026A0",
-                parse_mode="HTML")
+                "\U000026A0 <b>Under Contruction</b> \U000026A0", parse_mode="HTML"
+            )
             # key_markup = self.getConfigOptions()
             # query.edit_message_text(
             #     "<b>PyCryptoBot Config Panel.</b>",
@@ -199,7 +214,11 @@ class TelegramHandler():
         reply_markup = InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
 
         try:
-            query.edit_message_text("<b>Make your selection</b>", reply_markup=reply_markup, parse_mode="HTML")
+            query.edit_message_text(
+                "<b>Make your selection</b>",
+                reply_markup=reply_markup,
+                parse_mode="HTML",
+            )
         except:
             update.message.reply_text("Make your selection", reply_markup=reply_markup)
 
@@ -222,12 +241,16 @@ class TelegramHandler():
                 keyboard.append([buttons[i]])
             i += 3
 
-            keyboard.append([InlineKeyboardButton("\U000025C0 Back", callback_data="back")])
+            keyboard.append(
+                [InlineKeyboardButton("\U000025C0 Back", callback_data="back")]
+            )
 
         reply_markup = InlineKeyboardMarkup(keyboard)
         query = update.callback_query
         query.answer()
-        query.edit_message_text("<b>Select exchange</b>", reply_markup=reply_markup, parse_mode="HTML")
+        query.edit_message_text(
+            "<b>Select exchange</b>", reply_markup=reply_markup, parse_mode="HTML"
+        )
 
     def askConfimation(self, update):
 
@@ -242,14 +265,32 @@ class TelegramHandler():
         reply_markup = InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
 
         try:
-            query.edit_message_text(f"<b>Are you sure you want to {query.data.replace('_', ' ')}?</b>", reply_markup=reply_markup, parse_mode="HTML")
+            query.edit_message_text(
+                f"<b>Are you sure you want to {query.data.replace('_', ' ')}?</b>",
+                reply_markup=reply_markup,
+                parse_mode="HTML",
+            )
         except:
-            update.message.reply_text(f"<b>Are you sure you want to {query.data.replace('_', ' ')}?</b>", reply_markup=reply_markup, parse_mode="HTML")
+            update.message.reply_text(
+                f"<b>Are you sure you want to {query.data.replace('_', ' ')}?</b>",
+                reply_markup=reply_markup,
+                parse_mode="HTML",
+            )
 
     def _checkScheduledJob(self, update):
-        if helper.config["scanner"]["autoscandelay"] > 0 and len(scannerSchedule.get_jobs()) == 0:
+        if (
+            helper.config["scanner"]["autoscandelay"] > 0
+            and len(scannerSchedule.get_jobs()) == 0
+        ):
             scannerSchedule.start()
-            scannerSchedule.add_job(actions.StartMarketScan, args=(update, False, True), trigger='interval', minutes=helper.config["scanner"]["autoscandelay"]*60, name='Volume Auto Scanner', misfire_grace_time=10)
+            scannerSchedule.add_job(
+                actions.StartMarketScan,
+                args=(update, False, True),
+                trigger="interval",
+                minutes=helper.config["scanner"]["autoscandelay"] * 60,
+                name="Volume Auto Scanner",
+                misfire_grace_time=10,
+            )
             # scannerSchedule.start()
             update.effective_message.reply_html(
                 f"<b>Scan job schedule created to run every {helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705"
@@ -260,6 +301,10 @@ class TelegramHandler():
         query.answer()
         if len(scannerSchedule.get_jobs()) > 0:
             scannerSchedule.shutdown()
-            query.edit_message_text("<b>Scan job schedule has been removed</b> \u2705", parse_mode="HTML")
+            query.edit_message_text(
+                "<b>Scan job schedule has been removed</b> \u2705", parse_mode="HTML"
+            )
         else:
-            query.edit_message_text("<b>No scheduled job found</b> \u2705", parse_mode="HTML")
+            query.edit_message_text(
+                "<b>No scheduled job found</b> \u2705", parse_mode="HTML"
+            )

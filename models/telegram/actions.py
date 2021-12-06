@@ -5,7 +5,7 @@ import logging
 from datetime import datetime
 
 from time import sleep
-from models.telegram.Helper import TelegramHelper
+from models.telegram.helper import TelegramHelper
 
 # Enable logging
 logging.basicConfig(
