@@ -343,9 +343,9 @@ def executeJob(
         else:
             price = float(df_last["close"].values[0])
 
-        if price < 0.000001:
+        if price < 0.00000001:
             raise Exception(
-                f"{_app.getMarket()} is unsuitable for trading, quote price is less than 0.000001!"
+                f"{_app.getMarket()} is unsuitable for trading, quote price is less than 0.00000001!"
             )
 
         # technical indicators
