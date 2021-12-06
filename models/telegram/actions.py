@@ -5,7 +5,7 @@ import logging
 from datetime import datetime
 
 from time import sleep
-from models.telegram.helper import TelegramHelper
+from models.telegram.Helper import TelegramHelper
 
 # Enable logging
 logging.basicConfig(
@@ -25,6 +25,7 @@ class TelegramActions():
     def startOpenOrders(self, update):
         logger.info("called startOpenOrders")
         query = update.callback_query
+        query.answer()
         query.edit_message_text(
                 "<b>Starting markets with open trades..</b>",
                 parse_mode="HTML")
@@ -36,6 +37,7 @@ class TelegramActions():
                 helper.startProcess(market, helper.data["opentrades"][market]["exchange"], "", "scanner")
             sleep(10)
         update.effective_message.reply_html(f"<i>Markets have been started</i>")
+        sleep(1)
         self.getBotInfo(update)
 
     def sellresponse(self, update):
@@ -150,7 +152,52 @@ class TelegramActions():
                 update.effective_message.reply_html(f"{output}")
             sleep(0.2)
 
-        update.effective_message.reply_html(f"<b>Bot Count ({count})</b>")
+            if count == 0:
+                query.edit_message_text(f"<b>Bot Count ({count})</b>", parse_mode="HTML")
+            else:
+                update.effective_message.reply_html(f"<b>Bot Count ({count})</b>")
+
+    def getMargins(self, response):
+
+        query = response.callback_query
+        query.answer()
+
+        closedoutput = "" 
+        openoutput = ""
+        closedbotCount = 0
+        openbotCount = 0
+        for file in helper.getActiveBotList():
+            helper.read_data(file)
+            # output = ""
+            if "margin" in helper.data:
+                if "margin" in helper.data and helper.data["margin"] == " ":
+                    closedoutput = (closedoutput + f"<b>{file}</b>")
+                    closedoutput = closedoutput + f"\n<i>{helper.data['message']}</i>\n"
+                    closedbotCount += 1
+                elif len(helper.data) > 2:
+                    space = 20 - len(file)
+                    margin_icon = ("\U0001F7E2" if "-" not in helper.data["margin"]else "\U0001F534")
+                    openoutput = (openoutput + f"\U0001F4C8 <b>{file}</b> ".ljust(space))
+                    openoutput = (openoutput + f" {margin_icon}  <i>Current Margin: {helper.data['margin']} \U0001F4B0 (P/L): {helper.data['delta']}\n(TSL Trg): {helper.data['trailingstoplosstriggered']}  --  (TSL Change): {helper.data['change_pcnt_high']}</i>\n")
+                    openbotCount += 1
+                # if closedbotCount + openbotCount == 1:
+                #     try:
+                #         query.edit_message_text(f"{output}", parse_mode="HTML")
+                #     except:
+                #         response.effective_message.reply_html(f"{output}")
+                # else:
+                #     response.effective_message.reply_html(f"{output}")
+        if (query.data.__contains__("orders") or query.data.__contains__("all")) and openbotCount > 0:
+            query.edit_message_text(f"{openoutput}", parse_mode="HTML")
+        elif (query.data.__contains__("pairs") or query.data.__contains__("all")) and closedbotCount > 0:
+            query.edit_message_text(f"{closedoutput}", parse_mode="HTML")
+
+        if (query.data.__contains__("orders") or query.data.__contains__("all")) and openbotCount == 0:
+            query.edit_message_text("<b>No open orders found.</b>", parse_mode="HTML")
+
+        elif (query.data.__contains__("pairs") or query.data.__contains__("all")) and closedbotCount == 0:
+            query.edit_message_text("<b>No active pairs found.</b>", parse_mode="HTML")
+
 
     def StartMarketScan(self, update, debug: bool = False, scanmarkets: bool = True):
         logger.info("called StartMarketScan")

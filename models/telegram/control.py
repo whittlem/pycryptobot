@@ -4,7 +4,7 @@ from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Updater
 # from telegram.ext.callbackcontext import CallbackContext
 
-from .helper import TelegramHelper
+from .Helper import TelegramHelper
 
 helper = None
 
@@ -16,7 +16,7 @@ class TelegramControl():
     def _sortInlineButtons(self, buttons: list, callbackTag):
         keyboard = []
         if len(buttons) > 0:
-            if len(buttons) > 1:
+            if (callbackTag not in ("buy", "sell")) and len(buttons) > 1:
                 keyboard = [[InlineKeyboardButton("All", callback_data=f"{callbackTag}_all")]]
 
             i = 0
@@ -29,10 +29,10 @@ class TelegramControl():
                     keyboard.append([buttons[i]])
                 i += 3
 
-            if callbackTag not in ("start", "resume"):
+            if callbackTag not in ("start", "resume", "buy", "sell"):
                 keyboard.append([InlineKeyboardButton("All (w/o open order)", callback_data=f"{callbackTag}_allclose")])
 
-            keyboard.append([InlineKeyboardButton("Cancel", callback_data="cancel")])
+            keyboard.append([InlineKeyboardButton("\U000025C0 Back", callback_data="back")])
 
         return InlineKeyboardMarkup(keyboard)
 
@@ -66,9 +66,9 @@ class TelegramControl():
                     reply_markup=self._sortInlineButtons(buttons, f"{callbackTag}"))
         else:
             try:
-                query.edit_message_text("No active bots found.")
+                query.edit_message_text(f"<b>No {status} bots found.</b>", parse_mode="HTML")
             except:
-                update.effective_message.reply_html("<b>No active bots found.</b>")
+                update.effective_message.reply_html(f"<b>No {status} bots found.</b>")
 
     def _actionBotResponse(self, update: Updater, callbackTag, state, status: str = "active"):
         query = update.callback_query
@@ -79,18 +79,19 @@ class TelegramControl():
         
         mode = "Stopping" if callbackTag == "stop" else "Pausing"
         if query.data.__contains__("allclose") or query.data.__contains__("all"):
-            query.edit_message_text(f"{mode} bots")
+            query.edit_message_text(f"<i>{mode} bots</i>", parse_mode="HTML")
 
             for pair in helper.getActiveBotList(status):
                 helper.stopRunningBot(pair, state, False if query.data.__contains__("allclose") else True)
                 sleep(1)
         else:
             helper.stopRunningBot(str(query.data).replace(f"{callbackTag}_", ""), state, True)
-            query.edit_message_text(
-                    f"{mode} {str(query.data).replace(f'{callbackTag}_', '')} crypto bot"
-                )
+            # query.edit_message_text(
+            #         f"{mode} {str(query.data).replace(f'{callbackTag}_', '')} crypto bot"
+            #     )
 
-        query.edit_message_text("Operation Complete")
+        update.effective_message.reply_html("<b>Operation Complete</b>")
+        # query.edit_message_text("Operation Complete")
 
     def askStartBotList(self, update: Updater):
         query = update.callback_query

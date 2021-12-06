@@ -33,7 +33,7 @@ from telegram.replykeyboardremove import ReplyKeyboardRemove
 from apscheduler.schedulers.background import BackgroundScheduler
 from models.chat import Telegram
 
-from models.telegram import TelegramControl, TelegramHelper, TelegramHandler, TelegramActions
+from models.telegram import TelegramControl, TelegramHelper, TelegramHandler, TelegramActions, Editor
 
 scannerSchedule = BackgroundScheduler(timezone='UTC')
 
@@ -44,6 +44,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+TYPING_RESPONSE = range(1)
 CHOOSING, TYPING_REPLY = range(2)
 EXCHANGE, MARKET, ANYOVERRIDES, OVERRIDES, SAVE, START = range(6)
 EXCEPT_EXCHANGE, EXCEPT_MARKET = range(2)
@@ -64,6 +65,7 @@ class TelegramBotBase:
 
     helper = None
     handler = None
+    editor = None
 
     def _read_data(self, name: str = "data.json") -> None:
         try:
@@ -267,33 +269,7 @@ class TelegramBot(TelegramBotBase):
         self.handler = TelegramHandler(self.datafolder, self.userid, self.helper)
         self.control = TelegramControl(self.datafolder, self.helper)
         self.actions = TelegramActions(self.datafolder, self.helper)
-# 
-#     def _getUptime(self, date: str):
-#         now = str(datetime.now())
-#         # If date passed from datetime.now() remove milliseconds
-#         if date.find(".") != -1:
-#             dt = date.split(".")[0]
-#             date = dt
-#         if now.find(".") != -1:
-#             dt = now.split(".", maxsplit=1)[0]
-#             now = dt
-# 
-#         now = now.replace("T", " ")
-#         now = f"{now}"
-#         # Add time in case only a date is passed in
-#         # new_date_str = f"{date} 00:00:00" if len(date) == 10 else date
-#         date = date.replace("T", " ") if date.find("T") != -1 else date
-#         # Add time in case only a date is passed in
-#         new_date_str = f"{date} 00:00:00" if len(date) == 10 else date
-# 
-#         started = datetime.strptime(new_date_str, "%Y-%m-%d %H:%M:%S")
-#         now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
-#         duration = now - started
-#         duration_in_s = duration.total_seconds()
-#         hours = divmod(duration_in_s, 3600)[0]
-#         duration_in_s -= 3600 * hours
-#         minutes = divmod(duration_in_s, 60)[0]
-#         return f"{round(hours)}h {round(minutes)}m"
+        self.editor = Editor(self.datafolder, self.helper)
 
     def _question_which_exchange(self, update):
         """start new bot ask which exchange"""
@@ -742,7 +718,7 @@ class TelegramBot(TelegramBotBase):
 
     def error(self, update, context):
         """Log Errors"""
-
+        logger.error(msg="Exception while handling an update:", exc_info=context.error)
         try:
             if "HTTPError" in context.error.args[0]: 
                 while self.checkconnection() == False:
@@ -751,8 +727,8 @@ class TelegramBot(TelegramBotBase):
                     sleep(30)
                 self.updater.start_polling()
                 return
-            else:
-                logger.error(msg="Exception while handling an update:", exc_info=context.error)
+            # else:
+                # logger.error(msg="Exception while handling an update:", exc_info=context.error)
         except:
             pass
 
@@ -788,44 +764,43 @@ class TelegramBot(TelegramBotBase):
             return
         self.handler._removeScheduledJob(update)
 
+    def _cleandata(self):
+        jsonfiles = self.helper.getActiveBotList()
+        for i in range(len(jsonfiles), 0, -1):
+            jfile = jsonfiles[i-1]
+
+            logger.info("checking %s", jfile)
+            self.helper.read_data(jfile)
+            last_modified = datetime.now() - datetime.fromtimestamp(
+                os.path.getmtime(
+                    os.path.join(self.datafolder, "telegram_data", f"{jfile}.json")
+                    )
+                )                
+            if "margin" not in self.helper.data:
+                logger.info("deleting %s", jfile)
+                os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
+                continue
+            if (
+                self.helper.data["botcontrol"]["status"] == "active"
+                and last_modified.seconds > 120
+                and (last_modified.seconds != 86399 and last_modified.days != -1)
+            ):
+                logger.info("deleting %s %s", jfile, str(last_modified))
+                os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
+                continue
+            elif (
+                self.helper.data["botcontrol"]["status"] == "exit"
+                and last_modified.seconds > 120
+                and last_modified.seconds != 86399
+            ):
+                logger.info("deleting %s %s", jfile, str(last_modified.seconds))
+                os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
+
     def cleandata(self, update, context) -> None:
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
 
-        jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
-        for i in range(len(jsonfiles), 0, -1):
-            jfile = jsonfiles[i-1]
-            if (
-                ".json" in jfile
-                and jfile != "data.json"
-                and jfile.__contains__("output.json") == False
-            ):
-                logger.info("checking %s", jfile)
-                self._read_data(jfile)
-                last_modified = datetime.now() - datetime.fromtimestamp(
-                    os.path.getmtime(
-                        os.path.join(self.datafolder, "telegram_data", jfile)
-                    )
-                )                
-                if "margin" not in self.data:
-                    logger.info("deleting %s", jfile)
-                    os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
-                    continue
-                if (
-                    self.data["botcontrol"]["status"] == "active"
-                    and last_modified.seconds > 120
-                    and (last_modified.seconds != 86399 and last_modified.days != -1)
-                ):
-                    logger.info("deleting %s %s", jfile, str(last_modified))
-                    os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
-                    continue
-                elif (
-                    self.data["botcontrol"]["status"] == "exit"
-                    and last_modified.seconds > 120
-                    and last_modified.seconds != 86399
-                ):
-                    logger.info("deleting %s %s", jfile, str(last_modified.seconds))
-                    os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
+        self._cleandata
 
         self.showbotinfo(update, context)
         update.message.reply_text("Operation Complete")
@@ -925,10 +900,6 @@ class TelegramBot(TelegramBotBase):
 
         self.control.askRestartBot(update)
 
-#     def GetActiveBotList(self):
-# 
-#         return self.helper.getActiveBotList(self.datafolder)
-
     def StartOpenOrderBots(self, update, context):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return None
@@ -1000,7 +971,7 @@ class TelegramBot(TelegramBotBase):
         if self._checkifallowed(userid, update):
             key_markup = self.handler.getRequest()
             update.message.reply_text(
-                "<b>Choose a command.</b>",
+                "<b>PyCryptoBot Command Panel.</b>",
                 reply_markup=key_markup,
                 parse_mode="HTML",
             )
@@ -1052,7 +1023,7 @@ def main():
 
     dp.add_handler(CommandHandler("reopen", botconfig.StartOpenOrderBots))
 
-    dp.add_handler(CommandHandler("exit", botconfig.ExitBot))
+    # dp.add_handler(CommandHandler("exit", botconfig.ExitBot))
     # dp.add_handler(CommandHandler("updatebuymax", botconfig.UpdateBuyMaxSize))
     dp.add_handler(CommandHandler("statsgroup", botconfig.statstwo))
     # Response to Question handler
@@ -1109,11 +1080,24 @@ def main():
         fallbacks=[("Done", botconfig.done)],
     )
 
+    conversation_stats = ConversationHandler(
+        entry_points=[CommandHandler("buymax", botconfig.editor.ask_buy_max_size)],
+        states={
+            TYPING_RESPONSE: [
+                MessageHandler(
+                    Filters.text, botconfig.editor.buy_max_size, pass_user_data=True
+                )],
+        },
+        fallbacks=[("Done", botconfig.done)],
+    )
+
     dp.add_handler(conversation_stats)
     dp.add_handler(conversation_newbot)
     dp.add_handler(conversation_exception)
     # log all errors
     dp.add_error_handler(botconfig.error)
+
+    botconfig._cleandata()
 
     # while botconfig.checkconnection() is False:
     #     sleep(10)

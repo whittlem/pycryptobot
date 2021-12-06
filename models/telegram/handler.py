@@ -1,10 +1,11 @@
-import os
+# import os
 from time import sleep
-from datetime import datetime
+# from datetime import datetime
 
-from models.telegram.control import TelegramControl
-from models.telegram.helper import TelegramHelper
-from models.telegram.actions import TelegramActions
+from models.telegram.Control import TelegramControl
+from models.telegram.Helper import TelegramHelper
+from models.telegram.Actions import TelegramActions
+from models.telegram.Config import Editor
 
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Updater
@@ -14,6 +15,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 helper = None
 control = None
 actions = None
+editor = None
 
 scannerSchedule = BackgroundScheduler(timezone='UTC')
 
@@ -24,6 +26,7 @@ class TelegramHandler():
         global helper ; helper = tg_helper
         global control ; control = TelegramControl(self.datafolder, tg_helper)
         global actions ; actions = TelegramActions(self.datafolder, tg_helper)
+        global editor ; editor = Editor(self.datafolder, tg_helper)
 
     def _checkifallowed(self, userid, update) -> bool:
         if str(userid) != self.authoriseduserid:
@@ -32,7 +35,7 @@ class TelegramHandler():
 
         return True
 
-    def getRequest(self) -> InlineKeyboardMarkup:
+    def getRequest(self, isCPanel: bool = True) -> InlineKeyboardMarkup:
         keyboard = [
             [
                 InlineKeyboardButton("\U0001F4D6 View config", callback_data="showconfig"),
@@ -84,10 +87,17 @@ class TelegramHandler():
         if query.data == "cancel":
             query.edit_message_text("\U00002757 User Cancelled Request", parse_mode='HTML')
 
+        if query.data == "back":
+            key_markup = self.getRequest()
+            query.edit_message_text(
+                "<b>PyCryptoBot Command Panel.</b>",
+                reply_markup=key_markup,
+                parse_mode="HTML")
+                
         elif query.data == "margin":
             self.askMarginType(update)
         elif query.data in ("margin_orders", "margin_pairs", "margin_all"):
-            self.getMargins(update)
+            actions.getMargins(update)
 
         elif query.data == "status":
             actions.getBotInfo(update)
@@ -149,11 +159,29 @@ class TelegramHandler():
             actions.StartMarketScan(update)
         elif query.data == "stopmarket":
             self._removeScheduledJob(update)
-# 
-#         elif query.data == "exception":
-#             # self._checkScheduledJob(update)
-#             actions.StartMarketScan(update)
 
+        elif query.data == "editconfig":
+            query.edit_message_text(
+                "\U000026A0 <b>Under Contruction</b> \U000026A0",
+                parse_mode="HTML")
+            # key_markup = self.getConfigOptions()
+            # query.edit_message_text(
+            #     "<b>PyCryptoBot Config Panel.</b>",
+            #     reply_markup=key_markup,
+            #     parse_mode="HTML")
+
+        elif query.data.__contains__("edit_"):
+            editor.ask_buy_max_size(query, context)
+
+    def getConfigOptions(self):
+        keyboard = [
+            [
+                InlineKeyboardButton("BuyMaxSize", callback_data="edit_buymaxsize"),
+            ],
+            [InlineKeyboardButton("\U000025C0 Back", callback_data="back")],
+        ]
+
+        return InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
 
     def askMarginType(self, update):
         """Ask what user wants to see active order/pairs or all"""
@@ -165,7 +193,7 @@ class TelegramHandler():
                 InlineKeyboardButton("Active Pairs", callback_data="margin_pairs"),
                 InlineKeyboardButton("All", callback_data="margin_all"),
             ],
-            [InlineKeyboardButton("Cancel", callback_data="cancel")],
+            [InlineKeyboardButton("\U000025C0 Back", callback_data="back")],
         ]
 
         reply_markup = InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
@@ -175,55 +203,31 @@ class TelegramHandler():
         except:
             update.message.reply_text("Make your selection", reply_markup=reply_markup)
 
-    def getMargins(self, response):
-
-        query = response.callback_query
-        query.answer()
-
-        # closeoutput = "" 
-        output = ""
-        closedbotCount = 0
-        openbotCount = 0
-        for file in helper.getActiveBotList():
-            helper.read_data(file)
-            output = ""
-            if "margin" in helper.data:
-                if "margin" in helper.data and helper.data["margin"] == " ":
-                    output = (output + f"<b>{file}</b>")
-                    output = output + f"\n<i>{helper.data['message']}</i>\n"
-                    closedbotCount += 1
-                elif len(helper.data) > 2:
-                    space = 20 - len(file)
-                    margin_icon = ("\U0001F7E2" if "-" not in helper.data["margin"]else "\U0001F534")
-                    output = (output + f"\U0001F4C8 <b>{file}</b> ".ljust(space))
-                    output = (output + f" {margin_icon}  <i>Current Margin: {helper.data['margin']} \U0001F4B0 (P/L): {helper.data['delta']}</i>\n      (TSL Trg): {helper.data['trailingstoplosstriggered']}  --  (TSL Change): {helper.data['change_pcnt_high']}\n")
-                    openbotCount += 1
-                if closedbotCount + openbotCount == 1:
-                    try:
-                        query.edit_message_text(f"{output}", parse_mode="HTML")
-                    except:
-                        response.effective_message.reply_html(f"{output}")
-                else:
-                    response.effective_message.reply_html(f"{output}")
-
-        if (query.data.__contains__("orders") or query.data.__contains__("all")) and openbotCount == 0:
-            query.edit_message_text("<b>No open orders found.</b>", parse_mode="HTML")
-
-        elif (query.data.__contains__("pairs") or query.data.__contains__("all")) and closedbotCount == 0:
-            query.edit_message_text("<b>No active pairs found.</b>", parse_mode="HTML")
-
     def askConfigOptions(self, update: Updater):
         keyboard = []
+        buttons = []
         for exchange in helper.config:
             if not exchange == "telegram":
-                keyboard.append(
-                    [InlineKeyboardButton(exchange, callback_data="ex_" + exchange)]
+                buttons.append(
+                    InlineKeyboardButton(exchange, callback_data="ex_" + exchange)
                 )
+
+        i = 0
+        while i <= len(buttons) - 1:
+            if len(buttons) - 1 >= i + 2:
+                keyboard.append([buttons[i], buttons[i + 1], buttons[i + 2]])
+            elif len(buttons) - 1 >= i + 1:
+                keyboard.append([buttons[i], buttons[i + 1]])
+            else:
+                keyboard.append([buttons[i]])
+            i += 3
+
+            keyboard.append([InlineKeyboardButton("\U000025C0 Back", callback_data="back")])
 
         reply_markup = InlineKeyboardMarkup(keyboard)
         query = update.callback_query
         query.answer()
-        query.edit_message_text("Select exchange", reply_markup=reply_markup)
+        query.edit_message_text("<b>Select exchange</b>", reply_markup=reply_markup, parse_mode="HTML")
 
     def askConfimation(self, update):
 
@@ -252,7 +256,10 @@ class TelegramHandler():
             )
 
     def _removeScheduledJob(self, update):
-        scannerSchedule.shutdown()
         query = update.callback_query
         query.answer()
-        query.edit_message_text("<b>Scan job schedule has been removed</b> \u2705", parse_mode="HTML")
+        if len(scannerSchedule.get_jobs()) > 0:
+            scannerSchedule.shutdown()
+            query.edit_message_text("<b>Scan job schedule has been removed</b> \u2705", parse_mode="HTML")
+        else:
+            query.edit_message_text("<b>No scheduled job found</b> \u2705", parse_mode="HTML")
