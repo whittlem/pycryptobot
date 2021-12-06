@@ -191,16 +191,7 @@ class TelegramBotHelper:
             self.deletemargin()
 
     def save_scanner_output(self, exchange, quote, output: DataFrame) -> None:
-        try:
-            os.remove(
-                    os.path.join(
-                        self.app.telegramdatafolder, "telegram_data", f"{exchange}_{quote}_output.json"
-                    )
-                )
-        except FileNotFoundError:
-            pass
-
-        output = output.sort_values(by=["buy_next", "adx", "volatility", "volume"], ascending=[False, False], inplace=False)
+        output = output.sort_values(by=["buy_next", "adx"], ascending=[False, False], inplace=False)
 
         output.to_json(
             os.path.join(

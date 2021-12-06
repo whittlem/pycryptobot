@@ -1447,13 +1447,8 @@ class TelegramBot(TelegramBotBase):
                         self.datafolder, "telegram_data", f"{ex}_{quote}_output.json"),"r",
                         encoding="utf8") as json_file:
                         data = json.load(json_file)
-                except IOError:
-                    with open(os.path.join(
-                        self.datafolder, "telegram_data", f"{ex}_{quote}_output.json"),"w",
-                        encoding="utf8") as json_file:
-                        json_file.write('{}')
-                    data = {}
-                
+                except FileNotFoundError:
+                    continue
                 outputmsg =  f"<b>{ex} ({quote})</b> \u23F3 \n"
 
                 for k,v in data.items():
@@ -1461,11 +1456,6 @@ class TelegramBot(TelegramBotBase):
                         logger.info(f"{k}: {v}")
 
                     if self.maxbotcount > 0 and botcounter >= self.maxbotcount:
-                        continue
-                    
-                    if self.enableleverage == False and (
-                        str(v).__contains__("DOWN") or str(v).__contains__("UP")
-                    ):
                         continue
 
                     if k in self.data["scannerexceptions"]:
