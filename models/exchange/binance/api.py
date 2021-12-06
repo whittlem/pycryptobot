@@ -29,7 +29,7 @@ DEFAULT_MARKET = "BTCGBP"
 
 class AuthAPIBase:
     def _isMarketValid(self, market: str) -> bool:
-        p = re.compile(r"^[A-Z0-9]{5,13}$")
+        p = re.compile(r"^[A-Z0-9]{5,17}$")
         if p.match(market):
             return True
         return False
