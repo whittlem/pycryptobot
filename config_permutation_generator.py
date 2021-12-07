@@ -2,13 +2,14 @@ import asyncio
 import os
 import re
 from itertools import product
+from typing import Iterable
 from jinja2 import Template
 from models.PyCryptoBot import PyCryptoBot
 from models.exchange.binance import PublicAPI as BPublicAPI
 from models.exchange.coinbase_pro import PublicAPI as CPublicAPI
 from models.exchange.kucoin import PublicAPI as KPublicAPI
 from models.exchange.ExchangesEnum import Exchange as CryptoExchange
-from numpy import arange, nditer, around
+from numpy import arange, array, around
 from pathlib import Path
 
 
@@ -99,17 +100,21 @@ async def write_config(**kwargs):
 
     return True
 
+async def gen_binary_config_perms(binary_configs):
+    list_of_dicts = [dict(zip(binary_configs, v)) for v in product(*binary_configs.values())]
 
-async def iterables_permutation(iterable, step):
-    perms = arange(int(iterable[0]), int(iterable[1]), float(step))
+    return list_of_dicts
 
+async def get_iterables_permutations(possible_iterable_values_dict):
+    perms = [dict(zip(possible_iterable_values_dict, b)) for b in product(*possible_iterable_values_dict.values())]
+    
     return perms
 
 async def main(app, **kwargs):
-    tsl = 0
-    tslt = 0
-    nsmin = 0
-    nsmax = 0
+    tsl = []
+    tslt = []
+    nsmin = []
+    nsmax = []
     market_pairs = []
     if kwargs['base_currencies']:
         market_pairs = kwargs['base_currencies']
@@ -117,23 +122,23 @@ async def main(app, **kwargs):
         for quote in kwargs['quote_currencies']:
             market_pairs.extend(populate_markets(app, quote))
     for market in market_pairs:
-        keys, values = zip(*kwargs['config_binaries'].items())
-        binary_permutations  = [dict(zip(keys, v)) for v in product(*values)]
+        binary_permutations  = await gen_binary_config_perms(kwargs['config_binaries'])
         for binary_combo in binary_permutations:
-            for k,v in kwargs['config_iterables'].items():
-                for perm in await iterables_permutation(v, kwargs['step']):
-                    if k == 'trailingstoploss':
-                        tsl = around(perm, 3)
-                    if k == 'trailingstoplosstrigger':
-                        tslt = around(perm, 3)
-                    if k == 'nosellminpcnt':
-                        nsmin = around(perm, 3)
-                    if k == 'nosellmaxpcnt':
-                        nsmax = around(perm, 3)
-                    await write_config(exchange=kwargs['exchange'], base_currency=market[0], quote_currency=market[1], tsl=tsl,
-                                       tslt=tslt, nsmin=nsmin, nsmax=nsmax, template=kwargs['template'],
-                                       destination=kwargs['destination'], **binary_combo)
-
+            for iter_key, iter_value in kwargs['config_iterables'].items():
+                iterable_permutations = arange(float(iter_value[0]), float(iter_value[1]), float(kwargs['step']))
+                if iter_key == 'trailingstoploss':
+                    tsl = [around(perm, 3) for perm in iterable_permutations]
+                if iter_key == 'trailingstoplosstrigger':
+                    tslt = [around(perm, 3) for perm in iterable_permutations]
+                if iter_key == 'nosellminpcnt':
+                    nsmin = [around(perm, 3) for perm in iterable_permutations]
+                if iter_key == 'nosellmaxpcnt':
+                    nsmax = [around(perm, 3) for perm in iterable_permutations]
+            all_possibilities = {'tsl': tsl, 'tslt': tslt, 'nsmin': nsmin, 'nsmax': nsmax}
+            all_possible_permutations = await get_iterables_permutations(all_possibilities) 
+            for possible_config in all_possible_permutations:
+                await write_config(exchange=kwargs['exchange'], base_currency=market[0], quote_currency=market[1], template=kwargs['template'],
+                                   destination=kwargs['destination'], **binary_combo, **possible_config)
     return True
 
 
