@@ -7,7 +7,7 @@
         {%- elif exchange == 'kucoin' %}
         "api_url": "https://api.kucoin.com",
         {%- endif %}
-        "api_key_file": "{ exchange }}.key,
+        "api_key_file": "{ exchange }}.key",
         "config": {
             "base_currency": "{{ base_currency|default('BTC', true) }}",
             "quote_currency": "{{ quote_currency|default('USD', true) }}",
