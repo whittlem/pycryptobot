@@ -9,10 +9,6 @@ from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_an
 def isMarketValid(market) -> bool:
     if market == None:
         return False
-
-    p = re.compile(r"^[0-9A-Z]{5,17}$")
-    if p.match(market):
-        return True
     p = re.compile(r"^[0-9A-Z]{1,10}\-[1-9A-Z]{2,5}$")
     if p.match(market):
         return True
