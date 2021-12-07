@@ -408,24 +408,6 @@ def executeJob(
         immediate_action = False
         margin, profit, sell_fee = 0, 0, 0
 
-        # Is buypricepcntinc set? Calculate price increase and set _state.action
-        if _state.action == "BUY" and _state.buy_wait_count == 0:
-            _state.waiting_buy_price = price
-            _state.action = "WAIT"
-            _state.buy_wait_count += 1
-            Logger.info(f"** {_app.getMarket()} - Waiting to buy until {_state.waiting_buy_price} increases 1% - Current Price: {price}, change 0%")
-        elif _state.action == "BUY" and _state.buy_wait_count > 0:
-            pricechange = (price - _state.waiting_buy_price) / _state.waiting_buy_price * 100
-            if pricechange >= 0.5:
-                _state.buy_wait_count = 0
-                return
-            elif price <= _state.waiting_buy_price:
-                    _state.waiting_buy_price = price
-            _state.action = "WAIT"
-            immediate_action = False
-            _state.buy_wait_count += 1
-            Logger.info(f"** {_app.getMarket()} - Waiting to buy until {_state.waiting_buy_price} increases 1% - Current Price: {price}, change {pricechange}%")
-
         # Reset the TA so that the last record is the current sim date
         # To allow for calculations to be done on the sim date being processed
         if _app.isSimulation():

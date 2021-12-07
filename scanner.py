@@ -134,7 +134,7 @@ def process_screener_data(app, markets, quote_currency):
             if recommend in app.tv_screener_ratings:
                 # print(ta.summary.get('RECOMMENDATION'))
                 score += 5
-            if (adx >= app.adx_threshold) and (adx_posi_di > adx_neg_di) or (adx_posi_di > adx):
+            if (adx >= app.adx_threshold or adx_posi_di > adx) and (adx_posi_di > adx_neg_di):
                 # print(f"ADX({adx}) >= {app.adx_threshold}")
                 score += 2
             if volume >= app.volume_threshold:
@@ -155,7 +155,7 @@ def process_screener_data(app, markets, quote_currency):
                 #relavent_ta['market'] = ta.symbol
                 relavent_ta['volume'] = volume
                 relavent_ta['volatility'] = volatility
-                relavent_ta['adx'] = ta.indicators['ADX']
+                relavent_ta['adx'] = adx
                 relavent_ta['adx+di'] = adx_posi_di
                 relavent_ta['adx-di'] = adx_neg_di
                 relavent_ta['macd'] = macd
