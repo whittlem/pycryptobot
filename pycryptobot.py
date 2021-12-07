@@ -456,7 +456,7 @@ def executeJob(
 
                     if (
                         _app.getExchange() == Exchange.COINBASEPRO
-                        or _app.getExchange() == Exchange.COINBASEPRO
+                        or _app.getExchange() == Exchange.KUCOIN
                     ):
                         if _state.last_buy_fee != exchange_last_buy["fee"]:
                             _state.last_buy_fee = exchange_last_buy["fee"]
@@ -1425,7 +1425,7 @@ def executeJob(
                         + ") "
                         + str(current_sim_date)
                         + "\n - TEST SELL at "
-                        + str(_truncate(price_text, 4))
+                        + str(price_text)
                         + " (margin: "
                         + margin_text
                         + ", delta: "
