@@ -60,7 +60,7 @@ class TradingAccount:
             market to check
         """
         if self.app.getExchange() == Exchange.COINBASEPRO and market != "":
-            p = re.compile(r"^[0-9A-Z]{1,10}\-[1-9A-Z]{2,5}$")
+            p = re.compile(r"^[1-9A-Z]{2,20}\-[1-9A-Z]{2,20}$")
             if not p.match(market):
                 raise TypeError("Coinbase Pro market is invalid.")
         elif self.app.getExchange() == Exchange.BINANCE:
@@ -68,7 +68,7 @@ class TradingAccount:
             if not p.match(market):
                 raise TypeError("Binance market is invalid.")
         elif self.app.getExchange() == Exchange.KUCOIN:
-            p = re.compile(r"^[0-9A-Z]{1,10}\-[1-9A-Z]{2,5}$")
+            p = re.compile(r"^[1-9A-Z]{2,20}\-[1-9A-Z]{2,20}$")
             if not p.match(market):
                 raise TypeError("Kucoin market is invalid.")
 
@@ -581,7 +581,7 @@ class TradingAccount:
         if market == "":
             market = self.app.getMarket()
 
-        p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
+        p = re.compile(r"^[1-9A-Z]{2,20}\-[1-9A-Z]{2,20}$")
         if not p.match(market):
             raise ValueError(f"Invalid market: {market}")
 
@@ -662,7 +662,7 @@ class TradingAccount:
         if market == "":
             market = self.app.getMarket()
 
-        p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
+        p = re.compile(r"^[1-9A-Z]{2,20}\-[1-9A-Z]{2,20}$")
         if not p.match(market):
             raise ValueError(f"Invalid market: {market}")
 

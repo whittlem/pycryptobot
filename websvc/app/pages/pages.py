@@ -50,7 +50,7 @@ def isBinanceMarketValid(market: str) -> bool:
 
 
 def isCoinbaseMarketValid(market: str) -> bool:
-    p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
+    p = re.compile(r"^[1-9A-Z]{2,20}\-[1-9A-Z]{2,20}$")
     if p.match(market):
         return True
     return False
