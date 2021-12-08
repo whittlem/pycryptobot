@@ -1087,7 +1087,7 @@ def main():
     #     fallbacks=[("Done", botconfig.done)],
     # )
     # CallbackQueryHandler(botconfig.editor.ask_buy_max_size)
-    dp.add_handler(botconfig.editor.get_conversation_handler())
+    # dp.add_handler(botconfig.editor.get_conversation_handler())
 
     dp.add_handler(conversation_stats)
     dp.add_handler(conversation_newbot)
