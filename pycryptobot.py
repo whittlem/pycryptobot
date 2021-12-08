@@ -1067,7 +1067,7 @@ def executeJob(
 
                 # if live
                 if _app.isLive():
-                    if not _app.insufficientfunds:
+                    if not _app.insufficientfunds and _app.getBuyMinSize() < float(account.getBalance(_app.getQuoteCurrency())):
                         if not _app.isVerbose():
                             if not _app.isSimulation() or (
                                 _app.isSimulation() and not _app.simResultOnly()
@@ -1085,10 +1085,10 @@ def executeJob(
 
                         ac = account.getBalance()
                         try:
-                            df_base = ac[ac["currency"] == app.getBaseCurrency()]["available"]
+                            df_base = ac[ac["currency"] == _app.getBaseCurrency()]["available"]
                             account.basebalance = 0.0 if len(df_base) == 0 else float(df_base.values[0])
 
-                            df_quote = ac[ac["currency"] == app.getQuoteCurrency()]["available"]
+                            df_quote = ac[ac["currency"] == _app.getQuoteCurrency()]["available"]
                             account.quotebalance = 0.0 if len(df_quote) == 0 else float(df_quote.values[0])
                         except:
                             pass
