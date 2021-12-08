@@ -251,7 +251,7 @@ def executeJob(
             _app.isSimulation() and not _app.simResultOnly()
         ):
             Logger.info(
-                "*** smart switch to 300 (5 min) granularity ***"
+                "*** open order detected smart switching to 300 (5 min) granularity ***"
             )
         _app.setGranularity(Granularity.FIFTEEN_MINUTES)
         list(map(s.cancel, s.queue))
