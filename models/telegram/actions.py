@@ -25,10 +25,13 @@ class TelegramActions():
     def startOpenOrders(self, update):
         logger.info("called startOpenOrders")
         query = update.callback_query
-        query.answer()
-        query.edit_message_text(
+        if query != None:
+            query.answer()
+            query.edit_message_text(
                 "<b>Starting markets with open trades..</b>",
                 parse_mode="HTML")
+        else:
+            update.effective_message.reply_html("<b>Starting markets with open trades..</b>")
         helper.read_data()
         # startbotinfo
         for market in helper.data["opentrades"]:
@@ -36,7 +39,7 @@ class TelegramActions():
                 # update.effective_message.reply_html(f"<i>Starting {market} crypto bot</i>")
                 helper.startProcess(market, helper.data["opentrades"][market]["exchange"], "", "scanner")
             sleep(10)
-        update.effective_message.reply_html(f"<i>Markets have been started</i>")
+        update.effective_message.reply_html("<i>Markets have been started</i>")
         sleep(1)
         self.getBotInfo(update)
 

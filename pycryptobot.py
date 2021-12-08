@@ -242,8 +242,23 @@ def executeJob(
             telegram_bot.remove_open_order()
 
 
+    if (_app.getSmartSwitch() == 1
+        and _app.getGranularity() != Granularity.FIVE_MINUTES
+        and _state.last_action == "BUY"
+    ):
+
+        if not _app.isSimulation() or (
+            _app.isSimulation() and not _app.simResultOnly()
+        ):
+            Logger.info(
+                "*** smart switch to 300 (5 min) granularity ***"
+            )
+        _app.setGranularity(Granularity.FIFTEEN_MINUTES)
+        list(map(s.cancel, s.queue))
+        s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
+
     # use actual sim mode date to check smartchswitch
-    if (
+    elif (
         (last_api_call_datetime.seconds > 60 or _app.isSimulation())
         and _app.getSmartSwitch() == 1
         and _app.getGranularity() == Granularity.ONE_HOUR
@@ -271,7 +286,7 @@ def executeJob(
         s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
 
     # use actual sim mode date to check smartchswitch
-    if (
+    elif (
         (last_api_call_datetime.seconds > 60 or _app.isSimulation())
         and _app.getSmartSwitch() == 1
         and _app.getGranularity() == Granularity.FIFTEEN_MINUTES

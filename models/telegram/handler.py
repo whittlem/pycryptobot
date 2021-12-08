@@ -55,12 +55,14 @@ class TelegramHandler:
                 InlineKeyboardButton("\U0001F4B0 Sell", callback_data="sell"),
                 InlineKeyboardButton("\U0001FA99 Buy", callback_data="buy"),
             ],
-            # [
-            #     InlineKeyboardButton("Scanner Exceptions", callback_data="exception"),
-            # ],
             [
                 InlineKeyboardButton(
                     "\U0001F50E Market Scanner", callback_data="scanner"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    "\U0001F9FE Restart open orders", callback_data="reopen"
                 ),
             ],
             [
@@ -195,14 +197,14 @@ class TelegramHandler:
 
         keyboard = [
             [
-                InlineKeyboardButton("Scan Only", callback_data="scanonly"),
-                InlineKeyboardButton("Start Bots Only", callback_data="noscan")
-            ],
-            [
                 InlineKeyboardButton("Add Schedule", callback_data="schedule")
             ],
             [
                 InlineKeyboardButton("Remove Schedule", callback_data="stopmarket"),
+            ],
+            [
+                InlineKeyboardButton("Scan Only", callback_data="scanonly"),
+                InlineKeyboardButton("Start Bots Only", callback_data="noscan")
             ],
             [
                 InlineKeyboardButton("Scan + Start Bots", callback_data="startmarket")
