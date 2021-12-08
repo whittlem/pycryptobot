@@ -11,7 +11,7 @@ class TelegramHelper():
         self.config = config
         self.config_file = configfile
 
-    def read_data(self, name: str = "data.json") -> None:
+    def read_data(self, name: str = "data.json") -> bool:
         try:
             fname = name if name.__contains__(".json") else f"{name}.json"
             with open(
@@ -20,6 +20,9 @@ class TelegramHelper():
                 self.data = json.load(json_file)
         except FileNotFoundError as err:
             print(err)
+            return False
+
+        return True
 
     def write_data(self, name: str = "data.json") -> None:
         fname = name if name.__contains__(".json") else f"{name}.json"

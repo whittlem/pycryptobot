@@ -199,7 +199,7 @@ class TelegramActions():
             query.edit_message_text("<b>No active pairs found.</b>", parse_mode="HTML")
 
 
-    def StartMarketScan(self, update, debug: bool = False, scanmarkets: bool = True):
+    def StartMarketScan(self, update, scanmarkets: bool = True, startbots: bool = True, debug: bool = False):
         logger.info("called StartMarketScan")
         try:
             with open("scanner.json") as json_file:
@@ -210,30 +210,41 @@ class TelegramActions():
             )
             return
 
-        if debug == False:
-            if scanmarkets:
-                update.effective_message.reply_html(
-                    f"<i>Gathering market data\nThis can take some time depending on number of pairs\nplease wait...</i> \u23F3")
-                try:
-                    logger.info("Starting Market Scanner")
-                    output = subprocess.getoutput("python3 scanner.py")
-                except Exception as err:
-                    update.effective_message.reply_html("<b>scanning failed.</b>")
-                    logger.error(err)
-                    raise
-            update.effective_message.reply_html("<b>scan complete, stopping bots..</b>")
-            for file in helper.getActiveBotList():
-                helper.stopRunningBot(file, "exit")
-                sleep(5)
+        if scanmarkets:
+            update.effective_message.reply_html(
+                f"<i>Gathering market data\nThis can take some time depending on number of pairs\nplease wait...</i> \u23F3")
+            try:
+                logger.info("Starting Market Scanner")
+                output = subprocess.getoutput("python3 scanner.py")
+            except Exception as err:
+                update.effective_message.reply_html("<b>scanning failed.</b>")
+                logger.error(err)
+                raise
+
+            update.effective_message.reply_html("<b>Scan Complete.</b>")
+        
+        if not startbots:
+            update.effective_message.reply_html(f"<b>Operation Complete  (0 started)</b>")
+            return
+
+        update.effective_message.reply_html("<i>stopping bots..</i>")
+        for file in helper.getActiveBotList():
+            helper.stopRunningBot(file, "exit")
+            sleep(5)
 
         botcounter = len(helper.getActiveBotList())
+        maxbotcount = helper.config["scanner"]["maxbotcount"] if "maxbotcount" in helper.config["scanner"] else 0
+
         helper.read_data()
         for ex in config:
-            if helper.config["scanner"]["maxbotcount"] > 0 and botcounter >= helper.config["scanner"]["maxbotcount"]:
+            if maxbotcount > 0 and botcounter >= maxbotcount:
                 break
             for quote in config[ex]["quote_currency"]:
                 update.effective_message.reply_html(f"Starting {ex} ({quote}) bots...")
                 logger.info("%s - (%s)", ex, quote)
+                if not os.path.isfile(os.path.join(self.datafolder, "telegram_data", f"{ex}_{quote}_output.json")):
+                    continue
+
                 with open(
                     os.path.join(
                         self.datafolder, "telegram_data", f"{ex}_{quote}_output.json"

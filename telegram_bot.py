@@ -44,7 +44,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-TYPING_RESPONSE = range(1)
+# TYPING_RESPONSE = 1
 CHOOSING, TYPING_REPLY = range(2)
 EXCHANGE, MARKET, ANYOVERRIDES, OVERRIDES, SAVE, START = range(6)
 EXCEPT_EXCHANGE, EXCEPT_MARKET = range(2)
@@ -898,7 +898,7 @@ class TelegramBot(TelegramBotBase):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return None
 
-        self.control.askRestartBot(update)
+        self.control.askRestartBotList(update)
 
     def StartOpenOrderBots(self, update, context):
         if not self._checkifallowed(context._user_id_and_data[0], update):
@@ -1031,8 +1031,7 @@ def main():
 
     dp.add_handler(CommandHandler("controlPanel", botconfig.Request))
 
-    conversation_exception = ConversationHandler(
-        entry_points=[CommandHandler("addexception", botconfig.ExceptionExchange)],
+    conversation_exception = ConversationHandler(entry_points=[CommandHandler("addexception", botconfig.ExceptionExchange)],
         states={
             EXCEPT_EXCHANGE: [
                 MessageHandler(
@@ -1048,8 +1047,7 @@ def main():
         fallbacks=[("Done", botconfig.done)],
     )
 
-    conversation_stats = ConversationHandler(
-        entry_points=[CommandHandler("stats", botconfig.statsrequest)],
+    conversation_stats = ConversationHandler(entry_points=[CommandHandler("stats", botconfig.statsrequest)],
         states={
             CHOOSING: [
                 MessageHandler(
@@ -1065,8 +1063,7 @@ def main():
         fallbacks=[("Done", botconfig.done)],
     )
 
-    conversation_newbot = ConversationHandler(
-        entry_points=[CommandHandler("addnew", botconfig.newbot_request)],
+    conversation_newbot = ConversationHandler(entry_points=[CommandHandler("addnew", botconfig.newbot_request)],
         states={
             EXCHANGE: [MessageHandler(Filters.text, botconfig.newbot_exchange)],
             MARKET: [MessageHandler(Filters.text, botconfig.newbot_market)],
@@ -1080,16 +1077,17 @@ def main():
         fallbacks=[("Done", botconfig.done)],
     )
 
-    conversation_stats = ConversationHandler(
-        entry_points=[CommandHandler("buymax", botconfig.editor.ask_buy_max_size)],
-        states={
-            TYPING_RESPONSE: [
-                MessageHandler(
-                    Filters.text, botconfig.editor.buy_max_size, pass_user_data=True
-                )],
-        },
-        fallbacks=[("Done", botconfig.done)],
-    )
+    # conversation_stats = ConversationHandler(entry_points=[CommandHandler("buymax", botconfig.editor.ask_buy_max_size)],
+    #     states={
+    #         TYPING_RESPONSE: [
+    #             MessageHandler(
+    #                 Filters.text, botconfig.editor.buy_max_size
+    #             )],
+    #     },
+    #     fallbacks=[("Done", botconfig.done)],
+    # )
+    # CallbackQueryHandler(botconfig.editor.ask_buy_max_size)
+    dp.add_handler(botconfig.editor.get_conversation_handler())
 
     dp.add_handler(conversation_stats)
     dp.add_handler(conversation_newbot)

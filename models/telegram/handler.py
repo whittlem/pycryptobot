@@ -8,7 +8,7 @@ from models.telegram.helper import TelegramHelper
 from models.telegram.actions import TelegramActions
 from models.telegram.config import Editor
 
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
 from telegram.ext import Updater
 from telegram.ext.callbackcontext import CallbackContext
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -59,16 +59,8 @@ class TelegramHandler:
             #     InlineKeyboardButton("Scanner Exceptions", callback_data="exception"),
             # ],
             [
-                InlineKeyboardButton("Stop Market Scanner", callback_data="stopmarket"),
-            ],
-            [
                 InlineKeyboardButton(
-                    "\U0001F50E Start Market Scanner", callback_data="startmarket"
-                ),
-            ],
-            [
-                InlineKeyboardButton(
-                    "\U0001F9FE Restart open orders", callback_data="reopen"
+                    "\U0001F50E Market Scanner", callback_data="scanner"
                 ),
             ],
             [
@@ -80,6 +72,11 @@ class TelegramHandler:
                 InlineKeyboardButton("stopbot(s) \U0001F534", callback_data="stop"),
             ],
             [
+                InlineKeyboardButton(
+                    "\U0000267B Restart active bots", callback_data="restart"
+                ),
+            ],
+            [
                 InlineKeyboardButton("\U00002139 Bot Status", callback_data="status"),
                 InlineKeyboardButton("Margins \U0001F4C8", callback_data="margin"),
             ],
@@ -88,7 +85,7 @@ class TelegramHandler:
 
         return InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
 
-    def getResponse(self, update: Updater, context: CallbackContext):
+    def getResponse(self, update: Update, context: CallbackContext):
 
         if not self._checkifallowed(update.effective_user.id, update):
             return
@@ -169,15 +166,20 @@ class TelegramHandler:
         elif query.data.__contains__("delete_"):
             actions.deleteresponse(update)
 
-        elif query.data == "startmarket":
+        elif query.data == "scanner":
+            self.getScannerOptions(update)
+        elif query.data == "schedule":
             self._checkScheduledJob(update)
-            actions.StartMarketScan(update)
+        elif query.data == "scanonly" or query.data == "noscan" or query.data == "startmarket":
+            if query.data == "startmarket":
+                self._checkScheduledJob(update)
+            actions.StartMarketScan(update, True if query.data != "noscan" else False, True if query.data != "scanonly" else False)
         elif query.data == "stopmarket":
             self._removeScheduledJob(update)
 
         elif query.data == "editconfig":
             query.edit_message_text(
-                "\U000026A0 <b>Under Contruction</b> \U000026A0", parse_mode="HTML"
+                "\U000026A0 <b>Under Construction</b> \U000026A0", parse_mode="HTML"
             )
             # key_markup = self.getConfigOptions()
             # query.edit_message_text(
@@ -187,6 +189,31 @@ class TelegramHandler:
 
         elif query.data.__contains__("edit_"):
             editor.ask_buy_max_size(query, context)
+
+    def getScannerOptions(self, update):
+        query = update.callback_query
+
+        keyboard = [
+            [
+                InlineKeyboardButton("Scan Only", callback_data="scanonly"),
+                InlineKeyboardButton("Start Bots Only", callback_data="noscan")
+            ],
+            [
+                InlineKeyboardButton("Add Schedule", callback_data="schedule")
+            ],
+            [
+                InlineKeyboardButton("Remove Schedule", callback_data="stopmarket"),
+            ],
+            [
+                InlineKeyboardButton("Scan + Start Bots", callback_data="startmarket")
+            ],
+            [InlineKeyboardButton("\U000025C0 Back", callback_data="back")],
+        ]
+
+        query.edit_message_text(
+            "<b>Scanning Options.</b>",
+            reply_markup=InlineKeyboardMarkup(keyboard, one_time_keyboard=True),
+            parse_mode="HTML")
 
     def getConfigOptions(self):
         keyboard = [
@@ -222,7 +249,7 @@ class TelegramHandler:
         except:
             update.message.reply_text("Make your selection", reply_markup=reply_markup)
 
-    def askConfigOptions(self, update: Updater):
+    def askConfigOptions(self, update: Update):
         keyboard = []
         buttons = []
         for exchange in helper.config:
@@ -291,9 +318,10 @@ class TelegramHandler:
                 name="Volume Auto Scanner",
                 misfire_grace_time=10,
             )
-            # scannerSchedule.start()
-            update.effective_message.reply_html(
-                f"<b>Scan job schedule created to run every {helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705"
+
+            query = update.callback_query
+            query.edit_message_text(
+                f"<b>Scan job schedule created to run every {helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705", parse_mode="HTML"
             )
 
     def _removeScheduledJob(self, update):

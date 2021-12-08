@@ -1,8 +1,5 @@
 from time import sleep
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-# import telegram
-from telegram.ext import Updater
-# from telegram.ext.callbackcontext import CallbackContext
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
 
 from .helper import TelegramHelper
 
@@ -36,7 +33,7 @@ class TelegramControl():
 
         return InlineKeyboardMarkup(keyboard)
 
-    def _askBotList(self, update: Updater, callbackTag, status):
+    def _askBotList(self, update: Update, callbackTag, status):
         query = update.callback_query
         try:
             query.answer()
@@ -70,7 +67,7 @@ class TelegramControl():
             except:
                 update.effective_message.reply_html(f"<b>No {status} bots found.</b>")
 
-    def _actionBotResponse(self, update: Updater, callbackTag, state, status: str = "active"):
+    def _actionBotResponse(self, update: Update, callbackTag, state, status: str = "active"):
         query = update.callback_query
         try:
             query.answer()
@@ -93,7 +90,7 @@ class TelegramControl():
         update.effective_message.reply_html("<b>Operation Complete</b>")
         # query.edit_message_text("Operation Complete")
 
-    def askStartBotList(self, update: Updater):
+    def askStartBotList(self, update: Update):
         query = update.callback_query
         try:
             query.answer()
@@ -117,7 +114,7 @@ class TelegramControl():
             update.effective_message.reply_html("<b>What crypto bots do you want to start?</b>",
             reply_markup=reply_markup)
 
-    def startBotResponse(self, update: Updater):
+    def startBotResponse(self, update: Update):
         query = update.callback_query
         try:
             query.answer()
@@ -152,22 +149,22 @@ class TelegramControl():
             else:
                 update.effective_message.reply_html(f"{str(query.data).replace('start_', '')} is already running, no action taken.")
 
-    def askStopBotList(self, update: Updater):
+    def askStopBotList(self, update: Update):
         self._askBotList(update, "stop", "active")
 
-    def stopBotResponse(self, update: Updater):
+    def stopBotResponse(self, update: Update):
         self._actionBotResponse(update, "stop", "exit", "active")
 
-    def askPauseBotList(self, update: Updater):
+    def askPauseBotList(self, update: Update):
         self._askBotList(update, "pause", "active")
 
-    def pauseBotResponse(self, update: Updater):
+    def pauseBotResponse(self, update: Update):
         self._actionBotResponse(update, "pause", "pause", "active")
 
-    def askResumeBotList(self, update: Updater):
+    def askResumeBotList(self, update: Update):
         self._askBotList(update, "resume", "paused")
 
-    def resumeBotResponse(self, update: Updater):
+    def resumeBotResponse(self, update: Update):
         self._actionBotResponse(update, "resume", "start", "pause")
 
     def askSellBotList(self, update):
@@ -178,10 +175,10 @@ class TelegramControl():
         """Manual buy request"""
         self._askBotList(update, "buy", "active")
 
-    def askRestartBotList(self, update: Updater):
+    def askRestartBotList(self, update: Update):
         self._askBotList(update, "restart", "active")
 
-    def restartBotResponse(self, update: Updater):
+    def restartBotResponse(self, update: Update):
 
         bList = {}
         for bot in helper.getActiveBotList():
@@ -199,7 +196,7 @@ class TelegramControl():
             helper.startProcess(bot, bList[bot]["exchange"], "", bList[bot]["startmethod"])
             sleep(10)
 
-    def askConfigOptions(self, update: Updater):
+    def askConfigOptions(self, update: Update):
         keyboard = []
         for exchange in helper.config:
             if not exchange == "telegram":
@@ -211,7 +208,7 @@ class TelegramControl():
 
         update.message.reply_text("Select exchange", reply_markup=reply_markup)
 
-    def askDeleteBotList(self, update: Updater):
+    def askDeleteBotList(self, update: Update):
         """ask which bot to delete"""
         buttons = []
         keyboard = []
