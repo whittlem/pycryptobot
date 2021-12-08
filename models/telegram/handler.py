@@ -121,6 +121,11 @@ class TelegramHandler:
         elif query.data.__contains__("ex_"):
             actions.showconfigresponse(update)
 
+        elif query.data == "restart":
+            control.askRestartBotList(update)
+        elif query.data.__contains__("restart_"):
+            control.restartBotResponse(update)
+            
         elif query.data == "start":
             control.askStartBotList(update)
         elif query.data.__contains__("start_"):
@@ -140,11 +145,6 @@ class TelegramHandler:
             control.askResumeBotList(update)
         elif query.data.__contains__("resume_"):
             control.resumeBotResponse(update)
-
-        elif query.data == "restart":
-            control.askRestartBotList(update)
-        elif query.data.__contains__("restart_"):
-            control.restartBotResponse(update)
 
         elif query.data == "reopen":
             actions.startOpenOrders(update)

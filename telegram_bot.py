@@ -770,7 +770,7 @@ class TelegramBot(TelegramBotBase):
             jfile = jsonfiles[i-1]
 
             logger.info("checking %s", jfile)
-            
+
             while self.helper.read_data(jfile) == False:
                 sleep(0.2)
             
@@ -789,7 +789,7 @@ class TelegramBot(TelegramBotBase):
                 and (last_modified.seconds != 86399 and last_modified.days != -1)
             ):
                 logger.info("deleting %s %s", jfile, str(last_modified))
-                os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
+                os.remove(os.path.join(self.datafolder, "telegram_data", f"{jfile}.json"))
                 continue
             elif (
                 self.helper.data["botcontrol"]["status"] == "exit"
