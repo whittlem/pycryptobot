@@ -14,7 +14,7 @@ def merge_config_and_args(exchange_config, args):
 
 
 def isCurrencyValid(currency):
-    p = re.compile(r"^[1-9A-Z]{2,20}$")
+    p = re.compile(r"^[1-9A-Z]{2,5}$")
     return p.match(currency)
 
 
