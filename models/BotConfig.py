@@ -50,6 +50,8 @@ class BotConfig:
         self.trailing_stop_loss_trigger = 0
         self.sell_at_loss = 1
         self.smart_switch = 1
+        self.sell_smart_switch = 0
+
         self.telegram = False
 
         self.logbuysellinjson = False
@@ -106,6 +108,7 @@ class BotConfig:
         self.consolelog = True
         self.consoleloglevel = "INFO"
 
+        self.ema1226_5m_cache = None
         self.ema1226_15m_cache = None
         self.ema1226_1h_cache = None
         self.ema1226_6h_cache = None

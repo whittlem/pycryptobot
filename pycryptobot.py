@@ -170,8 +170,18 @@ def executeJob(
                     simDate = _app.getDateFromISO8601Str(str(simDate))
                     sim_rounded = pd.Series(simDate).dt.round("15min")
                     simDate = sim_rounded[0]
+                elif _app.getGranularity() == Granularity.FIVE_MINUTES:
+                    simDate = _app.getDateFromISO8601Str(str(simDate))
+                    sim_rounded = pd.Series(simDate).dt.round("5min")
+                    simDate = sim_rounded[0]
 
-                _state.iterations = trading_data.index.get_loc(str(simDate)) + 1
+                dateFound = False
+                while dateFound == False:
+                    try:
+                        _state.iterations = trading_data.index.get_loc(str(simDate)) + 1
+                        dateFound = True
+                    except:
+                        simDate += timedelta(seconds=_app.getGranularity().value[0])
 
                 if (
                     _app.getDateFromISO8601Str(str(simDate)).isoformat()
@@ -242,7 +252,7 @@ def executeJob(
             telegram_bot.remove_open_order()
 
 
-    if (_app.getSmartSwitch() == 1
+    if (_app.getSmartSwitch() == 1 and _app.getSellSmartSwitch() == 1
         and _app.getGranularity() != Granularity.FIVE_MINUTES
         and _state.last_action == "BUY"
     ):
@@ -253,12 +263,45 @@ def executeJob(
             Logger.info(
                 "*** open order detected smart switching to 300 (5 min) granularity ***"
             )
-        _app.setGranularity(Granularity.FIFTEEN_MINUTES)
+
+        if not _app.telegramTradesOnly():
+            _app.notifyTelegram(
+                _app.getMarket()
+                + " open order detected smart switching to 300 (5 min) granularity"
+            )
+
+        if _app.isSimulation():
+            _app.sim_smartswitch = True
+
+        _app.setGranularity(Granularity.FIVE_MINUTES)
+        list(map(s.cancel, s.queue))
+        s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
+
+    if (_app.getSmartSwitch() == 1 and _app.getSellSmartSwitch() == 1
+        and _app.getGranularity() == Granularity.FIVE_MINUTES
+        and _state.last_action == "SELL"
+    ):
+
+        if not _app.isSimulation() or (
+            _app.isSimulation() and not _app.simResultOnly()
+        ):
+            Logger.info(
+                "*** sell detected smart switching to 3600 (1 hour) granularity ***"
+            )
+        if not _app.telegramTradesOnly():
+            _app.notifyTelegram(
+                _app.getMarket()
+                + " sell detected smart switching to 3600 (1 hour) granularity"
+            )
+        if _app.isSimulation():
+            _app.sim_smartswitch = True
+
+        _app.setGranularity(Granularity.ONE_HOUR)
         list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
 
     # use actual sim mode date to check smartchswitch
-    elif (
+    if (
         (last_api_call_datetime.seconds > 60 or _app.isSimulation())
         and _app.getSmartSwitch() == 1
         and _app.getGranularity() == Granularity.ONE_HOUR
@@ -286,7 +329,7 @@ def executeJob(
         s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
 
     # use actual sim mode date to check smartchswitch
-    elif (
+    if (
         (last_api_call_datetime.seconds > 60 or _app.isSimulation())
         and _app.getSmartSwitch() == 1
         and _app.getGranularity() == Granularity.FIFTEEN_MINUTES
