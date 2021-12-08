@@ -770,7 +770,10 @@ class TelegramBot(TelegramBotBase):
             jfile = jsonfiles[i-1]
 
             logger.info("checking %s", jfile)
-            self.helper.read_data(jfile)
+            
+            while self.helper.read_data(jfile) == False:
+                sleep(0.2)
+            
             last_modified = datetime.now() - datetime.fromtimestamp(
                 os.path.getmtime(
                     os.path.join(self.datafolder, "telegram_data", f"{jfile}.json")

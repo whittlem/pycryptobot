@@ -43,7 +43,9 @@ class TelegramControl():
         buttons = []
 
         for market in helper.getActiveBotList(status):
-            helper.read_data(market)
+            while helper.read_data(market) == False:
+                sleep(0.2)
+            # helper.read_data(market)
             if "botcontrol" in helper.data:
                 if callbackTag == "buy" and "margin" in helper.data and helper.data["margin"] == " ":
                     buttons.append(InlineKeyboardButton(market, callback_data=f"{callbackTag}_{market}"))
@@ -182,7 +184,9 @@ class TelegramControl():
 
         bList = {}
         for bot in helper.getActiveBotList():
-            helper.read_data(bot)
+            while helper.read_data(bot) == False:
+                sleep(0.2)
+            # helper.read_data(bot)
             bList.update({bot : {"exchange" : helper.data["exchange"], "startmethod" : helper.data["botcontrol"]["startmethod"]}})
 
         self._actionBotResponse(update, "stop", "exit", "active")

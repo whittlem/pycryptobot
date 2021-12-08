@@ -32,8 +32,8 @@ class TelegramActions():
                 parse_mode="HTML")
         else:
             update.effective_message.reply_html("<b>Starting markets with open trades..</b>")
+
         helper.read_data()
-        # startbotinfo
         for market in helper.data["opentrades"]:
             if not helper.isBotRunning(market):
                 # update.effective_message.reply_html(f"<i>Starting {market} crypto bot</i>")
@@ -47,12 +47,14 @@ class TelegramActions():
         """create the manual sell order"""
         query = update.callback_query
         logger.info("called sellresponse - %s", query.data)
-        helper.read_data(query.data.replace("sell_", ""))
+        while helper.read_data(query.data.replace("confirm_sell_", "")) == False:
+            sleep(0.2)
+
         if "botcontrol" in helper.data:
             helper.data["botcontrol"]["manualsell"] = True
-            # helper.write_data(query.data.replace("sell_", ""))
+            helper.write_data(query.data.replace("confirm_sell_", ""))
             query.edit_message_text(
-                f"Selling: {query.data.replace('sell_', '').replace('.json','')}\n<i>Please wait for sale notification...</i>",
+                f"Selling: {query.data.replace('confirm_sell_', '').replace('.json','')}\n<i>Please wait for sale notification...</i>",
                 parse_mode="HTML",
             )
 
@@ -60,10 +62,12 @@ class TelegramActions():
         """create the manual buy order"""
         query = update.callback_query
         logger.info("called buyresponse - %s", query.data)
-        helper.read_data(query.data.replace("confirm_buy_", ""))
+        # if helper.read_data(query.data.replace("confirm_buy_", "")):
+        while helper.read_data(query.data.replace("confirm_buy_", "")) == False:
+            sleep(0.2)
         if "botcontrol" in helper.data:
             helper.data["botcontrol"]["manualbuy"] = True
-            # helper.write_data(query.data.replace("sell_", ""))
+            helper.write_data(query.data.replace("confirm_buy_", ""))
             query.edit_message_text(
                 f"Buying: {query.data.replace('confirm_buy_', '').replace('.json','')}\n<i>Please wait for sale notification...</i>",
                 parse_mode="HTML",
@@ -121,7 +125,9 @@ class TelegramActions():
         for file in helper.getActiveBotList():
             output = ""
             count += 1
-            helper.read_data(file)
+            
+            while helper.read_data(file) == False:
+                sleep(0.2)
 
             output = output + f"\U0001F4C8 <b>{file}</b> "
 
@@ -155,10 +161,10 @@ class TelegramActions():
                 update.effective_message.reply_html(f"{output}")
             sleep(0.2)
 
-            if count == 0:
-                query.edit_message_text(f"<b>Bot Count ({count})</b>", parse_mode="HTML")
-            else:
-                update.effective_message.reply_html(f"<b>Bot Count ({count})</b>")
+        if count == 0:
+            query.edit_message_text(f"<b>Bot Count ({count})</b>", parse_mode="HTML")
+        else:
+            update.effective_message.reply_html(f"<b>Bot Count ({count})</b>")
 
     def getMargins(self, response):
 
@@ -170,7 +176,8 @@ class TelegramActions():
         closedbotCount = 0
         openbotCount = 0
         for file in helper.getActiveBotList():
-            helper.read_data(file)
+            while helper.read_data(file) == False:
+                sleep(0.2)
             # output = ""
             if "margin" in helper.data:
                 if "margin" in helper.data and helper.data["margin"] == " ":

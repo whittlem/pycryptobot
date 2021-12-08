@@ -2,6 +2,7 @@ import os, platform
 import subprocess
 import json
 
+from time import sleep
 from datetime import datetime
 
 class TelegramHelper():
@@ -18,8 +19,9 @@ class TelegramHelper():
                 os.path.join(self.datafolder, "telegram_data", fname), "r", encoding="utf8"
             ) as json_file:
                 self.data = json.load(json_file)
-        except FileNotFoundError as err:
-            print(err)
+        except FileNotFoundError:
+            return False
+        except json.decoder.JSONDecodeError:
             return False
 
         return True
@@ -50,7 +52,9 @@ class TelegramHelper():
             if jsonfiles[i] == "data.json" or jsonfiles[i].__contains__("output.json"):
                 jsonfiles.pop(i)
             else:
-                self.read_data(jsonfiles[i])
+                while self.read_data(jsonfiles[i]) == False:
+                    sleep(0.2)
+                # self.read_data(jsonfiles[i])
                 if "botcontrol" in self.data:
                     if not self.data["botcontrol"]["status"] == state:
                         jsonfiles.pop(i)
