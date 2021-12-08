@@ -190,7 +190,7 @@ class TelegramControl():
             bList.update({bot : {"exchange" : helper.data["exchange"], "startmethod" : helper.data["botcontrol"]["startmethod"]}})
 
         self._actionBotResponse(update, "stop", "exit", "active")
-
+        sleep(1)
         allstopped = False
         while allstopped == False:
             if len(helper.getActiveBotList()) == 0:
