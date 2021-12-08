@@ -251,8 +251,9 @@ def executeJob(
         else:
             telegram_bot.remove_open_order()
 
-
-    if (_app.getSmartSwitch() == 1 and _app.getSellSmartSwitch() == 1
+    if (
+        _app.getSmartSwitch() == 1
+        and _app.getSellSmartSwitch() == 1
         and _app.getGranularity() != Granularity.FIVE_MINUTES
         and _state.last_action == "BUY"
     ):
@@ -277,7 +278,9 @@ def executeJob(
         list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
 
-    if (_app.getSmartSwitch() == 1 and _app.getSellSmartSwitch() == 1
+    if (
+        _app.getSmartSwitch() == 1
+        and _app.getSellSmartSwitch() == 1
         and _app.getGranularity() == Granularity.FIVE_MINUTES
         and _state.last_action == "SELL"
     ):
@@ -355,7 +358,10 @@ def executeJob(
         list(map(s.cancel, s.queue))
         s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
 
-    if _app.getExchange() == Exchange.BINANCE and _app.getGranularity() == Granularity.ONE_DAY:
+    if (
+        _app.getExchange() == Exchange.BINANCE
+        and _app.getGranularity() == Granularity.ONE_DAY
+    ):
         if len(df) < 250:
             # data frame should have 250 rows, if not retry
             Logger.error(f"error: data frame length is < 250 ({str(len(df))})")
@@ -1110,7 +1116,9 @@ def executeJob(
 
                 # if live
                 if _app.isLive():
-                    if not _app.insufficientfunds and _app.getBuyMinSize() < float(account.getBalance(_app.getQuoteCurrency())):
+                    if not _app.insufficientfunds and _app.getBuyMinSize() < float(
+                        account.getBalance(_app.getQuoteCurrency())
+                    ):
                         if not _app.isVerbose():
                             if not _app.isSimulation() or (
                                 _app.isSimulation() and not _app.simResultOnly()
@@ -1128,11 +1136,19 @@ def executeJob(
 
                         ac = account.getBalance()
                         try:
-                            df_base = ac[ac["currency"] == _app.getBaseCurrency()]["available"]
-                            account.basebalance = 0.0 if len(df_base) == 0 else float(df_base.values[0])
+                            df_base = ac[ac["currency"] == _app.getBaseCurrency()][
+                                "available"
+                            ]
+                            account.basebalance = (
+                                0.0 if len(df_base) == 0 else float(df_base.values[0])
+                            )
 
-                            df_quote = ac[ac["currency"] == _app.getQuoteCurrency()]["available"]
-                            account.quotebalance = 0.0 if len(df_quote) == 0 else float(df_quote.values[0])
+                            df_quote = ac[ac["currency"] == _app.getQuoteCurrency()][
+                                "available"
+                            ]
+                            account.quotebalance = (
+                                0.0 if len(df_quote) == 0 else float(df_quote.values[0])
+                            )
                         except:
                             pass
                         # display balances
@@ -1155,8 +1171,11 @@ def executeJob(
 
                         try:
                             resp = _app.marketBuy(
-                                _app.getMarket(), _state.last_buy_size, _app.getBuyPercent())
-                                
+                                _app.getMarket(),
+                                _state.last_buy_size,
+                                _app.getBuyPercent(),
+                            )
+
                             now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
                             _app.notifyTelegram(
                                 _app.getMarket()
@@ -1173,11 +1192,23 @@ def executeJob(
                             # display balances
                             ac = account.getBalance()
                             try:
-                                df_base = ac[ac["currency"] == app.getBaseCurrency()]["available"]
-                                account.basebalance = 0.0 if len(df_base) == 0 else float(df_base.values[0])
+                                df_base = ac[ac["currency"] == app.getBaseCurrency()][
+                                    "available"
+                                ]
+                                account.basebalance = (
+                                    0.0
+                                    if len(df_base) == 0
+                                    else float(df_base.values[0])
+                                )
 
-                                df_quote = ac[ac["currency"] == app.getQuoteCurrency()]["available"]
-                                account.quotebalance = 0.0 if len(df_quote) == 0 else float(df_quote.values[0])
+                                df_quote = ac[ac["currency"] == app.getQuoteCurrency()][
+                                    "available"
+                                ]
+                                account.quotebalance = (
+                                    0.0
+                                    if len(df_quote) == 0
+                                    else float(df_quote.values[0])
+                                )
                             except:
                                 pass
 
@@ -1193,7 +1224,9 @@ def executeJob(
                             Logger.warning("Unable to place order")
                             state.last_api_call_datetime -= timedelta(seconds=60)
                     else:
-                        Logger.warning("Unable to place order, insufficient funds or buyminsize has not been reached")
+                        Logger.warning(
+                            "Unable to place order, insufficient funds or buyminsize has not been reached"
+                        )
                         state.last_api_call_datetime -= timedelta(seconds=60)
                 # if not live
                 else:
@@ -1363,7 +1396,11 @@ def executeJob(
                     )
                     # state.last_buy_size
                     # execute a live market sell
-                    baseamounttosell = float(account.basebalance) if _app.sellfullbaseamount == True else float(state.last_buy_filled)
+                    baseamounttosell = (
+                        float(account.basebalance)
+                        if _app.sellfullbaseamount == True
+                        else float(state.last_buy_filled)
+                    )
                     resp = _app.marketSell(
                         _app.getMarket(),
                         baseamounttosell,
@@ -1391,9 +1428,12 @@ def executeJob(
                         margin_text,
                     )
 
-                    if _app.enableexitaftersell and _app.startmethod not in ("standard", "telegram"):
+                    if _app.enableexitaftersell and _app.startmethod not in (
+                        "standard",
+                        "telegram",
+                    ):
                         sys.exit(0)
-                        
+
                     state.last_api_call_datetime -= timedelta(seconds=60)
                 # if not live
                 else:
@@ -1515,10 +1555,14 @@ def executeJob(
 
             _state.last_df_index = str(df_last.index.format()[0])
 
-            if _app.enabledLogBuySellInJson() == True \
-                    and _state.action in ["BUY", "SELL"] \
-                    and len(_app.trade_tracker) > 0:
-                Logger.info( _app.trade_tracker.loc[len(_app.trade_tracker)-1].to_json())
+            if (
+                _app.enabledLogBuySellInJson() == True
+                and _state.action in ["BUY", "SELL"]
+                and len(_app.trade_tracker) > 0
+            ):
+                Logger.info(
+                    _app.trade_tracker.loc[len(_app.trade_tracker) - 1].to_json()
+                )
 
             if not _app.isLive() and _state.iterations == len(df):
                 simulation = {
@@ -1753,7 +1797,10 @@ def executeJob(
             if _state.last_action == "BUY":
                 # update margin for telegram bot
                 telegram_bot.addmargin(
-                    str(_truncate(margin, 4) + "%"), str(_truncate(profit, 2)), price, change_pcnt_high
+                    str(_truncate(margin, 4) + "%"),
+                    str(_truncate(profit, 2)),
+                    price,
+                    change_pcnt_high,
                 )
 
             # decrement ignored iteration
