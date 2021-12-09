@@ -8,6 +8,17 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [4.6.0] - 2021-12-09
+
+- Added trailingstoplosstrigger to pair.json file + change percentage
+- Fixed sims with smartswitch and added the 5 minute granularity to sims
+- Added buyminsize so the bot will not buy anything below this value 
+- Added sellsmartswitch this sets the sell granularity to 5 minutes once sold it will switch back to normal smartswitch
+- Added restart open orders this will start any bots that have open orders (these state is added to data.json when each bot starts)
+- Added cleandata to when the TG bot starts
+- Added control dashboard to TG Bot, to replace some inline commands
+- Refactored TG Bot code
+
 ## [4.5.1] - 2021-11-22
 
 - Added Kucoin websockets
