@@ -192,6 +192,9 @@ class TelegramHandler:
         elif query.data.__contains__("edit_"):
             editor.ask_buy_max_size(query, context)
 
+        elif query.data.__contains__("delexcep_"):
+            actions.RemoveExceptionCallBack(update)
+
     def getScannerOptions(self, update):
         query = update.callback_query
 
@@ -321,20 +324,30 @@ class TelegramHandler:
                 misfire_grace_time=10,
             )
 
-            query = update.callback_query
-            query.edit_message_text(
-                f"<b>Scan job schedule created to run every {helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705", parse_mode="HTML"
-            )
+            try:
+                query = update.callback_query
+                query.edit_message_text(
+                    f"<b>Scan job schedule created to run every {helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705", parse_mode="HTML"
+                )
+            except:
+                update.message.reply_text(f"<b>Scan job schedule created to run every {helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705", parse_mode="HTML")
 
     def _removeScheduledJob(self, update):
-        query = update.callback_query
-        query.answer()
+        try:
+            query = update.callback_query
+            query.answer()
+        except:
+            pass
+
+        reply = ""
         if len(scannerSchedule.get_jobs()) > 0:
             scannerSchedule.shutdown()
-            query.edit_message_text(
-                "<b>Scan job schedule has been removed</b> \u2705", parse_mode="HTML"
-            )
+            reply = "Scan job schedule has been removed"
+
         else:
-            query.edit_message_text(
-                "<b>No scheduled job found</b> \u2705", parse_mode="HTML"
-            )
+            reply = "No scheduled job found"
+
+        try:
+            query.edit_message_text(f"<b>{reply}</b> \u2705", parse_mode="HTML")
+        except:
+            update.message.reply_text(f"<b>{reply}</b> \u2705", parse_mode="HTML")

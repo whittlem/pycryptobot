@@ -45,7 +45,7 @@ class TelegramControl():
         for market in helper.getActiveBotList(status):
             while helper.read_data(market) == False:
                 sleep(0.2)
-            # helper.read_data(market)
+
             if "botcontrol" in helper.data:
                 if callbackTag == "buy" and "margin" in helper.data and helper.data["margin"] == " ":
                     buttons.append(InlineKeyboardButton(market, callback_data=f"{callbackTag}_{market}"))
@@ -101,7 +101,6 @@ class TelegramControl():
 
         buttons = []
         helper.read_data()
-
         for market in helper.data["markets"]:
             if not helper.isBotRunning(market):
                 buttons.append(InlineKeyboardButton(market, callback_data="start_" + market))
@@ -239,6 +238,37 @@ class TelegramControl():
 
         update.message.reply_text(
             "<b>What crypto bots do you want to delete?</b>",
+            reply_markup=reply_markup,
+            parse_mode="HTML",
+        )
+
+    def askExceptionBotList(self, update):
+        """ask which bot to delete"""
+        buttons = []
+        keyboard = []
+
+        helper.read_data()
+        for pair in helper.data["scannerexceptions"]:
+            buttons.append(
+                InlineKeyboardButton(pair, callback_data="delexcep_" + pair)
+            )
+
+        if len(buttons) > 0:
+            i = 0
+            while i <= len(buttons) - 1:
+                if len(buttons) - 1 >= i + 2:
+                    keyboard.append([buttons[i], buttons[i + 1], buttons[i + 2]])
+                elif len(buttons) - 1 >= i + 1:
+                    keyboard.append([buttons[i], buttons[i + 1]])
+                else:
+                    keyboard.append([buttons[i]])
+                i += 3
+            keyboard.append([InlineKeyboardButton("Cancel", callback_data="cancel")])
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        update.message.reply_text(
+            "<b>What do you want to remove from the scanner exception list?</b>",
             reply_markup=reply_markup,
             parse_mode="HTML",
         )

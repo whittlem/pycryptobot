@@ -21,6 +21,38 @@ class TelegramActions():
         self.datafolder = datafolder
 
         global helper ; helper = tg_helper
+    
+    def _getMarginText(self, market, margin_icon, ):
+        result = f"\U0001F4C8 <b>{market}</b> {margin_icon}  <i>Current Margin: {helper.data['margin']} " \
+        f"\U0001F4B0 (P/L): {helper.data['delta']}\n(TSL Trg): {helper.data['trailingstoplosstriggered']}  --  (TSL Change): {helper.data['change_pcnt_high']}</i>\n"
+        return result
+
+    def _getUptime(self, date: str):
+        now = str(datetime.now())
+        # If date passed from datetime.now() remove milliseconds
+        if date.find(".") != -1:
+            dt = date.split(".")[0]
+            date = dt
+        if now.find(".") != -1:
+            dt = now.split(".", maxsplit=1)[0]
+            now = dt
+
+        now = now.replace("T", " ")
+        now = f"{now}"
+        # Add time in case only a date is passed in
+        # new_date_str = f"{date} 00:00:00" if len(date) == 10 else date
+        date = date.replace("T", " ") if date.find("T") != -1 else date
+        # Add time in case only a date is passed in
+        new_date_str = f"{date} 00:00:00" if len(date) == 10 else date
+
+        started = datetime.strptime(new_date_str, "%Y-%m-%d %H:%M:%S")
+        now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
+        duration = now - started
+        duration_in_s = duration.total_seconds()
+        hours = divmod(duration_in_s, 3600)[0]
+        duration_in_s -= 3600 * hours
+        minutes = divmod(duration_in_s, 60)[0]
+        return f"{round(hours)}h {round(minutes)}m"
 
     def startOpenOrders(self, update):
         logger.info("called startOpenOrders")
@@ -88,36 +120,9 @@ class TelegramActions():
 
         query.edit_message_text(query.data.replace("ex_", "") + "\n" + json.dumps(pbot, indent=4))
 
-    def _getUptime(self, date: str):
-        now = str(datetime.now())
-        # If date passed from datetime.now() remove milliseconds
-        if date.find(".") != -1:
-            dt = date.split(".")[0]
-            date = dt
-        if now.find(".") != -1:
-            dt = now.split(".", maxsplit=1)[0]
-            now = dt
-
-        now = now.replace("T", " ")
-        now = f"{now}"
-        # Add time in case only a date is passed in
-        # new_date_str = f"{date} 00:00:00" if len(date) == 10 else date
-        date = date.replace("T", " ") if date.find("T") != -1 else date
-        # Add time in case only a date is passed in
-        new_date_str = f"{date} 00:00:00" if len(date) == 10 else date
-
-        started = datetime.strptime(new_date_str, "%Y-%m-%d %H:%M:%S")
-        now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
-        duration = now - started
-        duration_in_s = duration.total_seconds()
-        hours = divmod(duration_in_s, 3600)[0]
-        duration_in_s -= 3600 * hours
-        minutes = divmod(duration_in_s, 60)[0]
-        return f"{round(hours)}h {round(minutes)}m"
-
     def getBotInfo(self, update):
-        query = update.callback_query
         try:
+            query = update.callback_query
             query.answer()
         except:
             pass
@@ -170,26 +175,33 @@ class TelegramActions():
 
         query = response.callback_query
         query.answer()
-
-        closedoutput = "" 
-        openoutput = ""
+        query.edit_message_text("<i>Getting Margins..</i>", parse_mode="HTML")
+        cOutput = []
+        oOutput = []
         closedbotCount = 0
         openbotCount = 0
-        for file in helper.getActiveBotList():
-            while helper.read_data(file) == False:
+        print(helper.getActiveBotList())
+        for market in helper.getActiveBotList():
+            while helper.read_data(market) == False:
                 sleep(0.2)
-            # output = ""
+
+            closedoutput = "" 
+            openoutput = ""
             if "margin" in helper.data:
                 if "margin" in helper.data and helper.data["margin"] == " ":
-                    closedoutput = (closedoutput + f"<b>{file}</b>")
+                    closedoutput = (closedoutput + f"<b>{market}</b>")
                     closedoutput = closedoutput + f"\n<i>{helper.data['message']}</i>\n"
+                    cOutput.append(closedoutput)
                     closedbotCount += 1
                 elif len(helper.data) > 2:
-                    space = 20 - len(file)
+                    # space = 20 - len(market)
                     margin_icon = ("\U0001F7E2" if "-" not in helper.data["margin"]else "\U0001F534")
-                    openoutput = (openoutput + f"\U0001F4C8 <b>{file}</b> ".ljust(space))
-                    openoutput = (openoutput + f" {margin_icon}  <i>Current Margin: {helper.data['margin']} \U0001F4B0 (P/L): {helper.data['delta']}\n(TSL Trg): {helper.data['trailingstoplosstriggered']}  --  (TSL Change): {helper.data['change_pcnt_high']}</i>\n")
+                    openoutput = openoutput + self._getMarginText(market, margin_icon)
+                    oOutput.append(openoutput)
+                    # openoutput = (openoutput + f"\U0001F4C8 <b>{file}</b> ".ljust(space))
+                    # openoutput = (openoutput + f" {margin_icon}  <i>Current Margin: {helper.data['margin']} \U0001F4B0 (P/L): {helper.data['delta']}\n(TSL Trg): {helper.data['trailingstoplosstriggered']}  --  (TSL Change): {helper.data['change_pcnt_high']}</i>\n")
                     openbotCount += 1
+            # sleep(1)
                 # if closedbotCount + openbotCount == 1:
                 #     try:
                 #         query.edit_message_text(f"{output}", parse_mode="HTML")
@@ -198,16 +210,20 @@ class TelegramActions():
                 # else:
                 #     response.effective_message.reply_html(f"{output}")
         if (query.data.__contains__("orders") or query.data.__contains__("all")) and openbotCount > 0:
-            query.edit_message_text(f"{openoutput}", parse_mode="HTML")
-        elif (query.data.__contains__("pairs") or query.data.__contains__("all")) and closedbotCount > 0:
-            query.edit_message_text(f"{closedoutput}", parse_mode="HTML")
+            for output in oOutput:
+                response.effective_message.reply_html(f"{output}")
+                sleep(0.5)
 
-        if (query.data.__contains__("orders") or query.data.__contains__("all")) and openbotCount == 0:
-            query.edit_message_text("<b>No open orders found.</b>", parse_mode="HTML")
+        elif (query.data.__contains__("orders") or query.data.__contains__("all")) and openbotCount == 0:
+            response.effective_message.reply_html("<b>No open orders found.</b>")
+
+        if (query.data.__contains__("pairs") or query.data.__contains__("all")) and closedbotCount > 0:
+            for output in cOutput:
+                response.effective_message.reply_html(f"{output}")
+                sleep(1)
 
         elif (query.data.__contains__("pairs") or query.data.__contains__("all")) and closedbotCount == 0:
-            query.edit_message_text("<b>No active pairs found.</b>", parse_mode="HTML")
-
+            response.effective_message.reply_html("<b>No active pairs found.</b>")
 
     def StartMarketScan(self, update, scanmarkets: bool = True, startbots: bool = True, debug: bool = False):
         logger.info("called StartMarketScan")
@@ -306,5 +322,21 @@ class TelegramActions():
 
         query.edit_message_text(
             f"<i>Deleted {str(query.data).replace('delete_', '')} crypto bot</i>",
+            parse_mode="HTML",
+        )
+
+    def RemoveExceptionCallBack(self, update):
+        """delete selected bot"""
+        helper.read_data()
+
+        query = update.callback_query
+        query.answer()
+
+        helper.data["scannerexceptions"].pop(str(query.data).replace("delexcep_", ""))
+
+        helper.write_data()
+
+        query.edit_message_text(
+            f"<i>Removed {str(query.data).replace('delexcep_', '')} from exception list. bot</i>",
             parse_mode="HTML",
         )

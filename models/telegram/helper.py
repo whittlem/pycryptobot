@@ -59,7 +59,7 @@ class TelegramHelper():
                     if not self.data["botcontrol"]["status"] == state:
                         jsonfiles.pop(i)
             i -= 1
-
+        jsonfiles.sort()
         return [x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles]
 
     def isBotRunning(self, pair) -> bool:

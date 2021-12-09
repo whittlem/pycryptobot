@@ -252,7 +252,8 @@ def executeJob(
             telegram_bot.remove_open_order()
 
     if (
-        _app.getSmartSwitch() == 1
+        (last_api_call_datetime.seconds > 60 or _app.isSimulation())
+        and _app.getSmartSwitch() == 1
         and _app.getSellSmartSwitch() == 1
         and _app.getGranularity() != Granularity.FIVE_MINUTES
         and _state.last_action == "BUY"
@@ -279,7 +280,8 @@ def executeJob(
         s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
 
     if (
-        _app.getSmartSwitch() == 1
+        (last_api_call_datetime.seconds > 60 or _app.isSimulation())
+        and _app.getSmartSwitch() == 1
         and _app.getSellSmartSwitch() == 1
         and _app.getGranularity() == Granularity.FIVE_MINUTES
         and _state.last_action == "SELL"
