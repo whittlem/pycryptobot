@@ -256,7 +256,7 @@ class TelegramActions():
             update.effective_message.reply_html("<b>Scan Complete.</b>")
         
         if not startbots:
-            update.effective_message.reply_html(f"<b>Operation Complete  (0 started)</b>")
+            update.effective_message.reply_html("<b>Operation Complete  (0 started)</b>")
             return
 
         update.effective_message.reply_html("<i>stopping bots..</i>")
@@ -293,7 +293,7 @@ class TelegramActions():
                         break
                     
                     if helper.config["scanner"]["enableleverage"] == False \
-                            and (str(row).__contains__("DOWN") or str(row).__contains__("UP")):
+                            and (str(row).__contains__(f"DOWN{quote}") or str(row).__contains__(f"UP{quote}") or str(row).__contains__(f"3L{quote}") or str(row).__contains__(f"3S{quote}")):
                         continue
 
                     if row in helper.data["scannerexceptions"]:
