@@ -70,12 +70,21 @@ class TelegramBotHelper:
 
     def _read_data(self, name: str = "") -> None:
         file = self.filename if name == "" else name
-        with open(
-            os.path.join(self.app.telegramdatafolder, "telegram_data", file),
-            "r",
-            encoding="utf8",
-        ) as json_file:
-            self.data = json.load(json_file)
+        try:
+            with open(
+                os.path.join(self.app.telegramdatafolder, "telegram_data", file),
+                "r",
+                encoding="utf8",
+            ) as json_file:
+                self.data = json.load(json_file)
+        except (JSONDecodeError, Exception) as err:
+            Logger.critical(str(err))
+            with open(
+                os.path.join(self.app.telegramdatafolder, "telegram_data", file),
+                "r",
+                encoding="utf8",
+            ) as json_file:
+                self.data = json.load(json_file)
 
     def _write_data(self, name: str = "") -> None:
         file = self.filename if name == "" else name

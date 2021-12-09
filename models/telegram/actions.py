@@ -22,14 +22,15 @@ class TelegramActions():
 
         global helper ; helper = tg_helper
     
-    def _getMarginText(self, market, margin_icon, ):
-        result = f"\U0001F4C8 <b>{market}</b> {margin_icon}  <i>Current Margin: {helper.data['margin']} \U0001F4B0 (P/L): {helper.data['delta']}\n" \
-        f"\U0001F4B0 (P/L): {helper.data['delta']}\n(TSL Trg): {helper.data['trailingstoplosstriggered']}  --  (TSL Change): {helper.data['change_pcnt_high']}</i>\n"
-        result = f"{margin_icon} <b>{market}</b>\n" \
-                    f"\U0001F97ACurrent Margin: {helper.data['margin']}\n" \
+    def _getMarginText(self, market):
+        light_icon, margin_icon = ("\U0001F7E2", "\U0001F973" if "-" not in helper.data["margin"] else "\U0001F534", "\U0001F97A")
+        # result = f"\U0001F4C8 <b>{market}</b> {margin_icon}  <i>Current Margin: {helper.data['margin']} \U0001F4B0 (P/L): {helper.data['delta']}\n" \
+        # f"\U0001F4B0 (P/L): {helper.data['delta']}\n(TSL Trg): {helper.data['trailingstoplosstriggered']}  --  (TSL Change): {helper.data['change_pcnt_high']}</i>\n"
+        result = f"{light_icon} <b>{market}</b>\n" \
+                    f"{margin_icon} Current Margin: {helper.data['margin']}\n" \
                     f"\U0001F4B0 P/L: {helper.data['delta']}\n" \
-                    f"TSL Trg: {helper.data['trailingstoplosstriggered']}\n " \
-                    f"TSL Change: {helper.data['change_pcnt_high']}\n"
+                    f"TSL Trg: {helper.data['trailingstoplosstriggered']}\n" \
+                    f"TSL Change: {float(helper.data['change_pcnt_high']).__round__(4)}\n"
         return result
 
     def _getUptime(self, date: str):
@@ -201,7 +202,7 @@ class TelegramActions():
                 elif len(helper.data) > 2:
                     # space = 20 - len(market)
                     margin_icon = ("\U0001F7E2" if "-" not in helper.data["margin"]else "\U0001F534")
-                    openoutput = openoutput + self._getMarginText(market, margin_icon)
+                    openoutput = openoutput + self._getMarginText(market)
                     oOutput.append(openoutput)
                     # openoutput = (openoutput + f"\U0001F4C8 <b>{file}</b> ".ljust(space))
                     # openoutput = (openoutput + f" {margin_icon}  <i>Current Margin: {helper.data['margin']} \U0001F4B0 (P/L): {helper.data['delta']}\n(TSL Trg): {helper.data['trailingstoplosstriggered']}  --  (TSL Change): {helper.data['change_pcnt_high']}</i>\n")
