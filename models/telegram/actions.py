@@ -23,8 +23,13 @@ class TelegramActions():
         global helper ; helper = tg_helper
     
     def _getMarginText(self, market, margin_icon, ):
-        result = f"\U0001F4C8 <b>{market}</b> {margin_icon}  <i>Current Margin: {helper.data['margin']} " \
+        result = f"\U0001F4C8 <b>{market}</b> {margin_icon}  <i>Current Margin: {helper.data['margin']} \U0001F4B0 (P/L): {helper.data['delta']}\n" \
         f"\U0001F4B0 (P/L): {helper.data['delta']}\n(TSL Trg): {helper.data['trailingstoplosstriggered']}  --  (TSL Change): {helper.data['change_pcnt_high']}</i>\n"
+        result = f"{margin_icon} <b>{market}</b>\n" \
+                    f"\U0001F97ACurrent Margin: {helper.data['margin']}\n" \
+                    f"\U0001F4B0 P/L: {helper.data['delta']}\n" \
+                    f"TSL Trg: {helper.data['trailingstoplosstriggered']}\n " \
+                    f"TSL Change: {helper.data['change_pcnt_high']}\n"
         return result
 
     def _getUptime(self, date: str):
