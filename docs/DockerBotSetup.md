@@ -13,6 +13,44 @@ The following software should be installed before starting this guide.
 -   Visual Sutdio Code (Optional you just need a text editor)
 -   Dockerhub account (optional only for cross compiling builds)
 
+## Useful Docker commands
+
+Run all containers in the docker-compose.yml file
+
+```
+docker-compose up -d
+```
+
+Stop and Destry all containers in the docker-compose.yml file
+
+```
+docker-compose down
+```
+
+View all logs for all containers in docker-compose.yml (Follow and Tail _Ctrl + C_ to unfollow log. )
+
+```
+docker-compose logs -f -t
+```
+
+Show all running containers
+
+```
+docker ps
+```
+
+Follow logs of specific container
+
+```
+docker container logs container_name --follow
+```
+
+"Exec" into a container This will give you a # prompt for the container that you can mess around inside of it for debuggings. (Dont change any files inside the container as the changes will get lost when the container updates. )
+
+```
+docker exec -it container_name bash
+```
+
 # Basic Configuratons (Latest release)
 
 ### Build a Folder Structure
@@ -60,6 +98,12 @@ services:
         entrypoint: ["python3", "-u", "telegram_bot.py"]
         restart: always
 
+```
+
+To start the container run the following command from inside the folder that contains the docker-compose.yml file
+
+```
+docker-compose up -d
 ```
 
 Your scanner is now alive and ready to play.
