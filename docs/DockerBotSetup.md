@@ -109,6 +109,12 @@ If you have a git patch file this is where you can apply it using this command r
 
 `git apply ~/scanner-go-brrrrrr.patch`
 
+** copy pasta **  Make pretty and do stuff with!
+```
+git apply —stat beta_brrrrr.patch
+git apply —check brrrrr.patch
+git am —signoff < brrrrr.patch
+```
 ## Build a local copy of your beta container
 
 Build the docker container with all of your changes by running this command from within the pycryptobot folder. This will compile all of the required files into a docker image that can be ran as a container.
