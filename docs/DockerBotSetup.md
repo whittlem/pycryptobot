@@ -108,6 +108,9 @@ At this step you can go in and update or patch any of the files in the pycryptob
 If you have a git patch file this is where you can apply it using this command replacing the patch file name as needed.
 
 ** copy pasta **  Make pretty and do stuff with!
+
+![Apply Patch](images/applying_patches.png)
+
 ```
 test % 
 test % git clone --branch beta https://github.com/whittlem/pycryptobot
