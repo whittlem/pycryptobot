@@ -145,6 +145,54 @@ Your scanner is now alive and ready to play.
 
 # Cross Compiling for ARM
 
+_You might need to fuzz with qemu stuff_
+
+create build toolchain
+
+`docker buildx create --name raspberrypi --platform linux/armhf,linux/aarch64,linux/amd64`
+
+use build toolchain
+
+`docker buildx use raspberrypi`
+
+build and push multiarch image to dockerhub
+`docker buildx build --platform linux/armhf,linux/aarch64,linux/amd64 --tag mattwa/pycryptobot:beta --push --file Dockerfile .`
+
+## Run the beta container
+
+Follow the steps above in the Basic confiuration section but modify the image: section of the docker-compose file to have the name that you tagged the image in the build step above.
+
+docker-compose.yml
+
+```
+version: "3.9"
+
+services:
+    pycryptobot:
+        image: mattwa/pycryptobot:beta
+        container_name: pycryptobot
+        volumes:
+            - ./market/binance.key:/app/keys/binance.key:ro
+            - ./market/config.json:/app/config.json
+            - ./market/pycryptobot.log:/app/pycryptobot.log
+            - ./market/scanner.json:/app/scanner.json
+            - ./market:/app/telegram_data
+            - ./market/graphs:/app/graphs
+            - /etc/timezone:/etc/timezone:ro
+            - /etc/localtime:/etc/localtime:ro
+        environment:
+            - PYTHONUNBUFFERED=1
+        entrypoint: ["python3", "-u", "telegram_bot.py"]
+        restart: always
+
+```
+
+To start the container run the following command from inside the folder that contains the docker-compose.yml file
+
+`docker-compose up -d`
+
+Your scanner is now alive and ready to play.
+
 # Appendix
 
 ## Useful Docker commands
