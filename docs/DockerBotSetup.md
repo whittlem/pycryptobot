@@ -159,7 +159,7 @@ In the example below it assumes you are going to run docker-compose on the same 
 
 If you wish to run the docker container on a different device it is recommended to push the image to docker hub and download it from there on the other device. To do this change the "tag" from pycryptobot to dockerhub_username/pycryptobot see the following example.
 
-`docker build-file Dockerfile . -tag mattwa/pycryptobot:beta`
+`docker build -file Dockerfile . -tag mattwa/pycryptobot:beta`
 
 You can then push the image to docker hub if you wish, this will push the image to your docker hub account.
 
