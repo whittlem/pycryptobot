@@ -109,7 +109,7 @@ If you have a git patch file this is where you can apply it using this command r
 
 ** copy pasta **  Make pretty and do stuff with!
 
-![Apply Patch](images/applying_patches.png)
+![Apply Patch](images/applying_patch.png)
 
 ```
 test % 
