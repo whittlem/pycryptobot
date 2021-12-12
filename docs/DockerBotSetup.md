@@ -43,6 +43,8 @@ Edit the left hand side as appropiate (it should work out the box if you have th
 
 The other important note is the _entrypoint_ property this overrides the default entrypoint in the dockerfile with the entrypoint specified in the docker-compose file. In the example below I am calling the telegram-bot.py script instead of the default pycryptobot.py script.
 
+docker-compose.yml
+
 ```
 version: "3.9"
 
@@ -74,7 +76,72 @@ Your scanner is now alive and ready to play.
 
 # Building a container with the Beta Branch
 
-# Building and Patching Beta Branch
+## Clone the beta branch
+
+From a terminal screen clone the beta branch by running the following command, this will download the latest bata branch into a folder called pycryptobot.
+
+If you wish to use a different branch then change the branch name from beta to your chosen branch.
+
+`git clone --branch beta https://github.com/whittlem/pycryptobot`
+
+## Patch as required
+
+At this step you can go in and update or patch any of the files in the pycryptobot folder, do not add your personal config or keys to this folder as you do not want these to be baked into the image.
+
+If you have a git patch file this is where you can apply it using this command replcing the patch file name as needed.
+
+`git apply ~/scanner-go-brrrrrr.patch`
+
+## Build a local copy of your beta container
+
+Build the docker container with all of your chanes by running this command from within the pycryptobot folder. This will compile all of the required files into a docker image that can be ran as a container.
+
+In the example below it assuemes you are going to run docker-compose on the same device you ran the build on. Also note that it is not advisable to run the build on a low powered device like a raspberry pi as this can take up to 7 hours for a complete build. See the Compile for ARM section below on how do build an image for a Raspberry Pi.
+
+`docker build . -file Dockerfile -tag pycryptobot`
+
+If you wish to run the docker container on a different device it is reccomended to push the image to docker hub and download it from there on ther other device. To do this change the "tag" from pycrytobot to dockerhub_usernamer/pycryptobot see the following example.
+
+`docker build . -file Dockerfile -tag mattwa/pycryptobot:beta`
+
+You can then push the image to dockerhub if you wish, this will push the image to your docker hub account.
+
+`docker push mattwa/pycryptobot:beta`
+
+## Run the beta container
+
+Follow the steps above in the Basic confiuration section but modify the image: section of the docker-compose file to have the name that you tagged the image in the build step above.
+
+docker-compose.yml
+
+```
+version: "3.9"
+
+services:
+    pycryptobot:
+        image: pycryptobot
+        container_name: pycryptobot
+        volumes:
+            - ./market/binance.key:/app/keys/binance.key:ro
+            - ./market/config.json:/app/config.json
+            - ./market/pycryptobot.log:/app/pycryptobot.log
+            - ./market/scanner.json:/app/scanner.json
+            - ./market:/app/telegram_data
+            - ./market/graphs:/app/graphs
+            - /etc/timezone:/etc/timezone:ro
+            - /etc/localtime:/etc/localtime:ro
+        environment:
+            - PYTHONUNBUFFERED=1
+        entrypoint: ["python3", "-u", "telegram_bot.py"]
+        restart: always
+
+```
+
+To start the container run the following command from inside the folder that contains the docker-compose.yml file
+
+`docker-compose up -d`
+
+Your scanner is now alive and ready to play.
 
 # Cross Compiling for ARM
 
