@@ -107,14 +107,48 @@ At this step you can go in and update or patch any of the files in the pycryptob
 
 If you have a git patch file this is where you can apply it using this command replacing the patch file name as needed.
 
-`git apply ~/scanner-go-brrrrrr.patch`
-
 ** copy pasta **  Make pretty and do stuff with!
 ```
-git apply —stat beta_brrrrr.patch
-git apply —check brrrrr.patch
-git am —signoff < brrrrr.patch
+test % 
+test % git clone --branch beta https://github.com/whittlem/pycryptobot
+Cloning into 'pycryptobot'...
+remote: Enumerating objects: 5905, done.
+remote: Counting objects: 100% (1843/1843), done.
+remote: Compressing objects: 100% (563/563), done.
+remote: Total 5905 (delta 1588), reused 1360 (delta 1280), pack-reused 4062
+Receiving objects: 100% (5905/5905), 3.17 MiB | 6.37 MiB/s, done.
+Resolving deltas: 100% (4035/4035), done.
+
+test % cd pycryptobot
+
+pycryptobot % git apply beta_brrrrr.patch --check
+
+pycryptobot % git apply beta_brrrrr.patch --ignore-whitespace --stat
+ telegram_bot.py                 |    7 +++++--
+ scanner.json                    |   16 ++++++++++-----
+ scanner.py                      |   41 ++++++++++++++++++++++++++++++---------
+ .gitignore                      |    3 ++-
+ scanner.py                      |    4 ++--
+ telegram_bot.py                 |    9 ++++++---
+ scanner.py                      |    8 ++++----
+ models/config/binance_parser.py |    2 +-
+ 8 files changed, 62 insertions(+), 28 deletions(-)
+
+pycryptobot % git apply beta_brrrrr.patch --check
+
+pycryptobot % git am < beta_brrrrr.patch
+Applying: tweaking showconfig output
+Applying: scanner upgrade
+.git/rebase-apply/patch:75: trailing whitespace.
+                score += 1
+warning: 1 line adds whitespace errors.
+Applying: criteria tweaks; fixed missing key error on config sanitization
+Applying: bug fix in dual comparisons
+Applying: fixing bug that creeped in from beta
+
+pycryptobot %
 ```
+
 ## Build a local copy of your beta container
 
 Build the docker container with all of your changes by running this command from within the pycryptobot folder. This will compile all of the required files into a docker image that can be ran as a container.
