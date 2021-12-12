@@ -31,6 +31,7 @@ The following software should be installed before starting this guide.
 - [Appendix](#appendix)
   - [Useful Docker commands](#useful-docker-commands)
   - [My Config files](#my-config-files)
+- [References](#references)
 
 # Basic Configurations (Latest release)
 
@@ -56,7 +57,7 @@ When creating the docker-compose file you will need to ensure that the volume ma
 When configuring volumes in the compose file the left hand side of the : is the local folder and the right hand side is the location in the "app" that it will map the files to inside of the container.
 Edit the left hand side as appropriate (it should work out the box if you have the folder structure above.)
 
-The other important note is the _entrypoint_ property this overrides the default entrypoint in the dockerfile with the entrypoint specified in the docker-compose file. In the example below I am calling the [telegram_bot.py](https://github.com/whittlem/pycryptobot/blob/main/telegram_bot.py) script instead of the default [pycryptobot.py](https://github.com/whittlem/pycryptobot/blob/main/pycryptobot.py) script.
+The other important note is the [_entrypoint:_](https://docs.docker.com/compose/compose-file/compose-file-v3/#entrypoint) property this overrides the default entrypoint in the dockerfile with the entrypoint specified in the docker-compose file. In the example below I am calling the [telegram_bot.py](https://github.com/whittlem/pycryptobot/blob/main/telegram_bot.py) script instead of the default [pycryptobot.py](https://github.com/whittlem/pycryptobot/blob/main/pycryptobot.py) script.
 
 docker-compose.yml
 
@@ -124,7 +125,7 @@ You can then push the image to docker hub if you wish, this will push the image 
 
 ## Run the beta container
 
-Follow the steps above in the [Basic Configurations (Latest release)](#basic-configurations-latest-release) section but modify the image: section of the docker-compose file to have the name that you tagged the image in the build step above.
+Follow the steps above in the [Basic Configurations (Latest release)](#basic-configurations-latest-release) section but modify the [_image:_](https://docs.docker.com/compose/compose-file/compose-file-v3/#image) section of the docker-compose file to have the name that you tagged the image in the build step above.
 
 docker-compose.yml
 
@@ -174,7 +175,7 @@ build and push multiarch image to docker hub (This takes a long time! :)
 
 ## Run the beta container
 
-Follow the steps above in the [Basic Configurations (Latest release)](#basic-configurations-latest-release) section but modify the image: section of the docker-compose file to have the name that you tagged the image in the build step above.
+Follow the steps above in the [Basic Configurations (Latest release)](#basic-configurations-latest-release) section but modify the [_image:_](https://docs.docker.com/compose/compose-file/compose-file-v3/#image) section of the docker-compose file to have the name that you tagged the image in the build step above.
 
 docker-compose.yml
 
@@ -295,3 +296,9 @@ config.json
 }
 
 ```
+
+# References 
+
+- [Scanning the market](https://playful-curio-e62.notion.site/Scanning-the-market-fd9b58b059dd4cf8addb167af7f36311)
+- [Compose file version 3 reference](https://docs.docker.com/compose/compose-file/compose-file-v3/)
+- [How I built ARM based Docker Images for Raspberry Pi using buildx CLI Plugin on Docker Desktop?](https://collabnix.com/building-arm-based-docker-images-on-docker-desktop-made-possible-using-buildx/)
