@@ -15,7 +15,22 @@ The following software should be installed before starting this guide.
 
 ## Contents
 
-INSERT TOC HERE!
+- [PyCryptoBot and Docker](#pycryptobot-and-docker)
+  - [Prerquisites](#prerquisites)
+  - [Contents](#contents)
+- [Basic Configuratons (Latest release)](#basic-configuratons-latest-release)
+  - [Build a Folder Structure](#build-a-folder-structure)
+  - [Populate your docker-compose file](#populate-your-docker-compose-file)
+- [Building a container with the Beta Branch](#building-a-container-with-the-beta-branch)
+  - [Clone the beta branch](#clone-the-beta-branch)
+  - [Patch as required](#patch-as-required)
+  - [Build a local copy of your beta container](#build-a-local-copy-of-your-beta-container)
+  - [Run the beta container](#run-the-beta-container)
+- [Cross Compiling for ARM](#cross-compiling-for-arm)
+  - [Run the beta container](#run-the-beta-container-1)
+- [Appendix](#appendix)
+  - [Useful Docker commands](#useful-docker-commands)
+  - [My Config files](#my-config-files)
 
 # Basic Configuratons (Latest release)
 
