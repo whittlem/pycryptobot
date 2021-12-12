@@ -1,24 +1,24 @@
 # PyCryptoBot and Docker
 
 PyCryptoBot can run in two modes Botfight and Telegram Control mode. For Botfight mode setup see [docker-compose option 2](https://github.com/whittlem/pycryptobot#docker-compose-option-2) in the main README file.
-This guide is going to concentrate on the Telegram Control and Scanner mode, it will focus on the docker configuration and supplying som ebasic bot config but will not be going in depth to the bot configuration file in this guide.
+This guide is going to concentrate on the Telegram Control and Scanner mode, it will focus on the docker configuration and supplying some basic bot config but will not be going in depth to the bot configuration file in this guide.
 
-## Prerquisites
+## Prerequisites
 
 The following software should be installed before starting this guide.
 
 -   Docker
 -   docker-compose
 -   GIT
--   Visual Sutdio Code (Optional you just need a text editor)
--   Dockerhub account (optional only for cross compiling builds)
+-   Visual Studio Code (Optional you just need a text editor)
+-   Docker hub account (optional only for cross compiling builds)
 
 ## Contents
 
 - [PyCryptoBot and Docker](#pycryptobot-and-docker)
-  - [Prerquisites](#prerquisites)
+  - [Prerequisites](#prerequisites)
   - [Contents](#contents)
-- [Basic Configuratons (Latest release)](#basic-configuratons-latest-release)
+- [Basic Configurations (Latest release)](#basic-configurations-latest-release)
   - [Build a Folder Structure](#build-a-folder-structure)
   - [Populate your docker-compose file](#populate-your-docker-compose-file)
 - [Building a container with the Beta Branch](#building-a-container-with-the-beta-branch)
@@ -32,12 +32,12 @@ The following software should be installed before starting this guide.
   - [Useful Docker commands](#useful-docker-commands)
   - [My Config files](#my-config-files)
 
-# Basic Configuratons (Latest release)
+# Basic Configurations (Latest release)
 
 ## Build a Folder Structure
 
 Build a basic folder structure containing the required configuration files as detailed below.
-I reccomend following [this guide](https://playful-curio-e62.notion.site/Scanning-the-market-fd9b58b059dd4cf8addb167af7f36311) for information on how to setup the config.json and scanner.json files. I will post mine at the end of the guide but will highly reccomend creating your own instead of copy pasting configuration.
+I recommend following [this guide](https://playful-curio-e62.notion.site/Scanning-the-market-fd9b58b059dd4cf8addb167af7f36311) for information on how to setup the config.json and scanner.json files. I will post mine at the end of the guide but will highly recommend creating your own instead of copy pasting configuration.
 
     ├── market
     │ ├── graphs
@@ -54,7 +54,7 @@ I reccomend following [this guide](https://playful-curio-e62.notion.site/Scannin
 
 When creating the docker-compose file you will need to ensure that the volume mappings are setup correctly to the files that you have added to the folder structure above.
 When configuring volumes in the compose file the left hand side of the : is the local folder and the right hand side is the location in the "app" that it will map the files to inside of the container.
-Edit the left hand side as appropiate (it should work out the box if you have the folder structure above. )
+Edit the left hand side as appropriate (it should work out the box if you have the folder structure above. )
 
 The other important note is the _entrypoint_ property this overrides the default entrypoint in the dockerfile with the entrypoint specified in the docker-compose file. In the example below I am calling the telegram-bot.py script instead of the default pycryptobot.py script.
 
@@ -92,7 +92,7 @@ Your scanner is now alive and ready to play.
 
 ## Clone the beta branch
 
-From a terminal screen clone the beta branch by running the following command, this will download the latest bata branch into a folder called pycryptobot.
+From a terminal screen clone the beta branch by running the following command, this will download the latest beta branch into a folder called pycryptobot.
 
 If you wish to use a different branch then change the branch name from beta to your chosen branch.
 
@@ -102,29 +102,29 @@ If you wish to use a different branch then change the branch name from beta to y
 
 At this step you can go in and update or patch any of the files in the pycryptobot folder, do not add your personal config or keys to this folder as you do not want these to be baked into the image.
 
-If you have a git patch file this is where you can apply it using this command replcing the patch file name as needed.
+If you have a git patch file this is where you can apply it using this command replacing the patch file name as needed.
 
 `git apply ~/scanner-go-brrrrrr.patch`
 
 ## Build a local copy of your beta container
 
-Build the docker container with all of your chanes by running this command from within the pycryptobot folder. This will compile all of the required files into a docker image that can be ran as a container.
+Build the docker container with all of your changes by running this command from within the pycryptobot folder. This will compile all of the required files into a docker image that can be ran as a container.
 
-In the example below it assuemes you are going to run docker-compose on the same device you ran the build on. Also note that it is not advisable to run the build on a low powered device like a raspberry pi as this can take up to 7 hours for a complete build. See the Compile for ARM section below on how do build an image for a Raspberry Pi.
+In the example below it assumes you are going to run docker-compose on the same device you ran the build on. Also note that it is not advisable to run the build on a low powered device like a raspberry pi as this can take up to 7 hours for a complete build. See the Compile for ARM section below on how do build an image for a Raspberry Pi.
 
 `docker build . -file Dockerfile -tag pycryptobot`
 
-If you wish to run the docker container on a different device it is reccomended to push the image to docker hub and download it from there on ther other device. To do this change the "tag" from pycrytobot to dockerhub_usernamer/pycryptobot see the following example.
+If you wish to run the docker container on a different device it is recommended to push the image to docker hub and download it from there on the other device. To do this change the "tag" from pycryptobot to dockerhub_username/pycryptobot see the following example.
 
 `docker build . -file Dockerfile -tag mattwa/pycryptobot:beta`
 
-You can then push the image to dockerhub if you wish, this will push the image to your docker hub account.
+You can then push the image to docker hub if you wish, this will push the image to your docker hub account.
 
 `docker push mattwa/pycryptobot:beta`
 
 ## Run the beta container
 
-Follow the steps above in the Basic confiuration section but modify the image: section of the docker-compose file to have the name that you tagged the image in the build step above.
+Follow the steps above in the Basic configuration section but modify the image: section of the docker-compose file to have the name that you tagged the image in the build step above.
 
 docker-compose.yml
 
@@ -168,13 +168,13 @@ use build toolchain
 
 `docker buildx use raspberrypi`
 
-build and push multiarch image to dockerhub (This takes a long time! :)
+build and push multiarch image to docker hub (This takes a long time! :)
 
 `docker buildx build --platform linux/armhf,linux/aarch64,linux/amd64 --tag mattwa/pycryptobot:beta --push --file Dockerfile .`
 
 ## Run the beta container
 
-Follow the steps above in the Basic confiuration section but modify the image: section of the docker-compose file to have the name that you tagged the image in the build step above.
+Follow the steps above in the Basic configuration section but modify the image: section of the docker-compose file to have the name that you tagged the image in the build step above.
 
 docker-compose.yml
 
@@ -214,11 +214,11 @@ Run all containers in the docker-compose.yml file
 
 `docker-compose up -d`
 
-Stop and Destry all containers in the docker-compose.yml file
+Stop and Destroy all containers in the docker-compose.yml file
 
 `docker-compose down`
 
-View all logs for all containers in docker-compose.yml (Follow and Tail _Ctrl + C_ to unfollow log. )
+View all logs for all containers in docker-compose.yml (Follow and Tail _Ctrl + C_ to un-follow log. )
 
 `docker-compose logs -f -t`
 
@@ -230,13 +230,13 @@ Follow logs of specific container
 
 `docker container logs container_name --follow`
 
-"Exec" into a container This will give you a # prompt for the container that you can mess around inside of it for debuggings. (Dont change any files inside the container as the changes will get lost when the container updates. )
+"Exec" into a container This will give you a # prompt for the container that you can mess around inside of it for debuggings. (Don't change any files inside the container as the changes will get lost when the container updates. )
 
 `docker exec -it container_name bash`
 
 ## My Config files
 
-I reccomend not blindly copying these and testing out your own versions of these files as I am still tuning my bot to suit my needs.
+I recommend not blindly copying these and testing out your own versions of these files as I am still tuning my bot to suit my needs.
 
 scanner.json
 
@@ -279,9 +279,9 @@ config.json
         "api_key_file": "/app/keys/binance.key"
     },
     "telegram": {
-        "token": <Seceret Code>,
-        "client_id": <Seceret Code>,
-        "user_id": <Seceret Code>,
+        "token": <Secret Code>,
+        "client_id": <Secret Code>,
+        "user_id": <Secret Code>,
         "datafolder": "/app/telegram_data"
     },
     "scanner": {
