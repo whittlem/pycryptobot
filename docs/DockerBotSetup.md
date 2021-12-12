@@ -128,7 +128,7 @@ Follow the steps above in the Basic configuration section but modify the image: 
 
 docker-compose.yml
 
-```
+```yaml
 version: "3.9"
 
 services:
@@ -178,7 +178,7 @@ Follow the steps above in the Basic configuration section but modify the image: 
 
 docker-compose.yml
 
-```
+```yaml
 version: "3.9"
 
 services:
