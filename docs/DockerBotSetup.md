@@ -13,9 +13,13 @@ The following software should be installed before starting this guide.
 -   Visual Sutdio Code (Optional you just need a text editor)
 -   Dockerhub account (optional only for cross compiling builds)
 
+## Contents
+
+INSERT TOC HERE!
+
 # Basic Configuratons (Latest release)
 
-### Build a Folder Structure
+## Build a Folder Structure
 
 Build a basic folder structure containing the required configuration files as detailed below.
 I reccomend following [this guide](https://playful-curio-e62.notion.site/Scanning-the-market-fd9b58b059dd4cf8addb167af7f36311) for information on how to setup the config.json and scanner.json files. I will post mine at the end of the guide but will highly reccomend creating your own instead of copy pasting configuration.
@@ -31,7 +35,7 @@ I reccomend following [this guide](https://playful-curio-e62.notion.site/Scannin
     │ ├── scanner.json
     └── docker-compose.yml
 
-### Populate your docker-compose file
+## Populate your docker-compose file
 
 When creating the docker-compose file you will need to ensure that the volume mappings are setup correctly to the files that you have added to the folder structure above.
 When configuring volumes in the compose file the left hand side of the : is the local folder and the right hand side is the location in the "app" that it will map the files to inside of the container.
