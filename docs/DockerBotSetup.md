@@ -107,3 +107,71 @@ docker-compose up -d
 ```
 
 Your scanner is now alive and ready to play.
+
+# Building a container with the Beta Branch
+
+# Building and Patching Beta Branch
+
+# Cross Compiling for ARM
+
+# My Config files
+
+I reccomend not blindly copying these and testing out your own versions of these files as I am still tuning my bot to suit my needs.
+
+scanner.json
+
+```
+{
+    "binance": {
+        "quote_currency": ["BUSD"]
+    }
+}
+```
+
+config.json
+
+```
+{
+    "binance": {
+        "api_url": "https://api.binance.com",
+        "config": {
+            "base_currency": "BTC",
+            "quote_currency": "BUSD",
+            "enabletelegrambotcontrol": 1,
+            "live": 1,
+            "disablebullonly": 1,
+            "sellupperpcnt": 5,
+            "disablebuyelderray": 1,
+            "sellatloss": 1,
+            "websocket": 1,
+            "disablelog": 0,
+            "autorestart": 1,
+            "enableinsufficientfundslogging": 1,
+            "logbuysellinjson": 1,
+            "graphs": 1,
+            "filelog": 1,
+            "logfile": "pycryptobot.log",
+            "recvWindow": 20000,
+            "fileloglevel": "DEBUG",
+            "consolelog": 1,
+            "consoleloglevel": "DEBUG"
+        },
+        "api_key_file": "/app/keys/binance.key"
+    },
+    "telegram": {
+        "token": <Seceret Code>,
+        "client_id": <Seceret Code>,
+        "user_id": <Seceret Code>,
+        "datafolder": "/app/telegram_data"
+    },
+    "scanner": {
+        "atr72_pcnt": 3.0,
+        "enableexitaftersell": 1,
+        "enableleverage": 0,
+        "maxbotcount": 10,
+        "autoscandelay": 1,
+        "enable_buy_next": 1
+    }
+}
+
+```
