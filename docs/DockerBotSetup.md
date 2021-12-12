@@ -11,7 +11,7 @@ The following software should be installed before starting this guide.
 -   docker-compose
 -   GIT
 -   Visual Studio Code (Optional you just need a text editor)
--   Docker hub account (optional only for cross compiling builds)
+-   Docker hub account (Optional only for cross compiling builds)
 
 ## Contents
 
@@ -60,7 +60,7 @@ The other important note is the _entrypoint_ property this overrides the default
 
 docker-compose.yml
 
-```
+```yaml
 version: "3.9"
 
 services:
@@ -240,7 +240,7 @@ I recommend not blindly copying these and testing out your own versions of these
 
 scanner.json
 
-```
+```json
 {
     "binance": {
         "quote_currency": ["BUSD"]
@@ -250,7 +250,7 @@ scanner.json
 
 config.json
 
-```
+```json
 {
     "binance": {
         "api_url": "https://api.binance.com",
