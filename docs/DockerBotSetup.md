@@ -27,6 +27,8 @@ The following software should be installed before starting this guide.
   - [Build a local copy of your beta container](#build-a-local-copy-of-your-beta-container)
   - [Run the beta container](#run-the-beta-container)
 - [Cross Compiling for ARM](#cross-compiling-for-arm)
+  - [Setup Docker Buildx](#setup-docker-buildx)
+  - [Tell buildx to use your new image builder](#tell-buildx-to-use-your-new-image-builder)
   - [Run the beta container](#run-the-beta-container-1)
 - [Appendix](#appendix)
   - [Useful Docker commands](#useful-docker-commands)
@@ -161,15 +163,24 @@ Your scanner is now alive and ready to play.
 
 _You might need to fuzz with qemu stuff_
 
-create build toolchain
+Complete the [Building a container with the Beta Branch](#building-a-container-with-the-beta-branch) section to [Patch as required](#patch-as-required) and then pickup the guide below with the build process. 
+
+## Setup Docker Buildx
+
+First we need to build the create the build instance by running the following command. I have named this raspberrypi but you can name this builder anything you wish. I have also added the basic ARM versions for the Raspberry pi in the below command. You may add in any additional architectures you may require. 
+
+You should only need to perform this step once. 
 
 `docker buildx create --name raspberrypi --platform linux/armhf,linux/aarch64,linux/amd64`
 
-use build toolchain
+## Tell buildx to use your new image builder 
 
+This command selects your image builder instance by name and enabled it. 
 `docker buildx use raspberrypi`
 
-build and push multiarch image to docker hub (This takes a long time! :)
+The final step is to run the build command this will build for all architecture's specified in the command line by the --platform flag. Once the images have built successfully the buildx builder will push the images to docker hub with the tags specified. 
+
+NOTE that the arm64 build (aarch64) takes a very long time as it needs to compile dependencies for the Raspberry Pi 4
 
 `docker buildx build --platform linux/armhf,linux/aarch64,linux/amd64 --tag mattwa/pycryptobot:beta --push --file Dockerfile .`
 
