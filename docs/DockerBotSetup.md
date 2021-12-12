@@ -54,9 +54,9 @@ I recommend following [this guide](https://playful-curio-e62.notion.site/Scannin
 
 When creating the docker-compose file you will need to ensure that the volume mappings are setup correctly to the files that you have added to the folder structure above.
 When configuring volumes in the compose file the left hand side of the : is the local folder and the right hand side is the location in the "app" that it will map the files to inside of the container.
-Edit the left hand side as appropriate (it should work out the box if you have the folder structure above. )
+Edit the left hand side as appropriate (it should work out the box if you have the folder structure above.)
 
-The other important note is the _entrypoint_ property this overrides the default entrypoint in the dockerfile with the entrypoint specified in the docker-compose file. In the example below I am calling the telegram-bot.py script instead of the default pycryptobot.py script.
+The other important note is the _entrypoint_ property this overrides the default entrypoint in the dockerfile with the entrypoint specified in the docker-compose file. In the example below I am calling the [telegram_bot.py](https://github.com/whittlem/pycryptobot/blob/main/telegram_bot.py) script instead of the default [pycryptobot.py](https://github.com/whittlem/pycryptobot/blob/main/pycryptobot.py) script.
 
 docker-compose.yml
 
@@ -124,7 +124,7 @@ You can then push the image to docker hub if you wish, this will push the image 
 
 ## Run the beta container
 
-Follow the steps above in the Basic configuration section but modify the image: section of the docker-compose file to have the name that you tagged the image in the build step above.
+Follow the steps above in the [Basic Configurations (Latest release)](#basic-configurations-latest-release) section but modify the image: section of the docker-compose file to have the name that you tagged the image in the build step above.
 
 docker-compose.yml
 
@@ -174,7 +174,7 @@ build and push multiarch image to docker hub (This takes a long time! :)
 
 ## Run the beta container
 
-Follow the steps above in the Basic configuration section but modify the image: section of the docker-compose file to have the name that you tagged the image in the build step above.
+Follow the steps above in the [Basic Configurations (Latest release)](#basic-configurations-latest-release) section but modify the image: section of the docker-compose file to have the name that you tagged the image in the build step above.
 
 docker-compose.yml
 
