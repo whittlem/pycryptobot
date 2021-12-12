@@ -56,7 +56,7 @@ I recommend following [this guide](https://playful-curio-e62.notion.site/Scannin
 ## Populate your docker-compose file
 
 When creating the docker-compose file you will need to ensure that the volume mappings are setup correctly to the files that you have added to the folder structure above.
-When configuring volumes in the compose file the left hand side of the : is the local folder and the right hand side is the location in the "app" that it will map the files to inside of the container.
+When configuring [_volumes:_](https://docs.docker.com/compose/compose-file/compose-file-v3/#volumes) in the compose file the left hand side of the : is the local folder and the right hand side is the location in the "app" that it will map the files to inside of the container.
 Edit the left hand side as appropriate (it should work out the box if you have the folder structure above.)
 
 The other important note is the [_entrypoint:_](https://docs.docker.com/compose/compose-file/compose-file-v3/#entrypoint) property this overrides the default entrypoint in the dockerfile with the entrypoint specified in the docker-compose file. In the example below I am calling the [telegram_bot.py](https://github.com/whittlem/pycryptobot/blob/main/telegram_bot.py) script instead of the default [pycryptobot.py](https://github.com/whittlem/pycryptobot/blob/main/pycryptobot.py) script.
