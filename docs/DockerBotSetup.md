@@ -65,7 +65,6 @@ services:
             - PYTHONUNBUFFERED=1
         entrypoint: ["python3", "-u", "telegram_bot.py"]
         restart: always
-
 ```
 
 To start the container run the following command from inside the folder that contains the docker-compose.yml file
@@ -134,7 +133,6 @@ services:
             - PYTHONUNBUFFERED=1
         entrypoint: ["python3", "-u", "telegram_bot.py"]
         restart: always
-
 ```
 
 To start the container run the following command from inside the folder that contains the docker-compose.yml file
@@ -155,7 +153,7 @@ use build toolchain
 
 `docker buildx use raspberrypi`
 
-build and push multiarch image to dockerhub
+build and push multiarch image to dockerhub (This takes a long time! :)
 `docker buildx build --platform linux/armhf,linux/aarch64,linux/amd64 --tag mattwa/pycryptobot:beta --push --file Dockerfile .`
 
 ## Run the beta container
@@ -184,7 +182,6 @@ services:
             - PYTHONUNBUFFERED=1
         entrypoint: ["python3", "-u", "telegram_bot.py"]
         restart: always
-
 ```
 
 To start the container run the following command from inside the folder that contains the docker-compose.yml file
