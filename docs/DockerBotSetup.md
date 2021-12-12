@@ -154,6 +154,7 @@ use build toolchain
 `docker buildx use raspberrypi`
 
 build and push multiarch image to dockerhub (This takes a long time! :)
+
 `docker buildx build --platform linux/armhf,linux/aarch64,linux/amd64 --tag mattwa/pycryptobot:beta --push --file Dockerfile .`
 
 ## Run the beta container
