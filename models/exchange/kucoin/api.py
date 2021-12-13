@@ -23,7 +23,7 @@ MARGIN_ADJUSTMENT = 0.0025
 DEFAULT_MAKER_FEE_RATE = 0.018
 DEFAULT_TAKER_FEE_RATE = 0.018
 DEFAULT_TRADE_FEE_RATE = 0.018  # added 0.0005 to allow for price movements
-MINIMUM_TRADE_AMOUNT = 10
+MINIMUM_TRADE_AMOUNT = 0.000021
 SUPPORTED_GRANULARITY = [
     "1min",
     "3min",
@@ -41,7 +41,7 @@ DEFAULT_MARKET = "BTC-USDT"
 
 class AuthAPIBase:
     def _isMarketValid(self, market: str) -> bool:
-        p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
+        p = re.compile(r"^[0-9A-Z]{1,10}\-[1-9A-Z]{2,5}$")
         if p.match(market):
             return True
         return False
@@ -50,6 +50,8 @@ class AuthAPIBase:
         if math.isnan(epoch) is False:
             epoch_str = str(epoch)[0:10]
             return datetime.fromtimestamp(int(epoch_str))
+        else:
+            return datetime.fromtimestamp(epoch)
 
 class AuthAPI(AuthAPIBase):
     def __init__(
@@ -487,7 +489,7 @@ class AuthAPI(AuthAPIBase):
             )
             raise TypeError("The funding amount is not numeric.")
 
-        # funding amount needs to be greater than 10
+        # funding amount needs to be greater than 0.000021
         if quote_quantity < MINIMUM_TRADE_AMOUNT:
             raise ValueError(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).")
 
@@ -904,7 +906,7 @@ class PublicAPI(AuthAPIBase):
 
         resp = self.authAPI("GET", f"api/v1/market/orderbook/level1?symbol={market}")
 
-        if "time" in resp["data"] and "price" in resp["data"]:
+        if "time" in resp["data"]:
             # make sure the time format is correct, if not, pause and submit request again
             trycnt, maxretry = (1, 3)
             while trycnt <= maxretry:
@@ -923,7 +925,21 @@ class PublicAPI(AuthAPIBase):
                         "GET", f"api/v1/market/orderbook/level1?symbol={market}"
                     )
                     trycnt += 1
-                if resptime != "":
+
+                respprice = ""
+                try:
+                    respprice = float(resp["data"]["price"])
+                except:
+                    Logger.warning(
+                        f"Kucoin API Error for Get Ticker: price KeyError - retrying - attempt {trycnt}"
+                    )
+                    time.sleep(15)
+                    resp = self.authAPI(
+                        "GET", f"api/v1/market/orderbook/level1?symbol={market}"
+                    )
+                    trycnt += 1
+
+                if resptime != "" and respprice != "":
                     break
 
             return (
@@ -931,7 +947,7 @@ class PublicAPI(AuthAPIBase):
                     str(datetime.fromtimestamp(int(resp["data"]["time"]) / 1000)),
                     "%Y-%m-%d %H:%M:%S.%f",
                 ).strftime("%Y-%m-%d %H:%M:%S"),
-                float(resp["data"]["price"]),
+                respprice,
             )
         else:
             now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")

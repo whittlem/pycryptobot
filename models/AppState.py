@@ -59,6 +59,8 @@ class AppState:
         self.last_buy_fee = 0
         self.last_buy_high = 0
         self.last_sell_size = 0
+        self.previous_buy_size = 0
+        self.open_trade_margin = 0
         self.last_df_index = ""
         self.sell_count = 0
         self.sell_sum = 0
@@ -68,35 +70,20 @@ class AppState:
         self.feetracker = 0
         self.buy_tracker = 0
 
-        self.last_api_call_datetime = datetime.datetime.now() - datetime.timedelta(minutes=2)
+        self.last_api_call_datetime = datetime.datetime.now() - datetime.timedelta(
+            minutes=2
+        )
         self.exchange_last_buy = None
 
-    def minimumOrderBase(self, base, actionchk: bool=False):
+    def minimumOrderBase(self, base, balancechk: bool = False):
         self.app.insufficientfunds = False
         if self.app.getExchange() == Exchange.BINANCE:
             df = self.api.getMarketInfoFilters(self.app.getMarket())
-
             if len(df) > 0:
-                try:
-                    base_min = float(
-                        df[df["filterType"] == "LOT_SIZE"][["minQty"]].values[0][0]
-                    )
-                    base = float(base)
-                except:
-                    return
-
-                if base < base_min:
-                    if self.app.enableinsufficientfundslogging:
-                        self.app.insufficientfunds = True
-                        Logger.warning(f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})")
-                        return
-
-                    sys.tracebacklimit = 0
-                    raise Exception(
-                        f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})"
-                    )
-
-                return
+                base_min = float(
+                    df[df["filterType"] == "LOT_SIZE"][["minQty"]].values[0][0]
+                )
+                base = float(base)
 
         elif self.app.getExchange() == Exchange.COINBASEPRO:
             product = self.api.authAPI("GET", f"products/{self.app.getMarket()}")
@@ -108,50 +95,51 @@ class AppState:
             base_min = float(product["base_min_size"])
 
         elif self.app.getExchange() == Exchange.KUCOIN:
-            resp = self.api.authAPI('GET', f'api/v1/symbols')
-            product = resp[resp['symbol'] == self.app.getMarket()]
+            resp = self.api.authAPI("GET", f"api/v1/symbols")
+            product = resp[resp["symbol"] == self.app.getMarket()]
             if len(product) == 0:
                 sys.tracebacklimit = 0
-                raise Exception(f'Market not found! ({self.app.getMarket()})')
+                raise Exception(f"Market not found! ({self.app.getMarket()})")
 
             base = float(base)
-            base_min = float(product['baseMinSize'])
-            # additional check for last order type
+            base_min = float(product["baseMinSize"])
+
+        # additional check for last order type
+        if balancechk:
             if base > base_min:
                 return True
-
-        if actionchk:
-            return
+            else:
+                return
         elif base < base_min:
             if self.app.enableinsufficientfundslogging:
                 self.app.insufficientfunds = True
-                Logger.warning(f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})")
+                Logger.warning(
+                    f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})"
+                )
                 return
-                        
+
             sys.tracebacklimit = 0
             raise Exception(
                 f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})"
             )
-            
-    def minimumOrderQuote(self, quote, actionchk: bool=False):
+        else:
+            return
+
+    def minimumOrderQuote(self, quote, balancechk: bool = False):
         self.app.insufficientfunds = False
         if self.app.getExchange() == Exchange.BINANCE:
             df = self.api.getMarketInfoFilters(self.app.getMarket())
 
             if len(df) > 0:
-                try:
-                    quote_min = float(
-                        df[df["filterType"] == "MIN_NOTIONAL"][["minNotional"]].values[
-                            0
-                        ][0]
-                    )
-                    quote = float(quote)
-                except:
-                    return
+                quote_min = float(
+                    df[df["filterType"] == "MIN_NOTIONAL"][["minNotional"]].values[0][0]
+                )
+                quote = float(quote)
 
                 if quote < quote_min:
                     if self.app.enableinsufficientfundslogging:
                         self.app.insufficientfunds = True
+
                         Logger.warning(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})")
                         return
 
@@ -159,7 +147,10 @@ class AppState:
                     raise Exception(
                         f"Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})"
                     )
-                return
+                elif balancechk and quote > quote_min:
+                    return True
+                else:
+                    return
             else:
                 sys.tracebacklimit = 0
                 raise Exception(f"Market not found! ({self.app.getMarket()})")
@@ -177,18 +168,22 @@ class AppState:
             base_min = float(product["base_min_size"])
 
         elif self.app.getExchange() == Exchange.KUCOIN:
-            resp = self.api.authAPI('GET', 'api/v1/symbols')
-            product = resp[resp['symbol'] == self.app.getMarket()]
+            resp = self.api.authAPI("GET", "api/v1/symbols")
+            product = resp[resp["symbol"] == self.app.getMarket()]
             if len(product) == 0:
                 sys.tracebacklimit = 0
-                raise Exception(f'Market not found! ({self.app.getMarket()})')
+                raise Exception(f"Market not found! ({self.app.getMarket()})")
 
-            ticker = self.api.authAPI("GET", f"api/v1/market/orderbook/level1?symbol={self.app.getMarket()}")
+            ticker = self.api.authAPI(
+                "GET", f"api/v1/market/orderbook/level1?symbol={self.app.getMarket()}"
+            )
 
             price = float(ticker["price"])
             quote = float(quote)
-            base_min = float(product['baseMinSize'])
-            # additional check for last order type
+            base_min = float(product["baseMinSize"])
+
+        # additional check for last order type
+        if balancechk:
             if (quote / price) > base_min:
                 return True
 
@@ -200,9 +195,11 @@ class AppState:
         elif (quote / price) < base_min:
             if self.app.enableinsufficientfundslogging:
                 self.app.insufficientfunds = True
-                Logger.warning(f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})')
+                Logger.warning(
+                    f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})'
+                )
                 return
-                    
+
             sys.tracebacklimit = 0
             raise Exception(
                 f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})'
@@ -243,7 +240,10 @@ class AppState:
                 )
 
                 # binance orders do not show fees
-                if self.app.getExchange() == Exchange.COINBASEPRO or self.app.getExchange() == Exchange.KUCOIN:
+                if (
+                    self.app.getExchange() == Exchange.COINBASEPRO
+                    or self.app.getExchange() == Exchange.KUCOIN
+                ):
                     self.last_buy_fee = float(
                         last_order[last_order.action == "buy"]["fees"]
                     )
@@ -251,6 +251,11 @@ class AppState:
                 self.last_action = "BUY"
                 return
             else:
+                # get last Sell order filled to use as next buy size
+                if str(last_order.action.values[0]) == "sell" and quote > 0.0:
+                    self.last_sell_size = float(
+                        last_order[last_order.action == "sell"]["filled"]
+                    ) * float(last_order[last_order.action == "sell"]["price"])
                 self.minimumOrderQuote(quote)
                 self.last_action = "SELL"
                 self.last_buy_price = 0.0
@@ -262,7 +267,9 @@ class AppState:
             if base == 0.0 and quote == 0.0:
                 if self.app.enableinsufficientfundslogging:
                     self.app.insufficientfunds = True
-                    Logger.warning(f"Insufficient Funds! ({self.app.getBaseCurrency()}={str(base)}, {self.app.getQuoteCurrency()}={str(base)})")
+                    Logger.warning(
+                        f"Insufficient Funds! ({self.app.getBaseCurrency()}={str(base)}, {self.app.getQuoteCurrency()}={str(base)})"
+                    )
                     self.last_action = "WAIT"
                     return
 
@@ -277,20 +284,22 @@ class AppState:
                 order_pairs
             )
 
-            # If Kucoin returns empty response, on a shared trading account, could multiple buy same pair
-            if self.app.getExchange() == Exchange.KUCOIN and self.minimumOrderBase(base, actionchk=True) and self.minimumOrderQuote(quote, actionchk=True):
-                if self.last_action == "BUY":
-                    return
-                else:
-                    self.last_action = "WAIT"
-                    Logger.warning('Kucoin temporary state set to "WAIT".')
+            # If multi buy check enabled for pair, check balances to prevent multiple buys
+            if (
+                self.app.marketMultiBuyCheck()
+                and self.minimumOrderBase(base, balancechk=True)
+                and self.minimumOrderQuote(quote, balancechk=True)
+            ):
+                self.last_action = "BUY"
+                Logger.warning(
+                    f"Market - {self.app.getMarket()} did not return order info, but looks like there was a already a buy. Set last action to buy"
+                )
             elif order_pairs_normalised[0] < order_pairs_normalised[1]:
                 self.minimumOrderQuote(quote)
                 self.last_action = "SELL"
             elif order_pairs_normalised[0] > order_pairs_normalised[1]:
                 self.minimumOrderBase(base)
                 self.last_action = "BUY"
-
             else:
                 self.last_action = "WAIT"
 

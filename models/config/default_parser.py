@@ -502,6 +502,20 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("buyminsize must be of type int or float")
 
+    if "buylastsellsize" in config:
+        if isinstance(config["buylastsellsize"], int):
+            if bool(config["buylastsellsize"]):
+                app.buylastsellsize = True
+        else:
+            raise TypeError("buylastsellsize must be of type int")
+
+    if "marketmultibuycheck" in config:
+        if isinstance(config["marketmultibuycheck"], int):
+            if bool(config["marketmultibuycheck"]):
+                app.marketmultibuycheck = True
+        else:
+            raise TypeError("marketmultibuycheck must be of type int")
+
     if "logbuysellinjson" in config:
         if isinstance(config["logbuysellinjson"], int):
             if bool(config["logbuysellinjson"]):

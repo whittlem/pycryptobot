@@ -8,6 +8,7 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+
 ## [4.6.0] - 2021-12-09
 
 - Added trailingstoplosstrigger to pair.json file + change percentage
@@ -18,6 +19,20 @@ Upgrade library dependencies (if required):
 - Added cleandata to when the TG bot starts
 - Added control dashboard to TG Bot, to replace some inline commands
 - Refactored TG Bot code
+
+## [4.5.2] - 2021-12-04
+
+- Fix smartswitch in Simulations
+- Fix a few incorrectly defined variables
+- Fix sim result margins
+- Add open trade margin to Sim Summary
+- Add config option for buylastsellsize
+- Add buylastsellsize to Simulations
+- Add retry loop to Coinbase Public API call
+- Increase isMarketValid to 10 chars for base currency regex
+- Add marketmultibuycheck config option to prevent multiple buys with some problem market pairs
+- some minor file formatting cleanup with VSCode format command
+
 
 ## [4.5.1] - 2021-11-22
 

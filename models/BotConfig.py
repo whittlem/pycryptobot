@@ -65,6 +65,10 @@ class BotConfig:
         self.buyminsize = 0
         self.sellfullbaseamount = True
 
+        self.buylastsellsize = False
+        self.marketmultibuycheck = False
+
+
         self.sellatresistance = False
         self.autorestart = False
         self.stats = False
@@ -455,6 +459,9 @@ class BotConfig:
         )
         parser.add_argument("--buymaxsize", type=float, help="maximum size on buy")
         parser.add_argument("--buyminsize", type=float, help="minimum size on buy")
+
+        parser.add_argument("--buylastsellsize", action="store_true", help="additional check for market multiple buys")
+        parser.add_argument("--marketmultibuycheck", action="store_true", help="")
 
         parser.add_argument(
             "--nobuynearhighpcnt",
