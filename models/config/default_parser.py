@@ -434,6 +434,17 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("enableimmediatebuy must be of type int")
 
+    if "sellsmartswitch" in config:
+        if isinstance(config["sellsmartswitch"], int):
+            if config["sellsmartswitch"] in [0, 1]:
+                app.sell_smart_switch = config["sellsmartswitch"]
+                if app.sell_smart_switch == 1:
+                    app.sell_smart_switch = 1
+                else:
+                    app.sell_smart_switch = 0
+        else:
+            raise TypeError("sellsmartswitch must be of type int")
+
     # backward compatibility
     if "nosellatloss" in config:
         if isinstance(config["nosellatloss"], int):
@@ -483,6 +494,13 @@ def defaultConfigParse(app, config):
                 app.buymaxsize = config["buymaxsize"]
         else:
             raise TypeError("buymaxsize must be of type int or float")
+
+    if "buyminsize" in config:
+        if isinstance(config["buyminsize"], (int, float)):
+            if config["buyminsize"] > 0:
+                app.buyminsize = config["buyminsize"]
+        else:
+            raise TypeError("buyminsize must be of type int or float")
 
     if "buylastsellsize" in config:
         if isinstance(config["buylastsellsize"], int):

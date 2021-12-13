@@ -72,7 +72,7 @@ class PyCryptoBot(BotConfig):
 
     def getConfig(self) -> dict:
         try:
-            config = json.loads(open(self.config_file, "r").read())
+            config = json.loads(open(self.config_file, "r", encoding="utf8").read())
 
             if self.exchange.value in config:
                 if "config" in config[self.exchange.value]:
@@ -199,11 +199,18 @@ class PyCryptoBot(BotConfig):
         except Exception:  # pylint: disable=broad-except
             return None
 
+    def getBuyMinSize(self):
+        try:
+            return float(self.buyminsize)
+        except Exception:  # pylint: disable=broad-except
+            return None
+
     def buyLastSellSize(self) -> bool:
         return self.buylastsellsize
 
     def marketMultiBuyCheck(self) -> bool:
         return self.marketmultibuycheck
+
 
     def getBuyNearHighPcnt(self):
         try:
@@ -419,6 +426,10 @@ class PyCryptoBot(BotConfig):
     ) -> pd.DataFrame:
 
         if self.isSimulation():
+            if self.getSellSmartSwitch() == 1:
+                self.ema1226_5m_cache = self.getSmartSwitchDataFrame(
+                    self.ema1226_5m_cache, market, Granularity.FIVE_MINUTES, start, end
+                )
             self.ema1226_15m_cache = self.getSmartSwitchDataFrame(
                 self.ema1226_15m_cache, market, Granularity.FIFTEEN_MINUTES, start, end
             )
@@ -428,14 +439,33 @@ class PyCryptoBot(BotConfig):
             self.ema1226_6h_cache = self.getSmartSwitchDataFrame(
                 self.ema1226_6h_cache, market, Granularity.SIX_HOURS, start, end
             )
-
+            
             if len(self.ema1226_15m_cache) == 0:
                 raise Exception(
                     f"No data return for selected date range {start} - {end}"
                 )
 
             if not self.extraCandlesFound:
-                if granularity == Granularity.FIFTEEN_MINUTES:
+                if granularity == Granularity.FIVE_MINUTES:
+                    if (
+                        self.getDateFromISO8601Str(
+                            str(self.ema1226_5m_cache.index.format()[0])
+                        ).isoformat()
+                        != self.getDateFromISO8601Str(start).isoformat()
+                    ):
+                        text_box = TextBox(80, 26)
+                        text_box.singleLine()
+                        text_box.center(
+                            f"{str(self.exchange.value)}is not returning data for the requested start date."
+                        )
+                        text_box.center(
+                            f"Switching to earliest start date: {str(self.ema1226_5m_cache.head(1).index.format()[0])}"
+                        )
+                        text_box.singleLine()
+                        self.simstartdate = str(
+                            self.ema1226_5m_cache.head(1).index.format()[0]
+                        )
+                elif granularity == Granularity.FIFTEEN_MINUTES:
                     if (
                         self.getDateFromISO8601Str(
                             str(self.ema1226_15m_cache.index.format()[0])
@@ -476,6 +506,8 @@ class PyCryptoBot(BotConfig):
 
             if granularity == Granularity.FIFTEEN_MINUTES:
                 return self.ema1226_15m_cache
+            elif granularity == Granularity.FIVE_MINUTES:
+                return self.ema1226_5m_cache
             else:
                 return self.ema1226_1h_cache
 
@@ -512,6 +544,9 @@ class PyCryptoBot(BotConfig):
 
     def getSmartSwitch(self):
         return self.smart_switch
+
+    def getSellSmartSwitch(self):
+        return self.sell_smart_switch
 
     def is1hEMA1226Bull(self, iso8601end: str = "", websocket=None):
         try:
@@ -1188,8 +1223,7 @@ class PyCryptoBot(BotConfig):
                         endDate = datetime.now()
                     if self.smart_switch == 1:
                         tradingData = self.getSmartSwitchHistoricalDataChained(
-                            self.market,
-                            self.getGranularity(),
+                            app,
                             str(startDate),
                             str(endDate),
                         )
@@ -1248,13 +1282,22 @@ class PyCryptoBot(BotConfig):
                 if endDate.isoformat() > datetime.now().isoformat():
                     endDate = datetime.now()
 
-                tradingData = self.getSmartSwitchDataFrame(
-                    tradingData,
-                    self.getMarket(),
-                    self.getGranularity(),
-                    self.getDateFromISO8601Str(str(startDate)).isoformat(),
-                    endDate.isoformat(),
-                )
+                if self.smart_switch == 1:
+                    tradingData = self.getSmartSwitchHistoricalDataChained(
+                        self.getMarket(),
+                        self.getGranularity(),
+                        str(startDate),
+                        str(endDate),
+                    )
+                else:
+                    tradingData = self.getSmartSwitchDataFrame(
+                        tradingData,
+                        self.getMarket(),
+                        self.getGranularity(),
+                        self.getDateFromISO8601Str(str(startDate)).isoformat(),
+                        endDate.isoformat(),
+                    )
+
                 if self.extraCandlesFound:
                     self.simstartdate = str(pd.Series(startDate).dt.round(freq="H")[0])
                     self.simenddate = str(pd.Series(endDate).dt.round(freq="H")[0])
@@ -1418,6 +1461,11 @@ class PyCryptoBot(BotConfig):
             text_box.line(
                 "Max Buy Size", str(self.getBuyMaxSize()) + "  --buymaxsize <size>"
             )
+
+
+        if self.getBuyMinSize():
+            text_box.line(
+                "Min Buy Size", str(self.getBuyMinSize()) + "  --buyminsize <size>")
 
         if self.buyLastSellSize():
             text_box.line(

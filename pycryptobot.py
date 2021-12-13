@@ -171,8 +171,18 @@ def executeJob(
                     simDate = _app.getDateFromISO8601Str(str(simDate))
                     sim_rounded = pd.Series(simDate).dt.round("15min")
                     simDate = sim_rounded[0]
+                elif _app.getGranularity() == Granularity.FIVE_MINUTES:
+                    simDate = _app.getDateFromISO8601Str(str(simDate))
+                    sim_rounded = pd.Series(simDate).dt.round("5min")
+                    simDate = sim_rounded[0]
 
-                _state.iterations = trading_data.index.get_loc(str(simDate)) + 1
+                dateFound = False
+                while dateFound == False:
+                    try:
+                        _state.iterations = trading_data.index.get_loc(str(simDate)) + 1
+                        dateFound = True
+                    except:
+                        simDate += timedelta(seconds=_app.getGranularity().value[0])
 
                 if (
                     _app.getDateFromISO8601Str(str(simDate)).isoformat()
@@ -233,6 +243,68 @@ def executeJob(
     )
 
     current_sim_date = formatted_current_df_index
+
+    if _state.iterations == 2:
+        # check if bot has open or closed order
+        # update data.json "opentrades"
+        if _state.last_action == "BUY":
+            telegram_bot.add_open_order()
+        else:
+            telegram_bot.remove_open_order()
+
+    if (
+        (last_api_call_datetime.seconds > 60 or _app.isSimulation())
+        and _app.getSmartSwitch() == 1
+        and _app.getSellSmartSwitch() == 1
+        and _app.getGranularity() != Granularity.FIVE_MINUTES
+        and _state.last_action == "BUY"
+    ):
+
+        if not _app.isSimulation() or (
+            _app.isSimulation() and not _app.simResultOnly()
+        ):
+            Logger.info(
+                "*** open order detected smart switching to 300 (5 min) granularity ***"
+            )
+
+        if not _app.telegramTradesOnly():
+            _app.notifyTelegram(
+                _app.getMarket()
+                + " open order detected smart switching to 300 (5 min) granularity"
+            )
+
+        if _app.isSimulation():
+            _app.sim_smartswitch = True
+
+        _app.setGranularity(Granularity.FIVE_MINUTES)
+        list(map(s.cancel, s.queue))
+        s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
+
+    if (
+        (last_api_call_datetime.seconds > 60 or _app.isSimulation())
+        and _app.getSmartSwitch() == 1
+        and _app.getSellSmartSwitch() == 1
+        and _app.getGranularity() == Granularity.FIVE_MINUTES
+        and _state.last_action == "SELL"
+    ):
+
+        if not _app.isSimulation() or (
+            _app.isSimulation() and not _app.simResultOnly()
+        ):
+            Logger.info(
+                "*** sell detected smart switching to 3600 (1 hour) granularity ***"
+            )
+        if not _app.telegramTradesOnly():
+            _app.notifyTelegram(
+                _app.getMarket()
+                + " sell detected smart switching to 3600 (1 hour) granularity"
+            )
+        if _app.isSimulation():
+            _app.sim_smartswitch = True
+
+        _app.setGranularity(Granularity.ONE_HOUR)
+        list(map(s.cancel, s.queue))
+        s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
 
     # use actual sim mode date to check smartchswitch
     if (
@@ -407,24 +479,6 @@ def executeJob(
 
         immediate_action = False
         margin, profit, sell_fee = 0, 0, 0
-
-        # Is buypricepcntinc set? Calculate price increase and set _state.action
-        if _state.action == "BUY" and _state.buy_wait_count == 0:
-            _state.waiting_buy_price = price
-            _state.action = "WAIT"
-            _state.buy_wait_count += 1
-            Logger.info(f"** {_app.getMarket()} - Waiting to buy until {_state.waiting_buy_price} increases 1% - Current Price: {price}, change 0%")
-        elif _state.action == "BUY" and _state.buy_wait_count > 0:
-            pricechange = (price - _state.waiting_buy_price) / _state.waiting_buy_price * 100
-            if pricechange >= 0.5:
-                _state.buy_wait_count = 0
-                return
-            elif price <= _state.waiting_buy_price:
-                    _state.waiting_buy_price = price
-            _state.action = "WAIT"
-            immediate_action = False
-            _state.buy_wait_count += 1
-            Logger.info(f"** {_app.getMarket()} - Waiting to buy until {_state.waiting_buy_price} increases 1% - Current Price: {price}, change {pricechange}%")
 
         # Reset the TA so that the last record is the current sim date
         # To allow for calculations to be done on the sim date being processed
@@ -1071,7 +1125,9 @@ def executeJob(
 
                 # if live
                 if _app.isLive():
-                    if not _app.insufficientfunds:
+                    if not _app.insufficientfunds and _app.getBuyMinSize() < float(
+                        account.getBalance(_app.getQuoteCurrency())
+                    ):
                         if not _app.isVerbose():
                             if not _app.isSimulation() or (
                                 _app.isSimulation() and not _app.simResultOnly()
@@ -1151,18 +1207,16 @@ def executeJob(
                             # display balances
                             ac = account.getBalance()
                             try:
-                                df_base = ac[ac["currency"] == _app.getBaseCurrency()][
-                                    "available"
-                                ]
+
+                                df_base = ac[ac["currency"] == _app.getBaseCurrency()]["available"]
                                 account.basebalance = (
                                     0.0
                                     if len(df_base) == 0
                                     else float(df_base.values[0])
                                 )
 
-                                df_quote = ac[
-                                    ac["currency"] == _app.getQuoteCurrency()
-                                ]["available"]
+                                df_quote = ac[ac["currency"] == _app.getQuoteCurrency()]["available"]
+
                                 account.quotebalance = (
                                     0.0
                                     if len(df_quote) == 0
@@ -1178,11 +1232,14 @@ def executeJob(
                                 f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance)}"
                             )
                             state.last_api_call_datetime -= timedelta(seconds=60)
+                            telegram_bot.add_open_order()
                         except:
                             Logger.warning("Unable to place order")
                             state.last_api_call_datetime -= timedelta(seconds=60)
                     else:
-                        Logger.warning("Unable to place order, insufficient funds")
+                        Logger.warning(
+                            "Unable to place order, insufficient funds or buyminsize has not been reached"
+                        )
                         state.last_api_call_datetime -= timedelta(seconds=60)
                 # if not live
                 else:
@@ -1366,11 +1423,16 @@ def executeJob(
                     Logger.info(
                         f"{_app.getQuoteCurrency()} balance before order: {str(account.quotebalance)}"
                     )
-
+                    # state.last_buy_size
                     # execute a live market sell
+                    baseamounttosell = (
+                        float(account.basebalance)
+                        if _app.sellfullbaseamount == True
+                        else float(state.last_buy_filled)
+                    )
                     resp = _app.marketSell(
                         _app.getMarket(),
-                        float(account.basebalance),
+                        baseamounttosell,
                         _app.getSellPercent(),
                     )
                     Logger.debug(resp)
@@ -1759,7 +1821,10 @@ def executeJob(
             if _state.last_action == "BUY":
                 # update margin for telegram bot
                 telegram_bot.addmargin(
-                    str(_truncate(margin, 4) + "%"), str(_truncate(profit, 2)), price
+                    str(_truncate(margin, 4) + "%"),
+                    str(_truncate(profit, 2)),
+                    price,
+                    change_pcnt_high,
                 )
 
             # decrement ignored iteration

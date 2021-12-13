@@ -95,7 +95,7 @@ class AppState:
             base_min = float(product["base_min_size"])
 
         elif self.app.getExchange() == Exchange.KUCOIN:
-            resp = self.api.authAPI("GET", f"api/v1/symbols")
+            resp = self.api.authAPI("GET", "api/v1/symbols")
             product = resp[resp["symbol"] == self.app.getMarket()]
             if len(product) == 0:
                 sys.tracebacklimit = 0
@@ -139,9 +139,8 @@ class AppState:
                 if quote < quote_min:
                     if self.app.enableinsufficientfundslogging:
                         self.app.insufficientfunds = True
-                        Logger.warning(
-                            f"Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})"
-                        )
+
+                        Logger.warning(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})")
                         return
 
                     sys.tracebacklimit = 0
@@ -189,7 +188,7 @@ class AppState:
                 return True
             else:
                 return
-        elif quote < 10:
+        elif quote < self.app.buyminsize:
             if self.app.enableinsufficientfundslogging:
                 self.app.insufficientfunds = True
         elif (quote / price) < base_min:
