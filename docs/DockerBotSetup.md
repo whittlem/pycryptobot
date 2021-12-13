@@ -158,11 +158,11 @@ Build the docker container with all of your changes by running this command from
 
 In the example below it assumes you are going to run docker-compose on the same device you ran the build on. Also note that it is not advisable to run the build on a low powered device like a raspberry pi as this can take up to 7 hours for a complete build. See the Compile for ARM section below on how do build an image for a Raspberry Pi.
 
-`docker build -file Dockerfile . -tag pycryptobot`
+`docker build --file Dockerfile . --tag pycryptobot`
 
 If you wish to run the docker container on a different device it is recommended to push the image to docker hub and download it from there on the other device. To do this change the "tag" from pycryptobot to dockerhub_username/pycryptobot see the following example.
 
-`docker build -file Dockerfile . -tag mattwa/pycryptobot:beta`
+`docker build --file Dockerfile . --tag mattwa/pycryptobot:beta`
 
 You can then push the image to docker hub if you wish, this will push the image to your docker hub account.
 
@@ -219,6 +219,7 @@ You should only need to perform this step once.
 ## Tell buildx to use your new image builder 
 
 This command selects your image builder instance by name and enabled it. 
+
 `docker buildx use raspberrypi`
 
 The final step is to run the build command this will build for all architecture's specified in the command line by the --platform flag. Once the images have built successfully the buildx builder will push the images to docker hub with the tags specified. 
