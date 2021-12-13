@@ -45,7 +45,6 @@ Upgrade library dependencies (if required):
 - Add marketmultibuycheck config option to prevent multiple buys with some problem market pairs
 - some minor file formatting cleanup with VSCode format command
 
-
 ## [4.5.1] - 2021-11-22
 
 - Added Kucoin websockets
