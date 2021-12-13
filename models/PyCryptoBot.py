@@ -1465,7 +1465,7 @@ class PyCryptoBot(BotConfig):
 
         if self.getBuyMinSize():
             text_box.line(
-                "Min Buy Size", str(self.getBuyMinSize()) + "  --buyminsize <size>"
+                "Min Buy Size", str(self.getBuyMinSize()) + "  --buyminsize <size>")
 
         if self.buyLastSellSize():
             text_box.line(

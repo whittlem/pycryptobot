@@ -806,6 +806,8 @@ class TelegramBot(TelegramBotBase):
                     f"python3 pycryptobot.py --stats --exchange {exchange}  --statgroup {pairs}  "
                 )
                 update.message.reply_text(output, parse_mode="HTML")
+                sleep(30)
+                update.message.reply_text("Pausing before next set", parse_mode="HTML")
 
 #     def UpdateBuyMaxSize(self, update, context):
 # 

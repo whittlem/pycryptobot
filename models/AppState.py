@@ -186,9 +186,8 @@ class AppState:
         if balancechk:
             if (quote / price) > base_min:
                 return True
-
-        if actionchk:
-            return
+            else:
+                return
         elif quote < self.app.buyminsize:
             if self.app.enableinsufficientfundslogging:
                 self.app.insufficientfunds = True
