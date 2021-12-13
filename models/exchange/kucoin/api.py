@@ -23,7 +23,7 @@ MARGIN_ADJUSTMENT = 0.0025
 DEFAULT_MAKER_FEE_RATE = 0.018
 DEFAULT_TAKER_FEE_RATE = 0.018
 DEFAULT_TRADE_FEE_RATE = 0.018  # added 0.0005 to allow for price movements
-MINIMUM_TRADE_AMOUNT = 0.000021
+MINIMUM_TRADE_AMOUNT = 10
 SUPPORTED_GRANULARITY = [
     "1min",
     "3min",
@@ -489,7 +489,7 @@ class AuthAPI(AuthAPIBase):
             )
             raise TypeError("The funding amount is not numeric.")
 
-        # funding amount needs to be greater than 0.000021
+        # funding amount needs to be greater than 10
         if quote_quantity < MINIMUM_TRADE_AMOUNT:
             raise ValueError(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).")
 
