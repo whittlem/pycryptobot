@@ -650,7 +650,7 @@ class AuthAPI(AuthAPIBase):
                 "recvWindow": self.recv_window,
             }
 
-            Logger.debug(order)
+            # Logger.debug(order)
 
             # POST /api/v3/order/test
             if test is True:
@@ -698,7 +698,7 @@ class AuthAPI(AuthAPIBase):
                 "recvWindow": self.recv_window,
             }
 
-            Logger.debug(order)
+            # Logger.debug(order)
 
             # POST /api/v3/order/test
             if test is True:

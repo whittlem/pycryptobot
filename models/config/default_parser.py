@@ -14,7 +14,7 @@ def merge_config_and_args(exchange_config, args):
 
 
 def isCurrencyValid(currency):
-    p = re.compile(r"^[1-9A-Z]{2,5}$")
+    p = re.compile(r"^[0-9A-Z]{1,20}$")
     return p.match(currency)
 
 
@@ -508,6 +508,13 @@ def defaultConfigParse(app, config):
                 app.buylastsellsize = True
         else:
             raise TypeError("buylastsellsize must be of type int")
+
+    if "trailingbuypcnt" in config:
+        if isinstance(config["trailingbuypcnt"], (int, float)):
+            if config["trailingbuypcnt"] > 0:
+                app.trailingbuypcnt = config["trailingbuypcnt"]
+        else:
+            raise TypeError("trailingbuypcnt must be of type int or float")
 
     if "marketmultibuycheck" in config:
         if isinstance(config["marketmultibuycheck"], int):

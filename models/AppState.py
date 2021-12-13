@@ -59,6 +59,8 @@ class AppState:
         self.last_buy_fee = 0
         self.last_buy_high = 0
         self.last_sell_size = 0
+        self.trailing_buy = 0
+        self.waiting_buy_price = 0
         self.previous_buy_size = 0
         self.open_trade_margin = 0
         self.last_df_index = ""

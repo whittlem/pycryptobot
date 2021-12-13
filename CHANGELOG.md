@@ -8,6 +8,11 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [4.6.1] - 2021-12-09
+
+- Add trailingbuypcnt as config option with a default of 0 and follow price lower.  See README for details.
+- clean up Strategy.py debug messages with debug bool variable
+- increase market and currency regex to allow 20 characters for base currency instead of 10.
 
 ## [4.6.0] - 2021-12-09
 

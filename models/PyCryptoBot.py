@@ -90,20 +90,20 @@ class PyCryptoBot(BotConfig):
             or self.exchange == Exchange.BINANCE
             or self.exchange == Exchange.KUCOIN
         ):
-            p = re.compile(r"^[1-9A-Z]{2,5}$")
+            p = re.compile(r"^[0-9A-Z]{1,20}$")
             return p.match(currency)
 
         return False
 
     def _isMarketValid(self, market):
         if self.exchange == Exchange.COINBASEPRO or self.exchange == Exchange.KUCOIN:
-            p = re.compile(r"^[0-9A-Z]{1,10}\-[1-9A-Z]{2,5}$")
+            p = re.compile(r"^[0-9A-Z]{1,20}\-[1-9A-Z]{2,5}$")
             return p.match(market)
         elif self.exchange == Exchange.BINANCE:
-            p = re.compile(r"^[A-Z0-9]{5,17}$")
+            p = re.compile(r"^[A-Z0-9]{4,25}$")
             if p.match(market):
                 return True
-            p = re.compile(r"^[0-9A-Z]{1,10}\-[1-9A-Z]{2,5}$")
+            p = re.compile(r"^[0-9A-Z]{1,20}\-[1-9A-Z]{2,5}$")
             if p.match(market):
                 return True
             return False
@@ -208,9 +208,14 @@ class PyCryptoBot(BotConfig):
     def buyLastSellSize(self) -> bool:
         return self.buylastsellsize
 
+    def getTrailingBuyPcnt(self):
+        try:
+            return float(self.trailingbuypcnt)
+        except Exception:  # pylint: disable=broad-except
+            return 0
+
     def marketMultiBuyCheck(self) -> bool:
         return self.marketmultibuycheck
-
 
     def getBuyNearHighPcnt(self):
         try:
@@ -439,7 +444,7 @@ class PyCryptoBot(BotConfig):
             self.ema1226_6h_cache = self.getSmartSwitchDataFrame(
                 self.ema1226_6h_cache, market, Granularity.SIX_HOURS, start, end
             )
-            
+
             if len(self.ema1226_15m_cache) == 0:
                 raise Exception(
                     f"No data return for selected date range {start} - {end}"
@@ -1223,7 +1228,8 @@ class PyCryptoBot(BotConfig):
                         endDate = datetime.now()
                     if self.smart_switch == 1:
                         tradingData = self.getSmartSwitchHistoricalDataChained(
-                            app,
+                            self.market,
+                            self.getGranularity(),
                             str(startDate),
                             str(endDate),
                         )
@@ -1471,6 +1477,11 @@ class PyCryptoBot(BotConfig):
             text_box.line(
                 "Buy Last Sell Size",
                 str(self.buyLastSellSize()) + "  --buylastsellsize",
+            )
+
+        if self.getTrailingBuyPcnt():
+            text_box.line(
+                "Trailing Buy Percent", str(self.getTrailingBuyPcnt()) + "  --trailingbuypcnt <size>"
             )
 
         if self.marketMultiBuyCheck():

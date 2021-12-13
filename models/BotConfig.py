@@ -66,8 +66,8 @@ class BotConfig:
         self.sellfullbaseamount = True
 
         self.buylastsellsize = False
+        self.trailingbuypcnt = 0
         self.marketmultibuycheck = False
-
 
         self.sellatresistance = False
         self.autorestart = False
@@ -450,7 +450,6 @@ class BotConfig:
         parser.add_argument(
             "--buypercent", type=int, help="percentage of quote currency to buy"
         )
-
         parser.add_argument(
             "--sellpercent", type=int, help="percentage of base currency to sell"
         )
@@ -461,6 +460,7 @@ class BotConfig:
         parser.add_argument("--buyminsize", type=float, help="minimum size on buy")
 
         parser.add_argument("--buylastsellsize", action="store_true", help="additional check for market multiple buys")
+        parser.add_argument("--trailingbuypcnt", type=float, help="percent of increase to wait before buying")
         parser.add_argument("--marketmultibuycheck", action="store_true", help="")
 
         parser.add_argument(
