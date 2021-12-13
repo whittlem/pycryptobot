@@ -1,15 +1,16 @@
 import os, json
 from models.telegram.helper import TelegramHelper
 from telegram import ReplyKeyboardRemove, Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ConversationHandler, CommandHandler, MessageHandler, Filters, CallbackContext, CallbackQueryHandler
+from telegram.ext import ConversationHandler, CommandHandler, CallbackContext, CallbackQueryHandler
 
 helper = None
 BUTTON_REPLY, TYPING_RESPONSE = range(2)
 
-class Editor():
+class ConfigEditor():
     def __init__(self, datafolder, tg_helper: TelegramHelper) -> None:
         self.datafolder = datafolder
-        global helper ; helper = tg_helper
+        global helper 
+        helper = tg_helper
 
     def get_conversation_handler(self):
         return ConversationHandler(entry_points=[CallbackQueryHandler(self.ask_buy_max_size, pattern='edit_buymaxsize')],

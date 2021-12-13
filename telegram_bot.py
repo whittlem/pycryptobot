@@ -33,7 +33,7 @@ from telegram.replykeyboardremove import ReplyKeyboardRemove
 from apscheduler.schedulers.background import BackgroundScheduler
 from models.chat import Telegram
 
-from models.telegram import TelegramControl, TelegramHelper, TelegramHandler, TelegramActions, Editor
+from models.telegram import TelegramControl, TelegramHelper, TelegramHandler, TelegramActions, ConfigEditor
 
 scannerSchedule = BackgroundScheduler(timezone='UTC')
 
@@ -187,7 +187,7 @@ class TelegramBot(TelegramBotBase):
         self.handler = TelegramHandler(self.datafolder, self.userid, self.helper)
         self.control = TelegramControl(self.datafolder, self.helper)
         self.actions = TelegramActions(self.datafolder, self.helper)
-        self.editor = Editor(self.datafolder, self.helper)
+        self.editor = ConfigEditor(self.datafolder, self.helper)
 
     def _question_which_exchange(self, update):
         """start new bot ask which exchange"""

@@ -72,7 +72,7 @@ class PyCryptoBot(BotConfig):
 
     def getConfig(self) -> dict:
         try:
-            config = json.loads(open(self.config_file, "r").read())
+            config = json.loads(open(self.config_file, "r", encoding="utf8").read())
 
             if self.exchange.value in config:
                 if "config" in config[self.exchange.value]:
@@ -426,9 +426,9 @@ class PyCryptoBot(BotConfig):
     ) -> pd.DataFrame:
 
         if self.isSimulation():
-            if _app.getSellSmartSwitch() == 1:
+            if self.getSellSmartSwitch() == 1:
                 self.ema1226_5m_cache = self.getSmartSwitchDataFrame(
-                    _app, self.ema1226_5m_cache, market, Granularity.FIVE_MINUTES, start, end
+                    self.ema1226_5m_cache, market, Granularity.FIVE_MINUTES, start, end
                 )
             self.ema1226_15m_cache = self.getSmartSwitchDataFrame(
                 self.ema1226_15m_cache, market, Granularity.FIFTEEN_MINUTES, start, end
@@ -1284,13 +1284,13 @@ class PyCryptoBot(BotConfig):
 
                 if self.smart_switch == 1:
                     tradingData = self.getSmartSwitchHistoricalDataChained(
-                        _app,
+                        self.getMarket(),
+                        self.getGranularity(),
                         str(startDate),
                         str(endDate),
                     )
                 else:
                     tradingData = self.getSmartSwitchDataFrame(
-                        _app,
                         tradingData,
                         self.getMarket(),
                         self.getGranularity(),

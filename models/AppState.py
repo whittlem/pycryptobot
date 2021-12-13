@@ -95,7 +95,7 @@ class AppState:
             base_min = float(product["base_min_size"])
 
         elif self.app.getExchange() == Exchange.KUCOIN:
-            resp = self.api.authAPI("GET", f"api/v1/symbols")
+            resp = self.api.authAPI("GET", "api/v1/symbols")
             product = resp[resp["symbol"] == self.app.getMarket()]
             if len(product) == 0:
                 sys.tracebacklimit = 0
