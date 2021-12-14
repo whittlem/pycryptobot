@@ -43,7 +43,9 @@ class TelegramBotHelper:
                         "manualsell": False,
                         "manualbuy": False,
                         "started": datetime.now().isoformat(),
-                    }
+                        "startmethod" : self.app.startmethod,
+                    },
+                    "trailingstoplosstriggered" : False,
                 }
                 self.data = ds
                 self._write_data()
@@ -54,23 +56,35 @@ class TelegramBotHelper:
                 self._read_data("data.json")
                 if "markets" not in self.data:
                     self.data.update({"markets": {}})
-                    self._write_data()
+                    self._write_data("data.json")
                 if "scannerexceptions" not in self.data:
                     self.data.update({"scannerexceptions": {}})
-                    self._write_data()
+                    self._write_data("data.json")
+                if "opentrades" not in self.data:
+                    self.data.update({"opentrades": {}})
+                    self._write_data("data.json")
             else:
-                ds = {"trades": {}, "markets": {}, "scannerexceptions": {}}
+                ds = {"trades": {}, "markets": {}, "scannerexceptions": {}, "opentrades": {}}
                 self.data = ds
                 self._write_data("data.json")
 
     def _read_data(self, name: str = "") -> None:
         file = self.filename if name == "" else name
-        with open(
-            os.path.join(self.app.telegramdatafolder, "telegram_data", file),
-            "r",
-            encoding="utf8",
-        ) as json_file:
-            self.data = json.load(json_file)
+        try:
+            with open(
+                os.path.join(self.app.telegramdatafolder, "telegram_data", file),
+                "r",
+                encoding="utf8",
+            ) as json_file:
+                self.data = json.load(json_file)
+        except (JSONDecodeError, Exception) as err:
+            Logger.critical(str(err))
+            with open(
+                os.path.join(self.app.telegramdatafolder, "telegram_data", file),
+                "r",
+                encoding="utf8",
+            ) as json_file:
+                self.data = json.load(json_file)
 
     def _write_data(self, name: str = "") -> None:
         file = self.filename if name == "" else name
@@ -90,7 +104,7 @@ class TelegramBotHelper:
             ) as outfile:
                 json.dump(self.data, outfile, indent=4)
 
-    def addmargin(self, margin: str = "", delta: str = "", price: str = ""):
+    def addmargin(self, margin: str = "", delta: str = "", price: str = "", change_pcnt_high: float = 0.0):
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             self._read_data()
 
@@ -101,6 +115,8 @@ class TelegramBotHelper:
                 "price": price,
                 "df_high": " ",
                 "from_df_high": " ",
+                "trailingstoplosstriggered" : float(margin.replace("%", "")) > self.app.trailingStopLossTrigger() if "trailingstoplosstriggered" in self.data and self.data['trailingstoplosstriggered'] == False else True,
+                "change_pcnt_high" : change_pcnt_high if "trailingstoplosstriggered" in self.data and self.data['trailingstoplosstriggered'] == True else 0.0
             }
             self.data.update(addmarket)
             self._write_data()
@@ -150,6 +166,9 @@ class TelegramBotHelper:
                 {ts: {"pair": self.market, "price": price, "margin": margin}}
             )
             self._write_data("data.json")
+
+            self.remove_open_order()
+
 
     def checkmanualbuysell(self) -> str:
         result = "WAIT"
@@ -221,3 +240,25 @@ class TelegramBotHelper:
             ),
             orient="index",
         )
+
+    def add_open_order(self):
+        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
+            self._read_data("data.json")
+
+        if self.market in self.data["opentrades"]:
+            if self.exchange != self.data["opentrades"][self.market]:
+                return
+
+        self.data["opentrades"].update({self.market : {"exchange": self.exchange.value}})
+        self._write_data("data.json")
+
+    def remove_open_order(self):
+        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
+            self._read_data("data.json")
+
+        if self.market not in self.data["opentrades"]:
+            return
+
+        self.data["opentrades"].pop(self.market)
+        self._write_data("data.json")
+

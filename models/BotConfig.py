@@ -50,6 +50,8 @@ class BotConfig:
         self.trailing_stop_loss_trigger = 0
         self.sell_at_loss = 1
         self.smart_switch = 1
+        self.sell_smart_switch = 0
+
         self.telegram = False
 
         self.logbuysellinjson = False
@@ -60,6 +62,12 @@ class BotConfig:
         self.last_action = None
         self._chat_client = None
         self.buymaxsize = None
+        self.buyminsize = 0
+        self.sellfullbaseamount = True
+
+        self.buylastsellsize = False
+        self.trailingbuypcnt = 0
+        self.marketmultibuycheck = False
 
         self.sellatresistance = False
         self.autorestart = False
@@ -104,6 +112,7 @@ class BotConfig:
         self.consolelog = True
         self.consoleloglevel = "INFO"
 
+        self.ema1226_5m_cache = None
         self.ema1226_15m_cache = None
         self.ema1226_1h_cache = None
         self.ema1226_6h_cache = None
@@ -448,6 +457,12 @@ class BotConfig:
             "--lastaction", type=str, help="optionally set the last action (BUY, SELL)"
         )
         parser.add_argument("--buymaxsize", type=float, help="maximum size on buy")
+        parser.add_argument("--buyminsize", type=float, help="minimum size on buy")
+
+        parser.add_argument("--buylastsellsize", action="store_true", help="additional check for market multiple buys")
+        parser.add_argument("--trailingbuypcnt", type=float, help="percent of increase to wait before buying")
+        parser.add_argument("--marketmultibuycheck", action="store_true", help="")
+
         parser.add_argument(
             "--nobuynearhighpcnt",
             type=float,

@@ -21,7 +21,7 @@ from models.exchange.Granularity import Granularity
 MARGIN_ADJUSTMENT = 0.0025
 DEFAULT_MAKER_FEE_RATE = 0.005
 DEFAULT_TAKER_FEE_RATE = 0.005
-MINIMUM_TRADE_AMOUNT = 10
+MINIMUM_TRADE_AMOUNT = 0.000021
 DEFAULT_GRANULARITY = 3600
 SUPPORTED_GRANULARITY = [60, 300, 900, 3600, 21600, 86400]
 FREQUENCY_EQUIVALENTS = ["T", "5T", "15T", "H", "6H", "D"]
@@ -31,7 +31,7 @@ DEFAULT_MARKET = "BTC-GBP"
 
 class AuthAPIBase:
     def _isMarketValid(self, market: str) -> bool:
-        p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
+        p = re.compile(r"^[0-9A-Z]{1,20}\-[1-9A-Z]{2,5}$")
         if p.match(market):
             return True
         return False
@@ -885,14 +885,26 @@ class PublicAPI(AuthAPIBase):
             elif method == "POST":
                 resp = requests.post(self._api_url + uri, json=payload)
 
-            if resp.status_code != 200:
-                resp_message = resp.json()["message"]
-                message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
-                if self.die_on_api_error:
-                    raise Exception(message)
+            trycnt, maxretry = (1, 5)
+            while trycnt <= maxretry:
+                if resp.status_code != 200:
+                    resp_message = resp.json()["message"]
+                    message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
+                    if self.die_on_api_error:
+                        raise Exception(message)
+                    else:
+                        Logger.error(
+                            f"Coinbase Pro API request error - retry attempt {trycnt}: {message}"
+                        )
+                    time.sleep(15)
+                    trycnt += 1
                 else:
-                    Logger.error(f"Error: {message}")
-                    return {}
+                    break
+
+                if method == "GET":
+                    resp = requests.get(self._api_url + uri)
+                elif method == "POST":
+                    resp = requests.post(self._api_url + uri, json=payload)
 
             resp.raise_for_status()
             return resp.json()

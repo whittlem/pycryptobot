@@ -8,6 +8,42 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [4.6.1] - 2021-12-09
+
+- Add trailingbuypcnt as config option with a default of 0 and follow price lower.  See README for details.
+- clean up Strategy.py debug messages with debug bool variable
+- increase market and currency regex to allow 20 characters for base currency instead of 10.
+
+## [4.6.0] - 2021-12-09
+
+- Added trailingstoplosstrigger to pair.json file + change percentage
+- Fixed sims with smartswitch and added the 5 minute granularity to sims
+- Added buyminsize so the bot will not buy anything below this value 
+- Added sellsmartswitch this sets the sell granularity to 5 minutes once sold it will switch back to normal smartswitch
+- Added restart open orders this will start any bots that have open orders (these state is added to data.json when each bot starts)
+- Added cleandata to when the TG bot starts
+- Added control dashboard to TG Bot, to replace some inline commands
+- Refactored TG Bot code
+
+## [4.5.2] - 2021-12-04
+
+- Fix smartswitch in Simulations
+- Fix a few incorrectly defined variables
+- Fix sim result margins
+- Add open trade margin to Sim Summary
+- Add config option for buylastsellsize
+- Add buylastsellsize to Simulations
+- Add retry loop to Coinbase Public API call
+- Increase isMarketValid to 10 chars for base currency regex
+- Add marketmultibuycheck config option to prevent multiple buys with some problem market pairs
+- some minor file formatting cleanup with VSCode format command
+
+
+## [4.5.1] - 2021-11-22
+
+- Added Kucoin websockets
+- Fixed Kucoin failing when using scanner
+
 ## [4.4.2] - 2021-11-21
 
 - Telegram scanner bugfix
