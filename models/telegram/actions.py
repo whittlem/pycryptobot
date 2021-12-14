@@ -23,8 +23,7 @@ class TelegramActions():
 
     def _getMarginText(self, market):
         light_icon, margin_icon = ("\U0001F7E2" if "-" not in self.helper.data["margin"] else "\U0001F534", "\U0001F973" if "-" not in self.helper.data["margin"] else "\U0001F97A")
-        # result = f"\U0001F4C8 <b>{market}</b> {margin_icon}  <i>Current Margin: {self.helper.data['margin']} \U0001F4B0 (P/L): {self.helper.data['delta']}\n" \
-        # f"\U0001F4B0 (P/L): {self.helper.data['delta']}\n(TSL Trg): {self.helper.data['trailingstoplosstriggered']}  --  (TSL Change): {self.helper.data['change_pcnt_high']}</i>\n"
+
         result = f"{light_icon} <b>{market}</b>\n" \
                     f"{margin_icon} Margin: {self.helper.data['margin']}  " \
                     f"\U0001F4B0 P/L: {self.helper.data['delta']}\n" \
