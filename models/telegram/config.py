@@ -3,14 +3,13 @@ from models.telegram.helper import TelegramHelper
 from telegram import ReplyKeyboardRemove, Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ConversationHandler, CommandHandler, CallbackContext, CallbackQueryHandler
 
-helper = None
 BUTTON_REPLY, TYPING_RESPONSE = range(2)
 
 class ConfigEditor():
     def __init__(self, datafolder, tg_helper: TelegramHelper) -> None:
         self.datafolder = datafolder
-        global helper 
-        helper = tg_helper
+        
+        self.helper = tg_helper
 
     def get_conversation_handler(self):
         return ConversationHandler(entry_points=[CallbackQueryHandler(self.ask_buy_max_size, pattern='edit_buymaxsize')],
@@ -74,19 +73,19 @@ class ConfigEditor():
         try:
             amount = float(update.message.text)
         
-            helper.read_data(helper.config_file)
+            self.helper.read_data(self.helper.config_file)
 
-            with open(os.path.join(helper.config_file), "r", encoding="utf8") as json_file:
-                helper.config = json.load(json_file)
+            with open(os.path.join(self.helper.config_file), "r", encoding="utf8") as json_file:
+                self.helper.config = json.load(json_file)
 
             if amount > 0.0:
-                for ex in helper.config:
+                for ex in self.helper.config:
                     if ex not in ("telegram", "scanner"):
-                        helper.config[ex]["config"].update({"buymaxsize": amount})
+                        self.helper.config[ex]["config"].update({"buymaxsize": amount})
 
-            helper.write_data()
-            with open(os.path.join(helper.config_file), "w", encoding="utf8") as outfile:
-                json.dump(helper.config, outfile, indent=4)
+            self.helper.write_data()
+            with open(os.path.join(self.helper.config_file), "w", encoding="utf8") as outfile:
+                json.dump(self.helper.config, outfile, indent=4)
 
         except:
             pass

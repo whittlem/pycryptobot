@@ -1,38 +1,29 @@
 # import os
-from time import sleep
+# from time import sleep
 
 # from datetime import datetime
 
 from models.telegram.control import TelegramControl
 from models.telegram.helper import TelegramHelper
 from models.telegram.actions import TelegramActions
-from models.telegram.config import Editor
+from models.telegram.config import ConfigEditor
 
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
-from telegram.ext import Updater
+
 from telegram.ext.callbackcontext import CallbackContext
 from apscheduler.schedulers.background import BackgroundScheduler
 
-helper = None
-control = None
-actions = None
-editor = None
-
 scannerSchedule = BackgroundScheduler(timezone="UTC")
-
 
 class TelegramHandler:
     def __init__(self, datafolder, authuserid, tg_helper: TelegramHelper) -> None:
         self.authoriseduserid = authuserid
         self.datafolder = datafolder
-        global helper
-        helper = tg_helper
-        global control
-        control = TelegramControl(self.datafolder, tg_helper)
-        global actions
-        actions = TelegramActions(self.datafolder, tg_helper)
-        global editor
-        editor = Editor(self.datafolder, tg_helper)
+        self.helper = tg_helper
+
+        self.control = TelegramControl(self.datafolder, tg_helper)
+        self.actions = TelegramActions(self.datafolder, tg_helper)
+        self.editor = ConfigEditor(self.datafolder, tg_helper)
 
     def _checkifallowed(self, userid, update) -> bool:
         if str(userid) != self.authoriseduserid:
@@ -41,7 +32,7 @@ class TelegramHandler:
 
         return True
 
-    def getRequest(self, isCPanel: bool = True) -> InlineKeyboardMarkup:
+    def getRequest(self) -> InlineKeyboardMarkup:
         keyboard = [
             [
                 InlineKeyboardButton(
@@ -111,62 +102,62 @@ class TelegramHandler:
         elif query.data == "margin":
             self.askMarginType(update)
         elif query.data in ("margin_orders", "margin_pairs", "margin_all"):
-            actions.getMargins(update)
+            self.actions.getMargins(update)
 
         elif query.data == "status":
-            actions.getBotInfo(update)
+            self.actions.getBotInfo(update)
 
         elif query.data == "showconfig":
             self.askConfigOptions(update)
         elif query.data.__contains__("ex_"):
-            actions.showconfigresponse(update)
+            self.actions.showconfigresponse(update)
 
         elif query.data == "restart":
-            control.askRestartBotList(update)
+            self.control.askRestartBotList(update)
         elif query.data.__contains__("restart_"):
-            control.restartBotResponse(update)
+            self.control.restartBotResponse(update)
             
         elif query.data == "start":
-            control.askStartBotList(update)
+            self.control.askStartBotList(update)
         elif query.data.__contains__("start_"):
-            control.startBotResponse(update)
+            self.control.startBotResponse(update)
 
         elif query.data == "stop":
-            control.askStopBotList(update)
+            self.control.askStopBotList(update)
         elif query.data.__contains__("stop_"):
-            control.stopBotResponse(update)
+            self.control.stopBotResponse(update)
 
         elif query.data == "pause":
-            control.askPauseBotList(update)
+            self.control.askPauseBotList(update)
         elif query.data.__contains__("pause_"):
-            control.pauseBotResponse(update)
+            self.control.pauseBotResponse(update)
 
         elif query.data == "resume":
-            control.askResumeBotList(update)
+            self.control.askResumeBotList(update)
         elif query.data.__contains__("resume_"):
-            control.resumeBotResponse(update)
+            self.control.resumeBotResponse(update)
 
         elif query.data == "reopen":
-            actions.startOpenOrders(update)
+            self.actions.startOpenOrders(update)
 
         elif query.data == "buy":
-            control.askBuyBotList(update)
+            self.control.askBuyBotList(update)
         elif query.data.__contains__("confirm_buy_"):
-            actions.buyresponse(update)
+            self.actions.buyresponse(update)
         elif query.data.__contains__("buy_"):
             self.askConfimation(update)
 
         elif query.data == "sell":
-            control.askSellBotList(update)
+            self.control.askSellBotList(update)
         elif query.data.__contains__("confirm_sell_"):
-            actions.sellresponse(update)
+            self.actions.sellresponse(update)
         elif query.data.__contains__("sell_"):
             self.askConfimation(update)
 
         elif query.data == "delete":
-            control.askDeleteBotList(update)
+            self.control.askDeleteBotList(update)
         elif query.data.__contains__("delete_"):
-            actions.deleteresponse(update)
+            self.actions.deleteresponse(update)
 
         elif query.data == "scanner":
             self.getScannerOptions(update)
@@ -175,7 +166,7 @@ class TelegramHandler:
         elif query.data == "scanonly" or query.data == "noscan" or query.data == "startmarket":
             if query.data == "startmarket":
                 self._checkScheduledJob(update)
-            actions.StartMarketScan(update, True if query.data != "noscan" else False, True if query.data != "scanonly" else False)
+            self.actions.StartMarketScan(update, True if query.data != "noscan" else False, True if query.data != "scanonly" else False)
         elif query.data == "stopmarket":
             self._removeScheduledJob(update)
 
@@ -190,10 +181,10 @@ class TelegramHandler:
             #     parse_mode="HTML")
 
         elif query.data.__contains__("edit_"):
-            editor.ask_buy_max_size(query, context)
+            self.editor.ask_buy_max_size(query, context)
 
         elif query.data.__contains__("delexcep_"):
-            actions.RemoveExceptionCallBack(update)
+            self.actions.RemoveExceptionCallBack(update)
 
     def getScannerOptions(self, update):
         query = update.callback_query
@@ -257,7 +248,7 @@ class TelegramHandler:
     def askConfigOptions(self, update: Update):
         keyboard = []
         buttons = []
-        for exchange in helper.config:
+        for exchange in self.helper.config:
             if not exchange == "telegram":
                 buttons.append(
                     InlineKeyboardButton(exchange, callback_data="ex_" + exchange)
@@ -311,15 +302,15 @@ class TelegramHandler:
 
     def _checkScheduledJob(self, update):
         if (
-            helper.config["scanner"]["autoscandelay"] > 0
+            self.helper.config["scanner"]["autoscandelay"] > 0
             and len(scannerSchedule.get_jobs()) == 0
         ):
             scannerSchedule.start()
             scannerSchedule.add_job(
-                actions.StartMarketScan,
+                self.actions.StartMarketScan,
                 args=(update, False, True),
                 trigger="interval",
-                minutes=helper.config["scanner"]["autoscandelay"] * 60,
+                minutes=self.helper.config["scanner"]["autoscandelay"] * 60,
                 name="Volume Auto Scanner",
                 misfire_grace_time=10,
             )
@@ -327,10 +318,10 @@ class TelegramHandler:
             try:
                 query = update.callback_query
                 query.edit_message_text(
-                    f"<b>Scan job schedule created to run every {helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705", parse_mode="HTML"
+                    f"<b>Scan job schedule created to run every {self.helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705", parse_mode="HTML"
                 )
             except:
-                update.message.reply_text(f"<b>Scan job schedule created to run every {helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705", parse_mode="HTML")
+                update.message.reply_text(f"<b>Scan job schedule created to run every {self.helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705", parse_mode="HTML")
 
     def _removeScheduledJob(self, update):
         try:

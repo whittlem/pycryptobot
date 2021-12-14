@@ -8,7 +8,7 @@ helper = None
 class TelegramControl():
     def __init__(self, datafolder, tg_helper: TelegramHelper) -> None:
         self.datafolder = datafolder
-        global helper ; helper = tg_helper
+        self.helper = tg_helper
     
     def _sortInlineButtons(self, buttons: list, callbackTag):
         keyboard = []
@@ -42,14 +42,14 @@ class TelegramControl():
 
         buttons = []
 
-        for market in helper.getActiveBotList(status):
-            while helper.read_data(market) == False:
+        for market in self.helper.getActiveBotList(status):
+            while self.helper.read_data(market) == False:
                 sleep(0.2)
 
-            if "botcontrol" in helper.data:
-                if callbackTag == "buy" and "margin" in helper.data and helper.data["margin"] == " ":
+            if "botcontrol" in self.helper.data:
+                if callbackTag == "buy" and "margin" in self.helper.data and self.helper.data["margin"] == " ":
                     buttons.append(InlineKeyboardButton(market, callback_data=f"{callbackTag}_{market}"))
-                elif callbackTag == "sell" and "margin" in helper.data and helper.data["margin"] != " ":
+                elif callbackTag == "sell" and "margin" in self.helper.data and self.helper.data["margin"] != " ":
                     buttons.append(InlineKeyboardButton(market, callback_data=f"{callbackTag}_{market}"))
                 elif callbackTag not in ("buy", "sell"):
                     buttons.append(InlineKeyboardButton(market, callback_data=f"{callbackTag}_{market}"))
@@ -80,11 +80,11 @@ class TelegramControl():
         if query.data.__contains__("allclose") or query.data.__contains__("all"):
             query.edit_message_text(f"<i>{mode} bots</i>", parse_mode="HTML")
 
-            for pair in helper.getActiveBotList(status):
-                helper.stopRunningBot(pair, state, False if query.data.__contains__("allclose") else True)
+            for pair in self.helper.getActiveBotList(status):
+                self.helper.stopRunningBot(pair, state, False if query.data.__contains__("allclose") else True)
                 sleep(1)
         else:
-            helper.stopRunningBot(str(query.data).replace(f"{callbackTag}_", ""), state, True)
+            self.helper.stopRunningBot(str(query.data).replace(f"{callbackTag}_", ""), state, True)
             # query.edit_message_text(
             #         f"{mode} {str(query.data).replace(f'{callbackTag}_', '')} crypto bot"
             #     )
@@ -100,9 +100,9 @@ class TelegramControl():
             pass
 
         buttons = []
-        helper.read_data()
-        for market in helper.data["markets"]:
-            if not helper.isBotRunning(market):
+        self.helper.read_data()
+        for market in self.helper.data["markets"]:
+            if not self.helper.isBotRunning(market):
                 buttons.append(InlineKeyboardButton(market, callback_data="start_" + market))
 
         reply_markup = self._sortInlineButtons(buttons, "start")
@@ -122,7 +122,7 @@ class TelegramControl():
         except:
             pass
 
-        helper.read_data()
+        self.helper.read_data()
 
         if "all" in query.data: # start all bots
             try:
@@ -130,11 +130,11 @@ class TelegramControl():
             except:
                 update.effective_message.reply_html("<b>Starting all bots</b>")
 
-            for market in helper.data["markets"]:
-                if not helper.isBotRunning(market):
-                    overrides = helper.data["markets"][market]["overrides"]
+            for market in self.helper.data["markets"]:
+                if not self.helper.isBotRunning(market):
+                    overrides = self.helper.data["markets"][market]["overrides"]
                     update.effective_message.reply_html(f"<i>Starting {market} crypto bot</i>")
-                    helper.startProcess(market, "", overrides)
+                    self.helper.startProcess(market, "", overrides)
                 else:
                     update.effective_message.reply_html(f"{market} is already running, no action taken.")
 
@@ -144,9 +144,9 @@ class TelegramControl():
             except:
                 update.effective_message.reply_html(f"<i>Starting {str(query.data).replace('start_', '')} crypto bot</i>")
 
-            if not helper.isBotRunning(str(query.data).replace("start_", "")):
-                overrides = helper.data["markets"][str(query.data).replace("start_", "")]["overrides"]
-                helper.startProcess(str(query.data).replace("start_", ""), "", overrides)
+            if not self.helper.isBotRunning(str(query.data).replace("start_", "")):
+                overrides = self.helper.data["markets"][str(query.data).replace("start_", "")]["overrides"]
+                self.helper.startProcess(str(query.data).replace("start_", ""), "", overrides)
             else:
                 update.effective_message.reply_html(f"{str(query.data).replace('start_', '')} is already running, no action taken.")
 
@@ -182,26 +182,26 @@ class TelegramControl():
     def restartBotResponse(self, update: Update):
 
         bList = {}
-        for bot in helper.getActiveBotList():
-            while helper.read_data(bot) == False:
+        for bot in self.helper.getActiveBotList():
+            while self.helper.read_data(bot) == False:
                 sleep(0.2)
-            # helper.read_data(bot)
-            bList.update({bot : {"exchange" : helper.data["exchange"], "startmethod" : helper.data["botcontrol"]["startmethod"]}})
+            # self.helper.read_data(bot)
+            bList.update({bot : {"exchange" : self.helper.data["exchange"], "startmethod" : self.helper.data["botcontrol"]["startmethod"]}})
 
         self._actionBotResponse(update, "stop", "exit", "active")
         sleep(1)
         allstopped = False
         while allstopped == False:
-            if len(helper.getActiveBotList()) == 0:
+            if len(self.helper.getActiveBotList()) == 0:
                 allstopped = True
 
         for bot in bList:
-            helper.startProcess(bot, bList[bot]["exchange"], "", bList[bot]["startmethod"])
+            self.helper.startProcess(bot, bList[bot]["exchange"], "", bList[bot]["startmethod"])
             sleep(10)
 
     def askConfigOptions(self, update: Update):
         keyboard = []
-        for exchange in helper.config:
+        for exchange in self.helper.config:
             if not exchange == "telegram":
                 keyboard.append(
                     [InlineKeyboardButton(exchange, callback_data=exchange)]
@@ -216,8 +216,8 @@ class TelegramControl():
         buttons = []
         keyboard = []
 
-        helper.read_data()
-        for market in helper.data["markets"]:
+        self.helper.read_data()
+        for market in self.helper.data["markets"]:
             buttons.append(
                 InlineKeyboardButton(market, callback_data="delete_" + market)
             )
@@ -247,8 +247,8 @@ class TelegramControl():
         buttons = []
         keyboard = []
 
-        helper.read_data()
-        for pair in helper.data["scannerexceptions"]:
+        self.helper.read_data()
+        for pair in self.helper.data["scannerexceptions"]:
             buttons.append(
                 InlineKeyboardButton(pair, callback_data="delexcep_" + pair)
             )

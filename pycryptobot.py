@@ -577,7 +577,7 @@ def executeJob(
         # If buy signal, save the price and check for decrease/increase before buying.
         trailing_buy_logtext = ""
         if _state.action == "BUY" and immediate_action != True:
-            _state.action, _state.trailing_buy, trailing_buy_logtext = strategy.isTrailingBuy(_app, _state, price)
+            _state.action, _state.trailing_buy, trailing_buy_logtext = strategy.checkTrailingBuy(_app, _state, price)
 
         bullbeartext = ""
         if _app.disableBullOnly() is True or (

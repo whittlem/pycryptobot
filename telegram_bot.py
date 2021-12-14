@@ -18,6 +18,7 @@ import urllib.request
 
 from datetime import datetime
 from time import sleep, time
+
 # from pandas.core.frame import DataFrame
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 from telegram.bot import Bot, BotCommand
@@ -33,9 +34,15 @@ from telegram.replykeyboardremove import ReplyKeyboardRemove
 from apscheduler.schedulers.background import BackgroundScheduler
 from models.chat import Telegram
 
-from models.telegram import TelegramControl, TelegramHelper, TelegramHandler, TelegramActions, ConfigEditor
+from models.telegram import (
+    TelegramControl,
+    TelegramHelper,
+    TelegramHandler,
+    TelegramActions,
+    ConfigEditor,
+)
 
-scannerSchedule = BackgroundScheduler(timezone='UTC')
+scannerSchedule = BackgroundScheduler(timezone="UTC")
 
 # Enable logging
 logging.basicConfig(
@@ -73,6 +80,7 @@ class TelegramBotBase:
             return False
 
         return True
+
 
 class TelegramBot(TelegramBotBase):
     """
@@ -265,7 +273,9 @@ class TelegramBot(TelegramBotBase):
             BotCommand("cleandata", "clean JSON data files"),
             BotCommand("addexception", "add pair to scanner exception list"),
             BotCommand("removeexception", "remove pair from scanner exception list"),
-            BotCommand("startscanner", "start auto scan high volume markets and start bots"),
+            BotCommand(
+                "startscanner", "start auto scan high volume markets and start bots"
+            ),
             BotCommand("stopscanner", "stop auto scan high volume markets"),
             BotCommand("addnew", "add and start a new bot"),
             BotCommand("deletebot", "delete bot from startbot list"),
@@ -302,21 +312,25 @@ class TelegramBot(TelegramBotBase):
         helptext += "<b>/margins</b> - <i>show margins for open trade</i>\n"
         helptext += "<b>/trades</b> - <i>show closed trades</i>\n"
         helptext += "<b>/stats</b> - <i>display stats for market</i>\n"
-        helptext += "<b>/showinfo</b> - <i>display bot(s) status</i>\n"
-        helptext += "<b>/showconfig</b> - <i>show config for exchange</i>\n\n"
+        # helptext += "<b>/showinfo</b> - <i>display bot(s) status</i>\n"
+        # helptext += "<b>/showconfig</b> - <i>show config for exchange</i>\n\n"
         helptext += "<b>Interactive Command List</b>\n\n"
+        helptext += "<b>/controlpanel</b> - <i>show interactive control buttons</i>\n"
+        helptext += "<b>/cleandata</b> - <i>check and remove any bad Json files</i>\n"
         helptext += "<b>/addnew</b> - <i>start the requested pair</i>\n"
-        helptext += "<b>/pausebots</b> - <i>pause all or the selected bot</i>\n"
-        helptext += "<b>/resumebots</b> - <i>resume paused bots</i>\n"
-        helptext += "<b>/stopbots</b> - <i>stop all or the selected bots</i>\n"
-        helptext += "<b>/startbots</b> - <i>start all or the selected bots</i>\n"
-        helptext += "<b>/sell</b> - <i>sell market pair on next iteration</i>\n"
-        helptext += "<b>/buy</b> - <i>buy market pair on next iteration</i>\n\n"
+        # helptext += "<b>/pausebots</b> - <i>pause all or the selected bot</i>\n"
+        # helptext += "<b>/resumebots</b> - <i>resume paused bots</i>\n"
+        # helptext += "<b>/stopbots</b> - <i>stop all or the selected bots</i>\n"
+        # helptext += "<b>/startbots</b> - <i>start all or the selected bots</i>\n"
+        # helptext += "<b>/sell</b> - <i>sell market pair on next iteration</i>\n"
+        # helptext += "<b>/buy</b> - <i>buy market pair on next iteration</i>\n\n"
         helptext += "<b>Market Scanner Commands</b>\n\n"
         helptext += "<b>/startscanner</b> - <i>start auto scan high volume markets and start bots</i>\n"
         helptext += "<b>/stopscanner</b> - <i>stop auto scan high volume markets</i>\n"
         helptext += "<b>/addexception</b> - <i>add pair to scanner exception list</i>\n"
-        helptext += "<b>/removeexception</b> - <i>remove pair from scanner exception list</i>\n"
+        helptext += (
+            "<b>/removeexception</b> - <i>remove pair from scanner exception list</i>\n"
+        )
 
         mbot = Telegram(self.token, str(context._chat_id_and_data[0]))
 
@@ -332,7 +346,9 @@ class TelegramBot(TelegramBotBase):
         output = ""
         for time in self.helper.data["trades"]:
             output = ""
-            output = output + f"<b>{self.helper.data['trades'][time]['pair']}</b>\n{time}"
+            output = (
+                output + f"<b>{self.helper.data['trades'][time]['pair']}</b>\n{time}"
+            )
             output = (
                 output
                 + f"\n<i>Sold at: {self.helper.data['trades'][time]['price']}   Margin: {self.helper.data['trades'][time]['margin']}</i>\n"
@@ -413,7 +429,9 @@ class TelegramBot(TelegramBotBase):
             "<i>Gathering Stats, please wait...</i>", parse_mode="HTML"
         )
 
-        output = self.helper.startProcess(self.pair, self.exchange, "--stats", "telegram", True)
+        output = self.helper.startProcess(
+            self.pair, self.exchange, "--stats", "telegram", True
+        )
 
         update.message.reply_text(output, parse_mode="HTML")
 
@@ -540,26 +558,39 @@ class TelegramBot(TelegramBotBase):
             return None
 
         if update.message.text == "No":
-            update.message.reply_text("Command Complete, have a nice day.", reply_markup=ReplyKeyboardRemove())
+            update.message.reply_text(
+                "Command Complete, have a nice day.", reply_markup=ReplyKeyboardRemove()
+            )
             return ConversationHandler.END
 
-        if self.helper.startProcess(self.pair, self.exchange, self.overrides, startmethod) == False:
+        if (
+            self.helper.startProcess(
+                self.pair, self.exchange, self.overrides, startmethod
+            )
+            == False
+        ):
             update.message.reply_text(
                 f"{self.pair} is already running, no action taken.",
-                reply_markup=ReplyKeyboardRemove())
+                reply_markup=ReplyKeyboardRemove(),
+            )
         else:
             if startmethod != "scanner":
-                update.message.reply_text(f"{self.pair} crypto bot Starting", reply_markup=ReplyKeyboardRemove())
+                update.message.reply_text(
+                    f"{self.pair} crypto bot Starting",
+                    reply_markup=ReplyKeyboardRemove(),
+                )
 
-        update.message.reply_text("Command Complete, have a nice day.", reply_markup=ReplyKeyboardRemove())
-        
+        update.message.reply_text(
+            "Command Complete, have a nice day.", reply_markup=ReplyKeyboardRemove()
+        )
+
         return ConversationHandler.END
 
     def error(self, update, context):
         """Log Errors"""
         logger.error(msg="Exception while handling an update:", exc_info=context.error)
         try:
-            if "HTTPError" in context.error.args[0]: 
+            if "HTTPError" in context.error.args[0]:
                 while self.checkconnection() == False:
                     logger.warning("No internet connection found")
                     self.updater.start_polling(poll_interval=30)
@@ -567,7 +598,7 @@ class TelegramBot(TelegramBotBase):
                 self.updater.start_polling()
                 return
             # else:
-                # logger.error(msg="Exception while handling an update:", exc_info=context.error)
+            # logger.error(msg="Exception while handling an update:", exc_info=context.error)
         except:
             pass
 
@@ -587,18 +618,18 @@ class TelegramBot(TelegramBotBase):
     def _cleandata(self):
         jsonfiles = self.helper.getActiveBotList()
         for i in range(len(jsonfiles), 0, -1):
-            jfile = jsonfiles[i-1]
+            jfile = jsonfiles[i - 1]
 
             logger.info("checking %s", jfile)
 
             while self.helper.read_data(jfile) == False:
                 sleep(0.2)
-            
+
             last_modified = datetime.now() - datetime.fromtimestamp(
                 os.path.getmtime(
                     os.path.join(self.datafolder, "telegram_data", f"{jfile}.json")
-                    )
-                )                
+                )
+            )
             if "margin" not in self.helper.data:
                 logger.info("deleting %s", jfile)
                 os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
@@ -609,7 +640,9 @@ class TelegramBot(TelegramBotBase):
                 and (last_modified.seconds != 86399 and last_modified.days != -1)
             ):
                 logger.info("deleting %s %s", jfile, str(last_modified))
-                os.remove(os.path.join(self.datafolder, "telegram_data", f"{jfile}.json"))
+                os.remove(
+                    os.path.join(self.datafolder, "telegram_data", f"{jfile}.json")
+                )
                 continue
             elif (
                 self.helper.data["botcontrol"]["status"] == "exit"
@@ -648,11 +681,17 @@ class TelegramBot(TelegramBotBase):
             self.helper.data.update({"scannerexceptions": {}})
 
         if not self.pair in self.helper.data["scannerexceptions"]:
-            self.helper.data["scannerexceptions"].update({self.pair : {}})
+            self.helper.data["scannerexceptions"].update({self.pair: {}})
             self.helper.write_data()
-            update.message.reply_text(f"{self.pair} Added to Scanner Exception List \u2705", reply_markup=ReplyKeyboardRemove())
+            update.message.reply_text(
+                f"{self.pair} Added to Scanner Exception List \u2705",
+                reply_markup=ReplyKeyboardRemove(),
+            )
         else:
-            update.message.reply_text(f"{self.pair} Already on exception list", reply_markup=ReplyKeyboardRemove())
+            update.message.reply_text(
+                f"{self.pair} Already on exception list",
+                reply_markup=ReplyKeyboardRemove(),
+            )
 
         return ConversationHandler.END
 
@@ -736,14 +775,18 @@ class TelegramBot(TelegramBotBase):
 
         self.control.askDeleteBotList(update)
 
-    def StartScanning(self,update,context):
+    def StartScanning(self, update, context):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
 
         self.handler._checkScheduledJob(update)
-        self.actions.StartMarketScan(update, False if len(context.args) > 0 and context.args[0] == "debug" else True, False if len(context.args) > 0 and context.args[0] == "noscan" else True)
+        self.actions.StartMarketScan(
+            update,
+            False if len(context.args) > 0 and context.args[0] == "debug" else True,
+            False if len(context.args) > 0 and context.args[0] == "noscan" else True,
+        )
 
-    def StopScanning(self,update,context):
+    def StopScanning(self, update, context):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
         self.handler._removeScheduledJob(update)
@@ -756,7 +799,7 @@ class TelegramBot(TelegramBotBase):
 
         self.actions.getBotInfo(update)
         update.message.reply_text("Operation Complete")
-        
+
     def RestartBots(self, update, context):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return None
@@ -809,27 +852,27 @@ class TelegramBot(TelegramBotBase):
                 sleep(30)
                 update.message.reply_text("Pausing before next set", parse_mode="HTML")
 
-#     def UpdateBuyMaxSize(self, update, context):
-# 
-#         self.helper.read_data("config.json")
-# 
-#         with open(os.path.join(self.config_file), "r", encoding="utf8") as json_file:
-#             self.config = json.load(json_file)
-# 
-#         if len(context.args) > 0:
-#             for ex in self.config:
-#                 if ex in ("coinbasepro", "binance", "kucoin"):
-#                     self.config[ex]["config"].update({"buymaxsize": context.args[0]})
-# 
-#         with open(os.path.join(self.config_file), "w", encoding="utf8") as outfile:
-#                 json.dump(self.config, outfile, indent=4)
-# 
-#         update.message.reply_text("Config Updated")
+    #     def UpdateBuyMaxSize(self, update, context):
+    #
+    #         self.helper.read_data("config.json")
+    #
+    #         with open(os.path.join(self.config_file), "r", encoding="utf8") as json_file:
+    #             self.config = json.load(json_file)
+    #
+    #         if len(context.args) > 0:
+    #             for ex in self.config:
+    #                 if ex in ("coinbasepro", "binance", "kucoin"):
+    #                     self.config[ex]["config"].update({"buymaxsize": context.args[0]})
+    #
+    #         with open(os.path.join(self.config_file), "w", encoding="utf8") as outfile:
+    #                 json.dump(self.config, outfile, indent=4)
+    #
+    #         update.message.reply_text("Config Updated")
 
     def Request(self, update, context):
 
         userid = context._user_id_and_data[0]
-        
+
         if self._checkifallowed(userid, update):
             key_markup = self.handler.getRequest()
             update.message.reply_text(
@@ -839,9 +882,10 @@ class TelegramBot(TelegramBotBase):
             )
 
     # def ExitBot(self, update, context):
-        # self.updater.stop()
-        # self.updater.dispatcher.stop()
-        # os._exit(0)
+    # self.updater.stop()
+    # self.updater.dispatcher.stop()
+    # os._exit(0)
+
 
 def main():
     """Start the bot."""
@@ -872,12 +916,16 @@ def main():
     dp.add_handler(CommandHandler("stopbots", botconfig.stopbotrequest))
     dp.add_handler(CommandHandler("deletebot", botconfig.deleterequest, Filters.text))
 
-    dp.add_handler(CommandHandler("startscanner", botconfig.StartScanning, Filters.text))
+    dp.add_handler(
+        CommandHandler("startscanner", botconfig.StartScanning, Filters.text)
+    )
     dp.add_handler(CommandHandler("stopscanner", botconfig.StopScanning, Filters.text))
 
     dp.add_handler(CommandHandler("cleandata", botconfig.cleandata, Filters.text))
 
-    dp.add_handler(CommandHandler("removeexception", botconfig.ExceptionRemove, Filters.text))
+    dp.add_handler(
+        CommandHandler("removeexception", botconfig.ExceptionRemove, Filters.text)
+    )
 
     dp.add_handler(CommandHandler("restart", botconfig.RestartBots))
 
@@ -891,7 +939,8 @@ def main():
 
     dp.add_handler(CommandHandler("controlPanel", botconfig.Request))
 
-    conversation_exception = ConversationHandler(entry_points=[CommandHandler("addexception", botconfig.ExceptionExchange)],
+    conversation_exception = ConversationHandler(
+        entry_points=[CommandHandler("addexception", botconfig.ExceptionExchange)],
         states={
             EXCEPT_EXCHANGE: [
                 MessageHandler(
@@ -907,7 +956,8 @@ def main():
         fallbacks=[("Done", botconfig.done)],
     )
 
-    conversation_stats = ConversationHandler(entry_points=[CommandHandler("stats", botconfig.statsrequest)],
+    conversation_stats = ConversationHandler(
+        entry_points=[CommandHandler("stats", botconfig.statsrequest)],
         states={
             CHOOSING: [
                 MessageHandler(
@@ -923,7 +973,8 @@ def main():
         fallbacks=[("Done", botconfig.done)],
     )
 
-    conversation_newbot = ConversationHandler(entry_points=[CommandHandler("addnew", botconfig.newbot_request)],
+    conversation_newbot = ConversationHandler(
+        entry_points=[CommandHandler("addnew", botconfig.newbot_request)],
         states={
             EXCHANGE: [MessageHandler(Filters.text, botconfig.newbot_exchange)],
             MARKET: [MessageHandler(Filters.text, botconfig.newbot_market)],

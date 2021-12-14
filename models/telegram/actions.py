@@ -14,23 +14,21 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-helper = None
-
 class TelegramActions():
     def __init__(self, datafolder, tg_helper: TelegramHelper) -> None:
         self.datafolder = datafolder
 
-        global helper ; helper = tg_helper
-    
+        self.helper = tg_helper
+
     def _getMarginText(self, market):
-        light_icon, margin_icon = ("\U0001F7E2" if "-" not in helper.data["margin"] else "\U0001F534", "\U0001F973" if "-" not in helper.data["margin"] else "\U0001F97A")
-        # result = f"\U0001F4C8 <b>{market}</b> {margin_icon}  <i>Current Margin: {helper.data['margin']} \U0001F4B0 (P/L): {helper.data['delta']}\n" \
-        # f"\U0001F4B0 (P/L): {helper.data['delta']}\n(TSL Trg): {helper.data['trailingstoplosstriggered']}  --  (TSL Change): {helper.data['change_pcnt_high']}</i>\n"
+        light_icon, margin_icon = ("\U0001F7E2" if "-" not in self.helper.data["margin"] else "\U0001F534", "\U0001F973" if "-" not in self.helper.data["margin"] else "\U0001F97A")
+        # result = f"\U0001F4C8 <b>{market}</b> {margin_icon}  <i>Current Margin: {self.helper.data['margin']} \U0001F4B0 (P/L): {self.helper.data['delta']}\n" \
+        # f"\U0001F4B0 (P/L): {self.helper.data['delta']}\n(TSL Trg): {self.helper.data['trailingstoplosstriggered']}  --  (TSL Change): {self.helper.data['change_pcnt_high']}</i>\n"
         result = f"{light_icon} <b>{market}</b>\n" \
-                    f"{margin_icon} Current Margin: {helper.data['margin']}\n" \
-                    f"\U0001F4B0 P/L: {helper.data['delta']}\n" \
-                    f"TSL Trg: {helper.data['trailingstoplosstriggered']}\n" \
-                    f"TSL Change: {float(helper.data['change_pcnt_high']).__round__(4)}\n"
+                    f"{margin_icon} Current Margin: {self.helper.data['margin']}\n" \
+                    f"\U0001F4B0 P/L: {self.helper.data['delta']}\n" \
+                    f"TSL Trg: {self.helper.data['trailingstoplosstriggered']}\n" \
+                    f"TSL Change: {float(self.helper.data['change_pcnt_high']).__round__(4)}\n"
         return result
 
     def _getUptime(self, date: str):
@@ -71,11 +69,11 @@ class TelegramActions():
         else:
             update.effective_message.reply_html("<b>Starting markets with open trades..</b>")
 
-        helper.read_data()
-        for market in helper.data["opentrades"]:
-            if not helper.isBotRunning(market):
+        self.helper.read_data()
+        for market in self.helper.data["opentrades"]:
+            if not self.helper.isBotRunning(market):
                 # update.effective_message.reply_html(f"<i>Starting {market} crypto bot</i>")
-                helper.startProcess(market, helper.data["opentrades"][market]["exchange"], "", "scanner")
+                self.helper.startProcess(market, self.helper.data["opentrades"][market]["exchange"], "", "scanner")
             sleep(10)
         update.effective_message.reply_html("<i>Markets have been started</i>")
         sleep(1)
@@ -85,12 +83,12 @@ class TelegramActions():
         """create the manual sell order"""
         query = update.callback_query
         logger.info("called sellresponse - %s", query.data)
-        while helper.read_data(query.data.replace("confirm_sell_", "")) == False:
+        while self.helper.read_data(query.data.replace("confirm_sell_", "")) == False:
             sleep(0.2)
 
-        if "botcontrol" in helper.data:
-            helper.data["botcontrol"]["manualsell"] = True
-            helper.write_data(query.data.replace("confirm_sell_", ""))
+        if "botcontrol" in self.helper.data:
+            self.helper.data["botcontrol"]["manualsell"] = True
+            self.helper.write_data(query.data.replace("confirm_sell_", ""))
             query.edit_message_text(
                 f"Selling: {query.data.replace('confirm_sell_', '').replace('.json','')}\n<i>Please wait for sale notification...</i>",
                 parse_mode="HTML",
@@ -100,12 +98,12 @@ class TelegramActions():
         """create the manual buy order"""
         query = update.callback_query
         logger.info("called buyresponse - %s", query.data)
-        # if helper.read_data(query.data.replace("confirm_buy_", "")):
-        while helper.read_data(query.data.replace("confirm_buy_", "")) == False:
+        # if self.helper.read_data(query.data.replace("confirm_buy_", "")):
+        while self.helper.read_data(query.data.replace("confirm_buy_", "")) == False:
             sleep(0.2)
-        if "botcontrol" in helper.data:
-            helper.data["botcontrol"]["manualbuy"] = True
-            helper.write_data(query.data.replace("confirm_buy_", ""))
+        if "botcontrol" in self.helper.data:
+            self.helper.data["botcontrol"]["manualbuy"] = True
+            self.helper.write_data(query.data.replace("confirm_buy_", ""))
             query.edit_message_text(
                 f"Buying: {query.data.replace('confirm_buy_', '').replace('.json','')}\n<i>Please wait for sale notification...</i>",
                 parse_mode="HTML",
@@ -113,16 +111,16 @@ class TelegramActions():
 
     def showconfigresponse(self, update):
         """display config settings based on exchanged selected"""
-        with open(os.path.join(helper.config_file), "r", encoding="utf8") as json_file:
-            self.config = json.load(json_file)
+        with open(os.path.join(self.helper.config_file), "r", encoding="utf8") as json_file:
+            self.helper.config = json.load(json_file)
 
         query = update.callback_query
         logger.info("called showconfigresponse - %s", query.data)
 
         if query.data == "ex_scanner":
-            pbot = self.config[query.data.replace("ex_", "")]
+            pbot = self.helper.config[query.data.replace("ex_", "")]
         else:
-            pbot = self.config[query.data.replace("ex_", "")]["config"]
+            pbot = self.helper.config[query.data.replace("ex_", "")]["config"]
 
         query.edit_message_text(query.data.replace("ex_", "") + "\n" + json.dumps(pbot, indent=4))
 
@@ -133,11 +131,11 @@ class TelegramActions():
         except:
             pass
         count = 0
-        for file in helper.getActiveBotList():
+        for file in self.helper.getActiveBotList():
             output = ""
             count += 1
             
-            while helper.read_data(file) == False:
+            while self.helper.read_data(file) == False:
                 sleep(0.2)
 
             output = output + f"\U0001F4C8 <b>{file}</b> "
@@ -151,15 +149,15 @@ class TelegramActions():
             icon = "\U0001F6D1" # red dot
             if last_modified.seconds > 90 and last_modified.seconds != 86399:
                 output = f"{output} {icon} <b>Status</b>: <i>defaulted</i>"
-            elif "botcontrol" in helper.data and "status" in helper.data["botcontrol"]:
-                if helper.data["botcontrol"]["status"] == "active":
+            elif "botcontrol" in self.helper.data and "status" in self.helper.data["botcontrol"]:
+                if self.helper.data["botcontrol"]["status"] == "active":
                     icon = "\U00002705" # green tick
-                if helper.data["botcontrol"]["status"] == "paused":
+                if self.helper.data["botcontrol"]["status"] == "paused":
                     icon = "\U000023F8" # pause icon
-                if helper.data["botcontrol"]["status"] == "exit":
+                if self.helper.data["botcontrol"]["status"] == "exit":
                     icon = "\U0000274C" # stop icon
-                output = f"{output} {icon} <b>Status</b>: <i>{helper.data['botcontrol']['status']}</i>"
-                output = f"{output} \u23F1 <b>Uptime</b>: <i>{self._getUptime(helper.data['botcontrol']['started'])}</i>\n"
+                output = f"{output} {icon} <b>Status</b>: <i>{self.helper.data['botcontrol']['status']}</i>"
+                output = f"{output} \u23F1 <b>Uptime</b>: <i>{self._getUptime(self.helper.data['botcontrol']['started'])}</i>\n"
             else:
                 output = f"{output} {icon} <b>Status</b>: <i>stopped</i> "
 
@@ -186,26 +184,26 @@ class TelegramActions():
         oOutput = []
         closedbotCount = 0
         openbotCount = 0
-        print(helper.getActiveBotList())
-        for market in helper.getActiveBotList():
-            while helper.read_data(market) == False:
+        print(self.helper.getActiveBotList())
+        for market in self.helper.getActiveBotList():
+            while self.helper.read_data(market) == False:
                 sleep(0.2)
 
             closedoutput = "" 
             openoutput = ""
-            if "margin" in helper.data:
-                if "margin" in helper.data and helper.data["margin"] == " ":
+            if "margin" in self.helper.data:
+                if "margin" in self.helper.data and self.helper.data["margin"] == " ":
                     closedoutput = (closedoutput + f"<b>{market}</b>")
-                    closedoutput = closedoutput + f"\n<i>{helper.data['message']}</i>\n"
+                    closedoutput = closedoutput + f"\n<i>{self.helper.data['message']}</i>\n"
                     cOutput.append(closedoutput)
                     closedbotCount += 1
-                elif len(helper.data) > 2:
+                elif len(self.helper.data) > 2:
                     # space = 20 - len(market)
-                    margin_icon = ("\U0001F7E2" if "-" not in helper.data["margin"]else "\U0001F534")
+                    margin_icon = ("\U0001F7E2" if "-" not in self.helper.data["margin"]else "\U0001F534")
                     openoutput = openoutput + self._getMarginText(market)
                     oOutput.append(openoutput)
                     # openoutput = (openoutput + f"\U0001F4C8 <b>{file}</b> ".ljust(space))
-                    # openoutput = (openoutput + f" {margin_icon}  <i>Current Margin: {helper.data['margin']} \U0001F4B0 (P/L): {helper.data['delta']}\n(TSL Trg): {helper.data['trailingstoplosstriggered']}  --  (TSL Change): {helper.data['change_pcnt_high']}</i>\n")
+                    # openoutput = (openoutput + f" {margin_icon}  <i>Current Margin: {self.helper.data['margin']} \U0001F4B0 (P/L): {self.helper.data['delta']}\n(TSL Trg): {self.helper.data['trailingstoplosstriggered']}  --  (TSL Change): {self.helper.data['change_pcnt_high']}</i>\n")
                     openbotCount += 1
             # sleep(1)
                 # if closedbotCount + openbotCount == 1:
@@ -260,14 +258,14 @@ class TelegramActions():
             return
 
         update.effective_message.reply_html("<i>stopping bots..</i>")
-        for file in helper.getActiveBotList():
-            helper.stopRunningBot(file, "exit")
+        for file in self.helper.getActiveBotList():
+            self.helper.stopRunningBot(file, "exit")
             sleep(5)
 
-        botcounter = len(helper.getActiveBotList())
-        maxbotcount = helper.config["scanner"]["maxbotcount"] if "maxbotcount" in helper.config["scanner"] else 0
+        botcounter = len(self.helper.getActiveBotList())
+        maxbotcount = self.helper.config["scanner"]["maxbotcount"] if "maxbotcount" in self.helper.config["scanner"] else 0
 
-        helper.read_data()
+        self.helper.read_data()
         for ex in config:
             if maxbotcount > 0 and botcounter >= maxbotcount:
                 break
@@ -289,25 +287,25 @@ class TelegramActions():
                     if debug:
                         logger.info("%s", row)
 
-                    if helper.config["scanner"]["maxbotcount"] > 0 and botcounter >= helper.config["scanner"]["maxbotcount"]:
+                    if self.helper.config["scanner"]["maxbotcount"] > 0 and botcounter >= self.helper.config["scanner"]["maxbotcount"]:
                         break
                     
-                    if helper.config["scanner"]["enableleverage"] == False \
+                    if self.helper.config["scanner"]["enableleverage"] == False \
                             and (str(row).__contains__(f"DOWN{quote}") or str(row).__contains__(f"UP{quote}") or str(row).__contains__(f"3L{quote}") or str(row).__contains__(f"3S{quote}")):
                         continue
 
-                    if row in helper.data["scannerexceptions"]:
+                    if row in self.helper.data["scannerexceptions"]:
                         outputmsg = outputmsg + f"*** {row} found on scanner exception list ***\n"
                     else:
                         if data[row]["atr72_pcnt"] != None:
-                            if data[row]["atr72_pcnt"] >= helper.config["scanner"]["atr72_pcnt"]:
-                                if helper.config["scanner"]["enable_buy_next"] and data[row]["buy_next"]:
+                            if data[row]["atr72_pcnt"] >= self.helper.config["scanner"]["atr72_pcnt"]:
+                                if self.helper.config["scanner"]["enable_buy_next"] and data[row]["buy_next"]:
                                     outputmsg = outputmsg + f"<i><b>{row}</b>  //--//  <b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%  //--//  <b>buy_next:</b> {data[row]['buy_next']}</i>\n"
-                                    helper.startProcess(row, ex, "", "scanner")
+                                    self.helper.startProcess(row, ex, "", "scanner")
                                     botcounter += 1
-                                elif not helper.config["scanner"]["enable_buy_next"]:
+                                elif not self.helper.config["scanner"]["enable_buy_next"]:
                                     outputmsg = outputmsg + f"<i><b>{row}</b>  //--//  <b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%</i>\n"
-                                    helper.startProcess(row, ex, "", "scanner")
+                                    self.helper.startProcess(row, ex, "", "scanner")
                                     botcounter += 1
                                 if debug == False:
                                     sleep(10)
@@ -318,13 +316,13 @@ class TelegramActions():
 
     def deleteresponse(self, update):
         """delete selected bot"""
-        helper.read_data()
+        self.helper.read_data()
 
         query = update.callback_query
         logger.info("called deleteresponse - %s", query.data)
-        helper.data["markets"].pop(str(query.data).replace("delete_", ""))
+        self.helper.data["markets"].pop(str(query.data).replace("delete_", ""))
 
-        helper.write_data()
+        self.helper.write_data()
 
         query.edit_message_text(
             f"<i>Deleted {str(query.data).replace('delete_', '')} crypto bot</i>",
@@ -333,14 +331,14 @@ class TelegramActions():
 
     def RemoveExceptionCallBack(self, update):
         """delete selected bot"""
-        helper.read_data()
+        self.helper.read_data()
 
         query = update.callback_query
         query.answer()
 
-        helper.data["scannerexceptions"].pop(str(query.data).replace("delexcep_", ""))
+        self.helper.data["scannerexceptions"].pop(str(query.data).replace("delexcep_", ""))
 
-        helper.write_data()
+        self.helper.write_data()
 
         query.edit_message_text(
             f"<i>Removed {str(query.data).replace('delexcep_', '')} from exception list. bot</i>",
