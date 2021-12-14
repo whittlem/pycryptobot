@@ -22,12 +22,11 @@ class TelegramActions():
 
     def _getMarginText(self, market):
         light_icon, margin_icon = ("\U0001F7E2" if "-" not in self.helper.data["margin"] else "\U0001F534", "\U0001F973" if "-" not in self.helper.data["margin"] else "\U0001F97A")
-        # result = f"\U0001F4C8 <b>{market}</b> {margin_icon}  <i>Current Margin: {self.helper.data['margin']} \U0001F4B0 (P/L): {self.helper.data['delta']}\n" \
-        # f"\U0001F4B0 (P/L): {self.helper.data['delta']}\n(TSL Trg): {self.helper.data['trailingstoplosstriggered']}  --  (TSL Change): {self.helper.data['change_pcnt_high']}</i>\n"
+
         result = f"{light_icon} <b>{market}</b>\n" \
-                    f"{margin_icon} Current Margin: {self.helper.data['margin']}\n" \
+                    f"{margin_icon} Current Margin: {self.helper.data['margin']}  " \
                     f"\U0001F4B0 P/L: {self.helper.data['delta']}\n" \
-                    f"TSL Trg: {self.helper.data['trailingstoplosstriggered']}\n" \
+                    f"TSL Trg: {self.helper.data['trailingstoplosstriggered']}  " \
                     f"TSL Change: {float(self.helper.data['change_pcnt_high']).__round__(4)}\n"
         return result
 
@@ -198,21 +197,10 @@ class TelegramActions():
                     cOutput.append(closedoutput)
                     closedbotCount += 1
                 elif len(self.helper.data) > 2:
-                    # space = 20 - len(market)
-                    margin_icon = ("\U0001F7E2" if "-" not in self.helper.data["margin"]else "\U0001F534")
                     openoutput = openoutput + self._getMarginText(market)
                     oOutput.append(openoutput)
-                    # openoutput = (openoutput + f"\U0001F4C8 <b>{file}</b> ".ljust(space))
-                    # openoutput = (openoutput + f" {margin_icon}  <i>Current Margin: {self.helper.data['margin']} \U0001F4B0 (P/L): {self.helper.data['delta']}\n(TSL Trg): {self.helper.data['trailingstoplosstriggered']}  --  (TSL Change): {self.helper.data['change_pcnt_high']}</i>\n")
                     openbotCount += 1
-            # sleep(1)
-                # if closedbotCount + openbotCount == 1:
-                #     try:
-                #         query.edit_message_text(f"{output}", parse_mode="HTML")
-                #     except:
-                #         response.effective_message.reply_html(f"{output}")
-                # else:
-                #     response.effective_message.reply_html(f"{output}")
+
         if (query.data.__contains__("orders") or query.data.__contains__("all")) and openbotCount > 0:
             for output in oOutput:
                 response.effective_message.reply_html(f"{output}")
