@@ -8,7 +8,7 @@ from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_an
 from models.exchange.Granularity import Granularity
 
 def isMarketValid(market) -> bool:
-    p = re.compile(r"^[0-9A-Z]{1,10}\-[1-9A-Z]{2,5}$")
+    p = re.compile(r"^[0-9A-Z]{1,20}\-[1-9A-Z]{2,5}$")
     return p.match(market) is not None
 
 def parseMarket(market):

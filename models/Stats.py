@@ -1,4 +1,5 @@
 import sys
+from time import sleep
 from datetime import datetime, timedelta
 from models.PyCryptoBot import PyCryptoBot
 from models.TradingAccount import TradingAccount
@@ -28,6 +29,7 @@ class Stats():
         # pylint: disable=unused-variable
         for index, row in self.orders.iterrows():
             time = row['created_at'].to_pydatetime()
+            # Logger.debug(row)
             if row['action'] == 'buy':
                 if self.app.exchange == Exchange.COINBASEPRO:
                     amount = row['filled'] * row['price'] + row['fees']
@@ -35,9 +37,9 @@ class Stats():
                     amount = row['size']
                 if last_order in ['sell', None]:
                     last_order = 'buy'
-                    self.order_pairs.append({'buy': {'time':time, 'size': amount}, 'sell': None, 'market': self.app.getMarket()})
+                    self.order_pairs.append({'buy': {'time':time, 'size': float(amount)}, 'sell': None, 'market': self.app.getMarket()})
                 else:
-                    self.order_pairs[-1]['buy']['size'] += amount
+                    self.order_pairs[-1]['buy']['size'] += float(amount)
             else:
                 if self.app.exchange == Exchange.COINBASEPRO:
                     amount = (row['filled'] * row['price']) - row['fees']
@@ -47,19 +49,28 @@ class Stats():
                     continue
                 if last_order == 'buy':
                     last_order = 'sell'
-                    self.order_pairs[-1]['sell'] = {'time':time, 'size': amount}
+                    if float(amount) > 0:
+                        self.order_pairs[-1]['sell'] = {'time':time, 'size': float(amount)}
                 else:
-                    self.order_pairs[-1]['sell']['size'] += amount
+                    if float(amount) > 0:
+                        self.order_pairs[-1]['sell']['size'] += float(amount)
         # remove open trade
         if len(self.order_pairs) > 0:
             if self.order_pairs[-1]['sell'] == None:
-                self.order_pairs = self.order_pairs[:-1]
+                s = []
+                for order in self.order_pairs:
+                    if order["sell"] != None:
+                        s.append(order)
+                self.order_pairs = s
+
+        # return [x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles]
 
     def show(self):
         if self.app.getStats():
             if self.app.statgroup:
                 for currency in self.app.statgroup:
                     self.get_data(currency)
+                    sleep(5)
             else:
                 self.get_data(self.app.getMarket())
             self.data_display()
@@ -69,14 +80,17 @@ class Stats():
         for pair in self.order_pairs:
             try: # return 0 if unexpected exception
                 pair['delta'] = float(pair['sell']['size']) - float(pair['buy']['size'])
-            except:
+                Logger.debug(float(pair['sell']['size']))
+            except Exception as err:
+                Logger.debug(err)
                 Logger.warning('unexpected error calculating delta, returning 0')
                 Logger.debug(pair)
                 pair['delta'] = 0
 
             try: # return 0 if unexpected exception
                 pair['gain'] = (float(pair['delta']) / float(pair['buy']['size'])) * 100
-            except:
+            except Exception as err:
+                Logger.debug(err)
                 Logger.warning('unexpected error calculating gain, returning 0')
                 Logger.debug(pair)
                 pair['gain'] = 0
