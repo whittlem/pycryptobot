@@ -124,7 +124,7 @@ class TelegramBot(TelegramBotBase):
         self.userid = self.config["telegram"]["user_id"]
 
         # Config section for bot pair scanner
-        self.atr72pcnt = 4.0
+        self.atr72pcnt = 2.0
         self.enableleverage = False
         self.maxbotcount = 0
         self.autoscandelay = 0
