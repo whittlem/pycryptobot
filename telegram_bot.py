@@ -632,7 +632,7 @@ class TelegramBot(TelegramBotBase):
             )
             if "margin" not in self.helper.data:
                 logger.info("deleting %s", jfile)
-                os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
+                os.remove(os.path.join(self.datafolder, "telegram_data", f"{jfile}.json"))
                 continue
             if (
                 self.helper.data["botcontrol"]["status"] == "active"
@@ -650,7 +650,7 @@ class TelegramBot(TelegramBotBase):
                 and last_modified.seconds != 86399
             ):
                 logger.info("deleting %s %s", jfile, str(last_modified.seconds))
-                os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
+                os.remove(os.path.join(self.datafolder, "telegram_data", f"{jfile}.json"))
 
     def ExceptionExchange(self, update, context):
         """start new bot ask which exchange"""

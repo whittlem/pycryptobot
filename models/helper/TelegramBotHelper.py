@@ -245,20 +245,20 @@ class TelegramBotHelper:
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             self._read_data("data.json")
 
-        if self.market in self.data["opentrades"]:
-            if self.exchange != self.data["opentrades"][self.market]:
-                return
+            if self.market in self.data["opentrades"]:
+                if self.exchange != self.data["opentrades"][self.market]:
+                    return
 
-        self.data["opentrades"].update({self.market : {"exchange": self.exchange.value}})
-        self._write_data("data.json")
+            self.data["opentrades"].update({self.market : {"exchange": self.exchange.value}})
+            self._write_data("data.json")
 
     def remove_open_order(self):
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             self._read_data("data.json")
 
-        if self.market not in self.data["opentrades"]:
-            return
+            if self.market not in self.data["opentrades"]:
+                return
 
-        self.data["opentrades"].pop(self.market)
-        self._write_data("data.json")
+            self.data["opentrades"].pop(self.market)
+            self._write_data("data.json")
 
