@@ -24,7 +24,7 @@ class TelegramActions():
         light_icon, margin_icon = ("\U0001F7E2" if "-" not in self.helper.data["margin"] else "\U0001F534", "\U0001F973" if "-" not in self.helper.data["margin"] else "\U0001F97A")
 
         result = f"{light_icon} <b>{market}</b>\n" \
-                    f"{margin_icon} Current Margin: {self.helper.data['margin']}  " \
+                    f"{margin_icon} Margin: {self.helper.data['margin']}  " \
                     f"\U0001F4B0 P/L: {self.helper.data['delta']}\n" \
                     f"TSL Trg: {self.helper.data['trailingstoplosstriggered']}  " \
                     f"TSL Change: {float(self.helper.data['change_pcnt_high']).__round__(4)}\n"
