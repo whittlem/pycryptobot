@@ -681,7 +681,7 @@ class TechnicalAnalysis:
         self.df["close_pc"] = self.changePct()
 
         # cumulative returns
-        self.df["close_cpc"] = (1 + self.df["close_pc"]).cumprod()
+        self.df["close_cpc"] = (1 + self.df["close_pc"]).cumprod() - 1
 
     def cumulativeMovingAverage(self) -> float:
         """Calculates the Cumulative Moving Average (CMA)"""
