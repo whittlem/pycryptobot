@@ -245,7 +245,7 @@ class TelegramBot(TelegramBotBase):
             return ConversationHandler.END
 
         if self.exchange in ("coinbasepro", "kucoin"):
-            p = re.compile(r"^[1-9A-Z]{2,9}\-[1-9A-Z]{2,5}$")
+            p = re.compile(r"^[0-9A-Z]{1,20}\-[1-9A-Z]{2,5}$")
             if not p.match(update.message.text):
                 update.message.reply_text(
                     "Invalid market format", reply_markup=ReplyKeyboardRemove()
@@ -253,7 +253,7 @@ class TelegramBot(TelegramBotBase):
                 # self.newbot_exchange(update, context)
                 return False
         elif self.exchange == "binance":
-            p = re.compile(r"^[A-Z0-9]{5,13}$")
+            p = re.compile(r"^[A-Z0-9]{4,25}$")
             if not p.match(update.message.text):
                 update.message.reply_text(
                     "Invalid market format.", reply_markup=ReplyKeyboardRemove()
@@ -407,7 +407,7 @@ class TelegramBot(TelegramBotBase):
             return ConversationHandler.END
 
         if self.exchange == "coinbasepro" or self.exchange == "kucoin":
-            p = re.compile(r"^[1-9A-Z]{2,5}\-[1-9A-Z]{2,5}$")
+            p = re.compile(r"^[0-9A-Z]{1,20}\-[1-9A-Z]{2,5}$")
             if not p.match(update.message.text):
                 update.message.reply_text(
                     "Invalid market format", reply_markup=ReplyKeyboardRemove()
@@ -415,7 +415,7 @@ class TelegramBot(TelegramBotBase):
                 self.stats_exchange_received(update, context)
                 return None
         elif self.exchange == "binance":
-            p = re.compile(r"^[A-Z0-9]{5,12}$")
+            p = re.compile(r"^[A-Z0-9]{4,25}$")
             if not p.match(update.message.text):
                 update.message.reply_text(
                     "Invalid market format.", reply_markup=ReplyKeyboardRemove()
