@@ -567,7 +567,7 @@ def executeJob(
             if _state.action == "BUY":
                 immediate_action = True
 
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
+        if not _app.isSimulation() and _app.enableTelegramBotControl():
             manual_buy_sell = telegram_bot.checkmanualbuysell()
             if not manual_buy_sell == "WAIT":
                 _state.action = manual_buy_sell
