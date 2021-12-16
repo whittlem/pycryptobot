@@ -83,16 +83,33 @@ class TelegramActions():
         """create the manual sell order"""
         query = update.callback_query
         logger.info("called sellresponse - %s", query.data)
-        while self.helper.read_data(query.data.replace("confirm_sell_", "")) == False:
-            sleep(0.2)
 
-        if "botcontrol" in self.helper.data:
-            self.helper.data["botcontrol"]["manualsell"] = True
-            self.helper.write_data(query.data.replace("confirm_sell_", ""))
-            query.edit_message_text(
-                f"Selling: {query.data.replace('confirm_sell_', '').replace('.json','')}\n<i>Please wait for sale notification...</i>",
-                parse_mode="HTML",
-            )
+        if query.data.__contains__("all"):
+            query.edit_message_text("<b><i>Initiating sell orders..</i></b>", parse_mode="HTML")
+            for market in self.helper.getActiveBotList("active"):
+                while self.helper.read_data(market) == False:
+                    sleep(0.2)
+
+                if "margin" in self.helper.data and self.helper.data["margin"] != " ":
+                    while self.helper.read_data(market) == False:
+                        sleep(0.2)
+
+                    if "botcontrol" in self.helper.data:
+                        #self.helper.data["botcontrol"]["manualsell"] = True
+                        #self.helper.write_data(market)
+                        update.effective_message.reply_html(
+                            f"Selling: {market}\n<i>Please wait for sale notification...</i>")
+                sleep(0.2)
+        else:
+            while self.helper.read_data(query.data.replace("confirm_sell_", "")) == False:
+                sleep(0.2)
+            if "botcontrol" in self.helper.data:
+                #self.helper.data["botcontrol"]["manualsell"] = True
+                #self.helper.write_data(query.data.replace("confirm_sell_", ""))
+                query.edit_message_text(
+                    f"Selling: {query.data.replace('confirm_sell_', '').replace('.json','')}\n<i>Please wait for sale notification...</i>",
+                    parse_mode="HTML",
+                )
 
     def buyresponse(self, update):
         """create the manual buy order"""

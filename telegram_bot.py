@@ -182,12 +182,13 @@ class TelegramBot(TelegramBotBase):
 
         if os.path.isfile(os.path.join(self.datafolder, "telegram_data", "data.json")):
             self.helper.read_data()
+            if "trades" not in self.helper.data:
+                self.helper.data.update({"trades": {}})
             if "markets" not in self.helper.data:
                 self.helper.data.update({"markets": {}})
-                self.helper.write_data()
             if "scannerexceptions" not in self.helper.data:
                 self.helper.data.update({"scannerexceptions": {}})
-                self.helper.write_data()
+            self.helper.write_data()
         else:
             ds = {"trades": {}, "markets": {}, "scannerexceptions": {}}
             self.helper.data = ds
