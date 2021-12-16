@@ -172,19 +172,20 @@ class TelegramBotHelper:
 
     def checkmanualbuysell(self) -> str:
         result = "WAIT"
-        self._read_data()
+        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
+            self._read_data()
 
-        if len(self.data["botcontrol"]) > 0:
-            if self.data["botcontrol"]["manualsell"]:
-                self.data["botcontrol"]["manualsell"] = False
-                result = "SELL"
-                self._write_data()
+            if len(self.data["botcontrol"]) > 0:
+                if self.data["botcontrol"]["manualsell"]:
+                    self.data["botcontrol"]["manualsell"] = False
+                    result = "SELL"
+                    self._write_data()
 
-        if len(self.data["botcontrol"]) > 0:
-            if self.data["botcontrol"]["manualbuy"]:
-                self.data["botcontrol"]["manualbuy"] = False
-                result = "BUY"
-                self._write_data()
+            if len(self.data["botcontrol"]) > 0:
+                if self.data["botcontrol"]["manualbuy"]:
+                    self.data["botcontrol"]["manualbuy"] = False
+                    result = "BUY"
+                    self._write_data()
 
         return result
 
@@ -244,20 +245,20 @@ class TelegramBotHelper:
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             self._read_data("data.json")
 
-        if self.market in self.data["opentrades"]:
-            if self.exchange != self.data["opentrades"][self.market]:
-                return
+            if self.market in self.data["opentrades"]:
+                if self.exchange != self.data["opentrades"][self.market]:
+                    return
 
-        self.data["opentrades"].update({self.market : {"exchange": self.exchange.value}})
-        self._write_data("data.json")
+            self.data["opentrades"].update({self.market : {"exchange": self.exchange.value}})
+            self._write_data("data.json")
 
     def remove_open_order(self):
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             self._read_data("data.json")
 
-        if self.market not in self.data["opentrades"]:
-            return
+            if self.market not in self.data["opentrades"]:
+                return
 
-        self.data["opentrades"].pop(self.market)
-        self._write_data("data.json")
+            self.data["opentrades"].pop(self.market)
+            self._write_data("data.json")
 

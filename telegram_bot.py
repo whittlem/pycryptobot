@@ -176,12 +176,13 @@ class TelegramBot(TelegramBotBase):
 
         if os.path.isfile(os.path.join(self.datafolder, "telegram_data", "data.json")):
             self.helper.read_data()
+            if "trades" not in self.helper.data:
+                self.helper.data.update({"trades": {}})
             if "markets" not in self.helper.data:
                 self.helper.data.update({"markets": {}})
-                self.helper.write_data()
             if "scannerexceptions" not in self.helper.data:
                 self.helper.data.update({"scannerexceptions": {}})
-                self.helper.write_data()
+            self.helper.write_data()
         else:
             ds = {"trades": {}, "markets": {}, "scannerexceptions": {}}
             self.helper.data = ds
@@ -632,7 +633,7 @@ class TelegramBot(TelegramBotBase):
             )
             if "margin" not in self.helper.data:
                 logger.info("deleting %s", jfile)
-                os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
+                os.remove(os.path.join(self.datafolder, "telegram_data", f"{jfile}.json"))
                 continue
             if (
                 self.helper.data["botcontrol"]["status"] == "active"
@@ -650,7 +651,7 @@ class TelegramBot(TelegramBotBase):
                 and last_modified.seconds != 86399
             ):
                 logger.info("deleting %s %s", jfile, str(last_modified.seconds))
-                os.remove(os.path.join(self.datafolder, "telegram_data", jfile))
+                os.remove(os.path.join(self.datafolder, "telegram_data", f"{jfile}.json"))
 
     def ExceptionExchange(self, update, context):
         """start new bot ask which exchange"""
