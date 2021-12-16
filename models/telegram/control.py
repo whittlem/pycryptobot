@@ -3,8 +3,6 @@ from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
 
 from .helper import TelegramHelper
 
-helper = None
-
 class TelegramControl():
     def __init__(self, datafolder, tg_helper: TelegramHelper) -> None:
         self.datafolder = datafolder
@@ -13,7 +11,7 @@ class TelegramControl():
     def _sortInlineButtons(self, buttons: list, callbackTag):
         keyboard = []
         if len(buttons) > 0:
-            if (callbackTag not in ("buy", "sell")) and len(buttons) > 1:
+            if len(buttons) > 1:
                 keyboard = [[InlineKeyboardButton("All", callback_data=f"{callbackTag}_all")]]
 
             i = 0
