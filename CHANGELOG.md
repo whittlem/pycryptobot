@@ -49,6 +49,9 @@ Upgrade library dependencies (if required):
 ## [4.6.2] - 2021-12-18
 
 - Fix bug in trailingbuypcnt code that could cause the waiting price to continually change and prevent a buy
+- fix error when saving trade data for the first time
+- Add all option to Sell command
+- Add unit tests for TG Bot
 
 ## [4.6.1] - 2021-12-09
 
