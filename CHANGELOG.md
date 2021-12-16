@@ -11,6 +11,9 @@ Upgrade library dependencies (if required):
 ## [4.6.x] - 2021-12-xx
 
 - change tgbot manual buy/sell check
+- fix error when saving trade data for the first time
+- Add all option to Sell command
+- Add unit tests for TG Bot
 
 ## [4.6.1] - 2021-12-09
 
