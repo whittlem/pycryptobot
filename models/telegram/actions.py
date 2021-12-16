@@ -95,8 +95,8 @@ class TelegramActions():
                         sleep(0.2)
 
                     if "botcontrol" in self.helper.data:
-                        #self.helper.data["botcontrol"]["manualsell"] = True
-                        #self.helper.write_data(market)
+                        self.helper.data["botcontrol"]["manualsell"] = True
+                        self.helper.write_data(market)
                         update.effective_message.reply_html(
                             f"Selling: {market}\n<i>Please wait for sale notification...</i>")
                 sleep(0.2)
@@ -104,8 +104,8 @@ class TelegramActions():
             while self.helper.read_data(query.data.replace("confirm_sell_", "")) == False:
                 sleep(0.2)
             if "botcontrol" in self.helper.data:
-                #self.helper.data["botcontrol"]["manualsell"] = True
-                #self.helper.write_data(query.data.replace("confirm_sell_", ""))
+                self.helper.data["botcontrol"]["manualsell"] = True
+                self.helper.write_data(query.data.replace("confirm_sell_", ""))
                 query.edit_message_text(
                     f"Selling: {query.data.replace('confirm_sell_', '').replace('.json','')}\n<i>Please wait for sale notification...</i>",
                     parse_mode="HTML",
@@ -201,7 +201,7 @@ class TelegramActions():
         oOutput = []
         closedbotCount = 0
         openbotCount = 0
-        print(self.helper.getActiveBotList())
+        # print(self.helper.getActiveBotList())
         for market in self.helper.getActiveBotList():
             while self.helper.read_data(market) == False:
                 sleep(0.2)
