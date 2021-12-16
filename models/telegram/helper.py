@@ -95,7 +95,7 @@ class TelegramHelper():
                 )
         else:
             subprocess.Popen(
-                    f"{command} './logs/{exchange}-{pair}-{datetime.now().date()}.log' {overrides}",
+                    f"{command} --logfile './logs/{exchange}-{pair}-{datetime.now().date()}.log' {overrides}",
                     shell=True,
                 )
 
