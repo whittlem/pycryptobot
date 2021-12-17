@@ -200,7 +200,9 @@ This is a one step build and deploy on the same device that you have cloned the 
 
 ___** Write More Stuff Here ** __
 ** DRAFT **
+
 Pull 
+
 `git clone --branch beta https://github.com/whittlem/pycryptobot`
 
 Configure
@@ -208,6 +210,7 @@ Configure
 
 
 Deploy 
+
 `docker-compose up -d --build`
 
 ```yaml
