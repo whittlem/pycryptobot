@@ -26,6 +26,7 @@ The following software should be installed before starting this guide.
   - [Patch as required](#patch-as-required)
   - [Build a local copy of your beta container](#build-a-local-copy-of-your-beta-container)
   - [Run the beta container](#run-the-beta-container)
+- [One Step Build and Deploy (Advanced)](#one-step-build-and-deploy-advanced)
 - [Cross Compiling for ARM](#cross-compiling-for-arm)
   - [Setup Docker Buildx](#setup-docker-buildx)
   - [Tell buildx to use your new image builder](#tell-buildx-to-use-your-new-image-builder)
@@ -192,6 +193,46 @@ To start the container run the following command from inside the folder that con
 `docker-compose up -d`
 
 Your scanner is now alive and ready to play.
+
+# One Step Build and Deploy (Advanced)
+
+This is a one step build and deploy on the same device that you have cloned the repository on. 
+
+___** Write More Stuff Here ** __
+** DRAFT **
+Pull 
+`git clone --branch beta https://github.com/whittlem/pycryptobot`
+
+Configure
+** Write Stuff here **
+
+
+Deploy 
+`docker-compose up -d --build`
+
+```yaml
+version: "3.9"
+
+services:
+    pycryptobot:
+        build:
+          context: .
+        container_name: pycryptobot
+        volumes:
+            - ./market/BTCEUR/coinbase.key:/app/coinbase.key.json
+            - ./market/BTCEUR/config.json:/app/config.json
+            - ./market/BTCEUR/pycryptobot.log:/app/pycryptobot.log
+            - ./market/BTCEUR/graphs:/app/graphs
+            - ./market:/app/telegram_data
+            - /etc/timezone:/etc/timezone:ro
+            - /etc/localtime:/etc/localtime:ro
+        environment:
+            - PYTHONUNBUFFERED=1
+        entrypoint: ["python3", "-u", "telegram_bot.py"]
+        deploy:
+          restart_policy:
+            condition: on-failure
+```
 
 # Cross Compiling for ARM
 
