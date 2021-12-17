@@ -42,16 +42,7 @@ The following software should be installed before starting this guide.
 Build a basic folder structure containing the required configuration files as detailed below.
 I recommend following [this guide](https://playful-curio-e62.notion.site/Scanning-the-market-fd9b58b059dd4cf8addb167af7f36311) for information on how to setup the config.json and scanner.json files. I will post mine at the end of the guide but will highly recommend creating your own instead of copy pasting configuration.
 
-    ├── market
-    │ ├── graphs
-    │ │ └── .gitkeep
-    │ └── telegram_data
-    │ │ └── .gitkeep
-    │ ├── binance.key
-    │ ├── config.json
-    │ ├── pycryptobot.log
-    │ ├── scanner.json
-    └── docker-compose.yml
+![Apply Patch](images/folder_structure.png)
 
 ## Populate your docker-compose file
 
