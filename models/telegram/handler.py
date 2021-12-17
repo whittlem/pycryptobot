@@ -15,6 +15,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 scannerSchedule = BackgroundScheduler(timezone="UTC")
 
+
 class TelegramHandler:
     def __init__(self, datafolder, authuserid, tg_helper: TelegramHelper) -> None:
         self.authoriseduserid = authuserid
@@ -116,7 +117,7 @@ class TelegramHandler:
             self.control.askRestartBotList(update)
         elif query.data.__contains__("restart_"):
             self.control.restartBotResponse(update)
-            
+
         elif query.data == "start":
             self.control.askStartBotList(update)
         elif query.data.__contains__("start_"):
@@ -163,63 +164,98 @@ class TelegramHandler:
             self.getScannerOptions(update)
         elif query.data == "schedule":
             self._checkScheduledJob(update)
-        elif query.data == "scanonly" or query.data == "noscan" or query.data == "startmarket":
+        elif (
+            query.data == "scanonly"
+            or query.data == "noscan"
+            or query.data == "startmarket"
+        ):
             if query.data == "startmarket":
                 self._checkScheduledJob(update)
-            self.actions.StartMarketScan(update, True if query.data != "noscan" else False, True if query.data != "scanonly" else False)
+            self.actions.StartMarketScan(
+                update,
+                True if query.data != "noscan" else False,
+                True if query.data != "scanonly" else False,
+            )
         elif query.data == "stopmarket":
             self._removeScheduledJob(update)
 
         elif query.data == "editconfig":
+            # self.editor.getConfigOptions(update)
             query.edit_message_text(
                 "\U000026A0 <b>Under Construction</b> \U000026A0", parse_mode="HTML"
             )
-            # key_markup = self.getConfigOptions()
-            # query.edit_message_text(
-            #     "<b>PyCryptoBot Config Panel.</b>",
-            #     reply_markup=key_markup,
-            #     parse_mode="HTML")
 
-        elif query.data.__contains__("edit_"):
-            self.editor.ask_buy_max_size(query, context)
+        elif query.data.__contains__("bot_"):
+            self.getBotOptions(update)
 
         elif query.data.__contains__("delexcep_"):
             self.actions.RemoveExceptionCallBack(update)
+
+        elif query.data.__contains__("disable_"):
+            self.editor.disable_option(
+                "coinbasepro", query.data.replace("disable_", "")
+            )
+
+        elif query.data.__contains__("enable_"):
+            self.editor.enable_option("coinbasepro", query.data.replace("enable_", ""))
+
+    def getBotOptions(self, update):
+        query = update.callback_query
+
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    "Stop", callback_data=f"stop_{query.data.replace('bot_', '')}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "Restart", callback_data=f"restart_{query.data.replace('bot_', '')}"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    "Pause", callback_data=f"pause_{query.data.replace('bot_', '')}"
+                ),
+                InlineKeyboardButton(
+                    "Resume", callback_data=f"resume_{query.data.replace('bot_', '')}"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    "Sell", callback_data=f"sell_{query.data.replace('bot_', '')}"
+                )
+            ],
+            [InlineKeyboardButton("\U000025C0 Back", callback_data="back")],
+        ]
+
+        query.edit_message_text(
+            f"<b>{query.data.replace('bot_', '')} Actions:</b>",
+            reply_markup=InlineKeyboardMarkup(keyboard, one_time_keyboard=True),
+            parse_mode="HTML",
+        )
 
     def getScannerOptions(self, update):
         query = update.callback_query
 
         keyboard = [
-            [
-                InlineKeyboardButton("Add Schedule", callback_data="schedule")
-            ],
+            [InlineKeyboardButton("Add Schedule", callback_data="schedule")],
             [
                 InlineKeyboardButton("Remove Schedule", callback_data="stopmarket"),
             ],
             [
                 InlineKeyboardButton("Scan Only", callback_data="scanonly"),
-                InlineKeyboardButton("Start Bots Only", callback_data="noscan")
+                InlineKeyboardButton("Start Bots Only", callback_data="noscan"),
             ],
-            [
-                InlineKeyboardButton("Scan + Start Bots", callback_data="startmarket")
-            ],
+            [InlineKeyboardButton("Scan + Start Bots", callback_data="startmarket")],
             [InlineKeyboardButton("\U000025C0 Back", callback_data="back")],
         ]
 
         query.edit_message_text(
             "<b>Scanning Options.</b>",
             reply_markup=InlineKeyboardMarkup(keyboard, one_time_keyboard=True),
-            parse_mode="HTML")
-
-    def getConfigOptions(self):
-        keyboard = [
-            [
-                InlineKeyboardButton("BuyMaxSize", callback_data="edit_buymaxsize"),
-            ],
-            [InlineKeyboardButton("\U000025C0 Back", callback_data="back")],
-        ]
-
-        return InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
+            parse_mode="HTML",
+        )
 
     def askMarginType(self, update):
         """Ask what user wants to see active order/pairs or all"""
@@ -318,10 +354,14 @@ class TelegramHandler:
             try:
                 query = update.callback_query
                 query.edit_message_text(
-                    f"<b>Scan job schedule created to run every {self.helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705", parse_mode="HTML"
+                    f"<b>Scan job schedule created to run every {self.helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705",
+                    parse_mode="HTML",
                 )
             except:
-                update.message.reply_text(f"<b>Scan job schedule created to run every {self.helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705", parse_mode="HTML")
+                update.message.reply_text(
+                    f"<b>Scan job schedule created to run every {self.helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705",
+                    parse_mode="HTML",
+                )
 
     def _removeScheduledJob(self, update):
         try:

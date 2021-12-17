@@ -478,7 +478,7 @@ def executeJob(
         _state.action = strategy.getAction(_app, price, current_sim_date)
 
         immediate_action = False
-        margin, profit, sell_fee = 0, 0, 0
+        margin, profit, sell_fee, change_pcnt_high = 0, 0, 0, 0
 
         # Reset the TA so that the last record is the current sim date
         # To allow for calculations to be done on the sim date being processed

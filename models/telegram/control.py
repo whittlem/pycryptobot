@@ -11,7 +11,7 @@ class TelegramControl():
     def _sortInlineButtons(self, buttons: list, callbackTag):
         keyboard = []
         if len(buttons) > 0:
-            if len(buttons) > 1:
+            if len(buttons) > 1 and callbackTag not in ("bot"):
                 keyboard = [[InlineKeyboardButton("All", callback_data=f"{callbackTag}_all")]]
 
             i = 0
@@ -24,7 +24,7 @@ class TelegramControl():
                     keyboard.append([buttons[i]])
                 i += 3
 
-            if callbackTag not in ("start", "resume", "buy", "sell"):
+            if callbackTag not in ("start", "resume", "buy", "sell", "bot"):
                 keyboard.append([InlineKeyboardButton("All (w/o open order)", callback_data=f"{callbackTag}_allclose")])
 
             keyboard.append([InlineKeyboardButton("\U000025C0 Back", callback_data="back")])
@@ -87,8 +87,11 @@ class TelegramControl():
             #         f"{mode} {str(query.data).replace(f'{callbackTag}_', '')} crypto bot"
             #     )
 
-        update.effective_message.reply_html("<b>Operation Complete</b>")
-        # query.edit_message_text("Operation Complete")
+        try:
+            query.edit_message_text("Operation Complete")
+        except:
+            update.effective_message.reply_html("<b>Operation Complete</b>")
+
 
     def askStartBotList(self, update: Update):
         query = update.callback_query
@@ -186,16 +189,17 @@ class TelegramControl():
             # self.helper.read_data(bot)
             bList.update({bot : {"exchange" : self.helper.data["exchange"], "startmethod" : self.helper.data["botcontrol"]["startmethod"]}})
 
-        self._actionBotResponse(update, "stop", "exit", "active")
+        self._actionBotResponse(update, "restart", "exit", "active")
         sleep(1)
-        allstopped = False
-        while allstopped == False:
-            if len(self.helper.getActiveBotList()) == 0:
-                allstopped = True
+        # allstopped = False
+        # while allstopped == False:
+        #     if len(self.helper.getActiveBotList()) == 0:
+        #         allstopped = True
 
         for bot in bList:
-            self.helper.startProcess(bot, bList[bot]["exchange"], "", bList[bot]["startmethod"])
             sleep(10)
+            self.helper.startProcess(bot, bList[bot]["exchange"], "", bList[bot]["startmethod"])
+
 
     def askConfigOptions(self, update: Update):
         keyboard = []
