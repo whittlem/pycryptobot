@@ -861,6 +861,40 @@ class TelegramBot(TelegramBotBase):
                 sleep(30)
                 update.message.reply_text("Pausing before next set", parse_mode="HTML")
 
+    def getBotList(self, update, context):
+        if not self._checkifallowed(context._user_id_and_data[0], update):
+            return None
+
+        query = update.callback_query
+        try:
+            query.answer()
+        except:
+            pass
+
+        buttons = []
+
+        for market in self.helper.getActiveBotList("all"):
+            while self.helper.read_data(market) == False:
+                sleep(0.2)
+
+            if "botcontrol" in self.helper.data:
+                buttons.append(InlineKeyboardButton(market, callback_data=f"bot_{market}"))
+
+        if len(buttons) > 0:
+            try:
+                query.edit_message_text("<b>Select a market</b>",
+                    reply_markup=self.control._sortInlineButtons(buttons, "bot"),
+                    parse_mode="HTML")
+            except:
+                update.effective_message.reply_html(
+                    "<b>Select a market</b>",
+                    reply_markup=self.control._sortInlineButtons(buttons, "bot"))
+        else:
+            try:
+                query.edit_message_text("<b>No bots found.</b>", parse_mode="HTML")
+            except:
+                update.effective_message.reply_html(f"<b>No bots found.</b>")
+
     #     def UpdateBuyMaxSize(self, update, context):
     #
     #         self.helper.read_data("config.json")
@@ -940,7 +974,7 @@ def main():
 
     dp.add_handler(CommandHandler("reopen", botconfig.StartOpenOrderBots))
 
-    # dp.add_handler(CommandHandler("exit", botconfig.ExitBot))
+    dp.add_handler(CommandHandler("ex", botconfig.getBotList))
 
     dp.add_handler(CommandHandler("statsgroup", botconfig.statstwo))
     # Response to Question handler
