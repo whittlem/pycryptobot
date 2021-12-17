@@ -305,6 +305,18 @@ Run all containers in the docker-compose.yml file
 
 `docker-compose up -d`
 
+Builds image and deploys it in one step. 
+
+`docker-compose up -d --build`
+
+Force recreation of the container even if the image has not updated 
+
+`docker-compose up -d --force-recreate`
+
+Pull an updated version of the image from the registry 
+
+`docker-compose pull`
+
 Stop and Destroy all containers in the docker-compose.yml file
 
 `docker-compose down`
