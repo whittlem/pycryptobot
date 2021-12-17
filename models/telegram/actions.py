@@ -127,8 +127,9 @@ class TelegramActions():
 
     def showconfigresponse(self, update):
         """display config settings based on exchanged selected"""
-        with open(os.path.join(self.helper.config_file), "r", encoding="utf8") as json_file:
-            self.helper.config = json.load(json_file)
+        self.helper.read_config()
+        # with open(os.path.join(self.helper.config_file), "r", encoding="utf8") as json_file:
+        #     self.helper.config = json.load(json_file)
 
         query = update.callback_query
         logger.info("called showconfigresponse - %s", query.data)
