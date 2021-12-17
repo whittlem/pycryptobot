@@ -27,6 +27,9 @@ The following software should be installed before starting this guide.
   - [Build a local copy of your beta container](#build-a-local-copy-of-your-beta-container)
   - [Run the beta container](#run-the-beta-container)
 - [One Step Build and Deploy (Advanced)](#one-step-build-and-deploy-advanced)
+  - [Pull](#pull)
+  - [Configure](#configure)
+  - [Deploy](#deploy)
 - [Cross Compiling for ARM](#cross-compiling-for-arm)
   - [Setup Docker Buildx](#setup-docker-buildx)
   - [Tell buildx to use your new image builder](#tell-buildx-to-use-your-new-image-builder)
@@ -201,15 +204,15 @@ This is a one step build and deploy on the same device that you have cloned the 
 ___** Write More Stuff Here ** __
 ** DRAFT **
 
-Pull 
+## Pull 
 
 `git clone --branch beta https://github.com/whittlem/pycryptobot`
 
-Configure
+## Configure
 ** Write Stuff here **
 
 
-Deploy 
+## Deploy 
 
 `docker-compose up -d --build`
 
