@@ -43,6 +43,14 @@ class TelegramHelper():
             ) as outfile:
                 json.dump(self.data, outfile, indent=4)
 
+    def read_config(self):
+        with open(os.path.join(self.config_file), "r", encoding="utf8") as json_file:
+            self.config = json.load(json_file)
+
+    def write_config(self):
+        with open(os.path.join(self.config_file), "w", encoding="utf8") as outfile:
+                json.dump(self.config, outfile, indent=4)
+
     def getActiveBotList(self, state: str = "active") -> list[str]:
         '''Return contents of telegram_data folder'''
         jsonfiles = sorted(os.listdir(os.path.join(self.datafolder, "telegram_data")))
@@ -52,12 +60,13 @@ class TelegramHelper():
             if jsonfiles[i] == "data.json" or jsonfiles[i].__contains__("output.json"):
                 jsonfiles.pop(i)
             else:
-                while self.read_data(jsonfiles[i]) == False:
-                    sleep(0.2)
-                # self.read_data(jsonfiles[i])
-                if "botcontrol" in self.data:
-                    if not self.data["botcontrol"]["status"] == state:
-                        jsonfiles.pop(i)
+                if not state == "all":
+                    while self.read_data(jsonfiles[i]) == False:
+                        sleep(0.2)
+                    # self.read_data(jsonfiles[i])
+                    if "botcontrol" in self.data:
+                        if not self.data["botcontrol"]["status"] == state:
+                            jsonfiles.pop(i)
             i -= 1
         jsonfiles.sort()
         return [x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles]

@@ -28,15 +28,58 @@ class ConfigEditor():
         # fallbacks=[CommandHandler('cancel', self.cancel)],
         # )
 
-    def getConfigOptions(self):
-        keyboard = [
-            [
-                InlineKeyboardButton("BuyMaxSize", callback_data="edit_buymaxsize"),
-            ],
-            [InlineKeyboardButton("\U000025C0 Back", callback_data="back")],
-        ]
+    def getConfigOptions(self, update):
+        query = update.callback_query
 
-        return InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
+        normalProperties = {
+            "live": "live Mode",
+            "sellatloss": "Sell at Loss",
+            "sellatresistance": "Sell at Resistance",
+            "autorestart": "Auto Restart",
+            "graphs": "Graphs",
+            "verbose": "Verbose Logging",
+            "websocket": "WebSockets"
+        }
+        disableProperties = {
+            "disablebullonly": "Bull Only Mode",
+            "disablebuynearhigh": "Buy Near High",
+            "disablebuyema": "Buy EMA",
+            "disablebuymacd": "Buy MACD",
+            "disablebuyobv": "Buy OBV",
+            "disablebuyelderray": "Buy Elder Ray",
+            "disablefailsafefibonaccilow": "Fibonacci Low",
+            "disableprofitbankreversal": "Profit Bank Reversal",
+        }
+
+        buttons = []
+        for prop in normalProperties:
+            buttons.append(
+                InlineKeyboardButton(
+                        f"{'Disable' if self.helper.config['coinbasepro']['config'][prop] == 1 else 'Enable'} {normalProperties[prop]}",
+                        callback_data=f"{'disable' if self.helper.config['coinbasepro']['config'][prop] == 1 else 'enable' }_{prop}")
+            )
+        for prop in disableProperties:
+            buttons.append(
+                InlineKeyboardButton(
+                        f"{'Enable' if self.helper.config['coinbasepro']['config'][prop] == 1 else 'Disable'} {disableProperties[prop]}",
+                        callback_data=f"{'disable' if self.helper.config['coinbasepro']['config'][prop] == 1 else 'enable' }_{prop}")
+            )
+        keyboard = []
+        i = 0
+        while i <= len(buttons) - 1:
+            if len(buttons) - 1 >= i + 1:
+                keyboard.append([buttons[i], buttons[i + 1]])
+            else:
+                keyboard.append([buttons[i]])
+            i += 2
+
+        keyboard.append([InlineKeyboardButton("\U000025C0 Back", callback_data="back")])
+
+        query.edit_message_text(
+            "<b>Coinbase Pro Config Options.</b>",
+            reply_markup=InlineKeyboardMarkup(keyboard, one_time_keyboard=True),
+            parse_mode="HTML",
+        )
 
     def cancel(self, update: Update, context: CallbackContext) -> int:
         """Cancels and ends the conversation."""
@@ -91,3 +134,11 @@ class ConfigEditor():
             pass
 
         # update.message.reply_text("Config Updated")
+    
+    def disable_option(self, exchange, parameter):
+        self.helper.config[exchange]["config"][parameter] = 0
+        self.helper.write_config()
+
+    def enable_option(self, exchange, parameter):
+        self.helper.config[exchange]["config"][parameter] = 1
+        self.helper.write_config()
