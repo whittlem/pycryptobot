@@ -8,6 +8,10 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [4.6.2] - 2021-12-18
+
+- Fix bug in trailingbuypcnt code that could cause the waiting price to continually change and prevent a buy
+
 ## [4.6.1] - 2021-12-09
 
 - Add trailingbuypcnt as config option with a default of 0 and follow price lower.  See README for details.
@@ -37,7 +41,6 @@ Upgrade library dependencies (if required):
 - Increase isMarketValid to 10 chars for base currency regex
 - Add marketmultibuycheck config option to prevent multiple buys with some problem market pairs
 - some minor file formatting cleanup with VSCode format command
-
 
 ## [4.5.1] - 2021-11-22
 

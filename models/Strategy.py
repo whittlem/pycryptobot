@@ -489,40 +489,40 @@ class Strategy:
         # If buy signal, save the price and check if it decreases before buying.
         trailing_buy_logtext = ""
         waitpcnttext = ""
-        if self.state.trailing_buy == 0:
-            self.state.waiting_buy_price = price
+        if state.trailing_buy == 0:
+            state.waiting_buy_price = price
             pricechange = 0
-        elif self.state.trailing_buy == 1 and self.state.waiting_buy_price > 0:
+        elif state.trailing_buy == 1 and state.waiting_buy_price > 0:
             pricechange = (
-                (price - self.state.waiting_buy_price) / self.state.waiting_buy_price * 100
+                (price - state.waiting_buy_price) / state.waiting_buy_price * 100
             )
-            if price <= self.state.waiting_buy_price:
-                self.state.waiting_buy_price = price
+            if price < state.waiting_buy_price:
+                state.waiting_buy_price = price
                 waitpcnttext += f"Price decreased - resetting wait price. "
 
-        waitpcnttext += f"** {self.app.getMarket()} - "
-        if pricechange < self.app.getTrailingBuyPcnt(): # get pcnt from config, if not, use 0%
-            self.state.action = "WAIT"
-            self.state.trailing_buy = 1
-            if self.app.getTrailingBuyPcnt() > 0:
-                trailing_buy_logtext = f" - Wait Chg: {_truncate(pricechange,2)}%/{self.app.getTrailingBuyPcnt()}%"
-                waitpcnttext += f"Waiting to buy until {self.state.waiting_buy_price} increases {self.app.getTrailingBuyPcnt()}% - change {_truncate(pricechange,2)}%"
+        waitpcnttext += f"** {app.getMarket()} - "
+        if pricechange < app.getTrailingBuyPcnt(): # get pcnt from config, if not, use 0%
+            state.action = "WAIT"
+            state.trailing_buy = 1
+            if app.getTrailingBuyPcnt() > 0:
+                trailing_buy_logtext = f" - Wait Chg: {_truncate(pricechange,2)}%/{app.getTrailingBuyPcnt()}%"
+                waitpcnttext += f"Waiting to buy until {state.waiting_buy_price} increases {app.getTrailingBuyPcnt()}% - change {_truncate(pricechange,2)}%"
             else:
                 trailing_buy_logtext = f" - Wait Chg: {_truncate(pricechange,2)}%"
-                waitpcnttext += f"Waiting to buy until {self.state.waiting_buy_price} stops decreasing - change {_truncate(pricechange,2)}%"
+                waitpcnttext += f"Waiting to buy until {state.waiting_buy_price} stops decreasing - change {_truncate(pricechange,2)}%"
         else:
-            self.state.trailing_buy = 0
-            trailing_buy_logtext = f" - Ready Chg: {_truncate(pricechange,2)}%/{self.app.getTrailingBuyPcnt()}%"
-            waitpcnttext += f"Ready to buy. {self.state.waiting_buy_price} change of {_truncate(pricechange,2)}% is above setting of {self.app.getTrailingBuyPcnt()}%"
-            self.state.waiting_buy_price = 0
+            state.action = "BUY"
+            state.trailing_buy = 1
+            trailing_buy_logtext = f" - Ready Chg: {_truncate(pricechange,2)}%/{app.getTrailingBuyPcnt()}%"
+            waitpcnttext += f"Ready to buy. {state.waiting_buy_price} change of {_truncate(pricechange,2)}% is above setting of {app.getTrailingBuyPcnt()}%"
 
-        if self.app.isVerbose() and (
-            not self.app.isSimulation()
-            or (self.app.isSimulation() and not self.app.simResultOnly())
+        if app.isVerbose() and (
+            not app.isSimulation()
+            or (app.isSimulation() and not app.simResultOnly())
         ):
             Logger.info(waitpcnttext)
 
-        return self.state.action, self.state.trailing_buy, trailing_buy_logtext
+        return state.action, state.trailing_buy, trailing_buy_logtext
 
 
     def getAction(self, app, price, dt):
