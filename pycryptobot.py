@@ -560,7 +560,6 @@ def executeJob(
         # handle overriding wait actions (e.g. do not sell if sell at loss disabled!, do not buy in bull if bull only)
         if strategy.isWaitTrigger(_app, margin, goldencross):
             _state.action = "WAIT"
-            _state.trailing_buy = 0
             immediate_action = False
 
         if _app.enableImmediateBuy():
@@ -1160,7 +1159,6 @@ def executeJob(
                                 _state.last_buy_size,
                                 _app.getBuyPercent(),
                             )
-                            _state.trailing_buy = 0
 
                             now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
                             _app.notifyTelegram(
@@ -1204,6 +1202,7 @@ def executeJob(
                             )
                             state.last_api_call_datetime -= timedelta(seconds=60)
                             telegram_bot.add_open_order()
+                            _state.trailing_buy = 0
                         except:
                             Logger.warning("Unable to place order")
                             state.last_api_call_datetime -= timedelta(seconds=60)
