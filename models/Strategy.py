@@ -511,6 +511,7 @@ class Strategy:
                 trailing_buy_logtext = f" - Wait Chg: {_truncate(pricechange,2)}%"
                 waitpcnttext += f"Waiting to buy until {state.waiting_buy_price} stops decreasing - change {_truncate(pricechange,2)}%"
         else:
+            state.action = "BUY"
             trailing_buy_logtext = f" - Ready Chg: {_truncate(pricechange,2)}%/{app.getTrailingBuyPcnt()}%"
             waitpcnttext += f"Ready to buy. {state.waiting_buy_price} change of {_truncate(pricechange,2)}% is above setting of {app.getTrailingBuyPcnt()}%"
 
