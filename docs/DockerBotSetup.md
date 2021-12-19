@@ -30,6 +30,7 @@ The following software should be installed before starting this guide.
   - [Pull](#pull)
   - [Configure](#configure)
   - [Deploy](#deploy)
+  - [Update Container](#update-container)
 - [Cross Compiling for ARM](#cross-compiling-for-arm)
   - [Setup Docker Buildx](#setup-docker-buildx)
   - [Tell buildx to use your new image builder](#tell-buildx-to-use-your-new-image-builder)
@@ -101,8 +102,6 @@ If you wish to use a different branch then change the branch name from beta to y
 At this step you can go in and update or patch any of the files in the pycryptobot folder, do not add your personal config or keys to this folder as you do not want these to be baked into the image.
 
 If you have a git patch file this is where you can apply it using this command replacing the patch file name as needed.
-
-** copy pasta **  Make pretty and do stuff with!
 
 ![Apply Patch](images/applying_patch.png)
 
@@ -199,20 +198,33 @@ Your scanner is now alive and ready to play.
 
 # One Step Build and Deploy (Advanced)
 
-This is a one step build and deploy on the same device that you have cloned the repository on. 
+This is a one step build and deploy on the same device that you have cloned the repository on.  This is good for those who are testing new builds or want to be on the latest beta and want the ability to update in one step. 
 
-___** Write More Stuff Here ** __
-** DRAFT **
+Note that this comes with some dangers as we will be "baking" building in our own personal configuration into the docker container. This is not normal docker procedure as it comes with the risk that if the container is pushed to a public repository then you may expose your APIkeys to the world. 
+
+This risk is mitigated by not tagging the image with a name eg calling it pycryptobot only rather than docker_username/pycryptobot and secondly we don't run the docker push command. 
 
 ## Pull 
 
+Pull the latest version of your preferred branch. 
+
 `git clone --branch beta https://github.com/whittlem/pycryptobot`
 
-## Configure
-** Write Stuff here **
+Make any changes and [Patch as required](#patch-as-required)
 
+## Configure
+
+Update the configurations in the pycryptobot folder, you can still folder map them using the volumes if you wish to keep your configuration separate to the pycryptobot git folder. 
+
+Update the docker-compose.yml file inside of the pycryptobot folder, update your volume mappings as required and add this line to the services section as shown below. 
+
+`entrypoint: ["python3", "-u", "telegram_bot.py"]`
+
+Adding this line in will override the default entrypoint and start the telegram bot, omitting this line will use the default entrypoint and will only trade the coin specified in the config.json file. 
 
 ## Deploy 
+
+Run this command from within the pycryptobot git folder and it will build the latest version of the container from the files you have locally on your device and then start the container immediately. 
 
 `docker-compose up -d --build`
 
@@ -239,6 +251,19 @@ services:
           restart_policy:
             condition: on-failure
 ```
+
+## Update Container
+
+To update to the latest version of your current branch perform the following steps. 
+
+Pull the latest files from github.
+
+`git pull`
+
+Rebuild and run your container. 
+
+`docker-compose up -d --build`
+
 
 # Cross Compiling for ARM
 
