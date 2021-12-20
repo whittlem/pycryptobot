@@ -14,7 +14,7 @@ def merge_config_and_args(exchange_config, args):
 
 
 def isCurrencyValid(currency):
-    p = re.compile(r"^[1-9A-Z]{2,5}$")
+    p = re.compile(r"^[0-9A-Z]{1,20}$")
     return p.match(currency)
 
 
@@ -434,6 +434,17 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("enableimmediatebuy must be of type int")
 
+    if "sellsmartswitch" in config:
+        if isinstance(config["sellsmartswitch"], int):
+            if config["sellsmartswitch"] in [0, 1]:
+                app.sell_smart_switch = config["sellsmartswitch"]
+                if app.sell_smart_switch == 1:
+                    app.sell_smart_switch = 1
+                else:
+                    app.sell_smart_switch = 0
+        else:
+            raise TypeError("sellsmartswitch must be of type int")
+
     # backward compatibility
     if "nosellatloss" in config:
         if isinstance(config["nosellatloss"], int):
@@ -483,6 +494,34 @@ def defaultConfigParse(app, config):
                 app.buymaxsize = config["buymaxsize"]
         else:
             raise TypeError("buymaxsize must be of type int or float")
+
+    if "buyminsize" in config:
+        if isinstance(config["buyminsize"], (int, float)):
+            if config["buyminsize"] > 0:
+                app.buyminsize = config["buyminsize"]
+        else:
+            raise TypeError("buyminsize must be of type int or float")
+
+    if "buylastsellsize" in config:
+        if isinstance(config["buylastsellsize"], int):
+            if bool(config["buylastsellsize"]):
+                app.buylastsellsize = True
+        else:
+            raise TypeError("buylastsellsize must be of type int")
+
+    if "trailingbuypcnt" in config:
+        if isinstance(config["trailingbuypcnt"], (int, float)):
+            if config["trailingbuypcnt"] > 0:
+                app.trailingbuypcnt = config["trailingbuypcnt"]
+        else:
+            raise TypeError("trailingbuypcnt must be of type int or float")
+
+    if "marketmultibuycheck" in config:
+        if isinstance(config["marketmultibuycheck"], int):
+            if bool(config["marketmultibuycheck"]):
+                app.marketmultibuycheck = True
+        else:
+            raise TypeError("marketmultibuycheck must be of type int")
 
     if "logbuysellinjson" in config:
         if isinstance(config["logbuysellinjson"], int):
