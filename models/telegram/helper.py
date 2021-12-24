@@ -4,6 +4,7 @@ import json
 
 from time import sleep
 from datetime import datetime
+from typing import List
 
 class TelegramHelper():
     def __init__(self, datafolder, config, configfile) -> None:
