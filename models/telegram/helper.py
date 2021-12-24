@@ -4,6 +4,7 @@ import json
 
 from time import sleep
 from datetime import datetime
+from typing import List
 
 class TelegramHelper():
     def __init__(self, datafolder, config, configfile) -> None:
@@ -43,7 +44,7 @@ class TelegramHelper():
             ) as outfile:
                 json.dump(self.data, outfile, indent=4)
 
-    def getActiveBotList(self, state: str = "active") -> list[str]:
+    def getActiveBotList(self, state: str = "active") -> List[str]:
         '''Return contents of telegram_data folder'''
         jsonfiles = sorted(os.listdir(os.path.join(self.datafolder, "telegram_data")))
 
