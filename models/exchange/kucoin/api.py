@@ -668,7 +668,7 @@ class AuthAPI(AuthAPIBase):
                     )
                 else:
                     Logger.error(
-                        "error: "
+                        "Kucoin authAPI Error: "
                         + method.upper()
                         + " ("
                         + "{}".format(resp.status_code)
