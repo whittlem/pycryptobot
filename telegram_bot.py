@@ -245,7 +245,7 @@ class TelegramBot(TelegramBotBase):
             return ConversationHandler.END
 
         if self.exchange in ("coinbasepro", "kucoin"):
-            p = re.compile(r"^[1-9A-Z]{2,9}\-[1-9A-Z]{2,5}$")
+            p = re.compile(r"^[1-9A-Z]{2,20}\-[1-9A-Z]{2,5}$")
             if not p.match(update.message.text):
                 update.message.reply_text(
                     "Invalid market format", reply_markup=ReplyKeyboardRemove()
