@@ -386,7 +386,6 @@ def executeJob(
                 )
     # change_pcnt_high set to 0 here to prevent errors on some tokens for some users.
     # Need to track down main source of error.  This allows bots to launch in those instances.
-    change_pcnt_high = 0
     if len(df_last) > 0:
         now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -480,7 +479,7 @@ def executeJob(
         _state.action = strategy.getAction(_app, price, current_sim_date)
 
         immediate_action = False
-        margin, profit, sell_fee = 0, 0, 0
+        margin, profit, sell_fee, change_pcnt_high = 0, 0, 0, 0
 
         # Reset the TA so that the last record is the current sim date
         # To allow for calculations to be done on the sim date being processed
@@ -560,7 +559,7 @@ def executeJob(
                 immediate_action = True
 
         # handle overriding wait actions (e.g. do not sell if sell at loss disabled!, do not buy in bull if bull only)
-        if strategy.isWaitTrigger(_app, margin, goldencross):
+        if not immediate_action and strategy.isWaitTrigger(_app, margin, goldencross):
             _state.action = "WAIT"
             immediate_action = False
 
