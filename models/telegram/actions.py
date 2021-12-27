@@ -280,7 +280,7 @@ class TelegramActions():
                         break
                     
                     if self.helper.config["scanner"]["enableleverage"] == False \
-                            and (str(row).__contains__(f"DOWN{quote}") or str(row).__contains__(f"UP{quote}") or str(row).__contains__(f"3L{quote}") or str(row).__contains__(f"3S{quote}")):
+                            and (str(row).__contains__(f"DOWN{quote}") or str(row).__contains__(f"UP{quote}") or str(row).__contains__(f"3L-{quote}") or str(row).__contains__(f"3S-{quote}")):
                         continue
 
                     if row in self.helper.data["scannerexceptions"]:
