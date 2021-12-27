@@ -8,12 +8,17 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [5.0.2] - 2021-12-26
+
+- revised fix for change_pcnt_high variable from previous
+- fixed isSellTrigger immediate action it was waiting until candle close
+
 ## [5.0.1] - 2021-12-23
 
 - change tgbot manual buy/sell check
 - fix change_pcnt_high variable error for some tokens
 - modified tgbot helper.py code so that it does not require Python 3.9
-- Moved log and telegram output messages for buy and sell transaction to display after API call
+- Moved log and telegram output messages for buy and sell transaction to display after API call to help prevent notifications of trades that hadn't occurred yet if API error.
 
 ## [5.0.0] - 2021-12-20
 
