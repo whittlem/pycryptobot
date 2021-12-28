@@ -888,11 +888,16 @@ class PublicAPI(AuthAPIBase):
                 ["date", "market", "granularity", "low", "high", "open", "close", "volume"]
             ]
 
-            df["low"] = pd.to_numeric(df["low"])
-            df["high"] = pd.to_numeric(df["high"])
-            df["open"] = pd.to_numeric(df["open"])
-            df["close"] = pd.to_numeric(df["close"])
-            df["volume"] = pd.to_numeric(df["volume"])
+            #df["low"] = pd.to_numeric(df["low"])
+            #df["high"] = pd.to_numeric(df["high"])
+            #df["open"] = pd.to_numeric(df["open"])
+            #df["close"] = pd.to_numeric(df["close"])
+            #df["volume"] = pd.to_numeric(df["volume"])
+            df["low"] = df["low"].astype(float)
+            df["high"] = df["high"].astype(float)
+            df["open"] = df["open"].astype(float)
+            df["close"] = df["close"].astype(float)
+            df["volume"] = df["volume"].astype(float)
             # convert_columns = {'close': float}
             # resp.asType(convert_columns)
         return df
@@ -1129,9 +1134,10 @@ class WebSocket(AuthAPIBase):
         self.start_time = datetime.now()
 
     def _keepalive(self, interval=30):
-        while self.ws.connected:
-            self.ws.ping("keepalive")
-            time.sleep(interval)
+        if self.ws is not None:
+            while self.ws.connected:
+                self.ws.ping("keepalive")
+                time.sleep(interval)
 
     def _listen(self):
         self.keepalive.start()

@@ -835,19 +835,34 @@ class TechnicalAnalysis:
     def onBalanceVolume(self) -> ndarray:
         """Calculate On-Balance Volume (OBV)"""
 
-        return where(
-            self.df["close"] == self.df["close"].shift(1),
-            0,
-            where(
-                self.df["close"] > self.df["close"].shift(1),
-                self.df["volume"],
+        try:
+            return where(
+                self.df["close"] == self.df["close"].shift(1),
+                0,
                 where(
-                    self.df["close"] < self.df["close"].shift(1),
-                    -self.df["volume"],
-                    self.df.iloc[0]["volume"],
+                    self.df["close"] > self.df["close"].shift(1),
+                    self.df["volume"],
+                    where(
+                        self.df["close"] < self.df["close"].shift(1),
+                        -self.df["volume"],
+                        self.df.iloc[0]["volume"],
+                    ),
                 ),
-            ),
-        ).cumsum()
+            ).cumsum()
+        except:
+            return where(
+                self.df["close"] == self.df["close"].shift(1),
+                0,
+                where(
+                    self.df["close"] > self.df["close"].shift(1),
+                    self.df["volume"],
+                    where(
+                        self.df["close"] < self.df["close"].shift(1),
+                        -float(self.df["volume"]),
+                        self.df.iloc[0]["volume"],
+                    ),
+                ),
+            ).cumsum()
 
     def addOBV(self) -> None:
         """Add the On-Balance Volume (OBV) to the DataFrame"""
@@ -1455,22 +1470,30 @@ class TechnicalAnalysis:
     def __isSupport(self, df, i) -> bool:
         """Is support level? (private function)"""
 
-        c1 = df["low"][i] < df["low"][i - 1]
-        c2 = df["low"][i] < df["low"][i + 1]
-        c3 = df["low"][i + 1] < df["low"][i + 2]
-        c4 = df["low"][i - 1] < df["low"][i - 2]
-        support = c1 and c2 and c3 and c4
-        return support
+        try:
+            c1 = df["low"][i] < df["low"][i - 1]
+            c2 = df["low"][i] < df["low"][i + 1]
+            c3 = df["low"][i + 1] < df["low"][i + 2]
+            c4 = df["low"][i - 1] < df["low"][i - 2]
+            support = c1 and c2 and c3 and c4
+            return support
+        except:
+            support = False
+            return support
 
     def __isResistance(self, df, i) -> bool:
         """Is resistance level? (private function)"""
 
-        c1 = df["high"][i] > df["high"][i - 1]
-        c2 = df["high"][i] > df["high"][i + 1]
-        c3 = df["high"][i + 1] > df["high"][i + 2]
-        c4 = df["high"][i - 1] > df["high"][i - 2]
-        resistance = c1 and c2 and c3 and c4
-        return resistance
+        try:  
+            c1 = df["high"][i] > df["high"][i - 1]
+            c2 = df["high"][i] > df["high"][i + 1]
+            c3 = df["high"][i + 1] > df["high"][i + 2]
+            c4 = df["high"][i - 1] > df["high"][i - 2]
+            resistance = c1 and c2 and c3 and c4
+            return resistance
+        except:
+            resistance = False
+            return resistance
 
     def __isFarFromLevel(self, l) -> float:
         """Is far from support level? (private function)"""

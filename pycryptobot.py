@@ -386,6 +386,7 @@ def executeJob(
                 )
     # change_pcnt_high set to 0 here to prevent errors on some tokens for some users.
     # Need to track down main source of error.  This allows bots to launch in those instances.
+    
     if len(df_last) > 0:
         now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
