@@ -835,34 +835,19 @@ class TechnicalAnalysis:
     def onBalanceVolume(self) -> ndarray:
         """Calculate On-Balance Volume (OBV)"""
 
-        try:
-            return where(
-                self.df["close"] == self.df["close"].shift(1),
-                0,
+        return where(
+            self.df["close"] == self.df["close"].shift(1),
+            0,
+            where(
+                self.df["close"] > self.df["close"].shift(1),
+                self.df["volume"],
                 where(
-                    self.df["close"] > self.df["close"].shift(1),
-                    self.df["volume"],
-                    where(
-                        self.df["close"] < self.df["close"].shift(1),
-                        -self.df["volume"],
-                        self.df.iloc[0]["volume"],
-                    ),
+                    self.df["close"] < self.df["close"].shift(1),
+                    -self.df["volume"].apply(lambda x: float(x)),
+                    self.df.iloc[0]["volume"],
                 ),
-            ).cumsum()
-        except:
-            return where(
-                self.df["close"] == self.df["close"].shift(1),
-                0,
-                where(
-                    self.df["close"] > self.df["close"].shift(1),
-                    self.df["volume"],
-                    where(
-                        self.df["close"] < self.df["close"].shift(1),
-                        -float(self.df["volume"]),
-                        self.df.iloc[0]["volume"],
-                    ),
-                ),
-            ).cumsum()
+            ),
+        ).cumsum()
 
     def addOBV(self) -> None:
         """Add the On-Balance Volume (OBV) to the DataFrame"""
