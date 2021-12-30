@@ -214,6 +214,9 @@ class PyCryptoBot(BotConfig):
         except Exception:  # pylint: disable=broad-except
             return 0
 
+    def trailingImmediateBuy(self) -> bool:
+        return self.trailingimmediatebuy
+
     def marketMultiBuyCheck(self) -> bool:
         return self.marketmultibuycheck
 
@@ -802,6 +805,15 @@ class PyCryptoBot(BotConfig):
     def trailingStopLossTrigger(self):
         return self.trailing_stop_loss_trigger
 
+    def preventLoss(self):
+        return self.preventloss
+
+    def preventLossTrigger(self):
+        return self.preventlosstrigger
+
+    def preventLossMargin(self):
+        return self.preventlossmargin
+
     def allowSellAtLoss(self) -> bool:
         return self.sell_at_loss == 1
 
@@ -1381,6 +1393,24 @@ class PyCryptoBot(BotConfig):
                 str(self.trailingStopLossTrigger()) + "%  --trailingstoplosstrigger",
             )
 
+        if self.preventLoss():
+            text_box.line(
+                "Prevent Loss",
+                str(self.preventLoss()) + "  --preventloss",
+            )
+
+        if self.preventLossTrigger() != None:
+            text_box.line(
+                "Prevent Loss Trigger",
+                str(self.preventLossTrigger()) + "%  --preventlosstrigger",
+            )
+
+        if self.preventLossMargin() != None:
+            text_box.line(
+                "Prevent Loss Margin",
+                str(self.preventLossMargin()) + "%  --preventlossmargin",
+            )
+
         text_box.line("Sell At Loss", str(self.allowSellAtLoss()) + "  --sellatloss ")
         text_box.line(
             "Sell At Resistance", str(self.sellAtResistance()) + "  --sellatresistance"
@@ -1482,6 +1512,12 @@ class PyCryptoBot(BotConfig):
         if self.getTrailingBuyPcnt():
             text_box.line(
                 "Trailing Buy Percent", str(self.getTrailingBuyPcnt()) + "  --trailingbuypcnt <size>"
+            )
+
+        if self.trailingImmediateBuy():
+            text_box.line(
+                "Immediate buy for trailingbuypcnt",
+                str(self.trailingImmediateBuy()) + "  --trailingImmediateBuy",
             )
 
         if self.marketMultiBuyCheck():

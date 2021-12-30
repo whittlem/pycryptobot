@@ -8,6 +8,14 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [5.1.0] - 2021-12-27
+
+- added trailingimmediatebuy option to buy as soon as trailingbuypcnt is reached, instead of waiting until candle close
+- added preventloss option to enable selling prior to margin reaching 0% profit to prevent loss
+- added preventlosstrigger - margin set point to start watching for preventloss (see readme)
+- added preventlossmargin - margin set point to sell at for preventloss (see readme)
+- reordered some test in isSellTrigger to minimize processing on every pass under some conditions
+
 ## [5.0.2] - 2021-12-26
 
 - revised fix for change_pcnt_high variable from previous

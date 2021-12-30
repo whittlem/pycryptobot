@@ -1,7 +1,7 @@
 [![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg) [![Tests](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)
 
 
-# Python Crypto Bot v5.0.2 (pycryptobot)
+# Python Crypto Bot v5.1.0 (pycryptobot)
 
 ## Join our chat on Telegram
 
@@ -379,9 +379,7 @@ Special buy cases:
 * "buymaxsize" specifies a fixed max amount of the quote currency to buy with.
 * "buylastsellsize" when enabled, bot will buy the same size as the last sell size for the current market.
 * "trailingbuypcnt" specifies the percentage for the price to increase before placing buy order after receiving buy signal
-        The default percentage is 0%.  If the price drops after receiving buy signal, the bot will automatically follow the price
-        down and watch for it to have a positive percentage.  You are able to adjust this to any number above zero that you would 
-        like to see as an increase before buying.  Many times the price falls below zero right after a buy signal is received.
+* "trailingimmediatebuy" will trigger an immediate buy if "trailingbuypcnt" is reached.  Use caution, may not advisable on all markets. Default is to wait until candle close to process buy like a standard buy signal.
 * "marketmultibuycheck" when enabled, bot will perform an additional check on base and quote balance to prevent multiple buys.
         It has been determined that some market pairs have problem API responses which can create a multiple buy issue.
         Please Note:  "marketmultibuycheck" will conflict with configurations that use "sellpercent".
@@ -402,6 +400,10 @@ Special sell cases:
 * If the margin exceeds 3% and the price reaches a Fibonacci band it will sell to lock in profit
 * If the margin exceeds 3% but a strong reversal is detected with negative OBV and MACD < Signal it will sell
 * "sellatloss" set to 0 prevents selling at a loss
+* "preventloss" set to 1 to force a sell before margin is negative (losing money on active trade).  Default trigger point is 1%.  If nosellmaxpcnt is set it will be used as the default, unless preventlosstrigger is set to set a custom trigger point.
+* "preventlosstrigger" is the margin set point that will trigger/allow the preventloss function to start watching the margin and will sell when margin reaches 0.1% or lower unless preventlossmargin is set.
+  NOTE: to disable preventlosstrigger and use preventlossmargin only, set the trigger to 0.
+* "preventlossmargin" is the margin set point that will cause an immediate sell to prevent a loss.  If this is not set, a default of 0.1% will be used.  "preventlossmargin" can be used by itself or in conjunction with "preventlosstrigger".
 
 ## Optional Options
 
@@ -434,6 +436,22 @@ Special sell cases:
 ## "Sell At Loss" explained
 
 The "sellatloss" option disabled has it's advantages and disadvantages. It does prevent any losses but also prevents you from exiting a market before a crash or bear market. Sometimes it's better to make an occasional small loss and make it up with several buys than be conservative and potentially lock a trade for weeks if not months. It happened to me while testing this with the last crash (after Elon's tweet!). Three of my bots did not sell while the profit dropped to -10 to -20%. It did bounce back and I made over 3% a trade with any losses but I also lost out of loads of trading opportunities. It's really a matter of preference. Maybe some markets would be more appropriate than others for this.
+
+## "Prevent Loss" explained
+
+The "preventloss" option and it's corresponding settings add more options to control losses or minimize losses on trades.  "preventloss" does not depend on "sellatloss" to work.  The idea of Prevent Loss is to allow you to still use all the other sell criteria and the no sell zones as you would like, but still sell prior to the margin dropping below 0%.  Note: there are still transaction fees from the exchange, this has no effect on fees.  You could increase preventlossmargin to account for fees if you would like.
+If "preventloss" is set to 1 and enabled, it will watch for the "preventlosstrigger" margin percentage to be reached. If "preventloss" is enabled and "preventlosstrigger" is NOT in you configuration the default "preventlosstrigger" is 1%.  Once the trigger percentage is reached, preventloss will monitor the margin until it falls to the "preventlossmargin" set point.  If "preventlossmargin" is not in your configuration, it has a default setting of 0.1% to make the best attempt to trigger a sell before the margin drops below 0%.  On very fast falling prices, the margin could fall below 0% before the transaction is processed by the exchange.  Set at a level that you are comfortable with so the margin falls in the range you would like.
+
+"preventloss" and "preventlossmargin" can be used without "preventlosstrigger" if you choose.  Set "preventlosstrigger" to 0 in your config to disable it and sell any time the margin drops below the "preventlosmargin" set point.  It is assumed that most users won't want this option which is why you have to disable "preventlosstrigger" for it to function in this manner.
+
+Prevent Loss is not a required option.  It allows a little more control over your profits and losses.
+
+## Trailing Buy Percent Explained
+
+When the bot issues a standard buy signal via all normal methods, it waits until the next candle close to buy.  Many times after a buy signal is given, the price for the pair in question will still fall.  Trailing buy will, by default,  check to make sure the price is moving in a positive/upward direction before it buys.  If the price goes lower after the buy signal is given, trailing buy will watch the price changes and will prevent a buy if the price is dropping until it starts to increase again.  This will actually make the bot buy at the lowest price monitored after the buy signal was received.  The default is 0% of increase, so it will only prevent buying from the buy signal until next candle close if the price is decreasing.  At close, if the price is still falling, it will delay the buy again until next close.  This essentially takes an extra step to help stop you from possibly losing profit immediately after a buy, especially when using MACD signals only.
+"trailingbuypcnt" can be set at any percentage above 0.  Run some simualutions or use live: 0 to test the results of various percentage set points.  During testing, 1% had pretty good results, but all trade settings will vary based on market and pair being traded.  It is always recommended that you run tests before trading live with real funds.
+
+"trailingimmediatebuy" is another setting that can be used in conjunction with "trailingbuypcnt".  If "trailingimmediatebuy" is enabled (set to 1), "trailingbuypcnt" will buy immediately upon the set point being reached, instead of waiting until candle close.  Again, run tests to determine the best settings. 
 
 ## Live Trading
 
