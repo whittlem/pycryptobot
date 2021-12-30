@@ -384,8 +384,7 @@ def executeJob(
                     executeJob,
                     (sc, _app, _state, _technical_analysis, _websocket),
                 )
-    # change_pcnt_high set to 0 here to prevent errors on some tokens for some users.
-    # Need to track down main source of error.  This allows bots to launch in those instances.
+
     if len(df_last) > 0:
         now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -547,6 +546,7 @@ def executeJob(
             # handle immediate sell actions
             if strategy.isSellTrigger(
                 _app,
+                _state,
                 price,
                 _technical_analysis.getTradeExit(price),
                 margin,
@@ -559,7 +559,7 @@ def executeJob(
                 immediate_action = True
 
         # handle overriding wait actions (e.g. do not sell if sell at loss disabled!, do not buy in bull if bull only)
-        if not immediate_action and strategy.isWaitTrigger(_app, margin, goldencross):
+        if immediate_action is not True and strategy.isWaitTrigger(_app, margin, goldencross):
             _state.action = "WAIT"
             immediate_action = False
 
@@ -576,8 +576,8 @@ def executeJob(
 
         # If buy signal, save the price and check for decrease/increase before buying.
         trailing_buy_logtext = ""
-        if _state.action == "BUY" and immediate_action != True:
-            _state.action, _state.trailing_buy, trailing_buy_logtext = strategy.checkTrailingBuy(_app, _state, price)
+        if _state.action == "BUY" and immediate_action is not True:
+            _state.action, _state.trailing_buy, trailing_buy_logtext, immediate_action = strategy.checkTrailingBuy(_app, _state, price)
 
         bullbeartext = ""
         if _app.disableBullOnly() is True or (
