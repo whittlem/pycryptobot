@@ -66,7 +66,7 @@ class AppState:
         self.last_df_index = ""
         self.sell_count = 0
         self.sell_sum = 0
-
+        self.prevent_loss = 0
         self.margintracker = 0
         self.profitlosstracker = 0
         self.feetracker = 0

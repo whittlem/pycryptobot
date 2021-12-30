@@ -51,6 +51,9 @@ class BotConfig:
         self.sell_at_loss = 1
         self.smart_switch = 1
         self.sell_smart_switch = 0
+        self.preventloss = False
+        self.preventlosstrigger = None
+        self.preventlossmargin = None
 
         self.telegram = False
 
@@ -67,6 +70,7 @@ class BotConfig:
 
         self.buylastsellsize = False
         self.trailingbuypcnt = 0
+        self.trailingimmediatebuy = False
         self.marketmultibuycheck = False
 
         self.sellatresistance = False
@@ -407,6 +411,21 @@ class BotConfig:
             help="optionally set when the trailing stop loss should start",
         )
         parser.add_argument(
+            "--preventloss",
+            action="store_true",
+            help="optionally sell before margin is negative",
+        )
+        parser.add_argument(
+            "--preventlosstrigger",
+            type=float,
+            help="optionally set when the trigger when preventloss should start",
+        )
+        parser.add_argument(
+            "--preventlossmargin",
+            type=float,
+            help="optionally set margin to sell at regardless of other settings",
+        )
+        parser.add_argument(
             "--sim", type=str, help="simulation modes: fast, fast-sample, slow-sample"
         )
         parser.add_argument(
@@ -461,6 +480,7 @@ class BotConfig:
 
         parser.add_argument("--buylastsellsize", action="store_true", help="additional check for market multiple buys")
         parser.add_argument("--trailingbuypcnt", type=float, help="percent of increase to wait before buying")
+        parser.add_argument("--trailingimmediatebuy", action="store_true", help="immediate buy if trailingbuypcnt reached")
         parser.add_argument("--marketmultibuycheck", action="store_true", help="")
 
         parser.add_argument(
