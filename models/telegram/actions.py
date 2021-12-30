@@ -281,6 +281,7 @@ class TelegramActions():
                     
                     if self.helper.config["scanner"]["enableleverage"] == False \
                             and (str(row).__contains__(f"DOWN{quote}") or str(row).__contains__(f"UP{quote}") or str(row).__contains__(f"3L-{quote}") or str(row).__contains__(f"3S-{quote}")):
+                        update.effective_message.reply_html(f"Ignoring {ex} ({quote}) Leverage Pairs (enableleverage is disabled)...")    
                         continue
 
                     if row in self.helper.data["scannerexceptions"]:
