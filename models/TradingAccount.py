@@ -2,6 +2,7 @@
 
 import re
 from datetime import datetime
+import time
 
 import numpy as np
 import pandas as pd
@@ -345,9 +346,22 @@ class TradingAccount:
                 )
                 if currency == "":
                     # retrieve all balances
-                    return model.getAccounts()[
+                    accounts = model.getAccounts()[
                         ["currency", "balance", "hold", "available"]
                     ]
+
+                    trycnt, maxretry = (0, 5)
+                    while trycnt <= maxretry:
+                        if "balance" not in accounts:
+                            time.sleep(5)
+                            accounts = model.getAccounts()[
+                                ["currency", "balance", "hold", "available"]
+                            ]
+                        else:
+                            trycnt = 5
+                        trycnt += 1
+
+                    return accounts
                 else:
                     df = model.getAccounts()
 
