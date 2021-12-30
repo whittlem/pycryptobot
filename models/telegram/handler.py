@@ -308,7 +308,7 @@ class TelegramHandler:
             scannerSchedule.start()
             scannerSchedule.add_job(
                 self.actions.StartMarketScan,
-                args=(update, False, True),
+                args=(update, True, True),
                 trigger="interval",
                 minutes=self.helper.config["scanner"]["autoscandelay"] * 60,
                 name="Volume Auto Scanner",
