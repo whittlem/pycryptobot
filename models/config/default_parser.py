@@ -280,6 +280,34 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("sellatloss must be of type int")
 
+    if "preventloss" in config:
+        if isinstance(config["preventloss"], int):
+            if bool(config["preventloss"]):
+                app.preventloss = True
+        else:
+            raise TypeError("preventloss must be of type int")
+
+    if "preventlosstrigger" in config:
+        if isinstance(config["preventlosstrigger"], (int, float)):
+            if config["preventlosstrigger"] is not None:
+                app.preventlosstrigger = config["preventlosstrigger"]
+        else:
+            raise TypeError("preventlossmargin must be of type int or float")
+    elif app.preventloss:
+        if app.nosellmaxpcnt is not None:
+            app.preventlosstrigger = app.nosellmaxpcnt
+        else:
+            app.preventlosstrigger = 1
+
+    if "preventlossmargin" in config:
+        if isinstance(config["preventlossmargin"], (int, float)):
+            if config["preventlossmargin"] is not None:
+                app.preventlossmargin = config["preventlossmargin"]
+        else:
+            raise TypeError("preventlossmargin must be of type int or float")
+    elif app.preventloss:
+        app.preventlossmargin = 0.1
+
     if "simresultonly" in config:
         if isinstance(config["simresultonly"], int):
             if bool(config["simresultonly"]):
@@ -515,6 +543,13 @@ def defaultConfigParse(app, config):
                 app.trailingbuypcnt = config["trailingbuypcnt"]
         else:
             raise TypeError("trailingbuypcnt must be of type int or float")
+
+    if "trailingimmediatebuy" in config:
+        if isinstance(config["trailingimmediatebuy"], int):
+            if bool(config["trailingimmediatebuy"]):
+                app.trailingimmediatebuy = True
+        else:
+            raise TypeError("trailingimmediatebuy must be of type int")
 
     if "marketmultibuycheck" in config:
         if isinstance(config["marketmultibuycheck"], int):
