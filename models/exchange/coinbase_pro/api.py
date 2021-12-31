@@ -800,6 +800,15 @@ class PublicAPI(AuthAPIBase):
                 ]
             ]
 
+            df["low"] = df["low"].astype(float)
+            df["high"] = df["high"].astype(float)
+            df["open"] = df["open"].astype(float)
+            df["close"] = df["close"].astype(float)
+            df["volume"] = df["volume"].astype(float)
+
+            # reset pandas dataframe index
+            df.reset_index()
+
         return df
 
     def getTicker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
@@ -1026,9 +1035,10 @@ class WebSocket(AuthAPIBase):
         self.start_time = datetime.now()
 
     def _keepalive(self, interval=30):
-        while self.ws.connected:
-            self.ws.ping("keepalive")
-            time.sleep(interval)
+        if (self.ws is not None) and (hasattr(self.ws,"connected")):
+            while self.ws.connected:
+                self.ws.ping("keepalive")
+                time.sleep(interval)
 
     def _listen(self):
         self.keepalive.start()

@@ -805,7 +805,7 @@ class PublicAPI(AuthAPIBase):
         if websocket is None or (websocket is not None and using_websocket is False):
 
             resp = {}
-            trycnt, maxretry = (0, 3)
+            trycnt, maxretry = (0, 5)
             while trycnt <= maxretry:
                 if trycnt == 0 or "data" not in resp:
                     if trycnt > 0:
@@ -888,13 +888,16 @@ class PublicAPI(AuthAPIBase):
                 ["date", "market", "granularity", "low", "high", "open", "close", "volume"]
             ]
 
-            df["low"] = pd.to_numeric(df["low"])
-            df["high"] = pd.to_numeric(df["high"])
-            df["open"] = pd.to_numeric(df["open"])
-            df["close"] = pd.to_numeric(df["close"])
-            df["volume"] = pd.to_numeric(df["volume"])
+            df["low"] = df["low"].astype(float)
+            df["high"] = df["high"].astype(float)
+            df["open"] = df["open"].astype(float)
+            df["close"] = df["close"].astype(float)
+            df["volume"] = df["volume"].astype(float)
             # convert_columns = {'close': float}
             # resp.asType(convert_columns)
+
+            # reset pandas dataframe index
+            df.reset_index()
         return df
 
     def getTicker(self, market: str = DEFAULT_MARKET) -> tuple:
@@ -906,9 +909,18 @@ class PublicAPI(AuthAPIBase):
 
         resp = self.authAPI("GET", f"api/v1/market/orderbook/level1?symbol={market}")
 
+        if "data" not in resp:
+            try:
+                time.sleep(15)
+                resp = self.authAPI("GET", f"api/v1/market/orderbook/level1?symbol={market}")
+            except:
+                Logger.warning(
+                        f"Kucoin data not being retrieved - retrying - {resp}"
+                )
+
         if "time" in resp["data"]:
             # make sure the time format is correct, if not, pause and submit request again
-            trycnt, maxretry = (1, 3)
+            trycnt, maxretry = (0, 5)
             while trycnt <= maxretry:
                 resptime = ""
                 try:
@@ -994,7 +1006,7 @@ class PublicAPI(AuthAPIBase):
                 resp = requests.post(self._api_url + uri, json=payload)
 
             # If API returns an error status code, retry request up to 5 times
-            trycnt, maxretry = (1, 5)
+            trycnt, maxretry = (0, 5)
             while trycnt <= maxretry:
                 if resp.status_code != 200:
                     resp_message = resp.json()["msg"]
@@ -1129,9 +1141,10 @@ class WebSocket(AuthAPIBase):
         self.start_time = datetime.now()
 
     def _keepalive(self, interval=30):
-        while self.ws.connected:
-            self.ws.ping("keepalive")
-            time.sleep(interval)
+        if (self.ws is not None) and (hasattr(self.ws,"connected")):
+            while self.ws.connected:
+                self.ws.ping("keepalive")
+                time.sleep(interval)
 
     def _listen(self):
         self.keepalive.start()
