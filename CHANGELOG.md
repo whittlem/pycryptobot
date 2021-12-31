@@ -8,6 +8,10 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [5.1.1] - 2021-12-31
+
+- bugfixes
+
 ## [5.1.0] - 2021-12-27
 
 - added trailingimmediatebuy option to buy as soon as trailingbuypcnt is reached, instead of waiting until candle close
