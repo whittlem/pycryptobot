@@ -12,6 +12,7 @@ Upgrade library dependencies (if required):
 
 - bugfixes - minor revisions to previous fixes
 - modify Sell text - immediate actions don't say at Close any more.
+- adjust scanner to only display message for skipping leveraged bots once.
 
 ## [5.1.1] - 2021-12-31
 
