@@ -8,6 +8,11 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [5.1.2] - 2022-01-01
+
+- bugfixes - minor revisions to previous fixes
+- modify Sell text - immediate actions don't say at Close any more.
+
 ## [5.1.1] - 2021-12-31
 
 - bugfixes
