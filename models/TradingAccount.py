@@ -358,7 +358,7 @@ class TradingAccount:
                                 ["currency", "balance", "hold", "available"]
                             ]
                         else:
-                            trycnt = 5
+                            break
                         trycnt += 1
 
                     return accounts
