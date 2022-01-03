@@ -166,7 +166,7 @@ class TelegramHandler:
         elif query.data == "scanonly" or query.data == "noscan" or query.data == "startmarket":
             if query.data == "startmarket":
                 self._checkScheduledJob(update)
-            self.actions.StartMarketScan(update, True if query.data != "noscan" else False, True if query.data != "scanonly" else False)
+            self.actions.StartMarketScan(update, True if self.helper.config["scanner"]["use_default_scanner"] == 1 else False, True if query.data != "noscan" else False, True if query.data != "scanonly" else False)
         elif query.data == "stopmarket":
             self._removeScheduledJob(update)
 
@@ -308,7 +308,7 @@ class TelegramHandler:
             scannerSchedule.start()
             scannerSchedule.add_job(
                 self.actions.StartMarketScan,
-                args=(update, True, True),
+                args=(update, True if self.helper.config["scanner"]["use_default_scanner"] == 1 else False, True, True),
                 trigger="interval",
                 minutes=self.helper.config["scanner"]["autoscandelay"] * 60,
                 name="Volume Auto Scanner",

@@ -2,6 +2,7 @@ import os
 import json
 import subprocess
 import logging
+import csv
 from datetime import datetime
 
 from time import sleep
@@ -218,38 +219,108 @@ class TelegramActions():
         elif (query.data.__contains__("pairs") or query.data.__contains__("all")) and closedbotCount == 0:
             response.effective_message.reply_html("<b>No active pairs found.</b>")
 
-    def StartMarketScan(self, update, scanmarkets: bool = True, startbots: bool = True, debug: bool = False):
-        logger.info("called StartMarketScan")
+    def StartMarketScan(self, update, use_default_scanner: bool = True, scanmarkets: bool = True, startbots: bool = True, debug: bool = False):
+
+        #Check whether using the scanner or the screener - use correct config file etc
+        if use_default_scanner == True:
+            scanner_config_file = "scanner.json"
+            scanner_script_file = "scanner.py"
+        elif use_default_scanner == False:
+            scanner_config_file = "screener.json"
+            scanner_script_file = "screener.py"
+        
+        logger.info(f"called StartMarketScan - {scanner_script_file}")
+
         try:
-            with open("scanner.json") as json_file:
+            with open(f"{scanner_config_file}") as json_file:
                 config = json.load(json_file)
         except IOError as err:
             update.message.reply_text(
-                f"<i>scanner.json config error</i>\n{err}", parse_mode="HTML"
+                f"<i>{scanner_config_file} config error</i>\n{err}", parse_mode="HTML"
             )
             return
+
+        # If a bulk load file for the exchange exists - start up all the bulk bots for this 
+
+        for ex in config:
+            for quote in config[ex]["quote_currency"]:
+                if os.path.exists(os.path.join(self.datafolder, "telegram_data", f"{ex}_bulkstart.csv")):
+                    update.effective_message.reply_html(f"<i>Found bulk load CSV file for {ex}... Loading pairs</i>")
+                    try:
+                        with open(os.path.join(self.datafolder, "telegram_data", f"{ex}_bulkstart.csv"), newline='', encoding='utf-8') as csv_obj:
+                            csv_file = csv.DictReader(csv_obj)
+                            for row in csv_file:
+                                #update.effective_message.reply_html(row["market"])
+                                if "market" in row and row["market"] != None and quote in row["market"]:
+                                    # Start the process disregarding bot limits for the moment
+                                        update.effective_message.reply_html(f"Bulk Starting {row['market']} on {ex}...")
+                                        self.helper.startProcess(row["market"], ex, "", "scanner")
+                                        sleep(7)
+                    except IOError as err:
+                        pass
+                else:
+                #No Bulk Start File Found
+                    pass
 
         if scanmarkets:
             update.effective_message.reply_html(
                 f"<i>Gathering market data\nThis can take some time depending on number of pairs\nplease wait...</i> \u23F3")
             try:
                 logger.info("Starting Market Scanner")
-                output = subprocess.getoutput("python3 scanner.py")
+                output = subprocess.getoutput(f"python3 {scanner_script_file}")
             except Exception as err:
                 update.effective_message.reply_html("<b>scanning failed.</b>")
                 logger.error(err)
                 raise
 
             update.effective_message.reply_html("<b>Scan Complete.</b>")
-        
+
+        # Watchdog process - check for hung bots and force restart them
+
+        update.effective_message.reply_html("<i>Fido checking for hung bots..</i>")
+        for file in self.helper.getHungBotList():
+            ex = self.helper.getRunningBotExchange(file)
+            self.helper.stopRunningBot(file, "exit", True)
+            sleep(3)
+            os.remove(os.path.join(self.datafolder, "telegram_data", f"{file}.json"))
+            #self.helper._cleandataquietall()
+            sleep(1)
+            update.effective_message.reply_html(f"Restarting {file} as it appears to have hung...")
+            self.helper.startProcess(file, ex, "", "scanner")
+            sleep(1)
+
         if not startbots:
             update.effective_message.reply_html("<b>Operation Complete  (0 started)</b>")
             return
 
+        # Check to see if the bot would be restarted anyways from the scanner - and dont stop to maintain trailingbuypcnt etc
+
+        scanned_bots = []
+
+        for ex in config:
+            for quote in config[ex]["quote_currency"]:
+                try:
+                    with open(
+                        os.path.join(
+                            self.datafolder, "telegram_data", f"{ex}_{quote}_output.json"
+                            ), "r", encoding="utf8") as json_file:
+                        data = json.load(json_file)
+                    for row in data:
+                        if data[row]["atr72_pcnt"] != None:
+                            if data[row]["atr72_pcnt"] >= self.helper.config["scanner"]["atr72_pcnt"]:
+                                scanned_bots.append(row)
+                except:
+                    pass
+
         update.effective_message.reply_html("<i>stopping bots..</i>")
-        for file in self.helper.getActiveBotList():
-            self.helper.stopRunningBot(file, "exit")
-            sleep(5)
+        active_bots_list = self.helper.getActiveBotList()
+        open_order_bot_list = self.helper.getActiveBotListWithOpenOrders()
+        for file in active_bots_list:
+            if (file not in scanned_bots) or (file not in open_order_bot_list):
+                self.helper.stopRunningBot(file, "exit")
+                sleep(3)
+            else:
+                update.effective_message.reply_html(f"Not stopping {file} - in scanner list, or has open order...")
 
         botcounter = len(self.helper.getActiveBotList())
         maxbotcount = self.helper.config["scanner"]["maxbotcount"] if "maxbotcount" in self.helper.config["scanner"] else 0
@@ -301,7 +372,7 @@ class TelegramActions():
                                     self.helper.startProcess(row, ex, "", "scanner")
                                     botcounter += 1
                                 if debug == False:
-                                    sleep(10)
+                                    sleep(6)
 
                 update.effective_message.reply_html(f"{outputmsg}")
 
