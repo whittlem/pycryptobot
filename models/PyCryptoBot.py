@@ -22,6 +22,8 @@ from models.helper.TextBoxHelper import TextBox
 # disable insecure ssl warning
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+pd.set_option('display.float_format', '{:.8f}'.format)
+
 
 #  pylint: disable=unsubscriptable-object
 def truncate(f: Union[int, float], n: Union[int, float]) -> str:
@@ -1097,7 +1099,7 @@ class PyCryptoBot(BotConfig):
                     self.getAPIPassphrase(),
                     self.getAPIURL(),
                 )
-                return api.marketBuy(market, float(truncate(quote_currency, 2)))
+                return api.marketBuy(market, float(truncate(quote_currency, 8)))
             elif self.exchange == Exchange.KUCOIN:
                 api = KAuthAPI(
                     self.getAPIKey(),
@@ -1105,7 +1107,7 @@ class PyCryptoBot(BotConfig):
                     self.getAPIPassphrase(),
                     self.getAPIURL(),
                 )
-                return api.marketBuy(market, float(truncate(quote_currency, 2)))
+                return api.marketBuy(market, float(truncate(quote_currency, 8)))
             elif self.exchange == Exchange.BINANCE:
                 api = BAuthAPI(
                     self.getAPIKey(),

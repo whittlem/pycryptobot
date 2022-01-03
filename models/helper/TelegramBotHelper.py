@@ -121,6 +121,13 @@ class TelegramBotHelper:
             self.data.update(addmarket)
             self._write_data()
 
+    def updatewatchdogping(self):
+        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
+            self._read_data()
+            if "botcontrol" in self.data:
+                self.data["botcontrol"]["watchdog_ping"] =  datetime.now().isoformat()
+                self._write_data()
+    
     def addinfo(
         self,
         message: str = "",
