@@ -8,6 +8,10 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [5.1.3] - 2022-01-03
+
+- fixed spelling mistake in comment
+
 ## [5.1.2] - 2022-01-01
 
 - bugfixes - minor revisions to previous fixes
