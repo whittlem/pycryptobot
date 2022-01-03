@@ -16,7 +16,7 @@ from tradingview_ta import *
 
 def volatility_calculator(bollinger_band_upper, bollinger_band_lower):
     """
-    A break away from traditional volatility calcuations. Based entirely
+    A break away from traditional volatility calculations. Based entirely
     on the proportionate price gap between bollinger upper and lower bands.
     """
 
