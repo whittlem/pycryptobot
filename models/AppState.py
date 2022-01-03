@@ -63,6 +63,7 @@ class AppState:
         self.waiting_buy_price = 0
         self.previous_buy_size = 0
         self.open_trade_margin = 0
+        self.in_open_trade = False
         self.last_df_index = ""
         self.sell_count = 0
         self.sell_sum = 0
@@ -239,6 +240,7 @@ class AppState:
                 self.last_buy_price = float(
                     last_order[last_order.action == "buy"]["price"]
                 )
+                self.in_open_trade = True
 
                 # binance orders do not show fees
                 if (
@@ -260,6 +262,7 @@ class AppState:
                 self.minimumOrderQuote(quote)
                 self.last_action = "SELL"
                 self.last_buy_price = 0.0
+                self.in_open_trade = False
                 return
         else:
             if quote > 0.0:
