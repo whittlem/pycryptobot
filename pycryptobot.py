@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 
 from models.AppState import AppState
+from models.chat import telegram
 from models.exchange.Granularity import Granularity
 from models.helper.LogHelper import Logger
 from models.helper.MarginHelper import calculate_margin
@@ -45,6 +46,7 @@ telegram_bot = TelegramBotHelper(app)
 
 s = sched.scheduler(time.time, time.sleep)
 
+pd.set_option('display.float_format', '{:.8f}'.format)
 
 def signal_handler(signum, frame):
     if signum == 2:
@@ -603,7 +605,10 @@ def executeJob(
             # work with this precision. It should save a couple of `precision` uses, one for each `truncate()` call.
             truncate = functools.partial(_truncate, n=precision)
 
-            price_text = "Close: " + str(price)
+            if immediate_action:
+                price_text = str(price)
+            else:
+                price_text = "Close: " + str(price)
             ema_text = ""
             if _app.disableBuyEMA() is False:
                 ema_text = _app.compare(
@@ -1796,14 +1801,17 @@ def executeJob(
                     + "%",
                 )
 
-            if _state.last_action == "BUY":
+            if _state.last_action == "BUY" and _state.in_open_trade:
                 # update margin for telegram bot
                 telegram_bot.addmargin(
-                    str(_truncate(margin, 4) + "%"),
-                    str(_truncate(profit, 2)),
+                    str(_truncate(margin, 4) + "%") if _state.in_open_trade == True else " ",
+                    str(_truncate(profit, 2)) if _state.in_open_trade == True else " ",
                     price,
                     change_pcnt_high,
                 )
+            
+            # Update the watchdog_ping
+            telegram_bot.updatewatchdogping()
 
             # decrement ignored iteration
             if _app.isSimulation() and _app.smart_switch:

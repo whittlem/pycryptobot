@@ -907,63 +907,44 @@ class PublicAPI(AuthAPIBase):
         if not self._isMarketValid(market):
             raise TypeError("Kucoin market required.")
 
-        resp = self.authAPI("GET", f"api/v1/market/orderbook/level1?symbol={market}")
+        resp = {}
+        trycnt, maxretry = (0, 5)
+        while trycnt <= maxretry:
 
-        if "data" not in resp:
-            try:
-                time.sleep(15)
-                resp = self.authAPI("GET", f"api/v1/market/orderbook/level1?symbol={market}")
-            except:
+            resp = self.authAPI("GET", f"api/v1/market/orderbook/level1?symbol={market}")
+
+            if "data" not in resp: # if not proper response, retry
                 Logger.warning(
-                        f"Kucoin data not being retrieved - retrying - {resp}"
+                    f"Kucoin API Error for getTicket - 'data' not in response - retrying - attempt {trycnt}"
                 )
-
-        if "time" in resp["data"]:
-            # make sure the time format is correct, if not, pause and submit request again
-            trycnt, maxretry = (0, 5)
-            while trycnt <= maxretry:
+                time.sleep(15)
+                trycnt += 1
+            elif "time" in resp["data"]: # if time returned, check format
                 resptime = ""
+                respprice = ""
                 try:
                     resptime = datetime.strptime(
                         str(datetime.fromtimestamp(int(resp["data"]["time"]) / 1000)),
                         "%Y-%m-%d %H:%M:%S.%f",
                     )
-                except:
-                    Logger.warning(
-                        f"Kucoin API Error for Get Ticker: time format not correct - retrying - attempt {trycnt}"
-                    )
-                    time.sleep(15)
-                    resp = self.authAPI(
-                        "GET", f"api/v1/market/orderbook/level1?symbol={market}"
-                    )
-                    trycnt += 1
-
-                respprice = ""
-                try:
                     respprice = float(resp["data"]["price"])
+                    if resptime != "" and respprice != "": # if format is correct, return
+                        return (
+                            datetime.strptime(
+                                str(datetime.fromtimestamp(int(resp["data"]["time"]) / 1000)),
+                                "%Y-%m-%d %H:%M:%S.%f",
+                            ).strftime("%Y-%m-%d %H:%M:%S"),
+                            respprice,
+                        )
                 except:
                     Logger.warning(
-                        f"Kucoin API Error for Get Ticker: price KeyError - retrying - attempt {trycnt}"
+                        f"Kucoin API Error for Get Ticker - retrying - attempt {trycnt}"
                     )
                     time.sleep(15)
-                    resp = self.authAPI(
-                        "GET", f"api/v1/market/orderbook/level1?symbol={market}"
-                    )
                     trycnt += 1
-
-                if resptime != "" and respprice != "":
-                    break
-
-            return (
-                datetime.strptime(
-                    str(datetime.fromtimestamp(int(resp["data"]["time"]) / 1000)),
-                    "%Y-%m-%d %H:%M:%S.%f",
-                ).strftime("%Y-%m-%d %H:%M:%S"),
-                respprice,
-            )
-        else:
-            now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-            return (now, 0.0)
+            else: # time wasn't in response
+                now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+                return (now, 0.0)
 
     def getTime(self) -> datetime:
         """Retrieves the exchange time"""
@@ -1006,7 +987,7 @@ class PublicAPI(AuthAPIBase):
                 resp = requests.post(self._api_url + uri, json=payload)
 
             # If API returns an error status code, retry request up to 5 times
-            trycnt, maxretry = (0, 5)
+            trycnt, maxretry = (1, 5)
             while trycnt <= maxretry:
                 if resp.status_code != 200:
                     resp_message = resp.json()["msg"]
