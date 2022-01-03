@@ -236,14 +236,24 @@ class TelegramActions():
         elif (query.data.__contains__("pairs") or query.data.__contains__("all")) and closedbotCount == 0:
             response.effective_message.reply_html("<b>No active pairs found.</b>")
 
-    def StartMarketScan(self, update, scanmarkets: bool = True, startbots: bool = True, debug: bool = False):
-        logger.info("called StartMarketScan")
+    def StartMarketScan(self, update, use_default_scanner: bool = True, scanmarkets: bool = True, startbots: bool = True, debug: bool = False):
+
+        #Check whether using the scanner or the screener - use correct config file etc
+        if use_default_scanner == True:
+            scanner_config_file = "scanner.json"
+            scanner_script_file = "scanner.py"
+        elif use_default_scanner == False:
+            scanner_config_file = "screener.json"
+            scanner_script_file = "screener.py"
+        
+        logger.info(f"called StartMarketScan - {scanner_script_file}")
+
         try:
-            with open("scanner.json") as json_file:
+            with open(f"{scanner_config_file}") as json_file:
                 config = json.load(json_file)
         except IOError as err:
             update.message.reply_text(
-                f"<i>scanner.json config error</i>\n{err}", parse_mode="HTML"
+                f"<i>{scanner_config_file} config error</i>\n{err}", parse_mode="HTML"
             )
             return
 
@@ -274,7 +284,7 @@ class TelegramActions():
                 f"<i>Gathering market data\nThis can take some time depending on number of pairs\nplease wait...</i> \u23F3")
             try:
                 logger.info("Starting Market Scanner")
-                output = subprocess.getoutput("python3 scanner.py")
+                output = subprocess.getoutput(f"python3 {scanner_script_file}")
             except Exception as err:
                 update.effective_message.reply_html("<b>scanning failed.</b>")
                 logger.error(err)
