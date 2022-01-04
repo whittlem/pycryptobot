@@ -668,7 +668,7 @@ class AuthAPI(AuthAPIBase):
                     )
                 else:
                     Logger.error(
-                        "error: "
+                        "Kucoin authAPI Error: "
                         + method.upper()
                         + " ("
                         + "{}".format(resp.status_code)
@@ -805,7 +805,7 @@ class PublicAPI(AuthAPIBase):
         if websocket is None or (websocket is not None and using_websocket is False):
 
             resp = {}
-            trycnt, maxretry = (0, 3)
+            trycnt, maxretry = (0, 5)
             while trycnt <= maxretry:
                 if trycnt == 0 or "data" not in resp:
                     if trycnt > 0:
@@ -888,13 +888,16 @@ class PublicAPI(AuthAPIBase):
                 ["date", "market", "granularity", "low", "high", "open", "close", "volume"]
             ]
 
-            df["low"] = pd.to_numeric(df["low"])
-            df["high"] = pd.to_numeric(df["high"])
-            df["open"] = pd.to_numeric(df["open"])
-            df["close"] = pd.to_numeric(df["close"])
-            df["volume"] = pd.to_numeric(df["volume"])
+            df["low"] = df["low"].astype(float)
+            df["high"] = df["high"].astype(float)
+            df["open"] = df["open"].astype(float)
+            df["close"] = df["close"].astype(float)
+            df["volume"] = df["volume"].astype(float)
             # convert_columns = {'close': float}
             # resp.asType(convert_columns)
+
+            # reset pandas dataframe index
+            df.reset_index()
         return df
 
     def getTicker(self, market: str = DEFAULT_MARKET) -> tuple:
@@ -904,54 +907,44 @@ class PublicAPI(AuthAPIBase):
         if not self._isMarketValid(market):
             raise TypeError("Kucoin market required.")
 
-        resp = self.authAPI("GET", f"api/v1/market/orderbook/level1?symbol={market}")
+        resp = {}
+        trycnt, maxretry = (0, 5)
+        while trycnt <= maxretry:
 
-        if "time" in resp["data"]:
-            # make sure the time format is correct, if not, pause and submit request again
-            trycnt, maxretry = (1, 3)
-            while trycnt <= maxretry:
+            resp = self.authAPI("GET", f"api/v1/market/orderbook/level1?symbol={market}")
+
+            if "data" not in resp: # if not proper response, retry
+                Logger.warning(
+                    f"Kucoin API Error for getTicket - 'data' not in response - retrying - attempt {trycnt}"
+                )
+                time.sleep(15)
+                trycnt += 1
+            elif "time" in resp["data"]: # if time returned, check format
                 resptime = ""
+                respprice = ""
                 try:
                     resptime = datetime.strptime(
                         str(datetime.fromtimestamp(int(resp["data"]["time"]) / 1000)),
                         "%Y-%m-%d %H:%M:%S.%f",
                     )
-                except:
-                    Logger.warning(
-                        f"Kucoin API Error for Get Ticker: time format not correct - retrying - attempt {trycnt}"
-                    )
-                    time.sleep(15)
-                    resp = self.authAPI(
-                        "GET", f"api/v1/market/orderbook/level1?symbol={market}"
-                    )
-                    trycnt += 1
-
-                respprice = ""
-                try:
                     respprice = float(resp["data"]["price"])
+                    if resptime != "" and respprice != "": # if format is correct, return
+                        return (
+                            datetime.strptime(
+                                str(datetime.fromtimestamp(int(resp["data"]["time"]) / 1000)),
+                                "%Y-%m-%d %H:%M:%S.%f",
+                            ).strftime("%Y-%m-%d %H:%M:%S"),
+                            respprice,
+                        )
                 except:
                     Logger.warning(
-                        f"Kucoin API Error for Get Ticker: price KeyError - retrying - attempt {trycnt}"
+                        f"Kucoin API Error for Get Ticker - retrying - attempt {trycnt}"
                     )
                     time.sleep(15)
-                    resp = self.authAPI(
-                        "GET", f"api/v1/market/orderbook/level1?symbol={market}"
-                    )
                     trycnt += 1
-
-                if resptime != "" and respprice != "":
-                    break
-
-            return (
-                datetime.strptime(
-                    str(datetime.fromtimestamp(int(resp["data"]["time"]) / 1000)),
-                    "%Y-%m-%d %H:%M:%S.%f",
-                ).strftime("%Y-%m-%d %H:%M:%S"),
-                respprice,
-            )
-        else:
-            now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-            return (now, 0.0)
+            else: # time wasn't in response
+                now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+                return (now, 0.0)
 
     def getTime(self) -> datetime:
         """Retrieves the exchange time"""
@@ -1129,9 +1122,10 @@ class WebSocket(AuthAPIBase):
         self.start_time = datetime.now()
 
     def _keepalive(self, interval=30):
-        while self.ws.connected:
-            self.ws.ping("keepalive")
-            time.sleep(interval)
+        if (self.ws is not None) and (hasattr(self.ws,"connected")):
+            while self.ws.connected:
+                self.ws.ping("keepalive")
+                time.sleep(interval)
 
     def _listen(self):
         self.keepalive.start()

@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 
 from models.AppState import AppState
+from models.chat import telegram
 from models.exchange.Granularity import Granularity
 from models.helper.LogHelper import Logger
 from models.helper.MarginHelper import calculate_margin
@@ -45,6 +46,7 @@ telegram_bot = TelegramBotHelper(app)
 
 s = sched.scheduler(time.time, time.sleep)
 
+pd.set_option('display.float_format', '{:.8f}'.format)
 
 def signal_handler(signum, frame):
     if signum == 2:
@@ -546,6 +548,7 @@ def executeJob(
             # handle immediate sell actions
             if strategy.isSellTrigger(
                 _app,
+                _state,
                 price,
                 _technical_analysis.getTradeExit(price),
                 margin,
@@ -558,9 +561,8 @@ def executeJob(
                 immediate_action = True
 
         # handle overriding wait actions (e.g. do not sell if sell at loss disabled!, do not buy in bull if bull only)
-        if strategy.isWaitTrigger(_app, margin, goldencross):
+        if immediate_action is not True and strategy.isWaitTrigger(_app, margin, goldencross):
             _state.action = "WAIT"
-            _state.trailing_buy = 0
             immediate_action = False
 
         if _app.enableImmediateBuy():
@@ -576,8 +578,8 @@ def executeJob(
 
         # If buy signal, save the price and check for decrease/increase before buying.
         trailing_buy_logtext = ""
-        if _state.action == "BUY" and immediate_action != True:
-            _state.action, _state.trailing_buy, trailing_buy_logtext = strategy.checkTrailingBuy(_app, _state, price)
+        if _state.action == "BUY" and immediate_action is not True:
+            _state.action, _state.trailing_buy, trailing_buy_logtext, immediate_action = strategy.checkTrailingBuy(_app, _state, price)
 
         bullbeartext = ""
         if _app.disableBullOnly() is True or (
@@ -603,7 +605,10 @@ def executeJob(
             # work with this precision. It should save a couple of `precision` uses, one for each `truncate()` call.
             truncate = functools.partial(_truncate, n=precision)
 
-            price_text = "Close: " + str(price)
+            if immediate_action:
+                price_text = str(price)
+            else:
+                price_text = "Close: " + str(price)
             ema_text = ""
             if _app.disableBuyEMA() is False:
                 ema_text = _app.compare(
@@ -1160,19 +1165,7 @@ def executeJob(
                                 _state.last_buy_size,
                                 _app.getBuyPercent(),
                             )
-                            _state.trailing_buy = 0
 
-                            now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-                            _app.notifyTelegram(
-                                _app.getMarket()
-                                + " ("
-                                + _app.printGranularity()
-                                + ") - "
-                                + now
-                                + "\n"
-                                + "BUY at "
-                                + price_text
-                            )
                             # Logger.debug(resp)
 
                             # display balances
@@ -1196,17 +1189,33 @@ def executeJob(
                             except:
                                 pass
 
-                            Logger.info(
-                                f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance)}"
-                            )
-                            Logger.info(
-                                f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance)}"
-                            )
-                            state.last_api_call_datetime -= timedelta(seconds=60)
-                            telegram_bot.add_open_order()
                         except:
                             Logger.warning("Unable to place order")
                             state.last_api_call_datetime -= timedelta(seconds=60)
+
+                        Logger.info(
+                            f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance)}"
+                        )
+                        Logger.info(
+                            f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance)}"
+                        )
+
+                        now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+                        _app.notifyTelegram(
+                            _app.getMarket()
+                            + " ("
+                            + _app.printGranularity()
+                            + ") - "
+                            + now
+                            + "\n"
+                            + "BUY at "
+                            + price_text
+                        )
+
+                        state.last_api_call_datetime -= timedelta(seconds=60)
+                        telegram_bot.add_open_order()
+                        _state.trailing_buy = 0
+
                     else:
                         Logger.warning(
                             "Unable to place order, insufficient funds or buyminsize has not been reached"
@@ -1335,21 +1344,6 @@ def executeJob(
                     account.quotebalance = float(
                         account.getBalance(_app.getQuoteCurrency())
                     )
-                    _app.notifyTelegram(
-                        _app.getMarket()
-                        + " ("
-                        + _app.printGranularity()
-                        + ") - "
-                        + now
-                        + "\n"
-                        + "SELL at "
-                        + price_text
-                        + " (margin: "
-                        + margin_text
-                        + ", delta: "
-                        + str(round(price - _state.last_buy_price, precision))
-                        + ")"
-                    )
 
                     if not _app.isVerbose():
                         Logger.info(
@@ -1421,6 +1415,23 @@ def executeJob(
                     )
                     Logger.info(
                         f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance)}"
+                    )
+                    _state.prevent_loss = 0
+
+                    _app.notifyTelegram(
+                        _app.getMarket()
+                        + " ("
+                        + _app.printGranularity()
+                        + ") - "
+                        + now
+                        + "\n"
+                        + "SELL at "
+                        + price_text
+                        + " (margin: "
+                        + margin_text
+                        + ", delta: "
+                        + str(round(price - _state.last_buy_price, precision))
+                        + ")"
                     )
 
                     telegram_bot.closetrade(
@@ -1790,14 +1801,17 @@ def executeJob(
                     + "%",
                 )
 
-            if _state.last_action == "BUY":
+            if _state.last_action == "BUY" and _state.in_open_trade:
                 # update margin for telegram bot
                 telegram_bot.addmargin(
-                    str(_truncate(margin, 4) + "%"),
-                    str(_truncate(profit, 2)),
+                    str(_truncate(margin, 4) + "%") if _state.in_open_trade == True else " ",
+                    str(_truncate(profit, 2)) if _state.in_open_trade == True else " ",
                     price,
                     change_pcnt_high,
                 )
+            
+            # Update the watchdog_ping
+            telegram_bot.updatewatchdogping()
 
             # decrement ignored iteration
             if _app.isSimulation() and _app.smart_switch:

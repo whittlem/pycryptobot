@@ -8,9 +8,47 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-## [4.6.x] - 2021-12-xx
+## [5.1.3] - 2022-01-03
+
+- fixed spelling mistake in comment
+
+## [5.1.2] - 2022-01-01
+
+- bugfixes - minor revisions to previous fixes
+- modify Sell text - immediate actions don't say at Close any more.
+- adjust scanner to only display message for skipping leveraged bots once.
+
+## [5.1.1] - 2021-12-31
+
+- bugfixes
+
+## [5.1.0] - 2021-12-27
+
+- added trailingimmediatebuy option to buy as soon as trailingbuypcnt is reached, instead of waiting until candle close
+- added preventloss option to enable selling prior to margin reaching 0% profit to prevent loss
+- added preventlosstrigger - margin set point to start watching for preventloss (see readme)
+- added preventlossmargin - margin set point to sell at for preventloss (see readme)
+- reordered some test in isSellTrigger to minimize processing on every pass under some conditions
+
+## [5.0.2] - 2021-12-26
+
+- revised fix for change_pcnt_high variable from previous
+- fixed isSellTrigger immediate action it was waiting until candle close
+
+## [5.0.1] - 2021-12-23
 
 - change tgbot manual buy/sell check
+- fix change_pcnt_high variable error for some tokens
+- modified tgbot helper.py code so that it does not require Python 3.9
+- Moved log and telegram output messages for buy and sell transaction to display after API call to help prevent notifications of trades that hadn't occurred yet if API error.
+
+## [5.0.0] - 2021-12-20
+
+- major version number increased
+
+## [4.6.2] - 2021-12-18
+
+- Fix bug in trailingbuypcnt code that could cause the waiting price to continually change and prevent a buy
 - fix error when saving trade data for the first time
 - Add all option to Sell command
 - Add unit tests for TG Bot
@@ -44,7 +82,6 @@ Upgrade library dependencies (if required):
 - Increase isMarketValid to 10 chars for base currency regex
 - Add marketmultibuycheck config option to prevent multiple buys with some problem market pairs
 - some minor file formatting cleanup with VSCode format command
-
 
 ## [4.5.1] - 2021-11-22
 

@@ -9,8 +9,7 @@ on:
 
     # Publish `v1.2.3` tags as releases.
     tags:
-      - 1*
-      - 2*
+      - '**' # All tags kick off a new container build Save history ad 5.0.x etc
 
   # Run tests for any PRs.
   pull_request:
@@ -55,8 +54,8 @@ jobs:
           echo VERSION=$VERSION
 
           # Build and Publish container image
-          docker buidx build --push \
-          --tag $IMAGE_NAME $IMAGE_ID:$VERSION \
+          docker buildx build --push \
+          --tag $IMAGE_ID:$VERSION \
           --platform linux/armhf,linux/aarch64,linux/amd64 \
           --file Dockerfile .
 
