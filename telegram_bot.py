@@ -804,7 +804,7 @@ class TelegramBot(TelegramBotBase):
         if not self._checkifallowed(context._user_id_and_data[0], update):
             return
 
-        self._cleandata
+        self._cleandata()
 
         self.actions.getBotInfo(update)
         update.message.reply_text("Operation Complete")
