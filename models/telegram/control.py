@@ -7,7 +7,7 @@ class TelegramControl():
     def __init__(self, datafolder, tg_helper: TelegramHelper) -> None:
         self.datafolder = datafolder
         self.helper = tg_helper
-    
+
     def _sortInlineButtons(self, buttons: list, callbackTag):
         keyboard = []
         if len(buttons) > 0:
@@ -41,7 +41,7 @@ class TelegramControl():
         buttons = []
 
         for market in self.helper.getActiveBotList(status):
-            while self.helper.read_data(market) == False:
+            while self.helper.read_data(market) is False:
                 sleep(0.2)
 
             if "botcontrol" in self.helper.data:
@@ -73,7 +73,7 @@ class TelegramControl():
             query.answer()
         except:
             pass
-        
+
         mode = "Stopping" if callbackTag == "stop" else "Pausing"
         if query.data.__contains__("allclose") or query.data.__contains__("all"):
             query.edit_message_text(f"<i>{mode} bots</i>", parse_mode="HTML")
@@ -184,7 +184,7 @@ class TelegramControl():
 
         bList = {}
         for bot in self.helper.getActiveBotList():
-            while self.helper.read_data(bot) == False:
+            while self.helper.read_data(bot) is False:
                 sleep(0.2)
             # self.helper.read_data(bot)
             bList.update({bot : {"exchange" : self.helper.data["exchange"], "startmethod" : self.helper.data["botcontrol"]["startmethod"]}})
