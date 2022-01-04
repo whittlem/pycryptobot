@@ -189,7 +189,11 @@ class TelegramActions():
             sleep(0.2)
 
         if count == 0:
-            query.edit_message_text(f"<b>Bot Count ({count})</b>", parse_mode="HTML")
+            try:
+                query.edit_message_text(f"<b>Bot Count ({count})</b>", parse_mode="HTML")
+            except:
+                update.effective_message.reply_html(f"<b>Bot Count ({count})</b>")
+            #query.edit_message_text(f"<b>Bot Count ({count})</b>", parse_mode="HTML")
         else:
             update.effective_message.reply_html(f"<b>Bot Count ({count})</b>")
 
