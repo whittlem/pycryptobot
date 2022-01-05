@@ -284,11 +284,18 @@ class TelegramActions():
                     pass
 
         if scanmarkets:
-            update.effective_message.reply_html(
-                f"<i>Gathering market data\nThis can take some time depending on number of pairs\nplease wait...</i> \u23F3")
+            try:
+                query = update.callback_query
+                query.answer()
+                query.edit_message_text(
+                    "<i>Gathering market data\nplease wait...</i> \u23F3", parse_mode="HTML")
+
+            except Exception:
+                update.effective_message.reply_html(
+                    "<i>Gathering market data\nThis can take some time depending on number of pairs\nplease wait...</i> \u23F3")
             try:
                 logger.info("Starting Market Scanner")
-                output = subprocess.getoutput(f"python3 {scanner_script_file}")
+                subprocess.getoutput(f"python3 {scanner_script_file}")
             except Exception as err:
                 update.effective_message.reply_html("<b>scanning failed.</b>")
                 logger.error(err)
@@ -311,7 +318,7 @@ class TelegramActions():
             sleep(1)
 
         if not startbots:
-            update.effective_message.reply_html("<b>Operation Complete  (0 started)</b>")
+            update.effective_message.reply_html("<b>Operation Complete (0 started)</b>")
             return
 
         # Check to see if the bot would be restarted anyways from the scanner - and dont stop to maintain trailingbuypcnt etc

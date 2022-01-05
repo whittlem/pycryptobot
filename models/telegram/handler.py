@@ -7,6 +7,7 @@ from models.telegram.control import TelegramControl
 from models.telegram.helper import TelegramHelper
 from models.telegram.actions import TelegramActions
 from models.telegram.config import ConfigEditor
+from models.telegram.settings import SettingsEditor
 
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
 
@@ -25,6 +26,7 @@ class TelegramHandler:
         self.control = TelegramControl(self.datafolder, tg_helper)
         self.actions = TelegramActions(self.datafolder, tg_helper)
         self.editor = ConfigEditor(self.datafolder, tg_helper)
+        self.setting = SettingsEditor(self.datafolder, tg_helper)
 
     def _checkifallowed(self, userid, update) -> bool:
         if str(userid) != self.authoriseduserid:
@@ -35,6 +37,7 @@ class TelegramHandler:
 
     def getRequest(self) -> InlineKeyboardMarkup:
         keyboard = [
+            [InlineKeyboardButton("Notifications", callback_data="botsettings")],
             [
                 InlineKeyboardButton(
                     "\U0001F4D6 View config", callback_data="showconfig"
@@ -71,7 +74,7 @@ class TelegramHandler:
                 ),
             ],
             [
-                InlineKeyboardButton("\U00002139 Bot Status", callback_data="status"),
+                InlineKeyboardButton("\U00002139 Running Bot Status", callback_data="status"),
                 InlineKeyboardButton("Margins \U0001F4C8", callback_data="margin"),
             ],
             [InlineKeyboardButton("Cancel", callback_data="cancel")],
@@ -100,6 +103,9 @@ class TelegramHandler:
                 parse_mode="HTML",
             )
 
+        elif query.data == "botsettings":
+            self.setting.askSettings(update)
+
         elif query.data == "margin":
             self.askMarginType(update)
         elif query.data in ("margin_orders", "margin_pairs", "margin_all"):
@@ -109,7 +115,7 @@ class TelegramHandler:
             self.actions.getBotInfo(update)
 
         elif query.data == "showconfig":
-            self.askConfigOptions(update)
+            self.askConfigOptions(update, "ex")
         elif query.data.__contains__("ex_"):
             self.actions.showconfigresponse(update)
 
@@ -171,29 +177,32 @@ class TelegramHandler:
         ):
             if query.data == "startmarket":
                 self._checkScheduledJob(update)
-            self.actions.StartMarketScan(update, True if self.helper.config["scanner"]["use_default_scanner"] == 1 else False, True if query.data != "noscan" else False, True if query.data != "scanonly" else False)
+            self.actions.StartMarketScan(update, self.helper.use_default_scanner, True if query.data != "noscan" else False, True if query.data != "scanonly" else False)
         elif query.data == "stopmarket":
             self._removeScheduledJob(update)
 
         elif query.data == "editconfig":
-            # self.editor.getConfigOptions(update)
-            query.edit_message_text(
-                "\U000026A0 <b>Under Construction</b> \U000026A0", parse_mode="HTML"
+            self.askConfigOptions(update, "edit")
+        elif query.data.__contains__("edit_"):
+            self.editor.getConfigOptions(update)
+        elif query.data.__contains__("_disable_"):
+            self.editor.disable_option(
+                query.data[:query.data.find('_')], query.data[query.data.rfind('_')+1:]
             )
-
+        elif query.data.__contains__("_enable_"):
+            self.editor.enable_option(
+                query.data[:query.data.find('_')], query.data[query.data.rfind('_')+1:]
+            )
+        
         elif query.data.__contains__("bot_"):
             self.getBotOptions(update)
 
         elif query.data.__contains__("delexcep_"):
             self.actions.RemoveExceptionCallBack(update)
 
-        elif query.data.__contains__("disable_"):
-            self.editor.disable_option(
-                "coinbasepro", query.data.replace("disable_", "")
-            )
-
-        elif query.data.__contains__("enable_"):
-            self.editor.enable_option("coinbasepro", query.data.replace("enable_", ""))
+        # query.edit_message_text(
+            #     "\U000026A0 <b>Under Construction</b> \U000026A0", parse_mode="HTML"
+            # )
 
     def getBotOptions(self, update):
         query = update.callback_query
@@ -277,13 +286,13 @@ class TelegramHandler:
         except:
             update.message.reply_text("Make your selection", reply_markup=reply_markup)
 
-    def askConfigOptions(self, update: Update):
+    def askConfigOptions(self, update: Update, callback: str = "ex"):
         keyboard = []
         buttons = []
         for exchange in self.helper.config:
-            if not exchange == "telegram":
+            if exchange not in ("telegram", "scanner"):
                 buttons.append(
-                    InlineKeyboardButton(exchange, callback_data="ex_" + exchange)
+                    InlineKeyboardButton(exchange, callback_data=f"{callback}_{exchange}")
                 )
 
         i = 0
@@ -340,7 +349,7 @@ class TelegramHandler:
             scannerSchedule.start()
             scannerSchedule.add_job(
                 self.actions.StartMarketScan,
-                args=(update, True if self.helper.config["scanner"]["use_default_scanner"] == 1 else False, True, True),
+                args=(update, self.helper.use_default_scanner, True, True),
                 trigger="interval",
                 minutes=self.helper.config["scanner"]["autoscandelay"] * 60,
                 name="Volume Auto Scanner",

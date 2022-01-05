@@ -30,7 +30,8 @@ class ConfigEditor():
 
     def getConfigOptions(self, update):
         query = update.callback_query
-
+        exchange = query.data.replace('edit_', '')
+        
         normalProperties = {
             "live": "live Mode",
             "sellatloss": "Sell at Loss",
@@ -55,14 +56,14 @@ class ConfigEditor():
         for prop in normalProperties:
             buttons.append(
                 InlineKeyboardButton(
-                        f"{'Disable' if self.helper.config['coinbasepro']['config'][prop] == 1 else 'Enable'} {normalProperties[prop]}",
-                        callback_data=f"{'disable' if self.helper.config['coinbasepro']['config'][prop] == 1 else 'enable' }_{prop}")
+                        f"{'Disable' if self.helper.config[exchange]['config'][prop] == 1 else 'Enable'} {normalProperties[prop]}",
+                        callback_data=f"{exchange}_{'disable' if self.helper.config[exchange]['config'][prop] == 1 else 'enable' }_{prop}")
             )
         for prop in disableProperties:
             buttons.append(
                 InlineKeyboardButton(
-                        f"{'Enable' if self.helper.config['coinbasepro']['config'][prop] == 1 else 'Disable'} {disableProperties[prop]}",
-                        callback_data=f"{'disable' if self.helper.config['coinbasepro']['config'][prop] == 1 else 'enable' }_{prop}")
+                        f"{'Enable' if self.helper.config[exchange]['config'][prop] == 1 else 'Disable'} {disableProperties[prop]}",
+                        callback_data=f"{exchange}_{'disable' if self.helper.config[exchange]['config'][prop] == 1 else 'enable' }_{prop}")
             )
         keyboard = []
         i = 0
@@ -76,7 +77,7 @@ class ConfigEditor():
         keyboard.append([InlineKeyboardButton("\U000025C0 Back", callback_data="back")])
 
         query.edit_message_text(
-            "<b>Coinbase Pro Config Options.</b>",
+            f"<b>{exchange} Config Options.</b>",
             reply_markup=InlineKeyboardMarkup(keyboard, one_time_keyboard=True),
             parse_mode="HTML",
         )

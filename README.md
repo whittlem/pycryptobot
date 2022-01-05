@@ -411,7 +411,7 @@ Special sell cases:
     --autorestart                       Automatically restart the bot on error
     --sellatresistance                  Sells if the price reaches either resistance or Fibonacci band
     --enabletelegrambotcontrol          Enable bot control via Telegram
-    --sell_smart_switch                 Enables smart switching to 5 minute granularity after a buy is placed
+    --sellsmartswitch                 Enables smart switching to 5 minute granularity after a buy is placed
     --enableinsufficientfundslogging    Stop insufficient fund errors from stopping the bot, instead log and continue
 
 ## Disabling Default Functionality
