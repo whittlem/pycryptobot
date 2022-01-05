@@ -73,7 +73,7 @@ class TelegramHelper():
 
         i=len(jsonfiles)-1
         while i >= 0:
-            if jsonfiles[i] == "data.json" or jsonfiles[i].__contains__("output.json"):
+            if jsonfiles[i] == "data.json" or jsonfiles[i].__contains__("output.json") or jsonfiles[i].__contains__(".csv") or jsonfiles[i] == "settings.json":
                 jsonfiles.pop(i)
             else:
                 while self.read_data(jsonfiles[i]) == False:
@@ -89,7 +89,7 @@ class TelegramHelper():
 
         i=len(jsonfiles)-1
         while i >= 0:
-            if jsonfiles[i] == "data.json" or jsonfiles[i].__contains__("output.json") or jsonfiles[i].__contains__(".csv"):
+            if jsonfiles[i] == "data.json" or jsonfiles[i].__contains__("output.json") or jsonfiles[i].__contains__(".csv") or jsonfiles[i] == "settings.json":
                 jsonfiles.pop(i)
             else:
                 while self.read_data(jsonfiles[i]) == False:
@@ -108,7 +108,7 @@ class TelegramHelper():
 
         i=len(jsonfiles)-1
         while i >= 0:
-            if jsonfiles[i] == "data.json" or jsonfiles[i].__contains__("output.json") or jsonfiles[i].__contains__(".csv"):
+            if jsonfiles[i] == "data.json" or jsonfiles[i].__contains__("output.json") or jsonfiles[i].__contains__(".csv") or jsonfiles[i] == "settings.json":
                 jsonfiles.pop(i)
             else:
                 while self.read_data(jsonfiles[i]) == False:
@@ -128,7 +128,7 @@ class TelegramHelper():
 
         i=len(jsonfiles)-1
         while i >= 0:
-            if jsonfiles[i] == "data.json" or jsonfiles[i].__contains__("output.json") or jsonfiles[i].__contains__(".csv"):
+            if jsonfiles[i] == "data.json" or jsonfiles[i].__contains__("output.json") or jsonfiles[i].__contains__(".csv") or jsonfiles[i] == "settings.json":
                 jsonfiles.pop(i)
             else:
                 while self.read_data(jsonfiles[i]) == False:
