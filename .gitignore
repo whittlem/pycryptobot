@@ -136,6 +136,7 @@ dmypy.json
 config.json
 config-coinbasepro.json
 config-binance.json
+screener.json
 
 *.csv
 graphs/
@@ -152,3 +153,9 @@ tests/unit_tests/data/*.json
 
 *.key
 config-*.yaml
+telegram_data
+
+# WIP
+models/exchange/kraken
+script-kraken.py
+script-krakenv2.py

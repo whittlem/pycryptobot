@@ -97,6 +97,7 @@ def executeJob(
 
         if controlstatus == "exit":
             _app.notifyTelegram(f"{_app.getMarket()} bot is stopping")
+            telegram_bot.removeactivebot()
             sys.exit(0)
 
     # reset _websocket every 23 hours if applicable
