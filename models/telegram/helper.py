@@ -78,68 +78,55 @@ class TelegramHelper():
             else:
                 while self.read_data(jsonfiles[i]) == False:
                     sleep(0.1)
-                # self.read_data(jsonfiles[i])
             i -= 1
         jsonfiles.sort()
         return [x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles]
 
     def getActiveBotList(self, state: str = "active") -> List[str]:
         '''Return contents of telegram_data folder'''
-        jsonfiles = sorted(os.listdir(os.path.join(self.datafolder, "telegram_data")))
+        jsonfiles = self.getAllBotList()
 
         i=len(jsonfiles)-1
         while i >= 0:
-            if jsonfiles[i] == "data.json" or jsonfiles[i].__contains__("output.json") or jsonfiles[i].__contains__(".csv") or jsonfiles[i] == "settings.json":
-                jsonfiles.pop(i)
-            else:
-                while self.read_data(jsonfiles[i]) == False:
-                    sleep(0.2)
-                # self.read_data(jsonfiles[i])
-                if "botcontrol" in self.data:
-                    if not self.data["botcontrol"]["status"] == state:
-                        jsonfiles.pop(i)
+            while self.read_data(jsonfiles[i]) == False:
+                sleep(0.2)
+            if "botcontrol" in self.data:
+                if not self.data["botcontrol"]["status"] == state:
+                    jsonfiles.pop(i)
             i -= 1
         jsonfiles.sort()
         return [x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles]
 
     def getActiveBotListWithOpenOrders(self, state: str = "active") -> List[str]:
         '''Return contents of telegram_data folder active bots with an open order'''
-        jsonfiles = sorted(os.listdir(os.path.join(self.datafolder, "telegram_data")))
+        jsonfiles = self.getAllBotList()
 
         i=len(jsonfiles)-1
         while i >= 0:
-            if jsonfiles[i] == "data.json" or jsonfiles[i].__contains__("output.json") or jsonfiles[i].__contains__(".csv") or jsonfiles[i] == "settings.json":
-                jsonfiles.pop(i)
-            else:
-                while self.read_data(jsonfiles[i]) == False:
-                    sleep(0.1)
-                # self.read_data(jsonfiles[i])
-                if "botcontrol" in self.data:
-                    margin_string = str(self.data["margin"]).strip()
-                    if not self.data["botcontrol"]["status"] == state and not margin_string == "":
-                        jsonfiles.pop(i)
+            while self.read_data(jsonfiles[i]) == False:
+                sleep(0.1)
+            if "botcontrol" in self.data:
+                margin_string = str(self.data["margin"]).strip()
+                if not self.data["botcontrol"]["status"] == state and not margin_string == "":
+                    jsonfiles.pop(i)
             i -= 1
         jsonfiles.sort()
         return [x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles]
 
     def getHungBotList(self, state: str = "active") -> List[str]:
         '''Return contents of telegram_data folder - working out which are hung bots'''
-        jsonfiles = sorted(os.listdir(os.path.join(self.datafolder, "telegram_data")))
+        jsonfiles = self.getAllBotList()
 
         i=len(jsonfiles)-1
         while i >= 0:
-            if jsonfiles[i] == "data.json" or jsonfiles[i].__contains__("output.json") or jsonfiles[i].__contains__(".csv") or jsonfiles[i] == "settings.json":
-                jsonfiles.pop(i)
-            else:
-                while self.read_data(jsonfiles[i]) == False:
-                    sleep(0.2)
-                # self.read_data(jsonfiles[i])
-                if "botcontrol" in self.data:
-                    last_ping = datetime.strptime(self.data["botcontrol"]["watchdog_ping"], "%Y-%m-%dT%H:%M:%S.%f")
-                    current_dt = datetime.now()
-                    ping_delta = int((current_dt - last_ping).total_seconds())
-                    if (self.data["botcontrol"]["status"] == state and ping_delta < 600):
-                        jsonfiles.pop(i)
+            while self.read_data(jsonfiles[i]) == False:
+                sleep(0.2)
+            if "botcontrol" in self.data:
+                last_ping = datetime.strptime(self.data["botcontrol"]["watchdog_ping"], "%Y-%m-%dT%H:%M:%S.%f")
+                current_dt = datetime.now()
+                ping_delta = int((current_dt - last_ping).total_seconds())
+                if (self.data["botcontrol"]["status"] == state and ping_delta < 600):
+                    jsonfiles.pop(i)
             i -= 1
         jsonfiles.sort()
         return [x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles]
