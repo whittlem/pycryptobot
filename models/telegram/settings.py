@@ -11,6 +11,12 @@ class SettingsEditor():
         self.helper = tg_helper
         self.settings = {}
 
+        if not os.path.isfile(os.path.join(self.datafolder, "telegram_data", "settings.json")):
+            self.settings.update({"notifications": {"enable_scanner": 1, "enable_screener": 1,"enable_start": 1,"enable_stop": 1,"enable_pause": 1,"enable_resume": 1,}})
+            self._write_config()
+
+        self._read_config()
+
     def _read_config(self):
         try:
             with open(os.path.join(self.datafolder, "telegram_data", "settings.json"), "r", encoding="utf8") as json_file:
@@ -20,8 +26,18 @@ class SettingsEditor():
         except json.decoder.JSONDecodeError:
             return 
 
+    def _write_config(self):
+        try:
+            with open(
+                os.path.join(self.datafolder, "telegram_data", "settings.json"),
+                "w",
+                encoding="utf8",
+            ) as outfile:
+                json.dump(self.settings, outfile, indent=4)
+        except:
+            raise
 
-    def askSettings(self, update):
+    def askNotifications(self, update):
         query = update.callback_query
 
         keyboard = [

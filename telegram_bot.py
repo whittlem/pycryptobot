@@ -40,6 +40,7 @@ from models.telegram import (
     TelegramHandler,
     TelegramActions,
     ConfigEditor,
+    SettingsEditor
 )
 
 scannerSchedule = BackgroundScheduler(timezone="UTC")
@@ -203,6 +204,7 @@ class TelegramBot(TelegramBotBase):
         self.control = TelegramControl(self.datafolder, self.helper)
         self.actions = TelegramActions(self.datafolder, self.helper)
         self.editor = ConfigEditor(self.datafolder, self.helper)
+        self.setting = SettingsEditor(self.datafolder, self.helper)
 
     def _question_which_exchange(self, update):
         """start new bot ask which exchange"""

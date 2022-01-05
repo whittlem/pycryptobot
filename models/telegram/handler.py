@@ -104,7 +104,7 @@ class TelegramHandler:
             )
 
         elif query.data == "botsettings":
-            self.setting.askSettings(update)
+            self.setting.askNotifications(update)
 
         elif query.data == "margin":
             self.askMarginType(update)
