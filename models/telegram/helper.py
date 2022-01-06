@@ -2,6 +2,8 @@ import os, platform
 import subprocess
 import json
 
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
+
 from time import sleep
 from datetime import datetime
 from typing import List
@@ -15,6 +17,17 @@ class TelegramHelper():
         self.use_default_scanner = 1
         if "use_default_scanner" in config["scanner"]:
             self.use_default_scanner = bool(config["scanner"]["use_default_scanner"])
+
+    def sendtelegramMsg(self, update: Update, reply, markup: InlineKeyboardMarkup = None):
+        try:
+            query = update.callback_query
+            query.answer()
+        except:
+            pass
+        try:
+            query.edit_message_text(reply, reply_markup=markup if markup is not None else None, parse_mode="HTML")
+        except Exception as err:
+            update.message.reply_text(reply, reply_markup=markup, parse_mode="HTML")
 
     def read_data(self, name: str = "data.json") -> bool:
         try:
@@ -88,7 +101,7 @@ class TelegramHelper():
 
         i=len(jsonfiles)-1
         while i >= 0:
-            while self.read_data(jsonfiles[i]) == False:
+            while self.read_data(jsonfiles[i]) is False:
                 sleep(0.2)
             if "botcontrol" in self.data:
                 if not self.data["botcontrol"]["status"] == state:

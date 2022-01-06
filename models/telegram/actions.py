@@ -63,11 +63,11 @@ class TelegramActions():
         query = update.callback_query
         if query != None:
             query.answer()
-            query.edit_message_text(
-                "<b>Starting markets with open trades..</b>",
-                parse_mode="HTML")
+            self.helper.sendtelegramMsg(update,
+                "<b>Starting markets with open trades..</b>")
         else:
-            update.effective_message.reply_html("<b>Starting markets with open trades..</b>")
+            self.helper.sendtelegramMsg(update, "<b>Starting markets with open trades..</b>")
+            # update.effective_message.reply_html("<b>Starting markets with open trades..</b>")
 
         self.helper.read_data()
         for market in self.helper.data["opentrades"]:
@@ -75,7 +75,8 @@ class TelegramActions():
                 # update.effective_message.reply_html(f"<i>Starting {market} crypto bot</i>")
                 self.helper.startProcess(market, self.helper.data["opentrades"][market]["exchange"], "", "scanner")
             sleep(10)
-        update.effective_message.reply_html("<i>Markets have been started</i>")
+        self.helper.sendtelegramMsg(update, "<i>Markets have been started</i>")
+        # update.effective_message.reply_html("<i>Markets have been started</i>")
         sleep(1)
         self.getBotInfo(update)
 
@@ -85,30 +86,29 @@ class TelegramActions():
         logger.info("called sellresponse - %s", query.data)
 
         if query.data.__contains__("all"):
-            query.edit_message_text("<b><i>Initiating sell orders..</i></b>", parse_mode="HTML")
+            self.helper.sendtelegramMsg(update, "<b><i>Initiating sell orders..</i></b>")
             for market in self.helper.getActiveBotList("active"):
-                while self.helper.read_data(market) == False:
+                while self.helper.read_data(market) is False:
                     sleep(0.2)
 
                 if "margin" in self.helper.data and self.helper.data["margin"] != " ":
-                    while self.helper.read_data(market) == False:
+                    while self.helper.read_data(market) is False:
                         sleep(0.2)
 
                     if "botcontrol" in self.helper.data:
                         self.helper.data["botcontrol"]["manualsell"] = True
                         self.helper.write_data(market)
-                        update.effective_message.reply_html(
+                        self.helper.sendtelegramMsg(update,
                             f"Selling: {market}\n<i>Please wait for sale notification...</i>")
                 sleep(0.2)
         else:
-            while self.helper.read_data(query.data.replace("confirm_sell_", "")) == False:
+            while self.helper.read_data(query.data.replace("confirm_sell_", "")) is False:
                 sleep(0.2)
             if "botcontrol" in self.helper.data:
                 self.helper.data["botcontrol"]["manualsell"] = True
                 self.helper.write_data(query.data.replace("confirm_sell_", ""))
-                query.edit_message_text(
+                self.helper.sendtelegramMsg(update,
                     f"Selling: {query.data.replace('confirm_sell_', '').replace('.json','')}\n<i>Please wait for sale notification...</i>",
-                    parse_mode="HTML",
                 )
 
     def buyresponse(self, update):
@@ -116,14 +116,13 @@ class TelegramActions():
         query = update.callback_query
         logger.info("called buyresponse - %s", query.data)
         # if self.helper.read_data(query.data.replace("confirm_buy_", "")):
-        while self.helper.read_data(query.data.replace("confirm_buy_", "")) == False:
+        while self.helper.read_data(query.data.replace("confirm_buy_", "")) is False:
             sleep(0.2)
         if "botcontrol" in self.helper.data:
             self.helper.data["botcontrol"]["manualbuy"] = True
             self.helper.write_data(query.data.replace("confirm_buy_", ""))
-            query.edit_message_text(
+            self.helper.sendtelegramMsg(update,
                 f"Buying: {query.data.replace('confirm_buy_', '').replace('.json','')}\n<i>Please wait for sale notification...</i>",
-                parse_mode="HTML",
             )
 
     def showconfigresponse(self, update):
@@ -140,14 +139,10 @@ class TelegramActions():
         else:
             pbot = self.helper.config[query.data.replace("ex_", "")]["config"]
 
-        query.edit_message_text(query.data.replace("ex_", "") + "\n" + json.dumps(pbot, indent=4))
+        self.helper.sendtelegramMsg(update, query.data.replace("ex_", "") + "\n" + json.dumps(pbot, indent=4))
 
     def getBotInfo(self, update):
-        try:
-            query = update.callback_query
-            query.answer()
-        except:
-            pass
+
         count = 0
         for file in self.helper.getActiveBotList():
             output = ""
@@ -180,35 +175,27 @@ class TelegramActions():
                 output = f"{output} {icon} <b>Status</b>: <i>stopped</i> "
 
             if count == 1:
-                try:
-                    query.edit_message_text(f"{output}", parse_mode="HTML")
-                except:
-                    update.effective_message.reply_html(f"{output}")
+                self.helper.sendtelegramMsg(update, output)
             else:
                 update.effective_message.reply_html(f"{output}")
             sleep(0.2)
 
         if count == 0:
-            try:
-                query.edit_message_text(f"<b>Bot Count ({count})</b>", parse_mode="HTML")
-            except:
-                update.effective_message.reply_html(f"<b>Bot Count ({count})</b>")
-            #query.edit_message_text(f"<b>Bot Count ({count})</b>", parse_mode="HTML")
+            self.helper.sendtelegramMsg(update, f"<b>Bot Count ({count})</b>")
         else:
             update.effective_message.reply_html(f"<b>Bot Count ({count})</b>")
 
-    def getMargins(self, response):
+    def getMargins(self, update):
+        query = update.callback_query
 
-        query = response.callback_query
-        query.answer()
-        query.edit_message_text("<i>Getting Margins..</i>", parse_mode="HTML")
+        self.helper.sendtelegramMsg(update, "<i>Getting Margins..</i>")
         cOutput = []
         oOutput = []
         closedbotCount = 0
         openbotCount = 0
         # print(self.helper.getActiveBotList())
         for market in self.helper.getActiveBotList():
-            while self.helper.read_data(market) == False:
+            while self.helper.read_data(market) is False:
                 sleep(0.2)
 
             closedoutput = "" 
@@ -226,19 +213,19 @@ class TelegramActions():
 
         if (query.data.__contains__("orders") or query.data.__contains__("all")) and openbotCount > 0:
             for output in oOutput:
-                response.effective_message.reply_html(f"{output}")
+                update.effective_message.reply_html(f"{output}")
                 sleep(0.5)
 
         elif (query.data.__contains__("orders") or query.data.__contains__("all")) and openbotCount == 0:
-            response.effective_message.reply_html("<b>No open orders found.</b>")
+            update.effective_message.reply_html("<b>No open orders found.</b>")
 
         if (query.data.__contains__("pairs") or query.data.__contains__("all")) and closedbotCount > 0:
             for output in cOutput:
-                response.effective_message.reply_html(f"{output}")
+                update.effective_message.reply_html(f"{output}")
                 sleep(1)
 
         elif (query.data.__contains__("pairs") or query.data.__contains__("all")) and closedbotCount == 0:
-            response.effective_message.reply_html("<b>No active pairs found.</b>")
+            update.effective_message.reply_html("<b>No active pairs found.</b>")
 
     def StartMarketScan(self, update, use_default_scanner: bool = True, scanmarkets: bool = True, startbots: bool = True, debug: bool = False):
 
@@ -250,7 +237,7 @@ class TelegramActions():
             scanner_config_file = "screener.json"
             scanner_script_file = "screener.py"
         
-        logger.info(f"called StartMarketScan - {scanner_script_file}")
+        logger.info("called StartMarketScan - %s", scanner_script_file)
 
         try:
             with open(f"{scanner_config_file}") as json_file:

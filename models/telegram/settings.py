@@ -1,7 +1,6 @@
 import os, json
 from models.telegram.helper import TelegramHelper
-from telegram import ReplyKeyboardRemove, Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ConversationHandler, CommandHandler, CallbackContext, CallbackQueryHandler
+from telegram import  InlineKeyboardButton, InlineKeyboardMarkup
 
 # BUTTON_REPLY, TYPING_RESPONSE = range(2)
 
@@ -37,41 +36,44 @@ class SettingsEditor():
         except:
             raise
 
-    def askNotifications(self, update):
-        query = update.callback_query
+    def getNotifications(self, update):
+        notifications = {
+            "enable_screener" : "Screener",
+            "enable_scanner" : "Scanner",
+            "enable_start" : "Bot Start",
+            "enable_stop" : "Bot Stop",
+            "enable_pause" : "Bot Pause",
+            "enable_resume" : "Bot Resume"
+        }
 
-        keyboard = [
-            [
+        buttons = []
+        for prop in notifications:
+            buttons.append(
                 InlineKeyboardButton(
-                    "Disable Screener", callback_data=f"stop_{query.data.replace('bot_', '')}"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    "Disable Scanner", callback_data=f"restart_{query.data.replace('bot_', '')}"
-                ),
-            ],
-            [
-                InlineKeyboardButton(
-                    "Disable Bot Start", callback_data=f"pause_{query.data.replace('bot_', '')}"
-                ),
-                InlineKeyboardButton(
-                    "Disable Bot Stop", callback_data=f"resume_{query.data.replace('bot_', '')}"
-                ),
-            ],
-            [
-                InlineKeyboardButton(
-                    "Disable Bot Pause", callback_data=f"pause_{query.data.replace('bot_', '')}"
-                ),
-                InlineKeyboardButton(
-                    "Disable Bot Resume", callback_data=f"resume_{query.data.replace('bot_', '')}"
-                ),
-            ],
-            [InlineKeyboardButton("\U000025C0 Back", callback_data="back")],
-        ]
+                        f"{notifications[prop]} {'Disabled' if self.settings['notifications'][prop] == 0 else 'Enabled'}",
+                        callback_data=f"notify_{'disable' if self.settings['notifications'][prop] == 1 else 'enable' }_{prop}")
+            )
 
-        query.edit_message_text(
-            "<b>Notifications:</b>",
-            reply_markup=InlineKeyboardMarkup(keyboard, one_time_keyboard=True),
-            parse_mode="HTML",
+        keyboard = []
+        i = 0
+        while i <= len(buttons) - 1:
+            if len(buttons) - 1 >= i + 1:
+                keyboard.append([buttons[i], buttons[i + 1]])
+            else:
+                keyboard.append([buttons[i]])
+            i += 2
+
+        keyboard.append([InlineKeyboardButton("\U000025C0 Back", callback_data="back")])
+
+        self.helper.sendtelegramMsg(update,
+            "<b>Notification Options:</b>",
+            InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
         )
+
+    def disable_option(self, parameter):
+        self.settings["notifications"][f"enable_{parameter}"] = 0
+        self._write_config()
+
+    def enable_option(self, parameter):
+        self.settings["notifications"][f"enable_{parameter}"] = 1
+        self._write_config()
