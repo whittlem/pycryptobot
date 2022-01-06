@@ -7,11 +7,13 @@ from datetime import datetime
 
 from time import sleep
 from models.telegram.helper import TelegramHelper
+from models.telegram.settings import SettingsEditor
 
 # Enable logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
+
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +22,7 @@ class TelegramActions():
         self.datafolder = datafolder
 
         self.helper = tg_helper
+        self.settings = SettingsEditor(tg_helper)
 
     def _getMarginText(self, market):
         light_icon, margin_icon = ("\U0001F7E2" if "-" not in self.helper.data["margin"] else "\U0001F534", "\U0001F973" if "-" not in self.helper.data["margin"] else "\U0001F97A")
@@ -271,8 +274,9 @@ class TelegramActions():
                     pass
 
         if scanmarkets:
-            reply = "<i>Gathering market data\nplease wait...</i> \u23F3"
-            self.helper.sendtelegramMsg(update, reply)
+            if self.settings.config["notifications"]["enable_screener"]:
+                reply = "<i>Gathering market data\nplease wait...</i> \u23F3"
+                self.helper.sendtelegramMsg(update, reply)
             try:
                 logger.info("Starting Market Scanner")
                 subprocess.getoutput(f"python3 {scanner_script_file}")
@@ -281,11 +285,13 @@ class TelegramActions():
                 logger.error(err)
                 raise
 
-            update.effective_message.reply_html("<b>Scan Complete.</b>")
+            if self.settings.config["notifications"]["enable_screener"]:
+                update.effective_message.reply_html("<b>Scan Complete.</b>")
 
         # Watchdog process - check for hung bots and force restart them
 
-        update.effective_message.reply_html("<i>Fido checking for hung bots..</i>")
+        if self.settings.config["notifications"]["enable_screener"]:
+            update.effective_message.reply_html("<i>Fido checking for hung bots..</i>")
         for file in self.helper.getHungBotList():
             ex = self.helper.getRunningBotExchange(file)
             self.helper.stopRunningBot(file, "exit", True)
@@ -293,11 +299,12 @@ class TelegramActions():
             os.remove(os.path.join(self.datafolder, "telegram_data", f"{file}.json"))
             #self.helper._cleandataquietall()
             sleep(1)
-            update.effective_message.reply_html(f"Restarting {file} as it appears to have hung...")
+            if self.settings.config["notifications"]["enable_screener"]:
+                update.effective_message.reply_html(f"Restarting {file} as it appears to have hung...")
             self.helper.startProcess(file, ex, "", "scanner")
             sleep(1)
 
-        if not startbots:
+        if not startbots and self.settings.config["notifications"]["enable_screener"]:
             update.effective_message.reply_html("<b>Operation Complete (0 started)</b>")
             return
 
@@ -319,8 +326,8 @@ class TelegramActions():
                                 scanned_bots.append(row)
                 except:
                     pass
-
-        update.effective_message.reply_html("<i>stopping bots..</i>")
+        if self.settings.config["notifications"]["enable_screener"]:
+            update.effective_message.reply_html("<i>stopping bots..</i>")
         active_bots_list = self.helper.getActiveBotList()
         open_order_bot_list = self.helper.getActiveBotListWithOpenOrders()
         for file in active_bots_list:
@@ -328,7 +335,8 @@ class TelegramActions():
                 self.helper.stopRunningBot(file, "exit")
                 sleep(3)
             else:
-                update.effective_message.reply_html(f"Not stopping {file} - in scanner list, or has open order...")
+                if self.settings.config["notifications"]["enable_screener"]:
+                    update.effective_message.reply_html(f"Not stopping {file} - in scanner list, or has open order...")
 
         botcounter = 0
         runningcounter = len(self.helper.getActiveBotList())
@@ -339,7 +347,8 @@ class TelegramActions():
             if maxbotcount > 0 and botcounter >= maxbotcount:
                 break
             for quote in config[ex]["quote_currency"]:
-                update.effective_message.reply_html(f"Starting {ex} ({quote}) bots...")
+                if self.settings.config["notifications"]["enable_screener"]:
+                    update.effective_message.reply_html(f"Starting {ex} ({quote}) bots...")
                 logger.info("%s - (%s)", ex, quote)
                 if not os.path.isfile(os.path.join(self.datafolder, "telegram_data", f"{ex}_{quote}_output.json")):
                     continue
@@ -363,7 +372,8 @@ class TelegramActions():
                     if self.helper.config["scanner"]["enableleverage"] == False \
                             and (str(row).__contains__(f"DOWN{quote}") or str(row).__contains__(f"UP{quote}") or str(row).__contains__(f"3L-{quote}") or str(row).__contains__(f"3S-{quote}")):
                         if msg_cnt == 1:
-                            update.effective_message.reply_html(f"Ignoring {ex} ({quote}) Leverage Pairs (enableleverage is disabled)...")    
+                            if self.settings.config["notifications"]["enable_screener"]:
+                                update.effective_message.reply_html(f"Ignoring {ex} ({quote}) Leverage Pairs (enableleverage is disabled)...")    
                             msg_cnt += 1
                         continue
 
@@ -383,9 +393,11 @@ class TelegramActions():
                                 if debug == False:
                                     sleep(6)
 
-                update.effective_message.reply_html(f"{outputmsg}")
+                if self.settings.config["notifications"]["enable_screener"]:
+                    update.effective_message.reply_html(f"{outputmsg}")
 
-        update.effective_message.reply_html(f"<i>Operation Complete.  ({botcounter-runningcounter} started)</i>")
+        if self.settings.config["notifications"]["enable_screener"]:
+            update.effective_message.reply_html(f"<i>Operation Complete.  ({botcounter-runningcounter} started)</i>")
 
     def deleteresponse(self, update):
         """delete selected bot"""
