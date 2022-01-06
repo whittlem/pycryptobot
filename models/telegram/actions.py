@@ -277,8 +277,8 @@ class TelegramActions():
             if bool(self.settings.config["notifications"]["enable_screener"]):
                 reply = "<i>Gathering market data\nplease wait...</i> \u23F3"
                 self.helper.sendtelegramMsg(update, reply)
-            else:
-                self.helper.sendtelegramMsg(update, "")
+            # else:
+            #     self.helper.sendtelegramMsg(update, "Command Started")
             try:
                 logger.info("Starting Market Scanner")
                 subprocess.getoutput(f"python3 {scanner_script_file}")
