@@ -80,17 +80,16 @@ class ConfigEditor():
 
         keyboard.append([InlineKeyboardButton("\U000025C0 Back", callback_data="back")])
 
-        query.edit_message_text(
+        self.helper.sendtelegramMsg(update,
             f"<b>{exchange} Config Options.</b>",
-            reply_markup=InlineKeyboardMarkup(keyboard, one_time_keyboard=True),
-            parse_mode="HTML",
+            InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
         )
 
     def cancel(self, update: Update, context: CallbackContext) -> int:
         """Cancels and ends the conversation."""
         # user = update.message.from_user
         # logger.info("User %s canceled the conversation.", user.first_name)
-        update.message.reply_text(
+        self.helper.sendtelegramMsg(update, 
             'Bye! I hope we can talk again some day.', reply_markup=ReplyKeyboardRemove()
         )
 
@@ -99,18 +98,10 @@ class ConfigEditor():
     def updateconfig(self, update, key, value):
         # if key == "buymaxsize":
         #     self.buy_max_size(value)
-
-
-        update.message.reply_text(f"[{key}] Updated to: {value}")
+        self.helper.sendtelegramMsg(update, f"[{key}] Updated to: {value}")
 
     def ask_buy_max_size(self, update: Update, context):
-        try:
-            update.message.reply_text("What is the new value?")
-        except:
-            query = update.callback_query
-            query.answer()
-            query.edit_message_text(
-                "What is the new value?")
+        self.helper.sendtelegramMsg(update, "What is the new value?")
 
         return TYPING_RESPONSE
     
