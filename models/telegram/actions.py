@@ -240,11 +240,11 @@ class TelegramActions():
         logger.info("called StartMarketScan - %s", scanner_script_file)
 
         try:
-            with open(f"{scanner_config_file}") as json_file:
+            with open(f"{scanner_config_file}", encoding="utf8") as json_file:
                 config = json.load(json_file)
         except IOError as err:
-            update.message.reply_text(
-                f"<i>{scanner_config_file} config error</i>\n{err}", parse_mode="HTML"
+            self.helper.sendtelegramMsg(update,
+                f"<i>{scanner_config_file} config error</i>\n{err}"
             )
             return
 
@@ -261,9 +261,9 @@ class TelegramActions():
                                 #update.effective_message.reply_html(row["market"])
                                 if "market" in row and row["market"] != None and quote in row["market"]:
                                     # Start the process disregarding bot limits for the moment
-                                        update.effective_message.reply_html(f"Bulk Starting {row['market']} on {ex}...")
-                                        self.helper.startProcess(row["market"], ex, "", "scanner")
-                                        sleep(7)
+                                    update.effective_message.reply_html(f"Bulk Starting {row['market']} on {ex}...")
+                                    self.helper.startProcess(row["market"], ex, "", "scanner")
+                                    sleep(7)
                     except IOError as err:
                         pass
                 else:
@@ -271,15 +271,8 @@ class TelegramActions():
                     pass
 
         if scanmarkets:
-            try:
-                query = update.callback_query
-                query.answer()
-                query.edit_message_text(
-                    "<i>Gathering market data\nplease wait...</i> \u23F3", parse_mode="HTML")
-
-            except Exception:
-                update.effective_message.reply_html(
-                    "<i>Gathering market data\nThis can take some time depending on number of pairs\nplease wait...</i> \u23F3")
+            reply = "<i>Gathering market data\nplease wait...</i> \u23F3"
+            self.helper.sendtelegramMsg(update, reply)
             try:
                 logger.info("Starting Market Scanner")
                 subprocess.getoutput(f"python3 {scanner_script_file}")
@@ -337,7 +330,8 @@ class TelegramActions():
             else:
                 update.effective_message.reply_html(f"Not stopping {file} - in scanner list, or has open order...")
 
-        botcounter = len(self.helper.getActiveBotList())
+        botcounter = 0
+        runningcounter = len(self.helper.getActiveBotList())
         maxbotcount = self.helper.config["scanner"]["maxbotcount"] if "maxbotcount" in self.helper.config["scanner"] else 0
 
         self.helper.read_data()
@@ -391,7 +385,7 @@ class TelegramActions():
 
                 update.effective_message.reply_html(f"{outputmsg}")
 
-        update.effective_message.reply_html(f"<i>Operation Complete.  ({botcounter} started)</i>")
+        update.effective_message.reply_html(f"<i>Operation Complete.  ({botcounter-runningcounter} started)</i>")
 
     def deleteresponse(self, update):
         """delete selected bot"""
@@ -403,9 +397,8 @@ class TelegramActions():
 
         self.helper.write_data()
 
-        query.edit_message_text(
-            f"<i>Deleted {str(query.data).replace('delete_', '')} crypto bot</i>",
-            parse_mode="HTML",
+        self.helper.sendtelegramMsg(update,
+            f"<i>Deleted {str(query.data).replace('delete_', '')} crypto bot</i>"
         )
 
     def RemoveExceptionCallBack(self, update):
@@ -413,13 +406,11 @@ class TelegramActions():
         self.helper.read_data()
 
         query = update.callback_query
-        query.answer()
-
+ 
         self.helper.data["scannerexceptions"].pop(str(query.data).replace("delexcep_", ""))
 
         self.helper.write_data()
 
-        query.edit_message_text(
-            f"<i>Removed {str(query.data).replace('delexcep_', '')} from exception list. bot</i>",
-            parse_mode="HTML",
+        self.helper.sendtelegramMsg(update,
+            f"<i>Removed {str(query.data).replace('delexcep_', '')} from exception list. bot</i>"
         )

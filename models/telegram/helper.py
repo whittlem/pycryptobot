@@ -2,7 +2,7 @@ import os, platform
 import subprocess
 import json
 
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
+from telegram import InlineKeyboardMarkup, Update
 
 from time import sleep
 from datetime import datetime

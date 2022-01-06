@@ -32,12 +32,6 @@ class TelegramControl():
         return InlineKeyboardMarkup(keyboard)
 
     def _askBotList(self, update: Update, callbackTag, status):
-        query = update.callback_query
-        try:
-            query.answer()
-        except:
-            pass
-
         buttons = []
 
         for market in self.helper.getActiveBotList(status):
@@ -53,26 +47,13 @@ class TelegramControl():
                     buttons.append(InlineKeyboardButton(market, callback_data=f"{callbackTag}_{market}"))
 
         if len(buttons) > 0:
-            try:
-                query.edit_message_text(f"<b>What do you want to {callbackTag}?</b>",
-                    reply_markup=self._sortInlineButtons(buttons, f"{callbackTag}"),
-                    parse_mode="HTML")
-            except:
-                update.effective_message.reply_html(
-                    f"<b>What do you want to {callbackTag}?</b>",
-                    reply_markup=self._sortInlineButtons(buttons, f"{callbackTag}"))
+            self.helper.sendtelegramMsg(update, f"<b>What do you want to {callbackTag}?</b>",
+                    self._sortInlineButtons(buttons, f"{callbackTag}"))
         else:
-            try:
-                query.edit_message_text(f"<b>No {status} bots found.</b>", parse_mode="HTML")
-            except:
-                update.effective_message.reply_html(f"<b>No {status} bots found.</b>")
+            self.helper.sendtelegramMsg(update, f"<b>No {status} bots found.</b>")
 
     def _actionBotResponse(self, update: Update, callbackTag, state, status: str = "active"):
         query = update.callback_query
-        try:
-            query.answer()
-        except:
-            pass
 
         mode = "Stopping" if callbackTag == "stop" else "Pausing"
         if query.data.__contains__("allclose") or query.data.__contains__("all"):
@@ -83,23 +64,11 @@ class TelegramControl():
                 sleep(1)
         else:
             self.helper.stopRunningBot(str(query.data).replace(f"{callbackTag}_", ""), state, True)
-            # query.edit_message_text(
-            #         f"{mode} {str(query.data).replace(f'{callbackTag}_', '')} crypto bot"
-            #     )
 
-        try:
-            query.edit_message_text("Operation Complete")
-        except:
-            update.effective_message.reply_html("<b>Operation Complete</b>")
+        update.effective_message.reply_html("<b>Operation Complete</b>")
 
 
     def askStartBotList(self, update: Update):
-        query = update.callback_query
-        try:
-            query.answer()
-        except:
-            pass
-
         buttons = []
         self.helper.read_data()
         for market in self.helper.data["markets"]:
@@ -107,29 +76,15 @@ class TelegramControl():
                 buttons.append(InlineKeyboardButton(market, callback_data="start_" + market))
 
         reply_markup = self._sortInlineButtons(buttons, "start")
-
-        try:
-            query.edit_message_text("<b>What crypto bots do you want to start?</b>",
-            reply_markup=reply_markup,
-            parse_mode="HTML")
-        except:
-            update.effective_message.reply_html("<b>What crypto bots do you want to start?</b>",
-            reply_markup=reply_markup)
+        self.helper.sendtelegramMsg(update, "<b>What crypto bots do you want to start?</b>", reply_markup)
 
     def startBotResponse(self, update: Update):
         query = update.callback_query
-        try:
-            query.answer()
-        except:
-            pass
 
         self.helper.read_data()
 
         if "all" in query.data: # start all bots
-            try:
-                query.edit_message_text("<b>Starting all bots</b>", parse_mode="HTML")
-            except:
-                update.effective_message.reply_html("<b>Starting all bots</b>")
+            self.helper.sendtelegramMsg(update, "<b>Starting all bots</b>")
 
             for market in self.helper.data["markets"]:
                 if not self.helper.isBotRunning(market):
@@ -140,10 +95,7 @@ class TelegramControl():
                     update.effective_message.reply_html(f"{market} is already running, no action taken.")
 
         else: # start single bot
-            try:
-                query.edit_message_text(f"<i>Starting {str(query.data).replace('start_', '')} crypto bot</i>", parse_mode="HTML")
-            except:
-                update.effective_message.reply_html(f"<i>Starting {str(query.data).replace('start_', '')} crypto bot</i>")
+            self.helper.sendtelegramMsg(update, f"<i>Starting {str(query.data).replace('start_', '')} crypto bot</i>")
 
             if not self.helper.isBotRunning(str(query.data).replace("start_", "")):
                 overrides = self.helper.data["markets"][str(query.data).replace("start_", "")]["overrides"]
@@ -211,7 +163,7 @@ class TelegramControl():
 
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        update.message.reply_text("Select exchange", reply_markup=reply_markup)
+        self.helper.sendtelegramMsg(update, "Select exchange", reply_markup)
 
     def askDeleteBotList(self, update: Update):
         """ask which bot to delete"""
@@ -238,10 +190,9 @@ class TelegramControl():
 
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        update.message.reply_text(
+        self.helper.sendtelegramMsg(update,
             "<b>What crypto bots do you want to delete?</b>",
-            reply_markup=reply_markup,
-            parse_mode="HTML",
+            reply_markup
         )
 
     def askExceptionBotList(self, update):
@@ -269,8 +220,7 @@ class TelegramControl():
 
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        update.message.reply_text(
+        self.helper.sendtelegramMsg(update,
             "<b>What do you want to remove from the scanner exception list?</b>",
-            reply_markup=reply_markup,
-            parse_mode="HTML",
+            reply_markup
         )
