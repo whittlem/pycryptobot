@@ -761,6 +761,7 @@ class TelegramBot(TelegramBotBase):
 
         self.handler._checkScheduledJob(update)
         logger.info("Start scanning using default scanner? %s", bool(self.use_default_scanner))
+        self.helper.sendtelegramMsg(update, "Operation Started")
         self.actions.StartMarketScan(
             update,
             True if self.use_default_scanner == 1 else False,

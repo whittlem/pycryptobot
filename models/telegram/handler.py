@@ -194,6 +194,7 @@ class TelegramHandler:
         elif query.data in ("scanonly", "noscan", "startmarket"):
             if query.data == "startmarket":
                 self._checkScheduledJob(update)
+            self.helper.sendtelegramMsg(update, "Command Started")
             self.actions.StartMarketScan(update, self.helper.use_default_scanner, True if query.data != "noscan" else False, True if query.data != "scanonly" else False)
         elif query.data == "stopmarket":
             self._removeScheduledJob(update)
