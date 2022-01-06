@@ -274,9 +274,11 @@ class TelegramActions():
                     pass
 
         if scanmarkets:
-            if self.settings.config["notifications"]["enable_screener"]:
+            if bool(self.settings.config["notifications"]["enable_screener"]):
                 reply = "<i>Gathering market data\nplease wait...</i> \u23F3"
                 self.helper.sendtelegramMsg(update, reply)
+            else:
+                self.helper.sendtelegramMsg(update, "")
             try:
                 logger.info("Starting Market Scanner")
                 subprocess.getoutput(f"python3 {scanner_script_file}")
@@ -285,12 +287,12 @@ class TelegramActions():
                 logger.error(err)
                 raise
 
-            if self.settings.config["notifications"]["enable_screener"]:
+            if bool(self.settings.config["notifications"]["enable_screener"]):
                 update.effective_message.reply_html("<b>Scan Complete.</b>")
 
         # Watchdog process - check for hung bots and force restart them
 
-        if self.settings.config["notifications"]["enable_screener"]:
+        if bool(self.settings.config["notifications"]["enable_screener"]):
             update.effective_message.reply_html("<i>Fido checking for hung bots..</i>")
         for file in self.helper.getHungBotList():
             ex = self.helper.getRunningBotExchange(file)
@@ -299,12 +301,12 @@ class TelegramActions():
             os.remove(os.path.join(self.datafolder, "telegram_data", f"{file}.json"))
             #self.helper._cleandataquietall()
             sleep(1)
-            if self.settings.config["notifications"]["enable_screener"]:
+            if bool(self.settings.config["notifications"]["enable_screener"]):
                 update.effective_message.reply_html(f"Restarting {file} as it appears to have hung...")
             self.helper.startProcess(file, ex, "", "scanner")
             sleep(1)
 
-        if not startbots and self.settings.config["notifications"]["enable_screener"]:
+        if not startbots and bool(self.settings.config["notifications"]["enable_screener"]):
             update.effective_message.reply_html("<b>Operation Complete (0 started)</b>")
             return
 
@@ -326,7 +328,7 @@ class TelegramActions():
                                 scanned_bots.append(row)
                 except:
                     pass
-        if self.settings.config["notifications"]["enable_screener"]:
+        if bool(self.settings.config["notifications"]["enable_screener"]):
             update.effective_message.reply_html("<i>stopping bots..</i>")
         active_bots_list = self.helper.getActiveBotList()
         open_order_bot_list = self.helper.getActiveBotListWithOpenOrders()
@@ -335,7 +337,7 @@ class TelegramActions():
                 self.helper.stopRunningBot(file, "exit")
                 sleep(3)
             else:
-                if self.settings.config["notifications"]["enable_screener"]:
+                if bool(self.settings.config["notifications"]["enable_screener"]):
                     update.effective_message.reply_html(f"Not stopping {file} - in scanner list, or has open order...")
 
         botcounter = 0
@@ -347,7 +349,7 @@ class TelegramActions():
             if maxbotcount > 0 and botcounter >= maxbotcount:
                 break
             for quote in config[ex]["quote_currency"]:
-                if self.settings.config["notifications"]["enable_screener"]:
+                if bool(self.settings.config["notifications"]["enable_screener"]):
                     update.effective_message.reply_html(f"Starting {ex} ({quote}) bots...")
                 logger.info("%s - (%s)", ex, quote)
                 if not os.path.isfile(os.path.join(self.datafolder, "telegram_data", f"{ex}_{quote}_output.json")):
@@ -372,7 +374,7 @@ class TelegramActions():
                     if self.helper.config["scanner"]["enableleverage"] == False \
                             and (str(row).__contains__(f"DOWN{quote}") or str(row).__contains__(f"UP{quote}") or str(row).__contains__(f"3L-{quote}") or str(row).__contains__(f"3S-{quote}")):
                         if msg_cnt == 1:
-                            if self.settings.config["notifications"]["enable_screener"]:
+                            if bool(self.settings.config["notifications"]["enable_screener"]):
                                 update.effective_message.reply_html(f"Ignoring {ex} ({quote}) Leverage Pairs (enableleverage is disabled)...")    
                             msg_cnt += 1
                         continue
@@ -393,10 +395,10 @@ class TelegramActions():
                                 if debug == False:
                                     sleep(6)
 
-                if self.settings.config["notifications"]["enable_screener"]:
+                if bool(self.settings.config["notifications"]["enable_screener"]):
                     update.effective_message.reply_html(f"{outputmsg}")
 
-        if self.settings.config["notifications"]["enable_screener"]:
+        if bool(self.settings.config["notifications"]["enable_screener"]):
             update.effective_message.reply_html(f"<i>Operation Complete.  ({botcounter-runningcounter} started)</i>")
 
     def deleteresponse(self, update):
