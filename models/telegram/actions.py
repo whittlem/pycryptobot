@@ -346,7 +346,7 @@ class TelegramActions():
 
         self.helper.read_data()
         for ex in config:
-            if maxbotcount > 0 and botcounter >= maxbotcount:
+            if maxbotcount > 0 and (botcounter + runningcounter) >= maxbotcount:
                 break
             for quote in config[ex]["quote_currency"]:
                 if bool(self.settings.config["notifications"]["enable_screener"]):
@@ -398,8 +398,8 @@ class TelegramActions():
                 if bool(self.settings.config["notifications"]["enable_screener"]):
                     update.effective_message.reply_html(f"{outputmsg}")
 
-        if bool(self.settings.config["notifications"]["enable_screener"]):
-            update.effective_message.reply_html(f"<i>Operation Complete.  ({botcounter-runningcounter} started)</i>")
+        # if bool(self.settings.config["notifications"]["enable_screener"]):
+        update.effective_message.reply_html(f"<b>{scanner_config_file.replace('.json', '')} Operation Complete.</b><i>\n- {botcounter} started\n- {runningcounter + botcounter} running</i>")
 
     def deleteresponse(self, update):
         """delete selected bot"""
