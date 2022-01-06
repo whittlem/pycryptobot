@@ -22,7 +22,7 @@ class TelegramActions():
         self.datafolder = datafolder
 
         self.helper = tg_helper
-        self.settings = SettingsEditor(tg_helper)
+        self.settings = SettingsEditor(datafolder, tg_helper)
 
     def _getMarginText(self, market):
         light_icon, margin_icon = ("\U0001F7E2" if "-" not in self.helper.data["margin"] else "\U0001F534", "\U0001F973" if "-" not in self.helper.data["margin"] else "\U0001F97A")
