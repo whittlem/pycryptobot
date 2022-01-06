@@ -1,0 +1,35 @@
+{
+	"coinbasepro": {
+		"quote_currency": [
+			"GBP"
+		],
+		"tv_screener_ratings": [
+			"STRONG_BUY",
+			"BUY"
+		],
+		"volume_threshold": 15000,
+		"minimum_volume": 15000,
+		"minimum_quote_price": 0.00000001,
+		"volatility_threshold": 9,
+		"minimum_volatility": 5,
+		"granularity": 3600,
+		"selection_score": 7,
+		"adx_threshold": 35
+	},
+	"binance": {
+		"quote_currency": [
+			"USDT"
+		],
+		"volume_threshold": 25000,
+		"minimum_volume": 25000,
+		"minimum_quote_price": 0.000001,
+		"volatility_threshold": 9,
+		"minimum_volatility": 5,
+		"tv_screener_ratings": [
+			"STRONG_BUY"
+		],
+		"selection_score": 8,
+		"granularity": "1hour",
+		"adx_threshold": 35
+	}
+}
