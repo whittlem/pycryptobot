@@ -30,7 +30,11 @@ class ConfigEditor():
 
     def getConfigOptions(self, update):
         query = update.callback_query
-        exchange = query.data.replace('edit_', '')
+
+        if query.data.__contains__("edit_"):
+            exchange = query.data.replace('edit_', '')
+        elif query.data.__contains__("coinbasepro") or query.data.__contains__('binance') or query.data.__contains__('kucoin'):
+            exchange = query.data[:query.data.find('_')]
         
         normalProperties = {
             "live": "live Mode",
