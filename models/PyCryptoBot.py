@@ -810,7 +810,7 @@ class PyCryptoBot(BotConfig):
     def preventLoss(self):
         return self.preventloss
 
-    def preventLossTrigger(self):
+    def preventLossTrigger(self) -> float:
         return self.preventlosstrigger
 
     def preventLossMargin(self):
