@@ -8,33 +8,32 @@ BUTTON_REPLY, TYPING_RESPONSE = range(2)
 class ConfigEditor():
     def __init__(self, datafolder, tg_helper: TelegramHelper) -> None:
         self.datafolder = datafolder
-        
         self.helper = tg_helper
 
-    def get_conversation_handler(self):
-        return ConversationHandler(entry_points=[CallbackQueryHandler(self.ask_buy_max_size, pattern='edit_buymaxsize')],
-        states={
-            TYPING_RESPONSE: [CallbackQueryHandler(self.buy_max_size)],
-            },
-        fallbacks=[CommandHandler('cancel', self.cancel)],
-        )
-        # return ConversationHandler(entry_points=[CommandHandler("buymax", self.ask_buy_max_size)],
-        # states={
-        #     TYPING_RESPONSE: [
-        #         MessageHandler(
-        #             Filters.text, self.buy_max_size
-        #         )],
-        #     },
-        # fallbacks=[CommandHandler('cancel', self.cancel)],
-        # )
+        self.floatProperties = {
+            "trailingstoplosstrigger" : "Trailing Stop Loss Trigger",
+            "trailingstoploss" : "Trailing Stop Loss",
+            "selllowerpcnt" : "Lowest Sell Point",
+            "nosellminpcnt" : "Dont Sell Above",
+            "nosellmaxpcnt" : "Dont Sell Below",
+            "nobuynearhighpcnt" : "Dont Buy Near High"
+        }
 
-    def getConfigOptions(self, update):
+        self.integerProperties = {
+            "buymaxsize": "Max Buy Size",
+            "buyminsize" : "Min Buy Size"
+        }
+
+    def getConfigOptions(self, update, callback: str = ''):
         query = update.callback_query
 
-        if query.data.__contains__("edit_"):
-            exchange = query.data.replace('edit_', '')
-        elif query.data.__contains__("coinbasepro") or query.data.__contains__('binance') or query.data.__contains__('kucoin'):
-            exchange = query.data[:query.data.find('_')]
+        if callback == '':
+            if query.data.__contains__("edit_"):
+                exchange = query.data.replace('edit_', '')
+            elif query.data.__contains__("coinbasepro") or query.data.__contains__('binance') or query.data.__contains__('kucoin'):
+                exchange = query.data[:query.data.find('_')]
+        else:
+            exchange = callback
         
         normalProperties = {
             "live": "live Mode",
@@ -69,6 +68,21 @@ class ConfigEditor():
                         f"{'Enable' if self.helper.config[exchange]['config'][prop] == 1 else 'Disable'} {disableProperties[prop]}",
                         callback_data=f"{exchange}_{'disable' if self.helper.config[exchange]['config'][prop] == 1 else 'enable' }_{prop}")
             )
+
+        for prop in self.floatProperties:
+            buttons.append(
+                InlineKeyboardButton(
+                        f"{self.floatProperties[prop]}: {self.helper.config[exchange]['config'][prop]}",
+                        callback_data=f"{exchange}_float_{prop}")
+            )
+
+        for prop in self.integerProperties:
+            buttons.append(
+                InlineKeyboardButton(
+                        f"{self.integerProperties[prop]}: {self.helper.config[exchange]['config'][prop]}",
+                        callback_data=f"{exchange}_integer_{prop}")
+            )
+
         keyboard = []
         i = 0
         while i <= len(buttons) - 1:
@@ -132,9 +146,21 @@ class ConfigEditor():
         # update.message.reply_text("Config Updated")
     
     def disable_option(self, exchange, parameter):
+        self.helper.loadConfig()
         self.helper.config[exchange]["config"][parameter] = 0
         self.helper.write_config()
 
     def enable_option(self, exchange, parameter):
+        self.helper.loadConfig()
         self.helper.config[exchange]["config"][parameter] = 1
+        self.helper.write_config()
+
+    def increase_value(self, exchange, parameter, unitsize):
+        self.helper.loadConfig()
+        self.helper.config[exchange]["config"][parameter] = round(self.helper.config[exchange]["config"][parameter] + unitsize, 1)
+        self.helper.write_config()
+
+    def decrease_value(self, exchange, parameter, unitsize):
+        self.helper.loadConfig()
+        self.helper.config[exchange]["config"][parameter] = round(self.helper.config[exchange]["config"][parameter] - unitsize, 1)
         self.helper.write_config()

@@ -130,6 +130,23 @@ class TelegramHandler:
             self.editor.enable_option(query.data[:query.data.find('_')], query.data[query.data.rfind('_')+1:])
             self.editor.getConfigOptions(update) # refresh buttons
 
+        elif query.data.__contains__("_float_"):
+            self.askPercentValue(update, "float")
+        elif query.data.__contains__("_integer_"):
+            self.askPercentValue(update, "integer")
+        elif query.data.__contains__("increase"):
+            unit_size = 0.1 if query.data.__contains__("float") else 1
+            self.editor.increase_value(query.data[:query.data.find('_')], query.data[query.data.rfind('_')+1:], unit_size)
+            typestr = "float" if query.data.__contains__("float") else "integer"
+            self.askPercentValue(update, typestr)
+        elif query.data.__contains__("decrease"):
+            unit_size = 0.1 if query.data.__contains__("float") else 1
+            self.editor.decrease_value(query.data[:query.data.find('_')], query.data[query.data.rfind('_')+1:], unit_size)
+            type_str = "float" if query.data.__contains__("float") else "integer"
+            self.askPercentValue(update, type_str)
+        elif query.data.__contains__("_value_done"):
+            self.editor.getConfigOptions(update, query.data[:query.data.find('_')])
+
         # Restart Bots
         elif query.data == "restart":
             self.control.askRestartBotList(update)
@@ -309,6 +326,22 @@ class TelegramHandler:
 
         self.helper.sendtelegramMsg(update, "<b>Select exchange</b>", reply_markup)
 
+    def askPercentValue(self, update, typestr):
+        query = update.callback_query
+        exchange, prop = query.data[:query.data.find('_')], query.data[query.data.rfind('_')+1:]
+        keyboard = [
+            [
+                InlineKeyboardButton("+", callback_data=f"{exchange}_increase_*{typestr}*_{prop}"),
+                InlineKeyboardButton("-", callback_data=f"{exchange}_decrease_*{typestr}*_{prop}"),
+            ],
+            [InlineKeyboardButton("\U000025C0 Done", callback_data=f"{exchange}_value_done")],
+        ]
+        if typestr == "integer":
+            self.helper.sendtelegramMsg(update, f"<b>{self.editor.integerProperties[prop]}: {int(self.helper.config[exchange]['config'][prop])}</b>", InlineKeyboardMarkup(keyboard, one_time_keyboard=True))
+        elif typestr == "float":
+            self.helper.sendtelegramMsg(update, f"<b>{self.editor.floatProperties[prop]}: {round(float(self.helper.config[exchange]['config'][prop]),1)}</b>", InlineKeyboardMarkup(keyboard, one_time_keyboard=True))
+
+
     def askConfimation(self, update):
 
         query = update.callback_query
@@ -346,9 +379,9 @@ class TelegramHandler:
         reply = ""
         if len(scannerSchedule.get_jobs()) > 0:
             scannerSchedule.shutdown()
-            reply = "Scan job schedule has been removed"
+            reply = "<b>Scan job schedule has been removed</b> \u2705"
 
         else:
-            reply = "No scheduled job found"
+            reply = "<b>No scheduled job found!</b>"
 
         self.helper.sendtelegramMsg(update, reply)
