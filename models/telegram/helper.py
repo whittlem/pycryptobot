@@ -64,7 +64,7 @@ class TelegramHelper():
 
     def sendtelegramMsg(self, update: Update, reply, markup: InlineKeyboardMarkup = None):
         try:
-            update.callback_query.data = datetime.now().isoformat()
+            # update.callback_query.data = datetime.now().isoformat()
             query = update.callback_query
             query.answer()
         except:
