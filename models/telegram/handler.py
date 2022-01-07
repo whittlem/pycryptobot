@@ -341,7 +341,6 @@ class TelegramHandler:
         elif typestr == "float":
             self.helper.sendtelegramMsg(update, f"<b>{self.editor.floatProperties[prop]}: {round(float(self.helper.config[exchange]['config'][prop]),1)}</b>", InlineKeyboardMarkup(keyboard, one_time_keyboard=True))
 
-
     def askConfimation(self, update):
 
         query = update.callback_query
@@ -361,7 +360,9 @@ class TelegramHandler:
             self.helper.config["scanner"]["autoscandelay"] > 0
             and len(scannerSchedule.get_jobs()) == 0
         ):
-            scannerSchedule.start()
+            if not scannerSchedule.running: 
+                scannerSchedule.start()
+
             scannerSchedule.add_job(
                 self.actions.StartMarketScan,
                 args=(update, self.helper.use_default_scanner, True, True),
@@ -378,7 +379,7 @@ class TelegramHandler:
 
         reply = ""
         if len(scannerSchedule.get_jobs()) > 0:
-            scannerSchedule.shutdown()
+            scannerSchedule.remove_all_jobs()
             reply = "<b>Scan job schedule has been removed</b> \u2705"
 
         else:

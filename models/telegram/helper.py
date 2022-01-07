@@ -64,15 +64,21 @@ class TelegramHelper():
 
     def sendtelegramMsg(self, update: Update, reply, markup: InlineKeyboardMarkup = None):
         try:
+            update.callback_query.data = datetime.now().isoformat()
             query = update.callback_query
             query.answer()
         except:
             pass
         try:
-            query.edit_message_text(reply, reply_markup=markup if markup is not None else None, parse_mode="HTML")
+            if markup == None:
+                query.edit_message_text(reply, parse_mode="HTML")
+            else:
+                query.edit_message_text(reply, reply_markup=markup, parse_mode="HTML")
         except Exception as err:
-            update.message.reply_text(reply, reply_markup=markup, parse_mode="HTML")
-
+            try:
+                update.message.reply_text(reply, reply_markup=markup, parse_mode="HTML")
+            except Exception as err:
+                update.effective_message.reply_html(reply)
     def read_data(self, name: str = "data.json") -> bool:
         try:
             fname = name if name.__contains__(".json") else f"{name}.json"

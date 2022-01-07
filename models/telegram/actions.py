@@ -400,7 +400,7 @@ class TelegramActions():
                     update.effective_message.reply_html(f"{outputmsg}")
 
         # if bool(self.helper.settings["notifications"]["enable_screener"]):
-        update.effective_message.reply_html(f"<b>{scanner_config_file.replace('.json', '')} Operation Complete.</b><i>\n- {botcounter} started\n- {runningcounter + botcounter} running</i>")
+        update.effective_message.reply_html(f"<b>{scanner_config_file.replace('.json', '').capitalize} Operation Complete.</b><i>\n- {botcounter} started\n- {runningcounter + botcounter} running</i>")
 
     def deleteresponse(self, update):
         """delete selected bot"""
