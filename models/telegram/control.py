@@ -57,7 +57,7 @@ class TelegramControl():
 
         mode = "Stopping" if callbackTag == "stop" else "Pausing"
         if query.data.__contains__("allclose") or query.data.__contains__("all"):
-            self.helper.sendtelegramMsg(update, f"<i>{mode} bots</i>", parse_mode="HTML")
+            self.helper.sendtelegramMsg(update, f"<i>{mode} bots</i>")
 
             for pair in self.helper.getActiveBotList(status):
                 self.helper.stopRunningBot(pair, state, False if query.data.__contains__("allclose") else True)

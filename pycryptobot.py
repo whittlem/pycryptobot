@@ -1319,6 +1319,8 @@ def executeJob(
                         ignore_index=True,
                     )
 
+                    state.in_open_trade = True
+
                     state.last_api_call_datetime -= timedelta(seconds=60)
 
                 if _app.shouldSaveGraphs():
@@ -1549,6 +1551,7 @@ def executeJob(
                         },
                         ignore_index=True,
                     )
+                    state.in_open_trade = False
                     state.last_api_call_datetime -= timedelta(seconds=60)
                 if _app.shouldSaveGraphs():
                     tradinggraphs = TradingGraphs(_technical_analysis)

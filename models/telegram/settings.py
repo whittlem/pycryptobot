@@ -8,10 +8,10 @@ class SettingsEditor():
     def __init__(self, datafolder, tg_helper: TelegramHelper) -> None:
         self.datafolder = datafolder
         self.helper = tg_helper
-        self.config = {}
+        # self.config = {}
 
         if not os.path.isfile(os.path.join(self.datafolder, "telegram_data", "settings.json")):
-            self.config.update({"notifications": {"enable_scanner": 1, "enable_screener": 1,"enable_start": 1,"enable_stop": 1,"enable_pause": 1,"enable_resume": 1,}})
+            self.helper.settings.update({"notifications": {"enable_scanner": 1, "enable_screener": 1,"enable_start": 1,"enable_stop": 1,"enable_pause": 1,"enable_resume": 1,}})
             self._write_config()
 
         self._read_config()
@@ -19,7 +19,7 @@ class SettingsEditor():
     def _read_config(self):
         try:
             with open(os.path.join(self.datafolder, "telegram_data", "settings.json"), "r", encoding="utf8") as json_file:
-                self.config = json.load(json_file)
+                self.helper.settings = json.load(json_file)
         except FileNotFoundError:
             return 
         except json.decoder.JSONDecodeError:
@@ -32,11 +32,13 @@ class SettingsEditor():
                 "w",
                 encoding="utf8",
             ) as outfile:
-                json.dump(self.config, outfile, indent=4)
+                json.dump(self.helper.settings, outfile, indent=4)
         except:
             raise
 
     def getNotifications(self, update):
+        self._read_config()
+
         notifications = {
             "enable_screener" : "Screener",
             "enable_scanner" : "Scanner",
@@ -50,8 +52,8 @@ class SettingsEditor():
         for prop in notifications:
             buttons.append(
                 InlineKeyboardButton(
-                        f"{notifications[prop]} {'Disabled' if self.config['notifications'][prop] == 0 else 'Enabled'}",
-                        callback_data=f"notify_{'disable' if self.config['notifications'][prop] == 1 else 'enable' }_{prop}")
+                        f"{notifications[prop]} {'Disabled' if self.helper.settings['notifications'][prop] == 0 else 'Enabled'}",
+                        callback_data=f"notify_{'disable' if self.helper.settings['notifications'][prop] == 1 else 'enable' }_{prop}")
             )
 
         keyboard = []
@@ -71,9 +73,11 @@ class SettingsEditor():
         )
 
     def disable_option(self, parameter):
-        self.config["notifications"][f"enable_{parameter}"] = 0
+        self.helper.settings["notifications"][f"enable_{parameter}"] = 0
         self._write_config()
+        self._read_config()
 
     def enable_option(self, parameter):
-        self.config["notifications"][f"enable_{parameter}"] = 1
+        self.helper.settings["notifications"][f"enable_{parameter}"] = 1
         self._write_config()
+        self._read_config()

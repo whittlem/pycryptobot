@@ -14,9 +14,53 @@ class TelegramHelper():
         self.data = {}
         self.config = config
         self.config_file = configfile
+        self.settings = {}
         self.use_default_scanner = 1
-        if "use_default_scanner" in config["scanner"]:
-            self.use_default_scanner = bool(config["scanner"]["use_default_scanner"])
+        self.atr72pcnt = 2.0
+        self.enableleverage = False
+        self.use_default_scanner = 1
+        self.maxbotcount = 0
+        self.autoscandelay = 0
+        self.enable_buy_next = True
+        self.autostart = False
+
+        self.loadConfig()
+
+    def loadConfig(self):
+        self.read_config()
+
+        if "scanner" in self.config:
+
+            self.atr72pcnt = (
+                self.config["scanner"]["atr72_pcnt"]
+                if "atr72_pcnt" in self.config["scanner"]
+                else self.atr72pcnt
+            )
+            self.enableleverage = (
+                self.config["scanner"]["enableleverage"]
+                if "enableleverage" in self.config["scanner"]
+                else self.enableleverage
+            )
+            self.use_default_scanner = (
+                self.config["scanner"]["use_default_scanner"]
+                if "use_default_scanner" in self.config["scanner"]
+                else self.use_default_scanner
+            )
+            self.maxbotcount = (
+                self.config["scanner"]["maxbotcount"]
+                if "maxbotcount" in self.config["scanner"]
+                else self.maxbotcount
+            )
+            self.autoscandelay = (
+                self.config["scanner"]["autoscandelay"]
+                if "autoscandelay" in self.config["scanner"]
+                else 0
+            )
+            self.enable_buy_next = (
+                self.config["scanner"]["enable_buy_next"]
+                if "enable_buy_next" in self.config["scanner"]
+                else True
+            )
 
     def sendtelegramMsg(self, update: Update, reply, markup: InlineKeyboardMarkup = None):
         try:
@@ -63,7 +107,7 @@ class TelegramHelper():
     def read_config(self):
         try:
             with open(os.path.join(self.config_file), "r", encoding="utf8") as json_file:
-                self.data = json.load(json_file)
+                self.config = json.load(json_file)
         except FileNotFoundError:
             return 
         except json.decoder.JSONDecodeError:
