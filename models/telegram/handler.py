@@ -146,6 +146,11 @@ class TelegramHandler:
             self.askPercentValue(update, type_str)
         elif query.data.__contains__("_value_done"):
             self.editor.getConfigOptions(update, query.data[:query.data.find('_')])
+        elif query.data == "save_config":
+            self.editor.save_updated_config(update)
+        elif query.data == "reload_config":
+            update.callback_query.data = "all"
+            self.control._actionBotResponse(update, "reload", "reload", "active")
 
         # Restart Bots
         elif query.data == "restart":
@@ -303,7 +308,7 @@ class TelegramHandler:
         for exchange in self.helper.config:
             if exchange not in ("telegram", "scanner"):
                 buttons.append(
-                    InlineKeyboardButton(exchange, callback_data=f"{callback}_{exchange}")
+                    InlineKeyboardButton(exchange.capitalize(), callback_data=f"{callback}_{exchange}")
                 )
 
         i = 0
