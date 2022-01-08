@@ -40,12 +40,12 @@ class SettingsEditor():
         self._read_config()
 
         notifications = {
-            "enable_screener" : "Screener",
-            "enable_scanner" : "Scanner",
-            "enable_start" : "Bot Start",
-            "enable_stop" : "Bot Stop",
-            "enable_pause" : "Bot Pause",
-            "enable_resume" : "Bot Resume"
+            "enable_screener" : "Screener/Scanner",
+            # "enable_scanner" : "Scanner",
+            # "enable_start" : "Bot Start",
+            # "enable_stop" : "Bot Stop",
+            # "enable_pause" : "Bot Pause",
+            # "enable_resume" : "Bot Resume"
         }
 
         buttons = []

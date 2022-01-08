@@ -55,7 +55,8 @@ class TelegramControl():
     def _actionBotResponse(self, update: Update, callbackTag, state, status: str = "active"):
         query = update.callback_query
 
-        mode = "Stopping" if callbackTag == "stop" else "Pausing"
+        mode = callbackTag.capitalize()
+        # mode = "Stopping" if callbackTag == "stop" else "Pausing"
         if query.data.__contains__("allclose") or query.data.__contains__("all"):
             self.helper.sendtelegramMsg(update, f"<i>{mode} bots</i>")
 
