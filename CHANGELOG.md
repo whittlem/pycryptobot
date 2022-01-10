@@ -14,6 +14,12 @@ Upgrade library dependencies (if required):
 - added option to enable/disable screener/scanner notifications
 - update to default parser to set to correct object type
 
+## [5.1.4] - 2022-01-10
+
+- fixed spelling mistake in Kucoin api.py file
+- added balance checking to verify buy/sell trades occurred
+- revised market/symbol regex in telegram_bot.py to match rest of code
+
 ## [5.1.3] - 2022-01-03
 
 - fixed spelling mistake in comment
