@@ -19,10 +19,9 @@ class TelegramHelper:
         self.config = config
         self.config_file = configfile
         self.settings = {}
-        self.use_default_scanner = 1
+        self.use_default_scanner = True
         self.atr72pcnt = 2.0
         self.enableleverage = False
-        self.use_default_scanner = 1
         self.maxbotcount = 0
         self.autoscandelay = 0
         self.enable_buy_next = True
@@ -47,7 +46,7 @@ class TelegramHelper:
                 else self.enableleverage
             )
             self.use_default_scanner = (
-                self.config["scanner"]["use_default_scanner"]
+                bool(self.config["scanner"]["use_default_scanner"])
                 if "use_default_scanner" in self.config["scanner"]
                 else self.use_default_scanner
             )
