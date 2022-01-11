@@ -252,7 +252,7 @@ class TelegramHandler:
                 True if query.data != "scanonly" else False,
             )
         elif query.data == "stopmarket":
-            self._remove_scheduled_job(update)
+            self._remove_scheduled_job(update, context)
 
         # Delete Exceptions
         elif query.data.__contains__("delexcep_"):
@@ -459,9 +459,9 @@ class TelegramHandler:
 
             reply = "<b>Scan job schedule created to run every "\
                 f"{self.helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705"
-            self.helper.send_telegram_message(update, reply)
+            self.helper.send_telegram_message(update, reply, context=context)
 
-    def _remove_scheduled_job(self, update):
+    def _remove_scheduled_job(self, update, context):
         """check if scanner/screener is scheduled to run, remove if it is"""
         reply = ""
         if len(scannerSchedule.get_jobs()) > 0:
@@ -471,4 +471,4 @@ class TelegramHandler:
         else:
             reply = "<b>No scheduled job found!</b>"
 
-        self.helper.send_telegram_message(update, reply)
+        self.helper.send_telegram_message(update, reply, context=context)

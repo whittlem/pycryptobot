@@ -824,7 +824,7 @@ class TelegramBot(TelegramBotBase):
     def StopScanning(self, update, context):
         if not self._check_if_allowed(context._user_id_and_data[0], update):
             return
-        self.handler._remove_scheduled_job(update)
+        self.handler._remove_scheduled_job(update, context)
 
     def cleandata(self, update, context) -> None:
         if not self._check_if_allowed(context._user_id_and_data[0], update):
