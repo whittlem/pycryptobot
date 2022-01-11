@@ -152,3 +152,10 @@ tests/unit_tests/data/*.json
 
 *.key
 config-*.yaml
+telegram_data
+screener.json
+
+# WIP
+models/exchange/kraken
+script-kraken.py
+script-krakenv2.py

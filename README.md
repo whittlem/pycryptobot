@@ -1,7 +1,7 @@
 [![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg) [![Tests](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)
 
 
-# Python Crypto Bot v5.1.3 (pycryptobot)
+# Python Crypto Bot v5.2.0 (pycryptobot)
 
 ## Join our chat on Telegram
 
@@ -411,7 +411,7 @@ Special sell cases:
     --autorestart                       Automatically restart the bot on error
     --sellatresistance                  Sells if the price reaches either resistance or Fibonacci band
     --enabletelegrambotcontrol          Enable bot control via Telegram
-    --sell_smart_switch                 Enables smart switching to 5 minute granularity after a buy is placed
+    --sellsmartswitch                 Enables smart switching to 5 minute granularity after a buy is placed
     --enableinsufficientfundslogging    Stop insufficient fund errors from stopping the bot, instead log and continue
 
 ## Disabling Default Functionality

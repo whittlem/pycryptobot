@@ -22,20 +22,20 @@ def test_helper_isnot_null():
 
 def test_margins():
     assert helper.read_data(market)
-    assert actions._getMarginText(market)
+    assert actions._get_margin_text(market)
 
-def test_getActiveBotList():
-    result = helper.getActiveBotList("active")
+def test_get_active_bot_list():
+    result = helper.get_active_bot_list("active")
     assert len(result) > 0
 
-def test_isBotRunning():
-    assert helper.isBotRunning(market)
+def test_is_bot_running():
+    assert helper.is_bot_running(market)
 
 def test_updateBotcontrol():
-    helper.updatebotcontrol(market, "stop")
+    helper.update_bot_control(market, "stop")
     helper.read_data(market)
     assert helper.data["botcontrol"]["status"] == "stop"
-    helper.updatebotcontrol(market, "active")
+    helper.update_bot_control(market, "active")
     helper.read_data(market)
     assert helper.data["botcontrol"]["status"] == "active"
     
@@ -49,4 +49,4 @@ def test_handler_isnot_null():
     assert handler is not None
 
 def test_authorised_check():
-    assert handler._checkifallowed("0000000000", None)
+    assert handler._check_if_allowed("0000000000", None)
