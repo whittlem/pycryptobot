@@ -1,0 +1,22 @@
+{
+    "botcontrol": {
+        "status": "active",
+        "manualsell": false,
+        "manualbuy": false,
+        "started": "2021-12-09T15:20:19.456063",
+        "startmethod": "scanner"
+    },
+    "trailingstoplosstriggered": false,
+    "indicators": {
+        "EMA": true,
+        "BULL": false,
+        "MACD": false
+    },
+    "exchange": "binance",
+    "margin": "5.8735%",
+    "delta": "3.11",
+    "price": 5.942,
+    "df_high": " ",
+    "from_df_high": " ",
+    "change_pcnt_high": 0.0
+}
