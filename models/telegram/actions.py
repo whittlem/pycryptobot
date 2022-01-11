@@ -532,8 +532,8 @@ class TelegramActions:
         # if bool(self.helper.settings["notifications"]["enable_screener"]):
         update.effective_message.reply_html(
             f"<b>{scanner_config_file.replace('.json', '').capitalize()} " \
-                "Operation Complete.</b><i>\n- {botcounter} started"\
-                    "\n- {runningcounter + botcounter} running</i>"
+                f"Operation Complete.</b><i>\n- {botcounter} started"\
+                    f"\n- {runningcounter + botcounter} running</i>"
         )
 
     def delete_response(self, update):
