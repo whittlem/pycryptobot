@@ -1197,7 +1197,7 @@ def executeJob(
                                     _app.getBuyPercent(),
                                 )
 
-                                Logger.debug(resp)
+                                # Logger.debug(resp)
 
                                 # check balances after order
                                 ac = account.getBalance()
@@ -1225,18 +1225,9 @@ def executeJob(
                                     bal_resp_error = 1
                                     trycnt += 1
 
-                                if account.basebalance_after <= account.basebalance_before:
-                                    if trycnt == maxtry:
-                                        Logger.warning(
-                                            f"Error: BUY order was not placed for {app.getMarket()}, possible API problem.\n"
-                                            f"Balance before: {account.basebalance_before} after: {account.basebalance_after}"
-                                            )
-                                        if not app.disableTelegramErrorMsgs():
-                                            app.notifyTelegram(f"Error: BUY order was not placed for {app.getMarket()}, possible API problem.")
-                                        break
-                                    if bal_resp_error == 0:
-                                        time.sleep(15)
-                                        trycnt += 1
+                                if account.basebalance_after <= account.basebalance_before and bal_resp_error == 0:
+                                    time.sleep(10)
+                                    trycnt += 1
                                 else:
                                     Logger.info(
                                         f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance_after)}\n"
@@ -1256,10 +1247,16 @@ def executeJob(
                                     )
 
                                     telegram_bot.add_open_order()
+                                    _state.trade_error_cnt = 0
                                     _state.trailing_buy = 0
                                     break
 
                         except:
+                            _state.trade_error_cnt += 1
+                            if _state.trade_error_cnt >= 4:  # 5 attempts made
+                                raise Exception(
+                                    "Trade Error: BUY transaction attempted 5 times. Determine cause before continuing."
+                                )
                             Logger.warning(f"API Error: Unable to place buy order for {app.getMarket()}")
                             if not app.disableTelegramErrorMsgs():
                                 app.notifyTelegram(f"API Error: Unable to place buy order for {app.getMarket()}")
@@ -1368,9 +1365,7 @@ def executeJob(
                         },
                         ignore_index=True,
                     )
-
                     state.in_open_trade = True
-
                     state.last_api_call_datetime -= timedelta(seconds=60)
 
                 if _app.shouldSaveGraphs():
@@ -1460,7 +1455,7 @@ def executeJob(
                                 baseamounttosell,
                                 _app.getSellPercent(),
                             )
-                            Logger.debug(resp)
+                            #Logger.debug(resp)
 
                             # check balances
                             try:
@@ -1474,15 +1469,9 @@ def executeJob(
                                 trycnt += 1
 
                             # if the balance is still the same, try again
-                            if account.basebalance_after == account.basebalance_before:
-                                if trycnt == maxtry:
-                                    Logger.warning(f"Error: SELL order was not placed for {app.getMarket()}, possible API problem.")
-                                    if not app.disableTelegramErrorMsgs():
-                                        app.notifyTelegram(f"Error: SELL order was not placed for {app.getMarket()}, possible API problem.")
-                                    break
-                                if bal_resp_error == 0:
-                                    time.sleep(10)
-                                    trycnt += 1
+                            if account.basebalance_after == account.basebalance_before and bal_resp_error == 0:
+                                time.sleep(10)
+                                trycnt += 1
                             else:
                                 # display balances
                                 Logger.info(
@@ -1490,6 +1479,7 @@ def executeJob(
                                     f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance_after)}"
                                 )
                                 _state.prevent_loss = 0
+                                _state.trade_error_cnt = 0
 
                                 _app.notifyTelegram(
                                     _app.getMarket()
@@ -1521,6 +1511,11 @@ def executeJob(
 
                                 break
                     except:
+                        _state.trade_error_cnt += 1
+                        if _state.trade_error_cnt >= 4:  # 5 attempts made
+                            raise Exception(
+                                "Trade Error: SELL transaction attempted 5 times. Determine cause before continuing."
+                            )
                         Logger.warning(f"API Error: Unable to place SELL order for {app.getMarket()}")
                         if not app.disableTelegramErrorMsgs():
                             app.notifyTelegram(f"API Error: Unable to place SELL order for {app.getMarket()}")
