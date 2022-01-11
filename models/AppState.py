@@ -72,6 +72,7 @@ class AppState:
         self.profitlosstracker = 0
         self.feetracker = 0
         self.buy_tracker = 0
+        self.trade_error_cnt = 0
 
         self.last_api_call_datetime = datetime.datetime.now() - datetime.timedelta(
             minutes=2
