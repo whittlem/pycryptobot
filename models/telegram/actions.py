@@ -279,6 +279,7 @@ class TelegramActions:
     def start_market_scan(
         self,
         update,
+        context,
         use_default_scanner: bool = True,
         scanmarkets: bool = True,
         startbots: bool = True,
@@ -300,7 +301,7 @@ class TelegramActions:
                 config = json.load(json_file)
         except IOError as err:
             self.helper.send_telegram_message(
-                update, f"<i>{scanner_config_file} config error</i>\n{err}"
+                update, f"<i>{scanner_config_file} config error</i>\n{err}", context=context
             )
             return
 
@@ -349,7 +350,7 @@ class TelegramActions:
         if scanmarkets:
             if bool(self.helper.settings["notifications"]["enable_screener"]):
                 reply = "<i>Gathering market data\nplease wait...</i> \u23F3"
-                self.helper.send_telegram_message(update, reply)
+                self.helper.send_telegram_message(update, reply, context=context)
             # else:
             #     self.helper.send_telegram_message(update, "Command Started")
             try:

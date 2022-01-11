@@ -73,9 +73,10 @@ class SettingsEditor:
         buttons = []
         for prop in notifications.items():
             setting_value = bool(self.helper.settings['notifications'][prop[0]])
+            light_icon = "\U0001F7E2" if setting_value == 1 else "\U0001F534"
             buttons.append(
                 InlineKeyboardButton(
-                    f"{prop[1]} {'Disabled' if setting_value is False else 'Enabled'}",
+                    f"{light_icon} {prop[1]}",
                     callback_data=
                         f"notify_{'disable' if setting_value is True else 'enable' }_{prop[0]}",
                 )
