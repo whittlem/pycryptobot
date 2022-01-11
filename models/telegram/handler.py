@@ -239,13 +239,14 @@ class TelegramHandler:
         elif query.data == "scanner":
             self.get_scanner_options(update)
         elif query.data == "schedule":
-            self._check_scheduled_job(update)
+            self._check_scheduled_job(update, context)
         elif query.data in ("scanonly", "noscan", "startmarket"):
             if query.data == "startmarket":
-                self._check_scheduled_job(update)
+                self._check_scheduled_job(update, context)
             self.helper.send_telegram_message(update, "Command Started")
             self.actions.start_market_scan(
                 update,
+                context,
                 self.helper.use_default_scanner,
                 True if query.data != "noscan" else False,
                 True if query.data != "scanonly" else False,
@@ -438,7 +439,7 @@ class TelegramHandler:
         reply = f"<b>Are you sure you want to {query.data.replace('_', ' ')}?</b>"
         self.helper.send_telegram_message(update, reply, reply_markup)
 
-    def _check_scheduled_job(self, update):
+    def _check_scheduled_job(self, update, context):
         """check if scanner/screener is scheduled to run, add if not"""
         if (
             self.helper.config["scanner"]["autoscandelay"] > 0
@@ -449,7 +450,7 @@ class TelegramHandler:
 
             scannerSchedule.add_job(
                 self.actions.start_market_scan,
-                args=(update, self.helper.use_default_scanner, True, True),
+                args=(update, context, self.helper.use_default_scanner, True, True),
                 trigger="interval",
                 minutes=self.helper.config["scanner"]["autoscandelay"] * 60,
                 name="Volume Auto Scanner",
