@@ -81,6 +81,11 @@ def executeJob(
         controlstatus = telegram_bot.checkbotcontrolstatus()
         while controlstatus == "pause" or controlstatus == "paused":
             if controlstatus == "pause":
+                text_box = TextBox(80, 22)
+                text_box.singleLine()
+                text_box.center("Pausing Bot")
+                text_box.singleLine()
+                Logger.debug("Pausing Bot.")
                 print(str(datetime.now()).format() + " - Bot is paused")
                 _app.notifyTelegram(f"{_app.getMarket()} bot is paused")
                 telegram_bot.updatebotstatus("paused")
@@ -92,7 +97,12 @@ def executeJob(
             controlstatus = telegram_bot.checkbotcontrolstatus()
 
         if controlstatus == "start":
-            print(str(datetime.now()).format() + " - Bot has restarted")
+            text_box = TextBox(80, 22)
+            text_box.singleLine()
+            text_box.center("Restarting Bot")
+            text_box.singleLine()
+            Logger.debug("Restarting Bot.")
+            # print(str(datetime.now()).format() + " - Bot has restarted")
             _app.notifyTelegram(f"{_app.getMarket()} bot has restarted")
             telegram_bot.updatebotstatus("active")
             _app.read_config(_app.getExchange())
@@ -101,11 +111,21 @@ def executeJob(
                 _websocket.start()
 
         if controlstatus == "exit":
+            text_box = TextBox(80, 22)
+            text_box.singleLine()
+            text_box.center("Closing Bot")
+            text_box.singleLine()
+            Logger.debug("Closing Bot.")
             _app.notifyTelegram(f"{_app.getMarket()} bot is stopping")
             telegram_bot.removeactivebot()
             sys.exit(0)
 
         if controlstatus == "reload":
+            text_box = TextBox(80, 22)
+            text_box.singleLine()
+            text_box.center("Reloading config parameters")
+            text_box.singleLine()
+            Logger.debug("Reloading config parameters.")
             _app.read_config(_app.getExchange())
             if _app.enableWebsocket():
                 _websocket.close()

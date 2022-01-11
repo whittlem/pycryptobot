@@ -33,7 +33,7 @@ class TelegramActions:
         )
 
         result = (
-            f"{light_icon} <b>{market}</b>\n"
+            f"{light_icon} <b>{market}</b> (<i>{self.helper.data['exchange']}</i>)\n"
             f"{margin_icon} Margin: {self.helper.data['margin']}  "
             f"\U0001F4B0 P/L: {self.helper.data['delta']}\n"
             f"TSL Trg: {self.helper.data['trailingstoplosstriggered']}  "

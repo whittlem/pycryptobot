@@ -1,5 +1,5 @@
 ''' Telegram Bot Request Handler '''
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update, callbackquery
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
 from telegram.ext.callbackcontext import CallbackContext
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -133,10 +133,6 @@ class TelegramHandler:
             self.helper.load_config()
             self.ask_config_options(update, "edit")
         elif query.data.__contains__("edit_"):
-        # elif query.data.__contains__("edit_"):
-        #     self.editor.get_config_category(update, context, query.data[query.data.rfind("_") + 1 :])
-        # elif query.data.__contains__("config_"):
-        #     self.editor.get_config_options(update, context, query.data[: query.data.find("_")])
             self.editor.get_config_options(update, context)
         elif query.data.__contains__("_disable_"):
             self.editor.disable_option(
@@ -193,25 +189,25 @@ class TelegramHandler:
         elif query.data == "start":
             self.control.ask_start_bot_list(update)
         elif query.data.__contains__("start_"):
-            self.control.start_bot_response(update)
+            self.control.start_bot_response(update, context)
 
         # Stop Bots
         elif query.data == "stop":
             self.control.ask_stop_bot_list(update)
         elif query.data.__contains__("stop_"):
-            self.control.stop_bot_response(update)
+            self.control.stop_bot_response(update, context)
 
         # Pause Bots
         elif query.data == "pause":
             self.control.ask_pause_bot_list(update)
         elif query.data.__contains__("pause_"):
-            self.control.pause_bot_response(update)
+            self.control.pause_bot_response(update, context)
 
         # Resume Bots
         elif query.data == "resume":
             self.control.ask_resume_bot_list(update)
         elif query.data.__contains__("resume_"):
-            self.control.resume_bot_response(update)
+            self.control.resume_bot_response(update, context)
 
         # Restart Bots with Open Orders
         elif query.data == "reopen":
@@ -349,7 +345,7 @@ class TelegramHandler:
         keyboard = []
         buttons = []
         for exchange in self.helper.config:
-            if exchange not in ("telegram", "scanner"):
+            if exchange not in ("telegram"):
                 buttons.append(
                     InlineKeyboardButton(
                         exchange.capitalize(), callback_data=f"{callback}_{exchange}"
@@ -365,7 +361,13 @@ class TelegramHandler:
             else:
                 keyboard.append([buttons[i]])
             i += 3
-
+            keyboard.append(
+            [
+                InlineKeyboardButton(
+                    "Reload all running bots", callback_data="reload_config"
+                )
+            ]
+        )
             keyboard.append(
                 [InlineKeyboardButton("\U000025C0 Back", callback_data="back")]
             )
@@ -391,10 +393,10 @@ class TelegramHandler:
         keyboard = [
             [
                 InlineKeyboardButton(
-                    "+", callback_data=f"{exchange}_increase_*{typestr}*_{prop}"
+                    "-", callback_data=f"{exchange}_decrease_*{typestr}*_{prop}"
                 ),
                 InlineKeyboardButton(
-                    "-", callback_data=f"{exchange}_decrease_*{typestr}*_{prop}"
+                    "+", callback_data=f"{exchange}_increase_*{typestr}*_{prop}"
                 ),
             ],
             [
@@ -403,18 +405,22 @@ class TelegramHandler:
                 )
             ],
         ]
+        if exchange != "scanner":
+            config_value = self.helper.config[exchange]['config'][prop]
+        else:
+            config_value = self.helper.config[exchange][prop]
         if typestr == "integer":
             self.helper.send_telegram_message(
                 update,
                 f"<b>{prop}: "\
-                    f"{int(self.helper.config[exchange]['config'][prop])}</b>",
+                    f"{int(config_value)}</b>",
                 InlineKeyboardMarkup(keyboard, one_time_keyboard=True),
             )
         elif typestr == "float":
             self.helper.send_telegram_message(
                 update,
                 f"<b>{prop}: "\
-                    f"{round(float(self.helper.config[exchange]['config'][prop]),1)}</b>",
+                    f"{round(float(config_value),2)}</b>",
                 InlineKeyboardMarkup(keyboard, one_time_keyboard=True),
             )
 
@@ -451,7 +457,7 @@ class TelegramHandler:
             )
 
             reply = "<b>Scan job schedule created to run every "\
-                "{self.helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705"
+                f"{self.helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705"
             self.helper.send_telegram_message(update, reply)
 
     def _remove_scheduled_job(self, update):
