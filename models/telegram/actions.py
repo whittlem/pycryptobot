@@ -38,8 +38,8 @@ class TelegramActions:
             f"\U0001F4B0 P/L: {self.helper.data['delta']}\n"
             f"TSL Trg: {self.helper.data['trailingstoplosstriggered']}  "
             f"TSL Change: {float(self.helper.data['change_pcnt_high']).__round__(4)}\n"
-            f"TPL Trg: {self.helper.data['preventlosstriggered']}  "
-            f"TPL Change: {float(self.helper.data['change_pcnt_high']).__round__(4)}\n"
+            # f"TPL Trg: {self.helper.data['preventlosstriggered']}  "
+            # f"TPL Change: {float(self.helper.data['change_pcnt_high']).__round__(4)}\n"
         )
         return result
 
