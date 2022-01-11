@@ -1137,7 +1137,7 @@ def executeJob(
                         if (
                             _app.getBuyMaxSize()
                             and _app.buyLastSellSize()
-                            and _state.last_sell_size > 10
+                            and _state.minimumOrderQuote(quote=_state.last_sell_size, balancechk = True)
                         ):
                             _state.last_buy_size = _state.last_sell_size
                         elif (
@@ -1588,6 +1588,7 @@ def executeJob(
                         },
                         ignore_index=True,
                     )
+                    state.in_open_trade = False
                     state.last_api_call_datetime -= timedelta(seconds=60)
                 if _app.shouldSaveGraphs():
                     tradinggraphs = TradingGraphs(_technical_analysis)
