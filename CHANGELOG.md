@@ -18,6 +18,7 @@ Upgrade library dependencies (if required):
 
 - fixed spelling mistake in Kucoin api.py file
 - added balance checking to verify buy/sell trades occurred
+- revised getBalance code for Coinbase and Kucion to verify a response from API
 - revised market/symbol regex in telegram_bot.py to match rest of code
 
 ## [5.1.3] - 2022-01-03

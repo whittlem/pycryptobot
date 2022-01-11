@@ -1176,7 +1176,7 @@ def executeJob(
                         if (
                             _app.getBuyMaxSize()
                             and _app.buyLastSellSize()
-                            and _state.last_sell_size > 10
+                            and _state.minimumOrderQuote(quote=_state.last_sell_size, balancechk = True)
                         ):
                             _state.last_buy_size = _state.last_sell_size
                         elif (
