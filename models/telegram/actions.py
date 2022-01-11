@@ -509,8 +509,8 @@ class TelegramActions:
                                     outputmsg = (
                                         outputmsg
                                         + f"<i><b>{row}</b>  //--//  "\
-                                            "<b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%  //--//"\
-                                                "  <b>buy_next:</b> {data[row]['buy_next']}</i>\n"
+                                            f"<b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%  //--//"\
+                                                f"  <b>buy_next:</b> {data[row]['buy_next']}</i>\n"
                                     )
                                     self.helper.start_process(row, ex, "", "scanner")
                                     botcounter += 1
