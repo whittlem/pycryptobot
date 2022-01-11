@@ -207,7 +207,7 @@ class TelegramActions:
                     icon = "\U000023F8"  # pause icon
                 if self.helper.data["botcontrol"]["status"] == "exit":
                     icon = "\U0000274C"  # stop icon
-                output += f"{output} {icon} <b>Status</b>: <i> {self.helper.data['botcontrol']['status']}</i>"
+                output = f"{output} {icon} <b>Status</b>: <i> {self.helper.data['botcontrol']['status']}</i>"
                 output = f"{output} \u23F1 <b>Uptime</b>: <i> {self._get_uptime(self.helper.data['botcontrol']['started'])}</i>\n"
             else:
                 output = f"{output} {icon} <b>Status</b>: <i>stopped</i> "
