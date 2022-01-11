@@ -1210,6 +1210,7 @@ def executeJob(
                                     telegram_bot.add_open_order()
                                     _state.trade_error_cnt = 0
                                     _state.trailing_buy = 0
+                                    _state.last_action = "BUY"
                                     break
 
                         except:
@@ -1327,6 +1328,7 @@ def executeJob(
                         ignore_index=True,
                     )
                     state.in_open_trade = True
+                    _state.last_action = "BUY"
                     state.last_api_call_datetime -= timedelta(seconds=60)
 
                 if _app.shouldSaveGraphs():
@@ -1441,7 +1443,8 @@ def executeJob(
                                 )
                                 _state.prevent_loss = 0
                                 _state.trade_error_cnt = 0
-
+                                _state.last_action = "SELL"
+                                
                                 _app.notifyTelegram(
                                     _app.getMarket()
                                     + " ("
@@ -1587,6 +1590,8 @@ def executeJob(
                     )
                     state.in_open_trade = False
                     state.last_api_call_datetime -= timedelta(seconds=60)
+                    _state.last_action = "SELL"
+
                 if _app.shouldSaveGraphs():
                     tradinggraphs = TradingGraphs(_technical_analysis)
                     ts = datetime.now().timestamp()
@@ -1601,15 +1606,12 @@ def executeJob(
                             len(trading_data), "graphs/" + filename, True
                         )
 
-            # last significant action
-            if _state.action in ["BUY", "SELL"]:
-                _state.last_action = _state.action
-
             _state.last_df_index = str(df_last.index.format()[0])
 
             if (
                 _app.enabledLogBuySellInJson() == True
                 and _state.action in ["BUY", "SELL"]
+                and _state.action == _state.last_action
                 and len(_app.trade_tracker) > 0
             ):
                 Logger.info(
