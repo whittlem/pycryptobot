@@ -84,7 +84,7 @@ class TelegramControl:
         return InlineKeyboardMarkup(keyboard)
 
     def action_bot_response(
-        self, update: Update, call_back_tag, state, status: str = "active"
+        self, update: Update, call_back_tag, state, context, status: str = "active"
     ):
         ''' Run requested bot action '''
         query = update.callback_query
@@ -92,7 +92,7 @@ class TelegramControl:
         mode = call_back_tag.capitalize()
         # mode = "Stopping" if callbackTag == "stop" else "Pausing"
         if query.data.__contains__("allclose") or query.data.__contains__("all"):
-            self.helper.send_telegram_message(update, f"<i>{mode} bots</i>")
+            self.helper.send_telegram_message(update, f"<i>{mode} bots</i>", context=context)
 
             for pair in self.helper.get_active_bot_list(status):
                 self.helper.stop_running_bot(
@@ -100,6 +100,7 @@ class TelegramControl:
                 )
                 sleep(1)
         else:
+            self.helper.send_telegram_message(update, f"<i>{mode} bots</i>", context=context)
             self.helper.stop_running_bot(
                 str(query.data).replace(f"{call_back_tag}_", ""), state, True
             )
@@ -116,19 +117,24 @@ class TelegramControl:
                     InlineKeyboardButton(market, callback_data="start_" + market)
                 )
 
-        reply_markup = self.sort_inline_buttons(buttons, "start")
-        self.helper.send_telegram_message(
-            update, "<b>What crypto bots do you want to start?</b>", reply_markup
-        )
+        if len(buttons) > 0:
+            reply_markup = self.sort_inline_buttons(buttons, "start")
+            self.helper.send_telegram_message(
+                update, "<b>What crypto bots do you want to start?</b>", reply_markup
+            )
+        else:
+            self.helper.send_telegram_message(
+                update, "<b>Nothing on your start list</b>\n<i>Use /addnew to add a market.</i>"
+            )
 
-    def start_bot_response(self, update: Update):
+    def start_bot_response(self, update: Update, context):
         ''' Start bot list response '''
         query = update.callback_query
 
         self.helper.read_data()
 
         if "all" in query.data:  # start all bots
-            self.helper.send_telegram_message(update, "<b>Starting all bots</b>")
+            self.helper.send_telegram_message(update, "<b>Starting all bots</b>", context=context)
 
             for market in self.helper.data["markets"]:
                 if not self.helper.is_bot_running(market):
@@ -137,6 +143,7 @@ class TelegramControl:
                         f"<i>Starting {market} crypto bot</i>"
                     )
                     self.helper.start_process(market, "", overrides)
+                    sleep(10)
                 else:
                     update.effective_message.reply_html(
                         f"{market} is already running, no action taken."
@@ -145,7 +152,7 @@ class TelegramControl:
         else:  # start single bot
             self.helper.send_telegram_message(
                 update,
-                f"<i>Starting {str(query.data).replace('start_', '')} crypto bot</i>",
+                f"<i>Starting {str(query.data).replace('start_', '')} crypto bot</i>", context=context
             )
 
             if not self.helper.is_bot_running(str(query.data).replace("start_", "")):
@@ -164,25 +171,25 @@ class TelegramControl:
         ''' Get bot stop list '''
         self._ask_bot_list(update, "stop", "active")
 
-    def stop_bot_response(self, update: Update):
+    def stop_bot_response(self, update: Update, context):
         ''' Stop bot list response '''
-        self.action_bot_response(update, "stop", "exit", "active")
+        self.action_bot_response(update, "stop", "exit", context, "active")
 
     def ask_pause_bot_list(self, update: Update):
         ''' Get pause bot list '''
         self._ask_bot_list(update, "pause", "active")
 
-    def pause_bot_response(self, update: Update):
+    def pause_bot_response(self, update: Update, context):
         ''' Pause bot list response '''
-        self.action_bot_response(update, "pause", "pause", "active")
+        self.action_bot_response(update, "pause", "pause", context, "active")
 
     def ask_resume_bot_list(self, update: Update):
         ''' Get resume bot list '''
         self._ask_bot_list(update, "resume", "paused")
 
-    def resume_bot_response(self, update: Update):
+    def resume_bot_response(self, update: Update, context):
         ''' Resume bot list response '''
-        self.action_bot_response(update, "resume", "start", "pause")
+        self.action_bot_response(update, "resume", "start", context, "paused")
 
     def ask_sell_bot_list(self, update):
         """Manual sell request (asks which coin to sell)"""
@@ -198,27 +205,38 @@ class TelegramControl:
 
     def restart_bot_response(self, update: Update):
         ''' Restart bot list reponse '''
+        query = update.callback_query
         bot_list = {}
         for bot in self.helper.get_active_bot_list():
             while self.helper.read_data(bot) is False:
                 sleep(0.2)
-            bot_list.update(
-                {
-                    bot: {
-                        "exchange": self.helper.data["exchange"],
-                        "startmethod": self.helper.data["botcontrol"]["startmethod"],
+            if query.data.__contains__("all"):
+                bot_list.update(
+                    {
+                        bot: {
+                            "exchange": self.helper.data["exchange"],
+                            "startmethod": self.helper.data["botcontrol"]["startmethod"],
+                        }
                     }
-                }
-            )
+                )
+            elif query.data.__contains__(bot):
+                bot_list.update(
+                    {
+                        bot: {
+                            "exchange": self.helper.data["exchange"],
+                            "startmethod": self.helper.data["botcontrol"]["startmethod"],
+                        }
+                    }
+                )
 
         self.action_bot_response(update, "restart", "exit", "active")
         sleep(1)
 
         for bot in bot_list.items():
-            sleep(10)
             self.helper.start_process(
-                bot, bot[0], "", bot[1]
+                bot[0], bot[1]["exchange"], "", bot[1]["startmethod"]
             )
+            sleep(10)
 
     def ask_config_options(self, update: Update):
         ''' Get available exchanges from config '''
