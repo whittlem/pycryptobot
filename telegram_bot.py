@@ -810,11 +810,12 @@ class TelegramBot(TelegramBotBase):
         if not self._check_if_allowed(context._user_id_and_data[0], update):
             return
 
-        self.handler._check_scheduled_job(update)
+        self.handler._check_scheduled_job(update, context)
         logger.info("Start scanning using default scanner? %s", bool(self.helper.use_default_scanner))
-        self.helper.send_telegram_message(update, "Operation Started")
+        self.helper.send_telegram_message(update, "Operation Started",context=context)
         self.actions.start_market_scan(
             update,
+            context,
             True if self.helper.use_default_scanner == 1 else False,
             False if len(context.args) > 0 and context.args[0] == "debug" else True,
             False if len(context.args) > 0 and context.args[0] == "noscan" else True
