@@ -220,14 +220,20 @@ class TelegramHelper:
         while i >= 0:
             while self.read_data(jsonfiles[i]) is False:
                 sleep(0.2)
+                # self.read_data(jsonfiles[i])
             if "botcontrol" in self.data:
-                last_ping = datetime.strptime(
-                    self.data["botcontrol"]["watchdog_ping"], "%Y-%m-%dT%H:%M:%S.%f"
-                )
-                current_dt = datetime.now()
-                ping_delta = int((current_dt - last_ping).total_seconds())
-                if self.data["botcontrol"]["status"] == state and ping_delta < 600:
-                    jsonfiles.pop(i)
+                if "watchdog_ping" in self.data["botcontrol"]:
+                    last_ping = datetime.strptime(self.data["botcontrol"]["watchdog_ping"], "%Y-%m-%dT%H:%M:%S.%f")
+                    current_dt = datetime.now()
+                    ping_delta = int((current_dt - last_ping).total_seconds())
+                    if (self.data["botcontrol"]["status"] == state and ping_delta < 600):
+                        jsonfiles.pop(i)
+                else:
+                    start_time = datetime.strptime(self.data["botcontrol"]["started"], "%Y-%m-%dT%H:%M:%S.%f")
+                    current_dt = datetime.now()
+                    start_delta = int((current_dt - start_time).total_seconds())
+                    if (self.data["botcontrol"]["status"] == state and start_delta < 300):
+                        jsonfiles.pop(i)
             i -= 1
         jsonfiles.sort()
         return [

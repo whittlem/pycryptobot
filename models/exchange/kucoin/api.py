@@ -915,7 +915,7 @@ class PublicAPI(AuthAPIBase):
 
             if "data" not in resp: # if not proper response, retry
                 Logger.warning(
-                    f"Kucoin API Error for getTicket - 'data' not in response - retrying - attempt {trycnt}"
+                    f"Kucoin API Error for getTicker - 'data' not in response - retrying - attempt {trycnt}"
                 )
                 time.sleep(15)
                 trycnt += 1
