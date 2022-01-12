@@ -49,7 +49,7 @@ class TelegramControl:
             self.helper.send_telegram_message(update, f"<b>No {status} bots found.</b>")
 
     def sort_inline_buttons(self, buttons: list, call_back_tag):
-        ''' Sort butons for inline keyboard display '''
+        ''' Sort buttons for inline keyboard display '''
         keyboard = []
         if len(buttons) > 0:
             if len(buttons) > 1 and call_back_tag not in ("bot"):
@@ -204,7 +204,7 @@ class TelegramControl:
         self._ask_bot_list(update, "restart", "active")
 
     def restart_bot_response(self, update: Update):
-        ''' Restart bot list reponse '''
+        ''' Restart bot list response '''
         query = update.callback_query
         bot_list = {}
         for bot in self.helper.get_active_bot_list():

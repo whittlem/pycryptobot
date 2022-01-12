@@ -14,7 +14,7 @@ class ConfigEditor:
         self.helper = tg_helper
 
     def get_config_from_file(self, exchange: str = "binance"):
-        ''' Read config file paramaters and values '''
+        ''' Read config file parameters and values '''
         config = {"float": {}, "int": {}, "disabled": {}, "normal": {}}
 
         for param in self.helper.config[exchange]["config"]:
@@ -41,7 +41,7 @@ class ConfigEditor:
         return config
 
     def get_scanner_config_from_file(self):
-        ''' Read scanner config file paramaters and values '''
+        ''' Read scanner config file parameters and values '''
         config = {"float": {}, "int": {}, "disabled": {}, "normal": {}}
 
         for param in self.helper.config["scanner"]:
