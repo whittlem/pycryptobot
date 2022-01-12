@@ -428,7 +428,7 @@ class TelegramBot(TelegramBotBase):
                 self.exchange = "coinbasepro"
         else:
             if self.exchange == "":
-                self.helper.send_telegram_message(update, "Invalid Exchange Entered!")
+                self.helper.send_telegram_message(update, "Invalid Exchange Entered!", context=context)
                 self.statsrequest(update, context)
                 return None
 
@@ -460,12 +460,12 @@ class TelegramBot(TelegramBotBase):
 
         self.pair = update.message.text
 
-        self.helper.send_telegram_message(update, "<i>Gathering Stats, please wait...</i>")
+        self.helper.send_telegram_message(update, "<i>Gathering Stats, please wait...</i>", context=context)
         
         output = self.helper.start_process(
             self.pair, self.exchange, "--stats --live 1", "telegram", True
         )
-        self.helper.send_telegram_message(update, output)
+        self.helper.send_telegram_message(update, output, context=context)
 
         return ConversationHandler.END
 
@@ -860,7 +860,7 @@ class TelegramBot(TelegramBotBase):
                     exchange = "kucoin"
 
                 self.helper.send_telegram_message(update,
-                    "<i>Gathering Stats, please wait...</i>"
+                    "<i>Gathering Stats, please wait...</i>", context=context
                 )
 
                 with open(
@@ -881,19 +881,19 @@ class TelegramBot(TelegramBotBase):
                 output = subprocess.getoutput(
                     f"python3 pycryptobot.py --stats --exchange {exchange}  --statgroup {pairs}  "
                 )
-                self.helper.send_telegram_message(update, output)
+                self.helper.send_telegram_message(update, output, context=context)
                 sleep(30)
-                self.helper.send_telegram_message(update, "Pausing before next set")
+                self.helper.send_telegram_message(update, "Pausing before next set", context=context)
 
     def getBotList(self, update, context):
         if not self._check_if_allowed(context._user_id_and_data[0], update):
             return None
 
-        query = update.callback_query
-        try:
-            query.answer()
-        except:
-            pass
+        # query = update.callback_query
+        # try:
+        #     query.answer()
+        # except:
+        #     pass
 
         buttons = []
 
@@ -905,26 +905,9 @@ class TelegramBot(TelegramBotBase):
                 buttons.append(InlineKeyboardButton(market, callback_data=f"bot_{market}"))
 
         if len(buttons) > 0:
-            self.helper.send_telegram_message(update, "<b>Select a market</b>", self.control.sort_inline_buttons(buttons, "bot"))
+            self.helper.send_telegram_message(update, "<b>Select a market</b>", self.control.sort_inline_buttons(buttons, "bot"), context=context)
         else:
-            self.helper.send_telegram_message(update, "<b>No bots found.</b>")
-
-    #     def UpdateBuyMaxSize(self, update, context):
-    #
-    #         self.helper.read_data("config.json")
-    #
-    #         with open(os.path.join(self.config_file), "r", encoding="utf8") as json_file:
-    #             self.config = json.load(json_file)
-    #
-    #         if len(context.args) > 0:
-    #             for ex in self.config:
-    #                 if ex in ("coinbasepro", "binance", "kucoin"):
-    #                     self.config[ex]["config"].update({"buymaxsize": context.args[0]})
-    #
-    #         with open(os.path.join(self.config_file), "w", encoding="utf8") as outfile:
-    #                 json.dump(self.config, outfile, indent=4)
-    #
-    #         update.message.reply_text("Config Updated")
+            self.helper.send_telegram_message(update, "<b>No bots found.</b>", context=context)
 
     def Request(self, update, context):
 
@@ -938,12 +921,6 @@ class TelegramBot(TelegramBotBase):
                 key_markup,
                 context
             )
-
-    # def ExitBot(self, update, context):
-    # self.updater.stop()
-    # self.updater.dispatcher.stop()
-    # os._exit(0)
-
 
 def main():
     """Start the bot."""
@@ -1046,17 +1023,6 @@ def main():
         fallbacks=[("Done", botconfig.done)],
     )
 
-    # conversation_stats = ConversationHandler(entry_points=[CommandHandler("buymax", botconfig.editor.ask_buy_max_size)],
-    #     states={
-    #         TYPING_RESPONSE: [
-    #             MessageHandler(
-    #                 Filters.text, botconfig.editor.buy_max_size
-    #             )],
-    #     },
-    #     fallbacks=[("Done", botconfig.done)],
-    # )
-    # CallbackQueryHandler(botconfig.editor.ask_buy_max_size)
-    # dp.add_handler(botconfig.editor.get_conversation_handler())
 
     dp.add_handler(conversation_stats)
     dp.add_handler(conversation_newbot)
@@ -1065,9 +1031,6 @@ def main():
     dp.add_error_handler(botconfig.error)
 
     botconfig._cleandata()
-
-    # while botconfig.checkconnection() is False:
-    #     sleep(10)
 
     # Start the Bot
     botconfig.updater.start_polling()

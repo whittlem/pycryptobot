@@ -103,14 +103,14 @@ class TelegramActions:
         sleep(1)
         self.get_bot_info(update, context)
 
-    def sell_response(self, update):
+    def sell_response(self, update, context):
         """create the manual sell order"""
         query = update.callback_query
         logger.info("called sell_response - %s", query.data)
 
         if query.data.__contains__("all"):
             self.helper.send_telegram_message(
-                update, "<b><i>Initiating sell orders..</i></b>"
+                update, "<b><i>Initiating sell orders..</i></b>", context=context
             )
             for market in self.helper.get_active_bot_list("active"):
                 while self.helper.read_data(market) is False:
@@ -125,7 +125,7 @@ class TelegramActions:
                         self.helper.write_data(market)
                         self.helper.send_telegram_message(
                             update,
-                            f"Selling: {market}\n<i>Please wait for sale notification...</i>",
+                            f"Selling: {market}\n<i>Please wait for sale notification...</i>", context=context
                         )
                 sleep(0.2)
         else:
@@ -139,10 +139,10 @@ class TelegramActions:
                 self.helper.send_telegram_message(
                     update,
                     f"Selling: {query.data.replace('confirm_sell_', '').replace('.json','')}"
-                    "\n<i>Please wait for sale notification...</i>",
+                    "\n<i>Please wait for sale notification...</i>", context=context
                 )
 
-    def buy_response(self, update):
+    def buy_response(self, update, context):
         """create the manual buy order"""
         query = update.callback_query
         logger.info("called buy_response - %s", query.data)
@@ -155,7 +155,7 @@ class TelegramActions:
             self.helper.send_telegram_message(
                 update,
                 f"Buying: {query.data.replace('confirm_buy_', '').replace('.json','')}"
-                "\n<i>Please wait for sale notification...</i>",
+                "\n<i>Please wait for sale notification...</i>", context=context
             )
 
     def show_config_response(self, update):
@@ -213,7 +213,7 @@ class TelegramActions:
                 output = f"{output} {icon} <b>Status</b>: <i>stopped</i> "
 
             if count == 1:
-                self.helper.send_telegram_message(update, output)
+                self.helper.send_telegram_message(update, output, context=context)
             else:
                 update.effective_message.reply_html(f"{output}")
             sleep(0.2)

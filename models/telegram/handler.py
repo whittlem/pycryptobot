@@ -217,7 +217,7 @@ class TelegramHandler:
         elif query.data == "buy":
             self.control.ask_buy_bot_list(update)
         elif query.data.__contains__("confirm_buy_"):
-            self.actions.buy_response(update)
+            self.actions.buy_response(update, context)
         elif query.data.__contains__("buy_"):
             self.ask_confimation(update)
 
@@ -225,7 +225,7 @@ class TelegramHandler:
         elif query.data == "sell":
             self.control.ask_sell_bot_list(update)
         elif query.data.__contains__("confirm_sell_"):
-            self.actions.sell_response(update)
+            self.actions.sell_response(update, context)
         elif query.data.__contains__("sell_"):
             self.ask_confimation(update)
 
@@ -243,7 +243,7 @@ class TelegramHandler:
         elif query.data in ("scanonly", "noscan", "startmarket"):
             if query.data == "startmarket":
                 self._check_scheduled_job(update, context)
-            self.helper.send_telegram_message(update, "Command Started")
+            self.helper.send_telegram_message(update, "Command Started", context)
             self.actions.start_market_scan(
                 update,
                 context,
