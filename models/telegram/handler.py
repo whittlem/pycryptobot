@@ -243,7 +243,7 @@ class TelegramHandler:
         elif query.data in ("scanonly", "noscan", "startmarket"):
             if query.data == "startmarket":
                 self._check_scheduled_job(update, context)
-            self.helper.send_telegram_message(update, "Command Started", context)
+            self.helper.send_telegram_message(update, "Command Started", context=context)
             self.actions.start_market_scan(
                 update,
                 context,
