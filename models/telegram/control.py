@@ -1,6 +1,7 @@
 ''' Telegram Bot Control '''
 from time import sleep
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
+from telegram.ext.callbackcontext import CallbackContext
 
 from .helper import TelegramHelper
 
@@ -251,7 +252,7 @@ class TelegramControl:
 
         self.helper.send_telegram_message(update, "Select exchange", reply_markup)
 
-    def ask_delete_bot_list(self, update: Update):
+    def ask_delete_bot_list(self, update: Update, context: CallbackContext):
         """ask which bot to delete"""
         buttons = []
         keyboard = []
@@ -277,10 +278,10 @@ class TelegramControl:
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         self.helper.send_telegram_message(
-            update, "<b>What crypto bots do you want to delete?</b>", reply_markup
+            update, "<b>What crypto bots do you want to delete?</b>", reply_markup, context=context
         )
 
-    def ask_exception_bot_list(self, update):
+    def ask_exception_bot_list(self, update, context):
         """ask which bot to delete"""
         buttons = []
         keyboard = []
@@ -307,4 +308,5 @@ class TelegramControl:
             update,
             "<b>What do you want to remove from the scanner exception list?</b>",
             reply_markup,
+            context=context
         )

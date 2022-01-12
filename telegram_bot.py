@@ -349,7 +349,7 @@ class TelegramBot(TelegramBotBase):
         ubot = Bot(self.token)
         ubot.set_my_commands(command)
 
-        self.helper.send_telegram_message(update, "<i>Bot Commands Created</i>", ReplyKeyboardRemove())
+        self.helper.send_telegram_message(update, "<i>Bot Commands Created</i>", ReplyKeyboardRemove(), context=context)
 
     def help(self, update, context):
         """Send a message when the command /help is issued."""
@@ -381,7 +381,7 @@ class TelegramBot(TelegramBotBase):
             "<b>/removeexception</b> - <i>remove pair from scanner exception list</i>\n"
         )
 
-        self.helper.send_telegram_message(update, helptext)
+        self.helper.send_telegram_message(update, helptext, context=context)
 
     def trades(self, update, context):
         """List trades"""
@@ -409,7 +409,7 @@ class TelegramBot(TelegramBotBase):
         if not self._check_if_allowed(context._user_id_and_data[0], update):
             return None
 
-        self.helper.send_telegram_message(update, "Select the exchange", markup)
+        self.helper.send_telegram_message(update, "Select the exchange", markup, context=context)
 
         return CHOOSING
 
@@ -419,7 +419,7 @@ class TelegramBot(TelegramBotBase):
             return None
 
         if update.message.text.lower() == "cancel":
-            self.helper.send_telegram_message(update, "Operation Cancelled", ReplyKeyboardRemove())
+            self.helper.send_telegram_message(update, "Operation Cancelled", ReplyKeyboardRemove(), context=context)
             return ConversationHandler.END
 
         if update.message.text in ("Coinbase Pro", "Kucoin", "Binance"):
@@ -432,7 +432,7 @@ class TelegramBot(TelegramBotBase):
                 self.statsrequest(update, context)
                 return None
 
-        self.helper.send_telegram_message(update, "Which market/pair do you want stats for?", ReplyKeyboardRemove())
+        self.helper.send_telegram_message(update, "Which market/pair do you want stats for?", ReplyKeyboardRemove(), context=context)
 
         return TYPING_REPLY
 
@@ -442,19 +442,19 @@ class TelegramBot(TelegramBotBase):
             return None
 
         if update.message.text.lower() == "cancel":
-            self.helper.send_telegram_message(update, "Operation Cancelled", ReplyKeyboardRemove())
+            self.helper.send_telegram_message(update, "Operation Cancelled", ReplyKeyboardRemove(), context=context)
             return ConversationHandler.END
 
         if self.exchange in ("coinbasepro", "kucoin"):
             p = re.compile(r"^[0-9A-Z]{1,20}\-[1-9A-Z]{2,5}$")
             if not p.match(update.message.text):
-                self.helper.send_telegram_message(update, "Invalid market format", ReplyKeyboardRemove())
+                self.helper.send_telegram_message(update, "Invalid market format", ReplyKeyboardRemove(), context=context)
                 self.stats_exchange_received(update, context)
                 return None
         elif self.exchange == "binance":
             p = re.compile(r"^[A-Z0-9]{4,25}$")
             if not p.match(update.message.text):
-                self.helper.send_telegram_message(update, "Invalid market format", ReplyKeyboardRemove())
+                self.helper.send_telegram_message(update, "Invalid market format", ReplyKeyboardRemove(), context=context)
                 self.stats_exchange_received(update, context)
                 return None
 
@@ -730,14 +730,14 @@ class TelegramBot(TelegramBotBase):
         if not self._check_if_allowed(context._user_id_and_data[0], update):
             return
 
-        self.control.ask_exception_bot_list(update)
+        self.control.ask_exception_bot_list(update, context)
         return
 
     def marginrequest(self, update, context):
         if not self._check_if_allowed(context._user_id_and_data[0], update):
             return
 
-        self.handler.ask_margin_type(update)
+        self.handler.ask_margin_type(update, context)
         return
 
     def showbotinfo(self, update, context) -> None:
@@ -745,7 +745,7 @@ class TelegramBot(TelegramBotBase):
         if not self._check_if_allowed(context._user_id_and_data[0], update):
             return
 
-        self.actions.get_bot_info(update)
+        self.actions.get_bot_info(update, context)
         return
 
     def sellrequest(self, update, context):
@@ -804,7 +804,7 @@ class TelegramBot(TelegramBotBase):
         if not self._check_if_allowed(context._user_id_and_data[0], update):
             return
 
-        self.control.ask_delete_bot_list(update)
+        self.control.ask_delete_bot_list(update, context)
 
     def StartScanning(self, update, context):
         if not self._check_if_allowed(context._user_id_and_data[0], update):
@@ -832,8 +832,8 @@ class TelegramBot(TelegramBotBase):
 
         self._cleandata()
 
-        self.actions.get_bot_info(update)
-        self.helper.send_telegram_message(update, "Operation Complete")
+        self.actions.get_bot_info(update, context)
+        self.helper.send_telegram_message(update, "Operation Complete", context=context)
 
     def RestartBots(self, update, context):
         if not self._check_if_allowed(context._user_id_and_data[0], update):
@@ -845,7 +845,7 @@ class TelegramBot(TelegramBotBase):
         if not self._check_if_allowed(context._user_id_and_data[0], update):
             return None
 
-        self.actions.start_open_orders(update)
+        self.actions.start_open_orders(update, context)
 
     def statstwo(self, update, context):
         jsonfiles = os.listdir(os.path.join(self.datafolder, "telegram_data"))
