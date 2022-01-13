@@ -307,7 +307,7 @@ class TelegramHelper:
         return False
 
     def stop_running_bot(self, pair, state, is_open: bool = False):
-        ''' Stop current runnning bots '''
+        ''' Stop current running bots '''
         if self.is_bot_running(pair):
             done = False
             while done is False:
