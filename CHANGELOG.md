@@ -8,6 +8,11 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [5.2.2] - 2022-01-13
+
+- fixed bug in Base and Quote increment functions for Kucoin
+- improved BUY and SELL code after fixing increment bug
+
 ## [5.2.1] - 2022-01-12
 
 - minor updates to trade confirmations added previously
