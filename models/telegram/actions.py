@@ -72,18 +72,18 @@ class TelegramActions:
         minutes = divmod(duration_in_s, 60)[0]
         return f"{round(hours)}h {round(minutes)}m"
 
-    def start_open_orders(self, update):
+    def start_open_orders(self, update, context):
         ''' Start bots for open trades (data.json) '''
         logger.info("called start_open_orders")
         query = update.callback_query
         if query is not None:
             query.answer()
             self.helper.send_telegram_message(
-                update, "<b>Starting markets with open trades..</b>"
+                update, "<b>Starting markets with open trades..</b>", context=context
             )
         else:
             self.helper.send_telegram_message(
-                update, "<b>Starting markets with open trades..</b>"
+                update, "<b>Starting markets with open trades..</b>", context=context
             )
             # update.effective_message.reply_html("<b>Starting markets with open trades..</b>")
 
@@ -98,19 +98,19 @@ class TelegramActions:
                     "scanner",
                 )
             sleep(10)
-        self.helper.send_telegram_message(update, "<i>Markets have been started</i>")
+        self.helper.send_telegram_message(update, "<i>Markets have been started</i>", context=context)
         # update.effective_message.reply_html("<i>Markets have been started</i>")
         sleep(1)
-        self.get_bot_info(update)
+        self.get_bot_info(update, context)
 
-    def sell_response(self, update):
+    def sell_response(self, update, context):
         """create the manual sell order"""
         query = update.callback_query
         logger.info("called sell_response - %s", query.data)
 
         if query.data.__contains__("all"):
             self.helper.send_telegram_message(
-                update, "<b><i>Initiating sell orders..</i></b>"
+                update, "<b><i>Initiating sell orders..</i></b>", context=context
             )
             for market in self.helper.get_active_bot_list("active"):
                 while self.helper.read_data(market) is False:
@@ -125,7 +125,7 @@ class TelegramActions:
                         self.helper.write_data(market)
                         self.helper.send_telegram_message(
                             update,
-                            f"Selling: {market}\n<i>Please wait for sale notification...</i>",
+                            f"Selling: {market}\n<i>Please wait for sale notification...</i>", context=context
                         )
                 sleep(0.2)
         else:
@@ -139,10 +139,10 @@ class TelegramActions:
                 self.helper.send_telegram_message(
                     update,
                     f"Selling: {query.data.replace('confirm_sell_', '').replace('.json','')}"
-                    "\n<i>Please wait for sale notification...</i>",
+                    "\n<i>Please wait for sale notification...</i>", context=context
                 )
 
-    def buy_response(self, update):
+    def buy_response(self, update, context):
         """create the manual buy order"""
         query = update.callback_query
         logger.info("called buy_response - %s", query.data)
@@ -155,7 +155,7 @@ class TelegramActions:
             self.helper.send_telegram_message(
                 update,
                 f"Buying: {query.data.replace('confirm_buy_', '').replace('.json','')}"
-                "\n<i>Please wait for sale notification...</i>",
+                "\n<i>Please wait for sale notification...</i>", context=context
             )
 
     def show_config_response(self, update):
@@ -176,7 +176,7 @@ class TelegramActions:
             update, query.data.replace("ex_", "") + "\n" + json.dumps(pbot, indent=4)
         )
 
-    def get_bot_info(self, update):
+    def get_bot_info(self, update, context):
         ''' Get running bot information '''
         count = 0
         for file in self.helper.get_active_bot_list():
@@ -213,13 +213,13 @@ class TelegramActions:
                 output = f"{output} {icon} <b>Status</b>: <i>stopped</i> "
 
             if count == 1:
-                self.helper.send_telegram_message(update, output)
+                self.helper.send_telegram_message(update, output, context=context)
             else:
                 update.effective_message.reply_html(f"{output}")
             sleep(0.2)
 
         if count == 0:
-            self.helper.send_telegram_message(update, f"<b>Bot Count ({count})</b>")
+            self.helper.send_telegram_message(update, f"<b>Bot Count ({count})</b>", context=context)
         else:
             update.effective_message.reply_html(f"<b>Bot Count ({count})</b>")
 
