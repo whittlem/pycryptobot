@@ -1366,6 +1366,7 @@ def executeJob(
                         },
                         ignore_index=True,
                     )
+
                     state.in_open_trade = True
                     _state.last_action = "BUY"
                     state.last_api_call_datetime -= timedelta(seconds=60)
@@ -1513,7 +1514,8 @@ def executeJob(
                                     sys.exit(0)
 
                                 break
-                    except:
+                    except Exception as err:
+                        Logger.critical(err)
                         _state.trade_error_cnt += 1
                         if _state.trade_error_cnt >= 4:  # 5 attempts made
                             raise Exception(

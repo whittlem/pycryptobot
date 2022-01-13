@@ -402,7 +402,7 @@ class TelegramBot(TelegramBotBase):
             )
 
             if output != "":
-                self.helper.send_telegram_message(update, output)
+                self.helper.send_telegram_message(update, output, context=context)
 
     def statsrequest(self, update: Updater, context):
         """Ask which exchange stats are wanted for"""
