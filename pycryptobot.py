@@ -1167,7 +1167,7 @@ def executeJob(
                         # display balances
                         Logger.info(
                             f"{_app.getBaseCurrency()} balance before order: {str(account.basebalance_before)}\n"
-                            f"\t\t{_app.getQuoteCurrency()} balance before order: {str(account.quotebalance_before)}"
+                            f"{_app.getQuoteCurrency()} balance before order: {str(account.quotebalance_before)}"
                         )
 
                         # execute a live market buy
@@ -1241,7 +1241,7 @@ def executeJob(
 
                                     Logger.info(
                                         f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance_after)}\n"
-                                        f"\t\t{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance_after)}"
+                                        f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance_after)}"
                                     )
 
                                     now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
@@ -1443,7 +1443,7 @@ def executeJob(
 
                     Logger.info(
                         f"{_app.getBaseCurrency()} balance before order: {str(account.basebalance_before)}\n"
-                        f"\t\t{_app.getQuoteCurrency()} balance before order: {str(account.quotebalance_before)}"
+                        f"{_app.getQuoteCurrency()} balance before order: {str(account.quotebalance_before)}"
                     )
 
                     # execute a live market sell
@@ -1488,7 +1488,7 @@ def executeJob(
                                 # display balances
                                 Logger.info(
                                     f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance_after)}\n"
-                                    f"\t\t{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance_after)}"
+                                    f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance_after)}"
                                 )
                                 _state.prevent_loss = 0
                                 _state.trade_error_cnt = 0
