@@ -1,0 +1,31 @@
+.git/
+.github/
+.vscode/
+scripts/
+
+**/docs/
+**/chart/
+**/tests/
+
+.gitignore
+Dockerfile*
+
+*.log
+pycryptobot.log.*
+
+*.key
+*.csv
+telegram_data*
+
+*.ini
+*.md
+*.sample
+*.yaml
+*.json
+
+# Include readme in docker container or version number is blank
+# And we get a FileNotFoundError(2, 'No such file or directory') exception
+!README.md 
+
+# Allow default config
+!config.json
