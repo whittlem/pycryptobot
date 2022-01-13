@@ -8,6 +8,7 @@ Usage:
 Press Ctrl-C on the command line or send a signal to the process to stop the bot.
 """
 import argparse
+from asyncore import write
 import logging
 import os
 import json
@@ -182,14 +183,22 @@ class TelegramBot(TelegramBotBase):
             os.mkdir(os.path.join(self.datafolder, "telegram_data"))
 
         if os.path.isfile(os.path.join(self.datafolder, "telegram_data", "data.json")):
-            self.helper.read_data()
-            if "trades" not in self.helper.data:
-                self.helper.data.update({"trades": {}})
-            if "markets" not in self.helper.data:
-                self.helper.data.update({"markets": {}})
-            if "scannerexceptions" not in self.helper.data:
-                self.helper.data.update({"scannerexceptions": {}})
-            self.helper.write_data()
+            write_ok, try_cnt = False, 0
+            while not write_ok and try_cnt <= 5:
+                try_cnt += 1
+                self.helper.read_data("data.json")
+                write_ok = True
+                if "trades" not in self.helper.data:
+                    self.helper.data.update({"trades": {}})
+                    write_ok = self.helper.write_data()
+                if "markets" not in self.helper.data:
+                    self.helper.data.update({"markets": {}})
+                    write_ok = self.helper.write_data()
+                if "scannerexceptions" not in self.helper.data:
+                    self.helper.data.update({"scannerexceptions": {}})
+                    write_ok = self.helper.write_data()
+                if not write_ok:
+                    sleep(1)
         else:
             ds = {"trades": {}, "markets": {}, "scannerexceptions": {}}
             self.helper.data = ds
@@ -549,33 +558,47 @@ class TelegramBot(TelegramBotBase):
             return None
 
         if update.message.text == "Yes":
-            self.helper.read_data()
-            if "markets" in self.helper.data:
-                if not self.pair in self.helper.data["markets"]:
-                    self.helper.data["markets"].update(
-                        {
-                            self.pair: {
-                                "overrides": f"--exchange {self.exchange} --market {self.pair} {self.overrides}"
+            write_ok, try_cnt = False, 0
+            while not write_ok and try_cnt <= 5:
+                try_cnt += 1
+                try:
+                    self.helper.read_data()
+                    if "markets" in self.helper.data:
+                        if not self.pair in self.helper.data["markets"]:
+                            self.helper.data["markets"].update(
+                                {
+                                    self.pair: {
+                                        "overrides": f"--exchange {self.exchange} --market {self.pair} {self.overrides}"
+                                    }
+                                }
+                            )
+                            write_ok = self.helper.write_data()
+                            if write_ok:
+                                self.helper.send_telegram_message(update, f"{self.pair} saved \u2705", context=context)
+                            else:
+                                sleep(1)
+                        else:
+                            self.helper.send_telegram_message(update,
+                                f"{self.pair} already setup, no changes made.", context=context
+                            )
+                            write_ok = True
+                    else:
+                        self.helper.data.update({"markets": {}})
+                        self.helper.data["markets"].update(
+                            {
+                                self.pair: {
+                                    "overrides": f"--exchange {self.exchange} --market {self.pair} {self.overrides}"
+                                }
                             }
-                        }
-                    )
-                    self.helper.write_data()
-                    self.helper.send_telegram_message(update, f"{self.pair} saved \u2705", context=context)
-                else:
-                    self.helper.send_telegram_message(update,
-                        f"{self.pair} already setup, no changes made.", context=context
-                    )
-            else:
-                self.helper.data.update({"markets": {}})
-                self.helper.data["markets"].update(
-                    {
-                        self.pair: {
-                            "overrides": f"--exchange {self.exchange} --market {self.pair} {self.overrides}"
-                        }
-                    }
-                )
-                self.helper.write_data()
-                self.helper.send_telegram_message(update, f"{self.pair} saved", context=context)
+                        )
+                        write_ok = self.helper.write_data()
+                        if write_ok:
+                            self.helper.send_telegram_message(update, f"{self.pair} saved \u2705", context=context)
+                        else:
+                            sleep(1)
+                except Exception as err:
+                    print(err)
+
 
         reply_keyboard = [["Yes", "No"]]
         mark_up = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
@@ -712,8 +735,13 @@ class TelegramBot(TelegramBotBase):
             self.helper.data.update({"scannerexceptions": {}})
 
         if not self.pair in self.helper.data["scannerexceptions"]:
-            self.helper.data["scannerexceptions"].update({self.pair: {}})
-            self.helper.write_data()
+            write_ok, try_cnt = False, 0
+            while not write_ok and try_cnt <= 5:
+                try_cnt += 1
+                self.helper.data["scannerexceptions"].update({self.pair: {}})
+                write_ok = self.helper.write_data()
+                if not write_ok:
+                    sleep(1)
             self.helper.send_telegram_message(update,
                 f"{self.pair} Added to Scanner Exception List \u2705",
                 ReplyKeyboardRemove(), context

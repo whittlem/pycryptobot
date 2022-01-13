@@ -539,13 +539,17 @@ class TelegramActions:
 
     def delete_response(self, update):
         """delete selected bot"""
-        self.helper.read_data()
-
         query = update.callback_query
         logger.info("called delete_response - %s", query.data)
-        self.helper.data["markets"].pop(str(query.data).replace("delete_", ""))
+        write_ok, try_cnt = False, 0
+        while not write_ok and try_cnt <= 5:
+            try_cnt += 1
+            self.helper.read_data()
+            self.helper.data["markets"].pop(str(query.data).replace("delete_", ""))
 
-        self.helper.write_data()
+            write_ok = self.helper.write_data()
+            if not write_ok:
+                sleep(1)
 
         self.helper.send_telegram_message(
             update,
@@ -554,15 +558,18 @@ class TelegramActions:
 
     def remove_exception_callback(self, update):
         """delete selected bot"""
-        self.helper.read_data()
-
         query = update.callback_query
+        write_ok, try_cnt = False, 0
+        while not write_ok and try_cnt <= 5:
+            try_cnt += 1
+            self.helper.read_data()
+            self.helper.data["scannerexceptions"].pop(
+                str(query.data).replace("delexcep_", "")
+            )
 
-        self.helper.data["scannerexceptions"].pop(
-            str(query.data).replace("delexcep_", "")
-        )
-
-        self.helper.write_data()
+            write_ok = self.helper.write_data()
+            if not write_ok:
+                sleep(1)
 
         self.helper.send_telegram_message(
             update,

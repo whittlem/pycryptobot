@@ -3,13 +3,19 @@ import os
 import platform
 import subprocess
 import json
-
+import logging
+from json.decoder import JSONDecodeError
 from time import sleep
 from datetime import datetime
 from typing import List
 from telegram import InlineKeyboardMarkup, Update
 from telegram.ext.callbackcontext import CallbackContext
 
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+
+logger = logging.getLogger(__name__)
 
 class TelegramHelper:
     """ Telegram Bot Helper """
@@ -34,7 +40,6 @@ class TelegramHelper:
         self.read_config()
 
         if "scanner" in self.config:
-
             self.atr72pcnt = (
                 self.config["scanner"]["atr72_pcnt"]
                 if "atr72_pcnt" in self.config["scanner"]
@@ -105,7 +110,7 @@ class TelegramHelper:
                 self.data = json.load(json_file)
         except FileNotFoundError:
             return False
-        except json.decoder.JSONDecodeError:
+        except JSONDecodeError:
             return False
 
         return True
@@ -120,13 +125,10 @@ class TelegramHelper:
                 encoding="utf8",
             ) as outfile:
                 json.dump(self.data, outfile, indent=4)
-        except:
-            with open(
-                os.path.join(self.datafolder, "telegram_data", fname),
-                "w",
-                encoding="utf8",
-            ) as outfile:
-                json.dump(self.data, outfile, indent=4)
+                return True
+        except JSONDecodeError as err:
+            logger.error(err)
+            return False
 
     def read_config(self):
         ''' Read config file '''
