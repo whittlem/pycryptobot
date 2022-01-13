@@ -1167,7 +1167,7 @@ def executeJob(
                         # display balances
                         Logger.info(
                             f"{_app.getBaseCurrency()} balance before order: {str(account.basebalance_before)}\n"
-                            f"{_app.getQuoteCurrency()} balance before order: {str(account.quotebalance_before)}"
+                            f"\t\t{_app.getQuoteCurrency()} balance before order: {str(account.quotebalance_before)}"
                         )
 
                         # execute a live market buy
@@ -1185,8 +1185,6 @@ def executeJob(
                         ):
                             _state.last_buy_size = _app.getBuyMaxSize()
 
-                        account.basebalance_after = 0
-                        account.quotebalance_after = 0
                         bal_resp_error = 0
                         try:
                             trycnt, maxtry = (1,5)
@@ -1196,42 +1194,54 @@ def executeJob(
                                     _state.last_buy_size,
                                     _app.getBuyPercent(),
                                 )
-
                                 # Logger.debug(resp)
 
-                                # check balances after order
-                                ac = account.getBalance()
-                                try:
+                                # if error and no resp, don't add to it by making more API calls
+                                if len(resp) > 0:
+                                    # check balances after order
+                                    ac = account.getBalance()
+                                    try:
 
-                                    df_base = ac[ac["currency"] == _app.getBaseCurrency()]["available"]
-                                    account.basebalance_after = (
-                                        0.0
-                                        if len(df_base) == 0
-                                        else float(df_base.values[0])
-                                    )
+                                        df_base = ac[ac["currency"] == _app.getBaseCurrency()]["available"]
+                                        account.basebalance_after = (
+                                            0.0
+                                            if len(df_base) == 0
+                                            else float(df_base.values[0])
+                                        )
 
-                                    df_quote = ac[ac["currency"] == _app.getQuoteCurrency()]["available"]
+                                        df_quote = ac[ac["currency"] == _app.getQuoteCurrency()]["available"]
 
-                                    account.quotebalance_after = (
-                                        0.0
-                                        if len(df_quote) == 0
-                                        else float(df_quote.values[0])
-                                    )
-                                    bal_resp_error = 0
+                                        account.quotebalance_after = (
+                                            0.0
+                                            if len(df_quote) == 0
+                                            else float(df_quote.values[0])
+                                        )
+                                        bal_resp_error = 0
 
-                                except:
-                                    Logger.warning(f"Error: Ballance not retrieved after trade for {app.getMarket()}.  Trying again.")
-                                    time.sleep(10)
-                                    bal_resp_error = 1
-                                    trycnt += 1
+                                    except:
+                                        Logger.warning(f"Error: Ballance not retrieved after trade for {app.getMarket()}.  Trying again.")
+                                        time.sleep(10)
+                                        bal_resp_error = 1
+                                        trycnt += 1
+                                else:
+                                    account.basebalance_after = 0
+                                    account.quotebalance_after = 0
 
+                                # if error or the balance is still the same, pause and try again
                                 if account.basebalance_after <= account.basebalance_before and bal_resp_error == 0:
-                                    time.sleep(10)
+                                    time.sleep(15)
                                     trycnt += 1
                                 else:
+                                    telegram_bot.add_open_order()
+                                    _state.trade_error_cnt = 0
+                                    _state.trailing_buy = 0
+                                    _state.last_action = "BUY"
+                                    _state.action = "DONE"
+                                    telegram_bot.add_open_order()
+
                                     Logger.info(
                                         f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance_after)}\n"
-                                        f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance_after)}"
+                                        f"\t\t{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance_after)}"
                                     )
 
                                     now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
@@ -1246,10 +1256,6 @@ def executeJob(
                                         + price_text
                                     )
 
-                                    telegram_bot.add_open_order()
-                                    _state.trade_error_cnt = 0
-                                    _state.trailing_buy = 0
-                                    _state.last_action = "BUY"
                                     break
 
                         except:
@@ -1284,7 +1290,7 @@ def executeJob(
                     elif (
                         _app.getBuyMaxSize() != None
                         and _app.buyLastSellSize()
-                        and _state.last_sell_size > 10
+                        and _state.last_sell_size > _state.minimumOrderQuote(quote=_state.last_sell_size, balancechk = True)
                     ):
                         _state.last_buy_size = _state.last_sell_size
 
@@ -1437,7 +1443,7 @@ def executeJob(
 
                     Logger.info(
                         f"{_app.getBaseCurrency()} balance before order: {str(account.basebalance_before)}\n"
-                        f"{_app.getQuoteCurrency()} balance before order: {str(account.quotebalance_before)}"
+                        f"\t\t{_app.getQuoteCurrency()} balance before order: {str(account.quotebalance_before)}"
                     )
 
                     # execute a live market sell
@@ -1447,8 +1453,6 @@ def executeJob(
                         else float(state.last_buy_filled)
                     )
 
-                    account.basebalance_after = 0
-                    account.quotebalance_after = 0
                     bal_resp_error = 0
                     try:
                         trycnt, maxtry = (1,3)
@@ -1460,30 +1464,36 @@ def executeJob(
                             )
                             #Logger.debug(resp)
 
-                            # check balances
-                            try:
-                                account.basebalance_after = float(account.getBalance(_app.getBaseCurrency()))
-                                account.quotebalance_after = float(account.getBalance(_app.getQuoteCurrency()))
-                                bal_resp_error = 0
-                            except:
-                                Logger.warning(f"Error: Ballance not retrieved after trade for {app.getMarket()}.  Trying again.")
-                                time.sleep(10)
-                                bal_resp_error = 1
-                                trycnt += 1
+                            # if error and no resp, don't add to it by making more API calls
+                            if len(resp) > 0:
+                                # check balances
+                                try:
+                                    account.basebalance_after = float(account.getBalance(_app.getBaseCurrency()))
+                                    account.quotebalance_after = float(account.getBalance(_app.getQuoteCurrency()))
+                                    bal_resp_error = 0
+                                except:
+                                    Logger.warning(f"Error: Ballance not retrieved after trade for {app.getMarket()}.  Trying again.")
+                                    time.sleep(10)
+                                    bal_resp_error = 1
+                                    trycnt += 1
+                            else: 
+                                account.basebalance_after = 0
+                                account.quotebalance_after = 0
 
-                            # if the balance is still the same, try again
-                            if account.basebalance_after == account.basebalance_before and bal_resp_error == 0:
-                                time.sleep(10)
+                            # if error or the balance is still the same, pause and try again
+                            if account.basebalance_after >= account.basebalance_before and bal_resp_error == 0:
+                                time.sleep(15)
                                 trycnt += 1
                             else:
                                 # display balances
                                 Logger.info(
                                     f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance_after)}\n"
-                                    f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance_after)}"
+                                    f"\t\t{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance_after)}"
                                 )
                                 _state.prevent_loss = 0
                                 _state.trade_error_cnt = 0
                                 _state.last_action = "SELL"
+                                _state.action = "DONE"
                                 
                                 _app.notifyTelegram(
                                     _app.getMarket()
@@ -1514,8 +1524,7 @@ def executeJob(
                                     sys.exit(0)
 
                                 break
-                    except Exception as err:
-                        Logger.critical(err)
+                    except:
                         _state.trade_error_cnt += 1
                         if _state.trade_error_cnt >= 4:  # 5 attempts made
                             raise Exception(
@@ -1651,8 +1660,7 @@ def executeJob(
 
             if (
                 _app.enabledLogBuySellInJson() == True
-                and _state.action in ["BUY", "SELL"]
-                and _state.action == _state.last_action
+                and _state.action == "DONE"
                 and len(_app.trade_tracker) > 0
             ):
                 Logger.info(

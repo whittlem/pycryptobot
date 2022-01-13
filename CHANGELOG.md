@@ -8,6 +8,10 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [5.2.1] - 2022-01-12
+
+- minor updates to trade confirmations added previously
+
 ## [5.2.0] - 2022-01-11
 
 - updated telegram bot config editor
