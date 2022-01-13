@@ -56,6 +56,7 @@ class TelegramBotHelper:
             if os.path.isfile(
                 os.path.join(self.app.telegramdatafolder, "telegram_data", "data.json")
             ):
+            
                 write_ok, try_cnt = False, 0
                 while not write_ok and try_cnt <= 5:
                     try_cnt += 1

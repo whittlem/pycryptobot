@@ -112,7 +112,6 @@ class TelegramHelper:
             return False
         except JSONDecodeError:
             return False
-
         return True
 
     def write_data(self, name: str = "data.json") -> None:
