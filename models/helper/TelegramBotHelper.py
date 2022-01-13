@@ -47,6 +47,7 @@ class TelegramBotHelper:
                     },
                     "trailingstoplosstriggered" : False,
                     "preventlosstriggered" : False,
+                    "exchange" : self.exchange.value,
                 }
                 self.data = ds
                 self._write_data()
@@ -78,6 +79,8 @@ class TelegramBotHelper:
                 encoding="utf8",
             ) as json_file:
                 self.data = json.load(json_file)
+        except FileNotFoundError as err:
+            Logger.warning(err)
         except (JSONDecodeError, Exception) as err:
             Logger.critical(str(err))
             with open(
@@ -166,11 +169,14 @@ class TelegramBotHelper:
 
     def deletemargin(self):
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
-            os.remove(
-                os.path.join(
-                    self.app.telegramdatafolder, "telegram_data", self.filename
+            try:
+                os.remove(
+                    os.path.join(
+                        self.app.telegramdatafolder, "telegram_data", self.filename
+                    )
                 )
-            )
+            except FileNotFoundError:
+                pass
 
     def closetrade(self, ts, price, margin):
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
@@ -179,7 +185,6 @@ class TelegramBotHelper:
                 {ts: {"pair": self.market, "price": price, "margin": margin}}
             )
             self._write_data("data.json")
-
             self.remove_open_order()
 
 

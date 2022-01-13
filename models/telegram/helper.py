@@ -220,7 +220,6 @@ class TelegramHelper:
         while i >= 0:
             while self.read_data(jsonfiles[i]) is False:
                 sleep(0.2)
-                # self.read_data(jsonfiles[i])
             if "botcontrol" in self.data:
                 if "watchdog_ping" in self.data["botcontrol"]:
                     last_ping = datetime.strptime(self.data["botcontrol"]["watchdog_ping"], "%Y-%m-%dT%H:%M:%S.%f")
