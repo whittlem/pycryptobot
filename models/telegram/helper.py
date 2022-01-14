@@ -12,7 +12,7 @@ from telegram import InlineKeyboardMarkup, Update
 from telegram.ext.callbackcontext import CallbackContext
 
 logging.basicConfig(
-    filename=f"telegrambot.log {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", filemode='w',
+    filename=f"telegrambot {datetime.now().strftime('%Y-%m-%d')}.log", filemode='w',
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", 
     level=logging.INFO
 )
@@ -26,6 +26,7 @@ class TelegramHelper:
         self.data = {}
         self.config = config
         self.config_file = configfile
+        self.screener = {}
         self.settings = {}
         self.use_default_scanner = True
         self.atr72pcnt = 2.0
@@ -37,6 +38,7 @@ class TelegramHelper:
         self.logger = logging.getLogger(__name__)
 
         self.load_config()
+        self.read_screener_config()
 
     def load_config(self):
         ''' Load/Reread config file from file '''
@@ -153,6 +155,30 @@ class TelegramHelper:
                 encoding="utf8",
             ) as outfile:
                 json.dump(self.config, outfile, indent=4)
+        except:
+            return
+
+    def read_screener_config(self):
+        ''' Read screener config file '''
+        try:
+            with open(
+                "screener.json", "r", encoding="utf8"
+            ) as json_file:
+                self.screener = json.load(json_file)
+        except FileNotFoundError:
+            return
+        except json.decoder.JSONDecodeError:
+            return
+
+    def write_screener_config(self):
+        ''' Write screener config file '''
+        try:
+            with open(
+                "screener.json",
+                "w",
+                encoding="utf8",
+            ) as outfile:
+                json.dump(self.screener, outfile, indent=4)
         except:
             return
 

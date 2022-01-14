@@ -909,6 +909,8 @@ class TelegramBot(TelegramBotBase):
 def main():
     """Start the bot."""
     # Create telegram bot configuration
+    print("Telegram Bot is litening")
+
     botconfig = TelegramBot()
 
     # Get the dispatcher to register handlers
@@ -1018,6 +1020,7 @@ def main():
 
     # Start the Bot
     botconfig.updater.start_polling()
+    botconfig.updater.bot.send_message(text="Online and ready.", chat_id=botconfig.helper.config["telegram"]["user_id"])
 
     # Run the bot until you press Ctrl-C
     # since start_polling() is non-blocking and will stop the bot gracefully.

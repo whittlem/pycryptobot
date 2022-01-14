@@ -353,7 +353,11 @@ class TelegramHandler:
                         exchange.capitalize(), callback_data=f"{callback}_{exchange}"
                     )
                 )
-
+        # buttons.append(
+        #             InlineKeyboardButton(
+        #                 "Screener", callback_data=f"{callback}_screener"
+        #             )
+        #         )
         i = 0
         while i <= len(buttons) - 1:
             if len(buttons) - 1 >= i + 2:
