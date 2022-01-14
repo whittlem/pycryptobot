@@ -2,7 +2,7 @@
 import os
 import json
 import subprocess
-import logging
+# import logging
 import csv
 from datetime import datetime
 
@@ -10,11 +10,11 @@ from time import sleep
 from models.telegram.helper import TelegramHelper
 from models.telegram.settings import SettingsEditor
 
-# Enable logging
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-logger = logging.getLogger(__name__)
+# # Enable logging
+# logging.basicConfig(
+#     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+# )
+# logger = logging.getLogger(__name__)
 
 class TelegramActions:
     ''' Telegram Bot Action Class '''
@@ -73,7 +73,7 @@ class TelegramActions:
 
     def start_open_orders(self, update, context):
         ''' Start bots for open trades (data.json) '''
-        logger.info("called start_open_orders")
+        self.helper.logger.info("called start_open_orders")
         query = update.callback_query
         if query is not None:
             query.answer()
@@ -105,7 +105,7 @@ class TelegramActions:
     def sell_response(self, update, context):
         """create the manual sell order"""
         query = update.callback_query
-        logger.info("called sell_response - %s", query.data)
+        self.helper.logger.info("called sell_response - %s", query.data)
 
         if query.data.__contains__("all"):
             self.helper.send_telegram_message(
@@ -144,7 +144,7 @@ class TelegramActions:
     def buy_response(self, update, context):
         """create the manual buy order"""
         query = update.callback_query
-        logger.info("called buy_response - %s", query.data)
+        self.helper.logger.info("called buy_response - %s", query.data)
         # if self.helper.read_data(query.data.replace("confirm_buy_", "")):
         while self.helper.read_data(query.data.replace("confirm_buy_", "")) is False:
             sleep(0.2)
@@ -164,7 +164,7 @@ class TelegramActions:
         #     self.helper.config = json.load(json_file)
 
         query = update.callback_query
-        logger.info("called show_config_response - %s", query.data)
+        self.helper.logger.info("called show_config_response - %s", query.data)
 
         if query.data == "ex_scanner":
             pbot = self.helper.config[query.data.replace("ex_", "")]
@@ -293,7 +293,7 @@ class TelegramActions:
             scanner_config_file = "screener.json"
             scanner_script_file = "screener.py"
 
-        logger.info("called start_market_scan - %s", scanner_script_file)
+        self.helper.logger.info("called start_market_scan - %s", scanner_script_file)
 
         try:
             with open(f"{scanner_config_file}", encoding="utf8") as json_file:
@@ -353,11 +353,11 @@ class TelegramActions:
             # else:
             #     self.helper.send_telegram_message(update, "Command Started")
             try:
-                logger.info("Starting Market Scanner")
+                self.helper.logger.info("Starting Market Scanner")
                 subprocess.getoutput(f"python3 {scanner_script_file}")
             except Exception as err:
                 update.effective_message.reply_html("<b>scanning failed.</b>")
-                logger.error(err)
+                self.helper.logger.error(err)
                 raise
 
             if bool(self.helper.settings["notifications"]["enable_screener"]):
@@ -446,7 +446,7 @@ class TelegramActions:
                     update.effective_message.reply_html(
                         f"Starting {ex} ({quote}) bots..."
                     )
-                logger.info("%s - (%s)", ex, quote)
+                self.helper.logger.info("%s - (%s)", ex, quote)
                 if not os.path.isfile(
                     os.path.join(
                         self.datafolder, "telegram_data", f"{ex}_{quote}_output.json"
@@ -468,7 +468,7 @@ class TelegramActions:
                 msg_cnt = 1
                 for row in data:
                     if debug:
-                        logger.info("%s", row)
+                        self.helper.logger.info("%s", row)
 
                     if maxbotcount > 0 and (botcounter + runningcounter) >= maxbotcount:
                         break
@@ -539,7 +539,7 @@ class TelegramActions:
     def delete_response(self, update):
         """delete selected bot"""
         query = update.callback_query
-        logger.info("called delete_response - %s", query.data)
+        self.helper.logger.info("called delete_response - %s", query.data)
         write_ok, try_cnt = False, 0
         while not write_ok and try_cnt <= 5:
             try_cnt += 1
@@ -556,8 +556,9 @@ class TelegramActions:
         )
 
     def remove_exception_callback(self, update):
-        """delete selected bot"""
+        """remove bot exception """
         query = update.callback_query
+        self.helper.logger.info("called remove_exception_callback")
         write_ok, try_cnt = False, 0
         while not write_ok and try_cnt <= 5:
             try_cnt += 1

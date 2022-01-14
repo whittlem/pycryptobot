@@ -12,10 +12,12 @@ from telegram import InlineKeyboardMarkup, Update
 from telegram.ext.callbackcontext import CallbackContext
 
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+    logfile=f"telegrambot.log {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", 
+    level=logging.INFO
 )
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 class TelegramHelper:
     """ Telegram Bot Helper """
@@ -32,6 +34,7 @@ class TelegramHelper:
         self.autoscandelay = 0
         self.enable_buy_next = True
         self.autostart = False
+        self.logger = logging.getLogger(__name__)
 
         self.load_config()
 
@@ -126,7 +129,7 @@ class TelegramHelper:
                 json.dump(self.data, outfile, indent=4)
                 return True
         except JSONDecodeError as err:
-            logger.error(err)
+            self.logger.error(err)
             return False
 
     def read_config(self):

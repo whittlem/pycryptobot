@@ -510,7 +510,7 @@ class TelegramBot(TelegramBotBase):
         """start bot - save if required ask if want to start"""
         if not self._check_if_allowed(context._user_id_and_data[0], update):
             return None
-
+        self.helper.logger.info("called newbot_save")
         if update.message.text == "Yes":
             write_ok, try_cnt = False, 0
             while not write_ok and try_cnt <= 5:
@@ -596,11 +596,11 @@ class TelegramBot(TelegramBotBase):
 
     def error(self, update, context):
         """Log Errors"""
-        logger.error(msg="Exception while handling an update:", exc_info=context.error)
+        self.helper.logger.error(msg="Exception while handling an update:", exc_info=context.error)
         try:
             if "HTTPError" in context.error.args[0]:
                 while self.checkconnection() == False:
-                    logger.warning("No internet connection found")
+                    self.helper.logger.warning("No internet connection found")
                     self.updater.start_polling(poll_interval=30)
                     sleep(30)
                 self.updater.start_polling()
@@ -628,7 +628,7 @@ class TelegramBot(TelegramBotBase):
         for i in range(len(jsonfiles), 0, -1):
             jfile = jsonfiles[i - 1]
 
-            logger.info("checking %s", jfile)
+            self.helper.logger.info("checking %s", jfile)
 
             while self.helper.read_data(jfile) == False:
                 sleep(0.2)
@@ -639,7 +639,7 @@ class TelegramBot(TelegramBotBase):
                 )
             )
             if "margin" not in self.helper.data:
-                logger.info("deleting %s", jfile)
+                self.helper.logger.info("deleting %s", jfile)
                 os.remove(os.path.join(self.datafolder, "telegram_data", f"{jfile}.json"))
                 continue
             if (
@@ -657,7 +657,7 @@ class TelegramBot(TelegramBotBase):
                 and last_modified.seconds > 120
                 and last_modified.seconds != 86399
             ):
-                logger.info("deleting %s %s", jfile, str(last_modified.seconds))
+                self.helper.logger.info("deleting %s %s", jfile, str(last_modified.seconds))
                 os.remove(os.path.join(self.datafolder, "telegram_data", f"{jfile}.json"))
 
     def ExceptionExchange(self, update, context):
@@ -681,6 +681,8 @@ class TelegramBot(TelegramBotBase):
         if not self._check_if_allowed(context._user_id_and_data[0], update):
             return None
 
+        self.helper.logger.info("called ExceptionAdd")
+        
         self._answer_which_pair(update, context)
 
         self.helper.read_data()
@@ -793,7 +795,7 @@ class TelegramBot(TelegramBotBase):
             return
 
         self.handler._check_scheduled_job(update, context)
-        logger.info("Start scanning using default scanner? %s", bool(self.helper.use_default_scanner))
+        self.helper.logger.info("Start scanning using default scanner? %s", bool(self.helper.use_default_scanner))
         self.helper.send_telegram_message(update, "Operation Started",context=context)
         self.actions.start_market_scan(
             update,
