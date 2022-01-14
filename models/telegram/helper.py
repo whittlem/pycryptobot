@@ -12,9 +12,9 @@ from telegram import InlineKeyboardMarkup, Update
 from telegram.ext.callbackcontext import CallbackContext
 
 logging.basicConfig(
-    logfile=f"telegrambot.log {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+    filename=f"telegrambot.log {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", filemode='w',
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", 
-    level=logging.INFO
+    level=logging.DEBUG
 )
 
 # logger = logging.getLogger(__name__)
