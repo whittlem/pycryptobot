@@ -909,7 +909,7 @@ class TelegramBot(TelegramBotBase):
 def main():
     """Start the bot."""
     # Create telegram bot configuration
-    print("Telegram Bot is litening")
+    print("Telegram Bot is listening")
 
     botconfig = TelegramBot()
 
