@@ -14,7 +14,7 @@ from telegram.ext.callbackcontext import CallbackContext
 logging.basicConfig(
     filename=f"telegrambot.log {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", filemode='w',
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", 
-    level=logging.DEBUG
+    level=logging.INFO
 )
 
 # logger = logging.getLogger(__name__)

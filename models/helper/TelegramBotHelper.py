@@ -38,20 +38,7 @@ class TelegramBotHelper:
             ):
                 self._read_data()
             else:
-                ds = {
-                    "botcontrol": {
-                        "status": "active",
-                        "manualsell": False,
-                        "manualbuy": False,
-                        "started": datetime.now().isoformat(),
-                        "startmethod" : self.app.startmethod,
-                    },
-                    "trailingstoplosstriggered" : False,
-                    "preventlosstriggered" : False,
-                    "exchange" : self.exchange.value,
-                }
-                self.data = ds
-                self._write_data()
+                self.create_bot_data()
 
             if os.path.isfile(
                 os.path.join(self.app.telegramdatafolder, "telegram_data", "data.json")
@@ -76,11 +63,27 @@ class TelegramBotHelper:
                 self.data = ds
                 self._write_data("data.json")
 
+    def create_bot_data(self):
+        ds = {
+                "botcontrol": {
+                    "status": "active",
+                    "manualsell": False,
+                    "manualbuy": False,
+                    "started": datetime.now().isoformat(),
+                    "startmethod" : self.app.startmethod,
+                },
+                "trailingstoplosstriggered" : False,
+                "preventlosstriggered" : False,
+                "exchange" : self.exchange.value,
+            }
+        self.data = ds
+        self._write_data()
+
     def _read_data(self, name: str = "") -> None:
         file = self.filename if name == "" else name
 
         read_ok, try_cnt = False, 0
-        while not read_ok or try_cnt <= 5:
+        while not read_ok and try_cnt <= 5:
             try_cnt += 1
             try:
                 with open(
@@ -90,11 +93,17 @@ class TelegramBotHelper:
                 ) as json_file:
                     self.data = json.load(json_file)
                 read_ok = True
-            except FileNotFoundError as err:
-                Logger.warning(err)
-                read_ok = True
-            except JSONDecodeError as err:
-                Logger.critical(str(err))
+            except FileNotFoundError:
+                Logger.warning("File Not Found:  Recreating File..")
+                self.create_bot_data()
+            except JSONDecodeError:
+                if len(self.data) > 0:
+                    Logger.warning("JSON Decode Error: Recreating File..")
+                    self._write_data()
+                else:
+                    Logger.warning("JSON Decode Error: Removing File..")
+                    self.removeactivebot()
+                
 
     def _write_data(self, name: str = "") -> bool:
         file = self.filename if name == "" else name
@@ -199,17 +208,18 @@ class TelegramBotHelper:
         result = "WAIT"
         self._read_data()
 
-        if len(self.data["botcontrol"]) > 0:
-            if self.data["botcontrol"]["manualsell"]:
-                self.data["botcontrol"]["manualsell"] = False
-                result = "SELL"
-                self._write_data()
+        if "botcontrol" in self.data:
+            if len(self.data["botcontrol"]) > 0:
+                if self.data["botcontrol"]["manualsell"]:
+                    self.data["botcontrol"]["manualsell"] = False
+                    result = "SELL"
+                    self._write_data()
 
-        if len(self.data["botcontrol"]) > 0:
-            if self.data["botcontrol"]["manualbuy"]:
-                self.data["botcontrol"]["manualbuy"] = False
-                result = "BUY"
-                self._write_data()
+            if len(self.data["botcontrol"]) > 0:
+                if self.data["botcontrol"]["manualbuy"]:
+                    self.data["botcontrol"]["manualbuy"] = False
+                    result = "BUY"
+                    self._write_data()
 
         return result
 
@@ -217,16 +227,18 @@ class TelegramBotHelper:
         result = "active"
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             self._read_data()
-            result = self.data["botcontrol"]["status"]
+            if "botcontrol" in self.data:
+                result = self.data["botcontrol"]["status"]
 
         return result
 
     def updatebotstatus(self, status) -> None:
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             self._read_data()
-            if not self.data["botcontrol"]["status"] == status:
-                self.data["botcontrol"]["status"] = status
-                self._write_data()
+            if "botcontrol" in self.data:
+                if not self.data["botcontrol"]["status"] == status:
+                    self.data["botcontrol"]["status"] = status
+                    self._write_data()
 
     def removeactivebot(self) -> None:
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():

@@ -350,8 +350,6 @@ class TelegramActions:
             if bool(self.helper.settings["notifications"]["enable_screener"]):
                 reply = "<i>Gathering market data\nplease wait...</i> \u23F3"
                 self.helper.send_telegram_message(update, reply, context=context)
-            # else:
-            #     self.helper.send_telegram_message(update, "Command Started")
             try:
                 self.helper.logger.info("Starting Market Scanner")
                 subprocess.getoutput(f"python3 {scanner_script_file}")
@@ -372,7 +370,6 @@ class TelegramActions:
             self.helper.stop_running_bot(file, "exit", True)
             sleep(3)
             os.remove(os.path.join(self.datafolder, "telegram_data", f"{file}.json"))
-            # self.helper._cleandataquietall()
             sleep(1)
             if bool(self.helper.settings["notifications"]["enable_screener"]):
                 update.effective_message.reply_html(
