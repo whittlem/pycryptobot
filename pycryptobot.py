@@ -83,7 +83,7 @@ def executeJob(
             if controlstatus == "pause":
                 text_box = TextBox(80, 22)
                 text_box.singleLine()
-                text_box.center("Pausing Bot")
+                text_box.center(f"Pausing Bot {_app.getMarket()}")
                 text_box.singleLine()
                 Logger.debug("Pausing Bot.")
                 print(str(datetime.now()).format() + " - Bot is paused")
@@ -99,7 +99,7 @@ def executeJob(
         if controlstatus == "start":
             text_box = TextBox(80, 22)
             text_box.singleLine()
-            text_box.center("Restarting Bot")
+            text_box.center(f"Restarting Bot {_app.getMarket()}")
             text_box.singleLine()
             Logger.debug("Restarting Bot.")
             # print(str(datetime.now()).format() + " - Bot has restarted")
@@ -113,7 +113,7 @@ def executeJob(
         if controlstatus == "exit":
             text_box = TextBox(80, 22)
             text_box.singleLine()
-            text_box.center("Closing Bot")
+            text_box.center(f"Closing Bot {_app.getMarket()}")
             text_box.singleLine()
             Logger.debug("Closing Bot.")
             _app.notifyTelegram(f"{_app.getMarket()} bot is stopping")
@@ -123,7 +123,7 @@ def executeJob(
         if controlstatus == "reload":
             text_box = TextBox(80, 22)
             text_box.singleLine()
-            text_box.center("Reloading config parameters")
+            text_box.center(f"Reloading config parameters {_app.getMarket()}")
             text_box.singleLine()
             Logger.debug("Reloading config parameters.")
             _app.read_config(_app.getExchange())
