@@ -59,6 +59,25 @@ class ConfigEditor:
 
         return config
 
+    def get_screener_config_from_file(self, exchange):
+        ''' Read screener config file parameters and values '''
+        config = {"float": {}, "int": {}, "disabled": {}, "normal": {}}
+
+        for param in self.helper.screener[exchange]:
+            if type(self.helper.screener[exchange][param]) is float:
+                config["float"].update({param: self.helper.screener[exchange][param]})
+            elif param.__contains__("disable"):
+                config["disabled"].update({param: self.helper.screener[exchange][param]})
+            elif type(self.helper.screener[exchange][param]) is int and (
+                self.helper.screener[exchange][param] > 1
+                or self.helper.screener[exchange][param] < 0
+            ):
+                config["int"].update({param: self.helper.screener[exchange][param]})
+            elif type(self.helper.screener[exchange][param]) is int:
+                config["normal"].update({param: self.helper.screener[exchange][param]})
+
+        return config
+
     def get_config_options(
         self, update: Update, context: CallbackContext, callback: str = ""
     ):
@@ -72,6 +91,7 @@ class ConfigEditor:
                 or query.data.__contains__(Exchange.BINANCE.value)
                 or query.data.__contains__(Exchange.KUCOIN.value)
                 or query.data.__contains__("scanner")
+                or query.data.__contains__("screener")
             ):
                 exchange = query.data[: query.data.find("_")]
 
@@ -81,6 +101,8 @@ class ConfigEditor:
         buttons = []
         if exchange == "scanner":
             config_properties = self.get_scanner_config_from_file()
+        elif exchange == "screener":
+            config_properties = self.get_screener_config_from_file("binance")
         else:
             config_properties = self.get_config_from_file()
 
