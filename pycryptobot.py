@@ -1187,8 +1187,8 @@ def executeJob(
 
                         trycnt, maxtry = (1,3)
                         bal_resp_error = 0
-                        resp_error = 0
                         while trycnt <= maxtry:
+                            resp_error = 0
                             if bal_resp_error == 0:
                                 try:
                                     resp = _app.marketBuy(
@@ -1225,10 +1225,10 @@ def executeJob(
                                         f"Error: Balance not retrieved after trade for {app.getMarket()}.  Trying again.\n"
                                         f"API Error Msg: {err}"
                                         )
-                                    bal_resp_error = 1
+                                    resp_error, bal_resp_error = (1,1)
 
                             # if error or the balance is still the same, pause and try again
-                            if resp_error == 1 or bal_resp_error == 1 or account.basebalance_after <= account.basebalance_before:
+                            if resp_error == 1 or account.basebalance_after <= account.basebalance_before:
                                 time.sleep(15)
                                 trycnt += 1
                             else:
@@ -1264,7 +1264,7 @@ def executeJob(
                                     f"Trade Error: BUY transaction attempted 5 times. Check log for errors"
                                 )
                             Logger.warning(
-                                f"API Error: Unable to place buy order for {app.getMarket()}."
+                                f"API Error: Unable to place buy order for {app.getMarket()}. Check log for errors"
                             )
                             if not app.disableTelegramErrorMsgs():
                                 app.notifyTelegram(f"API Error: Unable to place buy order for {app.getMarket()}")
@@ -1456,8 +1456,8 @@ def executeJob(
 
                     trycnt, maxtry = (1,3)
                     bal_resp_error = 0
-                    resp_error = 0
                     while trycnt <= maxtry:
+                        resp_error = 0
                         account.basebalance_after = 0
                         account.quotebalance_after = 0
                         if bal_resp_error == 0:
@@ -1484,10 +1484,10 @@ def executeJob(
                                     f"Error: Ballance not retrieved after trade for {app.getMarket()}.  Trying again.\n"
                                     f"API Error Msg: {err}"
                                 )
-                                bal_resp_error = 1
+                                resp_error, bal_resp_error = (1,1)
 
                         # if error or the balance is still the same, pause and try again
-                        if resp_error == 1 or bal_resp_error == 1 or account.basebalance_after >= account.basebalance_before:
+                        if resp_error == 1 or account.basebalance_after >= account.basebalance_before:
                             time.sleep(15)
                             trycnt += 1
                         else:
@@ -1537,7 +1537,7 @@ def executeJob(
                                 f"Trade Error: SELL transaction attempted 5 times. Check log for errors."
                             )
                         Logger.warning(
-                            f"API Error: Unable to place SELL order for {app.getMarket()}."
+                            f"API Error: Unable to place SELL order for {app.getMarket()}.  Check log for errors."
                         )
                         if not app.disableTelegramErrorMsgs():
                             app.notifyTelegram(f"API Error: Unable to place SELL order for {app.getMarket()}")
