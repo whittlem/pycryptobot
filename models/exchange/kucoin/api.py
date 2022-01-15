@@ -600,10 +600,13 @@ class AuthAPI(AuthAPIBase):
         pMarket = market.split("-")[0]
         product = self.authAPI("GET", f"api/v1/symbols?{pMarket}")
 
-        if "baseIncrement" not in product:
-            return amount
+        for ind in product.index:
+            if product["symbol"][ind] == market:
+                if "baseIncrement" not in product:
+                    return amount
 
-        base_increment = str(product["baseIncrement"].values[0])
+                base_increment = str(product["baseIncrement"][ind])
+                break
 
         if "." in str(base_increment):
             nb_digits = len(str(base_increment).split(".")[1])
@@ -615,12 +618,15 @@ class AuthAPI(AuthAPIBase):
     def marketQuoteIncrement(self, market, amount) -> float:
         """Retrieves the market quote increment"""
 
-        product = self.authAPI("GET", f"api/v1/symbols?{market}")
+        products = self.authAPI("GET", f"api/v1/symbols?{market}")
 
-        if "quoteIncrement" not in product:
-            return amount
+        for ind in products.index:
+            if products["symbol"][ind] == market:
+                if "quoteIncrement" not in products:
+                    return amount
 
-        quote_increment = str(product["quoteIncrement"].values[0])
+                quote_increment = str(products["quoteIncrement"][ind])
+                break
 
         if "." in str(quote_increment):
             nb_digits = len(str(quote_increment).split(".")[1])
