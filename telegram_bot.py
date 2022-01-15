@@ -8,6 +8,7 @@ Usage:
 Press Ctrl-C on the command line or send a signal to the process to stop the bot.
 """
 import argparse
+from asyncore import write
 import logging
 import os
 import json
@@ -124,52 +125,6 @@ class TelegramBot(TelegramBotBase):
         self.token = self.config["telegram"]["token"]
         self.userid = self.config["telegram"]["user_id"]
 
-        # # Config section for bot pair scanner
-        # self.atr72pcnt = 2.0
-        # self.enableleverage = False
-        # self.use_default_scanner = 1
-        # self.maxbotcount = 0
-        # self.autoscandelay = 0
-        # self.enable_buy_next = True
-        # self.autostart = False
-        # if "scanner" in self.config:
-        #     self.atr72pcnt = (
-        #         self.config["scanner"]["atr72_pcnt"]
-        #         if "atr72_pcnt" in self.config["scanner"]
-        #         else self.atr72pcnt
-        #     )
-        #     self.enableleverage = (
-        #         self.config["scanner"]["enableleverage"]
-        #         if "enableleverage" in self.config["scanner"]
-        #         else self.enableleverage
-        #     )
-        #     self.use_default_scanner = (
-        #         self.config["scanner"]["use_default_scanner"]
-        #         if "use_default_scanner" in self.config["scanner"]
-        #         else self.use_default_scanner
-        #     )
-        #     self.maxbotcount = (
-        #         self.config["scanner"]["maxbotcount"]
-        #         if "maxbotcount" in self.config["scanner"]
-        #         else self.maxbotcount
-        #     )
-        #     self.autoscandelay = (
-        #         self.config["scanner"]["autoscandelay"]
-        #         if "autoscandelay" in self.config["scanner"]
-        #         else 0
-        #     )
-        #     self.enable_buy_next = (
-        #         self.config["scanner"]["enable_buy_next"]
-        #         if "enable_buy_next" in self.config["scanner"]
-        #         else True
-        #     )
-
-            # self.autostart = (
-            #     self.config["scanner"]["autostart"]
-            #     if "autostart" in self.config["scanner"]
-            #     else True
-            # )
-
         if "datafolder" in self.config["telegram"]:
             self.datafolder = self.config["telegram"]["datafolder"]
 
@@ -182,14 +137,22 @@ class TelegramBot(TelegramBotBase):
             os.mkdir(os.path.join(self.datafolder, "telegram_data"))
 
         if os.path.isfile(os.path.join(self.datafolder, "telegram_data", "data.json")):
-            self.helper.read_data()
-            if "trades" not in self.helper.data:
-                self.helper.data.update({"trades": {}})
-            if "markets" not in self.helper.data:
-                self.helper.data.update({"markets": {}})
-            if "scannerexceptions" not in self.helper.data:
-                self.helper.data.update({"scannerexceptions": {}})
-            self.helper.write_data()
+            write_ok, try_cnt = False, 0
+            while not write_ok and try_cnt <= 5:
+                try_cnt += 1
+                self.helper.read_data("data.json")
+                write_ok = True
+                if "trades" not in self.helper.data:
+                    self.helper.data.update({"trades": {}})
+                    write_ok = self.helper.write_data()
+                if "markets" not in self.helper.data:
+                    self.helper.data.update({"markets": {}})
+                    write_ok = self.helper.write_data()
+                if "scannerexceptions" not in self.helper.data:
+                    self.helper.data.update({"scannerexceptions": {}})
+                    write_ok = self.helper.write_data()
+                if not write_ok:
+                    sleep(1)
         else:
             ds = {"trades": {}, "markets": {}, "scannerexceptions": {}}
             self.helper.data = ds
@@ -547,35 +510,49 @@ class TelegramBot(TelegramBotBase):
         """start bot - save if required ask if want to start"""
         if not self._check_if_allowed(context._user_id_and_data[0], update):
             return None
-
+        self.helper.logger.info("called newbot_save")
         if update.message.text == "Yes":
-            self.helper.read_data()
-            if "markets" in self.helper.data:
-                if not self.pair in self.helper.data["markets"]:
-                    self.helper.data["markets"].update(
-                        {
-                            self.pair: {
-                                "overrides": f"--exchange {self.exchange} --market {self.pair} {self.overrides}"
+            write_ok, try_cnt = False, 0
+            while not write_ok and try_cnt <= 5:
+                try_cnt += 1
+                try:
+                    self.helper.read_data()
+                    if "markets" in self.helper.data:
+                        if not self.pair in self.helper.data["markets"]:
+                            self.helper.data["markets"].update(
+                                {
+                                    self.pair: {
+                                        "overrides": f"--exchange {self.exchange} --market {self.pair} {self.overrides}"
+                                    }
+                                }
+                            )
+                            write_ok = self.helper.write_data()
+                            if write_ok:
+                                self.helper.send_telegram_message(update, f"{self.pair} saved \u2705", context=context)
+                            else:
+                                sleep(1)
+                        else:
+                            self.helper.send_telegram_message(update,
+                                f"{self.pair} already setup, no changes made.", context=context
+                            )
+                            write_ok = True
+                    else:
+                        self.helper.data.update({"markets": {}})
+                        self.helper.data["markets"].update(
+                            {
+                                self.pair: {
+                                    "overrides": f"--exchange {self.exchange} --market {self.pair} {self.overrides}"
+                                }
                             }
-                        }
-                    )
-                    self.helper.write_data()
-                    self.helper.send_telegram_message(update, f"{self.pair} saved \u2705", context=context)
-                else:
-                    self.helper.send_telegram_message(update,
-                        f"{self.pair} already setup, no changes made.", context=context
-                    )
-            else:
-                self.helper.data.update({"markets": {}})
-                self.helper.data["markets"].update(
-                    {
-                        self.pair: {
-                            "overrides": f"--exchange {self.exchange} --market {self.pair} {self.overrides}"
-                        }
-                    }
-                )
-                self.helper.write_data()
-                self.helper.send_telegram_message(update, f"{self.pair} saved", context=context)
+                        )
+                        write_ok = self.helper.write_data()
+                        if write_ok:
+                            self.helper.send_telegram_message(update, f"{self.pair} saved \u2705", context=context)
+                        else:
+                            sleep(1)
+                except Exception as err:
+                    print(err)
+
 
         reply_keyboard = [["Yes", "No"]]
         mark_up = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
@@ -619,11 +596,11 @@ class TelegramBot(TelegramBotBase):
 
     def error(self, update, context):
         """Log Errors"""
-        logger.error(msg="Exception while handling an update:", exc_info=context.error)
+        self.helper.logger.error(msg="Exception while handling an update:", exc_info=context.error)
         try:
             if "HTTPError" in context.error.args[0]:
                 while self.checkconnection() == False:
-                    logger.warning("No internet connection found")
+                    self.helper.logger.warning("No internet connection found")
                     self.updater.start_polling(poll_interval=30)
                     sleep(30)
                 self.updater.start_polling()
@@ -651,7 +628,7 @@ class TelegramBot(TelegramBotBase):
         for i in range(len(jsonfiles), 0, -1):
             jfile = jsonfiles[i - 1]
 
-            logger.info("checking %s", jfile)
+            self.helper.logger.info("checking %s", jfile)
 
             while self.helper.read_data(jfile) == False:
                 sleep(0.2)
@@ -662,7 +639,7 @@ class TelegramBot(TelegramBotBase):
                 )
             )
             if "margin" not in self.helper.data:
-                logger.info("deleting %s", jfile)
+                self.helper.logger.info("deleting %s", jfile)
                 os.remove(os.path.join(self.datafolder, "telegram_data", f"{jfile}.json"))
                 continue
             if (
@@ -680,7 +657,7 @@ class TelegramBot(TelegramBotBase):
                 and last_modified.seconds > 120
                 and last_modified.seconds != 86399
             ):
-                logger.info("deleting %s %s", jfile, str(last_modified.seconds))
+                self.helper.logger.info("deleting %s %s", jfile, str(last_modified.seconds))
                 os.remove(os.path.join(self.datafolder, "telegram_data", f"{jfile}.json"))
 
     def ExceptionExchange(self, update, context):
@@ -704,6 +681,8 @@ class TelegramBot(TelegramBotBase):
         if not self._check_if_allowed(context._user_id_and_data[0], update):
             return None
 
+        self.helper.logger.info("called ExceptionAdd")
+        
         self._answer_which_pair(update, context)
 
         self.helper.read_data()
@@ -712,8 +691,13 @@ class TelegramBot(TelegramBotBase):
             self.helper.data.update({"scannerexceptions": {}})
 
         if not self.pair in self.helper.data["scannerexceptions"]:
-            self.helper.data["scannerexceptions"].update({self.pair: {}})
-            self.helper.write_data()
+            write_ok, try_cnt = False, 0
+            while not write_ok and try_cnt <= 5:
+                try_cnt += 1
+                self.helper.data["scannerexceptions"].update({self.pair: {}})
+                write_ok = self.helper.write_data()
+                if not write_ok:
+                    sleep(1)
             self.helper.send_telegram_message(update,
                 f"{self.pair} Added to Scanner Exception List \u2705",
                 ReplyKeyboardRemove(), context
@@ -811,7 +795,7 @@ class TelegramBot(TelegramBotBase):
             return
 
         self.handler._check_scheduled_job(update, context)
-        logger.info("Start scanning using default scanner? %s", bool(self.helper.use_default_scanner))
+        self.helper.logger.info("Start scanning using default scanner? %s", bool(self.helper.use_default_scanner))
         self.helper.send_telegram_message(update, "Operation Started",context=context)
         self.actions.start_market_scan(
             update,
@@ -925,6 +909,8 @@ class TelegramBot(TelegramBotBase):
 def main():
     """Start the bot."""
     # Create telegram bot configuration
+    print("Telegram Bot is listening")
+
     botconfig = TelegramBot()
 
     # Get the dispatcher to register handlers
@@ -1034,6 +1020,7 @@ def main():
 
     # Start the Bot
     botconfig.updater.start_polling()
+    botconfig.updater.bot.send_message(text="Online and ready.", chat_id=botconfig.helper.config["telegram"]["user_id"])
 
     # Run the bot until you press Ctrl-C
     # since start_polling() is non-blocking and will stop the bot gracefully.
