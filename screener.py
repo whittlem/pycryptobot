@@ -179,10 +179,13 @@ def process_screener_data(app, markets, quote_currency):
                 #print(f"Volatility({volatility} is above {app.volatility_threshold}")
                 score += 1
             if volatility < app.minimum_volatility:
+                #print(f"{ta.symbol} is below min volatility of {app.minimum_volatility}")
                 score -= 100
             if volume < app.minimum_volume:
+                #print(f"{ta.symbol} is below min volume of {app.volume}")
                 score -= 100
             if close < app.minimum_quote_price:
+                #print(f"{ta.symbol} is below min quote price of {app.minimum_quote_price}")
                 score -= 100
             if 30 >= rsi > 20:
                 score += 1
