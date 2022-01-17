@@ -1139,7 +1139,7 @@ class PyCryptoBot(BotConfig):
                         self.getAPIURL(),
                         recv_window=self.recv_window,
                     )
-                    return api.marketSell(market, base_currency)
+                    return api.marketSell(market, base_currency, use_fees=self.use_sell_fee)
                 elif self.exchange == Exchange.KUCOIN:
                     api = KAuthAPI(
                         self.getAPIKey(),
