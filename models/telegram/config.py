@@ -104,7 +104,7 @@ class ConfigEditor:
         elif exchange == "screener":
             config_properties = self.get_screener_config_from_file("binance")
         else:
-            config_properties = self.get_config_from_file()
+            config_properties = self.get_config_from_file(exchange)
 
         for prop in config_properties["normal"]:
             config_value = bool(config_properties["normal"][prop])
@@ -113,7 +113,7 @@ class ConfigEditor:
             buttons.append(
                 InlineKeyboardButton(
                     f"{light_icon} {prop}",
-                    callback_data=f"{exchange}_{'disable' if config_value == 1 else 'enable' }_{prop}",
+                    callback_data=f"{exchange}_{'disable' if config_value == 1 else 'enable' }_({prop})",
                 )
             )
         for prop in config_properties["disabled"]:
@@ -123,7 +123,7 @@ class ConfigEditor:
             buttons.append(
                 InlineKeyboardButton(
                     f"{light_icon} {prop}",
-                    callback_data=f"{exchange}_{'disable' if config_value == 1 else 'enable' }_{prop}",
+                    callback_data=f"{exchange}_{'disable' if config_value == 1 else 'enable' }_({prop})",
                 )
             )
 

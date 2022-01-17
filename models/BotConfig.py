@@ -98,6 +98,7 @@ class BotConfig:
         self.enableml = False
         self.websocket = False
         self.enableexitaftersell = False
+        self.use_sell_fee = True
 
         self.enableinsufficientfundslogging = False
         self.insufficientfunds = False

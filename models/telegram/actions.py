@@ -185,7 +185,7 @@ class TelegramActions:
             while self.helper.read_data(file) is False:
                 sleep(0.2)
 
-            output = output + f"\U0001F4C8 <b>{file}</b> "
+            output = output + f"\U0001F4C8 <b>{file} ({self.helper.data['exchange']})</b> "
 
             last_modified = datetime.now() - datetime.fromtimestamp(
                 os.path.getmtime(
