@@ -1405,10 +1405,10 @@ def executeJob(
                             float(price)
                         )
 
-                    if not _app.isSimulation() or (
-                        _app.isSimulation() and not _app.simResultOnly()
-                    ):
-                        Logger.info(f" Fibonacci Retracement Levels:{str(bands)}")
+                        if not _app.isSimulation() or (
+                            _app.isSimulation() and not _app.simResultOnly()
+                        ):
+                            Logger.info(f" Fibonacci Retracement Levels:{str(bands)}")
 
                         if len(bands) >= 1 and len(bands) <= 2:
                             if len(bands) == 1:

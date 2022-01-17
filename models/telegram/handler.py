@@ -138,13 +138,13 @@ class TelegramHandler:
         elif query.data.__contains__("_disable_"):
             self.editor.disable_option(
                 query.data[: query.data.find("_")],
-                query.data[query.data.rfind("_") + 1 :],
+                query.data[query.data.rfind("(") +1 : query.data.rfind(")")],
             )
             self.editor.get_config_options(update, context)  # refresh buttons
         elif query.data.__contains__("_enable_"):
             self.editor.enable_option(
                 query.data[: query.data.find("_")],
-                query.data[query.data.rfind("_") + 1 :],
+                query.data[query.data.rfind("(") +1 : query.data.rfind(")")],
             )
             self.editor.get_config_options(update, context)  # refresh buttons
 

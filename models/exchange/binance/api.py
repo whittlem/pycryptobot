@@ -665,7 +665,7 @@ class AuthAPI(AuthAPIBase):
             return []
 
     def marketSell(
-        self, market: str = "", base_quantity: float = 0, test: bool = False
+        self, market: str = "", base_quantity: float = 0, test: bool = False, use_fees: bool = True
     ) -> list:
         """Executes a market sell providing a crypto amount"""
 
@@ -684,7 +684,8 @@ class AuthAPI(AuthAPIBase):
             precision = int(round(-math.log(step_size, 10), 0))
 
             # remove fees
-            base_quantity = base_quantity - (base_quantity * self.getTradeFee(market))
+            if use_fees:
+                base_quantity = base_quantity - (base_quantity * self.getTradeFee(market))
 
             # execute market sell
             stepper = 10.0 ** precision

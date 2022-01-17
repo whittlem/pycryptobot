@@ -185,7 +185,7 @@ class TelegramActions:
             while self.helper.read_data(file) is False:
                 sleep(0.2)
 
-            output = output + f"\U0001F4C8 <b>{file}</b> "
+            output = output + f"\U0001F4C8 <b>{file} ({self.helper.data['exchange']})</b> "
 
             last_modified = datetime.now() - datetime.fromtimestamp(
                 os.path.getmtime(
@@ -516,7 +516,7 @@ class TelegramActions:
                                     outputmsg = (
                                         outputmsg
                                         + f"<i><b>{row}</b>  //--//  "\
-                                            "<b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%</i>\n"
+                                            f"<b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%</i>\n"
                                     )
                                     self.helper.start_process(row, ex, "", "scanner")
                                     botcounter += 1
