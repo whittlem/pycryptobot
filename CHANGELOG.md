@@ -8,6 +8,11 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [5.2.5] - 2022-01-19
+
+- bot in docker container runs as user pycryptobot as UID:GID 1000 (First non root user).
+- docker bot container size minified for better layer caching and faster downloads.
+
 ## [5.2.4] - 2022-01-16
 
 - fix indentation problems. Incorporated GetOrders caching system (Kucoin). Misc. fixes.
