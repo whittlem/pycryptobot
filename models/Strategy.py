@@ -229,22 +229,23 @@ class Strategy:
             return False
 
         # loss failsafe sell at trailing_stop_loss
-        if (
-            self.app.trailingStopLoss() != None
-            and change_pcnt_high < self.app.trailingStopLoss()
-            and margin > self.app.trailingStopLossTrigger()
-        ):
+        if self.app.trailingStopLoss() != None:
+            if margin > self.app.trailingStopLossTrigger():
+                state.tsl_triggered = 1
 
-            log_text = f"! Trailing Stop Loss Triggered (< {str(self.app.trailingStopLoss())}%)"
-            if not app.isSimulation() or (
-                app.isSimulation() and not app.simResultOnly()
-            ):
-                Logger.warning(log_text)
+            if state.tsl_triggered == 1 and change_pcnt_high < self.app.trailingStopLoss():
+                log_text = f"! Trailing Stop Loss Triggered (< {str(self.app.trailingStopLoss())}%)"
+                if not app.isSimulation() or (
+                    app.isSimulation() and not app.simResultOnly()
+                ):
+                    Logger.warning(log_text)
 
-            self.app.notifyTelegram(
-                f"{self.app.getMarket()} ({self.app.printGranularity()}) {log_text}"
-            )
-            return True
+                self.app.notifyTelegram(
+                    f"{self.app.getMarket()} ({self.app.printGranularity()}) {log_text}"
+                )
+                return True
+            else:
+                return False
 
         if debug:
             Logger.debug("-- loss failsafe sell at sell_lower_pcnt --")
