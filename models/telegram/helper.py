@@ -11,11 +11,11 @@ from typing import List
 from telegram import InlineKeyboardMarkup, Update
 from telegram.ext.callbackcontext import CallbackContext
 
-if not os.path.exists(os.path.join(os.curdir, "telegram_data", "logs")):
-    os.mkdir(os.path.join(os.curdir, "telegram_data", "logs"))
+if not os.path.exists(os.path.join(os.curdir, "telegram_logs")):
+    os.mkdir(os.path.join(os.curdir, "telegram_logs"))
 
 logging.basicConfig(
-    filename=os.path.join(os.curdir, "telegram_data", "logs", f"telegrambot {datetime.now().strftime('%Y-%m-%d')}.log"),
+    filename=os.path.join(os.curdir, "telegram_logs", f"telegrambot {datetime.now().strftime('%Y-%m-%d')}.log"),
     filemode='w',
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", 
     level=logging.INFO
