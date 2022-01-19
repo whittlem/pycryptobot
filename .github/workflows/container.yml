@@ -99,3 +99,21 @@ jobs:
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ steps.tags.outputs.IMAGE_ID }}:${{ steps.tags.outputs.VERSION }}"
+          format: "template"
+          template: "@/contrib/sarif.tpl"
+          output: "trivy-results.sarif"
+          ignore-unfixed: true
+          exit-code: 0
+          scan-type: "image"
+          vuln-type: "os,library"
+          severity: "MEDIUM,HIGH,CRITICAL"
+          
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: 'trivy-results.sarif'
