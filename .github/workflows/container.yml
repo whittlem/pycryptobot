@@ -48,8 +48,9 @@ jobs:
       
       - name: Log into registry
         run: echo "${{ secrets.PACKAGE_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Build and Push image
+      
+      - name: Create Tags 
+        id: tags
         run: |
           IMAGE_ID=ghcr.io/${{ github.repository }}/$IMAGE_NAME
 
@@ -64,14 +65,32 @@ jobs:
 
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
+          echo "::set-output name=IMAGE_ID::$IMAGE_ID"
+          echo "::set-output name=VERSION::$VERSION"
 
-          # Build and Publish container image
-          docker buildx build --push \
-          --cache-from "type=local,src=/tmp/.buildx-cache" \
-          --cache-to "type=local,dest=/tmp/.buildx-cache-new,mode=max" \
-          --tag $IMAGE_ID:$VERSION \
-          --platform $PLATFORM \
-          --file Dockerfile .
+      - name: Generate Docker Metadata
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ steps.tags.outputs.IMAGE_ID }}
+
+      - name: Build and Push Image
+        uses: docker/build-push-action@v2
+        with:
+          build-args: REPO=${{ github.repository }}
+          context: .
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          file: Dockerfile
+          platforms: ${{ env.PLATFORM }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Inspect Image
+        run: |
+          # Inspect Image
+          docker buildx imagetools inspect ${{ steps.tags.outputs.IMAGE_ID }}:${{ steps.tags.outputs.VERSION }}
 
       # Temp fix stops cache growing too big
       # https://github.com/docker/build-push-action/issues/252
