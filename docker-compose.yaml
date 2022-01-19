@@ -16,6 +16,25 @@ services:
         restart_policy:
           condition: on-failure
 
+# Bot can also be setup to use Scanner/Screener with this block
+    # pycryptobot:
+    #     image: ghcr.io/whittlem/pycryptobot/pycryptobot:latest
+    #     container_name: pycryptobot
+    #     volumes:
+    #         - ./market/binance.key:/app/keys/binance.key:ro
+    #         - ./market/config.json:/app/config.json
+    #         - ./market/pycryptobot.log:/app/pycryptobot.log
+    #         - ./market/screener.json:/app/screener.json
+    #         - ./market:/app/telegram_data
+    #         - ./market/graphs:/app/graphs
+    #         - /etc/timezone:/etc/timezone:ro
+    #         - /etc/localtime:/etc/localtime:ro
+    #     environment:
+    #         - PYTHONUNBUFFERED=1
+    #     entrypoint: ["python3", "-u", "telegram_bot.py"]
+    #     restart: always
+
+
 #  Different markets can be specified as below
 #
 #  BTCEUR:
