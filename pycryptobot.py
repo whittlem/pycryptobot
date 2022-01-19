@@ -1166,7 +1166,9 @@ def executeJob(
 
                         # display balances
                         Logger.info(
-                            f"{_app.getBaseCurrency()} balance before order: {str(account.basebalance_before)}\n"
+                            f"{_app.getBaseCurrency()} balance before order: {str(account.basebalance_before)}"
+                        )
+                        Logger.info(
                             f"{_app.getQuoteCurrency()} balance before order: {str(account.quotebalance_before)}"
                         )
 
@@ -1405,10 +1407,10 @@ def executeJob(
                             float(price)
                         )
 
-                        if not _app.isSimulation() or (
-                            _app.isSimulation() and not _app.simResultOnly()
-                        ):
-                            Logger.info(f" Fibonacci Retracement Levels:{str(bands)}")
+                    if not _app.isSimulation() or (
+                        _app.isSimulation() and not _app.simResultOnly()
+                    ):
+                        Logger.info(f" Fibonacci Retracement Levels:{str(bands)}")
 
                         if len(bands) >= 1 and len(bands) <= 2:
                             if len(bands) == 1:
@@ -1481,7 +1483,7 @@ def executeJob(
                                 bal_resp_error = 0
                             except Exception as err:
                                 Logger.warning(
-                                    f"Error: Ballance not retrieved after trade for {app.getMarket()}.  Trying again.\n"
+                                    f"Error: Balance not retrieved after trade for {app.getMarket()}.  Trying again.\n"
                                     f"API Error Msg: {err}"
                                 )
                                 resp_error, bal_resp_error = (1,1)

@@ -59,9 +59,12 @@ class TelegramBotHelper:
                         self.data.update({"opentrades": {}})
                         write_ok = self._write_data("data.json")
             else:
-                ds = {"trades": {}, "markets": {}, "scannerexceptions": {}, "opentrades": {}}
-                self.data = ds
-                self._write_data("data.json")
+                write_ok, try_cnt = False, 0
+                while not write_ok and try_cnt <= 5:
+                    try_cnt += 1
+                    ds = {"trades": {}, "markets": {}, "scannerexceptions": {}, "opentrades": {}}
+                    self.data = ds
+                    write_ok = self._write_data("data.json")
 
     def create_bot_data(self):
         ds = {
