@@ -129,7 +129,12 @@ def executeJob(
             _app.read_config(_app.getExchange())
             if _app.enableWebsocket():
                 _websocket.close()
-                _websocket = BWebSocketClient([app.getMarket()], app.getGranularity())
+                if _app.getExchange() == Exchange.BINANCE:
+                    _websocket = BWebSocketClient([app.getMarket()], app.getGranularity())
+                elif _app.getExchange() == Exchange.COINBASEPRO:
+                    _websocket = CWebSocketClient([app.getMarket()], app.getGranularity())
+                elif _app.getExchange() == Exchange.KUCOIN:
+                    _websocket = KWebSocketClient([app.getMarket()], app.getGranularity())
                 _websocket.start()
             _app.setGranularity(_app.getGranularity())
             list(map(s.cancel, s.queue))
