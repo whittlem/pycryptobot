@@ -85,7 +85,7 @@ def executeJob(
             telegram_bot.add_open_order()
 
             Logger.warning(
-                f"{_app.getMarket()} ({_app.printGranularity}) - {datetime.today().strftime("%Y-%m-%d %H:%M:%S")}\n"
+                f"{_app.getMarket()} ({_app.printGranularity}) - {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}\n"
                 f"Catching BUY that occured previously. Updating signal information."
             )
 
@@ -107,7 +107,7 @@ def executeJob(
             telegram_bot.remove_open_order()
 
             Logger.warning(
-                f"{_app.getMarket()} ({_app.printGranularity}) - {datetime.today().strftime("%Y-%m-%d %H:%M:%S")}\n"
+                f"{_app.getMarket()} ({_app.printGranularity}) - {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}\n"
                 f"Catching SELL that occured previously. Updating signal information."
             )
 
