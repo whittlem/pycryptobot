@@ -244,8 +244,6 @@ class Strategy:
                     f"{self.app.getMarket()} ({self.app.printGranularity()}) {log_text}"
                 )
                 return True
-            else:
-                return False
 
         if debug:
             Logger.debug("-- loss failsafe sell at sell_lower_pcnt --")
