@@ -8,7 +8,7 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-## [5.2.6] - 2022-01-20
+## [5.2.7] - 2022-01-20
 
 - more exception handling added for JSONDecode errors
 - fixed Telegram Reload config market not valid error
