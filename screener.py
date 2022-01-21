@@ -2,6 +2,7 @@ import time
 import json
 import pandas as pd
 import re
+import sys
 from decimal import Decimal
 from itertools import islice
 from models.PyCryptoBot import PyCryptoBot
@@ -12,7 +13,7 @@ from models.exchange.kucoin import PublicAPI as KPublicAPI
 from models.exchange.Granularity import Granularity
 from models.exchange.ExchangesEnum import Exchange as CryptoExchange
 from tradingview_ta import *
-
+from importlib.metadata import version
 
 def volatility_calculator(bollinger_band_upper, bollinger_band_lower, keltner_upper, keltner_lower, high, low):
     """
@@ -304,6 +305,12 @@ if  __name__ == '__main__':
     import time
     from datetime import datetime
 
+    tvlib_ver = version('tradingview-ta')
+    if tvlib_ver >= "3.2.10":
+        print(f"Library is correct version - were good to go! (v {tvlib_ver})")
+    else:
+        print(f"Gotta update your tradingview-ta library please! (v {tvlib_ver})")
+        sys.exit()
 
     start_time = time.time()
     print('Processing, please wait...')
