@@ -8,6 +8,10 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [5.2.6] - 2022-01-21
+
+- updating caching system timer. Screener update including volatility checking, package version check and debugging functionality.
+
 ## [5.2.5] - 2022-01-18
 
 - revise buy/sell code.  Still occasional problems with last update.
