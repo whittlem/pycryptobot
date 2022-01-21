@@ -8,6 +8,11 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [5.2.5] - 2022-01-18
+
+- revise buy/sell code.  Still occasional problems with last update.
+- fix trailingstoplosstrigger logic
+
 ## [5.2.4] - 2022-01-16
 
 - fix indentation problems. Incorporated GetOrders caching system (Kucoin). Misc. fixes.
