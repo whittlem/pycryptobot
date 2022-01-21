@@ -8,10 +8,13 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-## [5.2.5] - 2022-01-19
+## [5.2.5] - 2022-01-21
 
+- revise buy/sell code.  Still occasional problems with last update.
+- fix trailingstoplosstrigger logic
 - bot in docker container runs as user pycryptobot as UID:GID 1000 (First non root user).
 - docker bot container size minified for better layer caching and faster downloads.
+- updating caching system timer. Screener update including volatility checking, package version check and debugging functionality.
 
 ## [5.2.4] - 2022-01-16
 
