@@ -165,55 +165,7 @@ class TelegramBot(TelegramBotBase):
 
         self.helper.load_config()
 
-        # self.handler = TelegramHandler(self.datafolder, self.userid, self.helper)
-        # self.control = TelegramControl(self.datafolder, self.helper)
-        # self.actions = TelegramActions(self.datafolder, self.helper)
-        # self.editor = ConfigEditor(self.datafolder, self.helper)
-        # self.setting = SettingsEditor(self.datafolder, self.helper)
-# 
-#     def reload_config(self):
-#         # Config section for bot pair scanner
-#         self.atr72pcnt = 2.0
-#         self.enableleverage = False
-#         self.use_default_scanner = 1
-#         self.maxbotcount = 0
-#         self.autoscandelay = 0
-#         self.enable_buy_next = True
-#         self.autostart = False
-#         if "scanner" in self.config:
-#             self.atr72pcnt = (
-#                 self.config["scanner"]["atr72_pcnt"]
-#                 if "atr72_pcnt" in self.config["scanner"]
-#                 else self.atr72pcnt
-#             )
-#             self.enableleverage = (
-#                 self.config["scanner"]["enableleverage"]
-#                 if "enableleverage" in self.config["scanner"]
-#                 else self.enableleverage
-#             )
-#             self.use_default_scanner = (
-#                 self.config["scanner"]["use_default_scanner"]
-#                 if "use_default_scanner" in self.config["scanner"]
-#                 else self.use_default_scanner
-#             )
-#             self.maxbotcount = (
-#                 self.config["scanner"]["maxbotcount"]
-#                 if "maxbotcount" in self.config["scanner"]
-#                 else self.maxbotcount
-#             )
-#             self.autoscandelay = (
-#                 self.config["scanner"]["autoscandelay"]
-#                 if "autoscandelay" in self.config["scanner"]
-#                 else 0
-#             )
-#             self.enable_buy_next = (
-#                 self.config["scanner"]["enable_buy_next"]
-#                 if "enable_buy_next" in self.config["scanner"]
-#                 else True
-#             )
-
         self.helper = TelegramHelper(self.datafolder, self.config, self.config_file)
-
         self.handler = TelegramHandler(self.datafolder, self.userid, self.helper)
         self.control = TelegramControl(self.datafolder, self.helper)
         self.actions = TelegramActions(self.datafolder, self.helper)
@@ -596,6 +548,7 @@ class TelegramBot(TelegramBotBase):
 
     def error(self, update, context):
         """Log Errors"""
+        self.helper.send_telegram_message(update, context.error)
         self.helper.logger.error(msg="Exception while handling an update:", exc_info=context.error)
         try:
             if "HTTPError" in context.error.args[0]:

@@ -1,4 +1,5 @@
 ''' Telegram Bot Control '''
+import models.telegram.callbacktags as callbacktags
 from time import sleep
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
 from telegram.ext.callbackcontext import CallbackContext
@@ -24,19 +25,19 @@ class TelegramControl:
                     if call_back_tag == "buy" and self.helper.data["margin"] == " ":
                         buttons.append(
                             InlineKeyboardButton(
-                                market, callback_data=f"{call_back_tag}_{market}"
+                                market, callback_data=self.helper.create_callback_data(call_back_tag, "", market) #f"{call_back_tag}_{market}"
                             )
                         )
                     elif call_back_tag == "sell" and self.helper.data["margin"] != " ":
                         buttons.append(
                             InlineKeyboardButton(
-                                market, callback_data=f"{call_back_tag}_{market}"
+                                market, callback_data=self.helper.create_callback_data(call_back_tag, "", market) #f"{call_back_tag}_{market}"
                             )
                         )
                     elif call_back_tag not in ("buy", "sell"):
                         buttons.append(
                             InlineKeyboardButton(
-                                market, callback_data=f"{call_back_tag}_{market}"
+                                market, callback_data=self.helper.create_callback_data(call_back_tag, "", market) #f"{call_back_tag}_{market}"
                             )
                         )
 
@@ -55,7 +56,7 @@ class TelegramControl:
         if len(buttons) > 0:
             if len(buttons) > 1 and call_back_tag not in ("bot"):
                 keyboard = [
-                    [InlineKeyboardButton("All", callback_data=f"{call_back_tag}_all")]
+                    [InlineKeyboardButton("All", callback_data=self.helper.create_callback_data(call_back_tag, "", "all"))] #f"{call_back_tag}_all")]
                 ]
 
             i = 0
@@ -73,13 +74,13 @@ class TelegramControl:
                     [
                         InlineKeyboardButton(
                             "All (w/o open order)",
-                            callback_data=f"{call_back_tag}_allclose",
+                            callback_data=self.helper.create_callback_data(call_back_tag, "", "allclose") #f"{call_back_tag}_allclose",
                         )
                     ]
                 )
 
             keyboard.append(
-                [InlineKeyboardButton("\U000025C0 Back", callback_data="back")]
+                [InlineKeyboardButton("\U000025C0 Back", callback_data=self.helper.create_callback_data(callbacktags.BACK))]
             )
 
         return InlineKeyboardMarkup(keyboard)
@@ -115,7 +116,7 @@ class TelegramControl:
         for market in self.helper.data["markets"]:
             if not self.helper.is_bot_running(market):
                 buttons.append(
-                    InlineKeyboardButton(market, callback_data="start_" + market)
+                    InlineKeyboardButton(market, callback_data=self.helper.create_callback_data(callbacktags.START, "", market)) #"start_" + market)
                 )
 
         if len(buttons) > 0:
@@ -273,7 +274,7 @@ class TelegramControl:
                 else:
                     keyboard.append([buttons[i]])
                 i += 3
-            keyboard.append([InlineKeyboardButton("Cancel", callback_data="cancel")])
+            keyboard.append([InlineKeyboardButton("Cancel", callback_data=self.helper.create_callback_data(callbacktags.CANCEL))])
 
         reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -300,7 +301,7 @@ class TelegramControl:
                 else:
                     keyboard.append([buttons[i]])
                 i += 3
-            keyboard.append([InlineKeyboardButton("Cancel", callback_data="cancel")])
+            keyboard.append([InlineKeyboardButton("Cancel", callback_data=self.helper.create_callback_data(callbacktags.CANCEL))])
 
         reply_markup = InlineKeyboardMarkup(keyboard)
 

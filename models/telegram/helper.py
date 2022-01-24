@@ -36,10 +36,12 @@ class TelegramHelper:
         self.atr72pcnt = 2.0
         self.enableleverage = False
         self.maxbotcount = 0
+        self.exchange_bot_count = 0
         self.autoscandelay = 0
         self.enable_buy_next = True
         self.autostart = False
         self.logger = logging.getLogger(__name__)
+        self.terminal_start_process = ""
 
         self.load_config()
         self.read_screener_config()
@@ -68,6 +70,16 @@ class TelegramHelper:
                 self.config["scanner"]["maxbotcount"]
                 if "maxbotcount" in self.config["scanner"]
                 else self.maxbotcount
+            )
+            self.exchange_bot_count = (
+                self.config["scanner"]["exchange_bot_count"]
+                if "exchange_bot_count" in self.config["scanner"]
+                else self.exchange_bot_count
+            )
+            self.terminal_start_process = (
+                self.config["scanner"]["terminal_start_process"]
+                if "terminal_start_process" in self.config["scanner"]
+                else self.terminal_start_process
             )
             self.autoscandelay = (
                 self.config["scanner"]["autoscandelay"]
@@ -328,6 +340,8 @@ class TelegramHelper:
                     f"{overrides}"
             )
         else:
+            if self.terminal_start_process != "":
+                command = f"{self.terminal_start_process} {command}"
             subprocess.Popen(
                 f"{command} --logfile './logs/{exchange}-{pair}-{datetime.now().date()}.log' "\
                     f"{overrides}",
