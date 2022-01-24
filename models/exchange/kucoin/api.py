@@ -519,23 +519,26 @@ class AuthAPI(AuthAPIBase):
         dt_obj = datetime.strptime(str(datetime.now()), "%Y-%m-%d %H:%M:%S.%f")
         millisec = dt_obj.timestamp() * 1000
 
-        order = {
-            "clientOid": str(millisec),
-            "symbol": market,
-            "type": "market",
-            "side": "buy",
-            "funds": self.marketQuoteIncrement(market, quote_quantity),
-        }
+        try:
+            order = {
+                "clientOid": str(millisec),
+                "symbol": market,
+                "type": "market",
+                "side": "buy",
+                "funds": self.marketQuoteIncrement(market, quote_quantity),
+            }
 
-        # Logger.debug(order)
+            # Logger.debug(order)
 
-        # connect to authenticated Kucoin api
-        model = AuthAPI(
-            self._api_key, self._api_secret, self._api_passphrase, self._api_url
-        )
+            # connect to authenticated Kucoin api
+            model = AuthAPI(
+                self._api_key, self._api_secret, self._api_passphrase, self._api_url
+            )
 
-        # place order and return result
-        return model.authAPI("POST", "api/v1/orders", order)
+            # place order and return result
+            return model.authAPI("POST", "api/v1/orders", order)
+        except:
+            return pd.DataFrame()
 
     def truncate_float(self, n, places):
         return int(n * (10 ** places)) / 10 ** places
@@ -704,7 +707,7 @@ class AuthAPI(AuthAPIBase):
             )
 
             # If last build over a day ago
-            if last_modified.seconds < 86399:
+            if last_modified.seconds < 21599:
                 #print (f"Last modified cache: {last_modified.seconds}")
                 return True
 
@@ -787,6 +790,7 @@ class AuthAPI(AuthAPIBase):
 
         # Remove json cache - and then recreate with latest data
         if exists(self._cache_filepath): os.remove(self._cache_filepath)
+        time.sleep(1)
         df.to_json(self._cache_filepath, orient="records")
         time.sleep(1)
         #Delete Lock File
