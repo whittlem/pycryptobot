@@ -961,6 +961,7 @@ class PyCryptoBot(BotConfig):
                     self.getAPISecret(),
                     self.getAPIPassphrase(),
                     self.getAPIURL(),
+                    use_cache=self.useKucoinCache(),
                 )
                 orders = api.getOrders(self.getMarket(), "", "done")
 
@@ -1055,6 +1056,7 @@ class PyCryptoBot(BotConfig):
                 self.getAPISecret(),
                 self.getAPIPassphrase(),
                 self.getAPIURL(),
+                use_cache=self.useKucoinCache(),
             )
             self.takerfee = api.getTakerFee()
             return self.takerfee
@@ -1084,6 +1086,7 @@ class PyCryptoBot(BotConfig):
                 self.getAPISecret(),
                 self.getAPIPassphrase(),
                 self.getAPIURL(),
+                use_cache=self.useKucoinCache(),
             )
             return api.getMakerFee()
         else:
@@ -1109,6 +1112,7 @@ class PyCryptoBot(BotConfig):
                     self.getAPISecret(),
                     self.getAPIPassphrase(),
                     self.getAPIURL(),
+                    use_cache=self.useKucoinCache(),
                 )
                 return api.marketBuy(market, float(quote_currency))
             elif self.exchange == Exchange.BINANCE:
@@ -1149,6 +1153,7 @@ class PyCryptoBot(BotConfig):
                         self.getAPISecret(),
                         self.getAPIPassphrase(),
                         self.getAPIURL(),
+                        use_cache=self.useKucoinCache(),
                     )
                     return api.marketSell(market, base_currency)
             else:

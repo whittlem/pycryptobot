@@ -36,6 +36,7 @@ class AppState:
                 app.getAPISecret(),
                 app.getAPIPassphrase(),
                 app.getAPIURL(),
+                use_cache=app.useKucoinCache(),
             )
         else:
             self.api = None
