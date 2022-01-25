@@ -65,6 +65,7 @@ class AuthAPI(AuthAPIBase):
         api_passphrase="",
         api_url="",
         cache_path="cache",
+        use_cache=True,
     ) -> None:
         """kucoin API object model
 
@@ -126,6 +127,7 @@ class AuthAPI(AuthAPIBase):
         self._cache_path = cache_path
         self._cache_filepath = cache_path + os.path.sep + "kucoin_order_cache.json"
         self._cache_lock_filepath = cache_path + os.path.sep + "kucoin_order_cache.lock"
+        self.usekucoincache = use_cache
 
     def handle_init_error(self, err: str) -> None:
         """Handle initialisation error"""
@@ -290,10 +292,10 @@ class AuthAPI(AuthAPIBase):
             raise ValueError("Invalid order status.")
 
         # Update Cache if needed before continuing on any bot for Kucoin
-        result = self.buildOrderHistoryCache()
+        if self.usekucoincache : result = self.buildOrderHistoryCache()
 
         # GET /orders?status
-        resp = self.authAPI("GET", f"api/v1/orders?symbol={market}", use_order_cache=True, use_pagination=True)
+        resp = self.authAPI("GET", f"api/v1/orders?symbol={market}", use_order_cache=self.usekucoincache, use_pagination=True)
         if len(resp) > 0:
             if status == "active":
                 df = resp.copy()[
