@@ -571,3 +571,10 @@ def defaultConfigParse(app, config):
             app.granularity = Granularity.convert_to_enum(config['granularity'])
         else:
             app.granularity = Granularity.convert_to_enum(int(config['granularity']))
+
+    if "usekucoincache" in config:
+        if isinstance(config["usekucoincache"], int):
+            if bool(config["usekucoincache"]):
+                app.usekucoincache = True
+        else:
+            raise TypeError("usekucoincache must be of type int")

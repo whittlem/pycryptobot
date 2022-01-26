@@ -146,6 +146,7 @@ class BotConfig:
         self.enable_atr72_pcnt = True
         self.enable_buy_next = True
         self.enable_volume = False
+        self.usekucoincache = True
         # print(self.startmethod)
 
         # set defaults
@@ -596,6 +597,11 @@ class BotConfig:
             "--enableml",
             action="store_true",
             help="Enable Machine Learning E.g. seasonal ARIMA model for predictions",
+        )
+        parser.add_argument(
+            "--usekucoincache",
+            type=int,
+            help="Should Kucoin orders API Cache be used",
         )
         parser.add_argument("--websocket", action="store_true", help="Enable websocket")
         parser.add_argument("--logbuysellinjson", action="store_true", help="Enable logging orders in json format")
