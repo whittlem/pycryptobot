@@ -181,7 +181,12 @@ def executeJob(
             _app.read_config(_app.getExchange())
             if _app.enableWebsocket():
                 _websocket.close()
-                _websocket = BWebSocketClient([app.getMarket()], app.getGranularity())
+                if _app.getExchange() == Exchange.BINANCE:
+                    _websocket = BWebSocketClient([app.getMarket()], app.getGranularity())
+                elif _app.getExchange() == Exchange.COINBASEPRO:
+                    _websocket = CWebSocketClient([app.getMarket()], app.getGranularity())
+                elif _app.getExchange() == Exchange.KUCOIN:
+                    _websocket = KWebSocketClient([app.getMarket()], app.getGranularity())
                 _websocket.start()
             _app.setGranularity(_app.getGranularity())
             list(map(s.cancel, s.queue))
@@ -1218,7 +1223,9 @@ def executeJob(
 
                         # display balances
                         Logger.info(
-                            f"{_app.getBaseCurrency()} balance before order: {str(account.basebalance_before)}\n"
+                            f"{_app.getBaseCurrency()} balance before order: {str(account.basebalance_before)}"
+                        )
+                        Logger.info(
                             f"{_app.getQuoteCurrency()} balance before order: {str(account.quotebalance_before)}"
                         )
 
@@ -1450,10 +1457,10 @@ def executeJob(
                             float(price)
                         )
 
-                        if not _app.isSimulation() or (
-                            _app.isSimulation() and not _app.simResultOnly()
-                        ):
-                            Logger.info(f" Fibonacci Retracement Levels:{str(bands)}")
+                    if not _app.isSimulation() or (
+                        _app.isSimulation() and not _app.simResultOnly()
+                    ):
+                        Logger.info(f" Fibonacci Retracement Levels:{str(bands)}")
 
                         if len(bands) >= 1 and len(bands) <= 2:
                             if len(bands) == 1:

@@ -149,6 +149,7 @@ graphs/
 pycryptobot.log.*
 
 tests/unit_tests/data/*.json
+telegram_logs
 
 *.key
 config-*.yaml

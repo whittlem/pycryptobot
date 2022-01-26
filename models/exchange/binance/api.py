@@ -770,6 +770,10 @@ class AuthAPI(AuthAPIBase):
                 message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (hint: increase recvWindow with --recvWindow <5000-60000>)"
                 Logger.error(f"Error: {message}")
                 return {}
+            elif resp.status_code == 400 and resp_message.__contains__("Invalid quantity"):
+                message = f"{method} Invalid order quantity (hint: (binance only) try using use_sell_fee: 0)"
+                Logger.error(f"{message}")
+                return {}
             elif resp.status_code == 429 and (
                 resp_message.startswith("Too much request weight used")
             ):

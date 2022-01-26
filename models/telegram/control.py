@@ -143,7 +143,7 @@ class TelegramControl:
                     update.effective_message.reply_html(
                         f"<i>Starting {market} crypto bot</i>"
                     )
-                    self.helper.start_process(market, "", overrides)
+                    self.helper.start_process(market, self.helper.get_running_bot_exchange(market) , overrides)
                     sleep(10)
                 else:
                     update.effective_message.reply_html(

@@ -1,0 +1,14 @@
+BACK = "10"
+
+# Config Options
+DISABLE = "1"
+ENABLE = "2"
+FLOAT = "3"
+INTEGER = "4"
+GRANULARITY = "5"
+SAVECONFIG = "6"
+
+SCANNER = 0
+BINANCE = 1
+COINBASEPRO = 2
+KUCOIN = 3

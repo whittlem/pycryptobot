@@ -11,8 +11,12 @@ from typing import List
 from telegram import InlineKeyboardMarkup, Update
 from telegram.ext.callbackcontext import CallbackContext
 
+if not os.path.exists(os.path.join(os.curdir, "telegram_logs")):
+    os.mkdir(os.path.join(os.curdir, "telegram_logs"))
+
 logging.basicConfig(
-    filename=f"telegrambot {datetime.now().strftime('%Y-%m-%d')}.log", filemode='w',
+    filename=os.path.join(os.curdir, "telegram_logs", f"telegrambot {datetime.now().strftime('%Y-%m-%d')}.log"),
+    filemode='w',
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", 
     level=logging.INFO
 )
@@ -96,7 +100,8 @@ class TelegramHelper:
                                 message_id=update.effective_message.message_id,
                                 text=reply,
                                 reply_markup=markup,
-                                parse_mode="HTML")
+                                parse_mode="HTML"
+                                )
             except:
                 context.bot.send_message(chat_id=update.effective_message.chat_id,
                                 text=reply,
@@ -196,8 +201,14 @@ class TelegramHelper:
             ):
                 jsonfiles.pop(i)
             else:
-                while self.read_data(jsonfiles[i]) is False:
+                read_ok, try_cnt = False, 0
+                while not read_ok and try_cnt <= 5:
+                    try_cnt += 1
+                    read_ok = self.read_data(jsonfiles[i])
                     sleep(0.1)
+
+                if not read_ok:
+                    jsonfiles.pop(i)
             i -= 1
         jsonfiles.sort()
         return [
@@ -350,3 +361,6 @@ class TelegramHelper:
                     done = True
                 except:
                     pass
+
+    def create_callback_data(self, callback_tag, exchange: str = "", parameter: str = ""):
+        return json.dumps({'c':callback_tag,'e': exchange,'p':parameter})

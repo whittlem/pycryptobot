@@ -10,6 +10,9 @@ Upgrade library dependencies (if required):
 
 ## [5.2.5] - 2022-01-21
 
+- more exception handling added for JSONDecode errors
+- fixed Telegram Reload config market not valid error
+- added telegram_bot log file and telegram_logs folder
 - revise buy/sell code.  Still occasional problems with last update.
 - fix trailingstoplosstrigger logic
 - bot in docker container runs as user pycryptobot as UID:GID 1000 (First non root user).
