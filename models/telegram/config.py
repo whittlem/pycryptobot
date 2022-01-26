@@ -30,13 +30,13 @@ class ConfigEditor:
                 return "kucoin"
 
         if exchange_str != "":
-            if exchange_int == "scanner":
+            if exchange_str == "scanner":
                 return 0
-            if exchange_int == "binance":
+            if exchange_str == "binance":
                 return 1
-            if exchange_int == "coinbasepro":
+            if exchange_str == "coinbasepro":
                 return 2
-            if exchange_int == "kucoin":
+            if exchange_str == "kucoin":
                 return 3
         return None
 
@@ -122,7 +122,7 @@ class ConfigEditor:
                 or query.data.__contains__("scanner")
                 or query.data.__contains__("screener")
             ):
-                exchange = query.data[: query.data.find("_")]
+                exchange = query.data
         elif isinstance(callback, int):
             exchange = self.exchange_convert(callback)
         else:
@@ -308,7 +308,7 @@ class ConfigEditor:
 
     def disable_option(self, exchange, parameter):
         """Disable option"""
-        exchange = self.exchange_convert(exchange)
+        exchange = self.exchange_convert(exchange_int=int(exchange))
         if exchange != "scanner":
             self.helper.config[exchange]["config"][parameter] = 0
         else:
@@ -316,7 +316,7 @@ class ConfigEditor:
 
     def enable_option(self, exchange, parameter):
         """Enable option"""
-        exchange = self.exchange_convert(exchange_int=exchange)
+        exchange = self.exchange_convert(exchange_int=int(exchange))
         if exchange != "scanner":
             self.helper.config[exchange]["config"][parameter] = 1
         else:
@@ -324,7 +324,7 @@ class ConfigEditor:
 
     def increase_value(self, exchange, parameter, unitsize):
         """Increase value"""
-        exchange = self.exchange_convert(exchange)
+        exchange = self.exchange_convert(exchange_int=int(exchange))
         if exchange != "scanner":
             self.helper.config[exchange]["config"][parameter] = round(
                 self.helper.config[exchange]["config"][parameter] + unitsize, 1
@@ -336,7 +336,7 @@ class ConfigEditor:
 
     def decrease_value(self, exchange, parameter, unitsize):
         """Decrease value"""
-        exchange = self.exchange_convert(exchange)
+        exchange = self.exchange_convert(exchange_int=int(exchange))
         if exchange != "scanner":
             self.helper.config[exchange]["config"][parameter] = round(
                 self.helper.config[exchange]["config"][parameter] - unitsize, 1

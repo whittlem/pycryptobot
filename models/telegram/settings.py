@@ -1,6 +1,7 @@
 """ Telegram Bot Settings """
 import os
 import json
+import models.telegram.callbacktags as callbacktags
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from models.telegram.helper import TelegramHelper
 
@@ -72,13 +73,19 @@ class SettingsEditor:
 
         buttons = []
         for prop in notifications.items():
-            setting_value = bool(self.helper.settings['notifications'][prop[0]])
+            setting_value = bool(self.helper.settings["notifications"][prop[0]])
             light_icon = "\U0001F7E2" if setting_value == 1 else "\U0001F534"
             buttons.append(
                 InlineKeyboardButton(
                     f"{light_icon} {prop[1]}",
-                    callback_data=
-                        f"notify_{'disable' if setting_value is True else 'enable' }_{prop[0]}",
+                    callback_data=self.helper.create_callback_data(
+                        callbacktags.NOTIFY,
+                        callbacktags.DISABLE
+                        if setting_value is True
+                        else callbacktags.ENABLE,
+                        prop[0],
+                    )
+                    # f"notify_{'disable' if setting_value is True else 'enable' }_{prop[0]}",
                 )
             )
 
@@ -91,7 +98,14 @@ class SettingsEditor:
                 keyboard.append([buttons[i]])
             i += 2
 
-        keyboard.append([InlineKeyboardButton("\U000025C0 Back", callback_data="back")])
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    "\U000025C0 Back",
+                    callback_data=self.helper.create_callback_data(callbacktags.BACK),
+                )
+            ]
+        )
 
         self.helper.send_telegram_message(
             update,
@@ -101,12 +115,12 @@ class SettingsEditor:
 
     def disable_option(self, parameter):
         """Disable Option"""
-        self.helper.settings["notifications"][f"enable_{parameter}"] = 0
+        self.helper.settings["notifications"][f"{parameter}"] = 0
         self._write_config()
         self._read_config()
 
     def enable_option(self, parameter):
         """Enable Option"""
-        self.helper.settings["notifications"][f"enable_{parameter}"] = 1
+        self.helper.settings["notifications"][f"{parameter}"] = 1
         self._write_config()
         self._read_config()

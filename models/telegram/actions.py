@@ -166,13 +166,13 @@ class TelegramActions:
         query = update.callback_query
         self.helper.logger.info("called show_config_response - %s", query.data)
 
-        if query.data == "ex_scanner":
-            pbot = self.helper.config[query.data.replace("ex_", "")]
+        if query.data == "scanner":
+            pbot = self.helper.config[query.data]
         else:
-            pbot = self.helper.config[query.data.replace("ex_", "")]["config"]
+            pbot = self.helper.config[query.data]["config"]
 
         self.helper.send_telegram_message(
-            update, query.data.replace("ex_", "") + "\n" + json.dumps(pbot, indent=4)
+            update, query.data + "\n" + json.dumps(pbot, indent=4)
         )
 
     def get_bot_info(self, update, context):
@@ -222,9 +222,9 @@ class TelegramActions:
         else:
             update.effective_message.reply_html(f"<b>Bot Count ({count})</b>")
 
-    def get_margins(self, update):
+    def get_margins(self, update, option):
         ''' Get margins '''
-        query = update.callback_query
+        # query = update.callback_query
 
         self.helper.send_telegram_message(update, "<i>Getting Margins..</i>")
         closed_output = []
@@ -252,26 +252,26 @@ class TelegramActions:
                     open_count += 1
 
         if (
-            query.data.__contains__("orders") or query.data.__contains__("all")
+            option == "orders" or option == "all"
         ) and open_count > 0:
             for output in open_output:
                 update.effective_message.reply_html(f"{output}")
                 sleep(0.5)
 
         elif (
-            query.data.__contains__("orders") or query.data.__contains__("all")
+            option == "orders" or option == "all"
         ) and open_count == 0:
             update.effective_message.reply_html("<b>No open orders found.</b>")
 
         if (
-            query.data.__contains__("pairs") or query.data.__contains__("all")
+            option == "pairs" or option == "all"
         ) and closed_count > 0:
             for output in closed_output:
                 update.effective_message.reply_html(f"{output}")
                 sleep(1)
 
         elif (
-            query.data.__contains__("pairs") or query.data.__contains__("all")
+            option == "pairs" or option == "all"
         ) and closed_count == 0:
             update.effective_message.reply_html("<b>No active pairs found.</b>")
 

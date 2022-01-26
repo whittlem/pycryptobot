@@ -703,7 +703,7 @@ class TelegramBot(TelegramBotBase):
         if not self._check_if_allowed(context._user_id_and_data[0], update):
             return
 
-        self.handler.ask_config_options(update)
+        self.handler.ask_exchange_options(update)
         return
 
     def pausebotrequest(self, update, context) -> None:

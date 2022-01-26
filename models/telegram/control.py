@@ -240,18 +240,18 @@ class TelegramControl:
             )
             sleep(10)
 
-    def ask_config_options(self, update: Update):
-        ''' Get available exchanges from config '''
-        keyboard = []
-        for exchange in self.helper.config:
-            if not exchange == "telegram":
-                keyboard.append(
-                    [InlineKeyboardButton(exchange, callback_data=exchange)]
-                )
-
-        reply_markup = InlineKeyboardMarkup(keyboard)
-
-        self.helper.send_telegram_message(update, "Select exchange", reply_markup)
+#     def ask_exchange_options(self, update: Update):
+#         ''' Get available exchanges from config '''
+#         keyboard = []
+#         for exchange in self.helper.config:
+#             if not exchange == "telegram":
+#                 keyboard.append(
+#                     [InlineKeyboardButton(exchange, callback_data=exchange)]
+#                 )
+# 
+#         reply_markup = InlineKeyboardMarkup(keyboard)
+# 
+#         self.helper.send_telegram_message(update, "Select exchange", reply_markup)
 
     def ask_delete_bot_list(self, update: Update, context: CallbackContext):
         """ask which bot to delete"""
@@ -261,7 +261,7 @@ class TelegramControl:
         self.helper.read_data()
         for market in self.helper.data["markets"]:
             buttons.append(
-                InlineKeyboardButton(market, callback_data="delete_" + market)
+                InlineKeyboardButton(market, callback_data=self.helper.create_callback_data(callbacktags.DELETE, "", market)) #"delete_" + market)
             )
 
         if len(buttons) > 0:
@@ -289,7 +289,7 @@ class TelegramControl:
 
         self.helper.read_data()
         for pair in self.helper.data["scannerexceptions"]:
-            buttons.append(InlineKeyboardButton(pair, callback_data="delexcep_" + pair))
+            buttons.append(InlineKeyboardButton(pair, callback_data=self.helper.create_callback_data(callbacktags.REMOVEEXCEPTION, "", pair))) #"delexcep_" + pair))
 
         if len(buttons) > 0:
             i = 0
