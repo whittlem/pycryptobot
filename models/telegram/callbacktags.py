@@ -1,4 +1,6 @@
-BACK = "10"
+# Default Controls
+BACK = "100"
+CANCEL = "200"
 
 # Config Options
 DISABLE = "1"
@@ -7,7 +9,30 @@ FLOAT = "3"
 INTEGER = "4"
 GRANULARITY = "5"
 SAVECONFIG = "6"
+RELOADCONFIG = "7"
+DECREASEINT = "8"
+INCREASEINT = "9"
+DECREASEFLOAT = "10"
+INCREASEFLOAT = "11"
+DONE = "12"
 
+# Bot Control
+START = "start"
+STOP = "stop"
+PAUSE = "pause"
+RESUME = "resume"
+RESTART = "24"
+NOTIFY = "30"
+MARGIN = "31"
+BUY = "32"
+SELL = "33"
+CONFIRMBUY = "34"
+CONFIRMSELL = "35"
+
+DELETE = "40"
+REMOVEEXCEPTION = "45"
+
+# Exchanges
 SCANNER = 0
 BINANCE = 1
 COINBASEPRO = 2
