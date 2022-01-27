@@ -112,13 +112,9 @@ class TelegramActions:
                 update, "<b><i>Initiating sell orders..</i></b>", context=context
             )
             for market in self.helper.get_active_bot_list("active"):
-                while self.helper.read_data(market) is False:
-                    sleep(0.2)
-
+                if not self.helper.read_data(market):
+                    continue
                 if "margin" in self.helper.data and self.helper.data["margin"] != " ":
-                    while self.helper.read_data(market) is False:
-                        sleep(0.2)
-
                     if "botcontrol" in self.helper.data:
                         self.helper.data["botcontrol"]["manualsell"] = True
                         self.helper.write_data(market)
@@ -128,11 +124,8 @@ class TelegramActions:
                         )
                 sleep(0.2)
         else:
-            while (
-                self.helper.read_data(query.data.replace("confirm_sell_", "")) is False
-            ):
-                sleep(0.2)
-            if "botcontrol" in self.helper.data:
+            read_ok = self.helper.read_data(query.data.replace("confirm_sell_", ""))
+            if read_ok and "botcontrol" in self.helper.data:
                 self.helper.data["botcontrol"]["manualsell"] = True
                 self.helper.write_data(query.data.replace("confirm_sell_", ""))
                 self.helper.send_telegram_message(
@@ -146,9 +139,8 @@ class TelegramActions:
         query = update.callback_query
         self.helper.logger.info("called buy_response - %s", query.data)
         # if self.helper.read_data(query.data.replace("confirm_buy_", "")):
-        while self.helper.read_data(query.data.replace("confirm_buy_", "")) is False:
-            sleep(0.2)
-        if "botcontrol" in self.helper.data:
+        read_ok = self.helper.read_data(query.data.replace("confirm_buy_", ""))
+        if read_ok and "botcontrol" in self.helper.data:
             self.helper.data["botcontrol"]["manualbuy"] = True
             self.helper.write_data(query.data.replace("confirm_buy_", ""))
             self.helper.send_telegram_message(
@@ -182,8 +174,8 @@ class TelegramActions:
             output = ""
             count += 1
 
-            while self.helper.read_data(file) is False:
-                sleep(0.2)
+            if not self.helper.read_data(file):
+                continue
 
             output = output + f"\U0001F4C8 <b>{file} ({self.helper.data['exchange']})</b> "
 
@@ -233,9 +225,8 @@ class TelegramActions:
         open_count = 0
         # print(self.helper.get_active_bot_list())
         for market in self.helper.get_active_bot_list():
-            while self.helper.read_data(market) is False:
-                sleep(0.2)
-
+            if not self.helper.read_data(market):
+                continue
             closed_output_text = ""
             open_output_text = ""
             if "margin" in self.helper.data:

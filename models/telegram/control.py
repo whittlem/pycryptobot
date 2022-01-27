@@ -17,10 +17,7 @@ class TelegramControl:
         buttons = []
 
         for market in self.helper.get_active_bot_list(status):
-            while self.helper.read_data(market) is False:
-                sleep(0.2)
-
-            if "botcontrol" in self.helper.data:
+            if self.helper.read_data(market) and "botcontrol" in self.helper.data:
                 if "margin" in self.helper.data:
                     if call_back_tag == "buy" and self.helper.data["margin"] == " ":
                         buttons.append(
@@ -210,8 +207,8 @@ class TelegramControl:
         query = update.callback_query
         bot_list = {}
         for bot in self.helper.get_active_bot_list():
-            while self.helper.read_data(bot) is False:
-                sleep(0.2)
+            if not self.helper.read_data(bot):
+                continue
             if query.data.__contains__("all"):
                 bot_list.update(
                     {

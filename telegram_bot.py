@@ -303,19 +303,17 @@ class TelegramBot(TelegramBotBase):
         if not self._check_if_allowed(context._user_id_and_data[0], update):
             return
 
-        self.helper.read_data()
-
-        output = ""
-        for dt in self.helper.data["trades"]:
+        if self.helper.read_data():
             output = ""
-            output = (
-                output + f"<b>{self.helper.data['trades'][dt]['pair']}</b>\n{dt}"
-            )
-            output = (
-                output
-                + f"\n<i>Sold at: {self.helper.data['trades'][dt]['price']}   Margin: {self.helper.data['trades'][dt]['margin']}</i>\n"
-            )
-
+            for dt in self.helper.data["trades"]:
+                output = ""
+                output = (
+                    output + f"<b>{self.helper.data['trades'][dt]['pair']}</b>\n{dt}"
+                )
+                output = (
+                    output
+                    + f"\n<i>Sold at: {self.helper.data['trades'][dt]['price']}   Margin: {self.helper.data['trades'][dt]['margin']}</i>\n"
+                )
             if output != "":
                 self.helper.send_telegram_message(update, output, context=context)
 
@@ -583,8 +581,7 @@ class TelegramBot(TelegramBotBase):
 
             self.helper.logger.info("checking %s", jfile)
 
-            while self.helper.read_data(jfile) == False:
-                sleep(0.2)
+            self.helper.read_data(jfile)
 
             last_modified = datetime.now() - datetime.fromtimestamp(
                 os.path.getmtime(
@@ -826,19 +823,11 @@ class TelegramBot(TelegramBotBase):
         if not self._check_if_allowed(context._user_id_and_data[0], update):
             return None
 
-        # query = update.callback_query
-        # try:
-        #     query.answer()
-        # except:
-        #     pass
-
         buttons = []
 
         for market in self.helper.get_active_bot_list("active"):
-            while self.helper.read_data(market) == False:
-                sleep(0.2)
-
-            if "botcontrol" in self.helper.data:
+            read_ok = self.helper.read_data(market)
+            if read_ok and "botcontrol" in self.helper.data:
                 buttons.append(InlineKeyboardButton(market, callback_data=f"bot_{market}"))
 
         if len(buttons) > 0:

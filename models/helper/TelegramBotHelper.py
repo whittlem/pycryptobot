@@ -36,7 +36,8 @@ class TelegramBotHelper:
                     self.app.telegramdatafolder, "telegram_data", self.filename
                 )
             ):
-                self._read_data()
+                if not self._read_data():
+                    self.create_bot_data()
             else:
                 self.create_bot_data()
 
@@ -82,7 +83,7 @@ class TelegramBotHelper:
         self.data = ds
         self._write_data()
 
-    def _read_data(self, name: str = "") -> None:
+    def _read_data(self, name: str = "") -> bool:
         file = self.filename if name == "" else name
 
         read_ok, try_cnt = False, 0
@@ -102,11 +103,13 @@ class TelegramBotHelper:
             except JSONDecodeError:
                 if len(self.data) > 0:
                     Logger.warning("JSON Decode Error: Recreating File..")
-                    self._write_data()
+                    if name == "":
+                        self._write_data()
                 else:
                     Logger.warning("JSON Decode Error: Removing File..")
-                    self.removeactivebot()
-                
+                    if name == "":
+                        self.removeactivebot()
+        return read_ok
 
     def _write_data(self, name: str = "") -> bool:
         file = self.filename if name == "" else name
@@ -124,30 +127,28 @@ class TelegramBotHelper:
 
     def addmargin(self, margin: str = "", delta: str = "", price: str = "", change_pcnt_high: float = 0.0):
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
-            self._read_data()
+            if self._read_data():
+                addmarket = {
+                    "exchange": self.exchange.value,
+                    "margin": margin,
+                    "delta": delta,
+                    "price": price,
+                    "df_high": " ",
+                    "from_df_high": " ",
+                    "trailingstoplosstriggered" : float(margin.replace("%", "")) > self.app.trailingStopLossTrigger() if "trailingstoplosstriggered" in self.data and self.data['trailingstoplosstriggered'] == False else True,
+                    "change_pcnt_high" : change_pcnt_high if "trailingstoplosstriggered" in self.data and self.data['trailingstoplosstriggered'] == True else 0.0,
+                    # "change_pcnt_low" : change_pcnt_high if "preventlosstriggered" in self.data and self.data['preventlosstriggered'] == True else 0.0
+                }
+                
+                if self.app.preventLoss():
+                    self.data.update({"preventlosstriggered" : float(margin.replace("%", "")) > self.app.preventLossTrigger() if "preventlosstriggered" in self.data and self.data['preventlosstriggered'] == False else True})
 
-            addmarket = {
-                "exchange": self.exchange.value,
-                "margin": margin,
-                "delta": delta,
-                "price": price,
-                "df_high": " ",
-                "from_df_high": " ",
-                "trailingstoplosstriggered" : float(margin.replace("%", "")) > self.app.trailingStopLossTrigger() if "trailingstoplosstriggered" in self.data and self.data['trailingstoplosstriggered'] == False else True,
-                "change_pcnt_high" : change_pcnt_high if "trailingstoplosstriggered" in self.data and self.data['trailingstoplosstriggered'] == True else 0.0,
-                # "change_pcnt_low" : change_pcnt_high if "preventlosstriggered" in self.data and self.data['preventlosstriggered'] == True else 0.0
-            }
-            
-            if self.app.preventLoss():
-                self.data.update({"preventlosstriggered" : float(margin.replace("%", "")) > self.app.preventLossTrigger() if "preventlosstriggered" in self.data and self.data['preventlosstriggered'] == False else True})
-
-            self.data.update(addmarket)
-            self._write_data()
+                self.data.update(addmarket)
+                self._write_data()
 
     def updatewatchdogping(self):
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
-            self._read_data()
-            if "botcontrol" in self.data:
+            if self._read_data() and "botcontrol" in self.data:
                 self.data["botcontrol"]["watchdog_ping"] =  datetime.now().isoformat()
                 self._write_data()
     
@@ -159,27 +160,27 @@ class TelegramBotHelper:
         from_df_high: str = "",
     ) -> None:
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
-            self._read_data()
-            addmarket = {
-                "message": message,
-                "margin": " ",
-                "delta": " ",
-                "price": price,
-                "exchange": self.exchange.value,
-                "df_high": df_high,
-                "from_df_high": from_df_high,
-            }
-            self.data.update(addmarket)
-            self._write_data()
+            if self._read_data():
+                addmarket = {
+                    "message": message,
+                    "margin": " ",
+                    "delta": " ",
+                    "price": price,
+                    "exchange": self.exchange.value,
+                    "df_high": df_high,
+                    "from_df_high": from_df_high,
+                }
+                self.data.update(addmarket)
+                self._write_data()
 
     def addindicators(self, indicator, state) -> None:
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
-            self._read_data()
-            if not "indicators" in self.data:
-                self.data.update({"indicators": {}})
+            if self._read_data():
+                if not "indicators" in self.data:
+                    self.data.update({"indicators": {}})
 
-            self.data["indicators"].update({indicator: state})
-            self._write_data()
+                self.data["indicators"].update({indicator: state})
+                self._write_data()
 
     def deletemargin(self):
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
@@ -209,9 +210,8 @@ class TelegramBotHelper:
 
     def checkmanualbuysell(self) -> str:
         result = "WAIT"
-        self._read_data()
 
-        if "botcontrol" in self.data:
+        if self._read_data() and "botcontrol" in self.data:
             if len(self.data["botcontrol"]) > 0:
                 if self.data["botcontrol"]["manualsell"]:
                     self.data["botcontrol"]["manualsell"] = False
@@ -229,16 +229,14 @@ class TelegramBotHelper:
     def checkbotcontrolstatus(self) -> str:
         result = "active"
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
-            self._read_data()
-            if "botcontrol" in self.data:
+            if self._read_data() and "botcontrol" in self.data:
                 result = self.data["botcontrol"]["status"]
 
         return result
 
     def updatebotstatus(self, status) -> None:
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
-            self._read_data()
-            if "botcontrol" in self.data:
+            if self._read_data() and "botcontrol" in self.data:
                 if not self.data["botcontrol"]["status"] == status:
                     self.data["botcontrol"]["status"] = status
                     self._write_data()

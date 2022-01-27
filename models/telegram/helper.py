@@ -122,19 +122,26 @@ class TelegramHelper:
 
     def read_data(self, name: str = "data.json") -> bool:
         ''' Read data from json file '''
-        try:
-            fname = name if name.__contains__(".json") else f"{name}.json"
-            with open(
-                os.path.join(self.datafolder, "telegram_data", fname),
-                "r",
-                encoding="utf8",
-            ) as json_file:
-                self.data = json.load(json_file)
-        except FileNotFoundError:
-            return False
-        except JSONDecodeError:
-            return False
-        return True
+        fname = name if name.__contains__(".json") else f"{name}.json"
+        read_ok, try_cnt = False, 0
+        while not read_ok and try_cnt <= 5:
+            try_cnt += 1
+            try:
+                self.data = {}
+                with open(
+                    os.path.join(self.datafolder, "telegram_data", fname),
+                    "r",
+                    encoding="utf8",
+                ) as json_file:
+                    self.data = json.load(json_file)
+                read_ok = True
+            except FileNotFoundError:
+                if try_cnt == 5:
+                    self.logger.error("File Not Found {%s}", fname)
+            except JSONDecodeError:
+                if try_cnt == 5:
+                    self.logger.error("Unable to read file {%s}", fname)
+        return read_ok
 
     def write_data(self, name: str = "data.json") -> None:
         ''' Write data to json file '''
@@ -213,12 +220,7 @@ class TelegramHelper:
             ):
                 jsonfiles.pop(i)
             else:
-                read_ok, try_cnt = False, 0
-                while not read_ok and try_cnt <= 5:
-                    try_cnt += 1
-                    read_ok = self.read_data(jsonfiles[i])
-                    sleep(0.1)
-
+                read_ok = self.read_data(jsonfiles[i])
                 if not read_ok:
                     jsonfiles.pop(i)
             i -= 1
@@ -233,9 +235,10 @@ class TelegramHelper:
 
         i = len(jsonfiles) - 1
         while i >= 0:
-            while self.read_data(jsonfiles[i]) is False:
-                sleep(0.2)
-            if "botcontrol" in self.data:
+            read_ok = self.read_data(jsonfiles[i])
+            if not read_ok:
+                jsonfiles.pop(i)
+            elif "botcontrol" in self.data:
                 if not self.data["botcontrol"]["status"] == state:
                     jsonfiles.pop(i)
             i -= 1
@@ -250,9 +253,10 @@ class TelegramHelper:
 
         i = len(jsonfiles) - 1
         while i >= 0:
-            while self.read_data(jsonfiles[i]) is False:
-                sleep(0.1)
-            if "botcontrol" in self.data:
+            read_ok = self.read_data(jsonfiles[i])
+            if not read_ok:
+                jsonfiles.pop(i)
+            elif "botcontrol" in self.data:
                 margin_string = str(self.data["margin"]).strip()
                 if (
                     not self.data["botcontrol"]["status"] == state
@@ -271,9 +275,10 @@ class TelegramHelper:
 
         i = len(jsonfiles) - 1
         while i >= 0:
-            while self.read_data(jsonfiles[i]) is False:
-                sleep(0.2)
-            if "botcontrol" in self.data:
+            read_ok = self.read_data(jsonfiles[i])
+            if not read_ok:
+                jsonfiles.pop(i)
+            elif "botcontrol" in self.data:
                 if "watchdog_ping" in self.data["botcontrol"]:
                     last_ping = datetime.strptime(self.data["botcontrol"]["watchdog_ping"], "%Y-%m-%dT%H:%M:%S.%f")
                     current_dt = datetime.now()
@@ -352,29 +357,26 @@ class TelegramHelper:
 
     def update_bot_control(self, pair, status) -> bool:
         """used to update bot json files for controlling state"""
-        self.read_data(pair)
-
-        if "botcontrol" in self.data:
+        read_ok = self.read_data(pair)
+        if not read_ok:
+            self.logger.warning("update_bot_control for %s unable to read file", pair)
+        elif "botcontrol" in self.data:
             self.data["botcontrol"]["status"] = status
             self.write_data(pair)
             return True
 
         return False
 
-    def stop_running_bot(self, pair, state, is_open: bool = False):
+    def stop_running_bot(self, pair, state, is_open: bool = False) -> bool:
         ''' Stop current running bots '''
         if self.is_bot_running(pair):
-            done = False
-            while done is False:
-                try:
-                    self.read_data(pair)
-                    if is_open:
-                        self.update_bot_control(pair, state)
-                    elif "margin" in self.data and self.data["margin"] == " ":
-                        self.update_bot_control(pair, state)
-                    done = True
-                except:
-                    pass
+            read_ok = self.read_data(pair)
+            if not read_ok:
+                self.logger.warning("stop_running_bot for %s unable to read file", pair)
+            if is_open:
+                return self.update_bot_control(pair, state)
+            elif "margin" in self.data and self.data["margin"] == " ":
+                return self.update_bot_control(pair, state)
 
     def create_callback_data(self, callback_tag, exchange: str = "", parameter: str = ""):
         return json.dumps({'c':callback_tag,'e': exchange,'p':parameter})
