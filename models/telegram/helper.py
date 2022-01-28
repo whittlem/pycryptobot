@@ -5,7 +5,7 @@ import subprocess
 import json
 import logging
 from json.decoder import JSONDecodeError
-from time import sleep
+# from time import sleep
 from datetime import datetime
 from typing import List
 from telegram import InlineKeyboardMarkup, Update
@@ -123,6 +123,7 @@ class TelegramHelper:
     def read_data(self, name: str = "data.json") -> bool:
         ''' Read data from json file '''
         fname = name if name.__contains__(".json") else f"{name}.json"
+        self.logger.info("read_data {%s}", fname)
         read_ok, try_cnt = False, 0
         while not read_ok and try_cnt <= 5:
             try_cnt += 1
@@ -235,10 +236,10 @@ class TelegramHelper:
 
         i = len(jsonfiles) - 1
         while i >= 0:
-            read_ok = self.read_data(jsonfiles[i])
-            if not read_ok:
-                jsonfiles.pop(i)
-            elif "botcontrol" in self.data:
+            # read_ok = self.read_data(jsonfiles[i])
+            # if not read_ok:
+            #     jsonfiles.pop(i)
+            if "botcontrol" in self.data:
                 if not self.data["botcontrol"]["status"] == state:
                     jsonfiles.pop(i)
             i -= 1
@@ -253,10 +254,10 @@ class TelegramHelper:
 
         i = len(jsonfiles) - 1
         while i >= 0:
-            read_ok = self.read_data(jsonfiles[i])
-            if not read_ok:
-                jsonfiles.pop(i)
-            elif "botcontrol" in self.data:
+            # read_ok = self.read_data(jsonfiles[i])
+            # if not read_ok:
+            #     jsonfiles.pop(i)
+            if "botcontrol" in self.data:
                 margin_string = str(self.data["margin"]).strip()
                 if (
                     not self.data["botcontrol"]["status"] == state

@@ -47,11 +47,11 @@ from models.telegram import (
 scannerSchedule = BackgroundScheduler(timezone="UTC")
 
 # Enable logging
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-
-logger = logging.getLogger(__name__)
+# logging.basicConfig(
+#     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+# )
+# 
+# logger = logging.getLogger(__name__)
 
 # TYPING_RESPONSE = 1
 CHOOSING, TYPING_REPLY = range(2)
@@ -575,6 +575,7 @@ class TelegramBot(TelegramBotBase):
             return False
 
     def _cleandata(self):
+        self.helper.logger.info("/cleandata started")
         jsonfiles = self.helper.get_active_bot_list()
         for i in range(len(jsonfiles), 0, -1):
             jfile = jsonfiles[i - 1]
@@ -597,7 +598,7 @@ class TelegramBot(TelegramBotBase):
                 and last_modified.seconds > 120
                 and (last_modified.seconds != 86399 and last_modified.days != -1)
             ):
-                logger.info("deleting %s %s", jfile, str(last_modified))
+                self.helper.logger.info("deleting %s %s", jfile, str(last_modified))
                 os.remove(
                     os.path.join(self.datafolder, "telegram_data", f"{jfile}.json")
                 )
@@ -609,6 +610,7 @@ class TelegramBot(TelegramBotBase):
             ):
                 self.helper.logger.info("deleting %s %s", jfile, str(last_modified.seconds))
                 os.remove(os.path.join(self.datafolder, "telegram_data", f"{jfile}.json"))
+        self.helper.logger.info("/cleandata complete")
 
     def ExceptionExchange(self, update, context):
         """start new bot ask which exchange"""
