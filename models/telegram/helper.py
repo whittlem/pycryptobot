@@ -18,7 +18,7 @@ logging.basicConfig(
     filename=os.path.join(os.curdir, "telegram_logs", f"telegrambot {datetime.now().strftime('%Y-%m-%d')}.log"),
     filemode='w',
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", 
-    level=logging.INFO
+    level=logging.INFO,
 )
 
 # logger = logging.getLogger(__name__)
@@ -40,8 +40,20 @@ class TelegramHelper:
         self.autoscandelay = 0
         self.enable_buy_next = True
         self.autostart = False
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger("telegram.helper")
+        self.logger.setLevel(logging.DEBUG)
         self.terminal_start_process = ""
+
+        # set a format which is simpler for console use
+        consoleHandlerFormatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        # define a Handler which writes sys.stdout
+        consoleHandler = logging.StreamHandler()
+        # Set log level
+        consoleHandler.setLevel(logging.INFO)
+        # tell the handler to use this format
+        consoleHandler.setFormatter(consoleHandlerFormatter)
+        # add the handler to the root logger
+        self.logger.addHandler(consoleHandler)
 
         self.load_config()
         self.read_screener_config()
@@ -91,7 +103,6 @@ class TelegramHelper:
                 if "enable_buy_next" in self.config["scanner"]
                 else True
             )
-
     def send_telegram_message(
         self, update: Update , reply, markup: InlineKeyboardMarkup = None, context: CallbackContext = None
     ):
@@ -123,7 +134,7 @@ class TelegramHelper:
     def read_data(self, name: str = "data.json") -> bool:
         ''' Read data from json file '''
         fname = name if name.__contains__(".json") else f"{name}.json"
-        self.logger.info("read_data {%s}", fname)
+        self.logger.debug("METHOD(read_data) - DATA(%s)", fname)
         read_ok, try_cnt = False, 0
         while not read_ok and try_cnt <= 5:
             try_cnt += 1
@@ -147,6 +158,7 @@ class TelegramHelper:
     def write_data(self, name: str = "data.json") -> None:
         ''' Write data to json file '''
         fname = name if name.__contains__(".json") else f"{name}.json"
+        self.logger.debug("METHOD(write_data) - DATA(%s)", fname)
         try:
             with open(
                 os.path.join(self.datafolder, "telegram_data", fname),
@@ -161,6 +173,7 @@ class TelegramHelper:
 
     def read_config(self):
         ''' Read config file '''
+        self.logger.debug("METHOD(read_config)")
         try:
             with open(
                 os.path.join(self.config_file), "r", encoding="utf8"
@@ -173,6 +186,7 @@ class TelegramHelper:
 
     def write_config(self):
         ''' Write config file '''
+        self.logger.debug("METHOD(write_config)")
         try:
             with open(
                 os.path.join(self.config_file),
@@ -185,6 +199,7 @@ class TelegramHelper:
 
     def read_screener_config(self):
         ''' Read screener config file '''
+        self.logger.debug("METHOD(read_screener_config)")
         try:
             with open(
                 "screener.json", "r", encoding="utf8"
@@ -197,6 +212,7 @@ class TelegramHelper:
 
     def write_screener_config(self):
         ''' Write screener config file '''
+        self.logger.debug("METHOD(write_screener_config)")
         try:
             with open(
                 "screener.json",
@@ -209,6 +225,7 @@ class TelegramHelper:
 
     def get_all_bot_list(self) -> List[str]:
         """Return ALL contents of telegram_data folder"""
+        self.logger.debug("METHOD(get_all_bot_list)")
         jsonfiles = sorted(os.listdir(os.path.join(self.datafolder, "telegram_data")))
 
         i = len(jsonfiles) - 1
@@ -232,6 +249,7 @@ class TelegramHelper:
 
     def get_active_bot_list(self, state: str = "active") -> List[str]:
         """Return contents of telegram_data folder"""
+        self.logger.debug("METHOD(get_active_bot_list) - DATA(%s)", state)
         jsonfiles = self.get_all_bot_list()
 
         i = len(jsonfiles) - 1
@@ -250,6 +268,7 @@ class TelegramHelper:
 
     def get_active_bot_list_with_open_orders(self, state: str = "active") -> List[str]:
         """Return contents of telegram_data folder active bots with an open order"""
+        self.logger.debug("METHOD(get_active_bot_list_with_open_orders) - DATA(%s)", state)
         jsonfiles = self.get_all_bot_list()
 
         i = len(jsonfiles) - 1
@@ -272,6 +291,7 @@ class TelegramHelper:
 
     def get_hung_bot_list(self, state: str = "active") -> List[str]:
         """Return contents of telegram_data folder - working out which are hung bots"""
+        self.logger.debug("METHOD(get_hung_bot_list) - DATA(%s)", state)
         jsonfiles = self.get_all_bot_list()
 
         i = len(jsonfiles) - 1
@@ -300,6 +320,7 @@ class TelegramHelper:
 
     def is_bot_running(self, pair) -> bool:
         ''' Check is bot running (pair.json file exists)'''
+        self.logger.debug("METHOD(is_bot_running) - DATA(%s)", pair)
         if os.path.isfile(
             os.path.join(self.datafolder, "telegram_data", f"{pair}.json")
         ):
@@ -309,6 +330,7 @@ class TelegramHelper:
 
     def get_running_bot_exchange(self, pair) -> str:
         ''' Get bots exchange '''
+        self.logger.debug("METHOD(get_running_bot_exchange) - DATA(%s)", pair)
         if self.read_data(f"{pair}.json") is True:
             return self.data["exchange"]
         return "None"
@@ -322,7 +344,7 @@ class TelegramHelper:
         return_output: bool = False,
     ):
         """Start a new subprocess"""
-
+        self.logger.debug("METHOD(start_process) - DATA(%s, %s, %s, %s)", pair, exchange, overrides,startmethod)
         if self.is_bot_running(pair):
             return False
 
@@ -358,6 +380,7 @@ class TelegramHelper:
 
     def update_bot_control(self, pair, status) -> bool:
         """used to update bot json files for controlling state"""
+        self.logger.debug("METHOD(update_bot_control) - DATA(%s, %s)", pair, status)
         read_ok = self.read_data(pair)
         if not read_ok:
             self.logger.warning("update_bot_control for %s unable to read file", pair)
@@ -370,6 +393,7 @@ class TelegramHelper:
 
     def stop_running_bot(self, pair, state, is_open: bool = False) -> bool:
         ''' Stop current running bots '''
+        self.logger.debug("METHOD(stop_running_bot) - DATA(%s, %s)", pair, state)
         if self.is_bot_running(pair):
             read_ok = self.read_data(pair)
             if not read_ok:

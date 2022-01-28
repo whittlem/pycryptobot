@@ -8,20 +8,20 @@ Usage:
 Press Ctrl-C on the command line or send a signal to the process to stop the bot.
 """
 import argparse
-from asyncore import write
-import logging
+
 import os
 import json
 import subprocess
-import sys
+import logging
 import re
 import urllib.request
 
 from datetime import datetime
-from time import sleep, time
+from time import sleep
+
 
 # from pandas.core.frame import DataFrame
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
+from telegram import InlineKeyboardButton, ReplyKeyboardMarkup
 from telegram.bot import Bot, BotCommand
 from telegram.ext import (
     Updater,
@@ -33,7 +33,6 @@ from telegram.ext import (
 )
 from telegram.replykeyboardremove import ReplyKeyboardRemove
 from apscheduler.schedulers.background import BackgroundScheduler
-from models.chat import Telegram
 
 from models.telegram import (
     TelegramControl,
@@ -165,7 +164,6 @@ class TelegramBot(TelegramBotBase):
 
         self.helper.load_config()
 
-        self.helper = TelegramHelper(self.datafolder, self.config, self.config_file)
         self.handler = TelegramHandler(self.datafolder, self.userid, self.helper)
         self.control = TelegramControl(self.datafolder, self.helper)
         self.actions = TelegramActions(self.datafolder, self.helper)
@@ -575,7 +573,7 @@ class TelegramBot(TelegramBotBase):
             return False
 
     def _cleandata(self):
-        self.helper.logger.info("/cleandata started")
+        self.helper.logger.debug("/cleandata started")
         jsonfiles = self.helper.get_active_bot_list()
         for i in range(len(jsonfiles), 0, -1):
             jfile = jsonfiles[i - 1]
@@ -610,7 +608,7 @@ class TelegramBot(TelegramBotBase):
             ):
                 self.helper.logger.info("deleting %s %s", jfile, str(last_modified.seconds))
                 os.remove(os.path.join(self.datafolder, "telegram_data", f"{jfile}.json"))
-        self.helper.logger.info("/cleandata complete")
+        self.helper.logger.debug("/cleandata complete")
 
     def ExceptionExchange(self, update, context):
         """start new bot ask which exchange"""
@@ -853,10 +851,7 @@ class TelegramBot(TelegramBotBase):
 def main():
     """Start the bot."""
     # Create telegram bot configuration
-    print("Telegram Bot is listening")
-
     botconfig = TelegramBot()
-
     # Get the dispatcher to register handlers
     dp = botconfig.updater.dispatcher
 
@@ -964,8 +959,8 @@ def main():
 
     # Start the Bot
     botconfig.updater.start_polling()
+    botconfig.helper.logger.info("Telegram Bot is listening")
     botconfig.updater.bot.send_message(text="Online and ready.", chat_id=botconfig.helper.config["telegram"]["user_id"])
-
     # Run the bot until you press Ctrl-C
     # since start_polling() is non-blocking and will stop the bot gracefully.
     botconfig.updater.idle()
