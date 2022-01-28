@@ -40,23 +40,41 @@ class TelegramHelper:
         self.autoscandelay = 0
         self.enable_buy_next = True
         self.autostart = False
+        self.logger_level = "INFO"
+
         self.logger = logging.getLogger("telegram.helper")
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(self.get_level(self.logger_level))
         self.terminal_start_process = ""
 
+        self.load_config()
+        self.read_screener_config()
+
+        self.logger.setLevel(self.get_level(self.logger_level))
         # set a format which is simpler for console use
         consoleHandlerFormatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         # define a Handler which writes sys.stdout
         consoleHandler = logging.StreamHandler()
         # Set log level
-        consoleHandler.setLevel(logging.INFO)
+        consoleHandler.setLevel(self.get_level(self.logger_level))
         # tell the handler to use this format
         consoleHandler.setFormatter(consoleHandlerFormatter)
         # add the handler to the root logger
         self.logger.addHandler(consoleHandler)
 
-        self.load_config()
-        self.read_screener_config()
+    @classmethod
+    def get_level(cls, level):
+        if level == "CRITICAL":
+            return logging.CRITICAL
+        elif level == "ERROR":
+            return logging.ERROR
+        elif level == "WARNING":
+            return logging.WARNING
+        elif level == "INFO":
+            return logging.INFO
+        elif level == "DEBUG":
+            return logging.DEBUG
+        else:
+            return logging.NOTSET
 
     def load_config(self):
         ''' Load/Reread config file from file '''
@@ -102,6 +120,16 @@ class TelegramHelper:
                 self.config["scanner"]["enable_buy_next"]
                 if "enable_buy_next" in self.config["scanner"]
                 else True
+            )
+            self.logger_level = (
+                self.config["scanner"]["logger_level"]
+                if "logger_level" in self.config["scanner"]
+                else "INFO"
+            )
+            self.logger_level = (
+                self.config["telegram"]["logger_level"]
+                if "logger_level" in self.config["telegram"]
+                else "INFO"
             )
     def send_telegram_message(
         self, update: Update , reply, markup: InlineKeyboardMarkup = None, context: CallbackContext = None
