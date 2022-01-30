@@ -75,58 +75,6 @@ def executeJob(
     if last_api_call_datetime.seconds > 60:
         _state.last_api_call_datetime = datetime.now()
 
-    # this is used to confirm last trade if error occured during trade process
-    # make sure signals and telegram info is set correctly, close bot if needed on sell
-    if app.isLive():
-        if _state.action == "check_buy" and _state.last_action == "BUY":
-            _state.trade_error_cnt = 0
-            _state.trailing_buy = 0
-            _state.action = None
-            telegram_bot.add_open_order()
-
-            Logger.warning(
-                f"{_app.getMarket()} ({_app.printGranularity}) - {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}\n"
-                f"Catching BUY that occured previously. Updating signal information."
-            )
-
-            _app.notifyTelegram(
-                _app.getMarket()
-                + " ("
-                + _app.printGranularity()
-                + ") - "
-                + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-                + "\n"
-                + "Catching BUY that occured previously. Updating signal information."
-            )
-
-        elif _state.action == "check_sell" and _state.last_action == "SELL":
-            _state.prevent_loss = 0
-            _state.tsl_triggered = 0
-            _state.trade_error_cnt = 0
-            _state.action = None
-            telegram_bot.remove_open_order()
-
-            Logger.warning(
-                f"{_app.getMarket()} ({_app.printGranularity}) - {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}\n"
-                f"Catching SELL that occured previously. Updating signal information."
-            )
-
-            _app.notifyTelegram(
-                _app.getMarket()
-                + " ("
-                + _app.printGranularity()
-                + ") - "
-                + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-                + "\n"
-                + "Catching SELL that occured previously. Updating signal information."
-            )
-
-            if _app.enableexitaftersell and _app.startmethod not in (
-                "standard",
-                "telegram",
-            ):
-                sys.exit(0)
-
     # This is used by the telegram bot
     # If it not enabled in config while will always be False
     if not _app.isSimulation():
@@ -503,6 +451,57 @@ def executeJob(
                     _app.notifyTelegram(
                         f"{_app.getMarket} last_action change detected from {last_action_current} to {_state.last_action}"
                     )
+
+            # this is used to confirm last trade if error occurred during trade process
+            # make sure signals and telegram info is set correctly, close bot if needed on sell
+            if _state.action == "check_buy" and _state.last_action == "BUY":
+                _state.trade_error_cnt = 0
+                _state.trailing_buy = 0
+                _state.action = None
+                telegram_bot.add_open_order()
+
+                Logger.warning(
+                    f"{_app.getMarket()} ({_app.printGranularity}) - {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                    f"Catching BUY that occurred previously. Updating signal information."
+                )
+
+                _app.notifyTelegram(
+                    _app.getMarket()
+                    + " ("
+                    + _app.printGranularity()
+                    + ") - "
+                    + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+                    + "\n"
+                    + "Catching BUY that occurred previously. Updating signal information."
+                )
+
+            elif _state.action == "check_sell" and _state.last_action == "SELL":
+                _state.prevent_loss = 0
+                _state.tsl_triggered = 0
+                _state.trade_error_cnt = 0
+                _state.action = None
+                telegram_bot.remove_open_order()
+
+                Logger.warning(
+                    f"{_app.getMarket()} ({_app.printGranularity}) - {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                    f"Catching SELL that occurred previously. Updating signal information."
+                )
+
+                _app.notifyTelegram(
+                    _app.getMarket()
+                    + " ("
+                    + _app.printGranularity()
+                    + ") - "
+                    + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+                    + "\n"
+                    + "Catching SELL that occurred previously. Updating signal information."
+                )
+
+                if _app.enableexitaftersell and _app.startmethod not in (
+                    "standard",
+                    "telegram",
+                ):
+                    sys.exit(0)
 
         if not _app.isSimulation():
             ticker = _app.getTicker(_app.getMarket(), _websocket)
@@ -1457,10 +1456,10 @@ def executeJob(
                             float(price)
                         )
 
-                    if not _app.isSimulation() or (
-                        _app.isSimulation() and not _app.simResultOnly()
-                    ):
-                        Logger.info(f" Fibonacci Retracement Levels:{str(bands)}")
+                        if not _app.isSimulation() or (
+                            _app.isSimulation() and not _app.simResultOnly()
+                        ):
+                            Logger.info(f" Fibonacci Retracement Levels:{str(bands)}")
 
                         if len(bands) >= 1 and len(bands) <= 2:
                             if len(bands) == 1:
