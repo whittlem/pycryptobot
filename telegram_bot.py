@@ -544,7 +544,18 @@ class TelegramBot(TelegramBotBase):
 
     def error(self, update, context):
         """Log Errors"""
-        self.helper.send_telegram_message(update, context.error)
+        try:
+            if len(context.error.args) > 0:
+                context.bot.send_message(chat_id=update.effective_message.chat_id,
+                                    text=f"ERROR: {context.error.args[0]}",
+                                    parse_mode="HTML")
+            elif "message" in context.error :
+                context.bot.send_message(chat_id=update.effective_message.chat_id,
+                                    text=f"ERROR: {context.error.message}",
+                                    parse_mode="HTML")
+        except Exception as err:
+            print(err)
+        # self.helper.send_telegram_message(update, context.error)
         self.helper.logger.error(msg="Exception while handling an update:", exc_info=context.error)
         try:
             if "HTTPError" in context.error.args[0]:

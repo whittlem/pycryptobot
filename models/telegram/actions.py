@@ -4,7 +4,7 @@ import json
 import subprocess
 # import logging
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from time import sleep
 from models.telegram.helper import TelegramHelper
@@ -581,3 +581,26 @@ class TelegramActions:
             update,
             f"<i>Removed {str(query.data).replace('delexcep_', '')} from exception list. bot</i>",
         )
+
+    def get_closed_trades(self, update, days):
+        if self.helper.read_data():
+            now = datetime.now()
+            now -= timedelta(days=days)
+            trade_count = 0
+            self.helper.send_telegram_message(update, f"<i>Getting trades for last {days} days..</i>")
+            for trade_datetime in self.helper.data["trades"]:
+                if datetime.strptime(trade_datetime, '%Y-%m-%d %H:%M:%S').isoformat() < now.isoformat():
+                    continue
+                trade_count += 1
+                output = ""
+                output = (
+                    output + f"<b>{self.helper.data['trades'][trade_datetime]['pair']}</b>\n{trade_datetime}"
+                )
+                output = (
+                    output
+                    + f"\n<i>Sold at: {self.helper.data['trades'][trade_datetime]['price']}   Margin: {self.helper.data['trades'][trade_datetime]['margin']}</i>\n"
+                )
+                if output != "":
+                    update.effective_message.reply_html(output)
+            if trade_count == 0:
+                update.effective_message.reply_html("<b>No closed trades found</b>")

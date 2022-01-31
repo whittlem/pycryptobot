@@ -49,6 +49,9 @@ class TelegramHandler:
                 ),
             ],
             [
+                InlineKeyboardButton("\U0001F4B0 Closed Trades", callback_data="closed"),
+            ],
+            [
                 InlineKeyboardButton("\U0001F4B0 Sell", callback_data="sell"),
                 InlineKeyboardButton("\U0001FA99 Buy", callback_data="buy"),
             ],
@@ -77,7 +80,7 @@ class TelegramHandler:
             ],
             [
                 InlineKeyboardButton(
-                    "\U00002139 Running Bot Status", callback_data="status"
+                    "\U00002139 Bot Status", callback_data="status"
                 ),
                 InlineKeyboardButton("Margins \U0001F4C8", callback_data="margin"),
             ],
@@ -360,9 +363,43 @@ class TelegramHandler:
         elif query.data.__contains__("bot_"):
             self.get_bot_options(update)
 
+        elif query.data == "closed":
+            self.get_trade_options(update, context)
+        
+        elif callback_json is not None and callback_json["c"] == callbacktags.TRADES:
+            self.actions.get_closed_trades(update, callback_json["p"])
+
+
         # query.edit_message_text(
         #     "\U000026A0 <b>Under Construction</b> \U000026A0", parse_mode="HTML"
         # )
+
+    def get_trade_options(self, update, context):
+        """individual bot controls"""
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    "Last 24Hrs", callback_data=self.helper.create_callback_data(callbacktags.TRADES, "", callbacktags.TRADES24H)  #f"stop_{query.data.replace('bot_', '')}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "Last 7 Days", callback_data=self.helper.create_callback_data(callbacktags.TRADES, "", callbacktags.TRADES7D)  #f"stop_{query.data.replace('bot_', '')}"
+                ),
+                InlineKeyboardButton(
+                    "Last 14 Days", callback_data=self.helper.create_callback_data(callbacktags.TRADES, "", callbacktags.TRADES14D)  #f"stop_{query.data.replace('bot_', '')}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "Last 31 Days", callback_data=self.helper.create_callback_data(callbacktags.TRADES, "", callbacktags.TRADES1M)  #f"stop_{query.data.replace('bot_', '')}"
+                )
+            ],
+            [InlineKeyboardButton("\U000025C0 Back", callback_data=self.helper.create_callback_data(callbacktags.BACK))],
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
+        reply = "<b>Closed Trades:</b>"
+        self.helper.send_telegram_message(update, reply, reply_markup, context=context)
 
     def get_bot_options(self, update):
         """individual bot controls"""
