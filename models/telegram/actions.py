@@ -603,8 +603,9 @@ class TelegramActions:
                 if output != "":
                     update.effective_message.reply_html(output)
                 if trade_count == 10:
+                    trade_count = 1
                     sleep(3)
                 else:
-                    sleep(1)
+                    sleep(0.5)
             if trade_count == 0:
                 update.effective_message.reply_html("<b>No closed trades found</b>")
