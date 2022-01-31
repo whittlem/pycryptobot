@@ -8,6 +8,13 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [5.2.6] - 2022-01-30
+
+- fixed some spelling mistakes
+- suppressed some of the Kucoin error messages, only displays after last retry attempt
+- cleaned up a couple of the retry loops for Kucoin API to make more efficient
+- moved the buy/sell error check code further down pycryptobot.py to allow other variables to be set first
+
 ## [5.2.5] - 2022-01-21
 
 - more exception handling added for JSONDecode errors

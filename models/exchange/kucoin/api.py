@@ -119,7 +119,7 @@ class AuthAPI(AuthAPIBase):
         self._api_passphrase = api_passphrase
         self._api_url = api_url
 
-        # Make the cache folder if it doesnt exist
+        # Make the cache folder if it doesn't exist
 
         if not os.path.exists(cache_path):
             os.makedirs(cache_path)
@@ -521,29 +521,23 @@ class AuthAPI(AuthAPIBase):
         dt_obj = datetime.strptime(str(datetime.now()), "%Y-%m-%d %H:%M:%S.%f")
         millisec = dt_obj.timestamp() * 1000
 
-        try:
-            order = {
-                "clientOid": str(millisec),
-                "symbol": market,
-                "type": "market",
-                "side": "buy",
-                "funds": self.marketQuoteIncrement(market, quote_quantity),
-            }
+        order = {
+            "clientOid": str(millisec),
+            "symbol": market,
+            "type": "market",
+            "side": "buy",
+            "funds": self.marketQuoteIncrement(market, quote_quantity),
+        }
 
-            # Logger.debug(order)
+        # Logger.debug(order)
 
-            # connect to authenticated Kucoin api
-            model = AuthAPI(
-                self._api_key, self._api_secret, self._api_passphrase, self._api_url
-            )
+        # connect to authenticated Kucoin api
+        model = AuthAPI(
+            self._api_key, self._api_secret, self._api_passphrase, self._api_url
+        )
 
-            # place order and return result
-            return model.authAPI("POST", "api/v1/orders", order)
-        except:
-            return pd.DataFrame()
-
-    def truncate_float(self, n, places):
-        return int(n * (10 ** places)) / 10 ** places
+        # place order and return result
+        return model.authAPI("POST", "api/v1/orders", order)
 
     def marketSell(self, market: str = "", base_quantity: float = 0) -> pd.DataFrame:
         """Executes a market sell providing a crypto amount"""
@@ -804,7 +798,7 @@ class AuthAPI(AuthAPIBase):
         """Initiates a REST API call"""
 
         # Delay if we hit the ratelimit
-        RateLimitDelay = 4
+        RateLimitDelay = 5
         HitRateLimitCounter = 0
 
         if not isinstance(method, str):
@@ -850,7 +844,7 @@ class AuthAPI(AuthAPIBase):
             elif method == "POST":
                 resp = requests.post(self._api_url + uri, json=payload, auth=self)
 
-            while resp.status_code == 429 or HitRateLimitCounter == 10:
+            while resp.status_code == 429 and HitRateLimitCounter < 5:
                 # Hit the rate limit - Delay and retry. 
                 HitRateLimitCounter += 1
                 time.sleep(RateLimitDelay)
@@ -1060,16 +1054,7 @@ class PublicAPI(AuthAPIBase):
 
             resp = {}
             trycnt, maxretry = (0, 5)
-            while trycnt <= maxretry:
-                if trycnt == 0 or "data" not in resp:
-                    if trycnt > 0:
-                        Logger.warning(
-                            f"Kucoin API Error for Historical Data - 'data' not in response - retrying - attempt {trycnt}"
-                        )
-                        time.sleep(15)
-                    trycnt += 1
-                else:
-                    break
+            while trycnt < maxretry:
 
                 if iso8601start != "" and iso8601end == "":
                     startTime = int(
@@ -1102,6 +1087,16 @@ class PublicAPI(AuthAPIBase):
                         "GET",
                         f"api/v1/market/candles?type={granularity.to_medium}&symbol={market}",
                     )
+
+                if "data" not in resp:
+                    trycnt += 1
+                    if trycnt == (maxretry):
+                        Logger.warning(
+                            f"Kucoin API Error for Historical Data - 'data' not in response - attempted {trycnt} times"
+                        )
+                    time.sleep(15)
+                else:
+                    break
 
             # convert the API response into a Pandas DataFrame
             df = pd.DataFrame(
@@ -1162,17 +1157,18 @@ class PublicAPI(AuthAPIBase):
             raise TypeError("Kucoin market required.")
 
         resp = {}
-        trycnt, maxretry = (0, 5)
+        trycnt, maxretry = (1, 5)
         while trycnt <= maxretry:
 
             resp = self.authAPI("GET", f"api/v1/market/orderbook/level1?symbol={market}")
 
             if "data" not in resp: # if not proper response, retry
-                Logger.warning(
-                    f"Kucoin API Error for getTicker - 'data' not in response - retrying - attempt {trycnt}"
-                )
-                time.sleep(15)
                 trycnt += 1
+                if trycnt == maxretry:
+                    Logger.warning(
+                        f"Kucoin API Error for getTicker - 'data' not in response - attempted {trycnt} times"
+                    )
+                time.sleep(15)
             elif "time" in resp["data"]: # if time returned, check format
                 resptime = ""
                 respprice = ""
@@ -1191,11 +1187,12 @@ class PublicAPI(AuthAPIBase):
                             respprice,
                         )
                 except:
-                    Logger.warning(
-                        f"Kucoin API Error for Get Ticker - retrying - attempt {trycnt}"
-                    )
-                    time.sleep(15)
                     trycnt += 1
+                    if trycnt == maxretry:
+                        Logger.warning(
+                            f"Kucoin API Error for Get Ticker - attempted {trycnt} times."
+                        )
+                    time.sleep(15)
             else: # time wasn't in response
                 now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
                 return (now, 0.0)
@@ -1246,14 +1243,15 @@ class PublicAPI(AuthAPIBase):
                 if resp.status_code != 200:
                     resp_message = resp.json()["msg"]
                     message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
+                    trycnt += 1
                     if self.die_on_api_error:
                         raise Exception(message)
                     else:
-                        Logger.warning(
-                            f"Kucoin API request error - retry attempt {trycnt}: {message}"
-                        )
+                        if trycnt == maxretry:
+                            Logger.warning(
+                                f"Kucoin API request error - attempted {trycnt} times: {message}"
+                            )
                     time.sleep(15)
-                    trycnt += 1
                 else:
                     break
 
