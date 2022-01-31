@@ -180,12 +180,12 @@ class TelegramHelper:
                 if try_cnt == 5:
                     self.logger.error("File Not Found {%s}", fname)
                 else:
-                    sleep(0.5)
+                    sleep(0.2)
             except JSONDecodeError:
                 if try_cnt == 5:
                     self.logger.error("Unable to read file {%s}", fname)
                 else:
-                    sleep(0.5)
+                    sleep(0.2)
             
         return read_ok
 
