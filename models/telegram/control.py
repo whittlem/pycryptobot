@@ -19,19 +19,19 @@ class TelegramControl:
         for market in self.helper.get_active_bot_list(status):
             if self.helper.read_data(market) and "botcontrol" in self.helper.data:
                 if "margin" in self.helper.data:
-                    if call_back_tag == "buy" and self.helper.data["margin"] == " ":
+                    if call_back_tag == callbacktags.BUY and self.helper.data["margin"] == " ":
                         buttons.append(
                             InlineKeyboardButton(
                                 market, callback_data=self.helper.create_callback_data(call_back_tag, "", market) #f"{call_back_tag}_{market}"
                             )
                         )
-                    elif call_back_tag == "sell" and self.helper.data["margin"] != " ":
+                    elif call_back_tag == callbacktags.SELL and self.helper.data["margin"] != " ":
                         buttons.append(
                             InlineKeyboardButton(
                                 market, callback_data=self.helper.create_callback_data(call_back_tag, "", market) #f"{call_back_tag}_{market}"
                             )
                         )
-                    elif call_back_tag not in ("buy", "sell"):
+                    elif call_back_tag not in (callbacktags.BUY, callbacktags.SELL):
                         buttons.append(
                             InlineKeyboardButton(
                                 market, callback_data=self.helper.create_callback_data(call_back_tag, "", market) #f"{call_back_tag}_{market}"
@@ -41,7 +41,7 @@ class TelegramControl:
         if len(buttons) > 0:
             self.helper.send_telegram_message(
                 update,
-                f"<b>What do you want to {'buy' if call_back_tag==35 else 'sell'}?</b>",
+                f"<b>What do you want to {'buy' if call_back_tag==callbacktags.BUY else 'sell'}?</b>",
                 self.sort_inline_buttons(buttons, f"{call_back_tag}"),
             )
         else:
@@ -66,7 +66,7 @@ class TelegramControl:
                     keyboard.append([buttons[i]])
                 i += 3
 
-            if call_back_tag not in ("start", "resume", "buy", "sell", "bot"):
+            if call_back_tag not in (callbacktags.START, callbacktags.RESUME, callbacktags.BUY, callbacktags.SELL, "bot"):
                 keyboard.append(
                     [
                         InlineKeyboardButton(

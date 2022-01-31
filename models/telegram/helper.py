@@ -87,7 +87,7 @@ class TelegramHelper:
                 else self.atr72pcnt
             )
             self.enableleverage = (
-                self.config["scanner"]["enableleverage"]
+                bool(self.config["scanner"]["enableleverage"])
                 if "enableleverage" in self.config["scanner"]
                 else self.enableleverage
             )
@@ -117,15 +117,15 @@ class TelegramHelper:
                 else 0
             )
             self.enable_buy_next = (
-                self.config["scanner"]["enable_buy_next"]
+                bool(self.config["scanner"]["enable_buy_next"])
                 if "enable_buy_next" in self.config["scanner"]
                 else True
             )
-            self.logger_level = (
-                self.config["scanner"]["logger_level"]
-                if "logger_level" in self.config["scanner"]
-                else "INFO"
-            )
+            # self.logger_level = (
+            #     self.config["scanner"]["logger_level"]
+            #     if "logger_level" in self.config["scanner"]
+            #     else "INFO"
+            # )
             self.logger_level = (
                 self.config["telegram"]["logger_level"]
                 if "logger_level" in self.config["telegram"]
@@ -162,7 +162,7 @@ class TelegramHelper:
     def read_data(self, name: str = "data.json") -> bool:
         ''' Read data from json file '''
         fname = name if name.__contains__(".json") else f"{name}.json"
-        self.logger.debug("METHOD(read_data) - DATA(%s)", fname)
+        # self.logger.debug("METHOD(read_data) - DATA(%s)", fname)
         read_ok, try_cnt = False, 0
         while not read_ok and try_cnt <= 5:
             try_cnt += 1

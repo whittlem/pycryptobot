@@ -340,8 +340,9 @@ class TelegramHandler:
         elif query.data in ("scanonly", "noscan", "startmarket"):
             if query.data == "startmarket":
                 self._check_scheduled_job(update, context)
-            context.bot.send_message(chat_id=update.effective_message.chat_id,
-                                text="Market Scanner Started")
+            self.helper.send_telegram_message(update, "Market Scanner Started", context=context)
+            # context.bot.send_message(chat_id=update.effective_message.chat_id,
+            #                     text="Market Scanner Started 2")
             self.actions.start_market_scan(
                 update,
                 context,
@@ -584,7 +585,7 @@ class TelegramHandler:
         ]
 
         reply_markup = InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
-        reply = f"<b>Are you sure you want to {'buy' if trade_choice==35 else 'sell'} {query.data.replace('_', ' ')}?</b>"
+        reply = f"<b>Are you sure you want to {'buy' if trade_choice==callbacktags.CONFIRMBUY else 'sell'} {query.data}?</b>"
         self.helper.send_telegram_message(update, reply, reply_markup)
 
     def _check_scheduled_job(self, update, context):
