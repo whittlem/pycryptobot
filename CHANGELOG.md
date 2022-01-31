@@ -11,7 +11,7 @@ Upgrade library dependencies (if required):
 ## [5.2.6] - 2022-01-30
 
 - fixed some spelling mistakes
-- supressed some of the Kucoin error messages, only displays after last retry attempt
+- suppressed some of the Kucoin error messages, only displays after last retry attempt
 - cleaned up a couple of the retry loops for Kucoin API to make more efficient
 - moved the buy/sell error check code further down pycryptobot.py to allow other variables to be set first
 
