@@ -343,7 +343,7 @@ class TelegramActions:
                 reply = "<i>Gathering market data\nplease wait...</i> \u23F3"
                 self.helper.send_telegram_message(update, reply, context=context)
             try:
-                self.helper.logger.info("Starting Market Scanner")
+                self.helper.logger.info("Starting Market Scan")
                 subprocess.getoutput(f"python3 {scanner_script_file}")
             except Exception as err:
                 update.effective_message.reply_html("<b>scanning failed.</b>")
@@ -541,6 +541,7 @@ class TelegramActions:
                 f"Operation Complete.</b><i>\n- {total_bots_started} started"\
                     f"\n- {active_at_start + total_bots_started} running</i>"
         )
+        self.helper.logger.info("Market Scan Complete")
 
     def delete_response(self, update):
         """delete selected bot"""
