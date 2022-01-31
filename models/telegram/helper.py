@@ -4,6 +4,7 @@ import platform
 import subprocess
 import json
 import logging
+from time import sleep
 from json.decoder import JSONDecodeError
 # from time import sleep
 from datetime import datetime
@@ -178,9 +179,14 @@ class TelegramHelper:
             except FileNotFoundError:
                 if try_cnt == 5:
                     self.logger.error("File Not Found {%s}", fname)
+                else:
+                    sleep(0.5)
             except JSONDecodeError:
                 if try_cnt == 5:
                     self.logger.error("Unable to read file {%s}", fname)
+                else:
+                    sleep(0.5)
+            
         return read_ok
 
     def write_data(self, name: str = "data.json") -> None:
