@@ -204,23 +204,23 @@ class ConfigEditor:
             else:
                 keyboard.append([buttons[i]])
             i += 2
-
+        if exchange not in ("scanner", "screener"):
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        "Granularity",
+                        callback_data=self.helper.create_callback_data(
+                            callbacktags.GRANULARITY, exchange
+                        ),
+                    )
+                ]
+            )
         keyboard.append(
             [
                 InlineKeyboardButton(
                     "\U0001F4BE Save",
                     callback_data=self.helper.create_callback_data(
                         callbacktags.SAVECONFIG
-                    ),
-                )
-            ]
-        )
-        keyboard.append(
-            [
-                InlineKeyboardButton(
-                    "Granularity",
-                    callback_data=self.helper.create_callback_data(
-                        callbacktags.GRANULARITY, exchange
                     ),
                 )
             ]
@@ -352,24 +352,22 @@ class ConfigEditor:
         self.helper.send_telegram_message(update, "<b>Config File Updated</b>")
 
     def get_granularity(self, update, exchange, context):
-        exchange = self.exchange_convert(exchange)
+        cb_exchange = self.exchange_convert(exchange_str=exchange)
         buttons = []
         for gran in Granularity:
-            print(gran.medium)
-            # for prop in config_properties["normal"]:
             config_value = (
                 self.helper.config[exchange]["config"]["granularity"]
                 if "granularity" in self.helper.config[exchange]["config"]
                 else "SS"
             )
+            gran_convert = gran.to_integer if exchange == "coinbasepro" else gran.to_short if exchange == "kucoin" else gran.to_medium
             light_icon = (
-                "\U0001F7E2" if config_value == gran.to_short else ""
-            )  # "\U0001F534"
+                "\U0001F534" if config_value != str(gran_convert) else "\U0001F7E2") #U0001F7E2
 
             buttons.append(
                 InlineKeyboardButton(
                     f"{light_icon} {gran.name}",
-                    callback_data=f"{exchange}_granularity_({gran.name})",
+                    callback_data=self.helper.create_callback_data(callbacktags.GRANULARITY, cb_exchange, gran.name) #f"{cb_exchange}_granularity_({gran.name})",
                 )
             )
 
@@ -387,15 +385,22 @@ class ConfigEditor:
             [
                 InlineKeyboardButton(
                     f"{light_icon} Smart Switch",
-                    callback_data=f"{exchange}_granularity_(smartswitch)",
+                    callback_data=self.helper.create_callback_data(callbacktags.GRANULARITY, cb_exchange, "smartswitch") #f"{exchange}_granularity_(smartswitch)",
                 )
             ]
         )
 
         keyboard.append(
-            [InlineKeyboardButton("\U0001F4BE Save", callback_data="save_config")]
+            [InlineKeyboardButton("\U0001F4BE Save", callback_data=self.helper.create_callback_data(callbacktags.SAVECONFIG))] # "save_config")]
         )
-
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    "\U000025C0 Back",
+                    callback_data=self.helper.create_callback_data(callbacktags.BACK),
+                )
+            ]
+        )
         self.helper.send_telegram_message(
             update,
             f"<b>{exchange.capitalize()} Granularity Options.</b>",

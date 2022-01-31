@@ -41,7 +41,7 @@ class TelegramControl:
         if len(buttons) > 0:
             self.helper.send_telegram_message(
                 update,
-                f"<b>What do you want to {call_back_tag}?</b>",
+                f"<b>What do you want to {'buy' if call_back_tag==35 else 'sell'}?</b>",
                 self.sort_inline_buttons(buttons, f"{call_back_tag}"),
             )
         else:
@@ -168,7 +168,7 @@ class TelegramControl:
 
     def ask_stop_bot_list(self, update: Update):
         ''' Get bot stop list '''
-        self._ask_bot_list(update, "stop", "active")
+        self._ask_bot_list(update, callbacktags.STOP, "active")
 
     def stop_bot_response(self, update: Update, context):
         ''' Stop bot list response '''
@@ -176,7 +176,7 @@ class TelegramControl:
 
     def ask_pause_bot_list(self, update: Update):
         ''' Get pause bot list '''
-        self._ask_bot_list(update, "pause", "active")
+        self._ask_bot_list(update, callbacktags.PAUSE, "active")
 
     def pause_bot_response(self, update: Update, context):
         ''' Pause bot list response '''
@@ -184,7 +184,7 @@ class TelegramControl:
 
     def ask_resume_bot_list(self, update: Update):
         ''' Get resume bot list '''
-        self._ask_bot_list(update, "resume", "paused")
+        self._ask_bot_list(update, callbacktags.RESUME, "paused")
 
     def resume_bot_response(self, update: Update, context):
         ''' Resume bot list response '''
@@ -192,15 +192,15 @@ class TelegramControl:
 
     def ask_sell_bot_list(self, update):
         """Manual sell request (asks which coin to sell)"""
-        self._ask_bot_list(update, "sell", "active")
+        self._ask_bot_list(update, callbacktags.SELL, "active")
 
     def ask_buy_bot_list(self, update):
         """Manual buy request"""
-        self._ask_bot_list(update, "buy", "active")
+        self._ask_bot_list(update, callbacktags.BUY, "active")
 
     def ask_restart_bot_list(self, update: Update):
         ''' Get restart bot list '''
-        self._ask_bot_list(update, "restart", "active")
+        self._ask_bot_list(update, callbacktags.RESTART, "active")
 
     def restart_bot_response(self, update: Update):
         ''' Restart bot list response '''

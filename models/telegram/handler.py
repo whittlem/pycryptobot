@@ -243,8 +243,8 @@ class TelegramHandler:
             self.control.action_bot_response(update, "reload", "reload", "active")
         # elif query.data.__contains__("_granularity_"):
         #     self.editor.get_granularity(update, query.data[: query.data.find("_")])
-        elif query.data.__contains__("_granularity"):
-            self.editor.get_granularity(update, query.data[: query.data.find("_")], context)
+        elif callback_json is not None and callback_json["c"] == callbacktags.GRANULARITY:
+            self.editor.get_granularity(update, callback_json["e"], context)
         
 
         # Restart Bots
@@ -303,8 +303,8 @@ class TelegramHandler:
         # elif query.data.__contains__("buy_"):
         #     self.ask_confimation(update)
         elif callback_json is not None and callback_json["c"] == callbacktags.BUY:
-            update.callback_query.data = callback_json["p"]
-            self.ask_confimation(update)
+            update.callback_query.data = f"{callback_json['p']}"
+            self.ask_confimation(update, callbacktags.CONFIRMBUY)
         elif callback_json is not None and callback_json["c"] == callbacktags.CONFIRMBUY:
             update.callback_query.data = callback_json["p"]
             self.actions.buy_response(update, context)
@@ -317,8 +317,8 @@ class TelegramHandler:
         # elif query.data.__contains__("sell_"):
         #     self.ask_confimation(update)
         elif callback_json is not None and callback_json["c"] == callbacktags.SELL:
-            update.callback_query.data = callback_json["p"]
-            self.ask_confimation(update)
+            update.callback_query.data = f"{callback_json['p']}"
+            self.ask_confimation(update, callbacktags.CONFIRMSELL)
         elif callback_json is not None and callback_json["c"] == callbacktags.CONFIRMSELL:
             update.callback_query.data = callback_json["p"]
             self.actions.sell_response(update, context)
@@ -487,11 +487,11 @@ class TelegramHandler:
                         exchange.capitalize(), callback_data=self.helper.create_callback_data(callback,exchange) # f"{callback}_{exchange}"
                     )
                 )
-        # buttons.append(
-        #             InlineKeyboardButton(
-        #                 "Screener", callback_data=f"{callback}_screener"
-        #             )
-        #         )
+        buttons.append(
+                    InlineKeyboardButton(
+                        "Screener", callback_data=self.helper.create_callback_data(callback,"screener")#f"{callback}_screener"
+                    )
+                )
         i = 0
         while i <= len(buttons) - 1:
             if len(buttons) - 1 >= i + 2:
@@ -573,18 +573,18 @@ class TelegramHandler:
                 InlineKeyboardMarkup(keyboard, one_time_keyboard=True),
             )
 
-    def ask_confimation(self, update):
+    def ask_confimation(self, update, trade_choice):
         """confirmation question"""
         query = update.callback_query
         keyboard = [
             [
-                InlineKeyboardButton("Confirm", callback_data=self.helper.create_callback_data(callbacktags.CONFIRMBUY,"", query.data)) #f"confirm_{query.data}"),
+                InlineKeyboardButton("Confirm", callback_data=self.helper.create_callback_data(trade_choice,"", query.data)) #f"confirm_{query.data}"),
             ],
             [InlineKeyboardButton("Cancel", callback_data=self.helper.create_callback_data(callbacktags.CANCEL))] #)],
         ]
 
         reply_markup = InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
-        reply = f"<b>Are you sure you want to {query.data.replace('_', ' ')}?</b>"
+        reply = f"<b>Are you sure you want to {'buy' if trade_choice==35 else 'sell'} {query.data.replace('_', ' ')}?</b>"
         self.helper.send_telegram_message(update, reply, reply_markup)
 
     def _check_scheduled_job(self, update, context):
