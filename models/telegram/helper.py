@@ -307,9 +307,9 @@ class TelegramHelper:
 
         i = len(jsonfiles) - 1
         while i >= 0:
-            # read_ok = self.read_data(jsonfiles[i])
-            # if not read_ok:
-            #     jsonfiles.pop(i)
+            read_ok = self.read_data(jsonfiles[i])
+            if not read_ok:
+                jsonfiles.pop(i)
             if "botcontrol" in self.data:
                 margin_string = str(self.data["margin"]).strip()
                 if (
