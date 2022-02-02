@@ -228,8 +228,8 @@ class TelegramHelper:
                 try_cnt += 1
                 read_ok = self.read_data(jsonfiles[i])
                 sleep(0.2)
-            if try_cnt == 5:
-                self.logger.error(f"Get Active Bot list for bot {jsonfiles[i]} read_data retry count failed!")
+            if try_cnt >= 5:
+                self.logger.error(f"Get Active Bot list for bot {jsonfiles[i]} read_data retry count {try_cnt} failed!")
             if "botcontrol" in self.data:
                 if not self.data["botcontrol"]["status"] == state:
                     jsonfiles.pop(i)
