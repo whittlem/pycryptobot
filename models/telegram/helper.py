@@ -119,8 +119,10 @@ class TelegramHelper:
             ) as json_file:
                 self.data = json.load(json_file)
         except FileNotFoundError:
+            self.logger.warning(f"read_data file not found for {name}")
             return False
         except JSONDecodeError:
+            self.logger.warning(f"read_data Json Decode for {name}")
             return False
         return True
 
@@ -221,8 +223,13 @@ class TelegramHelper:
 
         i = len(jsonfiles) - 1
         while i >= 0:
-            while self.read_data(jsonfiles[i]) is False:
+            read_ok, try_cnt = False, 0
+            while not read_ok and try_cnt <= 5:
+                try_cnt += 1
+                read_ok = self.read_data(jsonfiles[i])
                 sleep(0.2)
+            if try_cnt >= 5:
+                self.logger.error(f"Get Active Bot list for bot {jsonfiles[i]} read_data retry count {try_cnt} failed!")
             if "botcontrol" in self.data:
                 if not self.data["botcontrol"]["status"] == state:
                     jsonfiles.pop(i)
