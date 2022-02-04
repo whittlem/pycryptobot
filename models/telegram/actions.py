@@ -422,9 +422,9 @@ class TelegramActions:
         manual_started_bots = self.helper.get_manual_started_bot_list()
         for file in active_bots_list:
             if (file not in scanned_bots)\
-            or (file not in open_order_bot_list)\
-            or (file not in manual_started_bots)\
-            or (file not in self.helper.data["scannerexceptions"]):
+            and (file not in open_order_bot_list)\
+            and (file not in manual_started_bots)\
+            and (file not in self.helper.data["scannerexceptions"]):
                 self.helper.stop_running_bot(file, "exit")
                 sleep(3)
             else:
