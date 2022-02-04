@@ -422,10 +422,10 @@ class TelegramActions:
         manual_started_bots = self.helper.get_manual_started_bot_list()
         self.helper.read_data()
         market_exceptions = self.helper.data["scannerexceptions"]
-        self.helper.logger.debug(scanned_bots)
-        self.helper.logger.debug(open_order_bot_list)
-        self.helper.logger.debug(manual_started_bots)
-        self.helper.logger.debug(market_exceptions)
+        # self.helper.logger.debug(scanned_bots)
+        # self.helper.logger.debug(open_order_bot_list)
+        # self.helper.logger.debug(manual_started_bots)
+        # self.helper.logger.debug(market_exceptions)
         for file in active_bots_list:
             if (file not in scanned_bots)\
             and (file not in open_order_bot_list)\
@@ -484,7 +484,7 @@ class TelegramActions:
                 outputmsg = f"<b>{ex} ({quote})</b> \u23F3 \n"
 
                 msg_cnt = 1
-                self.helper.logger.debug("%s", data)
+                # self.helper.logger.debug("%s", data)
                 for row in data:
                     if maxbotcount > 0 and (total_bots_started + active_at_start) >= maxbotcount:
                         break
