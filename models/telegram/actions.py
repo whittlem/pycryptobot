@@ -422,10 +422,10 @@ class TelegramActions:
         manual_started_bots = self.helper.get_manual_started_bot_list()
         self.helper.read_data()
         market_exceptions = self.helper.data["scannerexceptions"]
-        self.helper.debug(scanned_bots)
-        self.helper.debug(open_order_bot_list)
-        self.helper.debug(manual_started_bots)
-        self.helper.debug(market_exceptions)
+        self.helper.logger.debug(scanned_bots)
+        self.helper.logger.debug(open_order_bot_list)
+        self.helper.logger.debug(manual_started_bots)
+        self.helper.logger.debug(market_exceptions)
         for file in active_bots_list:
             if (file not in scanned_bots)\
             and (file not in open_order_bot_list)\
