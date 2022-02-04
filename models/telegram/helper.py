@@ -177,12 +177,12 @@ class TelegramHelper:
                     self.data = json.load(json_file)
                 read_ok = True
             except FileNotFoundError:
-                if try_cnt == 5:
+                if try_cnt == 20:
                     self.logger.error("File Not Found {%s}", fname)
                 # else:
                     # sleep(0.2)
             except JSONDecodeError:
-                if try_cnt == 5:
+                if try_cnt == 20:
                     self.logger.error("Unable to read file {%s}", fname)
                 # else:
                     # sleep(0.2)
@@ -288,9 +288,11 @@ class TelegramHelper:
 
         i = len(jsonfiles) - 1
         while i >= 0:
-            # read_ok = self.read_data(jsonfiles[i])
-            # if not read_ok:
-            #     jsonfiles.pop(i)
+            read_ok = self.read_data(jsonfiles[i])
+            if not read_ok:
+                jsonfiles.pop(i)
+                i -= 1
+                continue
             if "botcontrol" in self.data:
                 if not self.data["botcontrol"]["status"] == state:
                     jsonfiles.pop(i)
@@ -310,6 +312,8 @@ class TelegramHelper:
             read_ok = self.read_data(jsonfiles[i])
             if not read_ok:
                 jsonfiles.pop(i)
+                i -= 1
+                continue
             if "botcontrol" in self.data:
                 margin_string = str(self.data["margin"]).strip()
                 if (
@@ -333,6 +337,8 @@ class TelegramHelper:
             read_ok = self.read_data(jsonfiles[i])
             if not read_ok:
                 jsonfiles.pop(i)
+                i -= 1
+                continue
             elif "botcontrol" in self.data:
                 if "watchdog_ping" in self.data["botcontrol"]:
                     last_ping = datetime.strptime(self.data["botcontrol"]["watchdog_ping"], "%Y-%m-%dT%H:%M:%S.%f")
@@ -346,6 +352,27 @@ class TelegramHelper:
                     start_delta = int((current_dt - start_time).total_seconds())
                     if (self.data["botcontrol"]["status"] == state and start_delta < 300):
                         jsonfiles.pop(i)
+            i -= 1
+        jsonfiles.sort()
+        return [
+            x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles
+        ]
+
+    def get_manual_started_bot_list(self, startMethod: str = "scanner") -> List[str]:
+        """Return contents of telegram_data folder"""
+        self.logger.debug("METHOD(get_manual_started_bot_list) - DATA(%s)", startMethod)
+        jsonfiles = self.get_all_bot_list()
+
+        i = len(jsonfiles) - 1
+        while i >= 0:
+            read_ok = self.read_data(jsonfiles[i])
+            if not read_ok:
+                jsonfiles.pop(i)
+                i -= 1
+                continue
+            if "botcontrol" in self.data:
+                if not self.data["botcontrol"]["startmethod"] == startMethod:
+                    jsonfiles.pop(i)
             i -= 1
         jsonfiles.sort()
         return [

@@ -74,22 +74,12 @@ class TelegramActions:
     def start_open_orders(self, update, context):
         ''' Start bots for open trades (data.json) '''
         self.helper.logger.info("called start_open_orders")
-        query = update.callback_query
-        if query is not None:
-            query.answer()
-            self.helper.send_telegram_message(
-                update, "<b>Starting markets with open trades..</b>", context=context
-            )
-        else:
-            self.helper.send_telegram_message(
-                update, "<b>Starting markets with open trades..</b>", context=context
-            )
-            # update.effective_message.reply_html("<b>Starting markets with open trades..</b>")
-
+        self.helper.send_telegram_message(
+            update, "<b>Starting markets with open trades..</b>", context=context
+        )
         self.helper.read_data()
         for market in self.helper.data["opentrades"]:
             if not self.helper.is_bot_running(market):
-                # update.effective_message.reply_html(f"<i>Starting {market} crypto bot</i>")
                 self.helper.start_process(
                     market,
                     self.helper.data["opentrades"][market]["exchange"],
@@ -98,7 +88,6 @@ class TelegramActions:
                 )
             sleep(10)
         self.helper.send_telegram_message(update, "<i>Markets have been started</i>", context=context)
-        # update.effective_message.reply_html("<i>Markets have been started</i>")
         sleep(1)
         self.get_bot_info(update, context)
 
@@ -430,8 +419,12 @@ class TelegramActions:
         self.helper.logger.debug("stopping bots")
         active_bots_list = self.helper.get_active_bot_list()
         open_order_bot_list = self.helper.get_active_bot_list_with_open_orders()
+        manual_started_bots = self.helper.get_manual_started_bot_list()
         for file in active_bots_list:
-            if (file not in scanned_bots) or (file not in open_order_bot_list):
+            if (file not in scanned_bots)\
+            or (file not in open_order_bot_list)\
+            or (file not in manual_started_bots)\
+            or (file not in self.helper.data["scannerexceptions"]):
                 self.helper.stop_running_bot(file, "exit")
                 sleep(3)
             else:
