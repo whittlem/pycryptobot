@@ -558,9 +558,9 @@ class TelegramActions:
         """delete selected bot"""
         query = update.callback_query
         self.helper.logger.info("called delete_response - %s", query.data)
-        write_ok, try_cnt = False, 0
-        while not write_ok and try_cnt <= 5:
-            try_cnt += 1
+        write_ok, try_count = False, 0
+        while not write_ok and try_count <= 5:
+            try_count += 1
             self.helper.read_data()
             self.helper.data["markets"].pop(str(query.data).replace("delete_", ""))
 
@@ -577,9 +577,9 @@ class TelegramActions:
         """remove bot exception """
         query = update.callback_query
         self.helper.logger.info("called remove_exception_callback")
-        write_ok, try_cnt = False, 0
-        while not write_ok and try_cnt <= 5:
-            try_cnt += 1
+        write_ok, try_count = False, 0
+        while not write_ok and try_count <= 5:
+            try_count += 1
             self.helper.read_data()
             self.helper.data["scannerexceptions"].pop(
                 str(query.data).replace("delexcep_", "")

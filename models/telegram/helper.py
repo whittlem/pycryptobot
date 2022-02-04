@@ -164,9 +164,9 @@ class TelegramHelper:
         ''' Read data from json file '''
         fname = name if name.__contains__(".json") else f"{name}.json"
         # self.logger.debug("METHOD(read_data) - DATA(%s)", fname)
-        read_ok, try_cnt = False, 0
-        while not read_ok and try_cnt <= 20:
-            try_cnt += 1
+        read_ok, try_count = False, 0
+        while not read_ok and try_count <= 20:
+            try_count += 1
             try:
                 self.data = {}
                 with open(
@@ -177,12 +177,12 @@ class TelegramHelper:
                     self.data = json.load(json_file)
                 read_ok = True
             except FileNotFoundError:
-                if try_cnt == 20:
+                if try_count == 20:
                     self.logger.error("File Not Found {%s}", fname)
                 # else:
                     # sleep(0.2)
             except JSONDecodeError:
-                if try_cnt == 20:
+                if try_count == 20:
                     self.logger.error("Unable to read file {%s}", fname)
                 # else:
                     # sleep(0.2)

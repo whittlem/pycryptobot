@@ -136,9 +136,9 @@ class TelegramBot(TelegramBotBase):
             os.mkdir(os.path.join(self.datafolder, "telegram_data"))
 
         if os.path.isfile(os.path.join(self.datafolder, "telegram_data", "data.json")):
-            write_ok, try_cnt = False, 0
-            while not write_ok and try_cnt <= 5:
-                try_cnt += 1
+            write_ok, try_count = False, 0
+            while not write_ok and try_count <= 5:
+                try_count += 1
                 self.helper.read_data("data.json")
                 write_ok = True
                 if "trades" not in self.helper.data:
@@ -460,9 +460,9 @@ class TelegramBot(TelegramBotBase):
             return None
         self.helper.logger.info("called newbot_save")
         if update.message.text == "Yes":
-            write_ok, try_cnt = False, 0
-            while not write_ok and try_cnt <= 5:
-                try_cnt += 1
+            write_ok, try_count = False, 0
+            while not write_ok and try_count <= 5:
+                try_count += 1
                 try:
                     self.helper.read_data()
                     if "markets" in self.helper.data:
@@ -652,9 +652,9 @@ class TelegramBot(TelegramBotBase):
             self.helper.data.update({"scannerexceptions": {}})
 
         if not self.pair in self.helper.data["scannerexceptions"]:
-            write_ok, try_cnt = False, 0
-            while not write_ok and try_cnt <= 5:
-                try_cnt += 1
+            write_ok, try_count = False, 0
+            while not write_ok and try_count <= 5:
+                try_count += 1
                 self.helper.data["scannerexceptions"].update({self.pair: {}})
                 write_ok = self.helper.write_data()
                 if not write_ok:

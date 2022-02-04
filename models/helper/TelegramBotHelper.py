@@ -45,9 +45,9 @@ class TelegramBotHelper:
                 os.path.join(self.app.telegramdatafolder, "telegram_data", "data.json")
             ):
 
-                write_ok, try_cnt = False, 0
-                while not write_ok and try_cnt <= 5:
-                    try_cnt += 1
+                write_ok, try_count = False, 0
+                while not write_ok and try_count <= 5:
+                    try_count += 1
                     self._read_data("data.json")
                     write_ok = True
                     if "markets" not in self.data:
@@ -60,9 +60,9 @@ class TelegramBotHelper:
                         self.data.update({"opentrades": {}})
                         write_ok = self._write_data("data.json")
             else:
-                write_ok, try_cnt = False, 0
-                while not write_ok and try_cnt <= 5:
-                    try_cnt += 1
+                write_ok, try_count = False, 0
+                while not write_ok and try_count <= 5:
+                    try_count += 1
                     ds = {"trades": {}, "markets": {}, "scannerexceptions": {}, "opentrades": {}}
                     self.data = ds
                     write_ok = self._write_data("data.json")
@@ -86,9 +86,9 @@ class TelegramBotHelper:
     def _read_data(self, name: str = "") -> bool:
         file = self.filename if name == "" else name
 
-        read_ok, try_cnt = False, 0
-        while not read_ok and try_cnt <= 5:
-            try_cnt += 1
+        read_ok, try_count = False, 0
+        while not read_ok and try_count <= 5:
+            try_count += 1
             try:
                 with open(
                     os.path.join(self.app.telegramdatafolder, "telegram_data", file),
@@ -195,9 +195,9 @@ class TelegramBotHelper:
 
     def closetrade(self, ts, price, margin):
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
-            write_ok, try_cnt = False, 0
-            while not write_ok and try_cnt <= 5:
-                try_cnt += 1
+            write_ok, try_count = False, 0
+            while not write_ok and try_count <= 5:
+                try_count += 1
                 self._read_data("data.json")
                 self.data["trades"].update(
                     {ts: {"pair": self.market, "price": price, "margin": margin}}
@@ -280,9 +280,9 @@ class TelegramBotHelper:
 
     def add_open_order(self):
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
-            write_ok, try_cnt = False, 0
-            while not write_ok and try_cnt <= 5:
-                try_cnt += 1
+            write_ok, try_count = False, 0
+            while not write_ok and try_count <= 5:
+                try_count += 1
                 self._read_data("data.json")
                 if self.market in self.data["opentrades"]:
                     if self.exchange != self.data["opentrades"][self.market]:
@@ -294,9 +294,9 @@ class TelegramBotHelper:
 
     def remove_open_order(self):
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
-            write_ok, try_cnt = False, 0
-            while not write_ok and try_cnt <= 5:
-                try_cnt += 1
+            write_ok, try_count = False, 0
+            while not write_ok and try_count <= 5:
+                try_count += 1
                 self._read_data("data.json")
 
                 if self.market not in self.data["opentrades"]:
