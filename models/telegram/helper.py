@@ -315,8 +315,7 @@ class TelegramHelper:
                 i -= 1
                 continue
             if "botcontrol" in self.data:
-                margin_string = str(self.data["margin"]).strip()
-                if margin_string != "":
+                if self.data["margin"] == " ":
                     jsonfiles.pop(i)
             i -= 1
         jsonfiles.sort()
