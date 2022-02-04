@@ -420,11 +420,17 @@ class TelegramActions:
         active_bots_list = self.helper.get_active_bot_list()
         open_order_bot_list = self.helper.get_active_bot_list_with_open_orders()
         manual_started_bots = self.helper.get_manual_started_bot_list()
+        self.helper.read_data()
+        market_exceptions = self.helper.data["scannerexceptions"]
+        self.helper.debug(scanned_bots)
+        self.helper.debug(open_order_bot_list)
+        self.helper.debug(manual_started_bots)
+        self.helper.debug(market_exceptions)
         for file in active_bots_list:
             if (file not in scanned_bots)\
             and (file not in open_order_bot_list)\
             and (file not in manual_started_bots)\
-            and (file not in self.helper.data["scannerexceptions"]):
+            and (file not in market_exceptions):
                 self.helper.stop_running_bot(file, "exit")
                 sleep(3)
             else:

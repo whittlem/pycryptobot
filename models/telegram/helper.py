@@ -316,10 +316,7 @@ class TelegramHelper:
                 continue
             if "botcontrol" in self.data:
                 margin_string = str(self.data["margin"]).strip()
-                if (
-                    not self.data["botcontrol"]["status"] == state
-                    and margin_string != ""
-                ):
+                if margin_string != "":
                     jsonfiles.pop(i)
             i -= 1
         jsonfiles.sort()
@@ -358,7 +355,7 @@ class TelegramHelper:
             x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles
         ]
 
-    def get_manual_started_bot_list(self, startMethod: str = "scanner") -> List[str]:
+    def get_manual_started_bot_list(self, startMethod: str = "telegram") -> List[str]:
         """Return contents of telegram_data folder"""
         self.logger.debug("METHOD(get_manual_started_bot_list) - DATA(%s)", startMethod)
         jsonfiles = self.get_all_bot_list()
