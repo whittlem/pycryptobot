@@ -552,20 +552,18 @@ class TelegramBot(TelegramBotBase):
                 context.bot.send_message(chat_id=update.effective_message.chat_id,
                                     text=f"ERROR: {context.error.message}",
                                     parse_mode="HTML")
-        except Exception as err: # pylint: disable=bare-except
+        except Exception as err: # pylint: disable=broad-except
             print(err)
-        # self.helper.send_telegram_message(update, context.error)
+
         self.helper.logger.error(msg="Exception while handling an update:", exc_info=context.error)
         try:
             if "HTTPError" in context.error.args[0]:
-                while self.checkconnection() == False:
+                while self.checkconnection() is False:
                     self.helper.logger.warning("No internet connection found")
                     self.updater.start_polling(poll_interval=30)
                     sleep(30)
                 self.updater.start_polling()
                 return
-            # else:
-            # logger.error(msg="Exception while handling an update:", exc_info=context.error)
         except: # pylint: disable=bare-except
             pass
 
