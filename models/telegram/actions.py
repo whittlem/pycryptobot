@@ -282,7 +282,7 @@ class TelegramActions:
         use_default_scanner: bool = True,
         scanmarkets: bool = True,
         startbots: bool = True,
-        debug: bool = False,
+        # debug: bool = False,
     ):
         ''' Start market scanner/screener '''
         # Check whether using the scanner or the screener - use correct config file etc
@@ -412,7 +412,7 @@ class TelegramActions:
                                 >= self.helper.config["scanner"]["atr72_pcnt"]
                             ):
                                 scanned_bots.append(row)
-                except:
+                except: # pylint: disable=bare-except
                     pass
         if bool(self.helper.settings["notifications"]["enable_screener"]):
             update.effective_message.reply_html("<i>stopping bots..</i>")
@@ -456,9 +456,7 @@ class TelegramActions:
         for ex in config:
             if maxbotcount > 0 and (total_bots_started + active_at_start) >= maxbotcount:
                 break
-            if exchange_bots_started >= bots_per_exchange:
-                exchange_bots_started = 0
-                continue
+            exchange_bots_started = 0
             for quote in config[ex]["quote_currency"]:
                 if bool(self.helper.settings["notifications"]["enable_screener"]):
                     update.effective_message.reply_html(

@@ -4,7 +4,7 @@ import platform
 import subprocess
 import json
 import logging
-from time import sleep
+# from time import sleep
 from json.decoder import JSONDecodeError
 # from time import sleep
 from datetime import datetime
@@ -139,14 +139,14 @@ class TelegramHelper:
         try:
             query = update.callback_query
             query.answer()
-        except:
+        except: # pylint: disable=bare-except
             pass
         try:
             if markup is None:
                 query.edit_message_text(reply, parse_mode="HTML")
             else:
                 query.edit_message_text(reply, reply_markup=markup, parse_mode="HTML")
-        except Exception as err:
+        except: # pylint: disable=bare-except
             try:
                 context.bot.edit_message_text(chat_id=update.effective_message.chat_id,
                                 message_id=update.effective_message.message_id,
@@ -154,7 +154,7 @@ class TelegramHelper:
                                 reply_markup=markup,
                                 parse_mode="HTML"
                                 )
-            except:
+            except: # pylint: disable=bare-except
                 context.bot.send_message(chat_id=update.effective_message.chat_id,
                                 text=reply,
                                 reply_markup=markup,
@@ -228,7 +228,7 @@ class TelegramHelper:
                 encoding="utf8",
             ) as outfile:
                 json.dump(self.config, outfile, indent=4)
-        except:
+        except: # pylint: disable=bare-except
             return
 
     def read_screener_config(self):
@@ -254,7 +254,7 @@ class TelegramHelper:
                 encoding="utf8",
             ) as outfile:
                 json.dump(self.screener, outfile, indent=4)
-        except:
+        except: # pylint: disable=bare-except
             return
 
     def get_all_bot_list(self) -> List[str]:
