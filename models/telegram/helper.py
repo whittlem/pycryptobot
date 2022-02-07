@@ -375,6 +375,26 @@ class TelegramHelper:
             x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles
         ]
 
+    def get_exchange_bot_ruuning_count(self, exchange):
+        """Return contents of telegram_data folder"""
+        self.logger.debug("METHOD(get_exchange_bot_ruuning_count) - DATA(%s)", exchange)
+        jsonfiles = self.get_all_bot_list()
+
+        i = len(jsonfiles) - 1
+        while i >= 0:
+            read_ok = self.read_data(jsonfiles[i])
+            if not read_ok:
+                jsonfiles.pop(i)
+                i -= 1
+                continue
+            if "exchange" in self.data:
+                if not self.data["exchange"] == exchange:
+                    jsonfiles.pop(i)
+            i -= 1
+        # jsonfiles.sort()
+        jsonfiles.count()
+        return jsonfiles.count()
+
     def is_bot_running(self, pair) -> bool:
         ''' Check is bot running (pair.json file exists)'''
         self.logger.debug("METHOD(is_bot_running) - DATA(%s)", pair)
