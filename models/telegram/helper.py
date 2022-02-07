@@ -392,7 +392,7 @@ class TelegramHelper:
                     jsonfiles.pop(i)
             i -= 1
         # jsonfiles.sort()
-        jsonfiles.count()
+        # jsonfiles.count()
         self.logger.debug("METHOD(get_exchange_bot_ruuning_count) - RETURN(%s)", len(jsonfiles))
         return len(jsonfiles)
 
