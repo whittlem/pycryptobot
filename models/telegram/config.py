@@ -126,13 +126,19 @@ class ConfigEditor:
         elif isinstance(callback, int):
             exchange = self.exchange_convert(callback)
         else:
-            exchange = callback
+            try:
+                callback_json = json.loads(query.data)
+                if callback_json["c"] == callbacktags.SCREENER:
+                    exchange = "screener"
+                    callback = callback_json["e"]
+            except: # pylint: disable=bare-except
+                exchange = callback
 
         buttons = []
         if exchange == "scanner":
             config_properties = self.get_scanner_config_from_file()
         elif exchange == "screener":
-            config_properties = self.get_screener_config_from_file("binance")
+            config_properties = self.get_screener_config_from_file(callback)
         else:
             config_properties = self.get_config_from_file(exchange)
 

@@ -99,7 +99,7 @@ class TelegramHandler:
         callback_json = None
         try:
             callback_json = json.loads(query.data)
-        except:
+        except: # pylint: disable=bare-except
             pass
 
         # Default Cancel Button
@@ -148,49 +148,23 @@ class TelegramHandler:
         elif query.data == "editconfig":
             self.helper.load_config()
             self.ask_exchange_options(update, "edit")
-        # elif query.data.__contains__("edit_"):
-        #     self.editor.get_config_options(update, context)
+        elif callback_json is not None and callback_json["c"] == "edit" and callback_json["e"] == "screener":
+            self.ask_exchange_options(update, callbacktags.SCREENER)
+        elif callback_json is not None and callback_json["c"] == callbacktags.SCREENER:
+            self.editor.get_config_options(update, context, callback_json["e"])
         elif callback_json is not None and callback_json["c"] == "edit":
             update.callback_query.data = callback_json["e"]
             self.editor.get_config_options(update, context)
-        # elif query.data.__contains__("_disable_"):
-        #     self.editor.disable_option(
-        #         query.data[: query.data.find("_")],
-        #         query.data[query.data.rfind("(") +1 : query.data.rfind(")")])
-        #     self.editor.get_config_options(update, context)  # refresh buttons
         elif callback_json is not None and callback_json["c"] == callbacktags.DISABLE:
             self.editor.disable_option(callback_json["e"], callback_json["p"])
             self.editor.get_config_options(update, context, callback_json["e"])  # refresh buttons
-
-        # elif query.data.__contains__("_enable_"):
-        #     self.editor.enable_option(
-        #         query.data[: query.data.find("_")],
-        #         query.data[query.data.rfind("(") +1 : query.data.rfind(")")],
-        #     )
-        #     self.editor.get_config_options(update, context)  # refresh buttons
         elif callback_json is not None and callback_json["c"] == callbacktags.ENABLE:
             self.editor.enable_option(callback_json["e"], callback_json["p"])
             self.editor.get_config_options(update, context, callback_json["e"])  # refresh buttons
-
-        # elif query.data.__contains__("_float_"):
-        #     self.ask_percent_value(update, "float")
         elif callback_json is not None and callback_json["c"] == callbacktags.FLOAT:
             self.ask_percent_value(update, "float")
-
-        # elif query.data.__contains__("_integer_"):
-        #     self.ask_percent_value(update, "integer")
         elif callback_json is not None and callback_json["c"] == callbacktags.INTEGER:
             self.ask_percent_value(update, "integer")
-
-        # elif query.data.__contains__("increase"):
-        #     unit_size = 0.1 if query.data.__contains__("float") else 1
-        #     self.editor.increase_value(
-        #         query.data[: query.data.find("_")],
-        #         query.data[query.data.rfind("_") + 1 :],
-        #         unit_size,
-        #     )
-        #     typestr = "float" if query.data.__contains__("float") else "integer"
-        #     self.ask_percent_value(update, typestr)
         elif callback_json is not None and callback_json["c"] == callbacktags.INCREASEINT:
             unit_size = 1
             self.editor.increase_value(callback_json["e"], callback_json["p"], unit_size)
@@ -201,16 +175,6 @@ class TelegramHandler:
             self.editor.increase_value(callback_json["e"], callback_json["p"], unit_size)
             typestr = "float"
             self.ask_percent_value(update, typestr)
-
-        # elif query.data.__contains__("decrease"):
-        #     unit_size = 0.1 if query.data.__contains__("float") else 1
-        #     self.editor.decrease_value(
-        #         query.data[: query.data.find("_")],
-        #         query.data[query.data.rfind("_") + 1 :],
-        #         unit_size,
-        #     )
-        #     type_str = "float" if query.data.__contains__("float") else "integer"
-        #     self.ask_percent_value(update, type_str)
         elif callback_json is not None and callback_json["c"] == callbacktags.DECREASEINT:
             unit_size = 1
             self.editor.decrease_value(callback_json["e"], callback_json["p"], unit_size)
@@ -221,15 +185,9 @@ class TelegramHandler:
             self.editor.decrease_value(callback_json["e"], callback_json["p"], unit_size)
             typestr = "float"
             self.ask_percent_value(update, typestr)
-
-        # elif query.data.__contains__("_done"):
-        #     self.editor.get_config_options(update, query.data[: query.data.find("_")])
         elif callback_json is not None and callback_json["c"] == callbacktags.DONE:
             self.editor.get_config_options(update, context, int(callback_json["e"]))
-        # elif query.data == "save_config":
-        #     self.editor.save_updated_config(update)
-        #     self.helper.load_config()
-        #     self.ask_exchange_options(update, "edit")
+
         elif callback_json is not None and callback_json["c"] == callbacktags.SAVECONFIG:
             self.editor.save_updated_config(update)
             self.helper.load_config()
@@ -481,19 +439,23 @@ class TelegramHandler:
         """get exchanges from config file"""
         keyboard = []
         buttons = []
-        for exchange in self.helper.config:
+        exchange_list = self.helper.config
+        if callback == callbacktags.SCREENER:
+            exchange_list = self.helper.screener
+        for exchange in exchange_list:
             if exchange not in ("telegram"):
                 buttons.append(
                     InlineKeyboardButton(
                         exchange.capitalize(), callback_data=self.helper.create_callback_data(callback,exchange) # f"{callback}_{exchange}"
                     )
                 )
-        buttons.append(
+        i = 0
+        if callback != callbacktags.SCREENER:
+            buttons.append(
                     InlineKeyboardButton(
                         "Screener", callback_data=self.helper.create_callback_data(callback,"screener")#f"{callback}_screener"
                     )
                 )
-        i = 0
         while i <= len(buttons) - 1:
             if len(buttons) - 1 >= i + 2:
                 keyboard.append([buttons[i], buttons[i + 1], buttons[i + 2]])
@@ -502,20 +464,19 @@ class TelegramHandler:
             else:
                 keyboard.append([buttons[i]])
             i += 3
+        if callback != callbacktags.SCREENER:
             keyboard.append(
-            [
-                InlineKeyboardButton(
-                    "Reload all running bots", callback_data=self.helper.create_callback_data(callbacktags.RELOADCONFIG)# "reload_config"
-                )
-            ]
-        )
-            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        "Reload all running bots", callback_data=self.helper.create_callback_data(callbacktags.RELOADCONFIG)# "reload_config"
+                    )
+                ]
+            )
+        keyboard.append(
                 [InlineKeyboardButton("\U000025C0 Back", callback_data=self.helper.create_callback_data(callbacktags.BACK))]
             )
 
         reply_markup = InlineKeyboardMarkup(keyboard)
-        # query = update.callback_query
-        # query.answer()
 
         self.helper.send_telegram_message(update, "<b>Select exchange</b>", reply_markup)
 
