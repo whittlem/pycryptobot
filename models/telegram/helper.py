@@ -393,7 +393,7 @@ class TelegramHelper:
             i -= 1
         # jsonfiles.sort()
         jsonfiles.count()
-        return jsonfiles.count()
+        return len(jsonfiles)
 
     def is_bot_running(self, pair) -> bool:
         ''' Check is bot running (pair.json file exists)'''
