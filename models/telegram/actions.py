@@ -507,7 +507,7 @@ class TelegramActions:
                             self.helper.logger.debug(f"Ignoring ({row}) Leverage Pairs (enableleverage is disabled)...")
                         continue
 
-                    if row in self.helper.data["scannerexceptions"]:
+                    if row in market_exceptions:
                         outputmsg = (
                             outputmsg
                             + f"*** {row} found on scanner exception list ***\n"
