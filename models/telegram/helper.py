@@ -393,6 +393,7 @@ class TelegramHelper:
             i -= 1
         # jsonfiles.sort()
         jsonfiles.count()
+        self.logger.debug("METHOD(get_exchange_bot_ruuning_count) - RETURN(%s)", len(jsonfiles))
         return len(jsonfiles)
 
     def is_bot_running(self, pair) -> bool:
