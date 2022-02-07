@@ -48,14 +48,14 @@ s = sched.scheduler(time.time, time.sleep)
 
 pd.set_option('display.float_format', '{:.8f}'.format)
 
-def signal_handler(signum, frame):
+def signal_handler(signum):
     if signum == 2:
         print("Please be patient while websockets terminate!")
         #Logger.debug(frame)
         return
 
 
-def executeJob(
+def execute_job(
     sc=None,
     _app: PyCryptoBot = None,
     _state: AppState = None,
@@ -138,7 +138,7 @@ def executeJob(
                 _websocket.start()
             _app.setGranularity(_app.getGranularity())
             list(map(s.cancel, s.queue))
-            s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
+            s.enter(5, 1, execute_job, (sc, _app, _state, _technical_analysis, _websocket))
             # _app.read_config(_app.getExchange())
             telegram_bot.updatebotstatus("active")
 
@@ -153,7 +153,7 @@ def executeJob(
             _websocket.start()
             Logger.info("Restarting job in 30 seconds...")
             s.enter(
-                30, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket)
+                30, 1, execute_job, (sc, _app, _state, _technical_analysis, _websocket)
             )
 
     # increment _state.iterations
@@ -227,7 +227,7 @@ def executeJob(
                     try:
                         _state.iterations = trading_data.index.get_loc(str(simDate)) + 1
                         dateFound = True
-                    except:
+                    except: # pylint: disable=bare-except
                         simDate += timedelta(seconds=_app.getGranularity().value[0])
 
                 if (
@@ -324,7 +324,7 @@ def executeJob(
 
         _app.setGranularity(Granularity.FIVE_MINUTES)
         list(map(s.cancel, s.queue))
-        s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
+        s.enter(5, 1, execute_job, (sc, _app, _state, _technical_analysis, _websocket))
 
     if (
         (last_api_call_datetime.seconds > 60 or _app.isSimulation())
@@ -350,7 +350,7 @@ def executeJob(
 
         _app.setGranularity(Granularity.ONE_HOUR)
         list(map(s.cancel, s.queue))
-        s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
+        s.enter(5, 1, execute_job, (sc, _app, _state, _technical_analysis, _websocket))
 
     # use actual sim mode date to check smartchswitch
     if (
@@ -378,7 +378,7 @@ def executeJob(
 
         _app.setGranularity(Granularity.FIFTEEN_MINUTES)
         list(map(s.cancel, s.queue))
-        s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
+        s.enter(5, 1, execute_job, (sc, _app, _state, _technical_analysis, _websocket))
 
     # use actual sim mode date to check smartchswitch
     if (
@@ -405,7 +405,7 @@ def executeJob(
 
         _app.setGranularity(Granularity.ONE_HOUR)
         list(map(s.cancel, s.queue))
-        s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
+        s.enter(5, 1, execute_job, (sc, _app, _state, _technical_analysis, _websocket))
 
     if (
         _app.getExchange() == Exchange.BINANCE
@@ -416,7 +416,7 @@ def executeJob(
             Logger.error(f"error: data frame length is < 250 ({str(len(df))})")
             list(map(s.cancel, s.queue))
             s.enter(
-                300, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket)
+                300, 1, execute_job, (sc, _app, _state, _technical_analysis, _websocket)
             )
     else:
         if len(df) < 300:
@@ -427,7 +427,7 @@ def executeJob(
                 s.enter(
                     300,
                     1,
-                    executeJob,
+                    execute_job,
                     (sc, _app, _state, _technical_analysis, _websocket),
                 )
 
@@ -498,8 +498,7 @@ def executeJob(
                 )
 
                 if _app.enableexitaftersell and _app.startmethod not in (
-                    "standard",
-                    "telegram",
+                    "standard"
                 ):
                     sys.exit(0)
 
@@ -1975,7 +1974,7 @@ def executeJob(
                     s.enter(
                         0,
                         1,
-                        executeJob,
+                        execute_job,
                         (sc, _app, _state, _technical_analysis, None, df),
                     )
                 else:
@@ -1984,7 +1983,7 @@ def executeJob(
                     s.enter(
                         1,
                         1,
-                        executeJob,
+                        execute_job,
                         (sc, _app, _state, _technical_analysis, None, df),
                     )
 
@@ -2006,7 +2005,7 @@ def executeJob(
                 s.enter(
                     5,
                     1,
-                    executeJob,
+                    execute_job,
                     (sc, _app, _state, _technical_analysis, _websocket),
                 )
             else:
@@ -2015,7 +2014,7 @@ def executeJob(
                     s.enter(
                         15,
                         1,
-                        executeJob,
+                        execute_job,
                         (sc, _app, _state, _technical_analysis, _websocket),
                     )
                 else:
@@ -2023,7 +2022,7 @@ def executeJob(
                     s.enter(
                         60,
                         1,
-                        executeJob,
+                        execute_job,
                         (sc, _app, _state, _technical_analysis, _websocket),
                     )
 
@@ -2063,9 +2062,9 @@ def main():
         def runApp(_websocket):
             # run the first job immediately after starting
             if app.isSimulation():
-                executeJob(s, app, state, technical_analysis, _websocket, trading_data)
+                execute_job(s, app, state, technical_analysis, _websocket, trading_data)
             else:
-                executeJob(s, app, state, technical_analysis, _websocket)
+                execute_job(s, app, state, technical_analysis, _websocket)
 
             s.run()
 

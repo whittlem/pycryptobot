@@ -12,7 +12,7 @@ import argparse
 import os
 import json
 import subprocess
-import logging
+# import logging
 import re
 import urllib.request
 
@@ -298,7 +298,7 @@ class TelegramBot(TelegramBotBase):
 
     def trades(self, update, context):
         """List trades"""
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return
 
         if self.helper.read_data():
@@ -317,7 +317,7 @@ class TelegramBot(TelegramBotBase):
 
     def statsrequest(self, update: Updater, context):
         """Ask which exchange stats are wanted for"""
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return None
 
         self.helper.send_telegram_message(update, "Select the exchange", markup, context=context)
@@ -382,7 +382,7 @@ class TelegramBot(TelegramBotBase):
 
     def newbot_request(self, update: Updater, context):
         """start new bot ask which exchange"""
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return None
 
         self._question_which_exchange(update, context)
@@ -391,7 +391,7 @@ class TelegramBot(TelegramBotBase):
 
     def newbot_exchange(self, update, context):
         """start bot validate exchange and ask which market/pair"""
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return None
 
         if not self._answer_which_exchange(update, context):
@@ -403,7 +403,7 @@ class TelegramBot(TelegramBotBase):
 
     def newbot_any_overrides(self, update, context) -> None:
         """start bot validate market and ask if overrides required"""
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return None
 
         if not self._answer_which_pair(update, context):
@@ -422,7 +422,7 @@ class TelegramBot(TelegramBotBase):
 
     def newbot_market(self, update, context):
         """start bot - ask for overrides if none required ask to save bot"""
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return None
 
         if update.message.text == "No":
@@ -439,7 +439,7 @@ class TelegramBot(TelegramBotBase):
 
     def newbot_overrides(self, update, context):
         """start bot - ask to save bot"""
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return None
 
         # Telegram desktop client can auto replace -- with a single long dash
@@ -456,7 +456,7 @@ class TelegramBot(TelegramBotBase):
 
     def newbot_save(self, update, context):
         """start bot - save if required ask if want to start"""
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return None
         self.helper.logger.info("called newbot_save")
         if update.message.text == "Yes":
@@ -498,9 +498,8 @@ class TelegramBot(TelegramBotBase):
                             self.helper.send_telegram_message(update, f"{self.pair} saved \u2705", context=context)
                         else:
                             sleep(1)
-                except Exception as err:
+                except Exception as err:# pylint: disable=bare-except
                     print(err)
-
 
         reply_keyboard = [["Yes", "No"]]
         mark_up = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
@@ -510,7 +509,7 @@ class TelegramBot(TelegramBotBase):
 
     def newbot_start(self, update, context, startmethod: str = "telegram") -> None:
         """start bot - start bot if want"""
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return None
 
         if update.message.text == "No":
@@ -553,7 +552,7 @@ class TelegramBot(TelegramBotBase):
                 context.bot.send_message(chat_id=update.effective_message.chat_id,
                                     text=f"ERROR: {context.error.message}",
                                     parse_mode="HTML")
-        except Exception as err:
+        except Exception as err: # pylint: disable=bare-except
             print(err)
         # self.helper.send_telegram_message(update, context.error)
         self.helper.logger.error(msg="Exception while handling an update:", exc_info=context.error)
@@ -567,7 +566,7 @@ class TelegramBot(TelegramBotBase):
                 return
             # else:
             # logger.error(msg="Exception while handling an update:", exc_info=context.error)
-        except:
+        except: # pylint: disable=bare-except
             pass
 
     def done(self, update, context):
@@ -579,7 +578,7 @@ class TelegramBot(TelegramBotBase):
         try:
             urllib.request.urlopen("https://api.telegram.org")
             return True
-        except:
+        except: # pylint: disable=bare-except
             print("No internet connection")
             return False
 
@@ -628,7 +627,7 @@ class TelegramBot(TelegramBotBase):
         return EXCEPT_EXCHANGE
 
     def ExceptionPair(self, update, context):
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return
 
         self._answer_which_exchange(update, context)
@@ -639,7 +638,7 @@ class TelegramBot(TelegramBotBase):
 
     def ExceptionAdd(self, update, context):
         """start bot - save if required ask if want to start"""
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return None
 
         self.helper.logger.info("called ExceptionAdd")
@@ -672,14 +671,14 @@ class TelegramBot(TelegramBotBase):
         return ConversationHandler.END
 
     def ExceptionRemove(self, update, context):
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return
 
         self.control.ask_exception_bot_list(update, context)
         return
 
     def marginrequest(self, update, context):
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return
 
         self.handler.ask_margin_type(update, context)
@@ -687,7 +686,7 @@ class TelegramBot(TelegramBotBase):
 
     def showbotinfo(self, update, context) -> None:
         """Show running bot status"""
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return
 
         self.actions.get_bot_info(update, context)
@@ -700,7 +699,7 @@ class TelegramBot(TelegramBotBase):
 
     def buyrequest(self, update, context):
         """Manual buy request (asks which coin to buy)"""
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return
 
         self.control.ask_buy_bot_list(update)
@@ -708,7 +707,7 @@ class TelegramBot(TelegramBotBase):
 
     def showconfigrequest(self, update, context):
         """display config settings (ask which exchange)"""
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return
 
         self.handler.ask_exchange_options(update)
@@ -716,21 +715,21 @@ class TelegramBot(TelegramBotBase):
 
     def pausebotrequest(self, update, context) -> None:
         """Ask which bots to pause"""
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return
 
         self.control.ask_pause_bot_list(update)
 
     def restartbotrequest(self, update, context) -> None:
         """Ask which bot to restart"""
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return
 
         self.control.ask_resume_bot_list(update)
 
     def startallbotsrequest(self, update, context) -> None:
         """Ask which bot to start from start list (or all)"""
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return
 
         self.control.ask_start_bot_list(update)
@@ -738,7 +737,7 @@ class TelegramBot(TelegramBotBase):
 
     def stopbotrequest(self, update, context) -> None:
         """ask which active bots to stop (or all)"""
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return
 
         self.control.ask_stop_bot_list(update)
@@ -746,16 +745,16 @@ class TelegramBot(TelegramBotBase):
 
     def deleterequest(self, update, context):
         """ask which bot to delete"""
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return
 
         self.control.ask_delete_bot_list(update, context)
 
     def StartScanning(self, update, context):
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return
 
-        self.handler._check_scheduled_job(update, context)
+        self.handler._check_scheduled_job(update, context)# pylint: disable=protected-access
         self.helper.logger.info("Start scanning using default scanner? %s", bool(self.helper.use_default_scanner))
         self.helper.send_telegram_message(update, "Operation Started",context=context)
         self.actions.start_market_scan(
@@ -767,12 +766,12 @@ class TelegramBot(TelegramBotBase):
         )
 
     def StopScanning(self, update, context):
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update): # pylint: disable=protected-access
             return
-        self.handler._remove_scheduled_job(update, context)
+        self.handler._remove_scheduled_job(update, context) # pylint: disable=protected-access
 
     def cleandata(self, update, context) -> None:
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update): # pylint: disable=protected-access
             return
 
         self._cleandata()
@@ -781,13 +780,13 @@ class TelegramBot(TelegramBotBase):
         self.helper.send_telegram_message(update, "Operation Complete", context=context)
 
     def RestartBots(self, update, context):
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return None
 
         self.control.ask_restart_bot_list(update)
 
     def StartOpenOrderBots(self, update, context):
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return None
 
         self.actions.start_open_orders(update, context)
@@ -831,7 +830,7 @@ class TelegramBot(TelegramBotBase):
                 self.helper.send_telegram_message(update, "Pausing before next set", context=context)
 
     def getBotList(self, update, context):
-        if not self._check_if_allowed(context._user_id_and_data[0], update):
+        if not self._check_if_allowed(context._user_id_and_data[0], update):# pylint: disable=protected-access
             return None
 
         buttons = []
@@ -848,7 +847,7 @@ class TelegramBot(TelegramBotBase):
 
     def Request(self, update, context):
 
-        userid = context._user_id_and_data[0]
+        userid = context._user_id_and_data[0] # pylint: disable=protected-access
 
         if self._check_if_allowed(userid, update):
             self.helper.load_config()
@@ -966,7 +965,7 @@ def main():
     # log all errors
     dp.add_error_handler(botconfig.error)
 
-    botconfig._cleandata()
+    botconfig._cleandata()# pylint: disable=protected-access
 
     # Start the Bot
     botconfig.updater.start_polling()

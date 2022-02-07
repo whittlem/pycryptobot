@@ -599,6 +599,7 @@ class TelegramActions:
         )
 
     def get_closed_trades(self, update, days):
+        ''' Read closed trades from data.json file '''
         if self.helper.read_data():
             now = datetime.now()
             now -= timedelta(days=days)
