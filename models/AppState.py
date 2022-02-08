@@ -36,6 +36,7 @@ class AppState:
                 app.getAPISecret(),
                 app.getAPIPassphrase(),
                 app.getAPIURL(),
+                use_cache=app.useKucoinCache(),
             )
         else:
             self.api = None
@@ -68,10 +69,12 @@ class AppState:
         self.sell_count = 0
         self.sell_sum = 0
         self.prevent_loss = 0
+        self.tsl_triggered = 0
         self.margintracker = 0
         self.profitlosstracker = 0
         self.feetracker = 0
         self.buy_tracker = 0
+        self.trade_error_cnt = 0
 
         self.last_api_call_datetime = datetime.datetime.now() - datetime.timedelta(
             minutes=2

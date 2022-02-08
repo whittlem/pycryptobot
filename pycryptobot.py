@@ -65,6 +65,11 @@ def executeJob(
 ):
     """Trading bot job which runs at a scheduled interval"""
 
+    if app.isLive():
+        state.account.mode = "live"
+    else:
+        state.account.mode = "test"
+
     # This is used to control some API calls when using websockets
     last_api_call_datetime = datetime.now() - _state.last_api_call_datetime
     if last_api_call_datetime.seconds > 60:
@@ -76,6 +81,11 @@ def executeJob(
         controlstatus = telegram_bot.checkbotcontrolstatus()
         while controlstatus == "pause" or controlstatus == "paused":
             if controlstatus == "pause":
+                text_box = TextBox(80, 22)
+                text_box.singleLine()
+                text_box.center(f"Pausing Bot {_app.getMarket()}")
+                text_box.singleLine()
+                Logger.debug("Pausing Bot.")
                 print(str(datetime.now()).format() + " - Bot is paused")
                 _app.notifyTelegram(f"{_app.getMarket()} bot is paused")
                 telegram_bot.updatebotstatus("paused")
@@ -87,7 +97,12 @@ def executeJob(
             controlstatus = telegram_bot.checkbotcontrolstatus()
 
         if controlstatus == "start":
-            print(str(datetime.now()).format() + " - Bot has restarted")
+            text_box = TextBox(80, 22)
+            text_box.singleLine()
+            text_box.center(f"Restarting Bot {_app.getMarket()}")
+            text_box.singleLine()
+            Logger.debug("Restarting Bot.")
+            # print(str(datetime.now()).format() + " - Bot has restarted")
             _app.notifyTelegram(f"{_app.getMarket()} bot has restarted")
             telegram_bot.updatebotstatus("active")
             _app.read_config(_app.getExchange())
@@ -96,8 +111,37 @@ def executeJob(
                 _websocket.start()
 
         if controlstatus == "exit":
+            text_box = TextBox(80, 22)
+            text_box.singleLine()
+            text_box.center(f"Closing Bot {_app.getMarket()}")
+            text_box.singleLine()
+            Logger.debug("Closing Bot.")
             _app.notifyTelegram(f"{_app.getMarket()} bot is stopping")
+            telegram_bot.removeactivebot()
             sys.exit(0)
+
+        if controlstatus == "reload":
+            text_box = TextBox(80, 22)
+            text_box.singleLine()
+            text_box.center(f"Reloading config parameters {_app.getMarket()}")
+            text_box.singleLine()
+            Logger.debug("Reloading config parameters.")
+            _app.read_config(_app.getExchange())
+            if _app.enableWebsocket():
+                _websocket.close()
+                if _app.getExchange() == Exchange.BINANCE:
+                    _websocket = BWebSocketClient([app.getMarket()], app.getGranularity())
+                elif _app.getExchange() == Exchange.COINBASEPRO:
+                    _websocket = CWebSocketClient([app.getMarket()], app.getGranularity())
+                elif _app.getExchange() == Exchange.KUCOIN:
+                    _websocket = KWebSocketClient([app.getMarket()], app.getGranularity())
+                _websocket.start()
+            _app.setGranularity(_app.getGranularity())
+            list(map(s.cancel, s.queue))
+            s.enter(5, 1, executeJob, (sc, _app, _state, _technical_analysis, _websocket))
+            # _app.read_config(_app.getExchange())
+            telegram_bot.updatebotstatus("active")
+
 
     # reset _websocket every 23 hours if applicable
     if _app.enableWebsocket() and not _app.isSimulation():
@@ -407,6 +451,57 @@ def executeJob(
                     _app.notifyTelegram(
                         f"{_app.getMarket} last_action change detected from {last_action_current} to {_state.last_action}"
                     )
+
+            # this is used to confirm last trade if error occurred during trade process
+            # make sure signals and telegram info is set correctly, close bot if needed on sell
+            if _state.action == "check_buy" and _state.last_action == "BUY":
+                _state.trade_error_cnt = 0
+                _state.trailing_buy = 0
+                _state.action = None
+                telegram_bot.add_open_order()
+
+                Logger.warning(
+                    f"{_app.getMarket()} ({_app.printGranularity}) - {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                    f"Catching BUY that occurred previously. Updating signal information."
+                )
+
+                _app.notifyTelegram(
+                    _app.getMarket()
+                    + " ("
+                    + _app.printGranularity()
+                    + ") - "
+                    + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+                    + "\n"
+                    + "Catching BUY that occurred previously. Updating signal information."
+                )
+
+            elif _state.action == "check_sell" and _state.last_action == "SELL":
+                _state.prevent_loss = 0
+                _state.tsl_triggered = 0
+                _state.trade_error_cnt = 0
+                _state.action = None
+                telegram_bot.remove_open_order()
+
+                Logger.warning(
+                    f"{_app.getMarket()} ({_app.printGranularity}) - {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                    f"Catching SELL that occurred previously. Updating signal information."
+                )
+
+                _app.notifyTelegram(
+                    _app.getMarket()
+                    + " ("
+                    + _app.printGranularity()
+                    + ") - "
+                    + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+                    + "\n"
+                    + "Catching SELL that occurred previously. Updating signal information."
+                )
+
+                if _app.enableexitaftersell and _app.startmethod not in (
+                    "standard",
+                    "telegram",
+                ):
+                    sys.exit(0)
 
         if not _app.isSimulation():
             ticker = _app.getTicker(_app.getMarket(), _websocket)
@@ -1100,9 +1195,19 @@ def executeJob(
 
                 # if live
                 if _app.isLive():
-                    if not _app.insufficientfunds and _app.getBuyMinSize() < float(
-                        account.getBalance(_app.getQuoteCurrency())
-                    ):
+                    ac = account.getBalance()
+                    account.basebalance_before = 0.0
+                    account.quotebalance_before = 0.0
+                    try:
+                        df_base = ac[ac["currency"] == _app.getBaseCurrency()]["available"]
+                        account.basebalance_before = (0.0 if len(df_base) == 0 else float(df_base.values[0]))
+
+                        df_quote = ac[ac["currency"] == _app.getQuoteCurrency()]["available"]
+                        account.quotebalance_before = (0.0 if len(df_quote) == 0 else float(df_quote.values[0]))
+                    except:
+                        pass
+
+                    if not _app.insufficientfunds and _app.getBuyMinSize() < account.quotebalance_before:
                         if not _app.isVerbose():
                             if not _app.isSimulation() or (
                                 _app.isSimulation() and not _app.simResultOnly()
@@ -1115,42 +1220,21 @@ def executeJob(
                             text_box.center("*** Executing LIVE Buy Order ***")
                             text_box.singleLine()
 
-                        account.basebalance = 0.0
-                        account.quotebalance = 0.0
-
-                        ac = account.getBalance()
-                        try:
-                            df_base = ac[ac["currency"] == _app.getBaseCurrency()][
-                                "available"
-                            ]
-                            account.basebalance = (
-                                0.0 if len(df_base) == 0 else float(df_base.values[0])
-                            )
-
-                            df_quote = ac[ac["currency"] == _app.getQuoteCurrency()][
-                                "available"
-                            ]
-                            account.quotebalance = (
-                                0.0 if len(df_quote) == 0 else float(df_quote.values[0])
-                            )
-                        except:
-                            pass
                         # display balances
                         Logger.info(
-                            f"{_app.getBaseCurrency()} balance before order: {str(account.basebalance)}"
+                            f"{_app.getBaseCurrency()} balance before order: {str(account.basebalance_before)}"
                         )
                         Logger.info(
-                            f"{_app.getQuoteCurrency()} balance before order: {str(account.quotebalance)}"
+                            f"{_app.getQuoteCurrency()} balance before order: {str(account.quotebalance_before)}"
                         )
 
                         # execute a live market buy
-                        # _state.last_buy_size = float(account.getBalance(_app.getQuoteCurrency()))
-                        _state.last_buy_size = float(account.quotebalance)
+                        _state.last_buy_size = float(account.quotebalance_before)
 
                         if (
                             _app.getBuyMaxSize()
                             and _app.buyLastSellSize()
-                            and _state.last_sell_size > 0
+                            and _state.minimumOrderQuote(quote=_state.last_sell_size, balancechk = True)
                         ):
                             _state.last_buy_size = _state.last_sell_size
                         elif (
@@ -1159,68 +1243,91 @@ def executeJob(
                         ):
                             _state.last_buy_size = _app.getBuyMaxSize()
 
+                        # place the buy order
                         try:
                             resp = _app.marketBuy(
                                 _app.getMarket(),
                                 _state.last_buy_size,
                                 _app.getBuyPercent(),
                             )
-
+                            resp_error = 0
                             # Logger.debug(resp)
+                        except Exception as err:
+                            Logger.warning(f"Trade Error: {err}")
+                            resp_error = 1
 
-                            # display balances
-                            ac = account.getBalance()
+                        if resp_error == 0:
+                            account.basebalance_after = 0
+                            account.quotebalance_after = 0        
                             try:
-
+                                ac = account.getBalance()
                                 df_base = ac[ac["currency"] == _app.getBaseCurrency()]["available"]
-                                account.basebalance = (
+                                account.basebalance_after = (
                                     0.0
                                     if len(df_base) == 0
                                     else float(df_base.values[0])
                                 )
-
                                 df_quote = ac[ac["currency"] == _app.getQuoteCurrency()]["available"]
 
-                                account.quotebalance = (
+                                account.quotebalance_after = (
                                     0.0
                                     if len(df_quote) == 0
                                     else float(df_quote.values[0])
                                 )
-                            except:
-                                pass
+                            except Exception as err:
+                                Logger.warning(
+                                    f"Error: Balance not retrieved after trade for {app.getMarket()}.  Trying again.\n"
+                                    f"API Error Msg: {err}"
+                                )
 
-                        except:
-                            Logger.warning("Unable to place order")
-                            state.last_api_call_datetime -= timedelta(seconds=60)
+                            _state.trade_error_cnt = 0
+                            _state.trailing_buy = 0
+                            _state.last_action = "BUY"
+                            _state.action = "DONE"
+                            telegram_bot.add_open_order()
 
-                        Logger.info(
-                            f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance)}"
-                        )
-                        Logger.info(
-                            f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance)}"
-                        )
+                            Logger.info(
+                                f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance_after)}\n"
+                                f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance_after)}"
+                            )
 
-                        now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-                        _app.notifyTelegram(
-                            _app.getMarket()
-                            + " ("
-                            + _app.printGranularity()
-                            + ") - "
-                            + now
-                            + "\n"
-                            + "BUY at "
-                            + price_text
-                        )
+                            now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+                            _app.notifyTelegram(
+                                _app.getMarket()
+                                + " ("
+                                + _app.printGranularity()
+                                + ") - "
+                                + now
+                                + "\n"
+                                + "BUY at "
+                                + price_text
+                            )
 
-                        state.last_api_call_datetime -= timedelta(seconds=60)
-                        telegram_bot.add_open_order()
-                        _state.trailing_buy = 0
+                        else: # there was a response error
+                            # only attempt BUY 3 times before exception to prevent continuous loop 
+                            _state.trade_error_cnt += 1
+                            if _state.trade_error_cnt >= 2:  # 3 attempts made
+                                raise Exception(
+                                    f"Trade Error: BUY transaction attempted 3 times. Check log for errors"
+                                )
+
+                            # trigger a check of last trade on next iteration
+                            _state.last_action = None
+                            _state.action = "check_buy"
+                            Logger.warning(
+                                f"API Error: Unable to place buy order for {app.getMarket()}."
+                            )
+                            if not app.disableTelegramErrorMsgs():
+                                app.notifyTelegram(f"API Error: Unable to place buy order for {app.getMarket()}")
+                            time.sleep(30)
 
                     else:
                         Logger.warning(
                             "Unable to place order, insufficient funds or buyminsize has not been reached"
                         )
-                        state.last_api_call_datetime -= timedelta(seconds=60)
+
+                    state.last_api_call_datetime -= timedelta(seconds=60)
+
                 # if not live
                 else:
                     if _state.last_buy_size == 0 and _state.last_buy_filled == 0:
@@ -1235,7 +1342,7 @@ def executeJob(
                     elif (
                         _app.getBuyMaxSize() != None
                         and _app.buyLastSellSize()
-                        and _state.last_sell_size > 0
+                        and _state.last_sell_size > _state.minimumOrderQuote(quote=_state.last_sell_size, balancechk = True)
                     ):
                         _state.last_buy_size = _state.last_sell_size
 
@@ -1318,6 +1425,8 @@ def executeJob(
                         ignore_index=True,
                     )
 
+                    state.in_open_trade = True
+                    _state.last_action = "BUY"
                     state.last_api_call_datetime -= timedelta(seconds=60)
 
                 if _app.shouldSaveGraphs():
@@ -1338,13 +1447,6 @@ def executeJob(
             elif _state.action == "SELL":
                 # if live
                 if _app.isLive():
-                    account.basebalance = float(
-                        account.getBalance(_app.getBaseCurrency())
-                    )
-                    account.quotebalance = float(
-                        account.getBalance(_app.getQuoteCurrency())
-                    )
-
                     if not _app.isVerbose():
                         Logger.info(
                             f"{formatted_current_df_index} | {_app.getMarket()} | {_app.printGranularity()} | {price_text} | SELL"
@@ -1382,71 +1484,109 @@ def executeJob(
                         text_box.center("*** Executing LIVE Sell Order ***")
                         text_box.singleLine()
 
-                    # display balances
+                    # check balances before and display
+                    account.basebalance_before = 0
+                    account.quotebalance_before = 0
+                    try:
+                        account.basebalance_before = float(account.getBalance(_app.getBaseCurrency()))
+                        account.quotebalance_before = float(account.getBalance(_app.getQuoteCurrency()))
+                    except:
+                        pass
+
                     Logger.info(
-                        f"{_app.getBaseCurrency()} balance before order: {str(account.basebalance)}"
-                    )
-                    Logger.info(
-                        f"{_app.getQuoteCurrency()} balance before order: {str(account.quotebalance)}"
+                        f"{_app.getBaseCurrency()} balance before order: {str(account.basebalance_before)}\n"
+                        f"{_app.getQuoteCurrency()} balance before order: {str(account.quotebalance_before)}"
                     )
 
                     # execute a live market sell
                     baseamounttosell = (
-                        float(account.basebalance)
+                        float(account.basebalance_before)
                         if _app.sellfullbaseamount == True
                         else float(state.last_buy_filled)
                     )
-                    resp = _app.marketSell(
-                        _app.getMarket(),
-                        baseamounttosell,
-                        _app.getSellPercent(),
-                    )
-                    #Logger.debug(resp)
 
-                    # display balances
-                    account.basebalance = float(
-                        account.getBalance(_app.getBaseCurrency())
-                    )
-                    account.quotebalance = float(
-                        account.getBalance(_app.getQuoteCurrency())
-                    )
-                    Logger.info(
-                        f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance)}"
-                    )
-                    Logger.info(
-                        f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance)}"
-                    )
-                    _state.prevent_loss = 0
+                    account.basebalance_after = 0
+                    account.quotebalance_after = 0
+                    # place the sell order
+                    try:
+                        resp = _app.marketSell(
+                            _app.getMarket(),
+                            baseamounttosell,
+                            _app.getSellPercent(),
+                        )
+                        resp_error = 0
+                        #Logger.debug(resp)
+                    except Exception as err:
+                        Logger.warning(f"Trade Error: {err}")
+                        resp_error = 1
 
-                    _app.notifyTelegram(
-                        _app.getMarket()
-                        + " ("
-                        + _app.printGranularity()
-                        + ") - "
-                        + now
-                        + "\n"
-                        + "SELL at "
-                        + price_text
-                        + " (margin: "
-                        + margin_text
-                        + ", delta: "
-                        + str(round(price - _state.last_buy_price, precision))
-                        + ")"
-                    )
+                    if resp_error == 0:
+                        try:
+                            account.basebalance_after = float(account.getBalance(_app.getBaseCurrency()))
+                            account.quotebalance_after = float(account.getBalance(_app.getQuoteCurrency()))
+                        except Exception as err:
+                            Logger.warning(
+                                f"Error: Balance not retrieved after trade for {app.getMarket()}.\n"
+                                f"API Error Msg: {err}"
+                        )
 
-                    telegram_bot.closetrade(
-                        str(_app.getDateFromISO8601Str(str(datetime.now()))),
-                        price_text,
-                        margin_text,
-                    )
+                        Logger.info(
+                            f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance_after)}\n"
+                            f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance_after)}"
+                        )
+                        _state.prevent_loss = 0
+                        _state.tsl_triggered = 0
+                        _state.trade_error_cnt = 0
+                        _state.last_action = "SELL"
+                        _state.action = "DONE"
+                                
+                        _app.notifyTelegram(
+                            _app.getMarket()
+                            + " ("
+                            + _app.printGranularity()
+                            + ") - "
+                            + now
+                            + "\n"
+                            + "SELL at "
+                            + price_text
+                            + " (margin: "
+                            + margin_text
+                            + ", delta: "
+                            + str(round(price - _state.last_buy_price, precision))
+                            + ")"
+                        )
 
-                    if _app.enableexitaftersell and _app.startmethod not in (
-                        "standard",
-                        "telegram",
-                    ):
-                        sys.exit(0)
+                        telegram_bot.closetrade(
+                            str(_app.getDateFromISO8601Str(str(datetime.now()))),
+                            price_text,
+                            margin_text,
+                        )
+
+                        if _app.enableexitaftersell and _app.startmethod not in (
+                            "standard",
+                            "telegram",
+                        ):
+                            sys.exit(0)
+
+                    else: # there was an error
+                        # only attempt SELL 3 times before exception to prevent continuous loop 
+                        _state.trade_error_cnt += 1
+                        if _state.trade_error_cnt >= 2:  # 3 attempts made
+                            raise Exception(
+                                f"Trade Error: SELL transaction attempted 3 times. Check log for errors."
+                            )
+                        # trigger a check of last trade on next iteration
+                        _state.last_action = None
+                        _state.action = "check_sell"
+                        Logger.warning(
+                            f"API Error: Unable to place SELL order for {app.getMarket()}."
+                        )
+                        if not app.disableTelegramErrorMsgs():
+                            app.notifyTelegram(f"API Error: Unable to place SELL order for {app.getMarket()}")
+                        time.sleep(30)
 
                     state.last_api_call_datetime -= timedelta(seconds=60)
+
                 # if not live
                 else:
                     margin, profit, sell_fee = calculate_margin(
@@ -1548,7 +1688,10 @@ def executeJob(
                         },
                         ignore_index=True,
                     )
+                    state.in_open_trade = False
                     state.last_api_call_datetime -= timedelta(seconds=60)
+                    _state.last_action = "SELL"
+
                 if _app.shouldSaveGraphs():
                     tradinggraphs = TradingGraphs(_technical_analysis)
                     ts = datetime.now().timestamp()
@@ -1563,15 +1706,11 @@ def executeJob(
                             len(trading_data), "graphs/" + filename, True
                         )
 
-            # last significant action
-            if _state.action in ["BUY", "SELL"]:
-                _state.last_action = _state.action
-
             _state.last_df_index = str(df_last.index.format()[0])
 
             if (
                 _app.enabledLogBuySellInJson() == True
-                and _state.action in ["BUY", "SELL"]
+                and _state.action == "DONE"
                 and len(_app.trade_tracker) > 0
             ):
                 Logger.info(
@@ -1807,7 +1946,7 @@ def executeJob(
                     str(_truncate(margin, 4) + "%") if _state.in_open_trade == True else " ",
                     str(_truncate(profit, 2)) if _state.in_open_trade == True else " ",
                     price,
-                    change_pcnt_high,
+                    change_pcnt_high
                 )
             
             # Update the watchdog_ping

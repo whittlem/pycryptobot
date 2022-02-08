@@ -8,6 +8,58 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [6.0.0] - 2022-02-08
+
+- major release
+
+## [5.2.6] - 2022-01-30
+
+- fixed some spelling mistakes
+- suppressed some of the Kucoin error messages, only displays after last retry attempt
+- cleaned up a couple of the retry loops for Kucoin API to make more efficient
+- moved the buy/sell error check code further down pycryptobot.py to allow other variables to be set first
+
+## [5.2.5] - 2022-01-21
+
+- more exception handling added for JSONDecode errors
+- fixed Telegram Reload config market not valid error
+- added telegram_bot log file and telegram_logs folder
+- revise buy/sell code.  Still occasional problems with last update.
+- fix trailingstoplosstrigger logic
+- bot in docker container runs as user pycryptobot as UID:GID 1000 (First non root user).
+- docker bot container size minified for better layer caching and faster downloads.
+- updating caching system timer. Screener update including volatility checking, package version check and debugging functionality.
+
+## [5.2.4] - 2022-01-16
+
+- fix indentation problems. Incorporated GetOrders caching system (Kucoin). Misc. fixes.
+
+## [5.2.3] - 2022-01-15
+
+- fix possible issue where the trade could be processed multiple times on the same pass through the buy/sell process
+
+## [5.2.2] - 2022-01-13
+
+- fixed bug in Base and Quote increment functions for Kucoin
+- improved BUY and SELL code after fixing increment bug
+
+## [5.2.1] - 2022-01-12
+
+- minor updates to trade confirmations added previously
+
+## [5.2.0] - 2022-01-11
+
+- updated telegram bot config editor
+- added option to enable/disable screener/scanner notifications
+- update to default parser to set to correct object type
+
+## [5.1.4] - 2022-01-10
+
+- fixed spelling mistake in Kucoin api.py file
+- added balance checking to verify buy/sell trades occurred
+- revised getBalance code for Coinbase and Kucion to verify a response from API
+- revised market/symbol regex in telegram_bot.py to match rest of code
+
 ## [5.1.3] - 2022-01-03
 
 - fixed spelling mistake in comment
@@ -49,6 +101,9 @@ Upgrade library dependencies (if required):
 ## [4.6.2] - 2021-12-18
 
 - Fix bug in trailingbuypcnt code that could cause the waiting price to continually change and prevent a buy
+- fix error when saving trade data for the first time
+- Add all option to Sell command
+- Add unit tests for TG Bot
 
 ## [4.6.1] - 2021-12-09
 

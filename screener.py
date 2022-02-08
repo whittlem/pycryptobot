@@ -2,6 +2,7 @@ import time
 import json
 import pandas as pd
 import re
+import sys
 from decimal import Decimal
 from itertools import islice
 from models.PyCryptoBot import PyCryptoBot
@@ -12,20 +13,29 @@ from models.exchange.kucoin import PublicAPI as KPublicAPI
 from models.exchange.Granularity import Granularity
 from models.exchange.ExchangesEnum import Exchange as CryptoExchange
 from tradingview_ta import *
+from importlib.metadata import version
 
-
-def volatility_calculator(bollinger_band_upper, bollinger_band_lower):
+def volatility_calculator(bollinger_band_upper, bollinger_band_lower, keltner_upper, keltner_lower, high, low):
     """
     A break away from traditional volatility calculations. Based entirely
-    on the proportionate price gap between bollinger upper and lower bands.
+    on the proportionate price gap between keltner channels, bolinger, and high / low averaged out
     """
 
     try:
         b_spread = Decimal(bollinger_band_upper) - Decimal(bollinger_band_lower)
+        k_spread = Decimal(keltner_upper) - Decimal(keltner_lower)
+        p_spread = Decimal(high) - Decimal(low)
     except TypeError:
         return 0
+
+    b_pcnt = abs(b_spread / Decimal(bollinger_band_lower)) * 100
+    k_pcnt = abs(k_spread / Decimal(keltner_lower)) * 100
+
+    chan_20_pcnt = (b_pcnt + k_pcnt) / 2
+
+    p_pcnt = abs(p_spread / Decimal(low)) * 100
     
-    return abs(b_spread / Decimal(bollinger_band_lower)) * 100
+    return abs((chan_20_pcnt + p_pcnt) / 2)
 
 def load_configs():
     exchanges_loaded = []
@@ -116,25 +126,31 @@ def get_markets(app, quote_currency):
     
     return markets
 
-def process_screener_data(app, markets, quote_currency):
+def process_screener_data(app, markets, quote_currency, exchange_name):
     """
     Hit TradingView up for the goods so we don't waste unnecessary time/compute resources (brandon's top picks)
     """
-    
+    # Do you want it to spit out all the debug stuff?
+    debug = False
+
     ta_screener_list = [f"{re.sub('PRO', '', app.exchange.name, re.IGNORECASE)}:{re.sub('-', '', market)}" for market in markets]
     
     screener_staging = [p for p in chunker(ta_screener_list, 100)]
     screener_analysis = []
-    additional_indicators = ["ATR"]
-    #app.granularity.short = "1d"
+    additional_indicators = ["ATR", "KltChnl.upper", "KltChnl.lower"]
+    #TradingView.indicators.append("Volatility.D")
+
     for pair_list in screener_staging:
         screener_analysis.extend([a for a in get_multiple_analysis(screener='crypto', interval=app.granularity.short, symbols=pair_list, additional_indicators=additional_indicators).values()])
+    
     # Take what we need and do magic, ditch the rest.
     formatted_ta = []
     for ta in screener_analysis:
         try:
+            if debug : print(f"Checking {ta.symbol} on {exchange_name}\n")
             recommend = Decimal(ta.indicators.get('Recommend.All'))
-            volatility = Decimal(volatility_calculator(ta.indicators['BB.upper'], ta.indicators['BB.lower']))
+            volatility = Decimal(volatility_calculator(ta.indicators['BB.upper'], ta.indicators['BB.lower'], ta.indicators['KltChnl.upper'], ta.indicators['KltChnl.lower'], ta.indicators['high'], ta.indicators['low']))
+            #volatility = Decimal(ta.indicators['Volatility.D']) * 100
             adx = abs(Decimal(ta.indicators['ADX']))
             adx_posi_di = Decimal(ta.indicators['ADX+DI'])
             adx_neg_di = Decimal(ta.indicators['ADX-DI'])
@@ -148,6 +164,8 @@ def process_screener_data(app, markets, quote_currency):
             macd_signal = Decimal(ta.indicators['MACD.signal'])
             bollinger_upper = Decimal(ta.indicators['BB.upper'])
             bollinger_lower = Decimal(ta.indicators['BB.lower'])
+            kelt_upper = Decimal(ta.indicators['KltChnl.upper'])
+            kelt_lower = Decimal(ta.indicators['KltChnl.lower'])
             rsi = Decimal(ta.indicators.get('RSI', 0))
             stoch_d = Decimal(ta.indicators.get('Stoch.D', 0))
             stoch_k = Decimal(ta.indicators.get('Stoch.K', 0))
@@ -167,22 +185,25 @@ def process_screener_data(app, markets, quote_currency):
             elif rating == "STRONG_BUY":
                 score += 5        
             if (adx >= app.adx_threshold) and (adx_posi_di > adx_neg_di) and (adx_posi_di > adx):
-                #print(f"ADX({adx}) >= {app.adx_threshold}")
+                if debug : print(f"ADX({adx}) >= {app.adx_threshold}")
                 score += 1 
             if volume >= app.volume_threshold:
-                #print(f"Volume({volume}) >= {app.volume_threshold}")
+                if debug : print(f"Volume({volume}) >= {app.volume_threshold}")
                 score += 1
             if abs(macd) > abs(macd_signal):
-                # print(f"MACD({macd}) above signal({macd_signal})")
+                if debug : print(f"MACD({macd}) above signal({macd_signal})")
                 score += 1
             if volatility >= app.volatility_threshold:
-                #print(f"Volatility({volatility} is above {app.volatility_threshold}")
+                if debug : print(f"Volatility({volatility} is above {app.volatility_threshold}")
                 score += 1
             if volatility < app.minimum_volatility:
+                if debug : print(f"{ta.symbol} ({volatility}) is below min volatility of {app.minimum_volatility}")
                 score -= 100
             if volume < app.minimum_volume:
+                if debug : print(f"{ta.symbol} ({volume}) is below min volume of {app.volume}")
                 score -= 100
             if close < app.minimum_quote_price:
+                if debug : print(f"{ta.symbol} ({close}) is below min quote price of {app.minimum_quote_price}")
                 score -= 100
             if 30 >= rsi > 20:
                 score += 1
@@ -222,11 +243,11 @@ def process_screener_data(app, markets, quote_currency):
                 ## Hack a percentage from the recommendation which would take into account all the indicators rather than just ATR
                 if atr > 0:
                     relavent_ta['atr72_pcnt'] = atr
+                #else:
+                #    if recommend > 0:
+                #        relavent_ta['atr72_pcnt'] = recommend * 100
                 else:
-                    if recommend > 0:
-                        relavent_ta['atr72_pcnt'] = recommend * 100
-                    else:
-                        relavent_ta['atr72_pcnt'] = 0
+                    relavent_ta['atr72_pcnt'] = 0
 
                 try:
                     relavent_ta['buy_next'] = 'SEND IT!' if re.search('BUY', rating) else False
@@ -284,6 +305,12 @@ if  __name__ == '__main__':
     import time
     from datetime import datetime
 
+    tvlib_ver = version('tradingview-ta')
+    if tvlib_ver >= "3.2.10":
+        print(f"Library is correct version - were good to go! (v {tvlib_ver})")
+    else:
+        print(f"Gotta update your tradingview-ta library please! (v {tvlib_ver})")
+        sys.exit()
 
     start_time = time.time()
     print('Processing, please wait...')
@@ -293,7 +320,7 @@ if  __name__ == '__main__':
         for quote_currency in app.scanner_quote_currencies:
             markets = get_markets(app, quote_currency)
             try:
-                process_screener_data(app, markets, quote_currency)
+                process_screener_data(app, markets, quote_currency, app.exchange.name)
             except Exception as e:
                 print(e)
 

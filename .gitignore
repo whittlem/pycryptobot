@@ -149,7 +149,14 @@ graphs/
 pycryptobot.log.*
 
 tests/unit_tests/data/*.json
+telegram_logs
 
 *.key
 config-*.yaml
-telegram_data*
+telegram_data
+screener.json
+
+# WIP
+models/exchange/kraken
+script-kraken.py
+script-krakenv2.py
