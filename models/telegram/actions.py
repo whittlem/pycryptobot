@@ -84,7 +84,7 @@ class TelegramActions:
                     market,
                     self.helper.data["opentrades"][market]["exchange"],
                     "",
-                    "scanner",
+                    "telegram",
                 )
             sleep(10)
         self.helper.send_telegram_message(update, "<i>Markets have been started</i>", context=context)
@@ -439,18 +439,11 @@ class TelegramActions:
                         f"Not stopping {file} - in scanner list, or has open order..."
                     )
 
-        bots_per_exchange = self.helper.exchange_bot_count
-
         total_bots_started = 0
         exchange_bots_started = 0
         active_at_start = len(self.helper.get_active_bot_list())
-        # botcounter = 0
-        # runningcounter = len(self.helper.get_active_bot_list())
-        maxbotcount = (
-            self.helper.config["scanner"]["maxbotcount"]
-            if "maxbotcount" in self.helper.config["scanner"]
-            else 0
-        )
+        maxbotcount = self.helper.maxbotcount
+        bots_per_exchange = self.helper.exchange_bot_count
 
         self.helper.read_data()
         for ex in config:
@@ -486,7 +479,7 @@ class TelegramActions:
                 for row in data:
                     if maxbotcount > 0 and (total_bots_started + active_at_start) >= maxbotcount:
                         break
-                    if exchange_bots_started >= bots_per_exchange:
+                    if bots_per_exchange > 0 and exchange_bots_started >= bots_per_exchange:
                         exchange_bots_started = 0
                         break
                     if self.helper.enableleverage is False and (

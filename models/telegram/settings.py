@@ -79,10 +79,10 @@ class SettingsEditor:
                 InlineKeyboardButton(
                     f"{light_icon} {prop[1]}",
                     callback_data=self.helper.create_callback_data(
-                        callbacktags.NOTIFY,
-                        callbacktags.DISABLE
+                        callbacktags.NOTIFY[0],
+                        callbacktags.DISABLE[0]
                         if setting_value is True
-                        else callbacktags.ENABLE,
+                        else callbacktags.ENABLE[0],
                         prop[0],
                     )
                     # f"notify_{'disable' if setting_value is True else 'enable' }_{prop[0]}",
@@ -102,7 +102,7 @@ class SettingsEditor:
             [
                 InlineKeyboardButton(
                     "\U000025C0 Back",
-                    callback_data=self.helper.create_callback_data(callbacktags.BACK),
+                    callback_data=self.helper.create_callback_data(callbacktags.BACK[0]),
                 )
             ]
         )

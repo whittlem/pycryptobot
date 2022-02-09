@@ -152,9 +152,9 @@ class ConfigEditor:
                 InlineKeyboardButton(
                     f"{light_icon} {prop}",
                     callback_data=self.helper.create_callback_data(
-                        callbacktags.DISABLE
+                        callbacktags.DISABLE[0]
                         if config_value == 1
-                        else callbacktags.ENABLE,
+                        else callbacktags.ENABLE[0],
                         cb_exchange,
                         prop,
                     ),  # f"{exchange}_{'disable' if config_value == 1 else 'enable' }_({prop})",
@@ -168,9 +168,9 @@ class ConfigEditor:
                 InlineKeyboardButton(
                     f"{light_icon} {prop}",
                     callback_data=self.helper.create_callback_data(
-                        callbacktags.DISABLE
+                        callbacktags.DISABLE[0]
                         if config_value == 1
-                        else callbacktags.ENABLE,
+                        else callbacktags.ENABLE[0],
                         cb_exchange,
                         prop,
                     ),  # f"{exchange}_{'disable' if config_value == 1 else 'enable' }_({prop})",
@@ -183,7 +183,7 @@ class ConfigEditor:
                 InlineKeyboardButton(
                     f"{prop}: {config_value}",
                     callback_data=self.helper.create_callback_data(
-                        callbacktags.FLOAT, cb_exchange, prop
+                        callbacktags.FLOAT[0], cb_exchange, prop
                     ),  # f"{exchange}_float_{prop}",
                 )
             )
@@ -197,7 +197,7 @@ class ConfigEditor:
                 InlineKeyboardButton(
                     f"{prop}: {config_value}",
                     callback_data=self.helper.create_callback_data(
-                        callbacktags.INTEGER, cb_exchange, prop
+                        callbacktags.INTEGER[0], cb_exchange, prop
                     ),  # f"{exchange}_integer_{prop}",
                 )
             )
@@ -216,7 +216,7 @@ class ConfigEditor:
                     InlineKeyboardButton(
                         "Granularity",
                         callback_data=self.helper.create_callback_data(
-                            callbacktags.GRANULARITY, exchange
+                            callbacktags.GRANULARITY[0], exchange
                         ),
                     )
                 ]
@@ -226,7 +226,7 @@ class ConfigEditor:
                 InlineKeyboardButton(
                     "\U0001F4BE Save",
                     callback_data=self.helper.create_callback_data(
-                        callbacktags.SAVECONFIG
+                        callbacktags.SAVECONFIG[0]
                     ),
                 )
             ]
@@ -235,7 +235,7 @@ class ConfigEditor:
             [
                 InlineKeyboardButton(
                     "\U000025C0 Back",
-                    callback_data=self.helper.create_callback_data(callbacktags.BACK),
+                    callback_data=self.helper.create_callback_data(callbacktags.BACK[0]),
                 )
             ]
         )
@@ -247,7 +247,7 @@ class ConfigEditor:
             context,
         )
 
-    def get_scanner_options(self, update: Update, context: CallbackContext):
+    def get_scanner_options(self, update: Update, context: CallbackContext): #pylint: disable=missing-function-docstring
         buttons = []
         config_properties = self.helper.config["scanner"]
         for prop in config_properties:
@@ -258,9 +258,9 @@ class ConfigEditor:
                 InlineKeyboardButton(
                     f"{light_icon} {prop}",
                     callback_data=self.helper.create_callback_data(
-                        callbacktags.DISABLE
+                        callbacktags.DISABLE[0]
                         if config_value == 1
-                        else callbacktags.ENABLE,
+                        else callbacktags.ENABLE[0],
                         "scanner",
                         prop,
                     ),  # f"scanner_{'disable' if config_value == 1 else 'enable' }_{prop}",
@@ -281,7 +281,7 @@ class ConfigEditor:
                 InlineKeyboardButton(
                     "\U0001F4BE Save",
                     callback_data=self.helper.create_callback_data(
-                        callbacktags.SAVECONFIG
+                        callbacktags.SAVECONFIG[0]
                     ),
                 )
             ]
@@ -291,7 +291,7 @@ class ConfigEditor:
                 InlineKeyboardButton(
                     "Reload all running bots",
                     callback_data=self.helper.create_callback_data(
-                        callbacktags.RELOADCONFIG
+                        callbacktags.RELOADCONFIG[0]
                     ),
                 )
             ]
@@ -300,7 +300,7 @@ class ConfigEditor:
             [
                 InlineKeyboardButton(
                     "\U000025C0 Back",
-                    callback_data=self.helper.create_callback_data(callbacktags.BACK),
+                    callback_data=self.helper.create_callback_data(callbacktags.BACK[0]),
                 )
             ]
         )
@@ -357,7 +357,7 @@ class ConfigEditor:
         self.helper.write_config()
         self.helper.send_telegram_message(update, "<b>Config File Updated</b>")
 
-    def get_granularity(self, update, exchange, context):
+    def get_granularity(self, update, exchange, context): #pylint: disable=missing-function-docstring
         cb_exchange = self.exchange_convert(exchange_str=exchange)
         buttons = []
         for gran in Granularity:
@@ -373,7 +373,7 @@ class ConfigEditor:
             buttons.append(
                 InlineKeyboardButton(
                     f"{light_icon} {gran.name}",
-                    callback_data=self.helper.create_callback_data(callbacktags.GRANULARITY, cb_exchange, gran.name) #f"{cb_exchange}_granularity_({gran.name})",
+                    callback_data=self.helper.create_callback_data(callbacktags.GRANULARITY[0], cb_exchange, gran.name) #f"{cb_exchange}_granularity_({gran.name})",
                 )
             )
 
@@ -391,19 +391,19 @@ class ConfigEditor:
             [
                 InlineKeyboardButton(
                     f"{light_icon} Smart Switch",
-                    callback_data=self.helper.create_callback_data(callbacktags.GRANULARITY, cb_exchange, "smartswitch") #f"{exchange}_granularity_(smartswitch)",
+                    callback_data=self.helper.create_callback_data(callbacktags.GRANULARITY[0], cb_exchange, "smartswitch") #f"{exchange}_granularity_(smartswitch)",
                 )
             ]
         )
 
         keyboard.append(
-            [InlineKeyboardButton("\U0001F4BE Save", callback_data=self.helper.create_callback_data(callbacktags.SAVECONFIG))] # "save_config")]
+            [InlineKeyboardButton("\U0001F4BE Save", callback_data=self.helper.create_callback_data(callbacktags.SAVECONFIG[0]))] # "save_config")]
         )
         keyboard.append(
             [
                 InlineKeyboardButton(
                     "\U000025C0 Back",
-                    callback_data=self.helper.create_callback_data(callbacktags.BACK),
+                    callback_data=self.helper.create_callback_data(callbacktags.BACK[0]),
                 )
             ]
         )
