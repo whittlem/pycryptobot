@@ -8,6 +8,10 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [6.0.0] - 2022-02-08
+
+- major release
+
 ## [5.2.6] - 2022-01-30
 
 - fixed some spelling mistakes
