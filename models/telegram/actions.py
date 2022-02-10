@@ -600,6 +600,10 @@ class TelegramActions:
 
             trade_counter = 0
             margin_calculation = 0.0
+            margin_positive = 0.0
+            positive_counter = 0
+            margin_negative = 0.0
+            negative_counter = 0
 
             if days == 99:
                 self.helper.send_telegram_message(update, "<i>Getting all trades summary..</i>")
@@ -613,6 +617,12 @@ class TelegramActions:
                     trade_counter += 1
                     margin = float(self.helper.data['trades'][trade_datetime]['margin'][: self.helper.data['trades'][trade_datetime]['margin'].find("%")])
                     margin_calculation += margin
+                    if margin > 0.0:
+                        positive_counter += 1
+                        margin_positive += margin
+                    else:
+                        negative_counter += 1
+                        margin_negative += margin
                     if trade_counter == 1:
                         first_trade_date = trade_datetime
                     last_trade_date = trade_datetime
@@ -639,6 +649,7 @@ class TelegramActions:
             elif days > 0:
                 summary = f"First Recorded Date: <b>{first_trade_date}</b>\n"\
                             f"Last Recorded Date: <b>{last_trade_date}</b>\n\n"\
-                                f"Total trade: <b>{trade_counter}</b>\n"\
-                                    f"Profit/Loss: <b>{round(margin_calculation,4)}%</b>"
+                                    f"Profit: <b>{round(margin_positive,2)}%</b>  from (<b>{positive_counter}</b>) trades\n"\
+                                    f"Loss: <b>{round(margin_negative,2)}%</b>  from (<b>{negative_counter}</b>) trades\n"\
+                                    f"Total: <b>{round(margin_calculation,2)}%</b>  from (<b>{trade_counter}</b>) trades"
                 update.effective_message.reply_html(f"{summary}")
