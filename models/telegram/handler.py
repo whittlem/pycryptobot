@@ -45,11 +45,11 @@ class TelegramHandler:
                     "\U0001F4D6 View config", callback_data="showconfig"
                 ),
                 InlineKeyboardButton(
-                    "\U0001F510 Edit config \U00002699", callback_data="editconfig"
+                    "Edit config \U00002699", callback_data="editconfig"
                 ),
             ],
             [
-                InlineKeyboardButton("\U0001F4B0 Closed Trades", callback_data="closed"),
+                InlineKeyboardButton("\U0001F4B0 Trade Summary", callback_data="closed"),
             ],
             [
                 InlineKeyboardButton("\U0001F4B0 Sell", callback_data="sell"),
@@ -354,10 +354,15 @@ class TelegramHandler:
                     "Last 31 Days", callback_data=self.helper.create_callback_data(callbacktags.TRADES, "", callbacktags.TRADES1M)  #f"stop_{query.data.replace('bot_', '')}"
                 )
             ],
+            [
+                InlineKeyboardButton(
+                    "All", callback_data=self.helper.create_callback_data(callbacktags.TRADES, "", callbacktags.TRADESALL)  #f"stop_{query.data.replace('bot_', '')}"
+                )
+            ],
             [InlineKeyboardButton("\U000025C0 Back", callback_data=self.helper.create_callback_data(callbacktags.BACK[0]))],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
-        reply = "<b>Closed Trades:</b>"
+        reply = "<b>Select trade summary period:</b>"
         self.helper.send_telegram_message(update, reply, reply_markup, context=context)
 
     def get_bot_options(self, update):

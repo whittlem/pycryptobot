@@ -597,25 +597,48 @@ class TelegramActions:
             now = datetime.now()
             now -= timedelta(days=days)
             trade_count = 0
-            self.helper.send_telegram_message(update, f"<i>Getting trades for last {days} days..</i>")
+
+            trade_counter = 0
+            margin_calculation = 0.0
+
+            if days == 99:
+                self.helper.send_telegram_message(update, "<i>Getting all trades summary..</i>")
+            else:
+                self.helper.send_telegram_message(update, f"<i>Getting summary of trades for last {days} day(s)..</i>")
+
             for trade_datetime in self.helper.data["trades"]:
                 if datetime.strptime(trade_datetime, '%Y-%m-%d %H:%M:%S').isoformat() < now.isoformat():
                     continue
-                trade_count += 1
-                output = ""
-                output = (
-                    output + f"<b>{self.helper.data['trades'][trade_datetime]['pair']}</b>\n{trade_datetime}"
-                )
-                output = (
-                    output
-                    + f"\n<i>Sold at: {self.helper.data['trades'][trade_datetime]['price']}   Margin: {self.helper.data['trades'][trade_datetime]['margin']}</i>\n"
-                )
-                if output != "":
-                    update.effective_message.reply_html(output)
-                if trade_count == 10:
-                    trade_count = 1
-                    sleep(3)
+                if days > 0:
+                    trade_counter += 1
+                    margin = float(self.helper.data['trades'][trade_datetime]['margin'][: self.helper.data['trades'][trade_datetime]['margin'].find("%")])
+                    margin_calculation += margin
+                    if trade_counter == 1:
+                        first_trade_date = trade_datetime
+                    last_trade_date = trade_datetime
                 else:
-                    sleep(0.5)
-            if trade_count == 0:
+                    trade_count += 1
+                    output = ""
+                    output = (
+                        output + f"<b>{self.helper.data['trades'][trade_datetime]['pair']}</b>\n{trade_datetime}"
+                    )
+                    output = (
+                        output
+                        + f"\n<i>Sold at: {self.helper.data['trades'][trade_datetime]['price']}   Margin: {self.helper.data['trades'][trade_datetime]['margin']}</i>\n"
+                    )
+                    if days != 99:
+                        if output != "":
+                            update.effective_message.reply_html(output)
+                        if trade_count == 10:
+                            trade_count = 1
+                            sleep(3)
+                        else:
+                            sleep(0.5)
+            if trade_count == 0 and trade_counter == 0:
                 update.effective_message.reply_html("<b>No closed trades found</b>")
+            elif days > 0:
+                summary = f"First Recorded Date: <b>{first_trade_date}</b>\n"\
+                            f"Last Recorded Date: <b>{last_trade_date}</b>\n\n"\
+                                f"Total trade: <b>{trade_counter}</b>\n"\
+                                    f"Profit/Loss: <b>{round(margin_calculation,4)}%</b>"
+                update.effective_message.reply_html(f"{summary}")
