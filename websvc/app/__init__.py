@@ -1,6 +1,6 @@
 import sys
 from flask import Flask, send_from_directory
-
+from models.exchange.Granularity import Granularity
 from websvc.app.pages import Pages
 
 app = Flask(__name__, static_url_path="")
@@ -29,7 +29,7 @@ def binance():
 
 @app.route("/binance/<market>")
 def binance_market(market):
-    return Pages.technical_analysis('binance', market, '15m', '1h', '6h')
+    return Pages.technical_analysis('binance', market, Granularity.FIFTEEN_MINUTES, Granularity.ONE_HOUR, Granularity.SIX_HOURS)
 
 
 @app.route("/coinbasepro")
