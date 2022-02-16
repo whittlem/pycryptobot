@@ -1,6 +1,6 @@
 """ Telegram Bot Config Editor """
 import json
-import models.telegram.callbacktags as callbacktags
+from models.telegram import callbacktags
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 
@@ -12,8 +12,7 @@ from models.exchange.Granularity import Granularity
 class ConfigEditor:
     """Telegram Bot Config Editor"""
 
-    def __init__(self, datafolder, tg_helper: TelegramHelper) -> None:
-        self.datafolder = datafolder
+    def __init__(self, tg_helper: TelegramHelper) -> None:
         self.helper = tg_helper
 
     @staticmethod
@@ -244,7 +243,7 @@ class ConfigEditor:
             update,
             f"<b>{exchange.capitalize()} Config Options.</b>",
             InlineKeyboardMarkup(keyboard, one_time_keyboard=True),
-            context,
+            context, new_message=False
         )
 
     def get_scanner_options(self, update: Update, context: CallbackContext): #pylint: disable=missing-function-docstring
@@ -309,7 +308,7 @@ class ConfigEditor:
             update,
             "<b>Scanner Config Options.</b>",
             InlineKeyboardMarkup(keyboard, one_time_keyboard=True),
-            context,
+            context, new_message=False
         )
 
     def disable_option(self, exchange, parameter):
@@ -355,7 +354,7 @@ class ConfigEditor:
     def save_updated_config(self, update):
         """Save config file"""
         self.helper.write_config()
-        self.helper.send_telegram_message(update, "<b>Config File Updated</b>")
+        self.helper.send_telegram_message(update, "<b>Config File Updated</b>", new_message=False)
 
     def get_granularity(self, update, exchange, context): #pylint: disable=missing-function-docstring
         cb_exchange = self.exchange_convert(exchange_str=exchange)

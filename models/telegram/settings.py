@@ -1,20 +1,20 @@
 """ Telegram Bot Settings """
 import os
 import json
-import models.telegram.callbacktags as callbacktags
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from models.telegram import callbacktags
 from models.telegram.helper import TelegramHelper
 
 
 class SettingsEditor:
     """Telegram Bot Notification Settings Class"""
 
-    def __init__(self, datafolder, tg_helper: TelegramHelper) -> None:
-        self.datafolder = datafolder
+    def __init__(self, tg_helper: TelegramHelper) -> None:
+        # self.datafolder = datafolder
         self.helper = tg_helper
 
         if not os.path.isfile(
-            os.path.join(self.datafolder, "telegram_data", "settings.json")
+            os.path.join(self.helper.datafolder, "telegram_data", "settings.json")
         ):
             self.helper.settings.update(
                 {
@@ -36,7 +36,7 @@ class SettingsEditor:
         """Read Config File"""
         try:
             with open(
-                os.path.join(self.datafolder, "telegram_data", "settings.json"),
+                os.path.join(self.helper.datafolder, "telegram_data", "settings.json"),
                 "r",
                 encoding="utf8",
             ) as json_file:
@@ -50,12 +50,12 @@ class SettingsEditor:
         """Write config file"""
         try:
             with open(
-                os.path.join(self.datafolder, "telegram_data", "settings.json"),
+                os.path.join(self.helper.datafolder, "telegram_data", "settings.json"),
                 "w",
                 encoding="utf8",
             ) as outfile:
                 json.dump(self.helper.settings, outfile, indent=4)
-        except:
+        except: #pylint: disable=try-except-raise
             raise
 
     def get_notifications(self, update):
@@ -110,7 +110,7 @@ class SettingsEditor:
         self.helper.send_telegram_message(
             update,
             "<b>Notification Options:</b>",
-            InlineKeyboardMarkup(keyboard, one_time_keyboard=True),
+            InlineKeyboardMarkup(keyboard, one_time_keyboard=True), new_message=False
         )
 
     def disable_option(self, parameter):
