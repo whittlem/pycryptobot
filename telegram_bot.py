@@ -962,6 +962,7 @@ def main():
     )
 
     if botconfig.helper.autostart:
+        botconfig.actions.start_open_orders(None, None)
         botconfig.handler._check_scheduled_job()
         botconfig.actions.start_market_scan(None, None, use_default_scanner=botconfig.helper.use_default_scanner)
     # Run the bot until you press Ctrl-C
