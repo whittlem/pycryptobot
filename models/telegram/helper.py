@@ -91,6 +91,35 @@ class TelegramHelper:
             chat_instance="",
         )
 
+    def get_uptime(self):
+        """Get uptime"""
+        date = self.data['botcontrol']['started']
+        now = str(datetime.now())
+        # If date passed from datetime.now() remove milliseconds
+        if date.find(".") != -1:
+            date_time = date.split(".")[0]
+            date = date_time
+        if now.find(".") != -1:
+            date_time = now.split(".", maxsplit=1)[0]
+            now = date_time
+
+        now = now.replace("T", " ")
+        now = f"{now}"
+        # Add time in case only a date is passed in
+        # new_date_str = f"{date} 00:00:00" if len(date) == 10 else date
+        date = date.replace("T", " ") if date.find("T") != -1 else date
+        # Add time in case only a date is passed in
+        new_date_str = f"{date} 00:00:00" if len(date) == 10 else date
+
+        started = datetime.strptime(new_date_str, "%Y-%m-%d %H:%M:%S")
+        now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
+        duration = now - started
+        duration_in_s = duration.total_seconds()
+        hours = divmod(duration_in_s, 3600)[0]
+        duration_in_s -= 3600 * hours
+        minutes = divmod(duration_in_s, 60)[0]
+        return f"{round(hours)}h {round(minutes)}m"
+
     @classmethod
     def get_level(cls, level):  # pylint: disable=missing-function-docstring
         if level == "CRITICAL":

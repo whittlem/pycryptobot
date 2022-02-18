@@ -1,6 +1,6 @@
 """Wrapper for telegram functions"""
 from models.telegram import callbacktags
-from models.telegram import TelegramHelper, TelegramActions, TelegramHandler
+from models.telegram import TelegramHelper, TelegramActions, TelegramHandler, TelegramControl
 
 class Wrapper:
     """Wrapper for Telegram Functions"""
@@ -12,6 +12,7 @@ class Wrapper:
         self._handler = TelegramHandler(
             self.helper.config["telegram"]["user_id"], self.helper
         )
+        self._controls = TelegramControl(self.helper)
 
     def start_market_scanning(
         self,
@@ -52,3 +53,15 @@ class Wrapper:
     def place_market_sell_order(self, market):
         """place a market sell order"""
         return self._actions.sell_response(None, None, market)
+
+    def pause_bot(self, market):
+        """place a market sell order"""
+        return self._controls.pause_bot_response(None, None, market)
+
+    def resume_bot(self, market):
+        """place a market sell order"""
+        return self._controls.resume_bot_response(None, None, market)
+
+    def stop_bot(self, market):
+        """place a market sell order"""
+        return self._controls.stop_bot_response(None, None, market)

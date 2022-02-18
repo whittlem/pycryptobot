@@ -124,11 +124,21 @@ class TelegramControl:
         return InlineKeyboardMarkup(keyboard)
 
     def action_bot_response(
-        self, update: Update, call_back_tag, state, context, status: str = "active"
+        self, update: Update, call_back_tag, state, context, status: str = "active", market_override=""
     ):
         """Run requested bot action"""
-        query = update.callback_query
         mode = call_back_tag.capitalize()
+        if market_override != "":
+            self.helper.send_telegram_message(
+                update, f"<i>{mode} bots</i>", context=context, new_message=False
+            )
+            self.helper.stop_running_bot(
+                market_override, state, True
+            )
+            return
+
+        query = update.callback_query
+        
 
         if query.data.__contains__("allclose") or query.data.__contains__("all"):
             self.helper.send_telegram_message(
@@ -238,9 +248,9 @@ class TelegramControl:
         """Get bot stop list"""
         self._ask_bot_list(update, callbacktags.STOP, "active")
 
-    def stop_bot_response(self, update: Update, context):
+    def stop_bot_response(self, update: Update, context, market_override=""):
         """Stop bot list response"""
-        self.action_bot_response(update, "stop", "exit", context, "active")
+        self.action_bot_response(update, "stop", "exit", context, "active", market_override)
         self.helper.send_telegram_message(
             update, "<b>Stop bots complete</b>", context=context
         )
@@ -249,9 +259,9 @@ class TelegramControl:
         """Get pause bot list"""
         self._ask_bot_list(update, callbacktags.PAUSE, "active")
 
-    def pause_bot_response(self, update: Update, context):
+    def pause_bot_response(self, update: Update, context, market_override=""):
         """Pause bot list response"""
-        self.action_bot_response(update, "pause", "pause", context, "active")
+        self.action_bot_response(update, "pause", "pause", context, "active", market_override)
         self.helper.send_telegram_message(
             update, "<b>Pausing bots complete</b>", context=context
         )
@@ -260,9 +270,9 @@ class TelegramControl:
         """Get resume bot list"""
         self._ask_bot_list(update, callbacktags.RESUME, "paused")
 
-    def resume_bot_response(self, update: Update, context):
+    def resume_bot_response(self, update: Update, context, market_override=""):
         """Resume bot list response"""
-        self.action_bot_response(update, "resume", "start", context, "paused")
+        self.action_bot_response(update, "resume", "start", context, "paused", market_override)
         self.helper.send_telegram_message(
             update, "<b>Resuming bots complete</b>", context=context
         )
