@@ -104,7 +104,7 @@ class TelegramControl:
                         InlineKeyboardButton(
                             "All (w/o open order)",
                             callback_data=self.helper.create_callback_data(
-                                call_back_tag[0], "", "allclose"
+                                call_back_tag, "", "allclose"
                             ),  # f"{call_back_tag}_allclose",
                         )
                     ]
@@ -213,6 +213,7 @@ class TelegramControl:
                         market, self.helper.get_running_bot_exchange(market), overrides
                     )
                     sleep(10)
+                    self.helper.read_data()
                 else:
                     self.helper.send_telegram_message(
                         update,
