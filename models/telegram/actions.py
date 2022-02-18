@@ -87,8 +87,21 @@ class TelegramActions:
         sleep(1)
         self.get_bot_info(None, None)
 
-    def sell_response(self, update, context):
+    def sell_response(self, update, context, market_override = ""):
         """create the manual sell order"""
+        if market_override != "":
+            read_ok = self.helper.read_data(market_override)
+            if read_ok and "botcontrol" in self.helper.data:
+                self.helper.data["botcontrol"]["manualsell"] = True
+                self.helper.write_data(market_override)
+                self.helper.send_telegram_message(
+                    update,
+                    f"Selling: {market_override.replace('.json','')}"
+                    "\n<i>Please wait for sale notification...</i>",
+                    context=context, new_message=False,
+                )
+            return
+
         query = update.callback_query
         self.helper.logger.info("called sell_response - %s", query.data)
 
@@ -123,8 +136,22 @@ class TelegramActions:
                     context=context, new_message=False
                 )
 
-    def buy_response(self, update, context):
+    def buy_response(self, update, context, market_override = ""):
         """create the manual buy order"""
+
+        if market_override != "":
+            read_ok = self.helper.read_data(market_override)
+            if read_ok and "botcontrol" in self.helper.data:
+                self.helper.data["botcontrol"]["manualbuy"] = True
+                self.helper.write_data(market_override)
+                self.helper.send_telegram_message(
+                    update,
+                    f"Buying: {market_override.replace('.json','')}"
+                    "\n<i>Please wait for buy notification...</i>",
+                    context=context, new_message=False,
+                )
+            return
+
         query = update.callback_query
         self.helper.logger.info("called buy_response - %s", query.data)
 

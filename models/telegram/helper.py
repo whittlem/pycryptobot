@@ -36,7 +36,7 @@ logging.basicConfig(
 class TelegramHelper:
     """Telegram Bot Helper"""
 
-    def __init__(self, configfile) -> None:
+    def __init__(self, configfile = 'config.json') -> None:
         # self.datafolder = datafolder
         self.data = {}
         # self.config = config
