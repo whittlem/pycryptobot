@@ -1,14 +1,13 @@
-import json, glob, os
+import json
+import os
 import dash
 import datetime
 from dash import Dash, html, callback_context, dcc, State
 import dash_table
-# import dash_daq as daq
-# import plotly.express as px
+import dash_daq as daq
 from dash.dash_table.Format import Format, Scheme
 from dash.dash_table import DataTable, FormatTemplate
 import pandas as pd
-# import numpy as np
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 
@@ -24,17 +23,17 @@ tg_wrapper = Wrapper('config.json')
 json_dir = tg_wrapper.helper.datafolder
 
 #pairs_list = glob.glob(json_pattern) 
-# margincolor = ''
-from_df_highcolor = ''
+
 df=[]
+dff=[]
 df_margin=0
 app = dash.Dash(__name__, title = 'Pycryptobot Dashboard', external_stylesheets=external_stylesheets, update_title=None)
 
 percentage = FormatTemplate.percentage(2)
 
 CONTENT_STYLE = {
-    "margin-left": "2rem",
-    "margin-right": "2rem",
+    "margin-left": "1rem",
+    "margin-right": "1rem",
     "padding": "0rem 1rem",
 }
 
@@ -57,22 +56,30 @@ app.layout = html.Div(children=[
         ),
     ],
     brand="Pycryptobot",
+    brand_style={'textAlign':'left'},
     brand_href="/",
-    color="primary",
+    color="primary", #primary
     dark=True,
     ),
     html.Div(id='page-content', style=CONTENT_STYLE)])
 
 dashboard_layout = html.Div(children=[
-    html.H4('Dashboard', style={'textAlign':'left'}),
-
-    # ### margin bar
-    # daq.GraduatedBar(
-    #     id='my-graduated-bar-1',
-    #     label="Total Active Margins",
-    #     color={"gradient":True,"ranges":{"red":[-25,-0], "yellow":[-15,15], "green":[0,25]}},
-    #     value= 15#df_margin
-    # ),
+    dbc.Row([
+        dbc.Col([html.H4('Dashboard', style={'textAlign':'left'}),], width={'size':1}),
+        # dbc.Col([html.Div([
+        #     daq.Gauge(
+        #         label='Total Margin',
+        #         id='margin-bar',
+        #         color={"gradient":True,"ranges":{'#99413d':[-35,-4],'#F1C232':[-4,0],'#3D9970':[0,35]}},
+        #         showCurrentValue=True,
+        #         value=3,
+        #         max=35,
+        #         min=-35,
+        #         size=120,
+        #         )
+        #     ]),
+        # ], width={'size':1})
+        ]),
 
     html.Br(),
 
@@ -207,47 +214,45 @@ dashboard_layout = html.Div(children=[
                 'backgroundColor': '#3D9970',
                 'color': 'white'
             },
-
     ],
-
     ),
-    # daq.Gauge(
-    #    id='mygauge',
-    #    label="Total Margin",
-    #    color={"gradient":True,"ranges":{"red":[-25,-0], "yellow":[-15,15], "green":[0,25]}},
-    #    value=6.7,
-    #    size=250,
-    #    max=25,
-    #    min=-25
-    # ),
 
+### update interval
     dcc.Interval(id='interval-container', interval = 10000, n_intervals = 0),
-    html.Div(id='datatable-interactivity-container'),
 
-###trying to get graphs side by side.... this tutorial doesnt work
-    # html.Div([
-    #     html.Div([
-    #         html.H3('Column 1'),
-    #         dcc.Graph(id='g1', figure={'data': [{'y': [1, 2, 3]}],
-    #                     "layout": {
-    #                         "height": 250,
-    #                         "width": 750, ### this is roughly half screen width
-    #                         "margin": {"t": 10, "l": 10, "r": 10},
-    #                         },
-    #             },)
-    #     ], className="four columns"),
-
-    #     html.Div([
-    #         html.H3('Column 2'),
-    #         dcc.Graph(id='g2', figure={'data': [{'y': [1, 2, 3]}],
-    #                     "layout": {
-    #                         "height": 250,
-    #                         "width": 750, ### this is roughly half screen width
-    #                         "margin": {"t": 10, "l": 10, "r": 10},
-    #                         },
-    #             },)
-    #     ], className="four columns"),
-    # ], className="row")
+### graphs
+    dbc.Row([
+###margin graph
+        dbc.Col([
+                html.H5("Margin", style={'textAlign':'center'}),
+                html.Div(id='margin-graph'),
+            ], width={'size':5}),
+###df high graph
+        dbc.Col([
+                html.H5("From DF High", style={'textAlign':'center'}),
+                html.Div(id='from-df-high'),
+            ], width={'size':5}),
+        dbc.Col([
+            daq.Gauge(
+                label='Current Margins',
+                id='margin-current',
+                color={"gradient":True,"ranges":{'#99413d':[-35,-20],'#F1C232':[-20,13],'#3D9970':[13,35]}},
+                value=15,
+                max=35,
+                min=-35,
+                size=160,
+                ),
+            daq.Gauge(
+                label='Total Margin',
+                id='margin-total',
+                color={"gradient":True,"ranges":{'#99413d':[-35,-20],'#F1C232':[-20,13],'#3D9970':[13,35]}},
+                value=3,
+                max=35,
+                min=-35,
+                size=160,
+                )
+            ],width={'size':1}),
+        ],justify="evenly",),
 
 ])
 
@@ -262,8 +267,6 @@ def display_page(pathname):
         return config.layout
     else:
         return dashboard_layout
-
-    # You could also return a 404 "URL not found" page here
 
 ### Bot instance uptime tracking
 def getDateFromISO8601Str(date: str): #pylint: disable=invalid-name
@@ -294,11 +297,12 @@ def getDateFromISO8601Str(date: str): #pylint: disable=invalid-name
     return f"{round(hours)}h {round(minutes)}m"
 
 @app.callback(
+        #Output('margin-bar','value'), # ### gauge CALL BACK NOT WORKING 
         Output('table-paging-and-sorting','data'),
         Input('interval-container', 'n_intervals'),
         )
 def update_table(n):
-    """UPdate all data"""
+    """Update all data"""
     pairs_list = tg_wrapper.helper.get_active_bot_list() #glob.glob(json_pattern)
     df = pd.DataFrame(
     columns=['Uptime', 'Trading Pair', 'Exchange', 'Last Action', 'Current Price', 'From DF High', 'DF High', 
@@ -367,27 +371,16 @@ def update_table(n):
     df['MACD'] = df['MACD'].astype(str)
     df['OBV'] = df['OBV'].astype(str)
     df = df.sort_values(by="Last Action", ascending=[True], inplace=False)
-    # print(df)
-    # print(df_margin)
-    # print (df.dtypes)
+
     return df.to_dict(orient='records')
-
-# ### graduated bar CALL BACK NOT WORKING 
-# @app.callback(
-#     Output('my-graduated-bar-1', 'value'),
-#     Input('table-paging-and-sorting', 'data')
-# )
-# def update_output(data):
-#     return value
-
 
 ### create graphs
 @app.callback(
-    Output('datatable-interactivity-container', "children"),
+    Output('margin-graph', "children"),
     Input('table-paging-and-sorting', "derived_virtual_data"),
     Input('table-paging-and-sorting', "derived_virtual_selected_rows"))
 def update_graphs(rows, derived_virtual_selected_rows):
-
+    """Update graphs"""
     if derived_virtual_selected_rows is None:
         derived_virtual_selected_rows = []
 
@@ -398,17 +391,15 @@ def update_graphs(rows, derived_virtual_selected_rows):
             for i in range(len(dff))]
     
     return [
-
                 dcc.Graph(
-                    id=column,
+                    id="Margin",
                     figure={
                         "data": [
                             {
                                 "x": dff['Trading Pair'],
-                                "y": dff[column],
+                                "y": dff["Margin"],
                                 "type": "bar",
-                                "marker": {"color": colors[0],}, #[(-25,'#99413d'), (25,'#3D9970')]
-                                
+                                "marker": {"color": colors[0],}, #[(-25,'#99413d'), (25,'#3D9970')]     
                             }
                         ],
                         "layout": {
@@ -416,20 +407,59 @@ def update_graphs(rows, derived_virtual_selected_rows):
                             "paper_bgcolor": "rgba(0,0,0,0)",
                             "font": {"color": 'white'},
                             "xaxis": {"automargin": True},
-                            "yaxis": {"automargin": True, "title": {"text": column}},
+                            "yaxis": {"automargin": True},
                             "orientation": 'h',
-                            "height": 250,
-                            "width": 750, ### this is roughly half screen width
+                            "height": 400,
                             "margin": {"t": 10, "l": 10, "r": 10},
                             },   
                     },
+                )            
 
-                )
-
-                for column in ["Margin", "From DF High"] if column in dff
+                for column in ["Margin"] if column in dff
 ]
 
+@app.callback(
+    Output('from-df-high', "children"),
+    Input('table-paging-and-sorting', "derived_virtual_data"),
+    Input('table-paging-and-sorting', "derived_virtual_selected_rows"))
+def update_graphs1(rows, derived_virtual_selected_rows):
 
+    if derived_virtual_selected_rows is None:
+        derived_virtual_selected_rows = []
+
+    dff = df if rows is None else pd.DataFrame(rows)
+    dff['From DF High'] = dff['From DF High']*100
+    colors = ['white' if i in derived_virtual_selected_rows else dff["Margincolor"]
+            for i in range(len(dff))]
+    
+    return [
+                dcc.Graph(
+                    id="From DF High",
+                    figure={
+                        "data": [
+                            {
+                                "x": dff['Trading Pair'],
+                                "y": dff["From DF High"],
+                                "type": "bar",
+                                "marker": {"color": colors[0],},   
+                            }
+                        ],
+                        "layout": {
+                            "plot_bgcolor": "rgba(0,0,0,0)",
+                            "paper_bgcolor": "rgba(0,0,0,0)",
+                            "font": {"color": 'white'},
+                            "xaxis": {"automargin": True},
+                            "yaxis": {"automargin": True},
+                            "orientation": 'h',
+                            "height": 400,
+                            #"width": 750, ### this is roughly half screen width
+                            "margin": {"t": 10, "l": 10, "r": 10},
+                            },   
+                    },
+                )            
+
+                for column in ["From DF High"] if column in dff
+]
 
 if __name__ == '__main__':
     app.run_server(host="0.0.0.0", port="8051") # comment this line out if you want to run on just local machine @ 127.0.0.1:8050
