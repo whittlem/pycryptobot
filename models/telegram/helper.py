@@ -19,66 +19,60 @@ from telegram.ext.callbackcontext import CallbackContext
 if not os.path.exists(os.path.join(os.curdir, "telegram_logs")):
     os.mkdir(os.path.join(os.curdir, "telegram_logs"))
 
-logging.basicConfig(
-    filename=os.path.join(
-        os.curdir,
-        "telegram_logs",
-        f"telegrambot {datetime.now().strftime('%Y-%m-%d')}.log",
-    ),
-    filemode="w",
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO,
-)
+# logging.basicConfig(
+#     filename=os.path.join(
+#         os.curdir,
+#         "telegram_logs",
+#         f"telegrambot {datetime.now().strftime('%Y-%m-%d')}.log",
+#     ),
+#     filemode="w",
+#     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+#     level=logging.INFO,
+# )
 
 # logger = logging.getLogger(__name__)
 
 
 class TelegramHelper:
     """Telegram Bot Helper"""
-
+    logging.basicConfig(
+        filename=os.path.join(
+            os.curdir,
+            "telegram_logs",
+            f"telegrambot {datetime.now().strftime('%Y-%m-%d')}.log",
+        ),
+        filemode="w",
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        level=logging.INFO,
+    )
     def __init__(self, configfile = 'config.json') -> None:
-        # self.datafolder = datafolder
         self.data = {}
-        # self.config = config
         self.config_file = configfile
         self.screener = {}
         self.settings = {}
-        # self.use_default_scanner = True
-        # self.atr72pcnt = 2.0
-        # self.enableleverage = False
-        # self.maxbotcount = 0
-        # self.exchange_bot_count = 0
-        # self.autoscandelay = 0
-        # self.enable_buy_next = True
-        # self.autostart = False
-        # self.logger_level = "INFO"
-
+        self.logger = None
         self.logger = logging.getLogger("telegram.helper")
-        # self.logger.setLevel(self.get_level(self.logger_level))
-        # self.terminal_start_process = ""
 
         with open(os.path.join(configfile), "r", encoding="utf8") as json_file:
             self.config = json.load(json_file)
 
-        # self.datafolder = self.config["telegram"]["datafolder"]
-
         self.load_config()
         self.read_screener_config()
 
-        # self.logger = logging.getLogger("telegram.helper")
-        self.logger.setLevel(self.get_level(self.logger_level))
-        # set a format which is simpler for console use
-        consoleHandlerFormatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
-        # define a Handler which writes sys.stdout
-        consoleHandler = logging.StreamHandler()
-        # Set log level
-        consoleHandler.setLevel(self.get_level(self.logger_level))
-        # tell the handler to use this format
-        consoleHandler.setFormatter(consoleHandlerFormatter)
-        # add the handler to the root logger
-        self.logger.addHandler(consoleHandler)
+        if len(self.logger.handlers) == 0:
+            self.logger.setLevel(self.get_level(self.logger_level))
+            # set a format which is simpler for console use
+            consoleHandlerFormatter = logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
+            # define a Handler which writes sys.stdout
+            consoleHandler = logging.StreamHandler()
+            # Set log level
+            consoleHandler.setLevel(self.get_level(self.logger_level))
+            # tell the handler to use this format
+            consoleHandler.setFormatter(consoleHandlerFormatter)
+            # add the handler to the root logger
+            self.logger.addHandler(consoleHandler)
 
         self.updater = Updater(
             self.config["telegram"]["token"],
@@ -521,7 +515,7 @@ class TelegramHelper:
             )
         else:
             if self.terminal_start_process != "":
-                command = f"{self.terminal_start_process} {command}"
+                command = f"{self.terminal_start_process.replace('{pair}', pair)} {command}"
             subprocess.Popen(
                 f"{command} --logfile './logs/{exchange}-{pair}-{datetime.now().date()}.log' "
                 f"{overrides}",

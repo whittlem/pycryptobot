@@ -18,7 +18,7 @@ from models.telegram.actions import TelegramActions
 from models.telegram.config import ConfigEditor
 from models.telegram.settings import SettingsEditor
 
-scannerSchedule = BackgroundScheduler(timezone="UTC")
+# self.scannerSchedule = BackgroundScheduler(timezone="UTC")
 VALUE_ENTRY = range(1)
 
 
@@ -26,6 +26,8 @@ class TelegramHandler:
     """Handles response calls from TG"""
 
     def __init__(self, authuserid, tg_helper: TelegramHelper) -> None:
+        self.scannerSchedule = BackgroundScheduler(timezone="UTC")
+
         self.authoriseduserid = authuserid
         self.helper = tg_helper
 
@@ -493,7 +495,7 @@ class TelegramHandler:
         keyboard.insert(
             0,
             [InlineKeyboardButton("Add Schedule", callback_data="schedule")]
-            if len(scannerSchedule.get_jobs()) == 0
+            if len(self.scannerSchedule.get_jobs()) == 0
             else [
                 InlineKeyboardButton("Remove Schedule", callback_data="stopmarket"),
             ],
@@ -710,15 +712,15 @@ class TelegramHandler:
         """check if scanner/screener is scheduled to run, add if not"""
         if (
             self.helper.config["scanner"]["autoscandelay"] > 0
-            and len(scannerSchedule.get_jobs()) == 0
+            and len(self.scannerSchedule.get_jobs()) == 0
         ):
-            if not scannerSchedule.running:
-                scannerSchedule.start()
+            if not self.scannerSchedule.running:
+                self.scannerSchedule.start()
 
             # if update is None:
             #     update = self.helper.default_context
 
-            scannerSchedule.add_job(
+            self.scannerSchedule.add_job(
                 self.actions.start_market_scan,
                 args=(update, context, self.helper.use_default_scanner),
                 trigger="interval",
@@ -737,11 +739,11 @@ class TelegramHandler:
             return True
         return False
 
-    def _remove_scheduled_job(self, update, context):
+    def _remove_scheduled_job(self, update=None, context=None):
         """check if scanner/screener is scheduled to run, remove if it is"""
         reply = ""
-        if len(scannerSchedule.get_jobs()) > 0:
-            scannerSchedule.remove_all_jobs()
+        if len(self.scannerSchedule.get_jobs()) > 0:
+            self.scannerSchedule.remove_all_jobs()
             reply = "<b>Scan job schedule has been removed</b> \u2705"
 
         else:

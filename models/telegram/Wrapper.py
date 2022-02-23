@@ -14,6 +14,8 @@ class Wrapper:
         )
         self._controls = TelegramControl(self.helper)
 
+        # self.schedule = self._handler.sc
+
     def start_market_scanning(
         self,
         update=None,
@@ -65,3 +67,11 @@ class Wrapper:
     def stop_bot(self, market):
         """place a market sell order"""
         return self._controls.stop_bot_response(None, None, market)
+
+    def start_bot(self, market):
+        """place a market sell order"""
+        return self._controls.start_bot_response(None, None, market)
+
+    def check_schedule_running(self) -> bool:
+        """ Check schedule """
+        return self._handler.scannerSchedule.running

@@ -2,7 +2,7 @@ import json
 import os
 import dash
 import datetime
-from dash import Dash, html, callback_context, dcc, State
+from dash import html, dcc, State
 import dash_table
 import dash_daq as daq
 from dash.dash_table.Format import Format, Scheme
@@ -11,7 +11,7 @@ import pandas as pd
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 
-from models.telegram import Wrapper
+# from models.telegram import Wrapper
 from pages import controls, config
 
 external_stylesheets = [dbc.themes.DARKLY]
@@ -19,15 +19,17 @@ external_stylesheets = [dbc.themes.DARKLY]
 #The full list of available themes is CERULEAN, COSMO, CYBORG, DARKLY, FLATLY, JOURNAL, LITERA, LUMEN, 
 #LUX, MATERIA, MINTY, MORPH, PULSE, QUARTZ, SANDSTONE, SIMPLEX, SKETCHY, SLATE, SOLAR, SPACELAB, SUPERHERO, UNITED, VAPOR, YETI, ZEPHYR
 
-tg_wrapper = Wrapper('config.json')
+tg_wrapper = controls.tg_wrapper # Wrapper('config.json')
 json_dir = tg_wrapper.helper.datafolder
 
-#pairs_list = glob.glob(json_pattern) 
+# tg_wrapper.helper.read_data()
 
 df=[]
 dff=[]
 df_margin=0
-app = dash.Dash(__name__, title = 'Pycryptobot Dashboard', external_stylesheets=external_stylesheets, update_title=None)
+app = dash.Dash(__name__, title = 'Pycryptobot Dashboard', external_stylesheets=external_stylesheets, update_title=None, meta_tags=[
+        {"name": "viewport", "content": "width=device-width, initial-scale=1"}
+    ])
 
 percentage = FormatTemplate.percentage(2)
 
@@ -60,6 +62,8 @@ app.layout = html.Div(children=[
     brand_href="/",
     color="primary", #primary
     dark=True,
+    fluid=True,
+    fixed=True
     ),
     html.Div(id='page-content', style=CONTENT_STYLE)])
 
