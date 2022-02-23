@@ -228,6 +228,10 @@ class Strategy:
         ):
             return False
 
+        if debug:
+            Logger.debug(f"Trailing Stop Loss Enabled {self.app.trailingStopLoss()}")
+            Logger.debug(f"Change Percentage {change_pcnt_high} < Stop Loss Percent {self.app.trailingStopLoss()} = {change_pcnt_high < self.app.trailingStopLoss()}")
+            Logger.debug(f"Margin {margin} > Stop Loss Trigger  {self.app.trailingStopLossTrigger()} = {margin > self.app.trailingStopLossTrigger()}")
         # loss failsafe sell at trailing_stop_loss
         if self.app.trailingStopLoss() != None:
             if margin > self.app.trailingStopLossTrigger():
