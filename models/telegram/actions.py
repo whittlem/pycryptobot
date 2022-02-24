@@ -202,7 +202,7 @@ class TelegramActions:
             update, query.data + "\n" + json.dumps(pbot, indent=4), new_message=False
         )
 
-    def get_bot_info(self, update, context):
+    def get_bot_info(self, update=None, context=None):
         """Get running bot information"""
         count = 0
         for file in self.helper.get_active_bot_list():
@@ -316,7 +316,7 @@ class TelegramActions:
         use_default_scanner: bool = True,
         scanmarkets: bool = True,
         startbots: bool = True,
-    ):
+    )-> bool:
         """Start market scanner/screener"""
         # Check whether using the scanner or the screener - use correct config file etc
         if use_default_scanner is True:
@@ -339,7 +339,7 @@ class TelegramActions:
                 context=context,
                 new_message=False,
             )
-            return
+            return False
 
         # If a bulk load file for the exchange exists - start up all the bulk bots for this
         for ex in config:
@@ -439,7 +439,7 @@ class TelegramActions:
                 self.helper.send_telegram_message(
                     update, "<b>Operation Complete (0 started)</b>", context=context
                 )
-            return
+            return True
 
         # Check to see if the bot would be restarted anyways from the scanner
         # and dont stop to maintain trailingbuypcnt etc
@@ -632,6 +632,7 @@ class TelegramActions:
         )
 
         self.helper.logger.info("Market Scan Complete")
+        return True
 
     def delete_response(self, update):
         """delete selected bot"""

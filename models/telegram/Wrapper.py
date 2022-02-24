@@ -18,10 +18,10 @@ class Wrapper:
 
     def start_market_scanning(
         self,
-        update=None,
-        context=None,
         scanmarkets: bool = True,
         startbots: bool = True,
+        update=None,
+        context=None,
     ) -> str:
         """Start market scanning/screening\n
         Add schedule if not already running\v
@@ -35,18 +35,16 @@ class Wrapper:
         """Restart any bots that are not running and have open orders"""
         return self._actions.start_open_orders(None, None)
 
-    def running_bot_info(self, update=None, context=None) -> str:
+    def running_bot_info(self) -> str:
         """Get running bot infomation\n
-        update can be None\n
-        context can be None\n
         Telegram notifications will still be sent"""
-        return self._actions.get_bot_info(update, context)
+        return self._actions.get_bot_info()
 
-    def closed_trades(self, update=None, days=callbacktags.TRADES24H) -> str:
+    def closed_trades(self, days=callbacktags.TRADES24H) -> str:
         """Get closed trades\n
         update can be None\n
         Telegram notifications will still be sent"""
-        return self._actions.get_closed_trades(update, days)
+        return self._actions.get_closed_trades(None, days)
 
     def place_market_buy_order(self, market):
         """Place a market buy order"""

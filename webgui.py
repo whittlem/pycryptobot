@@ -86,140 +86,144 @@ dashboard_layout = html.Div(children=[
         ]),
 
     html.Br(),
+    dbc.Row([
+        dbc.Col(
+            dash_table.DataTable(
+                id='table-paging-and-sorting',
+                page_action="native",
+                page_current= 0,
+                page_size= 15,
+                sort_action="native",
+                style_cell={'textAlign': 'center'},
+                style_as_list_view=True,
+                editable=True,
+                columns=[
+                        {'name': 'Uptime', 'id': 'Uptime', 'type': 'text'},
+                        {'name': 'Trading Pair', 'id': 'Trading Pair', 'type': 'text'},
+                        {'name': 'Exchange', 'id': 'Exchange', 'type': 'text'},
+                        {'name': 'Last Action', 'id': 'Last Action', 'type': 'numeric'},
+                        {'name': 'Current Price', 'id': 'Current Price', 'type': 'numeric'},
+                        dict(id='Margin', name='Margin', type='numeric', format=percentage),
+                        #{'name': 'Margin', 'id': 'Margin', 'type': 'numeric', 'format': 'percentage'},
+                        {'name': 'TSLT', 'id': 'TSLT', 'type': 'text'},
+                        {'name': 'PVLT', 'id': 'PVLT', 'type': 'text'},
+                        dict(id='From DF High', name='From DF High', type='numeric', format=percentage),                
+                        #{'name': 'From DF High', 'id': 'From DF High', 'type': 'numeric'},
+                        {'name': 'DF High', 'id': 'DF High', 'type': 'numeric'},
+                        {'name': 'Delta', 'id': 'Delta', 'type': 'numeric'},
+                        {'name': 'BULL', 'id': 'BULL', 'type': 'text'},
+                        {'name': 'ERI', 'id': 'ERI', 'type': 'text'},
+                        {'name': 'EMA', 'id': 'EMA', 'type': 'text'},
+                        {'name': 'MACD', 'id': 'MACD', 'type': 'text'},
+                        {'name': 'OBV', 'id': 'OBV', 'type': 'text'},  
+                    ],
+                style_header={
+                        'backgroundColor': 'rgb(30, 30, 30)',
+                        'color': 'white',
+                        'fontWeight': 'bold'
+                    },
+                style_data={
+                        'backgroundColor': 'rgb(50, 50, 50)',
+                        'color': 'white'
+                    }, 
 
-    dash_table.DataTable(
-        id='table-paging-and-sorting',
-        page_action="native",
-        page_current= 0,
-        page_size= 15,
-        sort_action="native",
-        style_cell={'textAlign': 'center'},
-        style_as_list_view=True,
-        editable=True,
-        columns=[
-                {'name': 'Uptime', 'id': 'Uptime', 'type': 'text'},
-                {'name': 'Trading Pair', 'id': 'Trading Pair', 'type': 'text'},
-                {'name': 'Exchange', 'id': 'Exchange', 'type': 'text'},
-                {'name': 'Last Action', 'id': 'Last Action', 'type': 'numeric'},
-                {'name': 'Current Price', 'id': 'Current Price', 'type': 'numeric'},
-                dict(id='Margin', name='Margin', type='numeric', format=percentage),
-                #{'name': 'Margin', 'id': 'Margin', 'type': 'numeric', 'format': 'percentage'},
-                {'name': 'TSLT', 'id': 'TSLT', 'type': 'text'},
-                {'name': 'PVLT', 'id': 'PVLT', 'type': 'text'},
-                dict(id='From DF High', name='From DF High', type='numeric', format=percentage),                
-                #{'name': 'From DF High', 'id': 'From DF High', 'type': 'numeric'},
-                {'name': 'DF High', 'id': 'DF High', 'type': 'numeric'},
-                {'name': 'Delta', 'id': 'Delta', 'type': 'numeric'},
-                {'name': 'BULL', 'id': 'BULL', 'type': 'text'},
-                {'name': 'ERI', 'id': 'ERI', 'type': 'text'},
-                {'name': 'EMA', 'id': 'EMA', 'type': 'text'},
-                {'name': 'MACD', 'id': 'MACD', 'type': 'text'},
-                {'name': 'OBV', 'id': 'OBV', 'type': 'text'},  
+                style_data_conditional=[
+                    {
+                        'if': {'row_index': 'odd'},
+                        'backgroundColor': 'rgb(70, 70, 70)',
+                        },
+                    #set column widths    
+                    {'if': {'column_id': 'Trading Pair'},'width': '180px'},
+                    {'if': {'column_id': 'Last Action'},'width': '130px'},
+                    {'if': {'column_id': 'Current Price'},'width': '160px'},
+                    {'if': {'column_id': 'Margin'},'width': '160px'},
+                    {'if': {'column_id': 'TSLT'},'width': '80px'},
+                    {'if': {'column_id': 'PVLT'},'width': '80px'},
+                    {'if': {'column_id': 'From DF High'},'width': '130px'},
+                    {'if': {'column_id': 'DF High'},'width': '130px'},
+                    {'if': {'column_id': 'BULL'},'width': '80px'},
+                    {'if': {'column_id': 'ERI'},'width': '80px'},
+                    {'if': {'column_id': 'EMA'},'width': '80px'},
+                    {'if': {'column_id': 'MACD'},'width': '80px'},
+                    {'if': {'column_id': 'OBV'},'width': '80px'},
+
+        ###indicator states
+        ###add gradients for from_df_hi and margins to represent position, when from df high is > 0 make df hi green
+
+                    {'if': 
+                        {'filter_query': '{Margin} > 0', 'column_id': 'Margin'},
+                        'backgroundColor': '#3D9970',
+                        'color': 'white'
+                    },
+                    {'if': {'filter_query': '{Margin} < 0', 'column_id': 'Margin'},
+                        'backgroundColor': '#99413d',
+                        'color': 'white'
+                    },            
+                    {'if': {'filter_query': '{From DF High} > 0', 'column_id': 'From DF High'},
+                        'backgroundColor': '#3D9970',
+                        'color': 'white'
+                    },
+                    {'if': {'filter_query': '{From DF High} < 0', 'column_id': 'From DF High'},
+                        'backgroundColor': '#99413d',
+                        'color': 'white'
+                    },      
+                    {'if': {'filter_query': '{TSLT} = "True"', 'column_id': 'TSLT'},
+                        'backgroundColor': '#3D9970',
+                        'color': 'white'
+                    },
+                    {'if': {'filter_query': '{PVLT} = "True"', 'column_id': 'PVLT'},
+                        'backgroundColor': '#3D9970',
+                        'color': 'white'
+                    },
+                    {'if': {'filter_query': '{BULL} = "True"', 'column_id': 'BULL'},
+                        'backgroundColor': '#3D9970',
+                        'color': 'white'
+                    },
+                    {'if': {'filter_query': '{BULL} = "False"', 'column_id': 'BULL'},
+                        'backgroundColor': '#99413d',
+                        'color': 'white'
+                    },
+                    {'if': {'filter_query': '{ERI} = "True"', 'column_id': 'ERI'},
+                        'backgroundColor': '#3D9970',
+                        'color': 'white'
+                    },
+                    {'if': {'filter_query': '{ERI} = "False"', 'column_id': 'ERI'},
+                        'backgroundColor': '#99413d',
+                        'color': 'white'
+                    },
+                    {'if': {'filter_query': '{EMA} = "True"', 'column_id': 'EMA'},
+                        'backgroundColor': '#3D9970',
+                        'color': 'white'
+                    },
+                    {'if': {'filter_query': '{EMA} = "False"', 'column_id': 'EMA'},
+                        'backgroundColor': '#99413d',
+                        'color': 'white'
+                    },
+                    {'if': {'filter_query': '{MACD} = "True"','column_id': 'MACD'},
+                        'backgroundColor': '#3D9970',
+                        'color': 'white'
+                    },
+                    {'if': {'filter_query': '{MACD} = "False"','column_id': 'MACD'},
+                        'backgroundColor': '#99413d',
+                        'color': 'white'
+                    },
+                    {'if': {'filter_query': '{OBV} = "True"','column_id': 'OBV'},
+                        'backgroundColor': '#3D9970',
+                        'color': 'white'
+                    },
+                    {'if': {'filter_query': '{OBV} = "False"', 'column_id': 'OBV'},
+                        'backgroundColor': '#99413d',
+                        'color': 'white'
+                    },
+                    {'if': {'filter_query': '{Last Action} != SELL', 'column_id': 'Last Action'},
+                        'backgroundColor': '#3D9970',
+                        'color': 'white'
+                    },
             ],
-        style_header={
-                'backgroundColor': 'rgb(30, 30, 30)',
-                'color': 'white',
-                'fontWeight': 'bold'
-            },
-        style_data={
-                'backgroundColor': 'rgb(50, 50, 50)',
-                'color': 'white'
-            }, 
+            ),width={'size':12},
+        )
+    ]),
 
-        style_data_conditional=[
-            {
-                'if': {'row_index': 'odd'},
-                'backgroundColor': 'rgb(70, 70, 70)',
-                },
-            #set column widths    
-            {'if': {'column_id': 'Trading Pair'},'width': '180px'},
-            {'if': {'column_id': 'Last Action'},'width': '130px'},
-            {'if': {'column_id': 'Current Price'},'width': '160px'},
-            {'if': {'column_id': 'Margin'},'width': '160px'},
-            {'if': {'column_id': 'TSLT'},'width': '80px'},
-            {'if': {'column_id': 'PVLT'},'width': '80px'},
-            {'if': {'column_id': 'From DF High'},'width': '130px'},
-            {'if': {'column_id': 'DF High'},'width': '130px'},
-            {'if': {'column_id': 'BULL'},'width': '80px'},
-            {'if': {'column_id': 'ERI'},'width': '80px'},
-            {'if': {'column_id': 'EMA'},'width': '80px'},
-            {'if': {'column_id': 'MACD'},'width': '80px'},
-            {'if': {'column_id': 'OBV'},'width': '80px'},
-
-###indicator states
-###add gradients for from_df_hi and margins to represent position, when from df high is > 0 make df hi green
-
-            {'if': 
-                {'filter_query': '{Margin} > 0', 'column_id': 'Margin'},
-                'backgroundColor': '#3D9970',
-                'color': 'white'
-            },
-            {'if': {'filter_query': '{Margin} < 0', 'column_id': 'Margin'},
-                'backgroundColor': '#99413d',
-                'color': 'white'
-            },            
-            {'if': {'filter_query': '{From DF High} > 0', 'column_id': 'From DF High'},
-                'backgroundColor': '#3D9970',
-                'color': 'white'
-            },
-            {'if': {'filter_query': '{From DF High} < 0', 'column_id': 'From DF High'},
-                'backgroundColor': '#99413d',
-                'color': 'white'
-            },      
-            {'if': {'filter_query': '{TSLT} = "True"', 'column_id': 'TSLT'},
-                'backgroundColor': '#3D9970',
-                'color': 'white'
-            },
-            {'if': {'filter_query': '{PVLT} = "True"', 'column_id': 'PVLT'},
-                'backgroundColor': '#3D9970',
-                'color': 'white'
-            },
-            {'if': {'filter_query': '{BULL} = "True"', 'column_id': 'BULL'},
-                'backgroundColor': '#3D9970',
-                'color': 'white'
-            },
-            {'if': {'filter_query': '{BULL} = "False"', 'column_id': 'BULL'},
-                'backgroundColor': '#99413d',
-                'color': 'white'
-            },
-            {'if': {'filter_query': '{ERI} = "True"', 'column_id': 'ERI'},
-                'backgroundColor': '#3D9970',
-                'color': 'white'
-            },
-            {'if': {'filter_query': '{ERI} = "False"', 'column_id': 'ERI'},
-                'backgroundColor': '#99413d',
-                'color': 'white'
-            },
-            {'if': {'filter_query': '{EMA} = "True"', 'column_id': 'EMA'},
-                'backgroundColor': '#3D9970',
-                'color': 'white'
-            },
-            {'if': {'filter_query': '{EMA} = "False"', 'column_id': 'EMA'},
-                'backgroundColor': '#99413d',
-                'color': 'white'
-            },
-            {'if': {'filter_query': '{MACD} = "True"','column_id': 'MACD'},
-                'backgroundColor': '#3D9970',
-                'color': 'white'
-            },
-            {'if': {'filter_query': '{MACD} = "False"','column_id': 'MACD'},
-                'backgroundColor': '#99413d',
-                'color': 'white'
-            },
-            {'if': {'filter_query': '{OBV} = "True"','column_id': 'OBV'},
-                'backgroundColor': '#3D9970',
-                'color': 'white'
-            },
-            {'if': {'filter_query': '{OBV} = "False"', 'column_id': 'OBV'},
-                'backgroundColor': '#99413d',
-                'color': 'white'
-            },
-            {'if': {'filter_query': '{Last Action} != SELL', 'column_id': 'Last Action'},
-                'backgroundColor': '#3D9970',
-                'color': 'white'
-            },
-    ],
-    ),
 
 ### update interval
     dcc.Interval(id='interval-container', interval = 10000, n_intervals = 0),

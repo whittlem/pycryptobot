@@ -553,3 +553,56 @@ class TelegramHelper:
         self, callback_tag, exchange: str = "", parameter: str = ""
     ):
         return json.dumps({"c": callback_tag, "e": exchange, "p": parameter})
+
+    def clean_data_folder(self):
+        """ check market files in data folder """
+        self.logger.debug("cleandata started")
+        jsonfiles = self.get_active_bot_list()
+        for i in range(len(jsonfiles), 0, -1):
+            jfile = jsonfiles[i - 1]
+
+            self.logger.info("checking %s", jfile)
+
+            self.read_data(jfile)
+
+            last_modified = datetime.now() - datetime.fromtimestamp(
+                os.path.getmtime(
+                    os.path.join(
+                        self.datafolder, "telegram_data", f"{jfile}.json"
+                    )
+                )
+            )
+            if "margin" not in self.data:
+                self.logger.info("deleting %s", jfile)
+                os.remove(
+                    os.path.join(
+                        self.datafolder, "telegram_data", f"{jfile}.json"
+                    )
+                )
+                continue
+            if (
+                self.data["botcontrol"]["status"] == "active"
+                and last_modified.seconds > 120
+                and (last_modified.seconds != 86399 and last_modified.days != -1)
+            ):
+                self.logger.info("deleting %s %s", jfile, str(last_modified))
+                os.remove(
+                    os.path.join(
+                        self.datafolder, "telegram_data", f"{jfile}.json"
+                    )
+                )
+                continue
+            elif (
+                self.data["botcontrol"]["status"] == "exit"
+                and last_modified.seconds > 120
+                and last_modified.seconds != 86399
+            ):
+                self.logger.info(
+                    "deleting %s %s", jfile, str(last_modified.seconds)
+                )
+                os.remove(
+                    os.path.join(
+                        self.datafolder, "telegram_data", f"{jfile}.json"
+                    )
+                )
+        self.logger.debug("cleandata complete")

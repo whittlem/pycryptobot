@@ -627,58 +627,6 @@ class TelegramBot(TelegramBotBase):
             print("No internet connection")
             return False
 
-    def _cleandata(self):
-        self.helper.logger.debug("/cleandata started")
-        jsonfiles = self.helper.get_active_bot_list()
-        for i in range(len(jsonfiles), 0, -1):
-            jfile = jsonfiles[i - 1]
-
-            self.helper.logger.info("checking %s", jfile)
-
-            self.helper.read_data(jfile)
-
-            last_modified = datetime.now() - datetime.fromtimestamp(
-                os.path.getmtime(
-                    os.path.join(
-                        self.helper.datafolder, "telegram_data", f"{jfile}.json"
-                    )
-                )
-            )
-            if "margin" not in self.helper.data:
-                self.helper.logger.info("deleting %s", jfile)
-                os.remove(
-                    os.path.join(
-                        self.helper.datafolder, "telegram_data", f"{jfile}.json"
-                    )
-                )
-                continue
-            if (
-                self.helper.data["botcontrol"]["status"] == "active"
-                and last_modified.seconds > 120
-                and (last_modified.seconds != 86399 and last_modified.days != -1)
-            ):
-                self.helper.logger.info("deleting %s %s", jfile, str(last_modified))
-                os.remove(
-                    os.path.join(
-                        self.helper.datafolder, "telegram_data", f"{jfile}.json"
-                    )
-                )
-                continue
-            elif (
-                self.helper.data["botcontrol"]["status"] == "exit"
-                and last_modified.seconds > 120
-                and last_modified.seconds != 86399
-            ):
-                self.helper.logger.info(
-                    "deleting %s %s", jfile, str(last_modified.seconds)
-                )
-                os.remove(
-                    os.path.join(
-                        self.helper.datafolder, "telegram_data", f"{jfile}.json"
-                    )
-                )
-        self.helper.logger.debug("/cleandata complete")
-
     def ExceptionExchange(self, update, context):
         """start new bot ask which exchange"""
         self._question_which_exchange(update, context)
@@ -780,7 +728,7 @@ class TelegramBot(TelegramBotBase):
         ):  # pylint: disable=protected-access
             return
 
-        self._cleandata()
+        self.helper.clean_data_folder()
 
         self.actions.get_bot_info(None, context)
         self.helper.send_telegram_message(update, "<b>Operation Complete</b>", context=context)
@@ -951,7 +899,7 @@ def main():
     # log all errors
     dp.add_error_handler(botconfig.error)
 
-    botconfig._cleandata()  # pylint: disable=protected-access
+    botconfig.helper.clean_data_folder()
 
     # Start the Bot
     botconfig.updater.start_polling()
