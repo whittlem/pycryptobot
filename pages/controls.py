@@ -1,6 +1,7 @@
 """ WebGui Bot Controls """
 import dash_bootstrap_components as dbc
 from dash import dcc, html, Input, Output, State, MATCH, callback
+from numpy import False_
 
 from models.telegram import Wrapper
 
@@ -129,11 +130,26 @@ scan_layoutv2 = html.Div(
             )
         ),
         dbc.Row(
-            dbc.Col(
+            dbc.Col([
                 html.Div(
-                    id="schedule",
-                    className="d-grid gap-2",
-                ),
+                    html.Button(
+                        "Add Schedule",
+                        hidden=True,
+                        id="btn-add-schedule",
+                        n_clicks=0,
+                        name="add",
+                        className="btn btn-primary",
+                    ),className="d-grid gap-2"),
+                html.Div(
+                    html.Button(
+                        "Remove Schedule",
+                        hidden=False,
+                        id="btn-remove-schedule",
+                        n_clicks=0,
+                        name="remove",
+                        className="btn btn-primary",
+                    ),className="d-grid gap-2"
+                )],
                 width={"size": 6, "offset": 3},
             )
         ),
@@ -184,65 +200,33 @@ scan_layoutv2 = html.Div(
     ]
 )
 
-
-@callback(Output("schedule", "children"), Input("btn-start-scanning", "n_clicks"))
-def btn_schedule_click(n_clicks):
-    """Add scanner/screen schedule"""
-    if n_clicks > 0:
-        if tg_wrapper.check_schedule_running():
-            return html.Button(
-                "Remove Schedule",
-                id="btn-schedule",
-                n_clicks=0,
-                name="remove",
-                className="btn btn-primary",
-            )
-        else:
-            return html.Button(
-                "Add Schedule",
-                id="btn-schedule",
-                n_clicks=0,
-                name="add",
-                className="btn btn-primary",
-            )
-
-
 @callback(
-    [Output("btn-schedule", "value"),
-    Output("btn-start-scanning", "n_clicks")],
-    Input("btn-schedule", "n_clicks"),
-    State("btn-schedule", "name"),
+    [
+        Output("btn-add-schedule", "hidden"),
+        Output("btn-remove-schedule", "hidden"),
+        Output("btn-add-schedule", "n_clicks"),
+        Output("btn-remove-schedule", "n_clicks")
+    ],
+    [
+        Input("btn-add-schedule", "n_clicks"),
+        Input("btn-remove-schedule", "n_clicks"),
+        Input("btn-start-scanning", "n_clicks")
+    ],
 )
-def btn_remove_schedule_click(n_clicks, value):
+def btn_schedule_click(add_click, remove_click, open_click):
     """Add scanner/screen schedule"""
-    if n_clicks > 0:
-        if value == "add":
-            tg_wrapper._handler._check_scheduled_job()
-            return "remove", 1
-        if value == "remove":
-            tg_wrapper._handler._remove_scheduled_job()
-            return "add", 1
+    if add_click > 0:
+        tg_wrapper._handler._check_scheduled_job()
+        return True, False, 0, 0
+    if remove_click > 0:
+        tg_wrapper._handler._remove_scheduled_job()
+        return False, True, 0, 0
+    if open_click > 0:
+        if tg_wrapper.check_schedule_running():
+            return True, False, 0, 0
+        else:
+            return False, True, 0, 0
 
-
-# @callback(
-#     Output("schedule", "children"), Input("interval-container", "n_intervals")
-# )
-# def btn_add_schedule_update(n):
-#     """ Update button with correct text """
-#     if not tg_wrapper.check_schedule_running():
-#         return html.Button(
-#             "Add Schedule",
-#             id="btn-add-schedule",
-#             n_clicks=0,
-#             className="btn btn-primary",
-#         )
-#     else:
-#         return html.Button(
-#             "Remove Schedule",
-#             id="btn-remove-schedule",
-#             n_clicks=0,
-#             className="btn btn-primary",
-#         )
 
 
 @callback(Output("start-accordian", "start_collapsed"), Input("bots", "active_item"))
@@ -251,7 +235,6 @@ def update_output_1(value):
     global selected_pair
     if value is not None:
         selected_pair = value
-    # update_output_2(None)
     return "true"
 
 
@@ -263,7 +246,6 @@ def update_output_2(value):
     global selected_pair
     if value is not None:
         selected_pair = value
-    # update_output_1(None)
     return "true"
 
 
@@ -341,7 +323,6 @@ def start_bots_only(n):  # pylint: disable=missing-function-docstring
     Input({"type": "btn-pause", "index": MATCH}, "n_clicks"),
 )
 def btn_pause_click(click):  # pylint: disable=missing-function-docstring
-    # print(dash.callback_context.triggered)
     if click > 0:
         tg_wrapper.pause_bot(selected_pair)
     return "true"
@@ -381,7 +362,7 @@ def btn_start_click(click):  # pylint: disable=missing-function-docstring
     Output("start-accordian", "children"), Input("interval-container", "n_intervals")
 )
 def update_start_list(n):
-    """update manual start bot list"""
+    """ update manual start bot list """
     acc_list = []
     tg_wrapper.helper.read_data()
     buttons = []
@@ -416,7 +397,6 @@ def update_start_list(n):
     )
 
     return accordion
-
 
 @callback(
     Output("bot-accordian", "children"), Input("interval-container", "n_intervals")

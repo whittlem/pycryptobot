@@ -72,4 +72,4 @@ class Wrapper:
 
     def check_schedule_running(self) -> bool:
         """ Check schedule """
-        return self._handler.scannerSchedule.running
+        return len(self._handler.scannerSchedule.get_jobs()) > 0
