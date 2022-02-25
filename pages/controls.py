@@ -25,7 +25,6 @@ def get_bot_status(pair):
     if pair is not None:
         return f"Uptime: {tg_wrapper.helper.get_uptime()} - Status: {tg_wrapper.helper.data['botcontrol']['status']} - Margin: {tg_wrapper.helper.data['margin']}"
 
-
 layout = html.Div(
     [
         dbc.Row(
