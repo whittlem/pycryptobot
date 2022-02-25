@@ -1,7 +1,6 @@
 """ WebGui Bot Controls """
 import dash_bootstrap_components as dbc
 from dash import dcc, html, Input, Output, State, MATCH, callback
-from numpy import False_
 
 from models.telegram import Wrapper
 
@@ -22,29 +21,52 @@ def update_buttons(pair, value):
 
 
 def get_bot_status(pair):
+    """ Get bot status for accordian heading """
     if pair is not None:
         return f"Uptime: {tg_wrapper.helper.get_uptime()} - Status: {tg_wrapper.helper.data['botcontrol']['status']} - Margin: {tg_wrapper.helper.data['margin']}"
 
 
 layout = html.Div(
     [
+        dbc.Row(
+            dbc.Col(
+                html.H4("Controls", style={"textAlign": "left"})
+            ),
+        ),
+        dbc.Row(
+            dbc.Col(
+                html.H5("Main", style={"textAlign": "left"}),
+            )
+        ),
+        dbc.Row(
+            dbc.Col(
+                html.Div(
+                    html.Button(
+                        "Restart Open Orders",
+                        id="btn-open-orders",
+                        n_clicks=0,
+                        className="btn btn-primary"
+                    ),
+                    className="d-grid gap-2"
+                ),
+                width={"size": 12, "offset": 0}
+            )
+        ),
+        dbc.Row(
+            dbc.Col(
+                html.Div(
+                    html.Button(
+                        "Market Scanning",
+                        id="btn-start-scanning",
+                        n_clicks=0,
+                        className="btn btn-primary",
+                    ),
+                    className="d-grid gap-2"
+                ),
+                width={"size": 12, "offset": 0}
+            )
+        ),
         ### html buttons
-        html.P(),
-        html.H4("Controls", style={"textAlign": "left"}),
-        html.H5("Main", style={"textAlign": "left"}),
-        html.Button(
-            "Restart Open Orders",
-            id="btn-open-orders",
-            n_clicks=0,
-            className="btn btn-primary",
-        ),
-        html.P(),
-        html.Button(
-            "Market Scanning",
-            id="btn-start-scanning",
-            n_clicks=0,
-            className="btn btn-primary",
-        ),
         dbc.Collapse(
             dbc.Card(
                 dbc.CardBody(
@@ -54,9 +76,7 @@ layout = html.Div(
             id="scan_options",
             is_open=False,
         ),
-        # html.Div(id='market-scan-options'),
         html.P(),
-        # html.H5("Manual Start Bot List", style={"textAlign": "left"}),
         dbc.Accordion(
             children=dbc.AccordionItem(
                 id="start-accordian",
@@ -66,8 +86,6 @@ layout = html.Div(
             start_collapsed=True,
         ),
         html.P(),
-        # html.Div(id="start-accordian"),
-        # html.H5("Bot specific controls", style={"textAlign": "left"}),
         dbc.Accordion(
             children=dbc.AccordionItem(
                 id="bot-accordian",
@@ -77,45 +95,9 @@ layout = html.Div(
             start_collapsed=True,
         ),
         html.P(),
-        # html.Div(id="bot-accordian"),
-        # html.Div(id="container-button-timestamp"),
         dcc.Interval(id="interval-container", interval=30000, n_intervals=0),
-        # html.Div(id="dummy-div-0"),
-        # html.Div(id="dummy-div-1"),
-        # html.Div(id="dummy-div-2"),
-        # html.Div(id="dummy-div-3"),
-        # html.Div(id="dummy-div-4"),
-        # html.Div(id="dummy-div-5"),
-        # html.Div(id="dummy-div-6"),
-        # html.Div(id="dummy-div-7"),
     ],
     className="d-grid gap-2 col-11 mx-auto",
-)
-scan_layout = html.Div(
-    className="d-grid gap-2 col-6 mx-auto",
-    children=[
-        html.P(),
-        html.H5("Options", style={"textAlign": "left"}),
-        # html.Div(id="schedule",className="d-grid gap-2 col-12 mx-auto"),
-        html.P(),
-        # html.Button(
-        #     "Scan Only", id="btn-scan-only", n_clicks=0, className="btn btn-primary"
-        # ),
-        # html.Button(
-        #     "Start Bots Only",
-        #     id="btn-start-only",
-        #     n_clicks=0,
-        #     className="btn btn-primary",
-        # ),
-        # html.P(),
-        # html.Button(
-        #     "Scan and Start Bots",
-        #     id="btn-scan-start",
-        #     n_clicks=0,
-        #     className="btn btn-primary",
-        # ),
-        # html.P(),
-    ],
 )
 
 scan_layoutv2 = html.Div(
@@ -150,7 +132,8 @@ scan_layoutv2 = html.Div(
                         className="btn btn-primary",
                     ),className="d-grid gap-2"
                 )],
-                width={"size": 6, "offset": 3},
+                md={"size": 12, "offset": 0},
+                lg={"size": 10, "offset": 1},
             )
         ),
         html.P(),
@@ -166,8 +149,10 @@ scan_layoutv2 = html.Div(
                         ),
                         className="d-grid gap-2",
                     ),
-                    width={"size": 4, "offset": 2},
+                    md={"size": 6, "offset": 0},
+                    lg={"size": 5, "offset": 1},
                 ),
+                html.Br(),
                 dbc.Col(
                     html.Div(
                         html.Button(
@@ -178,7 +163,8 @@ scan_layoutv2 = html.Div(
                         ),
                         className="d-grid gap-2",
                     ),
-                    width={"size": 4},
+                    md={"size": 6},
+                    lg={"size": 5},
                 ),
             ]
         ),
@@ -194,7 +180,8 @@ scan_layoutv2 = html.Div(
                     ),
                     className="d-grid gap-2",
                 ),
-                width={"size": 6, "offset": 3},
+                md={"size": 12, "offset": 0},
+                lg={"size": 10, "offset": 1},
             )
         ),
     ]

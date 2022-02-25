@@ -1,12 +1,13 @@
 import json
 import os
 import dash
-import datetime
+# import datetime
+from datetime import datetime, timedelta
 from dash import html, dcc, State
 import dash_table
 import dash_daq as daq
-from dash.dash_table.Format import Format, Scheme
-from dash.dash_table import DataTable, FormatTemplate
+# from dash.dash_table.Format import Format, Scheme
+from dash.dash_table import FormatTemplate
 import pandas as pd
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
@@ -21,8 +22,6 @@ external_stylesheets = [dbc.themes.DARKLY]
 
 tg_wrapper = controls.tg_wrapper # Wrapper('config.json')
 json_dir = tg_wrapper.helper.datafolder
-
-# tg_wrapper.helper.read_data()
 
 df=[]
 dff=[]
@@ -68,26 +67,13 @@ app.layout = html.Div(children=[
     html.Div(id='page-content', style=CONTENT_STYLE)])
 
 dashboard_layout = html.Div(children=[
-    dbc.Row([
+    dbc.Row(
         dbc.Col([html.H4('Dashboard', style={'textAlign':'left'}),], width={'size':1}),
-        # dbc.Col([html.Div([
-        #     daq.Gauge(
-        #         label='Total Margin',
-        #         id='margin-bar',
-        #         color={"gradient":True,"ranges":{'#99413d':[-35,-4],'#F1C232':[-4,0],'#3D9970':[0,35]}},
-        #         showCurrentValue=True,
-        #         value=3,
-        #         max=35,
-        #         min=-35,
-        #         size=120,
-        #         )
-        #     ]),
-        # ], width={'size':1})
-        ]),
+        ),
 
     html.Br(),
     dbc.Row([
-        dbc.Col(
+        dbc.Col([
             dash_table.DataTable(
                 id='table-paging-and-sorting',
                 page_action="native",
@@ -220,10 +206,9 @@ dashboard_layout = html.Div(children=[
                         'color': 'white'
                     },
             ],
-            ),width={'size':12},
-        )
+        ),
+    ], xs=10, sm=10, md=10, lg=12, xl=12),
     ]),
-
 
 ### update interval
     dcc.Interval(id='interval-container', interval = 10000, n_intervals = 0),
@@ -234,32 +219,16 @@ dashboard_layout = html.Div(children=[
         dbc.Col([
                 html.H5("Margin", style={'textAlign':'center'}),
                 html.Div(id='margin-graph'),
-            ], width={'size':5}),
+            ], xs=12, sm=12, md=12, lg=6, xl=5),
 ###df high graph
         dbc.Col([
                 html.H5("From DF High", style={'textAlign':'center'}),
                 html.Div(id='from-df-high'),
-            ], width={'size':5}),
+            ], xs=12, sm=12, md=12, lg=6, xl=5),
         dbc.Col([
-            daq.Gauge(
-                label='Current Margins',
-                id='margin-current',
-                color={"gradient":True,"ranges":{'#99413d':[-35,-20],'#F1C232':[-20,13],'#3D9970':[13,35]}},
-                value=15,
-                max=35,
-                min=-35,
-                size=160,
-                ),
-            daq.Gauge(
-                label='Total Margin',
-                id='margin-total',
-                color={"gradient":True,"ranges":{'#99413d':[-35,-20],'#F1C232':[-20,13],'#3D9970':[13,35]}},
-                value=3,
-                max=35,
-                min=-35,
-                size=160,
-                )
-            ],width={'size':1}),
+            html.Div(id='margin-current'),
+            html.Div(id='margin-7Dtotal'),
+            ],xs=10, sm=10, md=2, lg=1, xl=1,)
         ],justify="evenly",),
 
 ])
@@ -279,7 +248,7 @@ def display_page(pathname):
 ### Bot instance uptime tracking
 def getDateFromISO8601Str(date: str): #pylint: disable=invalid-name
     """Bot instance uptime tracking"""
-    now = str(datetime.datetime.now())
+    now = str(datetime.now())
     # If date passed from datetime.now() remove milliseconds
     if date.find(".") != -1:
         dt = date.split(".")[0]
@@ -295,8 +264,8 @@ def getDateFromISO8601Str(date: str): #pylint: disable=invalid-name
     # Add time in case only a date is passed in
     new_date_str = f"{date} 00:00:00" if len(date) == 10 else date
 
-    started = datetime.datetime.strptime(new_date_str, "%Y-%m-%d %H:%M:%S")
-    now = datetime.datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
+    started = datetime.strptime(new_date_str, "%Y-%m-%d %H:%M:%S")
+    now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
     duration = now - started
     duration_in_s = duration.total_seconds()
     hours = divmod(duration_in_s, 3600)[0]
@@ -305,7 +274,6 @@ def getDateFromISO8601Str(date: str): #pylint: disable=invalid-name
     return f"{round(hours)}h {round(minutes)}m"
 
 @app.callback(
-        #Output('margin-bar','value'), # ### gauge CALL BACK NOT WORKING 
         Output('table-paging-and-sorting','data'),
         Input('interval-container', 'n_intervals'),
         )
@@ -322,8 +290,7 @@ def update_table(n):
             try:
                 with open(os.path.join(tg_wrapper.helper.datafolder, 'telegram_data', f"{pair}.json"), encoding="utf8") as f:
                     json_data =pd.json_normalize(json.loads(f.read()))
-                    # pair = os.path.splitext(pair)[0]
-                    json_data['pair'] = pair #.rsplit("/", 1)[-1]
+                    json_data['pair'] = pair
                     uptime = getDateFromISO8601Str(json_data['botcontrol.started'][0])
                     if isinstance(json_data["margin"][0], str) and '%' in json_data["margin"][0] and '-' in json_data["margin"][0]:
                         margincolor = '#99413d'
@@ -333,7 +300,6 @@ def update_table(n):
                         margincolor = '#99413d'
                     elif isinstance(json_data['from_df_high'][0], str) and '%' in json_data['from_df_high'][0] and '-' not in json_data['from_df_high'][0]:
                         margincolor = '#3D9970'
-                    
                     data = pd.DataFrame(
                             {
                                 "Uptime": uptime,
@@ -352,8 +318,6 @@ def update_table(n):
                                 "MACD": json_data["indicators.MACD"] if "indicators.MACD" in json_data else "",
                                 "OBV": json_data["indicators.OBV"] if "indicators.OBV" in json_data else "",
                                 "Margincolor": margincolor,
-                                
-                                
                             })
                 df = df.append(data, ignore_index=True)
             except KeyError:
@@ -419,10 +383,9 @@ def update_graphs(rows, derived_virtual_selected_rows):
                             "orientation": 'h',
                             "height": 400,
                             "margin": {"t": 10, "l": 10, "r": 10},
-                            },   
+                            },
                     },
-                )            
-
+                )
                 for column in ["Margin"] if column in dff
 ]
 
@@ -431,7 +394,7 @@ def update_graphs(rows, derived_virtual_selected_rows):
     Input('table-paging-and-sorting', "derived_virtual_data"),
     Input('table-paging-and-sorting', "derived_virtual_selected_rows"))
 def update_graphs1(rows, derived_virtual_selected_rows):
-
+    """ Update Graphs """
     if derived_virtual_selected_rows is None:
         derived_virtual_selected_rows = []
 
@@ -449,7 +412,7 @@ def update_graphs1(rows, derived_virtual_selected_rows):
                                 "x": dff['Trading Pair'],
                                 "y": dff["From DF High"],
                                 "type": "bar",
-                                "marker": {"color": colors[0],},   
+                                "marker": {"color": colors[0],},
                             }
                         ],
                         "layout": {
@@ -462,11 +425,75 @@ def update_graphs1(rows, derived_virtual_selected_rows):
                             "height": 400,
                             #"width": 750, ### this is roughly half screen width
                             "margin": {"t": 10, "l": 10, "r": 10},
-                            },   
+                            },
                     },
-                )            
-
+                )
                 for column in ["From DF High"] if column in dff
+]
+
+### Active Margins Gauge
+@app.callback(
+    Output('margin-current','children'),
+    Input('table-paging-and-sorting', "derived_virtual_data"),
+    Input('table-paging-and-sorting', "derived_virtual_selected_rows"))
+def gauge1(rows, derived_virtual_selected_rows):
+    """ Active Margins Gauge """
+    if derived_virtual_selected_rows is None:
+        derived_virtual_selected_rows = []
+
+    dff = df if rows is None else pd.DataFrame(rows)
+    df_margin=(dff['Margin'].mean())*100
+
+    return [
+                daq.Gauge(
+                label='Current Margins',
+                id='margin-current',
+                color={"gradient":True,"ranges":{'#99413d':[-35,-20],'#F1C232':[-20,20],'#3D9970':[20,35]}},
+                value=df_margin,
+                max=35,
+                min=-35,
+                size=160,
+                ),
+]
+
+### 7 Day Total Margins Gauge
+@app.callback(
+        Output('margin-7Dtotal','children'), # ### gauge CALL BACK NOT WORKING 
+        Input('table-paging-and-sorting', "derived_virtual_data"),
+        Input('table-paging-and-sorting', "derived_virtual_selected_rows"))
+
+def gauge2(rows, derived_virtual_selected_rows): 
+    days = -7
+    trade_counter = 0
+    margin_calculation = 0
+    trades_dir = 'telegram_data'
+    json_pattern = os.path.join(trades_dir, 'data.json')
+    today = datetime.now()
+    week = today + \
+                    timedelta(days)
+ 
+    with open(json_pattern) as f:
+        json_data =json.loads(f.read())
+
+    for trade_datetime in json_data['trades']:       
+        if datetime.strptime(trade_datetime, '%Y-%m-%d %H:%M:%S').isoformat() > week.isoformat():
+
+            trade_counter += 1
+            margin = float(json_data['trades'][trade_datetime]['margin'][: json_data['trades'][trade_datetime]['margin'].find("%")])
+            margin_calculation += margin
+
+    avg_margin = margin_calculation/trade_counter
+
+    return [
+                daq.Gauge(
+                label='7 Day Margins',
+                id='margin-7Dtotal',
+                color={"gradient":True,"ranges":{'#99413d':[-100,-20],'#F1C232':[-20,20],'#3D9970':[20,100]}},
+                value=margin_calculation,
+                max=100,
+                min=-100,
+                size=160,
+                ),
 ]
 
 if __name__ == '__main__':
