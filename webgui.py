@@ -25,7 +25,7 @@ json_dir = tg_wrapper.helper.datafolder
 
 df=[]
 dff=[]
-df_margin=0
+# df_margin=0
 app = dash.Dash(__name__, title = 'Pycryptobot Dashboard', external_stylesheets=external_stylesheets, update_title=None, meta_tags=[
         {"name": "viewport", "content": "width=device-width, initial-scale=1"}
     ])
@@ -80,9 +80,15 @@ dashboard_layout = html.Div(children=[
                 page_current= 0,
                 page_size= 15,
                 sort_action="native",
-                style_cell={'textAlign': 'center'},
+                style_cell={'text_align': 'center'},
                 style_as_list_view=True,
-                editable=True,
+                # editable=True,
+                style_header={
+                        'align': 'center',
+                        'backgroundColor': 'rgb(30, 30, 30)',
+                        'color': 'white',
+                        'fontWeight': 'bold'
+                    },
                 columns=[
                         {'name': 'Uptime', 'id': 'Uptime', 'type': 'text'},
                         {'name': 'Trading Pair', 'id': 'Trading Pair', 'type': 'text'},
@@ -103,11 +109,6 @@ dashboard_layout = html.Div(children=[
                         {'name': 'MACD', 'id': 'MACD', 'type': 'text'},
                         {'name': 'OBV', 'id': 'OBV', 'type': 'text'},  
                     ],
-                style_header={
-                        'backgroundColor': 'rgb(30, 30, 30)',
-                        'color': 'white',
-                        'fontWeight': 'bold'
-                    },
                 style_data={
                         'backgroundColor': 'rgb(50, 50, 50)',
                         'color': 'white'
@@ -219,16 +220,35 @@ dashboard_layout = html.Div(children=[
         dbc.Col([
                 html.H5("Margin", style={'textAlign':'center'}),
                 html.Div(id='margin-graph'),
-            ], xs=12, sm=12, md=12, lg=6, xl=5),
+            ], lg=5, xl=5),
 ###df high graph
         dbc.Col([
                 html.H5("From DF High", style={'textAlign':'center'}),
                 html.Div(id='from-df-high'),
-            ], xs=12, sm=12, md=12, lg=6, xl=5),
+            ], lg=5, xl=5),
         dbc.Col([
-            html.Div(id='margin-current'),
-            html.Div(id='margin-7Dtotal'),
-            ],xs=10, sm=10, md=2, lg=1, xl=1,)
+            # html.Div(id='margin-current'),
+            html.Div(daq.Gauge(
+                        label='Current Margins',
+                        id='margin-current',
+                        color={"gradient":True,"ranges":{'#99413d':[-35,-20],'#F1C232':[-20,20],'#3D9970':[20,35]}},
+                        value=0,
+                        max=35,
+                        min=-35,
+                        size=160,
+                        )
+                    ),
+            html.Div(daq.Gauge(
+                        label='7 Day Margins',
+                        id='margin-7Dtotal',
+                        color={"gradient":True,"ranges":{'#99413d':[-100,-20],'#F1C232':[-20,20],'#3D9970':[20,100]}},
+                        value=0,
+                        max=100,
+                        min=-100,
+                        size=160,
+                        )
+                    ),
+            ],lg=1, xl=1,)
         ],justify="evenly",),
 
 ])
@@ -433,49 +453,39 @@ def update_graphs1(rows, derived_virtual_selected_rows):
 
 ### Active Margins Gauge
 @app.callback(
-    Output('margin-current','children'),
+    Output('margin-current','value'),
     Input('table-paging-and-sorting', "derived_virtual_data"),
-    Input('table-paging-and-sorting', "derived_virtual_selected_rows"))
+    Input('table-paging-and-sorting', "derived_virtual_selected_rows")
+    )
 def gauge1(rows, derived_virtual_selected_rows):
     """ Active Margins Gauge """
     if derived_virtual_selected_rows is None:
         derived_virtual_selected_rows = []
 
     dff = df if rows is None else pd.DataFrame(rows)
-    df_margin=(dff['Margin'].mean())*100
-
-    return [
-                daq.Gauge(
-                label='Current Margins',
-                id='margin-current',
-                color={"gradient":True,"ranges":{'#99413d':[-35,-20],'#F1C232':[-20,20],'#3D9970':[20,35]}},
-                value=df_margin,
-                max=35,
-                min=-35,
-                size=160,
-                ),
-]
+    df_margin=(dff['Margin'].sum())*100
+    return df_margin
 
 ### 7 Day Total Margins Gauge
 @app.callback(
-        Output('margin-7Dtotal','children'), # ### gauge CALL BACK NOT WORKING 
+        Output('margin-7Dtotal','value'),
         Input('table-paging-and-sorting', "derived_virtual_data"),
         Input('table-paging-and-sorting', "derived_virtual_selected_rows"))
 
 def gauge2(rows, derived_virtual_selected_rows): 
-    days = -7
+    """ 7 Day Total Margins Gauge """
+    days = -31
     trade_counter = 0
     margin_calculation = 0
     trades_dir = 'telegram_data'
     json_pattern = os.path.join(trades_dir, 'data.json')
     today = datetime.now()
-    week = today + \
-                    timedelta(days)
- 
+    week = today + timedelta(days)
+
     with open(json_pattern) as f:
         json_data =json.loads(f.read())
 
-    for trade_datetime in json_data['trades']:       
+    for trade_datetime in json_data['trades']:
         if datetime.strptime(trade_datetime, '%Y-%m-%d %H:%M:%S').isoformat() > week.isoformat():
 
             trade_counter += 1
@@ -483,18 +493,7 @@ def gauge2(rows, derived_virtual_selected_rows):
             margin_calculation += margin
 
     avg_margin = margin_calculation/trade_counter
-
-    return [
-                daq.Gauge(
-                label='7 Day Margins',
-                id='margin-7Dtotal',
-                color={"gradient":True,"ranges":{'#99413d':[-100,-20],'#F1C232':[-20,20],'#3D9970':[20,100]}},
-                value=margin_calculation,
-                max=100,
-                min=-100,
-                size=160,
-                ),
-]
+    return margin_calculation
 
 if __name__ == '__main__':
     app.run_server(host="0.0.0.0", port="8051") # comment this line out if you want to run on just local machine @ 127.0.0.1:8050
