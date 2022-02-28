@@ -1,19 +1,20 @@
 import json
 import os
-import dash
+# import dash
 # import datetime
 from datetime import datetime, timedelta
-from dash import html, dcc, State
+from dash import Dash, html, dcc, State, callback, clientside_callback
 import dash_table
 import dash_daq as daq
 # from dash.dash_table.Format import Format, Scheme
 from dash.dash_table import FormatTemplate
+# from matplotlib.pyplot import axis
 import pandas as pd
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 
 # from models.telegram import Wrapper
-from pages import controls, config
+from pages import controls, config, terminals
 
 external_stylesheets = [dbc.themes.DARKLY]
 #To change the theme just insert the name in the line above.
@@ -26,35 +27,37 @@ json_dir = tg_wrapper.helper.datafolder
 df=[]
 dff=[]
 # df_margin=0
-app = dash.Dash(__name__, title = 'Pycryptobot Dashboard', external_stylesheets=external_stylesheets, update_title=None, meta_tags=[
+app = Dash(__name__, title = 'Pycryptobot Dashboard', external_stylesheets=external_stylesheets, update_title=None, meta_tags=[
         {"name": "viewport", "content": "width=device-width, initial-scale=1"}
     ])
 
 percentage = FormatTemplate.percentage(2)
 
 CONTENT_STYLE = {
-    "margin-left": "1rem",
-    "margin-right": "1rem",
+    "margin-left": "0rem",
+    "margin-right": "0rem",
     "padding": "0rem 1rem",
 }
 
 app.layout = html.Div(children=[
-    dcc.Location(id='url', refresh=False),
+    dcc.Location(id='url', refresh=True),
     dbc.NavbarSimple(
     children=[
         dbc.NavItem(dbc.NavLink("Dashboard", href="/")),
         dbc.NavItem(dbc.NavLink("Controls", href="/controls")),
         dbc.NavItem(dbc.NavLink("Edit Config", href="/config")),
-        dbc.DropdownMenu(
-            children=[
-                dbc.DropdownMenuItem("Bot Options", header=True),
-                dbc.DropdownMenuItem("Controls", href="/controls"),
-                dbc.DropdownMenuItem("Config Editor", href="/config"),
-            ],
-            nav=True,
-            in_navbar=True,
-            label="More",
-        ),
+        dbc.NavItem(dbc.NavLink("Terminals", href="/terminals")),
+        # dbc.DropdownMenu(
+        #     children=[
+        #         dbc.DropdownMenuItem("Bot Options", header=True),
+        #         dbc.DropdownMenuItem("Controls", href="/controls"),
+        #         dbc.DropdownMenuItem("Config Editor", href="/config"),
+        #         dbc.DropdownMenuItem("Terminals", href="/terminals"),
+        #     ],
+        #     nav=True,
+        #     in_navbar=True,
+        #     label="More",
+        # ),
     ],
     brand="Pycryptobot",
     brand_style={'textAlign':'left'},
@@ -64,6 +67,7 @@ app.layout = html.Div(children=[
     fluid=True,
     fixed=True
     ),
+    html.Div(id="test-div"),
     html.Div(id='page-content', style=CONTENT_STYLE)])
 
 dashboard_layout = html.Div(children=[
@@ -77,29 +81,30 @@ dashboard_layout = html.Div(children=[
             dash_table.DataTable(
                 id='table-paging-and-sorting',
                 page_action="native",
+                css =[{"selector": ".show-hide", "rule": "display: none"}], #move below table
                 page_current= 0,
                 page_size= 15,
                 sort_action="native",
-                style_cell={'text_align': 'center'},
+                style_cell={'text_align': 'center', 'font_size': '14px', 'font_family': 'Arial',},
                 style_as_list_view=True,
-                # editable=True,
                 style_header={
-                        'align': 'center',
+                        'textAlign': 'center',
                         'backgroundColor': 'rgb(30, 30, 30)',
                         'color': 'white',
-                        'fontWeight': 'bold'
+                        'fontWeight': 'bold',
+                        'font_size': '14px'
                     },
                 columns=[
                         {'name': 'Uptime', 'id': 'Uptime', 'type': 'text'},
-                        {'name': 'Trading Pair', 'id': 'Trading Pair', 'type': 'text'},
+                        {'name': 'Pair', 'id': 'Trading Pair', 'type': 'text'},
                         {'name': 'Exchange', 'id': 'Exchange', 'type': 'text'},
                         {'name': 'Last Action', 'id': 'Last Action', 'type': 'numeric'},
-                        {'name': 'Current Price', 'id': 'Current Price', 'type': 'numeric'},
+                        {'name': 'Price', 'id': 'Current Price', 'type': 'numeric'},
                         dict(id='Margin', name='Margin', type='numeric', format=percentage),
                         #{'name': 'Margin', 'id': 'Margin', 'type': 'numeric', 'format': 'percentage'},
                         {'name': 'TSLT', 'id': 'TSLT', 'type': 'text'},
                         {'name': 'PVLT', 'id': 'PVLT', 'type': 'text'},
-                        dict(id='From DF High', name='From DF High', type='numeric', format=percentage),                
+                        dict(id='From DF High', name='From DF High', type='numeric', format=percentage),
                         #{'name': 'From DF High', 'id': 'From DF High', 'type': 'numeric'},
                         {'name': 'DF High', 'id': 'DF High', 'type': 'numeric'},
                         {'name': 'Delta', 'id': 'Delta', 'type': 'numeric'},
@@ -107,19 +112,18 @@ dashboard_layout = html.Div(children=[
                         {'name': 'ERI', 'id': 'ERI', 'type': 'text'},
                         {'name': 'EMA', 'id': 'EMA', 'type': 'text'},
                         {'name': 'MACD', 'id': 'MACD', 'type': 'text'},
-                        {'name': 'OBV', 'id': 'OBV', 'type': 'text'},  
+                        {'name': 'OBV', 'id': 'OBV', 'type': 'text'},
                     ],
                 style_data={
                         'backgroundColor': 'rgb(50, 50, 50)',
                         'color': 'white'
-                    }, 
-
+                    },
                 style_data_conditional=[
                     {
                         'if': {'row_index': 'odd'},
                         'backgroundColor': 'rgb(70, 70, 70)',
                         },
-                    #set column widths    
+                    #set column widths
                     {'if': {'column_id': 'Trading Pair'},'width': '180px'},
                     {'if': {'column_id': 'Last Action'},'width': '130px'},
                     {'if': {'column_id': 'Current Price'},'width': '160px'},
@@ -136,8 +140,7 @@ dashboard_layout = html.Div(children=[
 
         ###indicator states
         ###add gradients for from_df_hi and margins to represent position, when from df high is > 0 make df hi green
-
-                    {'if': 
+                    {'if':
                         {'filter_query': '{Margin} > 0', 'column_id': 'Margin'},
                         'backgroundColor': '#3D9970',
                         'color': 'white'
@@ -145,7 +148,7 @@ dashboard_layout = html.Div(children=[
                     {'if': {'filter_query': '{Margin} < 0', 'column_id': 'Margin'},
                         'backgroundColor': '#99413d',
                         'color': 'white'
-                    },            
+                    },
                     {'if': {'filter_query': '{From DF High} > 0', 'column_id': 'From DF High'},
                         'backgroundColor': '#3D9970',
                         'color': 'white'
@@ -153,7 +156,7 @@ dashboard_layout = html.Div(children=[
                     {'if': {'filter_query': '{From DF High} < 0', 'column_id': 'From DF High'},
                         'backgroundColor': '#99413d',
                         'color': 'white'
-                    },      
+                    },
                     {'if': {'filter_query': '{TSLT} = "True"', 'column_id': 'TSLT'},
                         'backgroundColor': '#3D9970',
                         'color': 'white'
@@ -208,15 +211,40 @@ dashboard_layout = html.Div(children=[
                     },
             ],
         ),
-    ], xs=10, sm=10, md=10, lg=12, xl=12),
+    ], ),
     ]),
 
 ### update interval
     dcc.Interval(id='interval-container', interval = 10000, n_intervals = 0),
-
+    html.P(),
 ### graphs
     dbc.Row([
 ###margin graph
+        dbc.Col([
+            # html.Div(id='margin-current'),
+            daq.Gauge(
+                label='Current Margins',
+                id='margin-current',
+                color={"gradient":True,"ranges":{'#99413d':[-35,-20],'#F1C232':[-20,20],'#3D9970':[20,35]}},
+                value=0,
+                max=35,
+                min=-35,
+                size=160
+                )
+            ]),
+        dbc.Col([
+            daq.Gauge(
+                label='7 Day Margins',
+                id='margin-7Dtotal',
+                color={"gradient":True,"ranges":{'#99413d':[-100,-20],'#F1C232':[-20,20],'#3D9970':[20,100]}},
+                value=0,
+                max=100,
+                min=-100,
+                size=160
+                )
+            ]),
+    ]),
+    dbc.Row([
         dbc.Col([
                 html.H5("Margin", style={'textAlign':'center'}),
                 html.Div(id='margin-graph'),
@@ -226,34 +254,12 @@ dashboard_layout = html.Div(children=[
                 html.H5("From DF High", style={'textAlign':'center'}),
                 html.Div(id='from-df-high'),
             ], lg=5, xl=5),
-        dbc.Col([
-            # html.Div(id='margin-current'),
-            html.Div(daq.Gauge(
-                        label='Current Margins',
-                        id='margin-current',
-                        color={"gradient":True,"ranges":{'#99413d':[-35,-20],'#F1C232':[-20,20],'#3D9970':[20,35]}},
-                        value=0,
-                        max=35,
-                        min=-35,
-                        size=160,
-                        )
-                    ),
-            html.Div(daq.Gauge(
-                        label='7 Day Margins',
-                        id='margin-7Dtotal',
-                        color={"gradient":True,"ranges":{'#99413d':[-100,-20],'#F1C232':[-20,20],'#3D9970':[20,100]}},
-                        value=0,
-                        max=100,
-                        min=-100,
-                        size=160,
-                        )
-                    ),
-            ],lg=1, xl=1,)
+        
         ],justify="evenly",),
 
 ])
 
-@app.callback(
+@callback(
     Output('page-content', 'children'),
     [Input('url', 'pathname')])
 def display_page(pathname):
@@ -262,6 +268,8 @@ def display_page(pathname):
         return controls.layout
     if pathname == "/config":
         return config.layout
+    if pathname == "/terminals":
+        return terminals.layout
     else:
         return dashboard_layout
 
@@ -293,17 +301,17 @@ def getDateFromISO8601Str(date: str): #pylint: disable=invalid-name
     minutes = divmod(duration_in_s, 60)[0]
     return f"{round(hours)}h {round(minutes)}m"
 
-@app.callback(
+@callback(
         Output('table-paging-and-sorting','data'),
-        Input('interval-container', 'n_intervals'),
+        Input('interval-container', 'n_intervals')
         )
 def update_table(n):
     """Update all data"""
+
     pairs_list = tg_wrapper.helper.get_active_bot_list() #glob.glob(json_pattern)
     df = pd.DataFrame(
-    columns=['Uptime', 'Trading Pair', 'Exchange', 'Last Action', 'Current Price', 'From DF High', 'DF High', 
+    columns=['Uptime', 'Trading Pair', 'Exchange', 'Last Action', 'Current Price', 'From DF High', 'DF High',
         'Margin', 'Delta', 'TSLT', 'PVLT', 'ERI', 'BULL', 'EMA', 'MACD', 'OBV'],
-
     )
     for pair in pairs_list:
         if not "data.json" in pair and not pair.__contains__("output.json") and not "settings.json" in pair:
@@ -367,7 +375,7 @@ def update_table(n):
     return df.to_dict(orient='records')
 
 ### create graphs
-@app.callback(
+@callback(
     Output('margin-graph', "children"),
     Input('table-paging-and-sorting', "derived_virtual_data"),
     Input('table-paging-and-sorting', "derived_virtual_selected_rows"))
@@ -409,7 +417,7 @@ def update_graphs(rows, derived_virtual_selected_rows):
                 for column in ["Margin"] if column in dff
 ]
 
-@app.callback(
+@callback(
     Output('from-df-high', "children"),
     Input('table-paging-and-sorting', "derived_virtual_data"),
     Input('table-paging-and-sorting', "derived_virtual_selected_rows"))
@@ -452,7 +460,7 @@ def update_graphs1(rows, derived_virtual_selected_rows):
 ]
 
 ### Active Margins Gauge
-@app.callback(
+@callback(
     Output('margin-current','value'),
     Input('table-paging-and-sorting', "derived_virtual_data"),
     Input('table-paging-and-sorting', "derived_virtual_selected_rows")
@@ -467,33 +475,61 @@ def gauge1(rows, derived_virtual_selected_rows):
     return df_margin
 
 ### 7 Day Total Margins Gauge
-@app.callback(
+@callback(
         Output('margin-7Dtotal','value'),
         Input('table-paging-and-sorting', "derived_virtual_data"),
         Input('table-paging-and-sorting', "derived_virtual_selected_rows"))
 
 def gauge2(rows, derived_virtual_selected_rows): 
     """ 7 Day Total Margins Gauge """
-    days = -31
+    days = -7
     trade_counter = 0
     margin_calculation = 0
-    trades_dir = 'telegram_data'
-    json_pattern = os.path.join(trades_dir, 'data.json')
+
     today = datetime.now()
     week = today + timedelta(days)
 
-    with open(json_pattern) as f:
-        json_data =json.loads(f.read())
-
-    for trade_datetime in json_data['trades']:
+    tg_wrapper.helper.read_data()
+    for trade_datetime in tg_wrapper.helper.data['trades']:
         if datetime.strptime(trade_datetime, '%Y-%m-%d %H:%M:%S').isoformat() > week.isoformat():
-
             trade_counter += 1
-            margin = float(json_data['trades'][trade_datetime]['margin'][: json_data['trades'][trade_datetime]['margin'].find("%")])
+            margin = float(tg_wrapper.helper.data['trades'][trade_datetime]['margin'][: tg_wrapper.helper.data['trades'][trade_datetime]['margin'].find("%")])
             margin_calculation += margin
 
-    avg_margin = margin_calculation/trade_counter
+    # avg_margin = margin_calculation/trade_counter
     return margin_calculation
+
+@callback(
+    Output("table-paging-and-sorting", "hidden_columns"),
+    Input("test-div", "value")
+)
+def page_width_column_adjustment(screen_res):
+    """ hides some columns based on screen width """
+    small = 0
+    medium = 500
+    large = 875
+    print(screen_res)
+    hide_columns = []
+    if screen_res["width"] >= small and screen_res["width"] <= medium:
+        hide_columns = ["Uptime", "Exchange", "Price", "TSLT", "PVLT", "ERI", "EMA", "MACD", "OBV", "Last Action", "DF High", "Delta"]
+    elif screen_res["width"] >= medium and screen_res["width"] < large:
+        hide_columns = ["Exchange", "TSLT", "PVLT", "DF High", "Delta"]
+        # data = data.drop(columns=['Uptime'])
+
+        print(screen_res)
+    return hide_columns
+
+clientside_callback(
+    """
+    function(href) {
+        var w = window.innerWidth;
+        var h = window.innerHeight;
+        return {'height': h, 'width': w};
+    }
+    """,
+    Output('test-div', 'value'),
+    Input('url', 'href')
+)
 
 if __name__ == '__main__':
     app.run_server(host="0.0.0.0", port="8051") # comment this line out if you want to run on just local machine @ 127.0.0.1:8050

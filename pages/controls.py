@@ -454,7 +454,7 @@ def update_accordians(n):
 
     accordion = html.Div(
         dbc.Accordion(id="bots", children=acc_list, start_collapsed=True),
-        className="d-md-block",
+        className="d-grid gap-2"
     )
 
     return accordion

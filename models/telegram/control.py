@@ -208,7 +208,7 @@ class TelegramControl:
                     market_override
                 ]["overrides"]
                 self.helper.start_process(
-                    market_override, "", overrides
+                    market_override, self.helper.get_running_bot_exchange(market_override), overrides
                 )
             else:
                 self.helper.send_telegram_message(
