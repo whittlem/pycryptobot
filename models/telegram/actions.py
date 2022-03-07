@@ -78,7 +78,7 @@ class TelegramActions:
                     market,
                     self.helper.data["opentrades"][market]["exchange"],
                     "",
-                    "telegram",
+                    "telegram-open",
                 )
             sleep(10)
         self.helper.send_telegram_message(

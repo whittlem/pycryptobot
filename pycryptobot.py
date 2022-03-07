@@ -4,20 +4,27 @@
 """Python Crypto Bot consuming Coinbase Pro or Binance APIs"""
 
 import functools
+import json
 import os
 import sched
+import signal
 import sys
 import time
-import signal
-import json
 from datetime import datetime, timedelta
+
 import pandas as pd
 
 from models.AppState import AppState
 from models.chat import telegram
+from models.exchange.binance import WebSocketClient as BWebSocketClient
+from models.exchange.coinbase_pro import WebSocketClient as CWebSocketClient
+from models.exchange.ExchangesEnum import Exchange
 from models.exchange.Granularity import Granularity
+from models.exchange.kucoin import WebSocketClient as KWebSocketClient
 from models.helper.LogHelper import Logger
 from models.helper.MarginHelper import calculate_margin
+from models.helper.TelegramBotHelper import TelegramBotHelper
+from models.helper.TextBoxHelper import TextBox
 from models.PyCryptoBot import PyCryptoBot
 from models.PyCryptoBot import truncate as _truncate
 from models.Stats import Stats
@@ -25,12 +32,6 @@ from models.Strategy import Strategy
 from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
 from views.TradingGraphs import TradingGraphs
-from models.helper.TextBoxHelper import TextBox
-from models.exchange.ExchangesEnum import Exchange
-from models.exchange.binance import WebSocketClient as BWebSocketClient
-from models.exchange.coinbase_pro import WebSocketClient as CWebSocketClient
-from models.exchange.kucoin import WebSocketClient as KWebSocketClient
-from models.helper.TelegramBotHelper import TelegramBotHelper
 
 # minimal traceback
 sys.tracebacklimit = 1
@@ -1939,7 +1940,7 @@ def execute_job(
                     + "%",
                 )
 
-            if _state.last_action == "BUY" and _state.in_open_trade:
+            if _state.last_action == "BUY" and _state.in_open_trade and last_api_call_datetime.seconds > 60:
                 # update margin for telegram bot
                 telegram_bot.addmargin(
                     str(_truncate(margin, 4) + "%") if _state.in_open_trade == True else " ",

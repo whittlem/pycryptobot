@@ -5,16 +5,14 @@ from models.telegram import TelegramHelper, TelegramActions, TelegramHandler, Te
 class Wrapper:
     """Wrapper for Telegram Functions"""
 
-    def __init__(self, config_file='config.json') -> None:
+    def __init__(self, config_file='config.json', log_file_prefix = 'telegram') -> None:
         """Initiate wrapper class"""
-        self.helper = TelegramHelper(config_file)
+        self.helper = TelegramHelper(config_file, log_file_prefix)
         self._actions = TelegramActions(self.helper)
         self._handler = TelegramHandler(
             self.helper.config["telegram"]["user_id"], self.helper
         )
         self._controls = TelegramControl(self.helper)
-
-        # self.schedule = self._handler.sc
 
     def start_market_scanning(
         self,

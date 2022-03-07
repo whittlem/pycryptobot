@@ -1,14 +1,13 @@
 import json
 import os
-# import dash
-# import datetime
+
 from datetime import datetime, timedelta
-from dash import Dash, html, dcc, State, callback, clientside_callback
+from dash import Dash, html, dcc, callback, clientside_callback
 import dash_table
 import dash_daq as daq
-# from dash.dash_table.Format import Format, Scheme
+
 from dash.dash_table import FormatTemplate
-# from matplotlib.pyplot import axis
+
 import pandas as pd
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
@@ -347,30 +346,32 @@ def update_table(n):
                                 "OBV": json_data["indicators.OBV"] if "indicators.OBV" in json_data else "",
                                 "Margincolor": margincolor,
                             })
-                df = df.append(data, ignore_index=True)
+                # df = df.append(data, ignore_index=True)
+                df = pd.concat([df, data])
             except KeyError:
                 print('oops')
             except Exception as err:
                 print(err)
 
 ###change data types of dataframe for conditional statements
-    df['Margin'] = df['Margin'].map(lambda x: x.rstrip('%'))
-    df['Margin'] = df['Margin'].fillna(0)
-    df['Margin'] = df['Margin'].astype(float, errors='ignore')
-    df['Margin'] = df['Margin']*.01
-    df_margin = (df['Margin'].mean())*100
-    df['From DF High'] = df['From DF High'].map(lambda x: x.rstrip('%'))
-    df['From DF High'] = df['From DF High'].fillna(0)
-    df['From DF High'] = df['From DF High'].astype(float, errors='ignore')
-    df['From DF High'] = df['From DF High']*.01
-    df['TSLT'] = df['TSLT'].astype(str)
-    df['PVLT'] = df['PVLT'].astype(str)
-    df['BULL'] = df['BULL'].astype(str)
-    df['ERI'] = df['ERI'].astype(str)
-    df['EMA'] = df['EMA'].astype(str)
-    df['MACD'] = df['MACD'].astype(str)
-    df['OBV'] = df['OBV'].astype(str)
-    df = df.sort_values(by="Last Action", ascending=[True], inplace=False)
+    if len(pairs_list) > 0:
+        df['Margin'] = df['Margin'].map(lambda x: x.rstrip('%'))
+        df['Margin'] = df['Margin'].fillna(0)
+        df['Margin'] = df['Margin'].astype(float, errors='ignore')
+        df['Margin'] = df['Margin']*.01
+        # df_margin = (df['Margin'].mean())*100
+        df['From DF High'] = df['From DF High'].map(lambda x: x.rstrip('%'))
+        df['From DF High'] = df['From DF High'].fillna(0)
+        df['From DF High'] = df['From DF High'].astype(float, errors='ignore')
+        df['From DF High'] = df['From DF High']*.01
+        df['TSLT'] = df['TSLT'].astype(str)
+        df['PVLT'] = df['PVLT'].astype(str)
+        df['BULL'] = df['BULL'].astype(str)
+        df['ERI'] = df['ERI'].astype(str)
+        df['EMA'] = df['EMA'].astype(str)
+        df['MACD'] = df['MACD'].astype(str)
+        df['OBV'] = df['OBV'].astype(str)
+        df = df.sort_values(by="Last Action", ascending=[True], inplace=False)
 
     return df.to_dict(orient='records')
 
@@ -399,7 +400,7 @@ def update_graphs(rows, derived_virtual_selected_rows):
                                 "x": dff['Trading Pair'],
                                 "y": dff["Margin"],
                                 "type": "bar",
-                                "marker": {"color": colors[0],}, #[(-25,'#99413d'), (25,'#3D9970')]     
+                                "marker": {"color": colors[0],}, #[(-25,'#99413d'), (25,'#3D9970')]
                             }
                         ],
                         "layout": {

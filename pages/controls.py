@@ -4,7 +4,7 @@ from dash import dcc, html, Input, Output, State, MATCH, callback
 
 from models.telegram import Wrapper
 
-tg_wrapper = Wrapper("config.json")
+tg_wrapper = Wrapper("config.json", "webgui")
 selected_pair = None
 
 tg_wrapper.helper.clean_data_folder()

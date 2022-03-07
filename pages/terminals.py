@@ -1,6 +1,6 @@
 import os
 import dash_bootstrap_components as dbc
-from dash import dcc, html, callback, Output, Input, MATCH
+from dash import dcc, html, callback, Output, Input, MATCH, State
 
 layout = html.Div([
     dbc.Container(style={"height": "100%"}, children=
@@ -10,53 +10,76 @@ layout = html.Div([
                 dbc.Col(
                     html.Div(dbc.Tabs(id="tabs"))
                 )
+            ),
+            dbc.Row(
+                dbc.Col(
+                    html.Div(id="tab-content")
+                )
             )
         ]
     ),
     dcc.Interval(id="interval-container", interval=30000, n_intervals=0),
 ])
 
-@callback(
-    Output("tabs", "children"),
-    Input("interval-container", "n_intervals")
-)
-def read_log_file(n):
-    """ read log file """
-    tabs = []
-    jsonfiles = sorted(os.listdir(os.path.join("logs")))
-    tab_count = 0
-    for jfile in jsonfiles:
-        tabs.append(dbc.Tab(label=jfile, tab_id=jfile, id={"type": "tab", "index": tab_count}))
-        tab_count += 1
-    
-    return tabs
+
+# @callback(
+#     Output("tab-content", "children"),
+#     Input("interval-container", "n_intervals"),
+#     State("tabs", "active_tab")
+# )
+def read_log_file(active_tab):
+    if active_tab is not None:
+        log_entries = str(get_last_n_lines(os.path.join(active_tab["path"], active_tab["file"]), 100))\
+        .replace("\\r", "\n").replace("'", "").replace(",","").replace("[", "").replace("]", "")
+
+        content = dbc.Card(
+                    dbc.CardBody(
+                        dcc.Textarea(value=log_entries, readOnly=True,
+                            style={"width": "100%", "background": "black", "color": "white", "height": "100%"},
+                            draggable=False,
+                            rows=20)))
+        return content
 
 @callback(
     [
-        Output({"type": "tab", "index": 1}, "children"),
-        # Output("tabs", "active_tab")
+        Output("tabs", "children"),
+        Output("tabs", "active_tab"),
+        Output("tab-content", "children")
     ],
+    Input("interval-container", "n_intervals"),
     Input("tabs", "active_tab")
+    # State("tabs", "active_tab")
 )
-def get_log_content(active_tab):
-    """ read log files """
-    print(active_tab)
-    if active_tab is not None:
-        content = dbc.Card(
-                    dbc.CardBody(
-                        html.Textarea(
-                            str(get_last_n_lines(os.path.join("logs", active_tab), 100))
-                                    .replace("\\r", "\n").replace("'", "").replace(",","").replace("[", "").replace("]", ""),
-                                readOnly=True,
-                                style={"width": "100%", "background": "black", "color": "white", "height": "100%"},
-                                draggable=False,
-                                rows=20,
-                                title=active_tab
-                                )
-                            )
-                        )
-        return content #, None
-    # return None, None
+def read_logs(n, active_tab):
+    """ read log file """
+    tabs = []
+    jsonfiles = sorted(os.listdir(os.path.join("telegram_logs")))
+    for jfile in jsonfiles:
+        tabs.append(dbc.Tab(label=jfile, tab_id={"path": "telegram_logs", "file": jfile}))
+
+    jsonfiles = sorted(os.listdir(os.path.join("logs")))
+    for jfile in jsonfiles:
+        if jfile.__contains__(".log"):
+            tabs.append(dbc.Tab(label=jfile, tab_id={"path": "logs", "file": jfile}))
+    return tabs, active_tab, read_log_file(active_tab)
+
+# @callback(
+#     Output("tab-content", "children"),
+#     Input("tabs", "active_tab")
+# )
+# def get_log_content(active_tab):
+#     """ read log files """
+#     if active_tab is not None:
+#         log_entries = str(get_last_n_lines(os.path.join(active_tab["path"], active_tab["file"]), 50))\
+#         .replace("\\r", "\n").replace("'", "").replace(",","").replace("[", "").replace("]", "")
+# 
+#         content = dbc.Card(
+#                     dbc.CardBody(
+#                         dcc.Textarea(value=log_entries, readOnly=True,
+#                             style={"width": "100%", "background": "black", "color": "white", "height": "100%"},
+#                             draggable=False,
+#                             rows=20)))
+#         return content
 
 def get_last_n_lines(file_name, N):
     """ Get lines in file """

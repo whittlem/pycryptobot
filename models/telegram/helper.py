@@ -35,22 +35,25 @@ if not os.path.exists(os.path.join(os.curdir, "telegram_logs")):
 
 class TelegramHelper:
     """Telegram Bot Helper"""
-    logging.basicConfig(
+
+    def __init__(self, configfile = 'config.json', logfileprefix = 'telegrambot') -> None:
+        self.data = {}
+        self.config_file = configfile
+        self.screener = {}
+        self.settings = {}
+
+        logging.basicConfig(
         filename=os.path.join(
             os.curdir,
             "telegram_logs",
-            f"telegrambot {datetime.now().strftime('%Y-%m-%d')}.log",
+            f"{logfileprefix} {datetime.now().strftime('%Y-%m-%d')}.log",
         ),
         filemode="w",
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         level=logging.INFO,
     )
-    def __init__(self, configfile = 'config.json') -> None:
-        self.data = {}
-        self.config_file = configfile
-        self.screener = {}
-        self.settings = {}
-        self.logger = None
+
+        # self.logger = None
         self.logger = logging.getLogger("telegram.helper")
 
         with open(os.path.join(configfile), "r", encoding="utf8") as json_file:
