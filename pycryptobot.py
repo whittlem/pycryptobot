@@ -1409,7 +1409,7 @@ def execute_job(
                         text_box.center("*** Executing TEST Buy Order ***")
                         text_box.singleLine()
 
-                    _app.trade_tracker = _app.trade_tracker.append(
+                    _app.trade_tracker = pd.concat([_app.trade_tracker,
                         {
                             "Datetime": str(current_sim_date),
                             "Market": _app.getMarket(),
@@ -1421,9 +1421,7 @@ def execute_job(
                                 "close"
                             ].max(),
                             "DF_Low": df[df["date"] <= current_sim_date]["close"].min(),
-                        },
-                        ignore_index=True,
-                    )
+                        }])
 
                     state.in_open_trade = True
                     _state.last_action = "BUY"
@@ -1670,7 +1668,7 @@ def execute_job(
                         text_box.center("*** Executing TEST Sell Order ***")
                         text_box.singleLine()
 
-                    _app.trade_tracker = _app.trade_tracker.append(
+                    _app.trade_tracker = pd.concat([_app.trade_tracker,
                         {
                             "Datetime": str(current_sim_date),
                             "Market": _app.getMarket(),
@@ -1685,9 +1683,7 @@ def execute_job(
                                 "close"
                             ].max(),
                             "DF_Low": df[df["date"] <= current_sim_date]["close"].min(),
-                        },
-                        ignore_index=True,
-                    )
+                        }]),
                     state.in_open_trade = False
                     state.last_api_call_datetime -= timedelta(seconds=60)
                     _state.last_action = "SELL"

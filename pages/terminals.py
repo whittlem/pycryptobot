@@ -1,6 +1,6 @@
 import os
 import dash_bootstrap_components as dbc
-from dash import dcc, html, callback, Output, Input, MATCH, State
+from dash import dcc, html, callback, Output, Input
 
 layout = html.Div([
     dbc.Container(style={"height": "100%"}, children=
@@ -12,18 +12,19 @@ layout = html.Div([
                         id="log-dropdown",
                         options=["Item One", "Item Two"],
                         style={"color": "black"}
-                        # dbc.DropdownMenuItem("Item One")
                     )
                 )
             ),
+            # dbc.Row(
+            #     dbc.Col(
+            #         html.Div(dbc.Tabs(id="tabs"), hidden=True)
+            #     )
+            # ),
             dbc.Row(
                 dbc.Col(
-                    html.Div(dbc.Tabs(id="tabs"), hidden=True)
-                )
-            ),
-            dbc.Row(
-                dbc.Col(
-                    html.Div(id="tab-content", style={"width": "100%", "background": "black", "color": "white", "height": "100%"},)
+                    html.Div(id="tab-content", style={'overflow': 'auto',
+            'display': 'flex',
+            'flex-direction': 'column-reverse'},)
                 )
             )
         ]
@@ -31,17 +32,20 @@ layout = html.Div([
     dcc.Interval(id="interval-container", interval=30000, n_intervals=0),
 ])
 
-
-# @callback(
-#     Output("tab-content", "children"),
-#     Input("interval-container", "n_intervals"),
-#     State("tabs", "active_tab")
-# )
-def read_log_file(active_tab):
+@callback(
+    Output("tab-content", "children"),
+    [
+        Input("interval-container", "n_intervals"),
+        Input("log-dropdown", "value")
+    ]
+)
+def read_log_file(n, active_tab):
     """ read log file updated """
+    content = html.Div()
     if active_tab is not None:
         log_entries = str(get_last_n_lines(active_tab, 1000))\
-        .replace("\\r", "\n").replace("'", "").replace(",","").replace("[", "").replace("]", "")
+            .replace("', '", "\n").replace("['", "").replace("']", "").replace("\\r", "")
+        # .replace("\\r", "\n").replace("'", "").replace(",","").replace("[", "").replace("]", "")
 
         content = dbc.Card(
                     dbc.CardBody(
@@ -49,50 +53,50 @@ def read_log_file(active_tab):
                             style={"width": "100%", "background": "black", "color": "white", "height": "100%"},
                             draggable=False,
                             rows=20)))
-        return content
+    return content
 
-@callback(
-    [
-        Output("tabs", "children"),
-        Output("tabs", "active_tab"),
-        Output("tab-content", "children")
-    ],
-    Input("interval-container", "n_intervals"),
-    Input("tabs", "active_tab"),
-    Input("log-dropdown", "value")
-    # State("tabs", "active_tab")
-)
-def read_logs(n, active_tab, dd_value):
-    """ read log file """
-    print(dd_value)
-    tabs = []
-    jsonfiles = sorted(os.listdir(os.path.join("telegram_logs")))
-    for jfile in jsonfiles:
-        tabs.append(dbc.Tab(label=jfile, tab_id={"path": "telegram_logs", "file": jfile}))
+# @callback(
+#     Output("tab-content", "children"),
+#     [
+#         Input("interval-container", "n_intervals"),
+#         Input("log-dropdown", "value")
+#     ]
+# )
+# def read_logs(n, dd_value):
+#     """ read log file """
+# 
+# #     tabs = []
+# #     jsonfiles = sorted(os.listdir(os.path.join("telegram_logs")))
+# #     for jfile in jsonfiles:
+# #         tabs.append(dbc.Tab(label=jfile, tab_id={"path": "telegram_logs", "file": jfile}))
+# # 
+# #     jsonfiles = sorted(os.listdir(os.path.join("logs")))
+# #     for jfile in jsonfiles:
+# #         if jfile.__contains__(".log"):
+# #             tabs.append(dbc.Tab(label=jfile, tab_id={"path": "logs", "file": jfile}))
+#     # return tabs, active_tab, read_log_file(active_tab) if active_tab is not None else read_log_file(dd_value)
+#     if dd_value is not None:
+#         return read_log_file(dd_value)
+#     
 
-    jsonfiles = sorted(os.listdir(os.path.join("logs")))
-    for jfile in jsonfiles:
-        if jfile.__contains__(".log"):
-            tabs.append(dbc.Tab(label=jfile, tab_id={"path": "logs", "file": jfile}))
-    return tabs, active_tab, read_log_file(active_tab) if active_tab is not None else read_log_file(dd_value)
 
 @callback(
     Output("log-dropdown", "options"),
     Input("interval-container", "n_intervals"),
 )
 def get_log_content(n):
-#     """ read log files """
-    tabs = []
+    """ read log files add names to dropdown"""
+    logs = []
     jsonfiles = sorted(os.listdir(os.path.join("telegram_logs")))
     for jfile in jsonfiles:
-        tabs.append({"label": jfile, "value": os.path.join("telegram_logs", jfile)}) #{"path": "telegram_logs", "file": jfile}})
+        logs.append({"label": jfile, "value": os.path.join("telegram_logs", jfile)})
 
     jsonfiles = sorted(os.listdir(os.path.join("logs")))
     for jfile in jsonfiles:
         if jfile.__contains__(".log"):
-            tabs.append({"label": jfile, "value": os.path.join("logs", jfile)}) #{"path": "logs", "file": jfile}})
+            logs.append({"label": jfile, "value": os.path.join("logs", jfile)})
 
-    return tabs
+    return logs
 
 def get_last_n_lines(file_name, N):
     """ Get lines in file """

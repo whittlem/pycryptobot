@@ -566,7 +566,7 @@ class TradingAccount:
         ]
 
         # update orders
-        self.orders = self.orders.append(
+        self.orders = pd.concat([self.orders,
             {
                 "created_at": str(datetime.now()),
                 "market": market,
@@ -581,9 +581,7 @@ class TradingAccount:
                 "fees": fees,
                 "price": price,
                 "status": "done",
-            },
-            ignore_index=True,
-        )
+            }])
 
         return True
 
@@ -647,7 +645,7 @@ class TradingAccount:
         ]
 
         # update orders
-        self.orders = self.orders.append(
+        self.orders = pd.concat([self.orders,
             {
                 "created_at": str(datetime.now()),
                 "market": market,
@@ -658,9 +656,7 @@ class TradingAccount:
                 "fees": fees,
                 "price": price,
                 "status": "done",
-            },
-            ignore_index=True,
-        )
+            }])
 
         return True
 
@@ -772,7 +768,7 @@ class TradingAccount:
                             "sell_price",
                         ],
                     )
-                    df_tracker = df_tracker.append(df_pair, ignore_index=True)
+                    df_tracker = pd.concat([df_tracker, df_pair])
                     pair = 0
 
                 last_action = row["action"]

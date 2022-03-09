@@ -191,12 +191,12 @@ scan_layoutv2 = html.Div(
         Output("btn-add-schedule", "hidden"),
         Output("btn-remove-schedule", "hidden"),
         Output("btn-add-schedule", "n_clicks"),
-        Output("btn-remove-schedule", "n_clicks")
+        Output("btn-remove-schedule", "n_clicks"),
     ],
     [
         Input("btn-add-schedule", "n_clicks"),
         Input("btn-remove-schedule", "n_clicks"),
-        Input("btn-start-scanning", "n_clicks")
+        Input("btn-start-scanning", "n_clicks"),
     ],
 )
 def btn_schedule_click(add_click, remove_click, open_click):
@@ -215,7 +215,7 @@ def btn_schedule_click(add_click, remove_click, open_click):
 
 
 
-@callback(Output("start-accordian", "start_collapsed"), Input("bots", "active_item"))
+@callback(Output("start-accordian", "start_collapsed"), Input("bots", "active_item"),prevent_initial_call=True)
 def update_output_1(value):
     """get selected value from dropdown"""
     global selected_pair
@@ -225,7 +225,7 @@ def update_output_1(value):
 
 
 @callback(
-    Output("bot-accordian", "start_collapsed"), Input("start-bots", "active_item")
+    Output("bot-accordian", "start_collapsed"), Input("start-bots", "active_item"), prevent_initial_call=True
 )
 def update_output_2(value):
     """get selected value from dropdown"""
@@ -237,7 +237,7 @@ def update_output_2(value):
 
 @callback(
     Output({"type": "btn-buy", "index": MATCH}, "visible"),
-    Input({"type": "btn-buy", "index": MATCH}, "n_clicks"),
+    Input({"type": "btn-buy", "index": MATCH}, "n_clicks"), prevent_initial_call=True
 )
 def btn_buy_click(click):
     """Place a buy order"""
@@ -248,7 +248,7 @@ def btn_buy_click(click):
 
 @callback(
     Output({"type": "btn-sell", "index": MATCH}, "visible"),
-    Input({"type": "btn-sell", "index": MATCH}, "n_clicks"),
+    Input({"type": "btn-sell", "index": MATCH}, "n_clicks"), prevent_initial_call=True
 )
 def btn_sell_click(click):
     """Place a sell order"""
@@ -257,7 +257,7 @@ def btn_sell_click(click):
     return html.Label()
 
 
-@callback(Output("btn-open-orders", "visible"), Input("btn-open-orders", "n_clicks"))
+@callback(Output("btn-open-orders", "visible"), Input("btn-open-orders", "n_clicks"), prevent_initial_call=True)
 def btn_open_orders(click):
     """restart pairs with open orders"""
     if click > 0:
@@ -266,7 +266,7 @@ def btn_open_orders(click):
 
 
 @callback(
-    Output("market-scan-options", "children"), Input("btn-start-scanning", "n_clicks")
+    Output("market-scan-options", "children"), Input("btn-start-scanning", "n_clicks"), prevent_initial_call=True
 )
 def btn_start_scanning_click(click):
     """show scan options"""
@@ -278,6 +278,7 @@ def btn_start_scanning_click(click):
     Output("scan_options", "is_open"),
     [Input("btn-start-scanning", "n_clicks")],
     [State("scan_options", "is_open")],
+    prevent_initial_call=True
 )
 def toggle_options_collapse(n, is_open):
     """toggle scan option collapsable"""

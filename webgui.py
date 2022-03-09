@@ -44,19 +44,8 @@ app.layout = html.Div(children=[
     children=[
         dbc.NavItem(dbc.NavLink("Dashboard", href="/")),
         dbc.NavItem(dbc.NavLink("Controls", href="/controls")),
-        dbc.NavItem(dbc.NavLink("Edit Config", href="/config")),
-        dbc.NavItem(dbc.NavLink("Terminals", href="/terminals")),
-        # dbc.DropdownMenu(
-        #     children=[
-        #         dbc.DropdownMenuItem("Bot Options", header=True),
-        #         dbc.DropdownMenuItem("Controls", href="/controls"),
-        #         dbc.DropdownMenuItem("Config Editor", href="/config"),
-        #         dbc.DropdownMenuItem("Terminals", href="/terminals"),
-        #     ],
-        #     nav=True,
-        #     in_navbar=True,
-        #     label="More",
-        # ),
+        # dbc.NavItem(dbc.NavLink("Edit Config", href="/config")),
+        dbc.NavItem(dbc.NavLink("Logs", href="/terminals")),
     ],
     brand="Pycryptobot",
     brand_style={'textAlign':'left'},
