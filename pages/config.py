@@ -1,3 +1,4 @@
+from subprocess import call
 from dash import Dash, dcc, html, Input, Output, callback
 import dash_bootstrap_components as dbc
 
@@ -19,7 +20,7 @@ layout = html.Div([
                 {'label': 'Disable Bull Only', 'value': 'Disable Bull Only'},
                 {'label': 'Disable Buy Near High', 'value': 'Disable Buy Near High'},
             ],
-            value=[1],
+            value=0,
             id="switches-indicators",
             switch=True,
             inline=True,
@@ -101,3 +102,11 @@ layout = html.Div([
     ])
     ))
 ])
+
+@callback(
+    Output("switches-indicators", "inline"),
+    Input("switches-indicators", "value")
+)
+def switched(enabled_list):
+    print(enabled_list)
+    return True
