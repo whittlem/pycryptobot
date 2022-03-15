@@ -56,7 +56,6 @@ def test_authorised_check():  # pylint: disable=missing-function-docstring
 
 def test_get_closed_trades():  # pylint: disable=missing-function-docstring
     assert wrapper.closed_trades() != ""
-
 @unittest.skip
 def test_get_running_bot_info():  # pylint: disable=missing-function-docstring
     # helper.datafolder = os.path.join(os.curdir, "tests", "unit_tests", "data")

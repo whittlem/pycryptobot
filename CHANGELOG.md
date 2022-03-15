@@ -8,6 +8,20 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [6.1.0] - 2022-02-22
+
+[Telegram Bot]
+- added logging, logs are saved into ./telegram_logs folder.
+- added "logger_level": <sting> option in the telegram section of config default is "INFO" other options can be used.
+- added trades summary to control panel (24h, 7d, 14d, 31d or all)
+- fixed screener/scanner stopping bots that are on the exception list, the exception list is now checked when the screener/scanner starts and stops bots.
+- fixed bot count when screener/scanner starts or stops bots
+- fixed max bot count not always limiting the number of running bots
+- added "exchange_bot_count": <int> in scanner section of config to allow max number of bots running on each exchange
+- added screener to config editor
+- added "autostart" : <bit> in scanner section of config, if enabled, when telegram_bot.py is started it will run the market scanner and start any previous open orders.
+- including code refactoring.
+
 ## [6.0.0] - 2022-02-08
 
 - major release

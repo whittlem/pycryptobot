@@ -24,7 +24,19 @@
             "autorestart" : 0,
             "graphs" : 0,
             "verbose" : 0,
-            "stats" : 0
+            "stats" : 0,
+            "enableinsufficientfundslogging": 1,
+            "enabletelegrambotcontrol": 1,
+            "websocket": 0,
+            "disablelog": 0,
+            "buymaxsize": 0,
+            "buyminsize": 0,
+            "sellsmartswitch": 0,
+            "trailingbuypcnt": 0.5,
+            "telegramtradesonly": 0,
+            "granularity": "1hour",
+            "enableml": 0,
+            "use_sell_fee": 1
         }
     },
     "coinbasepro": {
@@ -52,22 +64,37 @@
             "autorestart" : 0,
             "graphs" : 0,
             "verbose" : 0,
-            "stats" : 0
+            "stats" : 0,
+            "enableinsufficientfundslogging": 1,
+            "enabletelegrambotcontrol": 1,
+            "websocket": 0,
+            "disablelog": 0,
+            "buymaxsize": 0,
+            "buyminsize": 0,
+            "sellsmartswitch": 0,
+            "trailingbuypcnt": 0.5,
+            "telegramtradesonly": 0,
+            "granularity": "3600",
+            "enableml": 0
         }
     },
     "telegram": {
         "token": "",
         "user_id": "0000000000",
         "client_id": "",
-        "datafolder": ""
+        "datafolder": "",
+        "logger_level": "DEBUG"
     },
 	"scanner" : {
 		"atr72_pcnt" : 1.0,
 		"enableexitaftersell" : 1,
 		"enableleverage" : 0,
         "use_default_scanner" : 1,
-		"maxbotcount" : 5,
+		"maxbotcount" : 6,
+        "exchange_bot_count": 3,
         "autoscandelay" : 0,
-        "enable_buy_next": 1
+        "enable_buy_next": 1,
+        "autostart": 0,
+        "terminal_start_process": ""
 	}
 }
