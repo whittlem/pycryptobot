@@ -5,9 +5,9 @@ from models.telegram import TelegramHelper, TelegramActions, TelegramHandler, Te
 class Wrapper:
     """Wrapper for Telegram Functions"""
 
-    def __init__(self, config_file='config.json') -> None:
+    def __init__(self, config_file='config.json', log_file_prefix = 'telegram') -> None:
         """Initiate wrapper class"""
-        self.helper = TelegramHelper(config_file)
+        self.helper = TelegramHelper(config_file, log_file_prefix)
         self._actions = TelegramActions(self.helper)
         self._handler = TelegramHandler(
             self.helper.config["telegram"]["user_id"], self.helper
@@ -16,10 +16,10 @@ class Wrapper:
 
     def start_market_scanning(
         self,
-        update=None,
-        context=None,
         scanmarkets: bool = True,
         startbots: bool = True,
+        update=None,
+        context=None,
     ) -> str:
         """Start market scanning/screening\n
         Add schedule if not already running\v
@@ -33,18 +33,16 @@ class Wrapper:
         """Restart any bots that are not running and have open orders"""
         return self._actions.start_open_orders(None, None)
 
-    def running_bot_info(self, update=None, context=None) -> str:
+    def running_bot_info(self) -> str:
         """Get running bot infomation\n
-        update can be None\n
-        context can be None\n
         Telegram notifications will still be sent"""
-        return self._actions.get_bot_info(update, context)
+        return self._actions.get_bot_info()
 
-    def closed_trades(self, update=None, days=callbacktags.TRADES24H) -> str:
+    def closed_trades(self, days=callbacktags.TRADES24H) -> str:
         """Get closed trades\n
         update can be None\n
         Telegram notifications will still be sent"""
-        return self._actions.get_closed_trades(update, days)
+        return self._actions.get_closed_trades(None, days)
 
     def place_market_buy_order(self, market):
         """Place a market buy order"""
@@ -65,3 +63,11 @@ class Wrapper:
     def stop_bot(self, market):
         """place a market sell order"""
         return self._controls.stop_bot_response(None, None, market)
+
+    def start_bot(self, market):
+        """place a market sell order"""
+        return self._controls.start_bot_response(None, None, market)
+
+    def check_schedule_running(self) -> bool:
+        """ Check schedule """
+        return len(self._handler.scannerSchedule.get_jobs()) > 0

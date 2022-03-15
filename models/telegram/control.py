@@ -192,8 +192,32 @@ class TelegramControl:
                 new_message=False,
             )
 
-    def start_bot_response(self, update: Update, context):
+    def start_bot_response(self, update: Update, context, market_override = ""):
         """Start bot list response"""
+
+        if market_override != "":
+            self.helper.send_telegram_message(
+                update,
+                f"<i>Starting {market_override} crypto bot</i>",
+                context=context,
+                new_message=False,
+            )
+            self.helper.read_data()
+            if not self.helper.is_bot_running(market_override):
+                overrides = self.helper.data["markets"][
+                    market_override
+                ]["overrides"]
+                self.helper.start_process(
+                    market_override, self.helper.get_running_bot_exchange(market_override), overrides
+                )
+            else:
+                self.helper.send_telegram_message(
+                    update,
+                    f"{market_override} is already running, no action taken.",
+                    context=context,
+                )
+            return
+
         query = update.callback_query
 
         self.helper.read_data()

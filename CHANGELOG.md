@@ -8,6 +8,14 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [6.2.0] - 2022-03-15
+
+- added webgui.py this is web interface, it has some of the telegram bot functions (more will be added) and can be run standalone or along side telegram_bot.py
+- added bot controls to webgui
+- added market scanner options to webgui (please note if using the telegram bot as well the schedules for webgui and telegram bot are separate processes)
+- added visual gauges to dashboard (current margins & last 7 day trade margin)
+- added log viewer page to webgui it will list logs from the default log location (this will be selectable in a future update)
+
 ## [6.1.0] - 2022-02-22
 
 [Telegram Bot]

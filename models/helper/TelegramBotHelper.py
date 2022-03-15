@@ -10,6 +10,7 @@ from models.helper.LogHelper import Logger
 
 
 class TelegramBotHelper:
+    """ Telegram Bot data helper """
     def __init__(self, app: PyCryptoBot, scanner: bool = False) -> None:
         self.app = app
         self.market = app.getMarket()
@@ -68,6 +69,7 @@ class TelegramBotHelper:
                     write_ok = self._write_data("data.json")
 
     def create_bot_data(self):
+        """ Create pair.json file """
         ds = {
                 "botcontrol": {
                     "status": "active",
@@ -76,9 +78,15 @@ class TelegramBotHelper:
                     "started": datetime.now().isoformat(),
                     "startmethod" : self.app.startmethod,
                 },
-                "trailingstoplosstriggered" : False,
                 "preventlosstriggered" : False,
                 "exchange" : self.exchange.value,
+                "margin": "",
+                "delta": "",
+                "price": 0.0,
+                "df_high": " ",
+                "from_df_high": " ",
+                "trailingstoplosstriggered" : False,
+                "change_pcnt_high" : 0.0
             }
         self.data = ds
         self._write_data()

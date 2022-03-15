@@ -19,16 +19,16 @@ from telegram.ext.callbackcontext import CallbackContext
 if not os.path.exists(os.path.join(os.curdir, "telegram_logs")):
     os.mkdir(os.path.join(os.curdir, "telegram_logs"))
 
-logging.basicConfig(
-    filename=os.path.join(
-        os.curdir,
-        "telegram_logs",
-        f"telegrambot {datetime.now().strftime('%Y-%m-%d')}.log",
-    ),
-    filemode="w",
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO,
-)
+# logging.basicConfig(
+#     filename=os.path.join(
+#         os.curdir,
+#         "telegram_logs",
+#         f"telegrambot {datetime.now().strftime('%Y-%m-%d')}.log",
+#     ),
+#     filemode="w",
+#     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+#     level=logging.INFO,
+# )
 
 # logger = logging.getLogger(__name__)
 
@@ -36,49 +36,46 @@ logging.basicConfig(
 class TelegramHelper:
     """Telegram Bot Helper"""
 
-    def __init__(self, configfile = 'config.json') -> None:
-        # self.datafolder = datafolder
+    def __init__(self, configfile = 'config.json', logfileprefix = 'telegrambot') -> None:
         self.data = {}
-        # self.config = config
         self.config_file = configfile
         self.screener = {}
         self.settings = {}
-        # self.use_default_scanner = True
-        # self.atr72pcnt = 2.0
-        # self.enableleverage = False
-        # self.maxbotcount = 0
-        # self.exchange_bot_count = 0
-        # self.autoscandelay = 0
-        # self.enable_buy_next = True
-        # self.autostart = False
-        # self.logger_level = "INFO"
 
+        logging.basicConfig(
+        filename=os.path.join(
+            os.curdir,
+            "telegram_logs",
+            f"{logfileprefix} {datetime.now().strftime('%Y-%m-%d')}.log",
+        ),
+        filemode="w",
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        level=logging.INFO,
+    )
+
+        # self.logger = None
         self.logger = logging.getLogger("telegram.helper")
-        # self.logger.setLevel(self.get_level(self.logger_level))
-        # self.terminal_start_process = ""
 
         with open(os.path.join(configfile), "r", encoding="utf8") as json_file:
             self.config = json.load(json_file)
 
-        # self.datafolder = self.config["telegram"]["datafolder"]
-
         self.load_config()
         self.read_screener_config()
 
-        # self.logger = logging.getLogger("telegram.helper")
-        self.logger.setLevel(self.get_level(self.logger_level))
-        # set a format which is simpler for console use
-        consoleHandlerFormatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
-        # define a Handler which writes sys.stdout
-        consoleHandler = logging.StreamHandler()
-        # Set log level
-        consoleHandler.setLevel(self.get_level(self.logger_level))
-        # tell the handler to use this format
-        consoleHandler.setFormatter(consoleHandlerFormatter)
-        # add the handler to the root logger
-        self.logger.addHandler(consoleHandler)
+        if len(self.logger.handlers) == 0:
+            self.logger.setLevel(self.get_level(self.logger_level))
+            # set a format which is simpler for console use
+            consoleHandlerFormatter = logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
+            # define a Handler which writes sys.stdout
+            consoleHandler = logging.StreamHandler()
+            # Set log level
+            consoleHandler.setLevel(self.get_level(self.logger_level))
+            # tell the handler to use this format
+            consoleHandler.setFormatter(consoleHandlerFormatter)
+            # add the handler to the root logger
+            self.logger.addHandler(consoleHandler)
 
         self.updater = Updater(
             self.config["telegram"]["token"],
@@ -521,7 +518,7 @@ class TelegramHelper:
             )
         else:
             if self.terminal_start_process != "":
-                command = f"{self.terminal_start_process} {command}"
+                command = f"{self.terminal_start_process.replace('{pair}', pair)} {command}"
             subprocess.Popen(
                 f"{command} --logfile './logs/{exchange}-{pair}-{datetime.now().date()}.log' "
                 f"{overrides}",
@@ -559,3 +556,56 @@ class TelegramHelper:
         self, callback_tag, exchange: str = "", parameter: str = ""
     ):
         return json.dumps({"c": callback_tag, "e": exchange, "p": parameter})
+
+    def clean_data_folder(self):
+        """ check market files in data folder """
+        self.logger.debug("cleandata started")
+        jsonfiles = self.get_active_bot_list()
+        for i in range(len(jsonfiles), 0, -1):
+            jfile = jsonfiles[i - 1]
+
+            self.logger.info("checking %s", jfile)
+
+            self.read_data(jfile)
+
+            last_modified = datetime.now() - datetime.fromtimestamp(
+                os.path.getmtime(
+                    os.path.join(
+                        self.datafolder, "telegram_data", f"{jfile}.json"
+                    )
+                )
+            )
+            if "margin" not in self.data:
+                self.logger.info("deleting %s", jfile)
+                os.remove(
+                    os.path.join(
+                        self.datafolder, "telegram_data", f"{jfile}.json"
+                    )
+                )
+                continue
+            if (
+                self.data["botcontrol"]["status"] == "active"
+                and last_modified.seconds > 120
+                and (last_modified.seconds != 86399 and last_modified.days != -1)
+            ):
+                self.logger.info("deleting %s %s", jfile, str(last_modified))
+                os.remove(
+                    os.path.join(
+                        self.datafolder, "telegram_data", f"{jfile}.json"
+                    )
+                )
+                continue
+            elif (
+                self.data["botcontrol"]["status"] == "exit"
+                and last_modified.seconds > 120
+                and last_modified.seconds != 86399
+            ):
+                self.logger.info(
+                    "deleting %s %s", jfile, str(last_modified.seconds)
+                )
+                os.remove(
+                    os.path.join(
+                        self.datafolder, "telegram_data", f"{jfile}.json"
+                    )
+                )
+        self.logger.debug("cleandata complete")

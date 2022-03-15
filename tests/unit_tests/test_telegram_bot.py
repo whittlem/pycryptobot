@@ -6,25 +6,18 @@ from models.telegram import (
     TelegramActions,
     TelegramControl,
     TelegramHandler,
-    TelegramHelper,
     Wrapper,
 )
 
 sys.path.append(".")
 
-# helper = TelegramHelper("config.json")
-# helper.datafolder = os.path.join(os.curdir, "tests", "unit_tests", "data")
-# actions = TelegramActions(helper)
-# control = TelegramControl(helper)
-# handler = TelegramHandler(helper.config["telegram"]["user_id"], helper)
-
 wrapper = Wrapper("config.json")
 wrapper.helper.datafolder = os.path.join(os.curdir, "tests", "unit_tests", "data")
+
 actions = TelegramActions(wrapper.helper)
 control = TelegramControl(wrapper.helper)
 handler = TelegramHandler(wrapper.helper.config["telegram"]["user_id"], wrapper.helper)
 
-# helper.datafolder = os.path.join(os.curdir, "tests", "unit_tests", "data")
 MARKET = "TESTUSDT"
 
 def test_helper_isnot_null():  # pylint: disable=missing-function-docstring
@@ -32,7 +25,7 @@ def test_helper_isnot_null():  # pylint: disable=missing-function-docstring
 
 def test_margins():  # pylint: disable=missing-function-docstring
     assert wrapper.helper.read_data(MARKET)
-    assert actions._get_margin_text(MARKET)
+    assert wrapper._actions._get_margin_text(MARKET)
 
 def test_get_active_bot_list():  # pylint: disable=missing-function-docstring
     result = wrapper.helper.get_active_bot_list("active")
@@ -63,7 +56,6 @@ def test_authorised_check():  # pylint: disable=missing-function-docstring
 
 def test_get_closed_trades():  # pylint: disable=missing-function-docstring
     assert wrapper.closed_trades() != ""
-    
 @unittest.skip
 def test_get_running_bot_info():  # pylint: disable=missing-function-docstring
     # helper.datafolder = os.path.join(os.curdir, "tests", "unit_tests", "data")
