@@ -13,7 +13,7 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 
 # from models.telegram import Wrapper
-from pages import controls, config, terminals
+from pages import controls, config, terminals, telegramconfig
 
 external_stylesheets = [dbc.themes.DARKLY]
 #To change the theme just insert the name in the line above.
@@ -44,7 +44,17 @@ app.layout = html.Div(children=[
     children=[
         dbc.NavItem(dbc.NavLink("Dashboard", href="/")),
         dbc.NavItem(dbc.NavLink("Controls", href="/controls")),
-        # dbc.NavItem(dbc.NavLink("Edit Config", href="/config")),
+        # dbc.NavItem(dbc.NavLink("Configuration", href="/config")),
+        dbc.DropdownMenu(
+            children=[
+                dbc.DropdownMenuItem("Bot Config", href="/config"),
+                dbc.DropdownMenuItem("Telegram Config", href="/telegramconfig"),
+                dbc.DropdownMenuItem("Scanner Config", href="#", disabled=True),
+            ],
+            nav=True,
+            in_navbar=True,
+            label="Configuration",
+        ),
         dbc.NavItem(dbc.NavLink("Logs", href="/terminals")),
     ],
     brand="Pycryptobot",
@@ -258,6 +268,8 @@ def display_page(pathname):
         return config.layout
     if pathname == "/terminals":
         return terminals.layout
+    if pathname == "/telegramconfig":
+        return telegramconfig.layout
     else:
         return dashboard_layout
 
