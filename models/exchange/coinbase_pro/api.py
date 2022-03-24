@@ -736,20 +736,34 @@ class PublicAPI(AuthAPIBase):
                     pass
 
         if websocket is None or (websocket is not None and using_websocket is False):
-            if iso8601start != "" and iso8601end == "":
-                resp = self.authAPI(
-                    "GET",
-                    f"products/{market}/candles?granularity={granularity.to_integer}&start={iso8601start}",
-                )
-            elif iso8601start != "" and iso8601end != "":
-                resp = self.authAPI(
-                    "GET",
-                    f"products/{market}/candles?granularity={granularity.to_integer}&start={iso8601start}&end={iso8601end}",
-                )
-            else:
-                resp = self.authAPI(
-                    "GET", f"products/{market}/candles?granularity={granularity.to_integer}"
-                )
+            resp = {}
+            trycnt, maxretry = (0, 5)
+            while trycnt < maxretry:
+
+                if iso8601start != "" and iso8601end == "":
+                    resp = self.authAPI(
+                        "GET",
+                        f"products/{market}/candles?granularity={granularity.to_integer}&start={iso8601start}",
+                    )
+                elif iso8601start != "" and iso8601end != "":
+                    resp = self.authAPI(
+                        "GET",
+                        f"products/{market}/candles?granularity={granularity.to_integer}&start={iso8601start}&end={iso8601end}",
+                    )
+                else:
+                    resp = self.authAPI(
+                        "GET", f"products/{market}/candles?granularity={granularity.to_integer}"
+                    )
+
+                if len(resp) > 0:
+                    break
+                else:
+                    trycnt += 1
+                    if trycnt == (maxretry):
+                        Logger.warning(
+                            f"CoinbasePro API Error for Historical Data - attempted {trycnt} times"
+                        )
+                    time.sleep(15)
 
             # convert the API response into a Pandas DataFrame
             df = pd.DataFrame(
@@ -821,34 +835,63 @@ class PublicAPI(AuthAPIBase):
         now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
         if websocket is not None and websocket.tickers is not None:
-            try:
-                row = websocket.tickers.loc[websocket.tickers["market"] == market]
-                return (
-                    datetime.strptime(
-                        re.sub(r".0*$", "", str(row["date"].values[0])),
-                        "%Y-%m-%dT%H:%M:%S",
-                    ).strftime("%Y-%m-%d %H:%M:%S"),
-                    float(row["price"].values[0]),
-                )
+            trycnt, maxretry = (1, 5)
+            while trycnt <= maxretry:
+                try:
+                    row = websocket.tickers.loc[websocket.tickers["market"] == market]
+                    ticker_date = datetime.strptime(
+                            re.sub(r".0*$", "", str(row["date"].values[0])),
+                            "%Y-%m-%dT%H:%M:%S",
+                        ).strftime("%Y-%m-%d %H:%M:%S")
+                    ticker_price = row["price"].values[0]
+                except:
+                    return None
 
-            except:
-                return (now, 0.0)
+                if ticker_price == 0 or ticker_date is None:
+                    return None
+                else:
+                    return (
+                        datetime.strptime(
+                            re.sub(r".0*$", "", str(row["date"].values[0])),
+                            "%Y-%m-%dT%H:%M:%S",
+                        ).strftime("%Y-%m-%d %H:%M:%S"),
+                        float(row["price"].values[0]),
+                    )
 
-        resp = self.authAPI("GET", f"products/{market}/ticker")
+        resp = {}
+        trycnt, maxretry = (1, 5)
+        while trycnt <= maxretry:
 
-        if "time" in resp and "price" in resp:
+            resp = self.authAPI("GET", f"products/{market}/ticker")
 
-            """Check if milliseconds (%f) are more then 6 digits. If so truncate for datetime which doesn't support more"""
-            if len(resp["time"].split('.')[1]) > 7: resp["time"]=resp["time"][:26] + 'Z'
+            if "time" not in resp or "price" not in resp:
+                trycnt += 1
+                if trycnt == maxretry:
+                    Logger.warning(
+                        f"CoinbasePro Ticker Error - 'time' or 'price' not in response - attempted {trycnt} times"
+                    )
+                    return (now, 0.0)
+                time.sleep(15)
 
-            return (
-                datetime.strptime(resp["time"], "%Y-%m-%dT%H:%M:%S.%fZ").strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                ),
-                float(resp["price"]),
-            )
+            else:
+                try:
+                    """Check if milliseconds (%f) are more then 6 digits. If so truncate for datetime which doesn't support more"""
+                    if len(resp["time"].split('.')[1]) > 7: resp["time"]=resp["time"][:26] + 'Z'
 
-        return (now, 0.0)
+                    return (
+                        datetime.strptime(resp["time"], "%Y-%m-%dT%H:%M:%S.%fZ").strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        ),
+                        float(resp["price"]),
+                    )
+                except:
+                    trycnt += 1
+                    if trycnt == maxretry:
+                        Logger.warning(
+                            f"CoinbasePro Ticker Error - attempted {trycnt} times."
+                        )
+                        return (now, 0.0)
+                    time.sleep(15)
 
     def getTime(self) -> datetime:
         """Retrieves the exchange time"""

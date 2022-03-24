@@ -219,6 +219,36 @@ class PyCryptoBot(BotConfig):
     def trailingImmediateBuy(self) -> bool:
         return self.trailingimmediatebuy
 
+    def getTrailingBuyImmediatePcnt(self):
+        try:
+            return float(self.trailingbuyimmediatepcnt)
+        except Exception:  # pylint: disable=broad-except
+            return None
+
+    def getTrailingSellPcnt(self):
+        try:
+            return float(self.trailingsellpcnt)
+        except Exception:  # pylint: disable=broad-except
+            return 0
+
+    def trailingImmediateSell(self) -> bool:
+        return self.trailingimmediatesell
+
+    def getTrailingSellImmediatePcnt(self):
+        try:
+            return float(self.trailingsellimmediatepcnt)
+        except Exception:  # pylint: disable=broad-except
+            return None
+
+    def getTrailingSellBailoutPcnt(self):
+        try:
+            return float(self.trailingsellbailoutpcnt)
+        except Exception:  # pylint: disable=broad-except
+            return None
+
+    def sellTriggerOverride(self) -> bool:
+        return self.sell_trigger_override
+
     def marketMultiBuyCheck(self) -> bool:
         return self.marketmultibuycheck
 
@@ -753,7 +783,7 @@ class PyCryptoBot(BotConfig):
 
         elif self.exchange == Exchange.KUCOIN:
             api = KPublicAPI(api_url=self.getAPIURL())
-            return api.getTicker(market)
+            return api.getTicker(market, websocket)
         else:  # returns data from coinbase if not specified
             api = CBPublicAPI()
             return api.getTicker(market, websocket)
@@ -806,6 +836,18 @@ class PyCryptoBot(BotConfig):
 
     def trailingStopLossTrigger(self):
         return self.trailing_stop_loss_trigger
+
+    def dynamicTSL(self) -> bool:
+        return self.dynamic_tsl
+
+    def TSLMultiplier(self):
+        return self.tsl_multiplier
+
+    def TSLTriggerMultiplier(self):
+        return self.tsl_trigger_multiplier
+
+    def TSLMaxPcnt(self) -> float:
+        return self.tsl_max_pcnt
 
     def preventLoss(self):
         return self.preventloss
@@ -890,6 +932,12 @@ class PyCryptoBot(BotConfig):
 
     def enableML(self) -> bool:
         return self.enableml
+
+    def enablePandasTA(self) -> bool:
+        return self.enable_pandas_ta
+
+    def enableCustomStrategy(self) -> bool:
+        return self.enable_custom_strategy
 
     def enableWebsocket(self) -> bool:
         return self.websocket
@@ -1407,6 +1455,29 @@ class PyCryptoBot(BotConfig):
                 str(self.trailingStopLossTrigger()) + "%  --trailingstoplosstrigger",
             )
 
+        if self.dynamicTSL():
+            text_box.line(
+                "Dynamic Trailing Stop Loss",
+                str(self.dynamicTSL()) + "  --dynamictsl",
+            )
+        if self.TSLMultiplier() != None:
+            text_box.line(
+                "Trailing Stop Loss Multiplier",
+                str(self.TSLMultiplier()) + "%  --tslmultiplier  <pcnt>",
+            )
+
+        if self.TSLTriggerMultiplier() != None:
+            text_box.line(
+                "Stop Loss Trigger Multiplier",
+                str(self.TSLTriggerMultiplier()) + "%  --tsltriggermultiplier  <pcnt>",
+            )
+
+        if self.TSLMaxPcnt() != None:
+            text_box.line(
+                "Stop Loss Maximum Percent",
+                str(self.TSLMaxPcnt()) + "%  --tslmaxpcnt  <pcnt>",
+            )
+
         if self.preventLoss():
             text_box.line(
                 "Prevent Loss",
@@ -1493,6 +1564,8 @@ class PyCryptoBot(BotConfig):
                 + " --disabletelegramerrormsgs",
             )
 
+        text_box.line("Enable Pandas-ta", str(self.enablePandasTA()) + "  --enable_pandas_ta")
+        text_box.line("EnableCustom Strategy", str(self.enableCustomStrategy()) + "  --enable_custom_strategy")
         text_box.line("Log", str(not self.disableLog()) + "  --disablelog")
         text_box.line("Tracker", str(not self.disableTracker()) + "  --disabletracker")
         text_box.line("Auto restart Bot", str(self.autoRestart()) + "  --autorestart")
@@ -1532,6 +1605,38 @@ class PyCryptoBot(BotConfig):
             text_box.line(
                 "Immediate buy for trailingbuypcnt",
                 str(self.trailingImmediateBuy()) + "  --trailingImmediateBuy",
+            )
+
+        if self.getTrailingBuyImmediatePcnt():
+            text_box.line(
+                "Trailing Buy Immediate Percent", str(self.getTrailingBuyImmediatePcnt()) + "  --trailingbuyimmediatepcnt <size>"
+            )
+
+        if self.getTrailingSellPcnt():
+            text_box.line(
+                "Trailing Sell Percent", str(self.getTrailingSellPcnt()) + "  --trailingsellpcnt <size>"
+            )
+
+        if self.trailingImmediateSell():
+            text_box.line(
+                "Immediate sell for trailingsellpcnt",
+                str(self.trailingImmediateSell()) + "  --trailingimmediatesell",
+            )
+
+        if self.getTrailingSellImmediatePcnt():
+            text_box.line(
+                "Trailing Sell Immediate Percent", str(self.getTrailingSellImmediatePcnt()) + "  --trailingsellimmediatepcnt <size>"
+            )
+
+        if self.getTrailingSellBailoutPcnt():
+            text_box.line(
+                "Trailing Sell Bailout Percent", str(self.getTrailingSellBailoutPcnt()) + "  --trailingsellbailoutpcnt <size>"
+            )
+
+        if self.sellTriggerOverride():
+            text_box.line(
+                "Override SellTrigger if STRONG buy",
+                str(self.sellTriggerOverride()) + "  --trailingImmediateSell",
             )
 
         if self.marketMultiBuyCheck():
