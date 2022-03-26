@@ -754,7 +754,7 @@ class TelegramActions:
                     f"Last Recorded Date: <b>{last_trade_date}</b>\n\n"
                     f"Profit: <b>{round(margin_positive,2)}%</b>  from (<b>{positive_counter}</b>) trades\n"
                     f"Loss: <b>{round(margin_negative,2)}%</b>  from (<b>{negative_counter}</b>) trades\n"
-                    f"Total: <b>{round(margin_calculation,2)}%</b>  from (<b>{trade_counter}</b>) trades"
+                    f"Total: <b>{round((margin_calculation/trade_counter),2)}%</b>  from (<b>{trade_counter}</b>) trades"
                 )
 
                 self.helper.send_telegram_message(update, summary)
