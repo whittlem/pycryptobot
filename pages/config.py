@@ -5,6 +5,7 @@ from models.telegram import Wrapper
 from models.exchange import Granularity
 
 tg_wrapper = Wrapper("config.json", "webgui")
+tg_wrapper.helper.read_config()
 # selected_pair = None
 CONTENT_STYLE = {
     "margin-left": "0rem",
@@ -20,7 +21,7 @@ layout = html.Div(style=CONTENT_STYLE, children=
             dbc.Button(
                 "Save Changes",
                 id="save-changes",
-                value="save",
+                value="saved",
                 n_clicks=0,
                 disabled=False,
             ),
@@ -232,7 +233,7 @@ layout = html.Div(style=CONTENT_STYLE, children=
                                                         },
                                                     ],
                                                     value=[1],
-                                                    id="switches-advsell",
+                                                    id="switches-preventloss",
                                                     switch=True,
                                                     inline=True,
                                                 ),
@@ -335,6 +336,95 @@ layout = html.Div(style=CONTENT_STYLE, children=
                             ),
                         ]
                     ),
+                    dbc.Row([
+                        dbc.Col(
+                            dbc.Card(
+                                dbc.CardBody(
+                                    html.Div(
+                                            [
+                                                dbc.Checklist(
+                                                    options=[
+                                                        {
+                                                            "label": "Disable Buy Near High Default",
+                                                            "value": "disablebuynearhigh",
+                                                        },
+                                                    ],
+                                                    value=[1],
+                                                    id="switches-buynearhigh",
+                                                    switch=True,
+                                                    inline=True,
+                                                ),
+                                                dbc.Label("(Optional) No Buy Near High %"),
+                                                html.B(),
+                                                html.Div(
+                                                    dbc.Input(
+                                                        id="buy-near-high",
+                                                        placeholder="no buy near high ... ",
+                                                        type="number",
+                                                    ),
+                                                )
+                                            ]
+                                        )
+                                )
+                            )
+                        ),
+                        dbc.Col(dbc.Card(
+                                    dbc.CardBody(
+                                        html.Div(
+                                            [
+                                                dbc.Checklist(
+                                                    options=[
+                                                        {
+                                                            "label": "Enable Sell At Loss",
+                                                            "value": "sellatloss",
+                                                        },
+                                                    ],
+                                                    value=[1],
+                                                    id="switches-sellatloss",
+                                                    switch=True,
+                                                    inline=True,
+                                                ),
+                                                dbc.Label("Ignore Sell Triggers before (%)"),
+                                                html.B(),
+                                                html.Div(
+                                                    dcc.Slider(
+                                                        -20,
+                                                        0,
+                                                        0.1,
+                                                        value=0,
+                                                        id="sell-at-loss-trigger",
+                                                        marks=None,
+                                                        tooltip={
+                                                            "placement": "left",
+                                                            "always_visible": True,
+                                                        },
+                                                        disabled=True,
+                                                    ),
+                                                ),
+                                                dbc.Label("FailSafe sell point (%)"),
+                                                html.B(),
+                                                html.Div(
+                                                    dcc.Slider(
+                                                        -10,
+                                                        10,
+                                                        0.05,
+                                                        value=0,
+                                                        id="prevent-loss-margin",
+                                                        marks=None,
+                                                        tooltip={
+                                                            "placement": "left",
+                                                            "always_visible": True,
+                                                        },
+                                                        disabled=True,
+                                                    ),
+                                                ),
+                                            ]
+                                        )
+                                    )
+                                )),
+                        dbc.Col()
+                    ]
+                    )
                 ],
             ),
             start_collapsed=True,
@@ -384,22 +474,70 @@ layout = html.Div(style=CONTENT_STYLE, children=
     ],
 )
 
-
 @callback(
     Output("save-change-message", "children"),
     Input("save-changes", "n_clicks"),
     State("exchange-selector", "value"),
-    State("switches-indicators", "options"),
-    State("switches-indicators", "value"),
+    State("switches-buysize", "value"),
+    State("buy-max-size", "value"),
+    State("buy-min-size", "value"),
+    State("switches-preventloss", "value"),
+    State("prevent-loss-trigger", "value"),
+    State("prevent-loss-margin", "value"),
+    State("switches-tsl", "value"),
+    State("trailing-stop-loss-trigger", "value"),
+    State("trailing-stop-loss-margin", "value"),
+    State("switches-buynearhigh", "value"),
+    State("buy-near-high", "value")
 )
-def save_changes_switch(value, exchange, ind_options, ind_value):
+def save_changes_buysize(value, exchange, buysize, buymaxsize, buyminsize, preventloss, pl_trigger, pl_margin, tsl, tsl_trigger, tsl_margin, buynearhigh, buynearhigh_percent):
     """Save changes"""
     if value > 0:
-        for option in ind_options:
-            tg_wrapper.helper.config[exchange]["config"].update(
-                {option["value"]: 1 if option["value"] in ind_value else 0}
-            )
-        return dbc.Alert(f"{exchange} changes saved successfully!", color="success", dismissable=True)
+        if "buysize" in buysize:
+            tg_wrapper.helper.config[exchange]["config"].update({"buymaxsize": buymaxsize})
+            tg_wrapper.helper.config[exchange]["config"].update({"buyminsize": buyminsize})
+        else:
+            if "buymaxsize" in tg_wrapper.helper.config[exchange]["config"]:
+                tg_wrapper.helper.config[exchange]["config"].pop("buymaxsize")
+            if "buyminsize" in tg_wrapper.helper.config[exchange]["config"]:
+                tg_wrapper.helper.config[exchange]["config"].pop("buyminsize")
+
+        if "preventloss" in preventloss:
+            tg_wrapper.helper.config[exchange]["config"].update({"preventlosstrigger": pl_trigger})
+            tg_wrapper.helper.config[exchange]["config"].update({"preventlossmargin": pl_margin})
+
+        if "trailingstoploss" in tsl:
+            tg_wrapper.helper.config[exchange]["config"].update({"trailingstoplosstrigger": tsl_trigger})
+            tg_wrapper.helper.config[exchange]["config"].update({"trailingstoploss": tsl_margin})
+        else:
+            if "trailingstoplosstrigger" in tg_wrapper.helper.config[exchange]["config"]:
+                tg_wrapper.helper.config[exchange]["config"].pop("trailingstoplosstrigger")
+            if "trailingstoploss" in tg_wrapper.helper.config[exchange]["config"]:
+                tg_wrapper.helper.config[exchange]["config"].pop("trailingstoploss")
+                
+        if "disablebuynearhigh" in buynearhigh:
+            tg_wrapper.helper.config[exchange]["config"].update({"disablebuynearhigh": 1})
+            tg_wrapper.helper.config[exchange]["config"].update({"nobuynearhighpcnt": buynearhigh_percent})
+        else:
+            if "disablebuynearhigh" in tg_wrapper.helper.config[exchange]["config"]:
+                tg_wrapper.helper.config[exchange]["config"].pop("disablebuynearhigh")
+            if "nobuynearhighpcnt" in tg_wrapper.helper.config[exchange]["config"]:
+                tg_wrapper.helper.config[exchange]["config"].pop("nobuynearhighpcnt")
+
+        if tg_wrapper.helper.write_config():
+            return dbc.Alert("Config File Update - SUCCESS", color="success", dismissable=True)
+
+        return dbc.Alert("Config File Update - FAILED", color="danger", dismissable=True)
+
+@callback(
+    Output("buy-near-high", "disabled"),
+    Input("switches-buynearhigh", "value"),
+)
+def buy_near_high_switch(value):
+    """enable/disable buy size amount"""
+    if "disablebuynearhigh" in value:
+        return False
+    return True
 
 @callback(
     Output("buy-max-size", "disabled"),
@@ -416,7 +554,7 @@ def buy_size_switch(value):
 @callback(
     Output("prevent-loss-trigger", "disabled"),
     Output("prevent-loss-margin", "disabled"),
-    Input("switches-advsell", "value"),
+    Input("switches-preventloss", "value"),
 )
 def prevent_loss_switch(value):
     """enable/disable prevent loss settings"""
@@ -441,10 +579,11 @@ def trailing_stop_loss_switch(value):
     [
         Output("switches-indicators", "value"),
         Output("switches-sell", "value"),
-        Output("switches-advsell", "value"),
+        Output("switches-preventloss", "value"),
         Output("switches-tsl", "value"),
         Output("switches-extras", "value"),
         Output("switches-buysize", "value"),
+        Output("switches-buynearhigh", "value")
     ],
     Input("exchange-selector", "value"),
 )
@@ -452,23 +591,28 @@ def exchange_selector(value):
     """Select Exchange"""
     enabled_list = []
     if value is not None:
-        if value in tg_wrapper.helper.config:
-            for param in tg_wrapper.helper.config[value]["config"]:
-                if tg_wrapper.helper.config[value]["config"][param] == 1:
-                    enabled_list.append(param)
+        if value not in tg_wrapper.helper.config:
+            tg_wrapper.helper.config.update({value : {"config": {}}})
+        for param in tg_wrapper.helper.config[value]["config"]:
+            if tg_wrapper.helper.config[value]["config"][param] == 1:
+                   enabled_list.append(param)
 
-            if (
-                "trailingstoplosstrigger" in tg_wrapper.helper.config[value]["config"]
-                and "trailingstoploss" in tg_wrapper.helper.config[value]["config"]
-            ):
-                enabled_list.append("trailingstoploss")
+        if (
+            "trailingstoplosstrigger" in tg_wrapper.helper.config[value]["config"]
+            and "trailingstoploss" in tg_wrapper.helper.config[value]["config"]
+        ):
+            enabled_list.append("trailingstoploss")
 
-            if (
-                "buymaxsize" in tg_wrapper.helper.config[value]["config"]
-                or "buyminsize" in tg_wrapper.helper.config[value]["config"]
-            ):
-                enabled_list.append("buysize")
+        if (
+            "buymaxsize" in tg_wrapper.helper.config[value]["config"]
+            or "buyminsize" in tg_wrapper.helper.config[value]["config"]
+        ):
+            enabled_list.append("buysize")
 
+            # if (
+            #     "nobuynearhighpcnt" in tg_wrapper.helper.config[value]["config"]
+            # ):
+            #     enabled_list.append("buysize")
     return (
         enabled_list,
         enabled_list,
@@ -476,8 +620,20 @@ def exchange_selector(value):
         enabled_list,
         enabled_list,
         enabled_list,
+        enabled_list
     )
 
+@callback(
+    Output("buy-near-high", "value"),
+    Input("exchange-selector", "value"),
+)
+def buy_near_high(value):
+    result = ""
+    if value is not None:
+        if value in tg_wrapper.helper.config:
+            if "nobuynearhighpcnt" in tg_wrapper.helper.config[value]["config"]:
+                result = tg_wrapper.helper.config[value]["config"]["nobuynearhighpcnt"]
+    return result
 
 @callback(
     Output("buy-max-size", "value"),
@@ -572,11 +728,13 @@ def prevent_loss_trigger(value):
     Output("switches-indicators", "visible"),
     Input("switches-indicators", "value"),
     Input("switches-sell", "value"),
+    Input("switches-extras", "value"),
     State("exchange-selector", "value"),
     State("switches-indicators", "options"),
     State("switches-sell", "options"),
+    State("switches-extras", "options"),
 )
-def switched(enabled_list, sell_list, exchange, options, sell_options):
+def switched(enabled_list, sell_list, options_list, exchange, options, sell_options, extras_options):
     """Make config changes"""
     if exchange is not None:
         if exchange in tg_wrapper.helper.config:
@@ -587,28 +745,37 @@ def switched(enabled_list, sell_list, exchange, options, sell_options):
             if option["value"] in enabled_list:
                 if exchange in tg_wrapper.helper.config:
                     tg_wrapper.helper.config[exchange]["config"][option["value"]] = 1
-                config_list[exchange]["config"].update({option["value"]: 1})
+                config_list["config"].update({option["value"]: 1})
             else:
                 if exchange in tg_wrapper.helper.config:
                     tg_wrapper.helper.config[exchange]["config"][option["value"]] = 0
-                config_list[exchange]["config"].update({option["value"]: 0})
+                config_list["config"].update({option["value"]: 0})
 
         for option in sell_options:
             if option["value"] in sell_list:
                 if exchange in tg_wrapper.helper.config:
                     tg_wrapper.helper.config[exchange]["config"][option["value"]] = 1
-                config_list[exchange]["config"].update({option["value"]: 1})
+                config_list["config"].update({option["value"]: 1})
             else:
                 if exchange in tg_wrapper.helper.config:
                     tg_wrapper.helper.config[exchange]["config"][option["value"]] = 0
-                config_list[exchange]["config"].update({option["value"]: 0})
+                config_list["config"].update({option["value"]: 0})
 
-        tg_wrapper.helper.config.update(config_list)
-        print(tg_wrapper.helper.config[exchange])
+        for option in extras_options:
+            if option["value"] in options_list:
+                if exchange in tg_wrapper.helper.config:
+                    tg_wrapper.helper.config[exchange]["config"][option["value"]] = 1
+                config_list["config"].update({option["value"]: 1})
+            else:
+                if exchange in tg_wrapper.helper.config:
+                    tg_wrapper.helper.config[exchange]["config"][option["value"]] = 0
+                config_list["config"].update({option["value"]: 0})
+
+        tg_wrapper.helper.config[exchange].update(config_list)
+        print(tg_wrapper.helper.config[exchange]["config"])
         return True
     else:
         return True
-
 
 @callback(
     Output("switches-granularity", "visible"),

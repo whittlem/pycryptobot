@@ -16,7 +16,7 @@ layout = html.Div(
                                 dbc.Input(
                                     id="input",
                                     placeholder="Enter Token ... ",
-                                    type="text",
+                                    type="password",
                                 ),
                                 dbc.FormText(
                                     "Token Format: nnnnnnnnnn:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -30,7 +30,7 @@ layout = html.Div(
                                 dbc.Input(
                                     id="input",
                                     placeholder="Enter Id ... ",
-                                    type="number",
+                                    type="password",
                                 ),
                                 dbc.FormText("User Id format: nnnnnnnnnn"),
                             ]

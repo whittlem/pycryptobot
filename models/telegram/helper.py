@@ -277,7 +277,7 @@ class TelegramHelper:
         except json.decoder.JSONDecodeError:
             return
 
-    def write_config(self):
+    def write_config(self) -> bool:
         """Write config file"""
         self.logger.debug("METHOD(write_config)")
         try:
@@ -287,8 +287,9 @@ class TelegramHelper:
                 encoding="utf8",
             ) as outfile:
                 json.dump(self.config, outfile, indent=4)
+            return True
         except:  # pylint: disable=bare-except
-            return
+            return False
 
     def read_screener_config(self):
         """Read screener config file"""
