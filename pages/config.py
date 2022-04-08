@@ -12,8 +12,9 @@ CONTENT_STYLE = {
     "margin-right": "0rem",
     "padding": "0rem 1rem",
 }
-layout = html.Div(style=CONTENT_STYLE, children=
-    [
+layout = html.Div(
+    style=CONTENT_STYLE,
+    children=[
         html.H4("Bot Config Generator", style={"textAlign": "left"}),
         html.B(),
         html.Div(id="save-change-message"),
@@ -80,10 +81,6 @@ layout = html.Div(style=CONTENT_STYLE, children=
                                             "label": "Disable Bull Only",
                                             "value": "disablebullonly",
                                         },
-                                        {
-                                            "label": "Disable Buy Near High",
-                                            "value": "disablebuynearhigh",
-                                        },
                                     ],
                                     value=0,
                                     id="switches-indicators",
@@ -109,10 +106,6 @@ layout = html.Div(style=CONTENT_STYLE, children=
                             [
                                 dbc.Checklist(
                                     options=[
-                                        {
-                                            "label": "Sell at a Loss",
-                                            "value": "sellatloss",
-                                        },
                                         {
                                             "label": "Sell at Resistance",
                                             "value": "sellatresistance",
@@ -219,6 +212,9 @@ layout = html.Div(style=CONTENT_STYLE, children=
                                         )
                                     )
                                 ),
+                                xs=12,
+                                md=6,
+                                lg=4,
                             ),
                             dbc.Col(
                                 dbc.Card(
@@ -243,7 +239,7 @@ layout = html.Div(style=CONTENT_STYLE, children=
                                                     dcc.Slider(
                                                         0,
                                                         10,
-                                                        0.05,
+                                                        0.1,
                                                         value=0,
                                                         id="prevent-loss-trigger",
                                                         marks=None,
@@ -259,8 +255,8 @@ layout = html.Div(style=CONTENT_STYLE, children=
                                                 html.Div(
                                                     dcc.Slider(
                                                         -10,
-                                                        10,
-                                                        0.05,
+                                                        0,
+                                                        0.5,
                                                         value=0,
                                                         id="prevent-loss-margin",
                                                         marks=None,
@@ -275,6 +271,9 @@ layout = html.Div(style=CONTENT_STYLE, children=
                                         )
                                     )
                                 ),
+                                xs=12,
+                                md=6,
+                                lg=4,
                             ),
                             # html.B(),
                             dbc.Col(
@@ -301,7 +300,7 @@ layout = html.Div(style=CONTENT_STYLE, children=
                                                     dcc.Slider(
                                                         0,
                                                         30,
-                                                        0.05,
+                                                        0.1,
                                                         value=0,
                                                         id="trailing-stop-loss-trigger",
                                                         marks=None,
@@ -317,8 +316,8 @@ layout = html.Div(style=CONTENT_STYLE, children=
                                                 html.Div(
                                                     dcc.Slider(
                                                         -10,
-                                                        10,
-                                                        0.05,
+                                                        0,
+                                                        0.5,
                                                         value=0,
                                                         id="trailing-stop-loss-margin",
                                                         marks=None,
@@ -333,14 +332,14 @@ layout = html.Div(style=CONTENT_STYLE, children=
                                         )
                                     )
                                 ),
+                                xs=12,
+                                md=6,
+                                lg=4,
                             ),
-                        ]
-                    ),
-                    dbc.Row([
-                        dbc.Col(
-                            dbc.Card(
-                                dbc.CardBody(
-                                    html.Div(
+                            dbc.Col(
+                                dbc.Card(
+                                    dbc.CardBody(
+                                        html.Div(
                                             [
                                                 dbc.Checklist(
                                                     options=[
@@ -354,7 +353,9 @@ layout = html.Div(style=CONTENT_STYLE, children=
                                                     switch=True,
                                                     inline=True,
                                                 ),
-                                                dbc.Label("(Optional) No Buy Near High %"),
+                                                dbc.Label(
+                                                    "(Optional) No Buy Near High %"
+                                                ),
                                                 html.B(),
                                                 html.Div(
                                                     dbc.Input(
@@ -362,13 +363,17 @@ layout = html.Div(style=CONTENT_STYLE, children=
                                                         placeholder="no buy near high ... ",
                                                         type="number",
                                                     ),
-                                                )
+                                                ),
                                             ]
                                         )
-                                )
-                            )
-                        ),
-                        dbc.Col(dbc.Card(
+                                    )
+                                ),
+                                xs=12,
+                                md=6,
+                                lg=4,
+                            ),
+                            dbc.Col(
+                                dbc.Card(
                                     dbc.CardBody(
                                         html.Div(
                                             [
@@ -384,11 +389,13 @@ layout = html.Div(style=CONTENT_STYLE, children=
                                                     switch=True,
                                                     inline=True,
                                                 ),
-                                                dbc.Label("Ignore Sell Triggers before (%)"),
+                                                dbc.Label(
+                                                    "Ignore Sell Triggers until (%)"
+                                                ),
                                                 html.B(),
                                                 html.Div(
                                                     dcc.Slider(
-                                                        -20,
+                                                        -10,
                                                         0,
                                                         0.1,
                                                         value=0,
@@ -405,11 +412,11 @@ layout = html.Div(style=CONTENT_STYLE, children=
                                                 html.B(),
                                                 html.Div(
                                                     dcc.Slider(
-                                                        -10,
-                                                        10,
-                                                        0.05,
+                                                        -25,
+                                                        2,
+                                                        0.5,
                                                         value=0,
-                                                        id="prevent-loss-margin",
+                                                        id="sell-at-loss-margin",
                                                         marks=None,
                                                         tooltip={
                                                             "placement": "left",
@@ -421,10 +428,13 @@ layout = html.Div(style=CONTENT_STYLE, children=
                                             ]
                                         )
                                     )
-                                )),
-                        dbc.Col()
-                    ]
-                    )
+                                ),
+                                xs=12,
+                                md=6,
+                                lg=4,
+                            ),
+                        ]
+                    ),
                 ],
             ),
             start_collapsed=True,
@@ -474,6 +484,7 @@ layout = html.Div(style=CONTENT_STYLE, children=
     ],
 )
 
+
 @callback(
     Output("save-change-message", "children"),
     Input("save-changes", "n_clicks"),
@@ -488,14 +499,38 @@ layout = html.Div(style=CONTENT_STYLE, children=
     State("trailing-stop-loss-trigger", "value"),
     State("trailing-stop-loss-margin", "value"),
     State("switches-buynearhigh", "value"),
-    State("buy-near-high", "value")
+    State("buy-near-high", "value"),
+    State("switches-sellatloss", "value"),
+    State("sell-at-loss-trigger", "value"),
+    State("sell-at-loss-margin", "value"),
 )
-def save_changes_buysize(value, exchange, buysize, buymaxsize, buyminsize, preventloss, pl_trigger, pl_margin, tsl, tsl_trigger, tsl_margin, buynearhigh, buynearhigh_percent):
+def save_changes_buysize(
+    value,
+    exchange,
+    buysize,
+    buymaxsize,
+    buyminsize,
+    preventloss,
+    pl_trigger,
+    pl_margin,
+    tsl,
+    tsl_trigger,
+    tsl_margin,
+    buynearhigh,
+    buynearhigh_percent,
+    sellatloss,
+    nosellminpcnt,
+    selllowerpcnt,
+):
     """Save changes"""
     if value > 0:
         if "buysize" in buysize:
-            tg_wrapper.helper.config[exchange]["config"].update({"buymaxsize": buymaxsize})
-            tg_wrapper.helper.config[exchange]["config"].update({"buyminsize": buyminsize})
+            tg_wrapper.helper.config[exchange]["config"].update(
+                {"buymaxsize": buymaxsize}
+            )
+            tg_wrapper.helper.config[exchange]["config"].update(
+                {"buyminsize": buyminsize}
+            )
         else:
             if "buymaxsize" in tg_wrapper.helper.config[exchange]["config"]:
                 tg_wrapper.helper.config[exchange]["config"].pop("buymaxsize")
@@ -503,31 +538,81 @@ def save_changes_buysize(value, exchange, buysize, buymaxsize, buyminsize, preve
                 tg_wrapper.helper.config[exchange]["config"].pop("buyminsize")
 
         if "preventloss" in preventloss:
-            tg_wrapper.helper.config[exchange]["config"].update({"preventlosstrigger": pl_trigger})
-            tg_wrapper.helper.config[exchange]["config"].update({"preventlossmargin": pl_margin})
+            tg_wrapper.helper.config[exchange]["config"].update(
+                {"preventlosstrigger": pl_trigger}
+            )
+            tg_wrapper.helper.config[exchange]["config"].update(
+                {"preventlossmargin": pl_margin}
+            )
 
         if "trailingstoploss" in tsl:
-            tg_wrapper.helper.config[exchange]["config"].update({"trailingstoplosstrigger": tsl_trigger})
-            tg_wrapper.helper.config[exchange]["config"].update({"trailingstoploss": tsl_margin})
+            tg_wrapper.helper.config[exchange]["config"].update(
+                {"trailingstoplosstrigger": tsl_trigger}
+            )
+            tg_wrapper.helper.config[exchange]["config"].update(
+                {"trailingstoploss": tsl_margin}
+            )
         else:
-            if "trailingstoplosstrigger" in tg_wrapper.helper.config[exchange]["config"]:
-                tg_wrapper.helper.config[exchange]["config"].pop("trailingstoplosstrigger")
+            if (
+                "trailingstoplosstrigger"
+                in tg_wrapper.helper.config[exchange]["config"]
+            ):
+                tg_wrapper.helper.config[exchange]["config"].pop(
+                    "trailingstoplosstrigger"
+                )
             if "trailingstoploss" in tg_wrapper.helper.config[exchange]["config"]:
                 tg_wrapper.helper.config[exchange]["config"].pop("trailingstoploss")
-                
+
         if "disablebuynearhigh" in buynearhigh:
-            tg_wrapper.helper.config[exchange]["config"].update({"disablebuynearhigh": 1})
-            tg_wrapper.helper.config[exchange]["config"].update({"nobuynearhighpcnt": buynearhigh_percent})
+            tg_wrapper.helper.config[exchange]["config"].update(
+                {"disablebuynearhigh": 1}
+            )
+            tg_wrapper.helper.config[exchange]["config"].update(
+                {"nobuynearhighpcnt": buynearhigh_percent}
+            )
         else:
             if "disablebuynearhigh" in tg_wrapper.helper.config[exchange]["config"]:
                 tg_wrapper.helper.config[exchange]["config"].pop("disablebuynearhigh")
             if "nobuynearhighpcnt" in tg_wrapper.helper.config[exchange]["config"]:
                 tg_wrapper.helper.config[exchange]["config"].pop("nobuynearhighpcnt")
 
-        if tg_wrapper.helper.write_config():
-            return dbc.Alert("Config File Update - SUCCESS", color="success", dismissable=True)
+        if "sellatloss" in sellatloss:
+            tg_wrapper.helper.config[exchange]["config"].update(
+                {"nosellminpcnt": nosellminpcnt}
+            )
+            tg_wrapper.helper.config[exchange]["config"].update(
+                {"selllowerpcnt": selllowerpcnt}
+            )
+        # else:
+        #     if "nosellminpcnt" in tg_wrapper.helper.config[exchange]["config"]:
+        #         tg_wrapper.helper.config[exchange]["config"].pop("nosellminpcnt")
+        #     if "selllowerpcnt" in tg_wrapper.helper.config[exchange]["config"]:
+        #         tg_wrapper.helper.config[exchange]["config"].pop("selllowerpcnt")
 
-        return dbc.Alert("Config File Update - FAILED", color="danger", dismissable=True)
+        if tg_wrapper.helper.write_config():
+            return dbc.Alert(
+                "Config File Update - SUCCESS", color="success", dismissable=True
+            )
+
+        return dbc.Alert(
+            "Config File Update - FAILED", color="danger", dismissable=True
+        )
+
+
+@callback(
+    Output("sell-at-loss-trigger", "disabled"),
+    Output("sell-at-loss-margin", "disabled"),
+    Input("switches-sellatloss", "value"),
+    State("exchange-selector", "value"),
+)
+def sell_at_loss_switch(value, exchange):
+    """enable/disable buy size amount"""
+    tg_wrapper.helper.config[exchange]["config"].update({"sellatloss": 0})
+    if "sellatloss" in value:
+        tg_wrapper.helper.config[exchange]["config"].update({"sellatloss": 1})
+        return False, False
+    return True, True
+
 
 @callback(
     Output("buy-near-high", "disabled"),
@@ -538,6 +623,7 @@ def buy_near_high_switch(value):
     if "disablebuynearhigh" in value:
         return False
     return True
+
 
 @callback(
     Output("buy-max-size", "disabled"),
@@ -555,10 +641,13 @@ def buy_size_switch(value):
     Output("prevent-loss-trigger", "disabled"),
     Output("prevent-loss-margin", "disabled"),
     Input("switches-preventloss", "value"),
+    State("exchange-selector", "value"),
 )
-def prevent_loss_switch(value):
+def prevent_loss_switch(value, exchange):
     """enable/disable prevent loss settings"""
+    tg_wrapper.helper.config[exchange]["config"].update({"preventloss": 0})
     if "preventloss" in value:
+        tg_wrapper.helper.config[exchange]["config"].update({"preventloss": 1})
         return False, False
     return True, True
 
@@ -583,7 +672,8 @@ def trailing_stop_loss_switch(value):
         Output("switches-tsl", "value"),
         Output("switches-extras", "value"),
         Output("switches-buysize", "value"),
-        Output("switches-buynearhigh", "value")
+        Output("switches-buynearhigh", "value"),
+        Output("switches-sellatloss", "value"),
     ],
     Input("exchange-selector", "value"),
 )
@@ -592,10 +682,10 @@ def exchange_selector(value):
     enabled_list = []
     if value is not None:
         if value not in tg_wrapper.helper.config:
-            tg_wrapper.helper.config.update({value : {"config": {}}})
+            tg_wrapper.helper.config.update({value: {"config": {}}})
         for param in tg_wrapper.helper.config[value]["config"]:
             if tg_wrapper.helper.config[value]["config"][param] == 1:
-                   enabled_list.append(param)
+                enabled_list.append(param)
 
         if (
             "trailingstoplosstrigger" in tg_wrapper.helper.config[value]["config"]
@@ -609,10 +699,6 @@ def exchange_selector(value):
         ):
             enabled_list.append("buysize")
 
-            # if (
-            #     "nobuynearhighpcnt" in tg_wrapper.helper.config[value]["config"]
-            # ):
-            #     enabled_list.append("buysize")
     return (
         enabled_list,
         enabled_list,
@@ -620,27 +706,47 @@ def exchange_selector(value):
         enabled_list,
         enabled_list,
         enabled_list,
-        enabled_list
+        enabled_list,
+        enabled_list,
     )
+
+
+@callback(
+    Output("sell-at-loss-trigger", "value"),
+    Output("sell-at-loss-margin", "value"),
+    Input("exchange-selector", "value"),
+)
+def sell_at_loss(value):
+    result = 0
+    margin = 0
+    if value is not None:
+        if value in tg_wrapper.helper.config:
+            if "nosellminpcnt" in tg_wrapper.helper.config[value]["config"]:
+                result = tg_wrapper.helper.config[value]["config"]["nosellminpcnt"]
+            if "selllowerpcnt" in tg_wrapper.helper.config[value]["config"]:
+                margin = tg_wrapper.helper.config[value]["config"]["selllowerpcnt"]
+    return result, margin
+
 
 @callback(
     Output("buy-near-high", "value"),
     Input("exchange-selector", "value"),
 )
 def buy_near_high(value):
-    result = ""
+    result = 0
     if value is not None:
         if value in tg_wrapper.helper.config:
             if "nobuynearhighpcnt" in tg_wrapper.helper.config[value]["config"]:
                 result = tg_wrapper.helper.config[value]["config"]["nobuynearhighpcnt"]
     return result
 
+
 @callback(
     Output("buy-max-size", "value"),
     Input("exchange-selector", "value"),
 )
 def buy_max_size(value):
-    result = ""
+    result = 0
     if value is not None:
         if value in tg_wrapper.helper.config:
             if "buymaxsize" in tg_wrapper.helper.config[value]["config"]:
@@ -653,7 +759,7 @@ def buy_max_size(value):
     Input("exchange-selector", "value"),
 )
 def buy_min_size(value):
-    result = ""
+    result = 0
     if value is not None:
         if value in tg_wrapper.helper.config:
             if "buyminsize" in tg_wrapper.helper.config[value]["config"]:
@@ -734,7 +840,15 @@ def prevent_loss_trigger(value):
     State("switches-sell", "options"),
     State("switches-extras", "options"),
 )
-def switched(enabled_list, sell_list, options_list, exchange, options, sell_options, extras_options):
+def switched(
+    enabled_list,
+    sell_list,
+    options_list,
+    exchange,
+    options,
+    sell_options,
+    extras_options,
+):
     """Make config changes"""
     if exchange is not None:
         if exchange in tg_wrapper.helper.config:
@@ -776,6 +890,7 @@ def switched(enabled_list, sell_list, options_list, exchange, options, sell_opti
         return True
     else:
         return True
+
 
 @callback(
     Output("switches-granularity", "visible"),
