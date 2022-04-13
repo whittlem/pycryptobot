@@ -122,8 +122,8 @@ dashboard_layout = html.Div(
                                 {"name": "Pair", "id": "Trading Pair", "type": "text"},
                                 {"name": "Exchange", "id": "Exchange", "type": "text"},
                                 {
-                                    "name": "Last Action",
-                                    "id": "Last Action",
+                                    "name": "Action",
+                                    "id": "Action",
                                     "type": "numeric",
                                 },
                                 {
@@ -164,7 +164,7 @@ dashboard_layout = html.Div(
                                 },
                                 # set column widths
                                 {"if": {"column_id": "Trading Pair"}, "width": "180px"},
-                                {"if": {"column_id": "Last Action"}, "width": "130px"},
+                                {"if": {"column_id": "Action"}, "width": "130px"},
                                 {
                                     "if": {"column_id": "Current Price"},
                                     "width": "160px",
@@ -311,8 +311,8 @@ dashboard_layout = html.Div(
                                 },
                                 {
                                     "if": {
-                                        "filter_query": "{Last Action} != SELL",
-                                        "column_id": "Last Action",
+                                        "filter_query": "{Action} != SELL",
+                                        "column_id": "Action",
                                     },
                                     "backgroundColor": "#3D9970",
                                     "color": "white",
@@ -458,7 +458,7 @@ def update_table(n):
             "Uptime",
             "Trading Pair",
             "Exchange",
-            "Last Action",
+            "Action",
             "Current Price",
             "From DF High",
             "DF High",
@@ -581,7 +581,7 @@ def update_table(n):
         df["EMA"] = df["EMA"].astype(str)
         df["MACD"] = df["MACD"].astype(str)
         df["OBV"] = df["OBV"].astype(str)
-        df = df.sort_values(by="Last Action", ascending=[True], inplace=False)
+        df = df.sort_values(by="Action", ascending=[True], inplace=False)
 
     return df.to_dict(orient="records")
 
@@ -764,7 +764,7 @@ def page_width_column_adjustment(screen_res):
             "EMA",
             "MACD",
             "OBV",
-            "Last Action",
+            "Action",
             "DF High",
             "Delta",
         ]
