@@ -680,6 +680,7 @@ def trailing_stop_loss_switch(value):
 def exchange_selector(value):
     """Select Exchange"""
     enabled_list = []
+    tg_wrapper.helper.read_config()
     if value is not None:
         if value not in tg_wrapper.helper.config:
             tg_wrapper.helper.config.update({value: {"config": {}}})
