@@ -552,7 +552,7 @@ def execute_job(
         two_black_gapping = bool(df_last["two_black_gapping"].values[0])
 
         # Log data for Telegram Bot
-        telegram_bot.addindicators("EMA", ema12gtema26co or ema12ltema26)
+        telegram_bot.addindicators("EMA", ema12gtema26 or ema12gtema26co)
         if not _app.disableBuyElderRay():
             telegram_bot.addindicators("ERI", elder_ray_buy)
         if _app.disableBullOnly():
