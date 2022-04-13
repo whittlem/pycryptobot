@@ -167,10 +167,12 @@ class TelegramBotHelper:
         price: str = "",
         df_high: str = "",
         from_df_high: str = "",
+        signal ="WAIT"
     ) -> None:
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             if self._read_data():
                 addmarket = {
+                    "signal": signal,
                     "message": message,
                     "margin": " ",
                     "delta": " ",
