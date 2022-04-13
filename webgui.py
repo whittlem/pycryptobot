@@ -518,9 +518,9 @@ def update_table(n):
                             "Uptime": uptime,
                             "Trading Pair": json_data["pair"],
                             "Exchange": json_data["exchange"],
-                            "Last Action": "SELL"
-                            if "margin" in json_data and json_data["margin"][0] == " "
-                            else "BUY",
+                            "Action": json_data["signal"],
+                            # if "margin" in json_data and json_data["margin"][0] == " "
+                            # else "BUY",
                             "Current Price": json_data["price"],
                             "Margin": json_data["margin"]
                             if "margin" in json_data and json_data["margin"][0] != " "

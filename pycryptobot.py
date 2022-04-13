@@ -1942,7 +1942,8 @@ def execute_job(
                     str(_truncate(margin, 4) + "%") if _state.in_open_trade == True else " ",
                     str(_truncate(profit, 2)) if _state.in_open_trade == True else " ",
                     price,
-                    change_pcnt_high
+                    change_pcnt_high,
+                    _state.action
                 )
             
             # Update the watchdog_ping
