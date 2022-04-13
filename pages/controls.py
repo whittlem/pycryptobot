@@ -442,6 +442,7 @@ def update_accordions(n):
                 "Stop",
                 id={"type": "btn-stop", "index": pair_count},
                 n_clicks=0,
+                value=i,
                 className="btn btn-primary",
             )
         )
@@ -451,6 +452,7 @@ def update_accordions(n):
                     "Pause",
                     id={"type": "btn-pause", "index": pair_count},
                     n_clicks=0,
+                    value=i,
                     className="btn btn-primary",
                 )
             )
@@ -460,6 +462,7 @@ def update_accordions(n):
                     "Resume",
                     id={"type": "btn-resume", "index": pair_count},
                     n_clicks=0,
+                    value=i,
                     className="btn btn-primary",
                 )
             )
@@ -469,6 +472,7 @@ def update_accordions(n):
                     "Buy",
                     id={"type": "btn-buy", "index": pair_count},
                     n_clicks=0,
+                    value=i,
                     className="btn btn-primary",
                 )
             )
@@ -478,6 +482,7 @@ def update_accordions(n):
                     "Sell",
                     id={"type": "btn-sell", "index": pair_count},
                     n_clicks=0,
+                    value=i,
                     className="btn btn-primary",
                 )
             )
