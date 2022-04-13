@@ -1934,6 +1934,7 @@ def execute_job(
                         )
                     )
                     + "%",
+                    _state.action,
                 )
 
             if _state.last_action == "BUY" and _state.in_open_trade and last_api_call_datetime.seconds > 60:
