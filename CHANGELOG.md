@@ -8,6 +8,10 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [6.3.0] - 2022-04-13
+
+- added pycryptobot configuration editor 
+
 ## [6.2.0] - 2022-03-15
 
 - added webgui.py this is web interface, it has some of the telegram bot functions (more will be added) and can be run standalone or along side telegram_bot.py

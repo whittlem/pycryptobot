@@ -5,7 +5,7 @@ from dash import dcc, html, Input, Output, State, MATCH, callback
 from models.telegram import Wrapper
 
 tg_wrapper = Wrapper("config.json", "webgui")
-selected_pair = None
+# selected_pair = None
 
 tg_wrapper.helper.clean_data_folder()
 
@@ -221,53 +221,55 @@ def btn_schedule_click(add_click, remove_click, open_click):
             return False, True, 0, 0
 
 
-@callback(
-    Output("start-accordian", "start_collapsed"),
-    Input("bots", "active_item"),
-    prevent_initial_call=True,
-)
-def update_output_1(value):
-    """get selected value from dropdown"""
-    global selected_pair
-    if value is not None:
-        selected_pair = value
-    return "true"
+# @callback(
+#     Output("start-accordian", "start_collapsed"),
+#     Input("bots", "active_item"),
+#     prevent_initial_call=True,
+# )
+# def update_output_1(value):
+#     """get selected value from dropdown"""
+#     global selected_pair
+#     if value is not None:
+#         selected_pair = value
+#     return "true"
 
 
-@callback(
-    Output("bot-accordian", "start_collapsed"),
-    Input("start-bots", "active_item"),
-    prevent_initial_call=True,
-)
-def update_output_2(value):
-    """get selected value from dropdown"""
-    global selected_pair
-    if value is not None:
-        selected_pair = value
-    return "true"
+# @callback(
+#     Output("bot-accordian", "start_collapsed"),
+#     Input("start-bots", "active_item"),
+#     prevent_initial_call=True,
+# )
+# def update_output_2(value):
+#     """get selected value from dropdown"""
+#     global selected_pair
+#     if value is not None:
+#         selected_pair = value
+#     return "true"
 
 
 @callback(
     Output({"type": "btn-buy", "index": MATCH}, "visible"),
     Input({"type": "btn-buy", "index": MATCH}, "n_clicks"),
+    State({"type": "btn-buy", "index": MATCH}, "value"),
     prevent_initial_call=True,
 )
-def btn_buy_click(click):
+def btn_buy_click(click, market):
     """Place a buy order"""
     if click > 0:
-        tg_wrapper.place_market_buy_order(selected_pair)
+        tg_wrapper.place_market_buy_order(market)
     return html.Label()
 
 
 @callback(
     Output({"type": "btn-sell", "index": MATCH}, "visible"),
     Input({"type": "btn-sell", "index": MATCH}, "n_clicks"),
+    State({"type": "btn-sell", "index": MATCH}, "value"),
     prevent_initial_call=True,
 )
-def btn_sell_click(click):
+def btn_sell_click(click, market):
     """Place a sell order"""
     if click > 0:
-        tg_wrapper.place_market_sell_order(selected_pair)
+        tg_wrapper.place_market_sell_order(market)
     return html.Label()
 
 
@@ -307,21 +309,24 @@ def toggle_options_collapse(n, is_open):
     return is_open
 
 
-@callback(Output("btn-scan-start", "visible"), Input("btn-scan-start", "n_clicks"))
+@callback(Output("btn-scan-start", "visible"), Input("btn-scan-start", "n_clicks"),
+    prevent_initial_call=True,)
 def start_scan_and_bots(n):  # pylint: disable=missing-function-docstring
     if n > 0:
         tg_wrapper.start_market_scanning()
     return "true"
 
 
-@callback(Output("btn-scan-only", "visible"), Input("btn-scan-only", "n_clicks"))
+@callback(Output("btn-scan-only", "visible"), Input("btn-scan-only", "n_clicks"),
+    prevent_initial_call=True,)
 def start_scan_only(n):  # pylint: disable=missing-function-docstring
     if n > 0:
         tg_wrapper.start_market_scanning(True, False)
     return "true"
 
 
-@callback(Output("btn-start-only", "visible"), Input("btn-start-only", "n_clicks"))
+@callback(Output("btn-start-only", "visible"), Input("btn-start-only", "n_clicks"),
+    prevent_initial_call=True,)
 def start_bots_only(n):  # pylint: disable=missing-function-docstring
     if n > 0:
         tg_wrapper.start_market_scanning(False, True)
@@ -331,40 +336,49 @@ def start_bots_only(n):  # pylint: disable=missing-function-docstring
 @callback(
     Output({"type": "btn-pause", "index": MATCH}, "visible"),
     Input({"type": "btn-pause", "index": MATCH}, "n_clicks"),
+    State({"type": "btn-pause", "index": MATCH}, "value"),
+    prevent_initial_call=True,
 )
-def btn_pause_click(click):  # pylint: disable=missing-function-docstring
+def btn_pause_click(click, market):  # pylint: disable=missing-function-docstring
     if click > 0:
-        tg_wrapper.pause_bot(selected_pair)
+        tg_wrapper.pause_bot(market)
     return "true"
 
 
 @callback(
     Output({"type": "btn-resume", "index": MATCH}, "visible"),
     Input({"type": "btn-resume", "index": MATCH}, "n_clicks"),
+    State({"type": "btn-resume", "index": MATCH}, "value"),
+    prevent_initial_call=True,
 )
-def btn_resume_click(click):  # pylint: disable=missing-function-docstring
+def btn_resume_click(click, market):  # pylint: disable=missing-function-docstring
     if click > 0:
-        tg_wrapper.resume_bot(selected_pair)
+        tg_wrapper.resume_bot(market)
     return html.Label()
 
 
 @callback(
     Output({"type": "btn-stop", "index": MATCH}, "visible"),
     Input({"type": "btn-stop", "index": MATCH}, "n_clicks"),
+    State({"type": "btn-stop", "index": MATCH}, "value"),
+    prevent_initial_call=True,
 )
-def btn_stop_click(click):  # pylint: disable=missing-function-docstring
+def btn_stop_click(click, market):  # pylint: disable=missing-function-docstring
     if click > 0:
-        tg_wrapper.stop_bot(selected_pair)
+        tg_wrapper.stop_bot(market)
     return html.Label()
 
 
 @callback(
     Output({"type": "btn-start", "index": MATCH}, "visible"),
     Input({"type": "btn-start", "index": MATCH}, "n_clicks"),
+    State({"type": "btn-start", "index": MATCH}, "value"),
+    prevent_initial_call=True,
 )
-def btn_start_click(click):  # pylint: disable=missing-function-docstring
+def btn_start_click(click, market):
+    """ start bot manually """
     if click > 0:
-        tg_wrapper.start_bot(selected_pair)
+        tg_wrapper.start_bot(market)
     return html.Label()
 
 
@@ -388,6 +402,7 @@ def update_start_list(n):
                         "Start",
                         id={"type": "btn-start", "index": pair_count},
                         n_clicks=0,
+                        value=market,
                         className="btn btn-primary",
                     )
                 )
@@ -412,8 +427,8 @@ def update_start_list(n):
 @callback(
     Output("bot-accordian", "children"), Input("interval-container", "n_intervals")
 )
-def update_accordians(n):
-    """create bot accoridans"""
+def update_accordions(n):
+    """create bot accordions"""
     acc_list = []
     pair_count = 0
     for i in tg_wrapper.helper.get_all_bot_list():
