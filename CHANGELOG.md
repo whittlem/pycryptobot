@@ -24,7 +24,7 @@ Upgrade library dependencies (if required):
 
 [Telegram Bot]
 - added logging, logs are saved into ./telegram_logs folder.
-- added "logger_level": <sting> option in the telegram section of config default is "INFO" other options can be used.
+- added "logger_level": <string> option in the telegram section of config default is "INFO" other options can be used.
 - added trades summary to control panel (24h, 7d, 14d, 31d or all)
 - fixed screener/scanner stopping bots that are on the exception list, the exception list is now checked when the screener/scanner starts and stops bots.
 - fixed bot count when screener/scanner starts or stops bots

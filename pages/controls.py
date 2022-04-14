@@ -302,33 +302,42 @@ def btn_start_scanning_click(click):
     [State("scan_options", "is_open")],
     prevent_initial_call=True,
 )
-def toggle_options_collapse(n, is_open):
-    """toggle scan option collapsable"""
-    if n:
+def toggle_options_collapse(clicks, is_open):
+    """toggle scan option collapsible"""
+    if clicks:
         return not is_open
     return is_open
 
 
-@callback(Output("btn-scan-start", "visible"), Input("btn-scan-start", "n_clicks"),
-    prevent_initial_call=True,)
-def start_scan_and_bots(n):  # pylint: disable=missing-function-docstring
-    if n > 0:
+@callback(
+    Output("btn-scan-start", "visible"),
+    Input("btn-scan-start", "n_clicks"),
+    prevent_initial_call=True,
+)
+def start_scan_and_bots(clicks):  # pylint: disable=missing-function-docstring
+    if clicks > 0:
         tg_wrapper.start_market_scanning()
     return "true"
 
 
-@callback(Output("btn-scan-only", "visible"), Input("btn-scan-only", "n_clicks"),
-    prevent_initial_call=True,)
-def start_scan_only(n):  # pylint: disable=missing-function-docstring
-    if n > 0:
+@callback(
+    Output("btn-scan-only", "visible"),
+    Input("btn-scan-only", "n_clicks"),
+    prevent_initial_call=True,
+)
+def start_scan_only(clicks):  # pylint: disable=missing-function-docstring
+    if clicks > 0:
         tg_wrapper.start_market_scanning(True, False)
     return "true"
 
 
-@callback(Output("btn-start-only", "visible"), Input("btn-start-only", "n_clicks"),
-    prevent_initial_call=True,)
-def start_bots_only(n):  # pylint: disable=missing-function-docstring
-    if n > 0:
+@callback(
+    Output("btn-start-only", "visible"),
+    Input("btn-start-only", "n_clicks"),
+    prevent_initial_call=True,
+)
+def start_bots_only(clicks):  # pylint: disable=missing-function-docstring
+    if clicks > 0:
         tg_wrapper.start_market_scanning(False, True)
     return "true"
 
@@ -376,7 +385,7 @@ def btn_stop_click(click, market):  # pylint: disable=missing-function-docstring
     prevent_initial_call=True,
 )
 def btn_start_click(click, market):
-    """ start bot manually """
+    """start bot manually"""
     if click > 0:
         tg_wrapper.start_bot(market)
     return html.Label()
@@ -385,7 +394,7 @@ def btn_start_click(click, market):
 @callback(
     Output("start-accordian", "children"), Input("interval-container", "n_intervals")
 )
-def update_start_list(n):
+def update_start_list(clicks):
     """update manual start bot list"""
     acc_list = []
     tg_wrapper.helper.read_data()
@@ -427,7 +436,7 @@ def update_start_list(n):
 @callback(
     Output("bot-accordian", "children"), Input("interval-container", "n_intervals")
 )
-def update_accordions(n):
+def update_accordions(clicks):
     """create bot accordions"""
     acc_list = []
     pair_count = 0
