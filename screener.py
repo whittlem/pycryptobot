@@ -44,13 +44,20 @@ def load_configs():
             config = json.load(json_file)
     except IOError as err:
         raise(err)
+
+    try:
+        with open("config.json", encoding='utf8') as json_file:
+            bot_config = json.load(json_file)
+    except IOError as err:
+        print (err)
+
     try:
         for exchange in config:
             ex = CryptoExchange(exchange)
             exchange_config = config[ex.value]
             if ex == CryptoExchange.BINANCE:
                 binance_app = PyCryptoBot(exchange=ex)
-                binance_app.public_api = BPublicAPI()
+                binance_app.public_api = BPublicAPI(bot_config[ex.value]["api_url"])
                 binance_app.scanner_quote_currencies = exchange_config.get('quote_currency', ['USDT'])
                 binance_app.granularity = Granularity(Granularity.convert_to_enum(exchange_config.get('granularity', '1h')))
                 binance_app.adx_threshold = exchange_config.get('adx_threshold', 25)
@@ -78,7 +85,7 @@ def load_configs():
                 exchanges_loaded.append(coinbase_app)
             elif ex == CryptoExchange.KUCOIN:
                 kucoin_app = PyCryptoBot(exchange=ex)
-                kucoin_app.public_api = KPublicAPI()
+                kucoin_app.public_api = KPublicAPI(bot_config[ex.value]["api_url"])
                 kucoin_app.scanner_quote_currencies = exchange_config.get('quote_currency', ['USDT'])
                 kucoin_app.granularity = Granularity(Granularity.convert_to_enum(exchange_config.get('granularity', '1h')))
                 kucoin_app.adx_threshold = exchange_config.get('adx_threshold', 25)
