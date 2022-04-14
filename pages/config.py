@@ -79,7 +79,7 @@ layout = html.Div([
 
         dbc.Checklist(
             options=[
-                {'label': 'Trailing Immeadiate Buy', 'value': 'Trailing Immeadiate Buy'},
+                {'label': 'Trailing Immediate Buy', 'value': 'Trailing Immediate Buy'},
                 {'label': 'Prevent Loss', 'value': 'Prevent Loss'},
             ],
             value=[1],
