@@ -8,6 +8,10 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [6.3.0] - 2022-04-13
+
+- added pycryptobot configuration editor 
+
 ## [6.2.0] - 2022-03-15
 
 - added webgui.py this is web interface, it has some of the telegram bot functions (more will be added) and can be run standalone or along side telegram_bot.py
@@ -20,7 +24,7 @@ Upgrade library dependencies (if required):
 
 [Telegram Bot]
 - added logging, logs are saved into ./telegram_logs folder.
-- added "logger_level": <sting> option in the telegram section of config default is "INFO" other options can be used.
+- added "logger_level": <string> option in the telegram section of config default is "INFO" other options can be used.
 - added trades summary to control panel (24h, 7d, 14d, 31d or all)
 - fixed screener/scanner stopping bots that are on the exception list, the exception list is now checked when the screener/scanner starts and stops bots.
 - fixed bot count when screener/scanner starts or stops bots

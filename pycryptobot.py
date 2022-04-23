@@ -552,7 +552,7 @@ def execute_job(
         two_black_gapping = bool(df_last["two_black_gapping"].values[0])
 
         # Log data for Telegram Bot
-        telegram_bot.addindicators("EMA", ema12gtema26co or ema12ltema26)
+        telegram_bot.addindicators("EMA", ema12gtema26 or ema12gtema26co)
         if not _app.disableBuyElderRay():
             telegram_bot.addindicators("ERI", elder_ray_buy)
         if _app.disableBullOnly():
@@ -1934,6 +1934,7 @@ def execute_job(
                         )
                     )
                     + "%",
+                    _state.action
                 )
 
             if _state.last_action == "BUY" and _state.in_open_trade and last_api_call_datetime.seconds > 60:
@@ -1942,7 +1943,8 @@ def execute_job(
                     str(_truncate(margin, 4) + "%") if _state.in_open_trade == True else " ",
                     str(_truncate(profit, 2)) if _state.in_open_trade == True else " ",
                     price,
-                    change_pcnt_high
+                    change_pcnt_high,
+                    _state.action
                 )
             
             # Update the watchdog_ping

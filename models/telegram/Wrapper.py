@@ -34,7 +34,7 @@ class Wrapper:
         return self._actions.start_open_orders(None, None)
 
     def running_bot_info(self) -> str:
-        """Get running bot infomation\n
+        """Get running bot information\n
         Telegram notifications will still be sent"""
         return self._actions.get_bot_info()
 

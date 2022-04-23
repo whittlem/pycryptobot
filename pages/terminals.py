@@ -11,7 +11,7 @@ layout = html.Div([
                     dcc.Dropdown(
                         id="log-dropdown",
                         options=["Item One", "Item Two"],
-                        style={"color": "black"}
+                        style={"color": "black"},
                     )
                 )
             ),

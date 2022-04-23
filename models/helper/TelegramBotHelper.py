@@ -133,11 +133,12 @@ class TelegramBotHelper:
             Logger.critical(str(err))
             return False
 
-    def addmargin(self, margin: str = "", delta: str = "", price: str = "", change_pcnt_high: float = 0.0):
+    def addmargin(self, margin: str = "", delta: str = "", price: str = "", change_pcnt_high: float = 0.0, signal = "WAIT"):
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             if self._read_data():
                 addmarket = {
                     "exchange": self.exchange.value,
+                    "signal": signal,
                     "margin": margin,
                     "delta": delta,
                     "price": price,
@@ -166,10 +167,12 @@ class TelegramBotHelper:
         price: str = "",
         df_high: str = "",
         from_df_high: str = "",
+        signal ="WAIT"
     ) -> None:
         if not self.app.isSimulation() and self.app.enableTelegramBotControl():
             if self._read_data():
                 addmarket = {
+                    "signal": signal,
                     "message": message,
                     "margin": " ",
                     "delta": " ",
