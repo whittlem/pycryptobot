@@ -19,16 +19,22 @@ try:
 except IOError as err:
     print (err)
 
+try:
+    with open("config.json", encoding='utf8') as json_file:
+        bot_config = json.load(json_file)
+except IOError as err:
+    print (err)
+
 for exchange in config:
     ex = Exchange(exchange)
     app = PyCryptoBot(exchange=ex)
     for quote in config[ex.value]["quote_currency"]:
         if ex == Exchange.BINANCE:
-            api = BPublicAPI()
+            api = BPublicAPI(bot_config[ex.value]["api_url"])
         elif ex == Exchange.COINBASEPRO:
             api = CPublicAPI()
         elif ex == Exchange.KUCOIN:
-            api = KPublicAPI()
+            api = KPublicAPI(bot_config[ex.value]["api_url"])
         else:
             raise ValueError(f"Invalid exchange: {ex}")
 

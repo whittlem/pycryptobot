@@ -8,6 +8,32 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [6.3.0] - 2022-04-13
+
+- added pycryptobot configuration editor 
+
+## [6.2.0] - 2022-03-15
+
+- added webgui.py this is web interface, it has some of the telegram bot functions (more will be added) and can be run standalone or along side telegram_bot.py
+- added bot controls to webgui
+- added market scanner options to webgui (please note if using the telegram bot as well the schedules for webgui and telegram bot are separate processes)
+- added visual gauges to dashboard (current margins & last 7 day trade margin)
+- added log viewer page to webgui it will list logs from the default log location (this will be selectable in a future update)
+
+## [6.1.0] - 2022-02-22
+
+[Telegram Bot]
+- added logging, logs are saved into ./telegram_logs folder.
+- added "logger_level": <string> option in the telegram section of config default is "INFO" other options can be used.
+- added trades summary to control panel (24h, 7d, 14d, 31d or all)
+- fixed screener/scanner stopping bots that are on the exception list, the exception list is now checked when the screener/scanner starts and stops bots.
+- fixed bot count when screener/scanner starts or stops bots
+- fixed max bot count not always limiting the number of running bots
+- added "exchange_bot_count": <int> in scanner section of config to allow max number of bots running on each exchange
+- added screener to config editor
+- added "autostart" : <bit> in scanner section of config, if enabled, when telegram_bot.py is started it will run the market scanner and start any previous open orders.
+- including code refactoring.
+
 ## [6.0.0] - 2022-02-08
 
 - major release

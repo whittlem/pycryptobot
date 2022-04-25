@@ -16,6 +16,7 @@ class Granularity(Enum):
         self.medium = medium
         self.frequency = frequency
 
+    @staticmethod
     def convert_to_enum(value):
         for granularity in Granularity:
             for enum_value in granularity.value:

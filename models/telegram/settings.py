@@ -2,18 +2,19 @@
 import os
 import json
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from models.telegram import callbacktags
 from models.telegram.helper import TelegramHelper
 
 
 class SettingsEditor:
     """Telegram Bot Notification Settings Class"""
 
-    def __init__(self, datafolder, tg_helper: TelegramHelper) -> None:
-        self.datafolder = datafolder
+    def __init__(self, tg_helper: TelegramHelper) -> None:
+        # self.datafolder = datafolder
         self.helper = tg_helper
 
         if not os.path.isfile(
-            os.path.join(self.datafolder, "telegram_data", "settings.json")
+            os.path.join(self.helper.datafolder, "telegram_data", "settings.json")
         ):
             self.helper.settings.update(
                 {
@@ -35,7 +36,7 @@ class SettingsEditor:
         """Read Config File"""
         try:
             with open(
-                os.path.join(self.datafolder, "telegram_data", "settings.json"),
+                os.path.join(self.helper.datafolder, "telegram_data", "settings.json"),
                 "r",
                 encoding="utf8",
             ) as json_file:
@@ -49,13 +50,13 @@ class SettingsEditor:
         """Write config file"""
         try:
             with open(
-                os.path.join(self.datafolder, "telegram_data", "settings.json"),
+                os.path.join(self.helper.datafolder, "telegram_data", "settings.json"),
                 "w",
                 encoding="utf8",
             ) as outfile:
                 json.dump(self.helper.settings, outfile, indent=4)
-        except:
-            raise
+        except: #pylint: disable=try-except-raise
+            return
 
     def get_notifications(self, update):
         """Get notification option buttons"""
@@ -72,13 +73,19 @@ class SettingsEditor:
 
         buttons = []
         for prop in notifications.items():
-            setting_value = bool(self.helper.settings['notifications'][prop[0]])
+            setting_value = bool(self.helper.settings["notifications"][prop[0]])
             light_icon = "\U0001F7E2" if setting_value == 1 else "\U0001F534"
             buttons.append(
                 InlineKeyboardButton(
                     f"{light_icon} {prop[1]}",
-                    callback_data=
-                        f"notify_{'disable' if setting_value is True else 'enable' }_{prop[0]}",
+                    callback_data=self.helper.create_callback_data(
+                        callbacktags.NOTIFY[0],
+                        callbacktags.DISABLE[0]
+                        if setting_value is True
+                        else callbacktags.ENABLE[0],
+                        prop[0],
+                    )
+                    # f"notify_{'disable' if setting_value is True else 'enable' }_{prop[0]}",
                 )
             )
 
@@ -91,22 +98,29 @@ class SettingsEditor:
                 keyboard.append([buttons[i]])
             i += 2
 
-        keyboard.append([InlineKeyboardButton("\U000025C0 Back", callback_data="back")])
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    "\U000025C0 Back",
+                    callback_data=self.helper.create_callback_data(callbacktags.BACK[0]),
+                )
+            ]
+        )
 
         self.helper.send_telegram_message(
             update,
             "<b>Notification Options:</b>",
-            InlineKeyboardMarkup(keyboard, one_time_keyboard=True),
+            InlineKeyboardMarkup(keyboard, one_time_keyboard=True), new_message=False
         )
 
     def disable_option(self, parameter):
         """Disable Option"""
-        self.helper.settings["notifications"][f"enable_{parameter}"] = 0
+        self.helper.settings["notifications"][f"{parameter}"] = 0
         self._write_config()
         self._read_config()
 
     def enable_option(self, parameter):
         """Enable Option"""
-        self.helper.settings["notifications"][f"enable_{parameter}"] = 1
+        self.helper.settings["notifications"][f"{parameter}"] = 1
         self._write_config()
         self._read_config()

@@ -1,0 +1,10 @@
+{
+    "notifications": {
+        "enable_scanner": 1,
+        "enable_screener": 1,
+        "enable_start": 1,
+        "enable_stop": 1,
+        "enable_pause": 1,
+        "enable_resume": 1
+    }
+}

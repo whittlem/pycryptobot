@@ -333,13 +333,13 @@ class AuthAPI(AuthAPIBase):
         except:
             return pd.DataFrame()
 
-    def getOrders(
+    def getOrders( #pylint: disable=invalid-name 
         self,
         market: str = "",
         action: str = "",
         status: str = "done",
-        order_history: list = [],
-    ) -> pd.DataFrame:
+        order_history: list = []
+    ) -> pd.DataFrame: #pylint: disable=dangerous-default-value
         """Retrieves your list of orders with optional filtering"""
 
         # if market provided
@@ -1439,7 +1439,7 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                             & (self.candles["market"] == df["market"].values[0])
                         ).any()
                         if not candle_exists:
-                            self.candles = self.candles.append(df)
+                            self.candles = pd.concat([self.candles, df]) #self.candles.append(df)
 
                         tsidx = pd.DatetimeIndex(
                             pd.to_datetime(self.candles["date"]).dt.strftime(
