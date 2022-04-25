@@ -11,7 +11,7 @@ from models.telegram import (
 
 sys.path.append(".")
 
-wrapper = Wrapper("config.json")
+wrapper = Wrapper("config.json.sample")
 wrapper.helper.datafolder = os.path.join(os.curdir, "tests", "unit_tests", "data")
 
 actions = TelegramActions(wrapper.helper)
