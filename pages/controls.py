@@ -5,9 +5,11 @@ from dash import dcc, html, Input, Output, State, MATCH, callback
 from models.telegram import Wrapper
 
 tg_wrapper = Wrapper("config.json", "webgui")
-selected_pair = None
+# selected_pair = None
 
 tg_wrapper.helper.clean_data_folder()
+
+
 def update_buttons(pair, value):
     """show/hide control buttons"""
     if pair is not None:
@@ -22,15 +24,15 @@ def update_buttons(pair, value):
 
 def get_bot_status(pair):
     """ Get bot status for accordion heading """
+
     if pair is not None:
         return f"Uptime: {tg_wrapper.helper.get_uptime()} - Status: {tg_wrapper.helper.data['botcontrol']['status']} - Margin: {tg_wrapper.helper.data['margin']}"
+
 
 layout = html.Div(
     [
         dbc.Row(
-            dbc.Col(
-                html.H4("Controls", style={"textAlign": "left"})
-            ),
+            dbc.Col(html.H4("Controls", style={"textAlign": "left"})),
         ),
         dbc.Row(
             dbc.Col(
@@ -44,11 +46,11 @@ layout = html.Div(
                         "Restart Open Orders",
                         id="btn-open-orders",
                         n_clicks=0,
-                        className="btn btn-primary"
+                        className="btn btn-primary",
                     ),
-                    className="d-grid gap-2"
+                    className="d-grid gap-2",
                 ),
-                width={"size": 12, "offset": 0}
+                width={"size": 12, "offset": 0},
             )
         ),
         dbc.Row(
@@ -60,12 +62,12 @@ layout = html.Div(
                         n_clicks=0,
                         className="btn btn-primary",
                     ),
-                    className="d-grid gap-2"
+                    className="d-grid gap-2",
                 ),
-                width={"size": 12, "offset": 0}
+                width={"size": 12, "offset": 0},
             )
         ),
-        ### html buttons
+        # html buttons
         dbc.Collapse(
             dbc.Card(
                 dbc.CardBody(
@@ -111,26 +113,31 @@ scan_layoutv2 = html.Div(
             )
         ),
         dbc.Row(
-            dbc.Col([
-                html.Div(
-                    html.Button(
-                        "Add Schedule",
-                        hidden=True,
-                        id="btn-add-schedule",
-                        n_clicks=0,
-                        name="add",
-                        className="btn btn-primary",
-                    ),className="d-grid gap-2"),
-                html.Div(
-                    html.Button(
-                        "Remove Schedule",
-                        hidden=False,
-                        id="btn-remove-schedule",
-                        n_clicks=0,
-                        name="remove",
-                        className="btn btn-primary",
-                    ),className="d-grid gap-2"
-                )],
+            dbc.Col(
+                [
+                    html.Div(
+                        html.Button(
+                            "Add Schedule",
+                            hidden=True,
+                            id="btn-add-schedule",
+                            n_clicks=0,
+                            name="add",
+                            className="btn btn-primary",
+                        ),
+                        className="d-grid gap-2",
+                    ),
+                    html.Div(
+                        html.Button(
+                            "Remove Schedule",
+                            hidden=False,
+                            id="btn-remove-schedule",
+                            n_clicks=0,
+                            name="remove",
+                            className="btn btn-primary",
+                        ),
+                        className="d-grid gap-2",
+                    ),
+                ],
                 md={"size": 12, "offset": 0},
                 lg={"size": 10, "offset": 1},
             )
@@ -186,6 +193,7 @@ scan_layoutv2 = html.Div(
     ]
 )
 
+
 @callback(
     [
         Output("btn-add-schedule", "hidden"),
@@ -214,50 +222,63 @@ def btn_schedule_click(add_click, remove_click, open_click):
             return False, True, 0, 0
 
 
+# @callback(
+#     Output("start-accordian", "start_collapsed"),
+#     Input("bots", "active_item"),
+#     prevent_initial_call=True,
+# )
+# def update_output_1(value):
+#     """get selected value from dropdown"""
+#     global selected_pair
+#     if value is not None:
+#         selected_pair = value
+#     return "true"
 
-@callback(Output("start-accordian", "start_collapsed"), Input("bots", "active_item"),prevent_initial_call=True)
-def update_output_1(value):
-    """get selected value from dropdown"""
-    global selected_pair
-    if value is not None:
-        selected_pair = value
-    return "true"
 
-
-@callback(
-    Output("bot-accordian", "start_collapsed"), Input("start-bots", "active_item"), prevent_initial_call=True
-)
-def update_output_2(value):
-    """get selected value from dropdown"""
-    global selected_pair
-    if value is not None:
-        selected_pair = value
-    return "true"
+# @callback(
+#     Output("bot-accordian", "start_collapsed"),
+#     Input("start-bots", "active_item"),
+#     prevent_initial_call=True,
+# )
+# def update_output_2(value):
+#     """get selected value from dropdown"""
+#     global selected_pair
+#     if value is not None:
+#         selected_pair = value
+#     return "true"
 
 
 @callback(
     Output({"type": "btn-buy", "index": MATCH}, "visible"),
-    Input({"type": "btn-buy", "index": MATCH}, "n_clicks"), prevent_initial_call=True
+    Input({"type": "btn-buy", "index": MATCH}, "n_clicks"),
+    State({"type": "btn-buy", "index": MATCH}, "value"),
+    prevent_initial_call=True,
 )
-def btn_buy_click(click):
+def btn_buy_click(click, market):
     """Place a buy order"""
     if click > 0:
-        tg_wrapper.place_market_buy_order(selected_pair)
+        tg_wrapper.place_market_buy_order(market)
     return html.Label()
 
 
 @callback(
     Output({"type": "btn-sell", "index": MATCH}, "visible"),
-    Input({"type": "btn-sell", "index": MATCH}, "n_clicks"), prevent_initial_call=True
+    Input({"type": "btn-sell", "index": MATCH}, "n_clicks"),
+    State({"type": "btn-sell", "index": MATCH}, "value"),
+    prevent_initial_call=True,
 )
-def btn_sell_click(click):
+def btn_sell_click(click, market):
     """Place a sell order"""
     if click > 0:
-        tg_wrapper.place_market_sell_order(selected_pair)
+        tg_wrapper.place_market_sell_order(market)
     return html.Label()
 
 
-@callback(Output("btn-open-orders", "visible"), Input("btn-open-orders", "n_clicks"), prevent_initial_call=True)
+@callback(
+    Output("btn-open-orders", "visible"),
+    Input("btn-open-orders", "n_clicks"),
+    prevent_initial_call=True,
+)
 def btn_open_orders(click):
     """restart pairs with open orders"""
     if click > 0:
@@ -266,7 +287,9 @@ def btn_open_orders(click):
 
 
 @callback(
-    Output("market-scan-options", "children"), Input("btn-start-scanning", "n_clicks"), prevent_initial_call=True
+    Output("market-scan-options", "children"),
+    Input("btn-start-scanning", "n_clicks"),
+    prevent_initial_call=True,
 )
 def btn_start_scanning_click(click):
     """show scan options"""
@@ -278,7 +301,7 @@ def btn_start_scanning_click(click):
     Output("scan_options", "is_open"),
     [Input("btn-start-scanning", "n_clicks")],
     [State("scan_options", "is_open")],
-    prevent_initial_call=True
+    prevent_initial_call=True,
 )
 def toggle_options_collapse(n, is_open):
     """toggle scan option collapsible"""
@@ -287,69 +310,93 @@ def toggle_options_collapse(n, is_open):
     return is_open
 
 
-@callback(Output("btn-scan-start", "visible"), Input("btn-scan-start", "n_clicks"))
-def start_scan_and_bots(n):  # pylint: disable=missing-function-docstring
-    if n > 0:
+@callback(
+    Output("btn-scan-start", "visible"),
+    Input("btn-scan-start", "n_clicks"),
+    prevent_initial_call=True,
+)
+def start_scan_and_bots(clicks):  # pylint: disable=missing-function-docstring
+    if clicks > 0:
         tg_wrapper.start_market_scanning()
     return "true"
 
-@callback(Output("btn-scan-only", "visible"), Input("btn-scan-only", "n_clicks"))
-def start_scan_only(n):  # pylint: disable=missing-function-docstring
-    if n > 0:
+
+@callback(
+    Output("btn-scan-only", "visible"),
+    Input("btn-scan-only", "n_clicks"),
+    prevent_initial_call=True,
+)
+def start_scan_only(clicks):  # pylint: disable=missing-function-docstring
+    if clicks > 0:
         tg_wrapper.start_market_scanning(True, False)
     return "true"
 
-@callback(Output("btn-start-only", "visible"), Input("btn-start-only", "n_clicks"))
-def start_bots_only(n):  # pylint: disable=missing-function-docstring
-    if n > 0:
+
+@callback(
+    Output("btn-start-only", "visible"),
+    Input("btn-start-only", "n_clicks"),
+    prevent_initial_call=True,
+)
+def start_bots_only(clicks):  # pylint: disable=missing-function-docstring
+    if clicks > 0:
         tg_wrapper.start_market_scanning(False, True)
     return "true"
+
 
 @callback(
     Output({"type": "btn-pause", "index": MATCH}, "visible"),
     Input({"type": "btn-pause", "index": MATCH}, "n_clicks"),
+    State({"type": "btn-pause", "index": MATCH}, "value"),
+    prevent_initial_call=True,
 )
-def btn_pause_click(click):  # pylint: disable=missing-function-docstring
+def btn_pause_click(click, market):  # pylint: disable=missing-function-docstring
     if click > 0:
-        tg_wrapper.pause_bot(selected_pair)
+        tg_wrapper.pause_bot(market)
     return "true"
 
 
 @callback(
     Output({"type": "btn-resume", "index": MATCH}, "visible"),
     Input({"type": "btn-resume", "index": MATCH}, "n_clicks"),
+    State({"type": "btn-resume", "index": MATCH}, "value"),
+    prevent_initial_call=True,
 )
-def btn_resume_click(click):  # pylint: disable=missing-function-docstring
+def btn_resume_click(click, market):  # pylint: disable=missing-function-docstring
     if click > 0:
-        tg_wrapper.resume_bot(selected_pair)
+        tg_wrapper.resume_bot(market)
     return html.Label()
 
 
 @callback(
     Output({"type": "btn-stop", "index": MATCH}, "visible"),
     Input({"type": "btn-stop", "index": MATCH}, "n_clicks"),
+    State({"type": "btn-stop", "index": MATCH}, "value"),
+    prevent_initial_call=True,
 )
-def btn_stop_click(click):  # pylint: disable=missing-function-docstring
+def btn_stop_click(click, market):  # pylint: disable=missing-function-docstring
     if click > 0:
-        tg_wrapper.stop_bot(selected_pair)
+        tg_wrapper.stop_bot(market)
     return html.Label()
 
 
 @callback(
     Output({"type": "btn-start", "index": MATCH}, "visible"),
     Input({"type": "btn-start", "index": MATCH}, "n_clicks"),
+    State({"type": "btn-start", "index": MATCH}, "value"),
+    prevent_initial_call=True,
 )
-def btn_start_click(click):  # pylint: disable=missing-function-docstring
+def btn_start_click(click, market):
+    """start bot manually"""
     if click > 0:
-        tg_wrapper.start_bot(selected_pair)
+        tg_wrapper.start_bot(market)
     return html.Label()
 
 
 @callback(
     Output("start-accordian", "children"), Input("interval-container", "n_intervals")
 )
-def update_start_list(n):
-    """ update manual start bot list """
+def update_start_list(clicks):
+    """update manual start bot list"""
     acc_list = []
     tg_wrapper.helper.read_data()
     buttons = []
@@ -365,6 +412,7 @@ def update_start_list(n):
                         "Start",
                         id={"type": "btn-start", "index": pair_count},
                         n_clicks=0,
+                        value=market,
                         className="btn btn-primary",
                     )
                 )
@@ -385,11 +433,12 @@ def update_start_list(n):
 
     return accordion
 
+
 @callback(
     Output("bot-accordian", "children"), Input("interval-container", "n_intervals")
 )
-def update_accordians(n):
-    """create bot accoridans"""
+def update_accordions(clicks):
+    """create bot accordions"""
     acc_list = []
     pair_count = 0
     for i in tg_wrapper.helper.get_all_bot_list():
@@ -403,6 +452,7 @@ def update_accordians(n):
                 "Stop",
                 id={"type": "btn-stop", "index": pair_count},
                 n_clicks=0,
+                value=i,
                 className="btn btn-primary",
             )
         )
@@ -412,6 +462,7 @@ def update_accordians(n):
                     "Pause",
                     id={"type": "btn-pause", "index": pair_count},
                     n_clicks=0,
+                    value=i,
                     className="btn btn-primary",
                 )
             )
@@ -421,6 +472,7 @@ def update_accordians(n):
                     "Resume",
                     id={"type": "btn-resume", "index": pair_count},
                     n_clicks=0,
+                    value=i,
                     className="btn btn-primary",
                 )
             )
@@ -430,6 +482,7 @@ def update_accordians(n):
                     "Buy",
                     id={"type": "btn-buy", "index": pair_count},
                     n_clicks=0,
+                    value=i,
                     className="btn btn-primary",
                 )
             )
@@ -439,6 +492,7 @@ def update_accordians(n):
                     "Sell",
                     id={"type": "btn-sell", "index": pair_count},
                     n_clicks=0,
+                    value=i,
                     className="btn btn-primary",
                 )
             )
@@ -455,7 +509,7 @@ def update_accordians(n):
 
     accordion = html.Div(
         dbc.Accordion(id="bots", children=acc_list, start_collapsed=True),
-        className="d-grid gap-2"
+        className="d-grid gap-2",
     )
 
     return accordion

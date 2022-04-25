@@ -204,11 +204,10 @@ class TelegramControl:
             )
             self.helper.read_data()
             if not self.helper.is_bot_running(market_override):
-                overrides = self.helper.data["markets"][
-                    market_override
-                ]["overrides"]
+                overrides = self.helper.data["markets"][market_override]["overrides"]
+                exchange = overrides[overrides.find("--exchange")+11: overrides.find("--market")-1]
                 self.helper.start_process(
-                    market_override, self.helper.get_running_bot_exchange(market_override), overrides
+                    market_override, exchange, overrides
                 )
             else:
                 self.helper.send_telegram_message(
