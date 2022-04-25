@@ -36,7 +36,7 @@ if not os.path.exists(os.path.join(os.curdir, "telegram_logs")):
 class TelegramHelper:
     """Telegram Bot Helper"""
 
-    def __init__(self, configfile = 'config.json', logfileprefix = 'telegrambot') -> None:
+    def __init__(self, configfile = 'config.json', logfileprefix = 'telegrambot', test_run: bool = False) -> None:
         self.data = {}
         self.config_file = configfile
         self.screener = {}
@@ -60,7 +60,7 @@ class TelegramHelper:
             self.config = json.load(json_file)
 
         self.load_config()
-        self.read_screener_config()
+        self.read_screener_config(test_run)
 
         if len(self.logger.handlers) == 0:
             self.logger.setLevel(self.get_level(self.logger_level))
@@ -77,16 +77,10 @@ class TelegramHelper:
             # add the handler to the root logger
             self.logger.addHandler(consoleHandler)
 
-        self.updater = Updater(
-            self.config["telegram"]["token"],
-            use_context=True,
-        )
-        self.default_context = telegram.CallbackQuery(
-            id=2,
-            from_user=self.config["telegram"]["user_id"],
-            bot=self.updater.bot,
-            chat_instance="",
-        )
+        # self.updater = Updater(
+        #     self.config["telegram"]["token"],
+        #     use_context=True,
+        # )
 
     def get_uptime(self):
         """Get uptime"""
@@ -218,7 +212,14 @@ class TelegramHelper:
     ):
         """Send telegram messages"""
         if context is None:
-            context = self.default_context
+            context = telegram.CallbackQuery(
+            id=2,
+            from_user=self.config["telegram"]["user_id"],
+            bot=Updater(self.config["telegram"]["token"],
+            use_context=True,
+        ),
+            chat_instance="",
+        )
 
         if new_message or update == None:
             context.bot.send_message(
@@ -304,11 +305,11 @@ class TelegramHelper:
         except:  # pylint: disable=bare-except
             return False
 
-    def read_screener_config(self):
+    def read_screener_config(self, test_run: bool = False):
         """Read screener config file"""
         self.logger.debug("METHOD(read_screener_config)")
         try:
-            with open("screener.json", "r", encoding="utf8") as json_file:
+            with open("screener.json" if not test_run else "screener.json.sample", "r", encoding="utf8") as json_file:
                 self.screener = json.load(json_file)
         except FileNotFoundError:
             return
