@@ -12,458 +12,499 @@ CONTENT_STYLE = {
     "margin-right": "0rem",
     "padding": "0rem 1rem",
 }
-layout = html.Div(
-    style=CONTENT_STYLE,
-    children=[
-        html.H4("Bot Config Generator", style={"textAlign": "left"}),
-        html.B(),
-        html.Div(id="save-change-message"),
-        html.Div(
-            dbc.Button(
-                "Save Changes",
-                id="save-changes",
-                value="saved",
-                n_clicks=0,
-                disabled=False,
-            ),
-            className="d-grid gap-2",
-        ),
-        html.H5("Exchanges"),
-        html.Div(
-            dbc.Card(
-                dbc.CardBody(
-                    dbc.RadioItems(
-                        options=[
-                            {"label": "Coinbase Pro", "value": "coinbasepro"},
-                            {"label": "Binance", "value": "binance"},
-                            {"label": "Kucoin", "value": "kucoin"},
-                        ],
-                        value=None,
-                        id="exchange-selector",
-                        inline=True,
-                    )
-                )
-            )
-        ),
-        dbc.Accordion(
-            children=dbc.AccordionItem(
-                id="start-accordian",
-                title="Indicator Options",
-                class_name="justify-content-md-center",
-                children=dbc.Card(
-                    dbc.CardBody(
-                        html.Div(
-                            [
-                                dbc.Checklist(
-                                    options=[
-                                        {"label": "Live Mode", "value": "live"},
-                                        {
-                                            "label": "Disable EMA",
-                                            "value": "disablebuyema",
-                                        },
-                                        {
-                                            "label": "Disable MACD",
-                                            "value": "disablebuymacd",
-                                        },
-                                        {
-                                            "label": "Disable OBV",
-                                            "value": "disablebuyobv",
-                                        },
-                                        {
-                                            "label": "Disable Elderray",
-                                            "value": "disablebuyelderray",
-                                        },
-                                        {
-                                            "label": "Disable Failsafe Fibonacci Low ",
-                                            "value": "disablefailsafefibonaccilow",
-                                        },
-                                        {
-                                            "label": "Disable Bull Only",
-                                            "value": "disablebullonly",
-                                        },
-                                    ],
-                                    value=0,
-                                    id="switches-indicators",
-                                    switch=True,
-                                    inline=True,
-                                ),
-                            ]
-                        ),
-                    )
+layout = (
+    html.Div(
+        style=CONTENT_STYLE,
+        children=[
+            html.H4("Bot Config Generator", style={"textAlign": "left"}),
+            html.B(),
+            html.Div(id="save-change-message"),
+            html.Div(
+                dbc.Button(
+                    "Save Changes",
+                    id="save-changes",
+                    value="saved",
+                    n_clicks=0,
+                    disabled=False,
                 ),
+                className="d-grid gap-2",
             ),
-            start_collapsed=True,
-        ),
-    ]),
-    )),
-
-    html.B(),
-    dbc.Card(
-    dbc.CardBody(   
-    html.Div([
-        dbc.Label("Advance Selling Options"),
-
-        dbc.Checklist(
-            options=[
-                {'label': 'Trailing Immediate Buy', 'value': 'Trailing Immediate Buy'},
-                {'label': 'Prevent Loss', 'value': 'Prevent Loss'},
-            ],
-            value=[1],
-            id="switches-advsell",
-            switch=True,
-            inline=True,
-        ),
-        html.B(),
-        dbc.Accordion(
-            children=dbc.AccordionItem(
-                id="start-accordian",
-                title="Time Frame Options",
-                class_name="justify-content-md-center",
-                children=dbc.Card(
+            html.H5("Exchanges"),
+            html.Div(
+                dbc.Card(
                     dbc.CardBody(
-                        html.Div(
-                            [
-                                dbc.RadioItems(
-                                    options=[
-                                        {
-                                            "label": "Smart-Switch Granularity",
-                                            "value": "ss",
-                                        },
-                                        {"label": "Granularity 1 Min", "value": 60},
-                                        {"label": "Granularity 5 Min", "value": 300},
-                                        {"label": "Granularity 15 Min", "value": 900},
-                                        {"label": "Granularity 1 HR", "value": 3600},
-                                    ],
-                                    value=[1],
-                                    id="switches-granularity",
-                                    # switch=True,
-                                    inline=True,
-                                ),
-                            ]
-                        ),
-                    )
-                ),
-            ),
-            start_collapsed=True,
-        ),
-        html.B(),
-        dbc.Accordion(
-            children=dbc.AccordionItem(
-                id="start-accordian",
-                title="Advanced Options",
-                class_name="justify-content-md-center",
-                children=[
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                dbc.Card(
-                                    dbc.CardBody(
-                                        html.Div(
-                                            [
-                                                dbc.Checklist(
-                                                    options=[
-                                                        {
-                                                            "label": "Enable Buy Size",
-                                                            "value": "buysize",
-                                                        },
-                                                    ],
-                                                    value=[1],
-                                                    id="switches-buysize",
-                                                    switch=True,
-                                                    inline=True,
-                                                ),
-                                                dbc.Label("Maximum Buy Amount"),
-                                                html.B(),
-                                                html.Div(
-                                                    dbc.Input(
-                                                        id="buy-max-size",
-                                                        placeholder="maximum amount ... ",
-                                                        type="number",
-                                                    ),
-                                                ),
-                                                dbc.Label("Minimum Buy Amount"),
-                                                html.B(),
-                                                html.Div(
-                                                    dbc.Input(
-                                                        id="buy-min-size",
-                                                        placeholder="minimum amount ... ",
-                                                        type="number",
-                                                    ),
-                                                ),
-                                            ]
-                                        )
-                                    )
-                                ),
-                                xs=12,
-                                md=6,
-                                lg=4,
-                            ),
-                            dbc.Col(
-                                dbc.Card(
-                                    dbc.CardBody(
-                                        html.Div(
-                                            [
-                                                dbc.Checklist(
-                                                    options=[
-                                                        {
-                                                            "label": "Prevent Loss",
-                                                            "value": "preventloss",
-                                                        },
-                                                    ],
-                                                    value=[1],
-                                                    id="switches-preventloss",
-                                                    switch=True,
-                                                    inline=True,
-                                                ),
-                                                dbc.Label("Prevent Loss Trigger"),
-                                                html.B(),
-                                                html.Div(
-                                                    dcc.Slider(
-                                                        0,
-                                                        10,
-                                                        0.1,
-                                                        value=0,
-                                                        id="prevent-loss-trigger",
-                                                        marks=None,
-                                                        tooltip={
-                                                            "placement": "left",
-                                                            "always_visible": True,
-                                                        },
-                                                        disabled=True,
-                                                    ),
-                                                ),
-                                                dbc.Label("Prevent Loss Margin"),
-                                                html.B(),
-                                                html.Div(
-                                                    dcc.Slider(
-                                                        -10,
-                                                        0,
-                                                        0.5,
-                                                        value=0,
-                                                        id="prevent-loss-margin",
-                                                        marks=None,
-                                                        tooltip={
-                                                            "placement": "left",
-                                                            "always_visible": True,
-                                                        },
-                                                        disabled=True,
-                                                    ),
-                                                ),
-                                            ]
-                                        )
-                                    )
-                                ),
-                                xs=12,
-                                md=6,
-                                lg=4,
-                            ),
-                            # html.B(),
-                            dbc.Col(
-                                dbc.Card(
-                                    dbc.CardBody(
-                                        html.Div(
-                                            [
-                                                # dbc.Label("Advance Selling Options"),
-                                                dbc.Checklist(
-                                                    options=[
-                                                        {
-                                                            "label": "Trailing Stop Loss",
-                                                            "value": "trailingstoploss",
-                                                        },
-                                                    ],
-                                                    value=[1],
-                                                    id="switches-tsl",
-                                                    switch=True,
-                                                    inline=True,
-                                                ),
-                                                dbc.Label("Trailing Stop Loss Trigger"),
-                                                html.B(),
-                                                html.Div(
-                                                    dcc.Slider(
-                                                        0,
-                                                        30,
-                                                        0.1,
-                                                        value=0,
-                                                        id="trailing-stop-loss-trigger",
-                                                        marks=None,
-                                                        tooltip={
-                                                            "placement": "left",
-                                                            "always_visible": True,
-                                                        },
-                                                        disabled=True,
-                                                    ),
-                                                ),
-                                                dbc.Label("Trailing Stop Loss Margin"),
-                                                html.B(),
-                                                html.Div(
-                                                    dcc.Slider(
-                                                        -10,
-                                                        0,
-                                                        0.5,
-                                                        value=0,
-                                                        id="trailing-stop-loss-margin",
-                                                        marks=None,
-                                                        tooltip={
-                                                            "placement": "left",
-                                                            "always_visible": True,
-                                                        },
-                                                        disabled=True,
-                                                    ),
-                                                ),
-                                            ]
-                                        )
-                                    )
-                                ),
-                                xs=12,
-                                md=6,
-                                lg=4,
-                            ),
-                            dbc.Col(
-                                dbc.Card(
-                                    dbc.CardBody(
-                                        html.Div(
-                                            [
-                                                dbc.Checklist(
-                                                    options=[
-                                                        {
-                                                            "label": "Disable Buy Near High Default",
-                                                            "value": "disablebuynearhigh",
-                                                        },
-                                                    ],
-                                                    value=[1],
-                                                    id="switches-buynearhigh",
-                                                    switch=True,
-                                                    inline=True,
-                                                ),
-                                                dbc.Label(
-                                                    "(Optional) No Buy Near High %"
-                                                ),
-                                                html.B(),
-                                                html.Div(
-                                                    dbc.Input(
-                                                        id="buy-near-high",
-                                                        placeholder="no buy near high ... ",
-                                                        type="number",
-                                                    ),
-                                                ),
-                                            ]
-                                        )
-                                    )
-                                ),
-                                xs=12,
-                                md=6,
-                                lg=4,
-                            ),
-                            dbc.Col(
-                                dbc.Card(
-                                    dbc.CardBody(
-                                        html.Div(
-                                            [
-                                                dbc.Checklist(
-                                                    options=[
-                                                        {
-                                                            "label": "Enable Sell At Loss",
-                                                            "value": "sellatloss",
-                                                        },
-                                                    ],
-                                                    value=[1],
-                                                    id="switches-sellatloss",
-                                                    switch=True,
-                                                    inline=True,
-                                                ),
-                                                dbc.Label(
-                                                    "Ignore Sell Triggers until (%)"
-                                                ),
-                                                html.B(),
-                                                html.Div(
-                                                    dcc.Slider(
-                                                        -10,
-                                                        0,
-                                                        0.1,
-                                                        value=0,
-                                                        id="sell-at-loss-trigger",
-                                                        marks=None,
-                                                        tooltip={
-                                                            "placement": "left",
-                                                            "always_visible": True,
-                                                        },
-                                                        disabled=True,
-                                                    ),
-                                                ),
-                                                dbc.Label("FailSafe sell point (%)"),
-                                                html.B(),
-                                                html.Div(
-                                                    dcc.Slider(
-                                                        -25,
-                                                        2,
-                                                        0.5,
-                                                        value=0,
-                                                        id="sell-at-loss-margin",
-                                                        marks=None,
-                                                        tooltip={
-                                                            "placement": "left",
-                                                            "always_visible": True,
-                                                        },
-                                                        disabled=True,
-                                                    ),
-                                                ),
-                                            ]
-                                        )
-                                    )
-                                ),
-                                xs=12,
-                                md=6,
-                                lg=4,
-                            ),
-                        ]
-                    ),
-                ],
-            ),
-            start_collapsed=True,
-        ),
-        html.B(),
-        dbc.Accordion(
-            children=dbc.AccordionItem(
-                id="start-accordian",
-                title="Extra Options",
-                class_name="justify-content-md-center",
-                children=dbc.Card(
-                    dbc.CardBody(
-                        html.Div(
-                            dbc.Checklist(
-                                options=[
-                                    {"label": "Auto Restart", "value": "autorestart"},
-                                    {"label": "Verbose", "value": "verbose"},
-                                    {
-                                        "label": "Disable Telegram Messages",
-                                        "value": "disabletelegram",
-                                    },
-                                    {
-                                        "label": "Enable Telegram Control",
-                                        "value": "enabletelegrambotcontrol",
-                                    },
-                                    {"label": "Websockets", "value": "websocket"},
-                                    {
-                                        "label": "Disable Bot Logs",
-                                        "value": "disablelog",
-                                    },
-                                    {
-                                        "label": "Enable Machine Learning Messages",
-                                        "value": "enableml",
-                                    },
-                                ],
-                                value=[1],
-                                id="switches-extras",
-                                switch=True,
-                                inline=True,
-                            )
+                        dbc.RadioItems(
+                            options=[
+                                {"label": "Coinbase Pro", "value": "coinbasepro"},
+                                {"label": "Binance", "value": "binance"},
+                                {"label": "Kucoin", "value": "kucoin"},
+                            ],
+                            value=None,
+                            id="exchange-selector",
+                            inline=True,
                         )
                     )
-                ),
+                )
             ),
-            start_collapsed=True,
-        ),
-    ],
+            dbc.Accordion(
+                children=dbc.AccordionItem(
+                    id="start-accordian",
+                    title="Indicator Options",
+                    class_name="justify-content-md-center",
+                    children=dbc.Card(
+                        dbc.CardBody(
+                            html.Div(
+                                [
+                                    dbc.Checklist(
+                                        options=[
+                                            {"label": "Live Mode", "value": "live"},
+                                            {
+                                                "label": "Disable EMA",
+                                                "value": "disablebuyema",
+                                            },
+                                            {
+                                                "label": "Disable MACD",
+                                                "value": "disablebuymacd",
+                                            },
+                                            {
+                                                "label": "Disable OBV",
+                                                "value": "disablebuyobv",
+                                            },
+                                            {
+                                                "label": "Disable Elderray",
+                                                "value": "disablebuyelderray",
+                                            },
+                                            {
+                                                "label": "Disable Failsafe Fibonacci Low ",
+                                                "value": "disablefailsafefibonaccilow",
+                                            },
+                                            {
+                                                "label": "Disable Bull Only",
+                                                "value": "disablebullonly",
+                                            },
+                                        ],
+                                        value=0,
+                                        id="switches-indicators",
+                                        switch=True,
+                                        inline=True,
+                                    ),
+                                ]
+                            ),
+                        )
+                    ),
+                ),
+                start_collapsed=True,
+            ),
+            html.B(),
+            dbc.Card(
+                dbc.CardBody(
+                    html.Div(
+                        [
+                            dbc.Label("Advance Selling Options"),
+                            dbc.Checklist(
+                                options=[
+                                    {
+                                        "label": "Trailing Immediate Buy",
+                                        "value": "Trailing Immediate Buy",
+                                    },
+                                    {"label": "Prevent Loss", "value": "Prevent Loss"},
+                                ],
+                                value=[1],
+                                id="switches-advsell",
+                                switch=True,
+                                inline=True,
+                            ),
+                            html.B(),
+                            dbc.Accordion(
+                                children=dbc.AccordionItem(
+                                    id="start-accordian",
+                                    title="Time Frame Options",
+                                    class_name="justify-content-md-center",
+                                    children=dbc.Card(
+                                        dbc.CardBody(
+                                            html.Div(
+                                                [
+                                                    dbc.RadioItems(
+                                                        options=[
+                                                            {
+                                                                "label": "Smart-Switch Granularity",
+                                                                "value": "ss",
+                                                            },
+                                                            {
+                                                                "label": "Granularity 1 Min",
+                                                                "value": 60,
+                                                            },
+                                                            {
+                                                                "label": "Granularity 5 Min",
+                                                                "value": 300,
+                                                            },
+                                                            {
+                                                                "label": "Granularity 15 Min",
+                                                                "value": 900,
+                                                            },
+                                                            {
+                                                                "label": "Granularity 1 HR",
+                                                                "value": 3600,
+                                                            },
+                                                        ],
+                                                        value=[1],
+                                                        id="switches-granularity",
+                                                        # switch=True,
+                                                        inline=True,
+                                                    ),
+                                                ]
+                                            ),
+                                        )
+                                    ),
+                                ),
+                                start_collapsed=True,
+                            ),
+                            html.B(),
+                            dbc.Accordion(
+                                children=dbc.AccordionItem(
+                                    id="start-accordian",
+                                    title="Advanced Options",
+                                    class_name="justify-content-md-center",
+                                    children=[
+                                        dbc.Row(
+                                            [
+                                                dbc.Col(
+                                                    dbc.Card(
+                                                        dbc.CardBody(
+                                                            html.Div(
+                                                                [
+                                                                    dbc.Checklist(
+                                                                        options=[
+                                                                            {
+                                                                                "label": "Enable Buy Size",
+                                                                                "value": "buysize",
+                                                                            },
+                                                                        ],
+                                                                        value=[1],
+                                                                        id="switches-buysize",
+                                                                        switch=True,
+                                                                        inline=True,
+                                                                    ),
+                                                                    dbc.Label(
+                                                                        "Maximum Buy Amount"
+                                                                    ),
+                                                                    html.B(),
+                                                                    html.Div(
+                                                                        dbc.Input(
+                                                                            id="buy-max-size",
+                                                                            placeholder="maximum amount ... ",
+                                                                            type="number",
+                                                                        ),
+                                                                    ),
+                                                                    dbc.Label(
+                                                                        "Minimum Buy Amount"
+                                                                    ),
+                                                                    html.B(),
+                                                                    html.Div(
+                                                                        dbc.Input(
+                                                                            id="buy-min-size",
+                                                                            placeholder="minimum amount ... ",
+                                                                            type="number",
+                                                                        ),
+                                                                    ),
+                                                                ]
+                                                            )
+                                                        )
+                                                    ),
+                                                    xs=12,
+                                                    md=6,
+                                                    lg=4,
+                                                ),
+                                                dbc.Col(
+                                                    dbc.Card(
+                                                        dbc.CardBody(
+                                                            html.Div(
+                                                                [
+                                                                    dbc.Checklist(
+                                                                        options=[
+                                                                            {
+                                                                                "label": "Prevent Loss",
+                                                                                "value": "preventloss",
+                                                                            },
+                                                                        ],
+                                                                        value=[1],
+                                                                        id="switches-preventloss",
+                                                                        switch=True,
+                                                                        inline=True,
+                                                                    ),
+                                                                    dbc.Label(
+                                                                        "Prevent Loss Trigger"
+                                                                    ),
+                                                                    html.B(),
+                                                                    html.Div(
+                                                                        dcc.Slider(
+                                                                            0,
+                                                                            10,
+                                                                            0.1,
+                                                                            value=0,
+                                                                            id="prevent-loss-trigger",
+                                                                            marks=None,
+                                                                            tooltip={
+                                                                                "placement": "left",
+                                                                                "always_visible": True,
+                                                                            },
+                                                                            disabled=True,
+                                                                        ),
+                                                                    ),
+                                                                    dbc.Label(
+                                                                        "Prevent Loss Margin"
+                                                                    ),
+                                                                    html.B(),
+                                                                    html.Div(
+                                                                        dcc.Slider(
+                                                                            -10,
+                                                                            0,
+                                                                            0.5,
+                                                                            value=0,
+                                                                            id="prevent-loss-margin",
+                                                                            marks=None,
+                                                                            tooltip={
+                                                                                "placement": "left",
+                                                                                "always_visible": True,
+                                                                            },
+                                                                            disabled=True,
+                                                                        ),
+                                                                    ),
+                                                                ]
+                                                            )
+                                                        )
+                                                    ),
+                                                    xs=12,
+                                                    md=6,
+                                                    lg=4,
+                                                ),
+                                                # html.B(),
+                                                dbc.Col(
+                                                    dbc.Card(
+                                                        dbc.CardBody(
+                                                            html.Div(
+                                                                [
+                                                                    # dbc.Label("Advance Selling Options"),
+                                                                    dbc.Checklist(
+                                                                        options=[
+                                                                            {
+                                                                                "label": "Trailing Stop Loss",
+                                                                                "value": "trailingstoploss",
+                                                                            },
+                                                                        ],
+                                                                        value=[1],
+                                                                        id="switches-tsl",
+                                                                        switch=True,
+                                                                        inline=True,
+                                                                    ),
+                                                                    dbc.Label(
+                                                                        "Trailing Stop Loss Trigger"
+                                                                    ),
+                                                                    html.B(),
+                                                                    html.Div(
+                                                                        dcc.Slider(
+                                                                            0,
+                                                                            30,
+                                                                            0.1,
+                                                                            value=0,
+                                                                            id="trailing-stop-loss-trigger",
+                                                                            marks=None,
+                                                                            tooltip={
+                                                                                "placement": "left",
+                                                                                "always_visible": True,
+                                                                            },
+                                                                            disabled=True,
+                                                                        ),
+                                                                    ),
+                                                                    dbc.Label(
+                                                                        "Trailing Stop Loss Margin"
+                                                                    ),
+                                                                    html.B(),
+                                                                    html.Div(
+                                                                        dcc.Slider(
+                                                                            -10,
+                                                                            0,
+                                                                            0.5,
+                                                                            value=0,
+                                                                            id="trailing-stop-loss-margin",
+                                                                            marks=None,
+                                                                            tooltip={
+                                                                                "placement": "left",
+                                                                                "always_visible": True,
+                                                                            },
+                                                                            disabled=True,
+                                                                        ),
+                                                                    ),
+                                                                ]
+                                                            )
+                                                        )
+                                                    ),
+                                                    xs=12,
+                                                    md=6,
+                                                    lg=4,
+                                                ),
+                                                dbc.Col(
+                                                    dbc.Card(
+                                                        dbc.CardBody(
+                                                            html.Div(
+                                                                [
+                                                                    dbc.Checklist(
+                                                                        options=[
+                                                                            {
+                                                                                "label": "Disable Buy Near High Default",
+                                                                                "value": "disablebuynearhigh",
+                                                                            },
+                                                                        ],
+                                                                        value=[1],
+                                                                        id="switches-buynearhigh",
+                                                                        switch=True,
+                                                                        inline=True,
+                                                                    ),
+                                                                    dbc.Label(
+                                                                        "(Optional) No Buy Near High %"
+                                                                    ),
+                                                                    html.B(),
+                                                                    html.Div(
+                                                                        dbc.Input(
+                                                                            id="buy-near-high",
+                                                                            placeholder="no buy near high ... ",
+                                                                            type="number",
+                                                                        ),
+                                                                    ),
+                                                                ]
+                                                            )
+                                                        )
+                                                    ),
+                                                    xs=12,
+                                                    md=6,
+                                                    lg=4,
+                                                ),
+                                                dbc.Col(
+                                                    dbc.Card(
+                                                        dbc.CardBody(
+                                                            html.Div(
+                                                                [
+                                                                    dbc.Checklist(
+                                                                        options=[
+                                                                            {
+                                                                                "label": "Enable Sell At Loss",
+                                                                                "value": "sellatloss",
+                                                                            },
+                                                                        ],
+                                                                        value=[1],
+                                                                        id="switches-sellatloss",
+                                                                        switch=True,
+                                                                        inline=True,
+                                                                    ),
+                                                                    dbc.Label(
+                                                                        "Ignore Sell Triggers until (%)"
+                                                                    ),
+                                                                    html.B(),
+                                                                    html.Div(
+                                                                        dcc.Slider(
+                                                                            -10,
+                                                                            0,
+                                                                            0.1,
+                                                                            value=0,
+                                                                            id="sell-at-loss-trigger",
+                                                                            marks=None,
+                                                                            tooltip={
+                                                                                "placement": "left",
+                                                                                "always_visible": True,
+                                                                            },
+                                                                            disabled=True,
+                                                                        ),
+                                                                    ),
+                                                                    dbc.Label(
+                                                                        "FailSafe sell point (%)"
+                                                                    ),
+                                                                    html.B(),
+                                                                    html.Div(
+                                                                        dcc.Slider(
+                                                                            -25,
+                                                                            2,
+                                                                            0.5,
+                                                                            value=0,
+                                                                            id="sell-at-loss-margin",
+                                                                            marks=None,
+                                                                            tooltip={
+                                                                                "placement": "left",
+                                                                                "always_visible": True,
+                                                                            },
+                                                                            disabled=True,
+                                                                        ),
+                                                                    ),
+                                                                ]
+                                                            )
+                                                        )
+                                                    ),
+                                                    xs=12,
+                                                    md=6,
+                                                    lg=4,
+                                                ),
+                                            ]
+                                        ),
+                                    ],
+                                ),
+                                start_collapsed=True,
+                            ),
+                            html.B(),
+                            dbc.Accordion(
+                                children=dbc.AccordionItem(
+                                    id="start-accordian",
+                                    title="Extra Options",
+                                    class_name="justify-content-md-center",
+                                    children=dbc.Card(
+                                        dbc.CardBody(
+                                            html.Div(
+                                                dbc.Checklist(
+                                                    options=[
+                                                        {
+                                                            "label": "Auto Restart",
+                                                            "value": "autorestart",
+                                                        },
+                                                        {
+                                                            "label": "Verbose",
+                                                            "value": "verbose",
+                                                        },
+                                                        {
+                                                            "label": "Disable Telegram Messages",
+                                                            "value": "disabletelegram",
+                                                        },
+                                                        {
+                                                            "label": "Enable Telegram Control",
+                                                            "value": "enabletelegrambotcontrol",
+                                                        },
+                                                        {
+                                                            "label": "Websockets",
+                                                            "value": "websocket",
+                                                        },
+                                                        {
+                                                            "label": "Disable Bot Logs",
+                                                            "value": "disablelog",
+                                                        },
+                                                        {
+                                                            "label": "Enable Machine Learning Messages",
+                                                            "value": "enableml",
+                                                        },
+                                                    ],
+                                                    value=[1],
+                                                    id="switches-extras",
+                                                    switch=True,
+                                                    inline=True,
+                                                )
+                                            )
+                                        )
+                                    ),
+                                ),
+                                start_collapsed=True,
+                            ),
+                        ],
+                    )
+                )
+            ),
+        ],
+    ),
 )
 
 
