@@ -94,42 +94,24 @@ layout = html.Div(
             ),
             start_collapsed=True,
         ),
-        html.B(),
-        dbc.Accordion(
-            children=dbc.AccordionItem(
-                id="start-accordian",
-                title="Basic Selling Options",
-                class_name="justify-content-md-center",
-                children=dbc.Card(
-                    dbc.CardBody(
-                        html.Div(
-                            [
-                                dbc.Checklist(
-                                    options=[
-                                        {
-                                            "label": "Sell at Resistance",
-                                            "value": "sellatresistance",
-                                        },
-                                        {
-                                            "label": "Disable Profit Bank Reversal",
-                                            "value": "disableprofitbankreversal",
-                                        },
-                                        {
-                                            "label": "Sell Smart Switch",
-                                            "value": "sellsmartswitch",
-                                        },
-                                    ],
-                                    value=[1],
-                                    id="switches-sell",
-                                    switch=True,
-                                    inline=True,
-                                ),
-                            ]
-                        )
-                    )
-                ),
-            ),
-            start_collapsed=True,
+    ]),
+    )),
+
+    html.B(),
+    dbc.Card(
+    dbc.CardBody(   
+    html.Div([
+        dbc.Label("Advance Selling Options"),
+
+        dbc.Checklist(
+            options=[
+                {'label': 'Trailing Immediate Buy', 'value': 'Trailing Immediate Buy'},
+                {'label': 'Prevent Loss', 'value': 'Prevent Loss'},
+            ],
+            value=[1],
+            id="switches-advsell",
+            switch=True,
+            inline=True,
         ),
         html.B(),
         dbc.Accordion(

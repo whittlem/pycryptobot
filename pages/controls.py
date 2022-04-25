@@ -23,7 +23,8 @@ def update_buttons(pair, value):
 
 
 def get_bot_status(pair):
-    """Get bot status for accordian heading"""
+    """ Get bot status for accordion heading """
+
     if pair is not None:
         return f"Uptime: {tg_wrapper.helper.get_uptime()} - Status: {tg_wrapper.helper.data['botcontrol']['status']} - Margin: {tg_wrapper.helper.data['margin']}"
 
@@ -302,9 +303,9 @@ def btn_start_scanning_click(click):
     [State("scan_options", "is_open")],
     prevent_initial_call=True,
 )
-def toggle_options_collapse(clicks, is_open):
+def toggle_options_collapse(n, is_open):
     """toggle scan option collapsible"""
-    if clicks:
+    if n:
         return not is_open
     return is_open
 
