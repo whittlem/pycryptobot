@@ -289,7 +289,7 @@ class Strategy:
             Logger.debug(f"Margin {margin} > Stop Loss Trigger  {self.state.tsl_trigger} = {margin > self.state.tsl_trigger}")
 
         if self.state.tsl_pcnt != None:
-            # dynamice trailing_stop_loss
+            # dynamic trailing_stop_loss
             if self.app.dynamicTSL():
                 if (
                     self.app.TSLTriggerMultiplier() != None
