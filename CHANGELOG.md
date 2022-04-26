@@ -8,6 +8,26 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [6.4.0] - 2022-04-26
+
+- fixed Kucoin websockets ticker
+- added some additional check to help with JSON errors with Coinbasepro and Kucoin
+- fixed Kucoin cache to properly disable and be disabled by default
+- added trailing sell feature - uses 0% for default if not in config
+- added dynamic trailing stoploss option (fixed version is default if dynamix not enabled)
+- added option for pandas-ta library with option talib and both use custom Trading_Pta.py file
+- added requirements-advanced.txt for installing pandas-ta library as to not require on all installations, use this for other option libraries in future
+    talib requires additional OS installation to function, did not include in any requirements file and is totally optional and loaded automatically if installed
+- added option to create separate Trading_myPta.py file for user edits to prevent overwrites during updating
+- added pandas_ta_help.py file to view pandas-ta help database and test ta signals
+- added option for custom trade indicators and signals with Strategy_CS.py file
+- added option to create serapate Strategy_myCS.py file for user edits to prevent overwrites during updating 
+- added numerous customized indicators and signals in Strategy_CS.py with non-traditional settings.  Uses points system for buy/sell signals
+- added selltriggeroveride option to be used with custom strategy (if/while all signals are strong buy, don't trigger any Sells allowing for greater profit)
+- added options to trailing sell and buy that use the custom points system to trigger immediate buys or sells if the respective setting is active
+- added trailingsellbailout setting - if trailing sell is active and waiting, but price drops drastically, sell immediately at this level
+- revised buy/sell transactions in pycryptobot.py for better recovery if an error occurs during trade processing (revising previous fixes)
+
 ## [6.3.0] - 2022-04-13
 
 - added pycryptobot configuration editor 

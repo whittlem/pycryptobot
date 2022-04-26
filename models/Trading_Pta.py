@@ -710,33 +710,6 @@ class TechnicalAnalysis:
         self.df["ema" + str(period) + "_pc"] = round(self.df["ema" + str(period)].pct_change() * 100, 2)
         self.df["ema" + str(period) + "_pc"] = self.df["ema" + str(period) + "_pc"].fillna(0)
 
-    def calculateRelativeStrengthIndex(self, series: int, interval: int = 14) -> float:
-        """Calculates the RSI on a Pandas series of closing prices."""
-
-        if not isinstance(series, Series):
-            raise TypeError("Pandas Series required.")
-
-        if not isinstance(interval, int):
-            raise TypeError("Interval integer required.")
-
-        if len(series) < interval:
-            raise IndexError("Pandas Series smaller than interval.")
-
-        diff = series.diff(1).dropna()
-
-        sum_gains = 0 * diff
-        sum_gains[diff > 0] = diff[diff > 0]
-        avg_gains = sum_gains.ewm(com=interval - 1, min_periods=interval).mean()
-
-        sum_losses = 0 * diff
-        sum_losses[diff < 0] = diff[diff < 0]
-        avg_losses = sum_losses.ewm(com=interval - 1, min_periods=interval).mean()
-
-        rs = abs(avg_gains / avg_losses)
-        rsi = 100 - 100 / (1 + rs)
-
-        return rsi
-
     def calculateStochasticRelativeStrengthIndex(
         self, series: int, interval: int = 14
     ) -> float:
@@ -832,9 +805,9 @@ class TechnicalAnalysis:
 
         df = self.df.copy()
 
-        fl = 10 # fast length
-        sl = 18 # slow length
-        sigl = 12 # signal length
+        fl = 8 # fast length
+        sl = 21 # slow length
+        sigl = 5 # signal length
 
         df['sema'] = ta.ema(df["close"], length=fl, talib=self.talib)
         df['lema'] = ta.ema(df["close"], length=sl, talib=self.talib)

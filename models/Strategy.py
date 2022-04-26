@@ -39,7 +39,7 @@ class Strategy:
             else:
                 if strategy_myCS is True:
                     self.CS = myCS(self.app, self.state)
-                elif strategy_myCS is False:
+                else:
                     self.CS = CS(self.app, self.state)
                 self.CS_ready = True
         else:
@@ -617,7 +617,8 @@ class Strategy:
             waitpcnttext += f"Price decreased - resetting wait price. "
         elif (
             self.app.getTrailingBuyImmediatePcnt() is not None
-            and self.state.trailing_buy_immediate is True
+            and (self.state.trailing_buy_immediate is True
+                or self.app.trailingImmediateBuy() is True)
             and pricechange > self.app.getTrailingBuyImmediatePcnt()
         ): # If price increases by more than trailingbuyimmediatepcnt, do an immediate buy
             self.state.action = "BUY"
@@ -633,8 +634,6 @@ class Strategy:
             waitpcnttext += f"Waiting to buy until price of {self.state.waiting_buy_price} increases {trailingbuypcnt}% (+/- 10%) - change {str(pricechange)}%"
         else:
             self.state.action = "BUY"
-            if self.app.trailingimmediatebuy is True:
-                immediate_action = True
             trailing_action_logtext = f" - Buy Chg: {str(pricechange)}%/{trailingbuypcnt}%"
             waitpcnttext += f"Ready to buy at close. Price of {self.state.waiting_buy_price}, change of {str(pricechange)}%, is greater than setting of {trailingbuypcnt}%  (+/- 10%)"
 
@@ -696,8 +695,6 @@ class Strategy:
                 waitpcnttext += f"Waiting to sell until price of {self.state.waiting_sell_price} decreases {self.app.getTrailingSellPcnt()}% (+/- 10%) - change {str(pricechange)}%"
         else:
             self.state.action = "SELL"
-            if self.app.trailingImmediateSell() is True:
-                immediate_action = True
             trailing_action_logtext = f" - Sell Chg: {str(pricechange)}%/{self.app.getTrailingSellPcnt()}%"
             waitpcnttext += f"Sell at Close. Price of {self.state.waiting_sell_price}, change of {str(pricechange)}%, is lower than setting of {str(self.app.getTrailingSellPcnt())}% (+/- 10%)"
 

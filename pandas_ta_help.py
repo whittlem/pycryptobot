@@ -26,7 +26,7 @@ df = pd.DataFrame()
 #df.ta.indicators()
 
 # Help for specific item
-help(ta.wma)
+help(ta.ema)
 
 #ta.cdl_pattern(name="doji")
 
