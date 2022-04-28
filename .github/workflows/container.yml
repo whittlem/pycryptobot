@@ -104,8 +104,7 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: "${{ steps.tags.outputs.IMAGE_ID }}:${{ steps.tags.outputs.VERSION }}"
-          format: "template"
-          template: "@/contrib/sarif.tpl"
+          format: "sarif"
           output: "trivy-results.sarif"
           ignore-unfixed: true
           exit-code: 0
