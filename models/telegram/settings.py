@@ -56,7 +56,7 @@ class SettingsEditor:
             ) as outfile:
                 json.dump(self.helper.settings, outfile, indent=4)
         except: #pylint: disable=try-except-raise
-            raise
+            return
 
     def get_notifications(self, update):
         """Get notification option buttons"""
