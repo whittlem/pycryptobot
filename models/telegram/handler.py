@@ -3,13 +3,7 @@ import datetime
 import json
 from apscheduler.schedulers.background import BackgroundScheduler
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
-from telegram.ext import (
-    CallbackContext,
-    ConversationHandler,
-    CommandHandler,
-    MessageHandler,
-    Filters,
-)
+from telegram.ext import  CallbackContext
 
 from models.telegram import callbacktags
 from models.telegram.control import TelegramControl
@@ -38,7 +32,8 @@ class TelegramHandler:
 
     def _check_if_allowed(self, userid, update) -> bool:
         if str(userid) != self.authoriseduserid:
-            self.helper.send_telegram_message(update, "<b>Not authorised!</b>", new_message=False)
+            if update is not None:
+                self.helper.send_telegram_message(update, "<b>Not authorised!</b>", new_message=False)
             # update.message.reply_text("<b>Not authorised!</b>", parse_mode="HTML")
             return False
 

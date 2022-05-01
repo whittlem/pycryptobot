@@ -5,10 +5,9 @@ import requests
 import sys
 import pandas
 
-from models.exchange.ExchangesEnum import Exchange
-
 sys.path.append('.')
 # pylint: disable=import-error
+from models.exchange.ExchangesEnum import Exchange
 from models.PyCryptoBot import PyCryptoBot
 from models.exchange.coinbase_pro import AuthAPI, PublicAPI
 

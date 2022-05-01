@@ -3,20 +3,13 @@ import sys
 import unittest
 # pylint: disable=import-error
 from models.telegram import (
-    TelegramActions,
-    TelegramControl,
-    TelegramHandler,
     Wrapper,
 )
 
 sys.path.append(".")
 
-wrapper = Wrapper("config.json")
+wrapper = Wrapper("config.json.sample")
 wrapper.helper.datafolder = os.path.join(os.curdir, "tests", "unit_tests", "data")
-
-actions = TelegramActions(wrapper.helper)
-control = TelegramControl(wrapper.helper)
-handler = TelegramHandler(wrapper.helper.config["telegram"]["user_id"], wrapper.helper)
 
 MARKET = "TESTUSDT"
 
@@ -43,16 +36,16 @@ def test_update_bot_control():  # pylint: disable=missing-function-docstring
     assert wrapper.helper.data["botcontrol"]["status"] == "active"
 
 def test_actions_isnot_null():  # pylint: disable=missing-function-docstring
-    assert actions is not None
+    assert wrapper._actions is not None
 
 def test_control_isnot_null():  # pylint: disable=missing-function-docstring
-    assert control is not None
+    assert wrapper._controls is not None
 
 def test_handler_isnot_null():  # pylint: disable=missing-function-docstring
-    assert handler is not None
+    assert wrapper._handler is not None
 
 def test_authorised_check():  # pylint: disable=missing-function-docstring
-    assert not handler._check_if_allowed("0000000000", None)
+    assert not wrapper._handler._check_if_allowed("", None)
 
 def test_get_closed_trades():  # pylint: disable=missing-function-docstring
     assert wrapper.closed_trades() != ""
