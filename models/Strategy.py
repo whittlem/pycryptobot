@@ -98,6 +98,13 @@ class Strategy:
             Logger.warning(f"{str(now)} | Insufficient funds, ignoring buy signal.")
             return False
 
+        # if Bull Only is set and no goldencross, return False 
+        if (
+            self.app.disableBullOnly() is False
+            and bool(self._df_last["goldencross"].values[0]) is False
+        ):
+            return False
+
         # Custom Strategy options
         if self.CS_ready:
             if self.CS.buySignal():
@@ -117,7 +124,6 @@ class Strategy:
         required_indicators = [
             "ema12gtema26co",
             "macdgtsignal",
-            "goldencross",
             "obv_pc",
             "eri_buy",
         ]
@@ -135,10 +141,6 @@ class Strategy:
             and (
                 bool(self._df_last["macdgtsignal"].values[0]) is True
                 or self.app.disableBuyMACD()
-            )
-            and (
-                bool(self._df_last["goldencross"].values[0]) is True
-                or self.app.disableBullOnly()
             )
             and (
                 float(self._df_last["obv_pc"].values[0]) > -5
@@ -166,10 +168,6 @@ class Strategy:
                 or self.app.disableBuyEMA()
             )
             and bool(self._df_last["macdgtsignalco"].values[0]) is True
-            and (
-                bool(self._df_last["goldencross"].values[0]) is True
-                or self.app.disableBullOnly()
-            )
             and (
                 float(self._df_last["obv_pc"].values[0]) > -5
                 or self.app.disableBuyOBV()
@@ -665,6 +663,13 @@ class Strategy:
             self.state.action = "WAIT"
             trailing_action_logtext = f" - Wait Chg: Inc {str(pricechange)}%"
             waitpcnttext += f"Price increased - resetting wait price."
+        # bailout setting.  If price drops x%, sell immediately.
+        elif self.app.getTrailingSellBailoutPcnt() is not None and pricechange < self.app.getTrailingSellBailoutPcnt():
+            self.state.action = "SELL"
+            immediate_action = True
+            trailing_action_logtext = f" - Bailout Immediately - Chg: {str(pricechange)}%/{self.app.getTrailingSellBailoutPcnt()}%"
+            waitpcnttext += f"Bailout Immediately. Price {self.state.waiting_sell_price}, change of {str(pricechange)}%, is lower than setting of {self.app.getTrailingSellBailoutPcnt()}%"
+            self.app.notifyTelegram(waitpcnttext)
         # When all indicators signal strong sell and price decreases more than "self.app.getTrailingSellImmediatePcnt()", immediate sell
         elif ( # This resets after a sell occurs
             self.app.getTrailingSellImmediatePcnt() is not None
@@ -676,13 +681,6 @@ class Strategy:
             immediate_action = True
             trailing_action_logtext = f" - Immediate Sell - Chg: {str(pricechange)}%/{self.app.getTrailingSellImmediatePcnt()}%"
             waitpcnttext += f"Sell Immediately. Price {self.state.waiting_sell_price}, change of {str(pricechange)}%, is lower than setting of {self.app.getTrailingSellImmediatePcnt()}%"
-            self.app.notifyTelegram(waitpcnttext)
-        # bailout setting.  If price drops x%, sell immediately.
-        elif self.app.getTrailingSellBailoutPcnt() is not None and pricechange < self.app.getTrailingSellBailoutPcnt():
-            self.state.action = "SELL"
-            immediate_action = True
-            trailing_action_logtext = f" - Bailout Immediately - Chg: {str(pricechange)}%/{self.app.getTrailingSellBailoutPcnt()}%"
-            waitpcnttext += f"Bailout Immediately. Price {self.state.waiting_sell_price}, change of {str(pricechange)}%, is lower than setting of {self.app.getTrailingSellBailoutPcnt()}%"
             self.app.notifyTelegram(waitpcnttext)
         # added 10% fluctuation to prevent holding another full candle for 0.025%
         elif pricechange > (self.app.getTrailingSellPcnt() * .9): 

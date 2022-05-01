@@ -835,28 +835,26 @@ class PublicAPI(AuthAPIBase):
         now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
         if websocket is not None and websocket.tickers is not None:
-            trycnt, maxretry = (1, 5)
-            while trycnt <= maxretry:
-                try:
-                    row = websocket.tickers.loc[websocket.tickers["market"] == market]
-                    ticker_date = datetime.strptime(
-                            re.sub(r".0*$", "", str(row["date"].values[0])),
-                            "%Y-%m-%dT%H:%M:%S",
-                        ).strftime("%Y-%m-%d %H:%M:%S")
-                    ticker_price = row["price"].values[0]
-                except:
-                    return None
+            try:
+                row = websocket.tickers.loc[websocket.tickers["market"] == market]
+                ticker_date = datetime.strptime(
+                        re.sub(r".0*$", "", str(row["date"].values[0])),
+                        "%Y-%m-%dT%H:%M:%S",
+                    ).strftime("%Y-%m-%d %H:%M:%S")
+                ticker_price = row["price"].values[0]
+            except:
+                return None
 
-                if ticker_price == 0 or ticker_date is None:
-                    return None
-                else:
-                    return (
-                        datetime.strptime(
-                            re.sub(r".0*$", "", str(row["date"].values[0])),
-                            "%Y-%m-%dT%H:%M:%S",
-                        ).strftime("%Y-%m-%d %H:%M:%S"),
-                        float(row["price"].values[0]),
-                    )
+            if ticker_price == 0 or ticker_date is None:
+                return None
+            else:
+                return (
+                    datetime.strptime(
+                        re.sub(r".0*$", "", str(row["date"].values[0])),
+                        "%Y-%m-%dT%H:%M:%S",
+                    ).strftime("%Y-%m-%d %H:%M:%S"),
+                    float(row["price"].values[0]),
+                )
 
         resp = {}
         trycnt, maxretry = (1, 5)
