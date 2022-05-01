@@ -543,7 +543,9 @@ def execute_job(
             ticker = _app.getTicker(_app.getMarket(), _websocket)
             now = ticker[0]
             price = ticker[1]
-            if price < df_last["low"].values[0] or price == 0:
+            if price < df_last["low"].values[0]:
+                df_last["low"].values[0] = price
+            if price == 0:
                 price = float(df_last["close"].values[0])
         else:
             price = float(df_last["close"].values[0])
