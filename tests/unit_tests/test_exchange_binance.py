@@ -5,19 +5,18 @@ import requests
 import sys
 import pandas
 
-from models.exchange.ExchangesEnum import Exchange
-
 sys.path.append(".")
 # pylint: disable=import-error
+from models.exchange.ExchangesEnum import Exchange
 from models.PyCryptoBot import PyCryptoBot
 from models.exchange.binance import AuthAPI, PublicAPI
 
 app = PyCryptoBot(exchange=Exchange.BINANCE)
 
-
+@pytest.mark.skip
 @responses.activate
 def test_api_v3_account1():
-    global app
+    #global app
     api = AuthAPI(app.api_key, app.api_secret)
 
     with open("tests/unit_tests/responses/account1.json") as fh:

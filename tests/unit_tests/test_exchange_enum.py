@@ -1,7 +1,7 @@
 import sys
 
 import pytest
-
+# pylint: disable=import-error
 from models.exchange.ExchangesEnum import Exchange
 
 sys.path.append('.')

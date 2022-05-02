@@ -139,6 +139,16 @@ class TelegramHelper:
         self.enable_buy_next = True
         self.autostart = False
 
+        self.atr72pcnt = 2.0
+        self.enableleverage = False
+        self.use_default_scanner = True
+        self.maxbotcount = 0
+        self.exchange_bot_count = 0
+        self.terminal_start_process = ""
+        self.autoscandelay = 0
+        self.enable_buy_next = True
+        self.autostart = False
+
         if "scanner" in self.config:
             self.atr72pcnt = (
                 self.config["scanner"]["atr72_pcnt"]
