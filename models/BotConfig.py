@@ -48,6 +48,10 @@ class BotConfig:
         self.nosellmaxpcnt = None
         self.trailing_stop_loss = None
         self.trailing_stop_loss_trigger = 0
+        self.dynamic_tsl = False
+        self.tsl_multiplier = 1.1
+        self.tsl_trigger_multiplier = 1.1
+        self.tsl_max_pcnt = float(-5)
         self.sell_at_loss = 1
         self.smart_switch = 1
         self.sell_smart_switch = 0
@@ -71,7 +75,14 @@ class BotConfig:
         self.buylastsellsize = False
         self.trailingbuypcnt = 0
         self.trailingimmediatebuy = False
+        self.trailingbuyimmediatepcnt = None
         self.marketmultibuycheck = False
+
+        self.trailingsellpcnt = 0
+        self.trailingimmediatesell = False
+        self.trailingsellimmediatepcnt = None
+        self.trailingsellbailoutpcnt = None
+        self.sell_trigger_override = False
 
         self.sellatresistance = False
         self.autorestart = False
@@ -92,6 +103,8 @@ class BotConfig:
         self.disablefailsafelowerpcnt = False
         self.disableprofitbankupperpcnt = False
         self.disableprofitbankreversal = False
+        self.enable_pandas_ta = False
+        self.enable_custom_strategy = False
         self.disabletelegram = False
         self.disablelog = False
         self.disabletracker = False
@@ -123,6 +136,9 @@ class BotConfig:
         self.ema1226_6h_cache = None
         self.sma50200_1h_cache = None
 
+        self.EMA1hBull = False
+        self.EMA6hBull = False
+
         self.sim_smartswitch = False
 
         self.recv_window = self._set_recv_window()
@@ -146,7 +162,9 @@ class BotConfig:
         self.enable_atr72_pcnt = True
         self.enable_buy_next = True
         self.enable_volume = False
-        self.usekucoincache = True
+        self.usekucoincache = False
+        self.adjust_total_periods = 300
+        self.manual_trades_only = False
         # print(self.startmethod)
 
         # set defaults
@@ -413,6 +431,26 @@ class BotConfig:
             help="optionally set when the trailing stop loss should start",
         )
         parser.add_argument(
+            "--dynamictsl",
+            action="store_true",
+            help="enable dynamic trailing stoploss",
+        )
+        parser.add_argument(
+            "--tslmultiplier",
+            type=float,
+            help="multiplier for dynamic trailingstoploss",
+        )
+        parser.add_argument(
+            "--tsltriggermultiplier",
+            type=float,
+            help="multiplier for dynamic trailingstoploss",
+        )
+        parser.add_argument(
+            "--tslmaxpcnt",
+            type=float,
+            help="maximum dynamic trailingstoploss percent allowed",
+        )
+        parser.add_argument(
             "--preventloss",
             action="store_true",
             help="optionally sell before margin is negative",
@@ -483,8 +521,14 @@ class BotConfig:
         parser.add_argument("--buylastsellsize", action="store_true", help="additional check for market multiple buys")
         parser.add_argument("--trailingbuypcnt", type=float, help="percent of increase to wait before buying")
         parser.add_argument("--trailingimmediatebuy", action="store_true", help="immediate buy if trailingbuypcnt reached")
+        parser.add_argument("--trailingbuyimmediatepcnt", type=float, help="percent of increase to trigger immediate buy")
         parser.add_argument("--marketmultibuycheck", action="store_true", help="")
 
+        parser.add_argument("--trailingsellpcnt", type=float, help="percent of decrease to wait before selling")
+        parser.add_argument("--trailingimmediatesell", action="store_true", help="immediate sell if trailingsellpcnt reached")
+        parser.add_argument("--trailingsellimmediatepcnt", type=float, help="percent of decrease used with STRONG sell signal")
+        parser.add_argument("--trailingsellbailoutpcnt", type=float, help="percent of decrease to bailout, sell immediately")
+        parser.add_argument("--selltriggeroverride", action="store_true", help="bypass isSellTrigger if STRONG buy signals")
         parser.add_argument(
             "--nobuynearhighpcnt",
             type=float,
@@ -598,14 +642,17 @@ class BotConfig:
             action="store_true",
             help="Enable Machine Learning E.g. seasonal ARIMA model for predictions",
         )
-        parser.add_argument(
-            "--usekucoincache",
-            type=int,
-            help="Should Kucoin orders API Cache be used",
-        )
+        parser.add_argument("--enable_pandas_ta", action="store_true", help="Enable Pandas-ta")
+        parser.add_argument("--enable_custom_strategy", action="store_true", help="EnableCustom Strategy")
         parser.add_argument("--websocket", action="store_true", help="Enable websocket")
         parser.add_argument("--logbuysellinjson", action="store_true", help="Enable logging orders in json format")
         parser.add_argument("--startmethod", type=str, help="Enable logging orders in json format")
+        parser.add_argument(
+            "--adjust_total_periods",
+            type=float,
+            help="adjust total periods available for market analysis",
+        )
+        parser.add_argument("--manual_trades_only", action="store_true", help="Manual Trades Only (HODL)")
 
         # pylint: disable=unused-variable
         args, unknown = parser.parse_known_args()

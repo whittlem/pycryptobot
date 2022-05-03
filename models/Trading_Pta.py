@@ -1,7 +1,8 @@
 """Technical analysis on a trading Pandas DataFrame"""
 
 import warnings
-
+import numpy as np
+import pandas as pd
 from re import compile
 from numpy import (
     abs,
@@ -21,6 +22,16 @@ from datetime import datetime, timedelta
 from statsmodels.tsa.statespace.sarimax import SARIMAX, SARIMAXResultsWrapper
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
 from models.helper.LogHelper import Logger
+#####  Setup custom Trading.py file for pandas_ta
+try:
+    import pandas_ta as ta
+except ImportError as err:
+    raise SystemExit(f"Pandas-ta Error: {err}")
+try:
+    import talib
+    use_talib = True
+except ImportError:
+    use_talib = False
 
 warnings.simplefilter("ignore", ConvergenceWarning)
 
@@ -60,9 +71,16 @@ class TechnicalAnalysis:
                 "Pandas DataFrame 'close' column not int64 or float64."
             )
 
+        # treat infinite values as nan
+        pd.set_option('use_inf_as_na', True)
+
         self.df = data
         self.levels = []
         self.total_periods = total_periods
+
+        # enable/disable Pandas-ta module and/or TA-Lib
+        self.pandas_ta = True
+        self.talib = False
 
     def getDataFrame(self) -> DataFrame:
         """Returns the Pandas DataFrame"""
@@ -75,6 +93,7 @@ class TechnicalAnalysis:
         self.addChangePct()
 
         self.addCMA()
+        self.addSMA(10)
         self.addSMA(20)
         if self.total_periods >= 50:
             self.addSMA(50)
@@ -88,18 +107,24 @@ class TechnicalAnalysis:
         self.addFibonacciBollingerBands()
 
         self.addRSI(14)
-        self.addStochasticRSI(14)
-        self.addWilliamsR(14)
+#        self.addStochasticRSI(14)
+#        self.addWilliamsR(14)
         self.addMACD()
         self.addOBV()
         self.addElderRayIndex()
+
+        self.addRSIMA(14,10) # RSI MA using VWMA10
 
         self.addEMABuySignals()
         if self.total_periods >= 200:
             self.addSMABuySignals()
         self.addMACDBuySignals()
-
+        self.addRSIBuySignals(14,10) # RSI14 / VWMA10
         self.addADXBuySignals()
+        self.addEMA_WMAsignal(5,5) # EMA with WMA smoothing
+        self.addEMA_pc(5) # EMA percent of change
+
+        self.ta_MACDLead()
 
         self.addCandleAstralBuy()
         self.addCandleAstralSell()
@@ -547,26 +572,16 @@ class TechnicalAnalysis:
     def addADXBuySignals(self, interval: int = 14) -> None:
         """Adds Average Directional Index (ADX) buy and sell signals to the DataFrame"""
 
-        data = self.averageDirectionalIndex(interval)
+        data = self.ta_ADX(interval)
+        self.df["di_pcnt"] = data["di_pcnt"]
+        self.df["+di_pc"] = data["+di_pc"]
         self.df["-di" + str(interval)] = data["-di" + str(interval)]
         self.df["+di" + str(interval)] = data["+di" + str(interval)]
         self.df["adx" + str(interval)] = data["adx" + str(interval)]
-        self.df["adx" + str(interval) + "_trend"] = data[
-            "adx" + str(interval) + "_trend"
-        ]
-        self.df["adx" + str(interval) + "_strength"] = data[
-            "adx" + str(interval) + "_strength"
-        ]
 
     def addADX(self, interval: int = 14) -> None:
         """Adds Average Directional Index (ADX)"""
 
-        data = self.averageDirectionalIndex(interval)
-        self.df["-di" + str(interval)] = data["-di" + str(interval)]
-        self.df["+di" + str(interval)] = data[["+di" + str(interval)]]
-        self.df["adx" + str(interval)] = data[["adx" + str(interval)]]
-
-    def averageDirectionalIndex(self, interval: int = 14) -> DataFrame:
         """Average Directional Index (ADX)"""
 
         if not isinstance(interval, int):
@@ -578,80 +593,39 @@ class TechnicalAnalysis:
         if len(self.df) < interval:
             raise Exception("Data range too small.")
 
+        data = self.ta_ADX(interval)
+        self.df["-di" + str(interval)] = data["-di" + str(interval)]
+        self.df["+di" + str(interval)] = data[["+di" + str(interval)]]
+        self.df["adx" + str(interval)] = data[["adx" + str(interval)]]
+
+    def ta_ADX(self, interval: int = 14) -> DataFrame:
+
         df = self.df.copy()
+        df = df.ta.adx(high=df["high"], low=df["low"], close=df["close"], length=interval, mamode="sma", talib=self.talib)
 
-        df["-dm"] = df["low"].shift(1) - df["low"]
-        df["+dm"] = df["high"] - df["high"].shift(1)
-        df["+dm"] = where((df["+dm"] > df["-dm"]) & (df["+dm"] > 0), df["+dm"], 0.0)
-        df["-dm"] = where((df["-dm"] > df["+dm"]) & (df["-dm"] > 0), df["-dm"], 0.0)
+        df["-di" + str(interval)] = df["DMN_" + str(interval)].fillna(0)
+        df["+di" + str(interval)] = df["DMP_" + str(interval)].fillna(0)
+        df["adx" + str(interval)] = df["ADX_" + str(interval)].fillna(0)
 
-        df["tr_tmp1"] = df["high"] - df["low"]
-        df["tr_tmp2"] = abs(df["high"] - df["close"].shift(1))
-        df["tr_tmp3"] = abs(df["low"] - df["close"].shift(1))
-        df["tr"] = df[["tr_tmp1", "tr_tmp2", "tr_tmp3"]].max(axis=1)
+        df["di_pcnt"] = (df["-di" + str(interval)] - df["+di" + str(interval)]) / df["-di" + str(interval)] * -100
+        df["di_pcnt"] = df["di_pcnt"].fillna(0)
 
-        df["tr" + str(interval)] = df["tr"].rolling(interval).sum()
-
-        df["+dmi" + str(interval)] = df["+dm"].rolling(interval).sum()
-        df["-dmi" + str(interval)] = df["-dm"].rolling(interval).sum()
-
-        df["+di" + str(interval)] = (
-            df["+dmi" + str(interval)] / df["tr" + str(interval)] * 100
-        )
-        df["-di" + str(interval)] = (
-            df["-dmi" + str(interval)] / df["tr" + str(interval)] * 100
-        )
-        df["di" + str(interval) + "-"] = abs(
-            df["+di" + str(interval)] - df["-di" + str(interval)]
-        )
-        df["di" + str(interval) + "+"] = (
-            df["+di" + str(interval)] + df["-di" + str(interval)]
-        )
-
-        df["dx"] = (
-            df["di" + str(interval) + "-"] / df["di" + str(interval) + "+"]
-        ) * 100
-
-        df["adx" + str(interval)] = df["dx"].rolling(interval).mean()
-
-        df["-di" + str(interval)] = df["-di" + str(interval)].fillna(
-            df["-di" + str(interval)].mean()
-        )
-        df["+di" + str(interval)] = df["+di" + str(interval)].fillna(
-            df["+di" + str(interval)].mean()
-        )
-        df["adx" + str(interval)] = df["adx" + str(interval)].fillna(
-            df["adx" + str(interval)].mean()
-        )
-
-        df["adx" + str(interval) + "_trend"] = where(
-            df["+di" + str(interval)] > df["-di" + str(interval)], "bull", "bear"
-        )
-        df["adx" + str(interval) + "_strength"] = where(
-            df["adx" + str(interval)] > 25,
-            "strong",
-            where(df["adx" + str(interval)] < 20, "weak", "normal"),
-        )
+        df["+di_pc"] = round(df["+di" + str(interval)].pct_change() * 100, 2)
+        df["+di_pc"] = df["+di_pc"].fillna(0)
 
         return df[
             [
                 "-di" + str(interval),
                 "+di" + str(interval),
                 "adx" + str(interval),
-                "adx" + str(interval) + "_trend",
-                "adx" + str(interval) + "_strength",
+                "di_pcnt",
+                "+di_pc"
             ]
         ]
 
     def addATR(self, interval: int = 14) -> None:
         """Adds Average True Range (ATR)"""
 
-        self.df["atr" + str(interval)] = self.averageTrueRange(interval)
-        self.df["atr" + str(interval)] = self.df["atr" + str(interval)].fillna(
-            self.df["atr" + str(interval)].mean()
-        )
-
-    def averageTrueRange(self, interval: int = 14) -> DataFrame:
         """Average True Range (ATX)"""
 
         if not isinstance(interval, int):
@@ -663,15 +637,11 @@ class TechnicalAnalysis:
         if len(self.df) < interval:
             raise Exception("Data range too small.")
 
-        high_low = self.df["high"] - self.df["low"]
-        high_close = abs(self.df["high"] - self.df["close"].shift())
-        low_close = abs(self.df["low"] - self.df["close"].shift())
-
-        ranges = concat([high_low, high_close, low_close], axis=1)
-        true_range = max(ranges, axis=1)
-
-        return true_range.rolling(interval).sum() / interval
-
+        self.df["atr" + str(interval)] = ta.atr(
+            high=self.df["high"], low=self.df["low"], close=self.df["close"], length=interval, mamode="sma", talib=self.talib
+        )
+        self.df["atr" + str(interval)] = self.df["atr" + str(interval)].fillna(0)
+ 
     def changePct(self) -> DataFrame:
         """Close change percentage"""
 
@@ -704,12 +674,12 @@ class TechnicalAnalysis:
             raise TypeError("Period parameter is not perioderic.")
 
         if period > self.total_periods or period < 5 or period > 200:
-            raise ValueError("Period is out of range")
+            raise ValueError(f"EMA{period} Period is out of range")
 
         if len(self.df) < period:
-            raise Exception("Data range too small.")
+            raise Exception("EMA Data range too small.")
 
-        return self.df.close.ewm(span=period, adjust=False).mean()
+        return self.df.close.ewm(span=period, adjust=False, min_periods=period).mean()
 
     def addEMA(self, period: int) -> None:
         """Adds the Exponential Moving Average (EMA) the DateFrame"""
@@ -718,39 +688,53 @@ class TechnicalAnalysis:
             raise TypeError("Period parameter is not perioderic.")
 
         if period > self.total_periods or period < 5 or period > 200:
-            raise ValueError("Period is out of range")
+            raise ValueError(f"addEMA{period} Period is out of range")
 
         if len(self.df) < period:
-            raise Exception("Data range too small.")
+            raise Exception("addEMA Data range too small.")
 
-        self.df["ema" + str(period)] = self.exponentialMovingAverage(period)
+        self.df["ema" + str(period)] = ta.ema(self.df["close"], length=period, talib=self.talib)
+        self.df["ema" + str(period)] = self.df["ema" + str(period)].fillna(0)
 
-    def calculateRelativeStrengthIndex(self, series: int, interval: int = 14) -> float:
-        """Calculates the RSI on a Pandas series of closing prices."""
+    def addEMA_WMAsignal(self, ema_period: int, wma_period: int) -> None:
+        """Adds EMA with WMA smoothing option to the DateFrame"""
 
-        if not isinstance(series, Series):
-            raise TypeError("Pandas Series required.")
+        if not isinstance(ema_period, int) or not isinstance(wma_period, int):
+            raise TypeError("Period parameter is not perioderic.")
 
-        if not isinstance(interval, int):
-            raise TypeError("Interval integer required.")
+        if ema_period > self.total_periods or ema_period < 5 or ema_period > 200:
+            raise ValueError(f"EMA{ema_period} Period is out of range")
 
-        if len(series) < interval:
-            raise IndexError("Pandas Series smaller than interval.")
+        if wma_period > self.total_periods or wma_period < 5 or wma_period > 200:
+            raise ValueError(f"WMA{wma_period} Period is out of range")
 
-        diff = series.diff(1).dropna()
+        if len(self.df) < ema_period or len(self.df) < wma_period:
+            raise Exception("addEMA_WMA Data range too small.")
 
-        sum_gains = 0 * diff
-        sum_gains[diff > 0] = diff[diff > 0]
-        avg_gains = sum_gains.ewm(com=interval - 1, min_periods=interval).mean()
+        if "ema" + str(ema_period) not in self.df:
+            self.addEMA(ema_period)
 
-        sum_losses = 0 * diff
-        sum_losses[diff < 0] = diff[diff < 0]
-        avg_losses = sum_losses.ewm(com=interval - 1, min_periods=interval).mean()
+        self.df["ema" + str(ema_period) + "_wma" + str(wma_period)] = ta.wma(close=self.df["ema" + str(ema_period)], length=wma_period, talib=self.talib)
+        self.df["ema" + str(ema_period) + "_wma" + str(wma_period)] = self.df["ema" + str(ema_period) + "_wma" + str(wma_period)].fillna(0)
 
-        rs = abs(avg_gains / avg_losses)
-        rsi = 100 - 100 / (1 + rs)
+    def addEMA_pc(self, period: int) -> None:
+        """Adds EMA percent of change for given period"""
+        """Used to verify trend in signals"""
 
-        return rsi
+        if not isinstance(period, int):
+            raise TypeError("Period parameter is not perioderic.")
+
+        if period > self.total_periods or period < 5 or period > 200:
+            raise ValueError("EMA_PC Period is out of range")
+
+        if len(self.df) < period:
+            raise Exception("addEMA_PC Data range too small.")
+
+        if "ema" + str(period) not in self.df:
+            self.addEMA(period)
+
+        self.df["ema" + str(period) + "_pc"] = round(self.df["ema" + str(period)].pct_change() * 100, 2)
+        self.df["ema" + str(period) + "_pc"] = self.df["ema" + str(period) + "_pc"].fillna(0)
 
     def calculateStochasticRelativeStrengthIndex(
         self, series: int, interval: int = 14
@@ -802,84 +786,91 @@ class TechnicalAnalysis:
         self.df["fbb_lower0_786"] = sma - (0.786 * sd)
         self.df["fbb_lower1"] = sma - (1 * sd)
 
-    def movingAverageConvergenceDivergence(self) -> DataFrame:
+    def ta_MACD(self) -> DataFrame:
         """Calculates the Moving Average Convergence Divergence (MACD)"""
-
+        """Using Fast 8, Slow 21 EMA Oscillator and SMA Signal Length of 5"""
+        """Traditional uses 12, 26, 9 with EMA Oscillator and Signal"""
         if len(self.df) < 26:
-            raise Exception("Data range too small.")
+            raise Exception("ta_MACD Data range too small.")
 
-        if (
-            not self.df["ema12"].dtype == "float64"
-            and not self.df["ema12"].dtype == "int64"
-        ):
-            raise AttributeError(
-                "Pandas DataFrame 'ema12' column not int64 or float64."
-            )
+        df = self.df.copy()
+#        df = df.ta.macd(close=df['close'], fast=8, slow=21, signal=5, talib=self.talib)
+#        df["macd"] = df["MACD_8_21_5"].fillna(0)
+#        df["signal"] = df["MACDs_8_21_5"].fillna(0)
+#        df["hist"] = df["MACDh_8_21_5"].fillna(0)
 
-        if (
-            not self.df["ema26"].dtype == "float64"
-            and not self.df["ema26"].dtype == "int64"
-        ):
-            raise AttributeError(
-                "Pandas DataFrame 'ema26' column not int64 or float64."
-            )
+        # modified MACD, above is traditional MACD
+        df["fast_ma"] = ta.ema(close=df["close"], length=8, talib=self.talib)
+        df["slow_ma"] = ta.ema(close=df["close"], length=21, talib=self.talib)
+        df["macd"] = df["fast_ma"] - df["slow_ma"]
+        df["signal"] = ta.sma(close=df["macd"], length=5, talib=self.talib)
+        df["macd"] = df["macd"].fillna(0)
+        df["signal"] = df["signal"].fillna(0)
 
-        df = DataFrame()
-        df["macd"] = self.df["ema12"] - self.df["ema26"]
-        df["signal"] = df["macd"].ewm(span=9, adjust=False).mean()
+        df["macd_pc"] = round((df["macd"].shift() - df["macd"]) / abs(df["macd"].shift()) * -100, 2)
+        df["macd_pc"] = df["macd_pc"].fillna(0)
+
+        # Calculate difference % between macd & signal, possible negative, require -100
+        df["macd_sig_pcnt"] = round(
+            (df["signal"] - df["macd"])/abs(df["signal"]) * -100, 2
+        )
+        df["macd_sig_pcnt"] = df["macd_sig_pcnt"].fillna(0)
         return df
 
     def addMACD(self) -> None:
         """Adds the Moving Average Convergence Divergence (MACD) to the DataFrame"""
 
-        df = self.movingAverageConvergenceDivergence()
+        df = self.ta_MACD()
         self.df["macd"] = df["macd"]
         self.df["signal"] = df["signal"]
+        self.df["macd_sig_pcnt"] = df["macd_sig_pcnt"]
+        self.df["macd_pc"] = df["macd_pc"]
 
-    def onBalanceVolume(self) -> ndarray:
-        """Calculate On-Balance Volume (OBV)"""
+    def ta_MACDLead(self) -> None:
+        """Adds the Leading Moving Average Convergence Divergence (MACDLead) to the DataFrame"""
 
-        try:
-            return where(
-                self.df["close"] == self.df["close"].shift(1),
-                0,
-                where(
-                    self.df["close"] > self.df["close"].shift(1),
-                    self.df["volume"],
-                    where(
-                        self.df["close"] < self.df["close"].shift(1),
-                        -self.df["volume"].apply(lambda x: float(x)),
-                        self.df.iloc[0]["volume"],
-                    ),
-                ),
-            ).cumsum()
-        except:
-            return 0
-            pass
+        df = self.df.copy()
 
-        #Logger.info(f"Close: {self.df['close']} Close -1: {self.df['close'].shift(1)} On Balance Volume: {OBV}")
+        fl = 8 # fast length
+        sl = 21 # slow length
+        sigl = 5 # signal length
+
+        df['sema'] = ta.ema(df["close"], length=fl, talib=self.talib)
+        df['lema'] = ta.ema(df["close"], length=sl, talib=self.talib)
+        df['sema'] = df['sema'].fillna(0)
+        df['lema'] = df['lema'].fillna(0)
+
+        df['i1'] = df['sema'] + ta.ema(df["close"] - df['sema'], length=fl, talib=self.talib)
+        df['i2'] = df['lema'] + ta.ema(df["close"] - df['lema'], length=sl, talib=self.talib)
+        df['i1'] = df['i1'].fillna(0)
+        df['i2'] = df['i2'].fillna(0)
+
+        df['macdlead'] = df['i1'] - df['i2']
+        self.df["macdlead"] = df["macdlead"].fillna(0)
+
+        df['macdl'] = df['sema'] - df['lema']
+        self.df["macdl"] = df["macdl"].fillna(0)
+
+        df['macdl_sig'] = ta.sma(df['macdl'], length=sigl, talib=self.talib)
+        self.df["macdl_sig"] = df["macdl_sig"].fillna(0)
+
+        df["macdlead_pc"] = round((df["macdlead"].shift() - df["macdlead"]) / abs(df["macdlead"].shift()) * -100, 2)
+        self.df["macdlead_pc"] = df["macdlead_pc"].fillna(0)
+
+        df["macdl_sg_diff"] = round((df["macdl_sig"] - df["macdlead"]) / abs(df["macdl_sig"]) * -100, 2)
+        self.df["macdl_sg_diff"] = df["macdl_sg_diff"].fillna(0)
 
     def addOBV(self) -> None:
         """Add the On-Balance Volume (OBV) to the DataFrame"""
 
-        self.df["obv"] = self.onBalanceVolume()
-        self.df["obv_pc"] = self.df["obv"].pct_change() * 100
-        self.df["obv_pc"] = round(self.df["obv_pc"].fillna(0), 2)
-
-    def relativeStrengthIndex(self, period) -> DataFrame:
-        """Calculate the Relative Strength Index (RSI)"""
-
-        if not isinstance(period, int):
-            raise TypeError("Period parameter is not perioderic.")
-
-        if period < 7 or period > 21:
-            raise ValueError("Period is out of range")
-
-        # calculate relative strength index
-        rsi = self.calculateRelativeStrengthIndex(self.df["close"], period)
-        # default to midway-50 for first entries
-        rsi = rsi.fillna(50)
-        return rsi
+        self.df["obv"] = ta.obv(close=self.df["close"], volume=self.df["volume"], talib=self.talib)
+        self.df["obv"] = self.df["obv"].fillna(0)
+        self.df['obvsm'] = ta.sma(self.df["obv"], length=5, talib=self.talib)
+        self.df["obvsm"] = self.df["obvsm"].fillna(0)
+        self.df["obv_sm_diff"] = round((self.df["obvsm"] - self.df["obv"]) / abs(self.df["obvsm"]) * -100, 2)
+        self.df["obv_sm_diff"] = self.df["obv_sm_diff"].fillna(0)
+        self.df["obv_pc"] = round((self.df["obv"].shift() - self.df["obv"]) / abs(self.df["obv"].shift()) * -100, 2)
+        self.df["obv_pc"] = self.df["obv_pc"].fillna(0)
 
     def stochasticRelativeStrengthIndex(self, period) -> DataFrame:
         """Calculate the Stochastic Relative Strength Index (Stochastic RSI)"""
@@ -888,7 +879,7 @@ class TechnicalAnalysis:
             raise TypeError("Period parameter is not perioderic.")
 
         if period < 7 or period > 21:
-            raise ValueError("Period is out of range")
+            raise ValueError("Stochastic RSI Period is out of range")
 
         if "rsi" + str(period) not in self.df:
             self.addRSI(period)
@@ -908,7 +899,7 @@ class TechnicalAnalysis:
             raise TypeError("Period parameter is not perioderic.")
 
         if period < 7 or period > 21:
-            raise ValueError("Period is out of range")
+            raise ValueError("WilliamsR Period is out of range")
 
         return (
             (self.df["high"].rolling(14).max() - self.df["close"]) /
@@ -922,10 +913,63 @@ class TechnicalAnalysis:
             raise TypeError("Period parameter is not perioderic.")
 
         if period < 7 or period > 21:
-            raise ValueError("Period is out of range")
+            raise ValueError("addRSI Period is out of range")
 
-        self.df["rsi" + str(period)] = self.relativeStrengthIndex(period)
-        self.df["rsi" + str(period)] = self.df["rsi" + str(period)].replace(nan, 50)
+        self.df["rsi" + str(period)] = ta.rsi(close=self.df["close"], length=period, talib=self.talib)
+        self.df["rsi" + str(period)] = self.df["rsi" + str(period)].fillna(0)
+
+    def addRSIMA(self, rsi_period: int, ma_period: int) -> None:
+        """Adds the Relative Strength Index Moving Avg (RSIMA) to the DataFrame"""
+
+        if not isinstance(ma_period, int):
+            raise TypeError("MA Period parameter is not perioderic.")
+
+        if not isinstance(rsi_period, int):
+            raise TypeError("RSI Period parameter is not perioderic.")
+
+        if ma_period < 7 or ma_period > 21:
+            raise ValueError("MA Period is out of range")
+
+        if rsi_period < 7 or rsi_period > 21:
+            raise ValueError("RSI Period is out of range")
+
+        if ("rsi" + str(rsi_period)) not in self.df:
+            self.addRSI(rsi_period)
+
+        self.df["rsima" + str(ma_period)] = ta.vwma(
+            close=self.df["rsi" + str(rsi_period)], volume=self.df["volume"], length=(ma_period), talib=self.talib
+        )
+        self.df["rsima" + str(ma_period)] = self.df["rsima" + str(ma_period)].fillna(0)
+
+
+    def addRSIBuySignals(self, rsi_period: int, ma_period: int) -> None:
+
+        if not isinstance(self.df, DataFrame):
+            raise TypeError("Pandas DataFrame required.")
+
+        if not "close" in self.df.columns:
+            raise AttributeError("Pandas DataFrame 'close' column required.")
+
+        if (
+            not self.df["close"].dtype == "float64"
+            and not self.df["close"].dtype == "int64"
+        ):
+            raise AttributeError(
+                "Pandas DataFrame 'close' column not int64 or float64."
+            )
+
+        if ("RSI" + str(rsi_period)) or ("RSIMA"  + str(ma_period)) not in self.df.columns:
+            self.addRSI(rsi_period)
+            self.addRSIMA(rsi_period, ma_period)
+
+        # percent of change from last
+        self.df["rsi_ma_pcnt"] = round(
+            (self.df["rsi" + str(rsi_period)] - self.df["rsima" + str(ma_period)])/self.df["rsi" + str(rsi_period)] * 100, 2
+        )
+        self.df["rsi_ma_pcnt"] = self.df["rsi_ma_pcnt"].fillna(0)
+
+        self.df["rsi" + str(rsi_period) + "_pc"] = round(self.df["rsi" + str(rsi_period)].pct_change() * 100, 2)
+        self.df["rsi" + str(rsi_period) + "_pc"] = self.df["rsi" + str(rsi_period) + "_pc"].fillna(0)
 
     def addStochasticRSI(self, period: int) -> None:
         """Adds the Stochastic Relative Strength Index (RSI) to the DataFrame"""
@@ -934,7 +978,7 @@ class TechnicalAnalysis:
             raise TypeError("Period parameter is not perioderic.")
 
         if period < 7 or period > 21:
-            raise ValueError("Period is out of range")
+            raise ValueError("add Stochastic RSI Period is out of range")
 
         self.df["stochrsi" + str(period)] = self.stochasticRelativeStrengthIndex(period)
         self.df["stochrsi" + str(period)] = self.df["stochrsi" + str(period)].replace(
@@ -964,7 +1008,7 @@ class TechnicalAnalysis:
             raise TypeError("Period parameter is not perioderic.")
 
         if period < 7 or period > 21:
-            raise ValueError("Period is out of range")
+            raise ValueError("addWilliamsR Period is out of range")
 
         self.df["williamsr" + str(period)] = self.williamsR(period)
         self.df["williamsr" + str(period)] = self.df["williamsr" + str(period)].replace(
@@ -1045,10 +1089,10 @@ class TechnicalAnalysis:
             raise TypeError("Period parameter is not perioderic.")
 
         if period > self.total_periods or period < 5 or period > 200:
-            raise ValueError("Period is out of range")
+            raise ValueError(f"SMA{period} Period is out of range")
 
         if len(self.df) < period:
-            raise Exception("Data range too small.")
+            raise Exception("SMA Data range too small.")
 
         return self.df.close.rolling(period, min_periods=1).mean()
 
@@ -1059,12 +1103,13 @@ class TechnicalAnalysis:
             raise TypeError("Period parameter is not perioderic.")
 
         if period > self.total_periods or period < 5 or period > 200:
-            raise ValueError("Period is out of range")
+            raise ValueError(f"addSMA{period} Period is out of range")
 
         if len(self.df) < period:
-            raise Exception("Data range too small.")
+            raise Exception("addSMA Data range too small.")
 
-        self.df["sma" + str(period)] = self.simpleMovingAverage(period)
+        self.df["sma" + str(period)] = ta.sma(self.df["close"], length=period, talib=self.talib)
+        self.df["sma" + str(period)] = self.df["sma" + str(period)].fillna(0)
 
     def addGoldenCross(self) -> None:
         """Add Golden Cross SMA50 over SMA200"""
@@ -1276,7 +1321,7 @@ class TechnicalAnalysis:
         """Adds the SMA50/SMA200 buy and sell signals to the DataFrame"""
 
         if self.total_periods < 200:
-            raise ValueError("Period is out of range")
+            raise ValueError("addSMABuySignals Period is out of range")
 
         if not isinstance(self.df, DataFrame):
             raise TypeError("Pandas DataFrame required.")

@@ -28,19 +28,40 @@ from models.helper.TextBoxHelper import TextBox
 from models.PyCryptoBot import PyCryptoBot
 from models.PyCryptoBot import truncate as _truncate
 from models.Stats import Stats
-from models.Strategy import Strategy
-from models.Trading import TechnicalAnalysis
 from models.TradingAccount import TradingAccount
+from views.TradingGraphs import TradingGraphs
+from os.path import exists as file_exists
+
+app = PyCryptoBot()
+account = TradingAccount(app)
+Stats(app, account).show()
+state = AppState(app, account)
+
+if app.enable_pandas_ta is True:
+    try:
+        from models.Trading_myPta import TechnicalAnalysis
+        trading_myPta = True
+        state.pandas_ta_enabled = True
+    except ImportError as myTrading_err:
+        trading_myPta = False
+    if trading_myPta is False and  file_exists("models/Trading_myPta.py"):
+        raise ImportError(f"Custom Trading Error: {myTrading_err}")
+    elif trading_myPta is False:
+        try:
+            from models.Trading_Pta import TechnicalAnalysis
+            state.pandas_ta_enabled = True
+        except ImportError as err:
+            raise ImportError(f"Pandas-ta is enabled, but an error occurred: {err}")
+else:
+    from models.Trading import TechnicalAnalysis
+
+from models.Strategy import Strategy
 from views.TradingGraphs import TradingGraphs
 
 # minimal traceback
 sys.tracebacklimit = 1
 
-app = PyCryptoBot()
-account = TradingAccount(app)
-Stats(app, account).show()
 technical_analysis = None
-state = AppState(app, account)
 state.initLastAction()
 
 telegram_bot = TelegramBotHelper(app)
@@ -175,7 +196,7 @@ def execute_job(
         df = trading_data
         if _app.appStarted and _app.simstartdate is not None:
             # On first run set the iteration to the start date entered
-            # This sim mode now pulls 300 candles from before the entered start date
+            # This sim mode now pulls 300 candles from before the entered start date, unless total periods adjusted
             _state.iterations = (
                 df.index.get_loc(str(_app.getDateFromISO8601Str(_app.simstartdate))) + 1
             )
@@ -241,7 +262,7 @@ def execute_job(
                     _state.iterations = 1
 
                 trading_dataCopy = trading_data.copy()
-                _technical_analysis = TechnicalAnalysis(trading_dataCopy)
+                _technical_analysis = TechnicalAnalysis(trading_dataCopy, _app.setTotalPeriods())
 
                 # if 'morning_star' not in df:
                 _technical_analysis.addAll()
@@ -252,7 +273,7 @@ def execute_job(
 
         elif _app.getSmartSwitch() == 1 and _technical_analysis is None:
             trading_dataCopy = trading_data.copy()
-            _technical_analysis = TechnicalAnalysis(trading_dataCopy)
+            _technical_analysis = TechnicalAnalysis(trading_dataCopy, _app.setTotalPeriods())
 
             if "morning_star" not in df:
                 _technical_analysis.addAll()
@@ -261,13 +282,13 @@ def execute_job(
 
     else:
         trading_dataCopy = trading_data.copy()
-        _technical_analysis = TechnicalAnalysis(trading_dataCopy)
+        _technical_analysis = TechnicalAnalysis(trading_dataCopy, _app.setTotalPeriods())
         _technical_analysis.addAll()
         df = _technical_analysis.getDataFrame()
 
         if _app.isSimulation() and _app.appStarted:
             # On first run set the iteration to the start date entered
-            # This sim mode now pulls 300 candles from before the entered start date
+            # This sim mode now pulls 300 candles from before the entered start date unless total periods adjusted
             _state.iterations = (
                 df.index.get_loc(str(_app.getDateFromISO8601Str(_app.simstartdate))) + 1
             )
@@ -355,7 +376,7 @@ def execute_job(
 
     # use actual sim mode date to check smartchswitch
     if (
-        (last_api_call_datetime.seconds > 60 or _app.isSimulation())
+        (last_api_call_datetime.seconds > 0 or _app.isSimulation())
         and _app.getSmartSwitch() == 1
         and _app.getGranularity() == Granularity.ONE_HOUR
         and _app.is1hEMA1226Bull(current_sim_date, _websocket) is True
@@ -420,10 +441,10 @@ def execute_job(
                 300, 1, execute_job, (sc, _app, _state, _technical_analysis, _websocket)
             )
     else:
-        if len(df) < 300:
+        if len(df) < _app.setTotalPeriods():
             if not _app.isSimulation():
-                # data frame should have 300 rows, if not retry
-                Logger.error(f"error: data frame length is < 300 ({str(len(df))})")
+                # data frame should have 300 rows or equal to adjusted total rows if set, if not retry
+                Logger.error(f"error: data frame length is < {str(_app.setTotalPeriods())} ({str(len(df))})")
                 list(map(s.cancel, s.queue))
                 s.enter(
                     300,
@@ -431,6 +452,23 @@ def execute_job(
                     execute_job,
                     (sc, _app, _state, _technical_analysis, _websocket),
                 )
+
+    if (
+        (last_api_call_datetime.seconds > 120 or _app.isSimulation())
+        and _app.getSmartSwitch() == 0
+        and (_app.getGranularity() == Granularity.FIFTEEN_MINUTES
+            or _app.getGranularity() == Granularity.FIVE_MINUTES
+        )
+    ):
+        if _app.is1hEMA1226Bull(current_sim_date, _websocket) is True:
+            _app.EMA1hBull = True
+        else:
+            _app.EMA1hBull = False
+
+        if _app.is6hEMA1226Bull(current_sim_date, _websocket) is True:
+            _app.EMA6hBull = True
+        else:
+            _app.EMA6hBull = False
 
     if len(df_last) > 0:
         now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
@@ -444,6 +482,7 @@ def execute_job(
                     _state.pollLastAction()
             else:
                 _state.pollLastAction()
+
             if last_action_current != _state.last_action:
                 Logger.info(
                     f"last_action change detected from {last_action_current} to {_state.last_action}"
@@ -453,12 +492,13 @@ def execute_job(
                         f"{_app.getMarket} last_action change detected from {last_action_current} to {_state.last_action}"
                     )
 
-            # this is used to confirm last trade if error occurred during trade process
+            # this is used to reset variables if error occurred during trade process
             # make sure signals and telegram info is set correctly, close bot if needed on sell
-            if _state.action == "check_buy" and _state.last_action == "BUY":
+            if _state.action == "check_action" and _state.last_action == "BUY":
                 _state.trade_error_cnt = 0
-                _state.trailing_buy = 0
+                _state.trailing_buy = False
                 _state.action = None
+                _state.trailing_buy_immediate = False
                 telegram_bot.add_open_order()
 
                 Logger.warning(
@@ -466,19 +506,25 @@ def execute_job(
                     f"Catching BUY that occurred previously. Updating signal information."
                 )
 
-                _app.notifyTelegram(
-                    _app.getMarket()
-                    + " ("
-                    + _app.printGranularity()
-                    + ") - "
-                    + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-                    + "\n"
-                    + "Catching BUY that occurred previously. Updating signal information."
-                )
+                if not _app.telegramTradesOnly():
+                    _app.notifyTelegram(
+                        _app.getMarket()
+                        + " ("
+                        + _app.printGranularity()
+                        + ") - "
+                        + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+                        + "\n"
+                        + "Catching BUY that occurred previously. Updating signal information."
+                    )
 
-            elif _state.action == "check_sell" and _state.last_action == "SELL":
-                _state.prevent_loss = 0
-                _state.tsl_triggered = 0
+            elif _state.action == "check_action" and _state.last_action == "SELL":
+                _state.prevent_loss = False
+                _state.trailing_sell = False
+                _state.trailing_sell_immediate = False 
+                _state.tsl_triggered = False
+                _state.tsl_pcnt = float(_app.trailingStopLoss())
+                _state.tsl_trigger = float(_app.trailingStopLossTrigger())
+                _state.tsl_max = False
                 _state.trade_error_cnt = 0
                 _state.action = None
                 telegram_bot.remove_open_order()
@@ -488,18 +534,25 @@ def execute_job(
                     f"Catching SELL that occurred previously. Updating signal information."
                 )
 
-                _app.notifyTelegram(
-                    _app.getMarket()
-                    + " ("
-                    + _app.printGranularity()
-                    + ") - "
-                    + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-                    + "\n"
-                    + "Catching SELL that occurred previously. Updating signal information."
+                if not _app.telegramTradesOnly():
+                    _app.notifyTelegram(
+                        _app.getMarket()
+                        + " ("
+                        + _app.printGranularity()
+                        + ") - "
+                        + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+                        + "\n"
+                        + "Catching SELL that occurred previously. Updating signal information."
+                    )
+
+                telegram_bot.closetrade(
+                    str(_app.getDateFromISO8601Str(str(datetime.now()))),
+                    0,
+                    0,
                 )
 
                 if _app.enableexitaftersell and _app.startmethod not in (
-                    "standard"
+                    "standard",
                 ):
                     sys.exit(0)
 
@@ -507,7 +560,9 @@ def execute_job(
             ticker = _app.getTicker(_app.getMarket(), _websocket)
             now = ticker[0]
             price = ticker[1]
-            if price < df_last["low"].values[0] or price == 0:
+            if price < df_last["low"].values[0]:
+                df_last["low"].values[0] = price
+            if price == 0:
                 price = float(df_last["close"].values[0])
         else:
             price = float(df_last["close"].values[0])
@@ -534,7 +589,10 @@ def execute_job(
 
         # if simulation, set goldencross based on actual sim date
         if _app.isSimulation():
-            goldencross = _app.is1hSMA50200Bull(current_sim_date, _websocket)
+            if _app.setTotalPeriods() < 200:
+                goldencross = False
+            else:
+                goldencross = _app.is1hSMA50200Bull(current_sim_date, _websocket)
 
         # candlestick detection
         hammer = bool(df_last["hammer"].values[0])
@@ -565,14 +623,17 @@ def execute_job(
         if _app.isSimulation():
             # Reset the Strategy so that the last record is the current sim date
             # To allow for calculations to be done on the sim date being processed
-            sdf = df[df["date"] <= current_sim_date].tail(300)
+            sdf = df[df["date"] <= current_sim_date].tail(_app.setTotalPeriods())
             strategy = Strategy(
                 _app, _state, sdf, sdf.index.get_loc(str(current_sim_date)) + 1
             )
         else:
-            strategy = Strategy(_app, _state, df, _state.iterations)
+            strategy = Strategy(_app, _state, df)
 
-        _state.action = strategy.getAction(_app, price, current_sim_date)
+        trailing_action_logtext = ""
+
+        # determine current action, indicatorvalues will be empty if custom Strategy are disabled or it's debug is False
+        _state.action, indicatorvalues = strategy.getAction(_state, price, current_sim_date)
 
         immediate_action = False
         margin, profit, sell_fee, change_pcnt_high = 0, 0, 0, 0
@@ -581,9 +642,9 @@ def execute_job(
         # To allow for calculations to be done on the sim date being processed
         if _app.isSimulation():
             trading_dataCopy = (
-                trading_data[trading_data["date"] <= current_sim_date].tail(300).copy()
+                trading_data[trading_data["date"] <= current_sim_date].tail(_app.setTotalPeriods()).copy()
             )
-            _technical_analysis = TechnicalAnalysis(trading_dataCopy)
+            _technical_analysis = TechnicalAnalysis(trading_dataCopy, _app.setTotalPeriods())
 
         if (
             _state.last_buy_size > 0
@@ -641,7 +702,7 @@ def execute_job(
             )
 
             # handle immediate sell actions
-            if strategy.isSellTrigger(
+            if _app.manualTradesOnly() is False and strategy.isSellTrigger(
                 _app,
                 _state,
                 price,
@@ -652,11 +713,21 @@ def execute_job(
                 macdltsignal,
             ):
                 _state.action = "SELL"
-                _state.last_action = "BUY"
                 immediate_action = True
 
-        # handle overriding wait actions (e.g. do not sell if sell at loss disabled!, do not buy in bull if bull only)
-        if immediate_action is not True and strategy.isWaitTrigger(_app, margin, goldencross):
+        # If buy signal, save the price and check for decrease/increase before buying.
+        if _state.action == "BUY" and immediate_action is not True:
+            _state.action, _state.trailing_buy, trailing_action_logtext, immediate_action = strategy.checkTrailingBuy(_state, price)
+        # If sell signal, save the price and check for decrease/increase before selling.
+        if _state.action == "SELL" and immediate_action is not True:
+            _state.action, _state.trailing_sell, trailing_action_logtext, immediate_action = strategy.checkTrailingSell(_state, price)
+
+        # handle overriding wait actions
+        # (e.g. do not sell if sell at loss disabled!, do not buy in bull if bull only, manual trades only)
+        if _app.manualTradesOnly() is True or (
+                _state.action != "WAIT"
+                and strategy.isWaitTrigger(margin, goldencross)
+            ):
             _state.action = "WAIT"
             immediate_action = False
 
@@ -668,17 +739,13 @@ def execute_job(
             manual_buy_sell = telegram_bot.checkmanualbuysell()
             if not manual_buy_sell == "WAIT":
                 _state.action = manual_buy_sell
-                _state.last_action = "BUY" if _state.action == "SELL" else "SELL"
                 immediate_action = True
 
-        # If buy signal, save the price and check for decrease/increase before buying.
-        trailing_buy_logtext = ""
-        if _state.action == "BUY" and immediate_action is not True:
-            _state.action, _state.trailing_buy, trailing_buy_logtext, immediate_action = strategy.checkTrailingBuy(_app, _state, price)
-
         bullbeartext = ""
-        if _app.disableBullOnly() is True or (
-            df_last["sma50"].values[0] == df_last["sma200"].values[0]
+        if (
+            _app.disableBullOnly() is True
+            or _app.setTotalPeriods() < 200
+            or df_last["sma50"].values[0] == df_last["sma200"].values[0]
         ):
             bullbeartext = ""
         elif goldencross is True:
@@ -845,7 +912,7 @@ def execute_job(
                             + _app.printGranularity()
                             + " | "
                             + price_text
-                            + trailing_buy_logtext
+                            + trailing_action_logtext
                             + " | "
                             + ema_co_prefix
                             + ema_text
@@ -904,7 +971,7 @@ def execute_job(
                             + _app.printGranularity()
                             + " | "
                             + price_text
-                            + trailing_buy_logtext
+                            + trailing_action_logtext
                             + " | "
                             + ema_co_prefix
                             + ema_text
@@ -931,7 +998,7 @@ def execute_job(
                             + str(round(((price - df_high) / df_high) * 100, 2))
                             + "% "
                             + "away from DF HIGH | Range: "
-                            + str(df.iloc[_state.iterations - 300, 0])
+                            + str(df.iloc[_state.iterations - _app.setTotalPeriods(), 0])
                             + " <--> "
                             + str(df.iloc[_state.iterations - 1, 0])
                         )
@@ -946,7 +1013,7 @@ def execute_job(
                             + _app.printGranularity()
                             + " | "
                             + price_text
-                            + trailing_buy_logtext
+                            + trailing_action_logtext
                             + " | "
                             + ema_co_prefix
                             + ema_text
@@ -1003,7 +1070,7 @@ def execute_job(
                             + _app.printGranularity()
                             + " | "
                             + price_text
-                            + trailing_buy_logtext
+                            + trailing_action_logtext
                             + " | "
                             + ema_co_prefix
                             + ema_text
@@ -1028,7 +1095,7 @@ def execute_job(
                             + str(round(((price - df_high) / df_high) * 100, 2))
                             + "% "
                             + "away from DF HIGH | Range: "
-                            + str(df.iloc[_state.iterations - 300, 0])
+                            + str(df.iloc[_state.iterations - _app.setTotalPeriods(), 0])
                             + " <--> "
                             + str(df.iloc[_state.iterations - 1, 0])
                         )
@@ -1039,7 +1106,8 @@ def execute_job(
                         margin_text = "0%"
 
                     output_text += (
-                        " | (margin: "
+                        trailing_action_logtext
+                        + " | (margin: "
                         + margin_text
                         + " delta: "
                         + str(round(price - _state.last_buy_price, precision))
@@ -1107,8 +1175,10 @@ def execute_job(
                     Logger.debug(f"ema12gtema26: {str(ema12gtema26)}")
                     Logger.debug(f"ema12ltema26co: {str(ema12ltema26co)}")
                     Logger.debug(f"ema12ltema26: {str(ema12ltema26)}")
-                    Logger.debug(f'sma50: {truncate(float(df_last["sma50"].values[0]))}')
-                    Logger.debug(f'sma200: {truncate(float(df_last["sma200"].values[0]))}')
+                    if _app.setTotalPeriods() >= 50:
+                        Logger.debug(f'sma50: {truncate(float(df_last["sma50"].values[0]))}')
+                    if _app.setTotalPeriods() >= 200:
+                        Logger.debug(f'sma200: {truncate(float(df_last["sma200"].values[0]))}')
                     Logger.debug(f'macd: {truncate(float(df_last["macd"].values[0]))}')
                     Logger.debug(f'signal: {truncate(float(df_last["signal"].values[0]))}')
                     Logger.debug(f"macdgtsignal: {str(macdgtsignal)}")
@@ -1274,34 +1344,50 @@ def execute_job(
                                     if len(df_quote) == 0
                                     else float(df_quote.values[0])
                                 )
+                                bal_error = 0
                             except Exception as err:
+                                bal_error = 1
                                 Logger.warning(
-                                    f"Error: Balance not retrieved after trade for {app.getMarket()}.  Trying again.\n"
+                                    f"Error: Balance not retrieved after trade for {app.getMarket()}.\n"
                                     f"API Error Msg: {err}"
                                 )
 
-                            _state.trade_error_cnt = 0
-                            _state.trailing_buy = 0
-                            _state.last_action = "BUY"
-                            _state.action = "DONE"
-                            telegram_bot.add_open_order()
+                            if bal_error == 0:
+                                _state.trade_error_cnt = 0
+                                _state.trailing_buy = False
+                                _state.last_action = "BUY"
+                                _state.action = "DONE"
+                                _state.trailing_buy_immediate = False
+                                telegram_bot.add_open_order()
 
-                            Logger.info(
-                                f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance_after)}\n"
-                                f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance_after)}"
-                            )
+                                Logger.info(
+                                    f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance_after)}\n"
+                                    f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance_after)}"
+                                )
 
-                            now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-                            _app.notifyTelegram(
-                                _app.getMarket()
-                                + " ("
-                                + _app.printGranularity()
-                                + ") - "
-                                + now
-                                + "\n"
-                                + "BUY at "
-                                + price_text
-                            )
+                                _app.notifyTelegram(
+                                    _app.getMarket()
+                                    + " ("
+                                    + _app.printGranularity()
+                                    + ") - "
+                                    + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+                                    + "\n"
+                                    + "BUY at "
+                                    + price_text
+                                )
+                            
+                            else:
+                                # set variable to trigger to check trade on next iteration
+                                _state.action = "check_action"
+                                Logger.info(
+                                    f"{_app.getMarket()} - Error occurred while checking balance after BUY. Last transaction check will happen shortly."
+                                )
+
+                                if not app.disableTelegramErrorMsgs():
+                                    _app.notifyTelegram(
+                                        _app.getMarket()
+                                        + " - Error occurred while checking balance after BUY. Last transaction check will happen shortly."
+                                    )
 
                         else: # there was a response error
                             # only attempt BUY 3 times before exception to prevent continuous loop 
@@ -1311,9 +1397,10 @@ def execute_job(
                                     f"Trade Error: BUY transaction attempted 3 times. Check log for errors"
                                 )
 
-                            # trigger a check of last trade on next iteration
+                            # set variable to trigger to check trade on next iteration
+                            _state.action = "check_action"
                             _state.last_action = None
-                            _state.action = "check_buy"
+
                             Logger.warning(
                                 f"API Error: Unable to place buy order for {app.getMarket()}."
                             )
@@ -1323,7 +1410,7 @@ def execute_job(
 
                     else:
                         Logger.warning(
-                            "Unable to place order, insufficient funds or buyminsize has not been reached"
+                            "Unable to place order, insufficient funds or buyminsize has not been reached. Check Logs."
                         )
 
                     state.last_api_call_datetime -= timedelta(seconds=60)
@@ -1348,7 +1435,9 @@ def execute_job(
 
                     _state.buy_count = _state.buy_count + 1
                     _state.buy_sum = _state.buy_sum + _state.last_buy_size
-                    _state.trailing_buy = 0
+                    _state.trailing_buy = False
+                    _state.action = "DONE"
+                    _state.trailing_buy_immediate = False
 
                     _app.notifyTelegram(
                         _app.getMarket()
@@ -1428,27 +1517,27 @@ def execute_job(
                     state.last_api_call_datetime -= timedelta(seconds=60)
 
                 if _app.shouldSaveGraphs():
-                    tradinggraphs = TradingGraphs(_technical_analysis)
-                    ts = datetime.now().timestamp()
-                    filename = f"{_app.getMarket()}_{_app.printGranularity()}_buy_{str(ts)}.png"
-                    # This allows graphs to be used in sim mode using the correct DF
-                    if _app.isSimulation:
-                        tradinggraphs.renderEMAandMACD(
-                            len(trading_dataCopy), "graphs/" + filename, True
-                        )
+                    if _app.setTotalPeriods() < 200:
+                        Logger.info("Trading Graphs can only be generated when dataframe has more than 200 periods.")
                     else:
-                        tradinggraphs.renderEMAandMACD(
-                            len(trading_data), "graphs/" + filename, True
-                        )
+                        tradinggraphs = TradingGraphs(_technical_analysis)
+                        ts = datetime.now().timestamp()
+                        filename = f"{_app.getMarket()}_{_app.printGranularity()}_buy_{str(ts)}.png"
+                        # This allows graphs to be used in sim mode using the correct DF
+                        if _app.isSimulation:
+                            tradinggraphs.renderEMAandMACD(
+                                len(trading_dataCopy), "graphs/" + filename, True
+                            )
+                        else:
+                            tradinggraphs.renderEMAandMACD(
+                                len(trading_data), "graphs/" + filename, True
+                            )
 
             # if a sell signal
             elif _state.action == "SELL":
                 # if live
                 if _app.isLive():
-                    if not _app.isVerbose():
-                        Logger.info(
-                            f"{formatted_current_df_index} | {_app.getMarket()} | {_app.printGranularity()} | {price_text} | SELL"
-                        )
+                    if _app.isVerbose():
 
                         bands = _technical_analysis.getFibonacciRetracementLevels(
                             float(price)
@@ -1459,28 +1548,32 @@ def execute_job(
                         ):
                             Logger.info(f" Fibonacci Retracement Levels:{str(bands)}")
 
-                        if len(bands) >= 1 and len(bands) <= 2:
-                            if len(bands) == 1:
-                                first_key = list(bands.keys())[0]
-                                if first_key == "ratio1":
-                                    _state.fib_low = 0
-                                    _state.fib_high = bands[first_key]
-                                if first_key == "ratio1_618":
-                                    _state.fib_low = bands[first_key]
-                                    _state.fib_high = bands[first_key] * 2
-                                else:
-                                    _state.fib_low = bands[first_key]
+                            if len(bands) >= 1 and len(bands) <= 2:
+                                if len(bands) == 1:
+                                    first_key = list(bands.keys())[0]
+                                    if first_key == "ratio1":
+                                        _state.fib_low = 0
+                                        _state.fib_high = bands[first_key]
+                                    if first_key == "ratio1_618":
+                                        _state.fib_low = bands[first_key]
+                                        _state.fib_high = bands[first_key] * 2
+                                    else:
+                                        _state.fib_low = bands[first_key]
 
-                            elif len(bands) == 2:
-                                first_key = list(bands.keys())[0]
-                                second_key = list(bands.keys())[1]
-                                _state.fib_low = bands[first_key]
-                                _state.fib_high = bands[second_key]
+                                elif len(bands) == 2:
+                                    first_key = list(bands.keys())[0]
+                                    second_key = list(bands.keys())[1]
+                                    _state.fib_low = bands[first_key]
+                                    _state.fib_high = bands[second_key]
 
-                    else:
                         text_box.singleLine()
                         text_box.center("*** Executing LIVE Sell Order ***")
                         text_box.singleLine()
+
+                    else:
+                        Logger.info(
+                            f"{formatted_current_df_index} | {_app.getMarket()} | {_app.printGranularity()} | {price_text} | SELL"
+                        )
 
                     # check balances before and display
                     account.basebalance_before = 0
@@ -1522,49 +1615,72 @@ def execute_job(
                         try:
                             account.basebalance_after = float(account.getBalance(_app.getBaseCurrency()))
                             account.quotebalance_after = float(account.getBalance(_app.getQuoteCurrency()))
+                            bal_error = 0
                         except Exception as err:
+                            bal_error = 1
                             Logger.warning(
                                 f"Error: Balance not retrieved after trade for {app.getMarket()}.\n"
                                 f"API Error Msg: {err}"
                         )
 
-                        Logger.info(
-                            f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance_after)}\n"
-                            f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance_after)}"
-                        )
-                        _state.prevent_loss = 0
-                        _state.tsl_triggered = 0
-                        _state.trade_error_cnt = 0
-                        _state.last_action = "SELL"
-                        _state.action = "DONE"
-                                
-                        _app.notifyTelegram(
-                            _app.getMarket()
-                            + " ("
-                            + _app.printGranularity()
-                            + ") - "
-                            + now
-                            + "\n"
-                            + "SELL at "
-                            + price_text
-                            + " (margin: "
-                            + margin_text
-                            + ", delta: "
-                            + str(round(price - _state.last_buy_price, precision))
-                            + ")"
-                        )
+                        if bal_error == 0:
+                            Logger.info(
+                                f"{_app.getBaseCurrency()} balance after order: {str(account.basebalance_after)}\n"
+                                f"{_app.getQuoteCurrency()} balance after order: {str(account.quotebalance_after)}"
+                            )
+                            _state.prevent_loss = False
+                            _state.trailing_sell = False
+                            _state.trailing_sell_immediate = False 
+                            _state.tsl_triggered = False
+                            _state.tsl_pcnt = float(_app.trailingStopLoss())
+                            _state.tsl_trigger = float(_app.trailingStopLossTrigger())
+                            _state.tsl_max = False
+                            _state.trade_error_cnt = 0
+                            _state.last_action = "SELL"
+                            _state.action = "DONE"
+                                    
+                            _app.notifyTelegram(
+                                _app.getMarket()
+                                + " ("
+                                + _app.printGranularity()
+                                + ") - "
+                                + now
+                                + "\n"
+                                + "SELL at "
+                                + price_text
+                                + " (margin: "
+                                + margin_text
+                                + ", delta: "
+                                + str(round(price - _state.last_buy_price, precision))
+                                + ")"
+                            )
 
-                        telegram_bot.closetrade(
-                            str(_app.getDateFromISO8601Str(str(datetime.now()))),
-                            price_text,
-                            margin_text,
-                        )
+                            telegram_bot.closetrade(
+                                str(_app.getDateFromISO8601Str(str(datetime.now()))),
+                                price_text,
+                                margin_text,
+                            )
 
-                        if _app.enableexitaftersell and _app.startmethod not in (
-                            "standard",
-                            "telegram",
-                        ):
-                            sys.exit(0)
+                            if _app.enableexitaftersell and _app.startmethod not in (
+                                "standard",
+                                "telegram",
+                            ):
+                                sys.exit(0)
+
+                        else:
+                            # set variable to trigger to check trade on next iteration
+                            _state.action = "check_action"
+
+                            Logger.info(
+                                _app.getMarket()
+                                + " - Error occurred while checking balance after SELL. Last transaction check will happen shortly."
+                            )
+
+                            if not app.disableTelegramErrorMsgs():
+                                _app.notifyTelegram(
+                                    _app.getMarket()
+                                    + " - Error occurred while checking balance after SELL. Last transaction check will happen shortly."
+                                )
 
                     else: # there was an error
                         # only attempt SELL 3 times before exception to prevent continuous loop 
@@ -1573,9 +1689,10 @@ def execute_job(
                             raise Exception(
                                 f"Trade Error: SELL transaction attempted 3 times. Check log for errors."
                             )
-                        # trigger a check of last trade on next iteration
+                        # set variable to trigger to check trade on next iteration
+                        _state.action = "check_action"
                         _state.last_action = None
-                        _state.action = "check_sell"
+
                         Logger.warning(
                             f"API Error: Unable to place SELL order for {app.getMarket()}."
                         )
@@ -1687,6 +1804,14 @@ def execute_job(
                     state.in_open_trade = False
                     state.last_api_call_datetime -= timedelta(seconds=60)
                     _state.last_action = "SELL"
+                    _state.prevent_loss = False
+                    _state.trailing_sell = False
+                    _state.trailing_sell_immediate = False 
+                    _state.tsl_triggered = False
+                    _state.tsl_pcnt = float(_app.trailingStopLoss())
+                    _state.tsl_trigger = float(_app.trailingStopLossTrigger())
+                    _state.tsl_max = False
+                    _state.action = "DONE"
 
                 if _app.shouldSaveGraphs():
                     tradinggraphs = TradingGraphs(_technical_analysis)
@@ -1712,6 +1837,9 @@ def execute_job(
                 Logger.info(
                     _app.trade_tracker.loc[len(_app.trade_tracker) - 1].to_json()
                 )
+
+            if _state.action == "DONE" and indicatorvalues != "":
+                _app.notifyTelegram(indicatorvalues)
 
             if not _app.isLive() and _state.iterations == len(df):
                 simulation = {
@@ -1820,13 +1948,13 @@ def execute_job(
                         Logger.info("      Margin : 0.00%")
                         Logger.info("\n")
                         Logger.info(
-                            "  ** margin is nil as a sell as not occurred during the simulation\n"
+                            "  ** margin is nil as a sell has not occurred during the simulation\n"
                         )
                     else:
                         simulation["data"]["margin"] = 0.0
 
                     _app.notifyTelegram(
-                        "      Margin: 0.00%\n  ** margin is nil as a sell as not occurred during the simulation\n"
+                        "      Margin: 0.00%\n  ** margin is nil as a sell has not occurred during the simulation\n"
                     )
 
                 _app.notifyTelegram(
@@ -1918,14 +2046,14 @@ def execute_job(
             ):
                 # show profit and margin if already bought
                 Logger.info(
-                    f"{now} | {_app.getMarket()}{bullbeartext} | {_app.printGranularity()} | Current Price: {str(price)} | Margin: {str(margin)} | Profit: {str(profit)}"
+                    f"{now} | {_app.getMarket()}{bullbeartext} | {_app.printGranularity()} | Current Price: {str(price)} {trailing_action_logtext} | Margin: {str(margin)} | Profit: {str(profit)}"
                 )
             else:
                 Logger.info(
-                    f'{now} | {_app.getMarket()}{bullbeartext} | {_app.printGranularity()} | Current Price: {str(price)}{trailing_buy_logtext} | {str(round(((price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH'
+                    f'{now} | {_app.getMarket()}{bullbeartext} | {_app.printGranularity()} | Current Price: {str(price)}{trailing_action_logtext} | {str(round(((price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH'
                 )
                 telegram_bot.addinfo(
-                    f'{now} | {_app.getMarket()}{bullbeartext} | {_app.printGranularity()} | Current Price: {str(price)}{trailing_buy_logtext} | {str(round(((price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH',
+                    f'{now} | {_app.getMarket()}{bullbeartext} | {_app.printGranularity()} | Current Price: {str(price)}{trailing_action_logtext} | {str(round(((price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH',
                     round(price, 4),
                     str(round(df["close"].max(), 4)),
                     str(
@@ -1997,7 +2125,7 @@ def execute_job(
                 )
                 and (
                     isinstance(_websocket.candles, pd.DataFrame)
-                    and len(_websocket.candles) == 300
+                    and len(_websocket.candles) == _app.setTotalPeriods()
                 )
             ):
                 # poll every 5 seconds (_websocket)

@@ -251,6 +251,34 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("trailingstoplosstrigger must be of type int or str")
 
+    if "dynamictsl" in config:
+        if isinstance(config["dynamictsl"], int):
+            if config["dynamictsl"] in [0, 1]:
+                app.dynamic_tsl = bool(config["dynamictsl"])
+        else:
+            raise TypeError("dynamictsl must be of type int")
+
+    if "tslmultiplier" in config:
+        if isinstance(config["tslmultiplier"], (int, float)):
+            if config["tslmultiplier"] > 0:
+                app.tsl_multiplier = float(config["tslmultiplier"])
+        else:
+            raise TypeError("tslmultiplier must be of type int or float")
+
+    if "tsltriggermultiplier" in config:
+        if isinstance(config["tsltriggermultiplier"], (int, float)):
+            if config["tsltriggermultiplier"] > 0:
+                app.tsl_trigger_multiplier = float(config["tsltriggermultiplier"])
+        else:
+            raise TypeError("tsltriggermultiplier must be of type int or float")
+
+    if "tslmaxpcnt" in config:
+        if isinstance(config["tslmaxpcnt"], (int, float)):
+            if config["tslmaxpcnt"] <= 0:
+                app.tsl_max_pcnt = float(config["tslmaxpcnt"])
+        else:
+            raise TypeError("tslmaxpcnt must be < 0 and of type int or float")
+
     if "autorestart" in config:
         if isinstance(config["autorestart"], int):
             if config["autorestart"] in [0, 1]:
@@ -391,6 +419,20 @@ def defaultConfigParse(app, config):
                 app.disableprofitbankreversal = bool(config["disableprofitbankreversal"])
         else:
             raise TypeError("disableprofitbankreversal must be of type int")
+
+    if "enable_pandas_ta" in config:
+        if isinstance(config["enable_pandas_ta"], int):
+            if config["enable_pandas_ta"] in [0, 1]:
+                app.enable_pandas_ta = bool(config["enable_pandas_ta"])
+        else:
+            raise TypeError("enable_pandas_ta must be of type int")
+
+    if "enable_custom_strategy" in config:
+        if isinstance(config["enable_custom_strategy"], int):
+            if config["enable_custom_strategy"] in [0, 1]:
+                app.enable_custom_strategy = bool(config["enable_custom_strategy"])
+        else:
+            raise TypeError("enable_custom_strategy must be of type int")
 
     if "disabletelegram" in config:
         if isinstance(config["disabletelegram"], int):
@@ -551,6 +593,48 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("trailingimmediatebuy must be of type int")
 
+    if "trailingbuyimmediatepcnt" in config:
+        if isinstance(config["trailingbuyimmediatepcnt"], (int, float)):
+            if config["trailingbuyimmediatepcnt"] > 0:
+                app.trailingbuyimmediatepcnt = config["trailingbuyimmediatepcnt"]
+        else:
+            raise TypeError("trailingbuyimmediatepcnt must be of type int or float")
+
+    if "trailingsellpcnt" in config:
+        if isinstance(config["trailingsellpcnt"], (int, float)):
+            if config["trailingsellpcnt"] <= 0:
+                app.trailingsellpcnt = config["trailingsellpcnt"]
+        else:
+            raise TypeError("trailingsellpcnt must be < 0 and of type int or float")
+
+    if "trailingimmediatesell" in config:
+        if isinstance(config["trailingimmediatesell"], int):
+            if config["trailingimmediatesell"] in [0, 1]:
+                app.trailingimmediatesell = bool(config["trailingimmediatesell"])
+        else:
+            raise TypeError("trailingimmediatesell must be of type int")
+
+    if "trailingsellimmediatepcnt" in config:
+        if isinstance(config["trailingsellimmediatepcnt"], (int, float)):
+            if config["trailingsellimmediatepcnt"] <= 0:
+                app.trailingsellimmediatepcnt = config["trailingsellimmediatepcnt"]
+        else:
+            raise TypeError("trailingsellimmediatepcnt must be < 0 and of type int or float")
+
+    if "trailingsellbailoutpcnt" in config:
+        if isinstance(config["trailingsellbailoutpcnt"], (int, float)):
+            if config["trailingsellbailoutpcnt"] <= 0:
+                app.trailingsellbailoutpcnt = config["trailingsellbailoutpcnt"]
+        else:
+            raise TypeError("trailingsellbailoutpcnt must be < 0 and of type int or float")
+
+    if "selltriggeroverride" in config:
+        if isinstance(config["selltriggeroverride"], int):
+            if config["selltriggeroverride"] in [0, 1]:
+                app.sell_trigger_override = bool(config["selltriggeroverride"])
+        else:
+            raise TypeError("selltriggeroverride must be of type int")
+
     if "marketmultibuycheck" in config:
         if isinstance(config["marketmultibuycheck"], int):
             if config["marketmultibuycheck"] in [0, 1]:
@@ -578,3 +662,17 @@ def defaultConfigParse(app, config):
                 app.usekucoincache = True
         else:
             raise TypeError("usekucoincache must be of type int")
+
+    if "adjust_total_periods" in config:
+        if isinstance(config["adjust_total_periods"], (int, float)):
+            if config["adjust_total_periods"] > 26 and config["adjust_total_periods"] < 300:
+                app.adjust_total_periods = int(config["adjust_total_periods"])
+        else:
+            raise TypeError("adjust_total_periods must be > 26 and < 300 and of type int or float")
+
+    if "manual_trades_only" in config:
+        if isinstance(config["manual_trades_only"], int):
+            if config["manual_trades_only"] in [0, 1]:
+                app.manual_trades_only = bool(config["manual_trades_only"])
+        else:
+            raise TypeError("manual_trades_only must be of type int")
