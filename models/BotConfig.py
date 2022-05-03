@@ -136,6 +136,9 @@ class BotConfig:
         self.ema1226_6h_cache = None
         self.sma50200_1h_cache = None
 
+        self.EMA1hBull = False
+        self.EMA6hBull = False
+
         self.sim_smartswitch = False
 
         self.recv_window = self._set_recv_window()
@@ -160,6 +163,8 @@ class BotConfig:
         self.enable_buy_next = True
         self.enable_volume = False
         self.usekucoincache = False
+        self.adjust_total_periods = 300
+        self.manual_trades_only = False
         # print(self.startmethod)
 
         # set defaults
@@ -642,6 +647,12 @@ class BotConfig:
         parser.add_argument("--websocket", action="store_true", help="Enable websocket")
         parser.add_argument("--logbuysellinjson", action="store_true", help="Enable logging orders in json format")
         parser.add_argument("--startmethod", type=str, help="Enable logging orders in json format")
+        parser.add_argument(
+            "--adjust_total_periods",
+            type=float,
+            help="adjust total periods available for market analysis",
+        )
+        parser.add_argument("--manual_trades_only", action="store_true", help="Manual Trades Only (HODL)")
 
         # pylint: disable=unused-variable
         args, unknown = parser.parse_known_args()

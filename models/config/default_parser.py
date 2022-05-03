@@ -261,21 +261,21 @@ def defaultConfigParse(app, config):
     if "tslmultiplier" in config:
         if isinstance(config["tslmultiplier"], (int, float)):
             if config["tslmultiplier"] > 0:
-                app.tsl_multiplier = config["tslmultiplier"]
+                app.tsl_multiplier = float(config["tslmultiplier"])
         else:
             raise TypeError("tslmultiplier must be of type int or float")
 
     if "tsltriggermultiplier" in config:
         if isinstance(config["tsltriggermultiplier"], (int, float)):
             if config["tsltriggermultiplier"] > 0:
-                app.tsl_trigger_multiplier = config["tsltriggermultiplier"]
+                app.tsl_trigger_multiplier = float(config["tsltriggermultiplier"])
         else:
             raise TypeError("tsltriggermultiplier must be of type int or float")
 
     if "tslmaxpcnt" in config:
         if isinstance(config["tslmaxpcnt"], (int, float)):
             if config["tslmaxpcnt"] <= 0:
-                app.tsl_max_pcnt = config["tslmaxpcnt"]
+                app.tsl_max_pcnt = float(config["tslmaxpcnt"])
         else:
             raise TypeError("tslmaxpcnt must be < 0 and of type int or float")
 
@@ -662,3 +662,17 @@ def defaultConfigParse(app, config):
                 app.usekucoincache = True
         else:
             raise TypeError("usekucoincache must be of type int")
+
+    if "adjust_total_periods" in config:
+        if isinstance(config["adjust_total_periods"], (int, float)):
+            if config["adjust_total_periods"] > 26 and config["adjust_total_periods"] < 300:
+                app.adjust_total_periods = int(config["adjust_total_periods"])
+        else:
+            raise TypeError("adjust_total_periods must be > 26 and < 300 and of type int or float")
+
+    if "manual_trades_only" in config:
+        if isinstance(config["manual_trades_only"], int):
+            if config["manual_trades_only"] in [0, 1]:
+                app.manual_trades_only = bool(config["manual_trades_only"])
+        else:
+            raise TypeError("manual_trades_only must be of type int")

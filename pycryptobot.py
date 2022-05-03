@@ -196,7 +196,7 @@ def execute_job(
         df = trading_data
         if _app.appStarted and _app.simstartdate is not None:
             # On first run set the iteration to the start date entered
-            # This sim mode now pulls 300 candles from before the entered start date
+            # This sim mode now pulls 300 candles from before the entered start date, unless total periods adjusted
             _state.iterations = (
                 df.index.get_loc(str(_app.getDateFromISO8601Str(_app.simstartdate))) + 1
             )
@@ -262,7 +262,7 @@ def execute_job(
                     _state.iterations = 1
 
                 trading_dataCopy = trading_data.copy()
-                _technical_analysis = TechnicalAnalysis(trading_dataCopy)
+                _technical_analysis = TechnicalAnalysis(trading_dataCopy, _app.setTotalPeriods())
 
                 # if 'morning_star' not in df:
                 _technical_analysis.addAll()
@@ -273,7 +273,7 @@ def execute_job(
 
         elif _app.getSmartSwitch() == 1 and _technical_analysis is None:
             trading_dataCopy = trading_data.copy()
-            _technical_analysis = TechnicalAnalysis(trading_dataCopy)
+            _technical_analysis = TechnicalAnalysis(trading_dataCopy, _app.setTotalPeriods())
 
             if "morning_star" not in df:
                 _technical_analysis.addAll()
@@ -282,13 +282,13 @@ def execute_job(
 
     else:
         trading_dataCopy = trading_data.copy()
-        _technical_analysis = TechnicalAnalysis(trading_dataCopy)
+        _technical_analysis = TechnicalAnalysis(trading_dataCopy, _app.setTotalPeriods())
         _technical_analysis.addAll()
         df = _technical_analysis.getDataFrame()
 
         if _app.isSimulation() and _app.appStarted:
             # On first run set the iteration to the start date entered
-            # This sim mode now pulls 300 candles from before the entered start date
+            # This sim mode now pulls 300 candles from before the entered start date unless total periods adjusted
             _state.iterations = (
                 df.index.get_loc(str(_app.getDateFromISO8601Str(_app.simstartdate))) + 1
             )
@@ -376,7 +376,7 @@ def execute_job(
 
     # use actual sim mode date to check smartchswitch
     if (
-        (last_api_call_datetime.seconds > 60 or _app.isSimulation())
+        (last_api_call_datetime.seconds > 0 or _app.isSimulation())
         and _app.getSmartSwitch() == 1
         and _app.getGranularity() == Granularity.ONE_HOUR
         and _app.is1hEMA1226Bull(current_sim_date, _websocket) is True
@@ -441,10 +441,10 @@ def execute_job(
                 300, 1, execute_job, (sc, _app, _state, _technical_analysis, _websocket)
             )
     else:
-        if len(df) < 300:
+        if len(df) < _app.setTotalPeriods():
             if not _app.isSimulation():
-                # data frame should have 300 rows, if not retry
-                Logger.error(f"error: data frame length is < 300 ({str(len(df))})")
+                # data frame should have 300 rows or equal to adjusted total rows if set, if not retry
+                Logger.error(f"error: data frame length is < {str(_app.setTotalPeriods())} ({str(len(df))})")
                 list(map(s.cancel, s.queue))
                 s.enter(
                     300,
@@ -452,6 +452,23 @@ def execute_job(
                     execute_job,
                     (sc, _app, _state, _technical_analysis, _websocket),
                 )
+
+    if (
+        (last_api_call_datetime.seconds > 120 or _app.isSimulation())
+        and _app.getSmartSwitch() == 0
+        and (_app.getGranularity() == Granularity.FIFTEEN_MINUTES
+            or _app.getGranularity() == Granularity.FIVE_MINUTES
+        )
+    ):
+        if _app.is1hEMA1226Bull(current_sim_date, _websocket) is True:
+            _app.EMA1hBull = True
+        else:
+            _app.EMA1hBull = False
+
+        if _app.is6hEMA1226Bull(current_sim_date, _websocket) is True:
+            _app.EMA6hBull = True
+        else:
+            _app.EMA6hBull = False
 
     if len(df_last) > 0:
         now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
@@ -572,7 +589,10 @@ def execute_job(
 
         # if simulation, set goldencross based on actual sim date
         if _app.isSimulation():
-            goldencross = _app.is1hSMA50200Bull(current_sim_date, _websocket)
+            if _app.setTotalPeriods() < 200:
+                goldencross = False
+            else:
+                goldencross = _app.is1hSMA50200Bull(current_sim_date, _websocket)
 
         # candlestick detection
         hammer = bool(df_last["hammer"].values[0])
@@ -603,7 +623,7 @@ def execute_job(
         if _app.isSimulation():
             # Reset the Strategy so that the last record is the current sim date
             # To allow for calculations to be done on the sim date being processed
-            sdf = df[df["date"] <= current_sim_date].tail(300)
+            sdf = df[df["date"] <= current_sim_date].tail(_app.setTotalPeriods())
             strategy = Strategy(
                 _app, _state, sdf, sdf.index.get_loc(str(current_sim_date)) + 1
             )
@@ -622,9 +642,9 @@ def execute_job(
         # To allow for calculations to be done on the sim date being processed
         if _app.isSimulation():
             trading_dataCopy = (
-                trading_data[trading_data["date"] <= current_sim_date].tail(300).copy()
+                trading_data[trading_data["date"] <= current_sim_date].tail(_app.setTotalPeriods()).copy()
             )
-            _technical_analysis = TechnicalAnalysis(trading_dataCopy)
+            _technical_analysis = TechnicalAnalysis(trading_dataCopy, _app.setTotalPeriods())
 
         if (
             _state.last_buy_size > 0
@@ -682,7 +702,7 @@ def execute_job(
             )
 
             # handle immediate sell actions
-            if strategy.isSellTrigger(
+            if _app.manualTradesOnly() is False and strategy.isSellTrigger(
                 _app,
                 _state,
                 price,
@@ -702,8 +722,12 @@ def execute_job(
         if _state.action == "SELL" and immediate_action is not True:
             _state.action, _state.trailing_sell, trailing_action_logtext, immediate_action = strategy.checkTrailingSell(_state, price)
 
-        # handle overriding wait actions (e.g. do not sell if sell at loss disabled!, do not buy in bull if bull only)
-        if _state.action != "WAIT" and strategy.isWaitTrigger(margin, goldencross):
+        # handle overriding wait actions
+        # (e.g. do not sell if sell at loss disabled!, do not buy in bull if bull only, manual trades only)
+        if _app.manualTradesOnly() is True or (
+                _state.action != "WAIT"
+                and strategy.isWaitTrigger(margin, goldencross)
+            ):
             _state.action = "WAIT"
             immediate_action = False
 
@@ -718,8 +742,10 @@ def execute_job(
                 immediate_action = True
 
         bullbeartext = ""
-        if _app.disableBullOnly() is True or (
-            df_last["sma50"].values[0] == df_last["sma200"].values[0]
+        if (
+            _app.disableBullOnly() is True
+            or _app.setTotalPeriods() < 200
+            or df_last["sma50"].values[0] == df_last["sma200"].values[0]
         ):
             bullbeartext = ""
         elif goldencross is True:
@@ -972,7 +998,7 @@ def execute_job(
                             + str(round(((price - df_high) / df_high) * 100, 2))
                             + "% "
                             + "away from DF HIGH | Range: "
-                            + str(df.iloc[_state.iterations - 300, 0])
+                            + str(df.iloc[_state.iterations - _app.setTotalPeriods(), 0])
                             + " <--> "
                             + str(df.iloc[_state.iterations - 1, 0])
                         )
@@ -1069,7 +1095,7 @@ def execute_job(
                             + str(round(((price - df_high) / df_high) * 100, 2))
                             + "% "
                             + "away from DF HIGH | Range: "
-                            + str(df.iloc[_state.iterations - 300, 0])
+                            + str(df.iloc[_state.iterations - _app.setTotalPeriods(), 0])
                             + " <--> "
                             + str(df.iloc[_state.iterations - 1, 0])
                         )
@@ -1149,8 +1175,10 @@ def execute_job(
                     Logger.debug(f"ema12gtema26: {str(ema12gtema26)}")
                     Logger.debug(f"ema12ltema26co: {str(ema12ltema26co)}")
                     Logger.debug(f"ema12ltema26: {str(ema12ltema26)}")
-                    Logger.debug(f'sma50: {truncate(float(df_last["sma50"].values[0]))}')
-                    Logger.debug(f'sma200: {truncate(float(df_last["sma200"].values[0]))}')
+                    if _app.setTotalPeriods() >= 50:
+                        Logger.debug(f'sma50: {truncate(float(df_last["sma50"].values[0]))}')
+                    if _app.setTotalPeriods() >= 200:
+                        Logger.debug(f'sma200: {truncate(float(df_last["sma200"].values[0]))}')
                     Logger.debug(f'macd: {truncate(float(df_last["macd"].values[0]))}')
                     Logger.debug(f'signal: {truncate(float(df_last["signal"].values[0]))}')
                     Logger.debug(f"macdgtsignal: {str(macdgtsignal)}")
@@ -1489,18 +1517,21 @@ def execute_job(
                     state.last_api_call_datetime -= timedelta(seconds=60)
 
                 if _app.shouldSaveGraphs():
-                    tradinggraphs = TradingGraphs(_technical_analysis)
-                    ts = datetime.now().timestamp()
-                    filename = f"{_app.getMarket()}_{_app.printGranularity()}_buy_{str(ts)}.png"
-                    # This allows graphs to be used in sim mode using the correct DF
-                    if _app.isSimulation:
-                        tradinggraphs.renderEMAandMACD(
-                            len(trading_dataCopy), "graphs/" + filename, True
-                        )
+                    if _app.setTotalPeriods() < 200:
+                        Logger.info("Trading Graphs can only be generated when dataframe has more than 200 periods.")
                     else:
-                        tradinggraphs.renderEMAandMACD(
-                            len(trading_data), "graphs/" + filename, True
-                        )
+                        tradinggraphs = TradingGraphs(_technical_analysis)
+                        ts = datetime.now().timestamp()
+                        filename = f"{_app.getMarket()}_{_app.printGranularity()}_buy_{str(ts)}.png"
+                        # This allows graphs to be used in sim mode using the correct DF
+                        if _app.isSimulation:
+                            tradinggraphs.renderEMAandMACD(
+                                len(trading_dataCopy), "graphs/" + filename, True
+                            )
+                        else:
+                            tradinggraphs.renderEMAandMACD(
+                                len(trading_data), "graphs/" + filename, True
+                            )
 
             # if a sell signal
             elif _state.action == "SELL":
@@ -1917,13 +1948,13 @@ def execute_job(
                         Logger.info("      Margin : 0.00%")
                         Logger.info("\n")
                         Logger.info(
-                            "  ** margin is nil as a sell as not occurred during the simulation\n"
+                            "  ** margin is nil as a sell has not occurred during the simulation\n"
                         )
                     else:
                         simulation["data"]["margin"] = 0.0
 
                     _app.notifyTelegram(
-                        "      Margin: 0.00%\n  ** margin is nil as a sell as not occurred during the simulation\n"
+                        "      Margin: 0.00%\n  ** margin is nil as a sell has not occurred during the simulation\n"
                     )
 
                 _app.notifyTelegram(
@@ -2094,7 +2125,7 @@ def execute_job(
                 )
                 and (
                     isinstance(_websocket.candles, pd.DataFrame)
-                    and len(_websocket.candles) == 300
+                    and len(_websocket.candles) == _app.setTotalPeriods()
                 )
             ):
                 # poll every 5 seconds (_websocket)

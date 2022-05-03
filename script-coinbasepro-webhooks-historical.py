@@ -3,7 +3,7 @@ import sys
 import time
 import signal
 from models.exchange.coinbase_pro import WebSocketClient as CWebSocketClient
-
+from models.exchange.Granularity import Granularity
 
 def cls():
     os.system("cls" if os.name == "nt" else "clear")
@@ -16,14 +16,15 @@ def handler(signum, frame):
 
 
 try:
-    websocket = CWebSocketClient(["ADA-GBP"], 60)
+    websocket = CWebSocketClient(["ADA-USD"], Granularity.FIVE_MINUTES)
     websocket.start()
     message_count = 0
     while True:
         if websocket:
             if (
                 message_count != websocket.message_count
-                and websocket.tickers is not None
+#                and websocket.tickers is not None
+                and websocket.candles is not None
             ):
                 cls()
                 print("\nMessageCount =", "%i \n" % websocket.message_count)

@@ -8,9 +8,9 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-## [6.4.0] - 2022-04-26
+## [6.4.0] - 2022-05-03
 
-- fixed Kucoin websockets ticker
+- fix problems with Kucoin websockets ticker
 - added some additional check to help with JSON errors with Coinbasepro and Kucoin
 - fixed Kucoin cache to properly disable and be disabled by default
 - added trailing sell feature - uses 0% for default if not in config
@@ -27,6 +27,10 @@ Upgrade library dependencies (if required):
 - added options to trailing sell and buy that use the custom points system to trigger immediate buys or sells if the respective setting is active
 - added trailingsellbailout setting - if trailing sell is active and waiting, but price drops drastically, sell immediately at this level
 - revised buy/sell transactions in pycryptobot.py for better recovery if an error occurs during trade processing (revising previous fixes)
+- added adjust_total_periods config option as advanced option to adjust periods/candles to compensate for Kucoin 100 candle max (hope to fix in future), but this option can also be used for traders looking to trade newly added coins on exchanges
+- added manual_trades_only config option for users wanting HODL some coins, but still monitor margin and status.  Manual trade through Telegram Bot or on exchange.
+- made a few spell corrections
+- added some new comments in places needing them
 
 ## [6.3.0] - 2022-04-13
 

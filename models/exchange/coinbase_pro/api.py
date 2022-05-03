@@ -733,8 +733,9 @@ class PublicAPI(AuthAPIBase):
                     df = websocket.candles.loc[websocket.candles["market"] == market]
                     using_websocket = True
                 except:
-                    pass
+                    using_websocket = False
 
+        # if not using websocket
         if websocket is None or (websocket is not None and using_websocket is False):
             resp = {}
             trycnt, maxretry = (0, 5)
@@ -841,20 +842,17 @@ class PublicAPI(AuthAPIBase):
                         re.sub(r".0*$", "", str(row["date"].values[0])),
                         "%Y-%m-%dT%H:%M:%S",
                     ).strftime("%Y-%m-%d %H:%M:%S")
-                ticker_price = row["price"].values[0]
+                ticker_price = float(row["price"].values[0])
             except:
-                return None
+                pass
 
-            if ticker_price == 0 or ticker_date is None:
-                return None
-            else:
-                return (
-                    datetime.strptime(
-                        re.sub(r".0*$", "", str(row["date"].values[0])),
-                        "%Y-%m-%dT%H:%M:%S",
-                    ).strftime("%Y-%m-%d %H:%M:%S"),
-                    float(row["price"].values[0]),
-                )
+            if ticker_date is None:
+                ticker_date = now
+ 
+            return (
+                ticker_date,
+                ticker_price
+            )
 
         resp = {}
         trycnt, maxretry = (1, 5)
@@ -990,7 +988,6 @@ class PublicAPI(AuthAPIBase):
             else:
                 Logger.info(f"{reason}: {self._api_url}")
                 return {}
-
 
 class WebSocket(AuthAPIBase):
     def __init__(
@@ -1260,12 +1257,12 @@ class WebSocketClient(WebSocket):
                             [
                                 df["candle"].values[0],
                                 df["market"].values[0],
-                                self.granularity.to_integer,
-                                df["price"].values[0],
-                                df["price"].values[0],
-                                df["price"].values[0],
-                                df["price"].values[0],
-                                msg["size"],
+                                df["granularity"].values[0],
+                                df["open"].values[0],
+                                df["high"].values[0],
+                                df["close"].values[0],
+                                df["low"].values[0],
+                                msg["volume"],
                             ]
                         ],
                     )
@@ -1308,12 +1305,12 @@ class WebSocketClient(WebSocket):
                                     [
                                         df["candle"].values[0],
                                         df["market"].values[0],
-                                        self.granularity.to_integer,
-                                        df["price"].values[0],
-                                        df["price"].values[0],
-                                        df["price"].values[0],
-                                        df["price"].values[0],
-                                        msg["size"],
+                                        df["granularity"].values[0],
+                                        df["open"].values[0],
+                                        df["high"].values[0],
+                                        df["close"].values[0],
+                                        df["low"].values[0],
+                                        msg["volume"],
                                     ]
                                 ],
                             )
@@ -1334,12 +1331,12 @@ class WebSocketClient(WebSocket):
                                 [
                                     df["candle"].values[0],
                                     df["market"].values[0],
-                                    self.granularity.to_integer,
-                                    df["price"].values[0],
-                                    df["price"].values[0],
-                                    df["price"].values[0],
-                                    df["price"].values[0],
-                                    msg["size"],
+                                    df["granularity"].values[0],
+                                    df["open"].values[0],
+                                    df["high"].values[0],
+                                    df["close"].values[0],
+                                    df["low"].values[0],
+                                    msg["volume"],
                                 ]
                             ],
                         )

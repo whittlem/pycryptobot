@@ -2,22 +2,21 @@ import os
 import sys
 import time
 import signal
-from models.exchange.coinbase_pro import WebSocketClient as CWebSocketClient
+from models.exchange.kucoin import WebSocketClient as KWebSocketClient
 from models.exchange.Granularity import Granularity
-
 
 def cls():
     os.system("cls" if os.name == "nt" else "clear")
 
 
-def signal_handler(signum, frame):
+def handler(signum, frame):
     if signum == 2:
         print(" -> not finished yet!")
         return
 
 
 try:
-    websocket = CWebSocketClient(["ADA-USD"], Granularity.FIVE_MINUTES)
+    websocket = KWebSocketClient(["NHCT-USDT"], Granularity.FIVE_MINUTES)
     websocket.start()
     message_count = 0
     while True:
@@ -25,18 +24,18 @@ try:
             if (
                 message_count != websocket.message_count
                 and websocket.tickers is not None
+#                and websocket.candles is not None
             ):
                 cls()
-                print (f"Start time: {websocket.getStartTime()}")
-                print (f"Time elapsed: {websocket.getTimeElapsed()} seconds")
                 print("\nMessageCount =", "%i \n" % websocket.message_count)
+                print(websocket.candles)
                 print(websocket.tickers)
                 message_count = websocket.message_count
                 time.sleep(5)  # output every 5 seconds, websocket is realtime
 
 # catches a keyboard break of app, exits gracefully
 except KeyboardInterrupt:
-    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGINT, handler)
     print("\nPlease wait while threads complete gracefully.")
     websocket.close()
     sys.exit(0)

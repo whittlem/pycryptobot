@@ -26,32 +26,37 @@ class Strategy_CS:
         # buy indicators - using non-traditional settings
         # *** currently requires pandas-ta module and optional talib 
 
-        # will output indicator values in log and telgram when True
+        # will output indicator values in log and after a trade in telgram when True
         debug = True
 
+        # to disable any indicator used in this file, set the buy and sell pts to 0 or comment out
+        # the lines for buy and sell pts.
+        # ** Be sure to adjust total counts below.
+
         # max possible points - this is used if sell_trigger_override setting is True, this value is used
-        self.max_pts = 11
+        # if using smartswitch granularity, recommend lowering each pt total by 1 pt due to the EMA Bull being disabled
+        self.max_pts = 12
         # total points required to buy
-        self.pts_to_buy = 8 # more points requires more signals to activate, less risk
+        self.pts_to_buy = 9 # more points requires more signals to activate, less risk
         # total points to trigger immediate buy if trailingbuyimmediatepcnt is configured, else ignored
-        self.immed_buy_pts = 10
+        self.immed_buy_pts = 11
         # use adjusted buy pts? Subtract any sell_pts from buy_pts before signaling a buy
         # Set to True or False, default is false if not added
         self.use_adjusted_buy_pts = True
 
         # total points required to sell
-        self.pts_to_sell = 3 # requiring fewer pts results in quicker sell signal
+        self.pts_to_sell = 4 # requiring fewer pts results in quicker sell signal
         # total points to trigger immediate sell if trailingsellimmediatepcnt is configured, else ignored
-        self.immed_sell_pts = 6
-        
+        self.immed_sell_pts = 7
+
         # Required signals.
         # Specify how many have to be triggered
         # Buys - currently 2 of ADX, OBV or MACDLeader - add self.pts_sig_required_buy += 1 to section for each signal
         self.sig_required_buy = 2
-        # Sells - currently 2 of OBV, MACDLeader or EMA/WMA - add self.pts_sig_required_sell += 1 to section for each signal
+        # Sells - currently 2 of OBV, MACDLeader, EMA/WMA - add self.pts_sig_required_sell += 1 to section for each signal
         self.sig_required_sell = 2 # set to 0 for default
 
-        # start at 0
+        # don't edit these, need to start at 0
         self.buy_pts = 0
         self.sell_pts = 0
         self.pts_sig_required_buy = 0
@@ -90,9 +95,9 @@ class Strategy_CS:
             self.rsi_action = "wait"
 
         # ADX with percentage of difference between DI+ & DI- for strength
-        if ( # DI+ above DI- and a difference of 20% and ADX > 20
+        if ( # DI+ above DI- and a difference of 25% and ADX > 20
             data["+di14"].values[0] > data["-di14"].values[0]
-            and data["di_pcnt"].values[0] > 20
+            and data["di_pcnt"].values[0] > 25
             and data["adx14"].values[0] > 20
         ):
             self.pts_sig_required_buy += 1
@@ -102,7 +107,7 @@ class Strategy_CS:
                     or  data["+di14"].values[0] > data["adx14"].values[0])
             ):
                 self.adx_action = "strongbuy"
-                self.buy_pts += 2 
+                self.buy_pts += 2
             else:
                 self.adx_action = "buy"
                 self.buy_pts += 1
@@ -153,8 +158,8 @@ class Strategy_CS:
             self.macd_action = "wait"
 
         # OBV and SMA5 - when OBV is above its SMA, buy and sell when below or decreasing
-        if ( # Buy when OBV is 0.5% above SMA and OBV change percent >= 0
-            data["obv_sm_diff"].values[0] > 0.5
+        if ( # Buy when OBV is 0.75% above SMA and OBV change percent >= 0
+            data["obv_sm_diff"].values[0] > 0.75
             and data['obv_pc'].values[0] >= 0
         ):
             self.pts_sig_required_buy += 1
@@ -173,8 +178,8 @@ class Strategy_CS:
         # MACD Leader signal.....
         # for short trading in pycryptobot, we check that MacdLeader > Macdl_sig and upward trend
         if ( # MACDL above Signal by 40% and MACDL change > 20%
-            data["macdl_sg_diff"].values[0] > 30
-            and data["macdlead_pc"].values[0] > 20 # Percent of change > 0 also indicates MACD > 0
+            data["macdl_sg_diff"].values[0] > 40
+            and data["macdlead_pc"].values[0] > 10 # Percent of change > 10 also indicates MACD > 0
         ):
             self.pts_sig_required_buy += 1
             if ( # Strong when MACDL is above Signal by 75%
@@ -189,8 +194,8 @@ class Strategy_CS:
             data["macdlead_pc"].values[0] < 0
         ):
             self.pts_sig_required_sell += 1
-            if ( # Strong when MACDL is < 15% above signal
-                data["macdl_sg_diff"].values[0] < 15
+            if ( # Strong when MACDL is < 5% above signal
+                data["macdl_sg_diff"].values[0] < 5
             ):
                 self.macdl_action = "strongsell"
                 self.sell_pts += 2
@@ -227,6 +232,22 @@ class Strategy_CS:
         else:
             self.emawma_action = "wait"
 
+        # if not using SmartSwitch, check EMA1hBull and EMA6hBull (checks used for smart switch normally)
+        # when running SmartSwitch granularity, these points don't count, lower pts counts by 1 each.
+        if (
+            self.app.getSmartSwitch() == 0
+            and self.app.EMA1hBull == True
+            and self.app.EMA6hBull == True
+        ):
+            self.buy_pts += 1
+        elif (
+            self.app.getSmartSwitch() == 0
+            and self.app.EMA1hBull == False
+            and self.app.EMA6hBull == False
+        ):
+            # If using adjusted buy_pts, this will get subtracted for buys
+            self.sell_pts += 1
+
         # adjusted buy pts - subtract any sell pts from buy pts
         if self.use_adjusted_buy_pts is True:
             self.buy_pts = self.buy_pts - self.sell_pts
@@ -234,8 +255,11 @@ class Strategy_CS:
         if debug is True:
             indicatorvalues = (
                 # Actions
-                f"Macd Action: {self.macd_action} ADX Action: {self.adx_action} RSI Action: {self.rsi_action}"
-                f" OBV Action: {self.obv_action} MacdL Action: {self.macdl_action} myCS: {self.myCS}"
+                f"BuyPts: {self.buy_pts} SellPts: {self.sell_pts} Macd Action: {self.macd_action}"
+                f" ADX Action: {self.adx_action} RSI Action: {self.rsi_action}"
+                "\n"
+                f"OBV Action: {self.obv_action} MacdL Action: {self.macdl_action}"
+                f" EMAWMA Action: {self.emawma_action} myCS: {self.myCS}"
                 "\n"
                 # RSI
                 f"RSI: {_truncate(data['rsi14'].values[0], 2)} RSIpc: {data['rsi14_pc'].values[0]}"
@@ -244,8 +268,9 @@ class Strategy_CS:
                 # OBV
                 f"OBV: {_truncate(data['obv'].values[0], 2)} SM: {_truncate(data['obvsm'].values[0], 2)}"
                 f" Diff: {data['obv_sm_diff'].values[0]} OBVPC: {data['obv_pc'].values[0]}"
+                "\n"
                 # ADX
-                f" ADX14: {_truncate(data['adx14'].values[0], 2)}"
+                f"ADX14: {_truncate(data['adx14'].values[0], 2)}"
                 f" DI Pcnt: {_truncate(data['di_pcnt'].values[0], 2)}%, +DIpc: {data['+di_pc'].values[0]}"
                 f" +DI14 {_truncate(data['+di14'].values[0], 2)} -DI14: {_truncate(data['-di14'].values[0], 2)}"
                 "\n"
@@ -256,12 +281,14 @@ class Strategy_CS:
                 f" Macdpc: {data['macd_pc'].values[0]}"
                 "\n"
                 # MACD_Leader
-                f"BuyPts: {self.buy_pts} SellPts: {self.sell_pts} MacdLead: {_truncate(data['macdlead'].values[0],6)} MacdL: {_truncate(data['macdl'].values[0],6)}"
-                f" MacdlSig: {_truncate(data['macdl_sig'].values[0],6)} MacdLeadpc: {data['macdlead_pc'].values[0]}% Diff: {data['macdl_sg_diff'].values[0]}%"
+                f"MacdLead: {_truncate(data['macdlead'].values[0],6)} MacdL: {_truncate(data['macdl'].values[0],6)}"
+                f" MacdlSig: {_truncate(data['macdl_sig'].values[0],6)} MacdLeadpc: {data['macdlead_pc'].values[0]}%"
+                f" Diff: {data['macdl_sg_diff'].values[0]}%"
                 "\n"
+                f"EMA 1h Bull: {self.app.EMA1hBull} EMA 6h Bull: {self.app.EMA6hBull}"
                 # EMA/WMA
-                f"EMAWMA Action: {self.emawma_action} EMA5pc: {data['ema5_pc'].values[0]}"
-                f" EMA5: {_truncate(data['ema5'].values[0],2)} WMA5: {_truncate(data['ema5_wma5'].values[0],2)}"
+                f" EMA5pc: {data['ema5_pc'].values[0]} EMA5: {_truncate(data['ema5'].values[0],2)}"
+                f" WMA5: {_truncate(data['ema5_wma5'].values[0],2)}"
             )
             Logger.info(indicatorvalues)
         else:

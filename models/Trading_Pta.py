@@ -37,7 +37,7 @@ warnings.simplefilter("ignore", ConvergenceWarning)
 
 
 class TechnicalAnalysis:
-    def __init__(self, data=DataFrame()) -> None:
+    def __init__(self, data=DataFrame(), total_periods: int=300) -> None:
         """Technical Analysis object model
 
         Parameters
@@ -76,6 +76,7 @@ class TechnicalAnalysis:
 
         self.df = data
         self.levels = []
+        self.total_periods = total_periods
 
         # enable/disable Pandas-ta module and/or TA-Lib
         self.pandas_ta = True
@@ -94,9 +95,11 @@ class TechnicalAnalysis:
         self.addCMA()
         self.addSMA(10)
         self.addSMA(20)
-        self.addSMA(50)
-        self.addSMA(200)
-        self.addEMA(9)
+        if self.total_periods >= 50:
+            self.addSMA(50)
+        if self.total_periods >= 200:
+            self.addSMA(200)
+        self.addEMA(8)
         self.addEMA(12)
         self.addEMA(26)
         self.addGoldenCross()
@@ -113,7 +116,8 @@ class TechnicalAnalysis:
         self.addRSIMA(14,10) # RSI MA using VWMA10
 
         self.addEMABuySignals()
-        self.addSMABuySignals()
+        if self.total_periods >= 200:
+            self.addSMABuySignals()
         self.addMACDBuySignals()
         self.addRSIBuySignals(14,10) # RSI14 / VWMA10
         self.addADXBuySignals()
@@ -578,6 +582,17 @@ class TechnicalAnalysis:
     def addADX(self, interval: int = 14) -> None:
         """Adds Average Directional Index (ADX)"""
 
+        """Average Directional Index (ADX)"""
+
+        if not isinstance(interval, int):
+            raise TypeError("interval parameter is not intervaleric.")
+
+        if interval > self.total_periods or interval < 5 or interval > 200:
+            raise ValueError("interval is out of range")
+
+        if len(self.df) < interval:
+            raise Exception("Data range too small.")
+
         data = self.ta_ADX(interval)
         self.df["-di" + str(interval)] = data["-di" + str(interval)]
         self.df["+di" + str(interval)] = data[["+di" + str(interval)]]
@@ -610,6 +625,17 @@ class TechnicalAnalysis:
 
     def addATR(self, interval: int = 14) -> None:
         """Adds Average True Range (ATR)"""
+
+        """Average True Range (ATX)"""
+
+        if not isinstance(interval, int):
+            raise TypeError("interval parameter is not intervaleric.")
+
+        if interval > self.total_periods or interval < 5 or interval > 200:
+            raise ValueError("interval is out of range")
+
+        if len(self.df) < interval:
+            raise Exception("Data range too small.")
 
         self.df["atr" + str(interval)] = ta.atr(
             high=self.df["high"], low=self.df["low"], close=self.df["close"], length=interval, mamode="sma", talib=self.talib
@@ -647,8 +673,8 @@ class TechnicalAnalysis:
         if not isinstance(period, int):
             raise TypeError("Period parameter is not perioderic.")
 
-        if period < 5 or period > 200:
-            raise ValueError("Period is out of range")
+        if period > self.total_periods or period < 5 or period > 200:
+            raise ValueError(f"EMA{period} Period is out of range")
 
         if len(self.df) < period:
             raise Exception("EMA Data range too small.")
@@ -661,8 +687,8 @@ class TechnicalAnalysis:
         if not isinstance(period, int):
             raise TypeError("Period parameter is not perioderic.")
 
-        if period < 5 or period > 200:
-            raise ValueError("Period is out of range")
+        if period > self.total_periods or period < 5 or period > 200:
+            raise ValueError(f"addEMA{period} Period is out of range")
 
         if len(self.df) < period:
             raise Exception("addEMA Data range too small.")
@@ -676,11 +702,11 @@ class TechnicalAnalysis:
         if not isinstance(ema_period, int) or not isinstance(wma_period, int):
             raise TypeError("Period parameter is not perioderic.")
 
-        if ema_period < 5 or ema_period > 200:
-            raise ValueError("Period is out of range")
+        if ema_period > self.total_periods or ema_period < 5 or ema_period > 200:
+            raise ValueError(f"EMA{ema_period} Period is out of range")
 
-        if wma_period < 5 or wma_period > 200:
-            raise ValueError("Period is out of range")
+        if wma_period > self.total_periods or wma_period < 5 or wma_period > 200:
+            raise ValueError(f"WMA{wma_period} Period is out of range")
 
         if len(self.df) < ema_period or len(self.df) < wma_period:
             raise Exception("addEMA_WMA Data range too small.")
@@ -698,7 +724,7 @@ class TechnicalAnalysis:
         if not isinstance(period, int):
             raise TypeError("Period parameter is not perioderic.")
 
-        if period < 5 or period > 200:
+        if period > self.total_periods or period < 5 or period > 200:
             raise ValueError("EMA_PC Period is out of range")
 
         if len(self.df) < period:
@@ -853,7 +879,7 @@ class TechnicalAnalysis:
             raise TypeError("Period parameter is not perioderic.")
 
         if period < 7 or period > 21:
-            raise ValueError("Period is out of range")
+            raise ValueError("Stochastic RSI Period is out of range")
 
         if "rsi" + str(period) not in self.df:
             self.addRSI(period)
@@ -873,7 +899,7 @@ class TechnicalAnalysis:
             raise TypeError("Period parameter is not perioderic.")
 
         if period < 7 or period > 21:
-            raise ValueError("Period is out of range")
+            raise ValueError("WilliamsR Period is out of range")
 
         return (
             (self.df["high"].rolling(14).max() - self.df["close"]) /
@@ -887,7 +913,7 @@ class TechnicalAnalysis:
             raise TypeError("Period parameter is not perioderic.")
 
         if period < 7 or period > 21:
-            raise ValueError("Period is out of range")
+            raise ValueError("addRSI Period is out of range")
 
         self.df["rsi" + str(period)] = ta.rsi(close=self.df["close"], length=period, talib=self.talib)
         self.df["rsi" + str(period)] = self.df["rsi" + str(period)].fillna(0)
@@ -952,7 +978,7 @@ class TechnicalAnalysis:
             raise TypeError("Period parameter is not perioderic.")
 
         if period < 7 or period > 21:
-            raise ValueError("Period is out of range")
+            raise ValueError("add Stochastic RSI Period is out of range")
 
         self.df["stochrsi" + str(period)] = self.stochasticRelativeStrengthIndex(period)
         self.df["stochrsi" + str(period)] = self.df["stochrsi" + str(period)].replace(
@@ -982,7 +1008,7 @@ class TechnicalAnalysis:
             raise TypeError("Period parameter is not perioderic.")
 
         if period < 7 or period > 21:
-            raise ValueError("Period is out of range")
+            raise ValueError("addWilliamsR Period is out of range")
 
         self.df["williamsr" + str(period)] = self.williamsR(period)
         self.df["williamsr" + str(period)] = self.df["williamsr" + str(period)].replace(
@@ -1062,8 +1088,8 @@ class TechnicalAnalysis:
         if not isinstance(period, int):
             raise TypeError("Period parameter is not perioderic.")
 
-        if period < 5 or period > 200:
-            raise ValueError("Period is out of range")
+        if period > self.total_periods or period < 5 or period > 200:
+            raise ValueError(f"SMA{period} Period is out of range")
 
         if len(self.df) < period:
             raise Exception("SMA Data range too small.")
@@ -1076,8 +1102,8 @@ class TechnicalAnalysis:
         if not isinstance(period, int):
             raise TypeError("Period parameter is not perioderic.")
 
-        if period < 5 or period > 200:
-            raise ValueError("Period is out of range")
+        if period > self.total_periods or period < 5 or period > 200:
+            raise ValueError(f"addSMA{period} Period is out of range")
 
         if len(self.df) < period:
             raise Exception("addSMA Data range too small.")
@@ -1087,6 +1113,10 @@ class TechnicalAnalysis:
 
     def addGoldenCross(self) -> None:
         """Add Golden Cross SMA50 over SMA200"""
+
+        if self.total_periods < 200:
+            self.df["goldencross"] = False
+            return
 
         if "sma50" not in self.df:
             self.addSMA(50)
@@ -1098,6 +1128,11 @@ class TechnicalAnalysis:
 
     def addDeathCross(self) -> None:
         """Add Death Cross SMA50 over SMA200"""
+
+        if self.total_periods < 200:
+            self.df["deathcross"] = False
+            self.df["bullsma50"] = False
+            return
 
         if "sma50" not in self.df:
             self.addSMA(50)
@@ -1245,8 +1280,8 @@ class TechnicalAnalysis:
                 "Pandas DataFrame 'close' column not int64 or float64."
             )
 
-        if not "ema9" in self.df.columns:
-            self.addEMA(9)
+        if not "ema8" in self.df.columns:
+            self.addEMA(8)
 
         if not "ema12" in self.df.columns:
             self.addEMA(12)
@@ -1254,17 +1289,17 @@ class TechnicalAnalysis:
         if not "ema26" in self.df.columns:
             self.addEMA(26)
 
-        # true if ema9 is above the EMA12
-        self.df["ema9gtema12"] = self.df.ema9 > self.df.ema12
-        # true if the current frame is where ema9 crosses over above
-        self.df["ema9gtema12co"] = self.df.ema9gtema12.ne(self.df.ema9gtema12.shift())
-        self.df.loc[self.df["ema9gtema12"] == False, "ema9gtema12co"] = False
+        # true if EMA8 is above the EMA12
+        self.df["ema8gtema12"] = self.df.ema8 > self.df.ema12
+        # true if the current frame is where EMA8 crosses over above
+        self.df["ema8gtema12co"] = self.df.ema8gtema12.ne(self.df.ema8gtema12.shift())
+        self.df.loc[self.df["ema8gtema12"] == False, "ema8gtema12co"] = False
 
-        # true if the ema9 is below the EMA12
-        self.df["ema9ltema12"] = self.df.ema9 < self.df.ema12
-        # true if the current frame is where ema9 crosses over below
-        self.df["ema9ltema12co"] = self.df.ema9ltema12.ne(self.df.ema9ltema12.shift())
-        self.df.loc[self.df["ema9ltema12"] == False, "ema9ltema12co"] = False
+        # true if the EMA8 is below the EMA12
+        self.df["ema8ltema12"] = self.df.ema8 < self.df.ema12
+        # true if the current frame is where EMA8 crosses over below
+        self.df["ema8ltema12co"] = self.df.ema8ltema12.ne(self.df.ema8ltema12.shift())
+        self.df.loc[self.df["ema8ltema12"] == False, "ema8ltema12co"] = False
 
         # true if EMA12 is above the EMA26
         self.df["ema12gtema26"] = self.df.ema12 > self.df.ema26
@@ -1284,6 +1319,9 @@ class TechnicalAnalysis:
 
     def addSMABuySignals(self) -> None:
         """Adds the SMA50/SMA200 buy and sell signals to the DataFrame"""
+
+        if self.total_periods < 200:
+            raise ValueError("addSMABuySignals Period is out of range")
 
         if not isinstance(self.df, DataFrame):
             raise TypeError("Pandas DataFrame required.")

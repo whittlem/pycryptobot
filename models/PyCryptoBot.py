@@ -398,7 +398,7 @@ class PyCryptoBot(BotConfig):
                 ):
 
                     end_date = df_first
-                    df_first -= timedelta(minutes=(300 * (granularity.to_integer / 60)))
+                    df_first -= timedelta(minutes=(self.setTotalPeriods() * (granularity.to_integer / 60)))
 
                     if df_first.isoformat(timespec="milliseconds") < simstart.isoformat(
                         timespec="milliseconds"
@@ -414,7 +414,7 @@ class PyCryptoBot(BotConfig):
                     )
 
                     # check to see if there are an extra 300 candles available to be used, if not just use the original starting point
-                    if addingExtraCandles == True and len(df2) <= 0:
+                    if self.setTotalPeriods() >= 300 and addingExtraCandles == True and len(df2) <= 0:
                         self.extraCandlesFound = False
                         simstart = originalSimStart
                     else:
@@ -423,13 +423,13 @@ class PyCryptoBot(BotConfig):
                         ).drop_duplicates()
                         df1 = result_df_cache
 
-                    # create df with 300 candles before the required startdate to match live
+                    # create df with 300 candles or adjusted total periods before the required startdate to match live
                     if df_first.isoformat(
                         timespec="milliseconds"
                     ) == simstart.isoformat(timespec="milliseconds"):
                         if addingExtraCandles == False:
                             simstart -= timedelta(
-                                minutes=(300 * (granularity.to_integer / 60))
+                                minutes=(self.setTotalPeriods() * (granularity.to_integer / 60))
                             )
                         addingExtraCandles = True
                         self.extraCandlesFound = True
@@ -563,7 +563,7 @@ class PyCryptoBot(BotConfig):
             end_date = df["date"].min() - timedelta(
                 seconds=(granularity.to_integer / 60)
             )
-            new_start = df["date"].min() - timedelta(hours=300)
+            new_start = df["date"].min() - timedelta(hours=self.setTotalPeriods())
             return (str(new_start).replace(" ", "T"), str(end_date).replace(" ", "T"))
 
         iterations = 0
@@ -631,6 +631,10 @@ class PyCryptoBot(BotConfig):
             return False
 
     def is1hSMA50200Bull(self, iso8601end: str = "", websocket=None):
+        # if periods adjusted and less than 200
+        if self.setTotalPeriods() < 200:
+            return False
+
         try:
             if self.isSimulation() and isinstance(self.sma50200_1h_cache, pd.DataFrame):
                 df_data = self.sma50200_1h_cache.loc[
@@ -673,6 +677,10 @@ class PyCryptoBot(BotConfig):
             return False
 
     def isCryptoRecession(self, websocket=None):
+        # if periods adjusted and less than 200
+        if self.setTotalPeriods() < 200:
+            return False
+
         try:
             if self.exchange == Exchange.COINBASEPRO:
                 api = CBPublicAPI()
@@ -748,6 +756,10 @@ class PyCryptoBot(BotConfig):
             return False
 
     def is6hSMA50200Bull(self, websocket):
+        # if periods adjusted and less than 200
+        if self.setTotalPeriods() < 200:
+            return False
+
         try:
             if self.exchange == Exchange.COINBASEPRO:
                 api = CBPublicAPI()
@@ -950,6 +962,12 @@ class PyCryptoBot(BotConfig):
 
     def useKucoinCache(self) -> bool:
         return self.usekucoincache
+
+    def setTotalPeriods(self) -> float:
+        return self.adjust_total_periods
+
+    def manualTradesOnly(self) -> bool:
+        return self.manual_trades_only
 
     def compare(self, val1, val2, label="", precision=2):
         if val1 > val2:
@@ -1268,7 +1286,7 @@ class PyCryptoBot(BotConfig):
                     # date = self.simstartdate.split('-')
                     startDate = self.getDateFromISO8601Str(self.simstartdate)
                     endDate = startDate + timedelta(
-                        minutes=(self.getGranularity().to_integer / 60) * 300
+                        minutes=(self.getGranularity().to_integer / 60) * self.setTotalPeriods()
                     )
 
                 elif self.simenddate is not None and self.simstartdate is None:
@@ -1278,7 +1296,7 @@ class PyCryptoBot(BotConfig):
                         endDate = self.getDateFromISO8601Str(self.simenddate)
 
                     startDate = endDate - timedelta(
-                        minutes=(self.getGranularity().to_integer / 60) * 300
+                        minutes=(self.getGranularity().to_integer / 60) * self.setTotalPeriods()
                     )
 
                 else:
@@ -1294,10 +1312,10 @@ class PyCryptoBot(BotConfig):
 
                     startDate = self.getDateFromISO8601Str(str(endDate))
                     startDate -= timedelta(
-                        minutes=(self.getGranularity().to_integer / 60) * 300
+                        minutes=(self.getGranularity().to_integer / 60) * self.setTotalPeriods()
                     )
 
-                while len(tradingData) < 300 and attempts < 10:
+                while len(tradingData) < self.setTotalPeriods() and attempts < 10:
                     if endDate.isoformat() > datetime.now().isoformat():
                         endDate = datetime.now()
                     if self.smart_switch == 1:
@@ -1325,9 +1343,9 @@ class PyCryptoBot(BotConfig):
 
                 self.extraCandlesFound = True
 
-                if len(tradingData) < 300:
+                if len(tradingData) < self.setTotalPeriods():
                     raise Exception(
-                        "Unable to retrieve 300 random sets of data between "
+                        f"Unable to retrieve {str(self.setTotalPeriods())} random sets of data between "
                         + str(startDate)
                         + " and "
                         + str(endDate)
@@ -1340,8 +1358,8 @@ class PyCryptoBot(BotConfig):
                     endDate = str(endDate.isoformat())
                     text_box.line("Sampling start", str(startDate))
                     text_box.line("Sampling end", str(endDate))
-                    if self.simstartdate != None and len(tradingData) < 300:
-                        text_box.center("WARNING: Using less than 300 intervals")
+                    if self.simstartdate != None and len(tradingData) < self.setTotalPeriods():
+                        text_box.center(f"WARNING: Using less than {str(self.setTotalPeriods())} intervals")
                         text_box.line("Interval size", str(len(tradingData)))
                     text_box.doubleLine()
 
@@ -1356,7 +1374,7 @@ class PyCryptoBot(BotConfig):
                 startDate = pd.Series(startDate).dt.round(freq="H")[0]
                 endDate = pd.Series(endDate).dt.round(freq="H")[0]
                 startDate -= timedelta(
-                    minutes=(self.getGranularity().to_integer / 60) * 300
+                    minutes=(self.getGranularity().to_integer / 60) * self.setTotalPeriods()
                 )
 
                 if endDate.isoformat() > datetime.now().isoformat():
@@ -1645,7 +1663,19 @@ class PyCryptoBot(BotConfig):
                 str(self.marketMultiBuyCheck()) + "  --marketmultibuycheck",
             )
 
-        if self.disablebuyema and self.disablebuymacd:
+        if self.setTotalPeriods() != None:
+            text_box.line(
+                "Adjust Total Periods for Market ",
+                str(self.setTotalPeriods()) + " --adjust_total_periods  <size>",
+            )
+
+        if self.manualTradesOnly():
+            text_box.line(
+                "Manual Trading Only (HODL)",
+                str(self.manualTradesOnly()) + "  --manual_trades_only",
+            )
+
+        if self.disablebuyema and self.disablebuymacd and self.enableCustomStrategy() is False:
             text_box.center(
                 "WARNING : EMA and MACD indicators disabled, no buy events will happen"
             )
