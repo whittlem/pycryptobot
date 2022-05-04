@@ -447,7 +447,7 @@ def execute_job(
                 300, 1, execute_job, (sc, _app, _state, _technical_analysis, _websocket)
             )
     else:
-        if len(df) < _app.setTotalPeriods():
+        if len(df) < _app.setTotalPeriods() - 5: # If 300 is required, set adjust_total_periods in config to 305
             if not _app.isSimulation():
                 # data frame should have 300 rows or equal to adjusted total rows if set, if not retry
                 Logger.error(f"error: data frame length is < {str(_app.setTotalPeriods())} ({str(len(df))})")
