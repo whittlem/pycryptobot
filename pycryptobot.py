@@ -43,10 +43,10 @@ if app.enable_pandas_ta is True:
         trading_myPta = True
         state.pandas_ta_enabled = True
     except ImportError as myTrading_err:
-        trading_myPta = False
-    if trading_myPta is False and  file_exists("models/Trading_myPta.py"):
-        raise ImportError(f"Custom Trading Error: {myTrading_err}")
-    elif trading_myPta is False:
+        # trading_myPta = False
+        if file_exists("models/Trading_myPta.py"):
+            raise ImportError(f"Custom Trading Error: {myTrading_err}")
+        # elif trading_myPta is False:
         try:
             from models.Trading_Pta import TechnicalAnalysis
             state.pandas_ta_enabled = True
@@ -55,9 +55,9 @@ if app.enable_pandas_ta is True:
 else:
     from models.Trading import TechnicalAnalysis
 
-from models.Strategy import Strategy
-from views.TradingGraphs import TradingGraphs
 
+# from views.TradingGraphs import TradingGraphs
+from models.Strategy import Strategy
 # minimal traceback
 sys.tracebacklimit = 1
 
@@ -1499,7 +1499,7 @@ def execute_job(
                         text_box.singleLine()
 
                     _app.trade_tracker = pd.concat([_app.trade_tracker,
-                        {
+                        pd.DataFrame({
                             "Datetime": str(current_sim_date),
                             "Market": _app.getMarket(),
                             "Action": "BUY",
@@ -1510,7 +1510,7 @@ def execute_job(
                                 "close"
                             ].max(),
                             "DF_Low": df[df["date"] <= current_sim_date]["close"].min(),
-                        }])
+                        }, index={0})], ignore_index=True)
 
                     state.in_open_trade = True
                     _state.last_action = "BUY"
@@ -1786,7 +1786,7 @@ def execute_job(
                         text_box.singleLine()
 
                     _app.trade_tracker = pd.concat([_app.trade_tracker,
-                        {
+                        pd.DataFrame({
                             "Datetime": str(current_sim_date),
                             "Market": _app.getMarket(),
                             "Action": "SELL",
@@ -1800,7 +1800,8 @@ def execute_job(
                                 "close"
                             ].max(),
                             "DF_Low": df[df["date"] <= current_sim_date]["close"].min(),
-                        }]),
+                        }, index={0})], ignore_index=True)
+
                     state.in_open_trade = False
                     state.last_api_call_datetime -= timedelta(seconds=60)
                     _state.last_action = "SELL"
