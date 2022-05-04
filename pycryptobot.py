@@ -183,10 +183,16 @@ def execute_job(
 
     if not _app.isSimulation():
         # retrieve the _app.getMarket() data
-        trading_data = _app.getHistoricalData(
-            _app.getMarket(), _app.getGranularity(), _websocket
-        )
-
+        if _app.getExchange() == Exchange.KUCOIN:
+            start = datetime.now() -  timedelta(minutes=(_app.getGranularity().to_integer / 60) * _app.setTotalPeriods())
+            start = str(start.isoformat()).split('.')[0]
+            trading_data = _app.getHistoricalData(
+                _app.getMarket(), _app.getGranularity(), _websocket , iso8601start=start
+            )
+        else:
+            trading_data = _app.getHistoricalData(
+                _app.getMarket(), _app.getGranularity(), _websocket
+            )
     else:
         if len(trading_data) == 0:
             return None
@@ -441,7 +447,7 @@ def execute_job(
                 300, 1, execute_job, (sc, _app, _state, _technical_analysis, _websocket)
             )
     else:
-        if len(df) < _app.setTotalPeriods():
+        if len(df) < _app.setTotalPeriods() - 5: # If 300 is required, set adjust_total_periods in config to 305
             if not _app.isSimulation():
                 # data frame should have 300 rows or equal to adjusted total rows if set, if not retry
                 Logger.error(f"error: data frame length is < {str(_app.setTotalPeriods())} ({str(len(df))})")
