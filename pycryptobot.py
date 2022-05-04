@@ -31,7 +31,6 @@ from models.Stats import Stats
 from models.TradingAccount import TradingAccount
 from views.TradingGraphs import TradingGraphs
 from os.path import exists as file_exists
-from models.Strategy import Strategy
 
 app = PyCryptoBot()
 account = TradingAccount(app)
@@ -58,7 +57,7 @@ else:
 
 
 # from views.TradingGraphs import TradingGraphs
-
+from models.Strategy import Strategy
 # minimal traceback
 sys.tracebacklimit = 1
 
