@@ -183,10 +183,16 @@ def execute_job(
 
     if not _app.isSimulation():
         # retrieve the _app.getMarket() data
-        trading_data = _app.getHistoricalData(
-            _app.getMarket(), _app.getGranularity(), _websocket
-        )
-
+        if _app.getExchange() == Exchange.KUCOIN:
+            start = datetime.now() -  timedelta(minutes=(_app.getGranularity().to_integer / 60) * _app.setTotalPeriods())
+            start = str(start.isoformat()).split('.')[0]
+            trading_data = _app.getHistoricalData(
+                _app.getMarket(), _app.getGranularity(), _websocket , iso8601start=start
+            )
+        else:
+            trading_data = _app.getHistoricalData(
+                _app.getMarket(), _app.getGranularity(), _websocket
+            )
     else:
         if len(trading_data) == 0:
             return None
