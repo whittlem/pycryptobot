@@ -1096,46 +1096,63 @@ class PublicAPI(AuthAPIBase):
                         f"api/v1/market/candles?type={granularity.to_medium}&symbol={market}",
                     )
 
-                if "data" not in resp:
-                    trycnt += 1
-                    if trycnt == (maxretry):
-                        Logger.warning(
-                            f"Kucoin API Error for Historical Data - 'data' not in response - attempted {trycnt} times"
-                        )
-                    time.sleep(15)
-                else:
+                try:
+#                    if "data" in resp:
+                    # convert the API response into a Pandas DataFrame
+                    df = pd.DataFrame(
+                        resp["data"],
+                        columns=["time", "open", "close", "high", "low", "volume", "turnover"],
+                    )
+                    # reverse the order of the response with earliest last
+                    df = df.iloc[::-1].reset_index()
+
+                    try:
+                        freq = granularity.get_frequency
+                    except:
+                        freq = "D"
+
+#                    now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+
+                    # convert the DataFrame into a time series with the date as the index/key
+                    tsidx = pd.DatetimeIndex(
+                        pd.to_datetime(df["time"], unit="s"), dtype="datetime64[ns]", freq=freq
+                    )
+                    df.set_index(tsidx, inplace=True)
+                    df = df.drop(columns=["time", "index"])
+                    df.index.names = ["ts"]
+                    df["date"] = tsidx
+
                     break
 
-            # convert the API response into a Pandas DataFrame
-            df = pd.DataFrame(
-                resp["data"],
-                columns=["time", "open", "close", "high", "low", "volume", "turnover"],
-            )
-            # reverse the order of the response with earliest last
-            df = df.iloc[::-1].reset_index()
+                except ValueError as err:
+                    trycnt += 1
+                    if trycnt == (maxretry):
+                        raise Exception(
+                            f"Kucoin API Error for Historical Data - attempted {trycnt} times - Error: {err}"
+                        )
+                    time.sleep(15)
 
-            try:
-                freq = granularity.get_frequency
-            except:
-                freq = "D"
+            else:
+                raise Exception(f"Kucoin API Error for Historical Data - attempted {trycnt} times.")
 
-            # convert the DataFrame into a time series with the date as the index/key
-            try:
-                tsidx = pd.DatetimeIndex(
-                    pd.to_datetime(df["time"], unit="s"), dtype="datetime64[ns]", freq=freq
-                )
-                df.set_index(tsidx, inplace=True)
-                df = df.drop(columns=["time", "index"])
-                df.index.names = ["ts"]
-                df["date"] = tsidx
-            except ValueError:
-                tsidx = pd.DatetimeIndex(
-                    pd.to_datetime(df["time"], unit="s", origin='1970-01-01'), dtype="datetime64[ns]"
-                )
-                df.set_index(tsidx, inplace=True)
-                df = df.drop(columns=["time", "index"])
-                df.index.names = ["ts"]
-                df["date"] = tsidx
+#                        tsidx = pd.DatetimeIndex(
+#        #                    pd.to_datetime(df["time"], unit="s", origin='1970-01-01'), dtype="datetime64[ns]"
+#                            self.convert_time(df["time"])
+#                        )
+#                        df.set_index(tsidx, inplace=True)
+#                        df = df.drop(columns=["time", "index"])
+#                        df.index.names = ["ts"]
+#                        df["date"] = tsidx
+
+
+#                else:
+#                    trycnt += 1
+#                    if trycnt == (maxretry):
+#                        Logger.warning(
+#                            f"Kucoin API Error for Historical Data - 'data' not in response - attempted {trycnt} times"
+#                        )
+#                    time.sleep(15)
+
 
             df["market"] = market
             df["granularity"] = granularity.to_medium
@@ -1589,14 +1606,14 @@ class WebSocketClient(WebSocket):
                         ],
                         data=[
                             [
-                                self.convert_time(df["date"].values[0]),
+                                self.convert_time(df["candle"].values[0]),
                                 df["market"].values[0],
                                 self.granularity.to_integer,
-                                df["open"].values[0],
-                                df["high"].values[0],
-                                df["close"].values[0],
-                                df["low"].values[0],
-                                msg["data"]["volume"],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                msg["data"]["size"],
                             ]
                         ],
                     )
@@ -1637,14 +1654,14 @@ class WebSocketClient(WebSocket):
                                 ],
                                 data=[
                                     [
-                                        self.convert_time(df["date"].values[0]),
+                                        self.convert_time(df["candle"].values[0]),
                                         df["market"].values[0],
                                         self.granularity.to_integer,
-                                        df["open"].values[0],
-                                        df["high"].values[0],
-                                        df["close"].values[0],
-                                        df["low"].values[0],
-                                        msg["data"]["volume"],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        msg["data"]["size"],
                                     ]
                                 ],
                             )
@@ -1666,11 +1683,11 @@ class WebSocketClient(WebSocket):
                                     df["candle"].values[0],
                                     df["market"].values[0],
                                     self.granularity.to_integer,
-                                    df["open"].values[0],
-                                    df["high"].values[0],
-                                    df["close"].values[0],
-                                    df["low"].values[0],
-                                    msg["data"]["volume"],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    msg["data"]["size"],
                                 ]
                             ],
                         )
@@ -1702,8 +1719,7 @@ class WebSocketClient(WebSocket):
                     # increment candle base volume
                     self.candles.at[candle.index.values[0], "volume"] = float(
                         candle["volume"].values[0]
-                    ) # + float(msg["data"]["size"])
-# commented out addition of data/size to volumes.  It seemed to have a negative affect of volume
+                    ) + float(msg["data"]["size"])
 
             # insert first entry
             if self.tickers is None and len(df) > 0:

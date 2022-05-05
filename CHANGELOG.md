@@ -8,6 +8,14 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [6.4.1] - 2022-05-05
+
+- reverted some recent changes to Coinbase Pro and Kucoin websocket code that caused incorrect data (still not totally right)
+- fixed last of the regular Kucoin error messages which were related to getTicker
+- added custom strategy files to gitignore so they dont get overwritten by mistake
+- Kucoin API is only return 100 rows of historical data the fix is to pass in a start date which is calculated so that it will return 300 rows of data
+- Fix for bug 'Updater' object has no attribute 'send_message'
+
 ## [6.4.0] - 2022-05-03
 
 - fix problems with Kucoin websockets ticker

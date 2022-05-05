@@ -1257,12 +1257,12 @@ class WebSocketClient(WebSocket):
                             [
                                 df["candle"].values[0],
                                 df["market"].values[0],
-                                df["granularity"].values[0],
-                                df["open"].values[0],
-                                df["high"].values[0],
-                                df["close"].values[0],
-                                df["low"].values[0],
-                                msg["volume"],
+                                self.granularity.to_integer,
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                msg["size"],
                             ]
                         ],
                     )
@@ -1305,12 +1305,12 @@ class WebSocketClient(WebSocket):
                                     [
                                         df["candle"].values[0],
                                         df["market"].values[0],
-                                        df["granularity"].values[0],
-                                        df["open"].values[0],
-                                        df["high"].values[0],
-                                        df["close"].values[0],
-                                        df["low"].values[0],
-                                        msg["volume"],
+                                        self.granularity.to_integer,
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        msg["size"],
                                     ]
                                 ],
                             )
@@ -1331,12 +1331,12 @@ class WebSocketClient(WebSocket):
                                 [
                                     df["candle"].values[0],
                                     df["market"].values[0],
-                                    df["granularity"].values[0],
-                                    df["open"].values[0],
-                                    df["high"].values[0],
-                                    df["close"].values[0],
-                                    df["low"].values[0],
-                                    msg["volume"],
+                                    self.granularity.to_integer,
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    msg["size"],
                                 ]
                             ],
                         )
