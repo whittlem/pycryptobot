@@ -567,7 +567,7 @@ class TradingAccount:
 
         # update orders
         self.orders = pd.concat([self.orders,
-            {
+            pd.DataFrame({
                 "created_at": str(datetime.now()),
                 "market": market,
                 "action": "buy",
@@ -581,7 +581,7 @@ class TradingAccount:
                 "fees": fees,
                 "price": price,
                 "status": "done",
-            }])
+            }, index={0})], ignore_index=True)
 
         return True
 
@@ -646,7 +646,7 @@ class TradingAccount:
 
         # update orders
         self.orders = pd.concat([self.orders,
-            {
+            pd.DataFrame({
                 "created_at": str(datetime.now()),
                 "market": market,
                 "action": "sell",
@@ -656,7 +656,7 @@ class TradingAccount:
                 "fees": fees,
                 "price": price,
                 "status": "done",
-            }])
+            }, index={0})], ignore_index=True)
 
         return True
 
