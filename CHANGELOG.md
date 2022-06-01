@@ -8,6 +8,15 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [6.4.2] - 2022-05-31
+
+- changed a couple config settings so they can be disabled via command line arguments
+- fixed CoinbasePro and Kucoin API errors for standard API access - believe all errors causing restarts are now resolved
+- moved getTicker call up pycryptobot.py to be inline with getHistoricalData and replace DF last row data with ticker data before technical anlaysis is performed.
+- changed getHistoricalData call to only be called at candle close instead of every iteration and use ticker to fill data between candle open and close.
+- known problems with CoinbasePro and Kucoin websocket functions still exist, but above fixes will make websocket fixes easier
+- fixed standard indicators still being process when custom strategies are enabled
+
 ## [6.4.1] - 2022-05-05
 
 - reverted some recent changes to Coinbase Pro and Kucoin websocket code that caused incorrect data (still not totally right)

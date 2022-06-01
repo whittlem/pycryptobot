@@ -194,8 +194,12 @@ class Strategy:
         debug = False
 
         # additional sell signals - add additional functions and calls as necessary
-        if self.CS_ready and self.CS.sellSignal():
-            return True
+        if self.CS_ready:
+            if self.CS.sellSignal():
+                return True
+            else:
+                # If Custom Strategy active, don't process standard signals, return False
+                return False
 
         # if standard EMA and MACD are disabled, do not run below tests
         if self.app.disableBuyEMA() and self.app.disableBuyMACD():
