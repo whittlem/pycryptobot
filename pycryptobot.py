@@ -83,7 +83,7 @@ def execute_job(
     _state: AppState = None,
     _technical_analysis=None,
     _websocket=None,
-    trading_data=pd.DataFrame()
+    trading_data=pd.DataFrame(),
 ):
     """Trading bot job which runs at a scheduled interval"""
 
@@ -182,42 +182,12 @@ def execute_job(
     _state.iterations = _state.iterations + 1
 
     if not _app.isSimulation():
-        if (
-            len(trading_data) == 0
-            or (len(trading_data) > 0
-                and (datetime.timestamp(datetime.utcnow()) - _app.getGranularity().to_integer >= datetime.timestamp(trading_data.iloc[-1, trading_data.columns.get_loc('date')])
-                )
-            )
-        ):
-            # retrieve the _app.getMarket() data
-            if _app.getExchange() == Exchange.KUCOIN:
-                start = datetime.now() -  timedelta(minutes=(_app.getGranularity().to_integer / 60) * _app.setTotalPeriods())
-                start = str(start.isoformat()).split('.')[0]
-                trading_data = _app.getHistoricalData(
-                    _app.getMarket(), _app.getGranularity(), _websocket , iso8601start=start
-                )
-            else:
-                trading_data = _app.getHistoricalData(
-                    _app.getMarket(), _app.getGranularity(), _websocket
-                )
-
-            price = float(trading_data.iloc[-1, trading_data.columns.get_loc('close')])
-        else:
-            # set time and price with ticker data and update current candle
-            ticker = _app.getTicker(_app.getMarket(), _websocket)
-            ticker_date = ticker[0]
-            price = ticker[1]
-            # if 0, use last close value as price
-            if price == 0:
-                price = float(trading_data.iloc[-1, trading_data.columns.get_loc('close')])
-            # set low and high based on price
-            elif price < trading_data.iloc[-1, trading_data.columns.get_loc('low')]:
-                trading_data.iloc[-1, trading_data.columns.get_loc('low')] = price
-            elif price > trading_data.iloc[-1, trading_data.columns.get_loc('high')]:
-                trading_data.iloc[-1, trading_data.columns.get_loc('high')] = price
+        # retrieve the _app.getMarket() data
+        trading_data = _app.getHistoricalData(
+            _app.getMarket(), _app.getGranularity(), _websocket
+        )
 
     else:
-        price = float(df_last["close"].values[0])
         if len(trading_data) == 0:
             return None
 
@@ -586,6 +556,17 @@ def execute_job(
                 ):
                     sys.exit(0)
 
+        if not _app.isSimulation():
+            ticker = _app.getTicker(_app.getMarket(), _websocket)
+            now = ticker[0]
+            price = ticker[1]
+            if price < df_last["low"].values[0]:
+                df_last["low"].values[0] = price
+            if price == 0:
+                price = float(df_last["close"].values[0])
+        else:
+            price = float(df_last["close"].values[0])
+
         if price < 0.000001:
             raise Exception(
                 f"{_app.getMarket()} is unsuitable for trading, quote price is less than 0.000001!"
@@ -734,6 +715,13 @@ def execute_job(
                 _state.action = "SELL"
                 immediate_action = True
 
+        # If buy signal, save the price and check for decrease/increase before buying.
+        if _state.action == "BUY" and immediate_action is not True:
+            _state.action, _state.trailing_buy, trailing_action_logtext, immediate_action = strategy.checkTrailingBuy(_state, price)
+        # If sell signal, save the price and check for decrease/increase before selling.
+        if _state.action == "SELL" and immediate_action is not True:
+            _state.action, _state.trailing_sell, trailing_action_logtext, immediate_action = strategy.checkTrailingSell(_state, price)
+
         # handle overriding wait actions
         # (e.g. do not sell if sell at loss disabled!, do not buy in bull if bull only, manual trades only)
         if _app.manualTradesOnly() is True or (
@@ -742,13 +730,6 @@ def execute_job(
             ):
             _state.action = "WAIT"
             immediate_action = False
-
-        # If buy signal, save the price and check for decrease/increase before buying.
-        if _state.action == "BUY" and immediate_action is not True:
-            _state.action, _state.trailing_buy, trailing_action_logtext, immediate_action = strategy.checkTrailingBuy(_state, price)
-        # If sell signal, save the price and check for decrease/increase before selling.
-        if _state.action == "SELL" and immediate_action is not True:
-            _state.action, _state.trailing_sell, trailing_action_logtext, immediate_action = strategy.checkTrailingSell(_state, price)
 
         if _app.enableImmediateBuy():
             if _state.action == "BUY":
@@ -1663,7 +1644,7 @@ def execute_job(
                                 + " ("
                                 + _app.printGranularity()
                                 + ") - "
-                                + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+                                + now
                                 + "\n"
                                 + "SELL at "
                                 + price_text
@@ -2152,7 +2133,7 @@ def execute_job(
                     5,
                     1,
                     execute_job,
-                    (sc, _app, _state, _technical_analysis, _websocket, trading_data),
+                    (sc, _app, _state, _technical_analysis, _websocket),
                 )
             else:
                 if _app.enableWebsocket() and not _app.isSimulation():
@@ -2161,7 +2142,7 @@ def execute_job(
                         15,
                         1,
                         execute_job,
-                        (sc, _app, _state, _technical_analysis, _websocket, trading_data),
+                        (sc, _app, _state, _technical_analysis, _websocket),
                     )
                 else:
                     # poll every 1 minute (no _websocket)
@@ -2169,7 +2150,7 @@ def execute_job(
                         60,
                         1,
                         execute_job,
-                        (sc, _app, _state, _technical_analysis, _websocket, trading_data),
+                        (sc, _app, _state, _technical_analysis, _websocket),
                     )
 
 
@@ -2210,8 +2191,7 @@ def main():
             if app.isSimulation():
                 execute_job(s, app, state, technical_analysis, _websocket, trading_data)
             else:
-                trading_data = pd.DataFrame()
-                execute_job(s, app, state, technical_analysis, _websocket, trading_data)
+                execute_job(s, app, state, technical_analysis, _websocket)
 
             s.run()
 

@@ -192,32 +192,29 @@ class TradingAccount:
                 )
                 trycnt, maxretry = (0, 5)
                 while trycnt <= maxretry:
-                    try:
-                        df = model.getAccounts()
+                    df = model.getAccounts()
 
-                        if isinstance(df, pd.DataFrame) and len(df) > 0:
-                            if currency == '':
-                                # retrieve all balances
-                                return df
+                    if isinstance(df, pd.DataFrame) and len(df) > 0:
+                        if currency == '':
+                            # retrieve all balances
+                            return df
+                        else:
+                            # retrieve balance of specified currency
+                            df_filtered = df[df['currency'] == currency]['available']
+                            if len(df_filtered) == 0:
+                                # return nil balance if no positive balance was found
+                                return 0.0
                             else:
-                                # retrieve balance of specified currency
-                                df_filtered = df[df['currency'] == currency]['available']
-                                if len(df_filtered) == 0:
-                                    # return nil balance if no positive balance was found
-                                    return 0.0
+                                # return balance of specified currency (if positive)
+                                if currency in ['EUR', 'GBP', 'USD']:
+                                    return float(truncate(float(df[df['currency'] == currency]['available'].values[0]), 2))
                                 else:
-                                    # return balance of specified currency (if positive)
-                                    if currency in ['EUR', 'GBP', 'USD']:
-                                        return float(truncate(float(df[df['currency'] == currency]['available'].values[0]), 2))
-                                    else:
-                                        return float(truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
-                    except Exception as err:
+                                    return float(truncate(float(df[df['currency'] == currency]['available'].values[0]), 4))
+                    else:
                         time.sleep(5)
                         trycnt += 1
-                        if trycnt >= maxretry:
-                            raise Exception(f"Kucoin API Error while getting balance.  Error: {err}")
-#                else:
-#                    return 0.0
+                else:
+                    return 0.0
 
             else:
                 # return dummy balances

@@ -310,8 +310,8 @@ def defaultConfigParse(app, config):
 
     if "preventloss" in config:
         if isinstance(config["preventloss"], int):
-            if config["preventloss"] in [0,1]:
-                app.preventloss = bool(config["preventloss"])
+            if bool(config["preventloss"]):
+                app.preventloss = True
         else:
             raise TypeError("preventloss must be of type int")
 
@@ -574,8 +574,8 @@ def defaultConfigParse(app, config):
 
     if "buylastsellsize" in config:
         if isinstance(config["buylastsellsize"], int):
-            if config["buylastsellsize"] in [0, 1]:
-                app.buylastsellsize = bool(config["buylastsellsize"])
+            if bool(config["buylastsellsize"]):
+                app.buylastsellsize = True
         else:
             raise TypeError("buylastsellsize must be of type int")
 
