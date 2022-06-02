@@ -201,7 +201,7 @@ class Strategy:
         if self.app.disableBuyEMA() and self.app.disableBuyMACD():
             # if custom trade signals is enabled, don't alert, just return False
             if self.CS_ready is False:
-                log_text = f"{str(now)} | {self.app.getMarket()} | {self.app.printGranularity()} | "
+                log_text = f"{str(datetime.now())} | {self.app.getMarket()} | {self.app.printGranularity()} | "
                 log_text += f" EMA, MACD indicators are needed for standard signals and they are disabled."
                 Logger.warning(log_text)
 
