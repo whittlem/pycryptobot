@@ -678,6 +678,9 @@ class AuthAPI(AuthAPIBase):
                 return self.handle_api_error(err, error)
             time.sleep(15)
 
+        else:
+            raise Exception(F"CoinbasePro API Error: Private API call to {uri} attempted 5 times, resulted in error")
+
     def handle_api_error(self, err: str, reason: str) -> pd.DataFrame:
         """Handle API errors"""
 
@@ -973,6 +976,9 @@ class PublicAPI(AuthAPIBase):
             if trycnt >= maxretry:
                 return self.handle_api_error(err, error)
             time.sleep(15)
+
+        else:
+            raise Exception(F"CoinbasePro API Error: Public API call to {uri} attempted 5 times, resulted in error")
 
     def handle_api_error(self, err: str, reason: str) -> dict:
         """Handle API errors"""
