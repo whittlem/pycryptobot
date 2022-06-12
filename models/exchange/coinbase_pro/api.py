@@ -659,29 +659,23 @@ class AuthAPI(AuthAPIBase):
                         return df
 
             except requests.ConnectionError as err:
-                if trycnt >= maxretry:
-                    return self.handle_api_error(err, "ConnectionError")
-                time.sleep(15)
+                error = "ConnectionError"
 
             except requests.exceptions.HTTPError as err:
-                if trycnt >= maxretry:
-                    return self.handle_api_error(err, "HTTPError")
-                time.sleep(15)
+                error = "HTTPError"
 
             except requests.Timeout as err:
-                if trycnt >= maxretry:
-                    return self.handle_api_error(err, "Timeout")
-                time.sleep(15)
+                error = "Timeout"
 
             except json.decoder.JSONDecodeError as err:
-                if trycnt >= maxretry:
-                    return self.handle_api_error(err, "JSONDecodeError")
-                time.sleep(15)
+                error = "JSONDecodeError"
 
             except Exception as err:
-                if trycnt >= maxretry:
-                    return self.handle_api_error(err, "Exception")
-                time.sleep(15)
+                error = "GeneralException"
+
+            if trycnt >= maxretry:
+                return self.handle_api_error(err, error)
+            time.sleep(15)
 
     def handle_api_error(self, err: str, reason: str) -> pd.DataFrame:
         """Handle API errors"""
@@ -960,29 +954,23 @@ class PublicAPI(AuthAPIBase):
                     return resp.json()
 
             except requests.ConnectionError as err:
-                if trycnt >= maxretry:
-                    return self.handle_api_error(err, "ConnectionError")
-                time.sleep(15)
+                error = "ConnectionError"
 
             except requests.exceptions.HTTPError as err:
-                if trycnt >= maxretry:
-                    return self.handle_api_error(err, "HTTPError")
-                time.sleep(15)
+                error = "HTTPError"
 
             except requests.Timeout as err:
-                if trycnt >= maxretry:
-                    return self.handle_api_error(err, "Timeout")
-                time.sleep(15)
+                error = "Timeout"
 
             except json.decoder.JSONDecodeError as err:
-                if trycnt >= maxretry:
-                    return self.handle_api_error(err, "JSONDecodeError")
-                time.sleep(15)
+                error = "JSONDecodeError"
 
             except Exception as err:
-                if trycnt >= maxretry:
-                    return self.handle_api_error(err, "Exception")
-                time.sleep(15)
+                error = "GeneralException"
+
+            if trycnt >= maxretry:
+                return self.handle_api_error(err, error)
+            time.sleep(15)
 
     def handle_api_error(self, err: str, reason: str) -> dict:
         """Handle API errors"""
