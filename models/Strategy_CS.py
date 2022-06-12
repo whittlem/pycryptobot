@@ -139,12 +139,14 @@ class Strategy_CS:
             data['sma5'][0] > data['sma10'][0]
             and data['sma5_pc'][0] > 0.1
             and data['sma10_pc'][0] > 0.1
+            and data_1h['ema5_pc'][0] > 0
         ):
             if ( # if sma10 is above sma50 and both or increasing, we are getting even better
                 data['sma10'][0] > data['sma50'][0]
                 and data['sma50_pc'][0] > 0
                 and EMA1hBull is True
                 and data_1h['ema5_pc'][0] > 0
+                and data_6h['ema5_pc'][0] > 0
             ): # SMA10/SMA50 points
                 self.market_trend = "Less risk, buy medium points"
                 self.pts_to_buy = 9
