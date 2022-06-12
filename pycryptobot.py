@@ -10,7 +10,7 @@ import sched
 import signal
 import sys
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pandas as pd
 
@@ -29,7 +29,6 @@ from models.PyCryptoBot import PyCryptoBot
 from models.PyCryptoBot import truncate as _truncate
 from models.Stats import Stats
 from models.TradingAccount import TradingAccount
-from views.TradingGraphs import TradingGraphs
 from os.path import exists as file_exists
 
 app = PyCryptoBot()
@@ -40,13 +39,11 @@ state = AppState(app, account)
 if app.enable_pandas_ta is True:
     try:
         from models.Trading_myPta import TechnicalAnalysis
-        trading_myPta = True
+        state.trading_myPta = True
         state.pandas_ta_enabled = True
     except ImportError as myTrading_err:
-        # trading_myPta = False
         if file_exists("models/Trading_myPta.py"):
             raise ImportError(f"Custom Trading Error: {myTrading_err}")
-        # elif trading_myPta is False:
         try:
             from models.Trading_Pta import TechnicalAnalysis
             state.pandas_ta_enabled = True
@@ -55,9 +52,9 @@ if app.enable_pandas_ta is True:
 else:
     from models.Trading import TechnicalAnalysis
 
-
-# from views.TradingGraphs import TradingGraphs
 from models.Strategy import Strategy
+from views.TradingGraphs import TradingGraphs
+
 # minimal traceback
 sys.tracebacklimit = 1
 
@@ -83,7 +80,7 @@ def execute_job(
     _state: AppState = None,
     _technical_analysis=None,
     _websocket=None,
-    trading_data=pd.DataFrame(),
+    trading_data=pd.DataFrame()
 ):
     """Trading bot job which runs at a scheduled interval"""
 
@@ -182,18 +179,61 @@ def execute_job(
     _state.iterations = _state.iterations + 1
 
     if not _app.isSimulation():
-        # retrieve the _app.getMarket() data
-        if _app.getExchange() == Exchange.KUCOIN:
-            start = datetime.now() -  timedelta(minutes=(_app.getGranularity().to_integer / 60) * _app.setTotalPeriods())
-            start = str(start.isoformat()).split('.')[0]
-            trading_data = _app.getHistoricalData(
-                _app.getMarket(), _app.getGranularity(), _websocket , iso8601start=start
+        # check if data exists or not and only refresh at candle close.
+        if (
+            len(trading_data) == 0
+            or (len(trading_data) > 0
+                and (
+                    datetime.timestamp(
+                        datetime.utcnow()
+                    ) - _app.getGranularity().to_integer >= datetime.timestamp(
+                        trading_data.iloc[_state.closed_candle_row, trading_data.columns.get_loc('date')]
+                    )
+                )
             )
-        else:
+        ):
             trading_data = _app.getHistoricalData(
                 _app.getMarket(), _app.getGranularity(), _websocket
             )
+            _state.closed_candle_row = -1
+            price = float(trading_data.iloc[-1, trading_data.columns.get_loc('close')])
+
+        else:
+            # set time and price with ticker data and add/update current candle
+            ticker = _app.getTicker(_app.getMarket(), _websocket)
+            # if 0, use last close value as price
+            price = trading_data["close"].iloc[-1] if ticker[1] == 0 else ticker[1]
+            _app.ticker_date = ticker[0]
+            _app.ticker_price = ticker[1]
+
+            if _state.closed_candle_row == -2:
+                trading_data.iloc[-1, trading_data.columns.get_loc('low')] = price if price < trading_data["low"].iloc[-1] else trading_data["low"].iloc[-1]
+                trading_data.iloc[-1, trading_data.columns.get_loc('high')] = price if price > trading_data["high"].iloc[-1] else trading_data["high"].iloc[-1]
+                trading_data.iloc[-1, trading_data.columns.get_loc('close')] = price
+                trading_data.iloc[-1, trading_data.columns.get_loc('date')] = datetime.strptime(ticker[0], "%Y-%m-%d %H:%M:%S")
+                tsidx = pd.DatetimeIndex(trading_data["date"])
+                trading_data.set_index(tsidx, inplace=True)
+                trading_data.index.name = "ts"
+            else:
+                trading_data.loc[len(trading_data.index)] = [
+                    datetime.strptime(ticker[0], "%Y-%m-%d %H:%M:%S"),
+                    trading_data["market"].iloc[-1],
+                    trading_data["granularity"].iloc[-1],
+                    (price if price < trading_data["close"].iloc[-1] else trading_data["close"].iloc[-1]),
+                    (price if price > trading_data["close"].iloc[-1] else trading_data["close"].iloc[-1]),
+                    trading_data["close"].iloc[-1],
+                    price,
+                    trading_data["volume"].iloc[-1]
+                ] 
+
+                tsidx = pd.DatetimeIndex(trading_data["date"])
+                trading_data.set_index(tsidx, inplace=True)
+                trading_data.index.name = "ts"
+                _state.closed_candle_row = -2
+
+#        print(trading_data.iloc[-1])
     else:
+        price = float(df_last["close"].values[0])
         if len(trading_data) == 0:
             return None
 
@@ -305,7 +345,8 @@ def execute_job(
     else:
         df_last = _app.getInterval(df)
 
-    if len(df_last.index.format()) > 0:
+    # Don't want index of new, unclosed candle, use the historical row setting to set index to last closed candle
+    if _state.closed_candle_row != -2 and len(df_last.index.format()) > 0:
         current_df_index = str(df_last.index.format()[0])
     else:
         current_df_index = _state.last_df_index
@@ -382,7 +423,7 @@ def execute_job(
 
     # use actual sim mode date to check smartchswitch
     if (
-        (last_api_call_datetime.seconds > 0 or _app.isSimulation())
+        (last_api_call_datetime.seconds > 60 or _app.isSimulation())
         and _app.getSmartSwitch() == 1
         and _app.getGranularity() == Granularity.ONE_HOUR
         and _app.is1hEMA1226Bull(current_sim_date, _websocket) is True
@@ -447,7 +488,8 @@ def execute_job(
                 300, 1, execute_job, (sc, _app, _state, _technical_analysis, _websocket)
             )
     else:
-        if len(df) < _app.setTotalPeriods() - 5: # If 300 is required, set adjust_total_periods in config to 305
+        # verify 300 rows - subtract 5 to allow small buffer if API is acting up.
+        if len(df) < _app.setTotalPeriods() - 5: # If 300 is required, set adjust_total_periods in config to 305.
             if not _app.isSimulation():
                 # data frame should have 300 rows or equal to adjusted total rows if set, if not retry
                 Logger.error(f"error: data frame length is < {str(_app.setTotalPeriods())} ({str(len(df))})")
@@ -458,23 +500,6 @@ def execute_job(
                     execute_job,
                     (sc, _app, _state, _technical_analysis, _websocket),
                 )
-
-    if (
-        (last_api_call_datetime.seconds > 120 or _app.isSimulation())
-        and _app.getSmartSwitch() == 0
-        and (_app.getGranularity() == Granularity.FIFTEEN_MINUTES
-            or _app.getGranularity() == Granularity.FIVE_MINUTES
-        )
-    ):
-        if _app.is1hEMA1226Bull(current_sim_date, _websocket) is True:
-            _app.EMA1hBull = True
-        else:
-            _app.EMA1hBull = False
-
-        if _app.is6hEMA1226Bull(current_sim_date, _websocket) is True:
-            _app.EMA6hBull = True
-        else:
-            _app.EMA6hBull = False
 
     if len(df_last) > 0:
         now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
@@ -562,17 +587,6 @@ def execute_job(
                 ):
                     sys.exit(0)
 
-        if not _app.isSimulation():
-            ticker = _app.getTicker(_app.getMarket(), _websocket)
-            now = ticker[0]
-            price = ticker[1]
-            if price < df_last["low"].values[0]:
-                df_last["low"].values[0] = price
-            if price == 0:
-                price = float(df_last["close"].values[0])
-        else:
-            price = float(df_last["close"].values[0])
-
         if price < 0.000001:
             raise Exception(
                 f"{_app.getMarket()} is unsuitable for trading, quote price is less than 0.000001!"
@@ -639,7 +653,7 @@ def execute_job(
         trailing_action_logtext = ""
 
         # determine current action, indicatorvalues will be empty if custom Strategy are disabled or it's debug is False
-        _state.action, indicatorvalues = strategy.getAction(_state, price, current_sim_date)
+        _state.action, indicatorvalues = strategy.getAction(_state, price, current_sim_date, _websocket)
 
         immediate_action = False
         margin, profit, sell_fee, change_pcnt_high = 0, 0, 0, 0
@@ -721,13 +735,6 @@ def execute_job(
                 _state.action = "SELL"
                 immediate_action = True
 
-        # If buy signal, save the price and check for decrease/increase before buying.
-        if _state.action == "BUY" and immediate_action is not True:
-            _state.action, _state.trailing_buy, trailing_action_logtext, immediate_action = strategy.checkTrailingBuy(_state, price)
-        # If sell signal, save the price and check for decrease/increase before selling.
-        if _state.action == "SELL" and immediate_action is not True:
-            _state.action, _state.trailing_sell, trailing_action_logtext, immediate_action = strategy.checkTrailingSell(_state, price)
-
         # handle overriding wait actions
         # (e.g. do not sell if sell at loss disabled!, do not buy in bull if bull only, manual trades only)
         if _app.manualTradesOnly() is True or (
@@ -736,6 +743,13 @@ def execute_job(
             ):
             _state.action = "WAIT"
             immediate_action = False
+
+        # If buy signal, save the price and check for decrease/increase before buying.
+        if _state.action == "BUY" and immediate_action is not True:
+            _state.action, _state.trailing_buy, trailing_action_logtext, immediate_action = strategy.checkTrailingBuy(_state, price)
+        # If sell signal, save the price and check for decrease/increase before selling.
+        if _state.action == "SELL" and immediate_action is not True:
+            _state.action, _state.trailing_sell, trailing_action_logtext, immediate_action = strategy.checkTrailingSell(_state, price)
 
         if _app.enableImmediateBuy():
             if _state.action == "BUY":
@@ -1650,7 +1664,7 @@ def execute_job(
                                 + " ("
                                 + _app.printGranularity()
                                 + ") - "
-                                + now
+                                + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
                                 + "\n"
                                 + "SELL at "
                                 + price_text
@@ -2140,7 +2154,7 @@ def execute_job(
                     5,
                     1,
                     execute_job,
-                    (sc, _app, _state, _technical_analysis, _websocket),
+                    (sc, _app, _state, _technical_analysis, _websocket, trading_data),
                 )
             else:
                 if _app.enableWebsocket() and not _app.isSimulation():
@@ -2149,7 +2163,7 @@ def execute_job(
                         15,
                         1,
                         execute_job,
-                        (sc, _app, _state, _technical_analysis, _websocket),
+                        (sc, _app, _state, _technical_analysis, _websocket, trading_data),
                     )
                 else:
                     # poll every 1 minute (no _websocket)
@@ -2157,7 +2171,7 @@ def execute_job(
                         60,
                         1,
                         execute_job,
-                        (sc, _app, _state, _technical_analysis, _websocket),
+                        (sc, _app, _state, _technical_analysis, _websocket, trading_data),
                     )
 
 
@@ -2198,7 +2212,8 @@ def main():
             if app.isSimulation():
                 execute_job(s, app, state, technical_analysis, _websocket, trading_data)
             else:
-                execute_job(s, app, state, technical_analysis, _websocket)
+                trading_data = pd.DataFrame()
+                execute_job(s, app, state, technical_analysis, _websocket, trading_data)
 
             s.run()
 

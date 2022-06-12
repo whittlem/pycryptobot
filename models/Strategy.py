@@ -194,8 +194,12 @@ class Strategy:
         debug = False
 
         # additional sell signals - add additional functions and calls as necessary
-        if self.CS_ready and self.CS.sellSignal():
-            return True
+        if self.CS_ready:
+            if self.CS.sellSignal():
+                return True
+            else:
+                # If Custom Strategy active, don't process standard signals, return False
+                return False
 
         # if standard EMA and MACD are disabled, do not run below tests
         if self.app.disableBuyEMA() and self.app.disableBuyMACD():
@@ -253,7 +257,7 @@ class Strategy:
         if ( # Custom Strategy loaded
             self.CS_ready
             and self.app.sellTriggerOverride() is True
-            and self.CS.buy_pts == self.CS.max_pts
+            and self.CS.buy_pts >= self.CS.sell_override_pts
         ):
             return False
 
@@ -708,21 +712,21 @@ class Strategy:
 
         return self.state.action, self.state.trailing_sell, trailing_action_logtext, immediate_action
 
-    def getAction(self, state, price, dt):
+    def getAction(self, state, price, current_sim_date, websocket):
         self.state = state
         # if Custom Strategy requirements are met, run tradeSignals function and report any errors.
         if self.CS_ready is True:
             # use try/except since this is a customizable file
             try:
                 # indicatorvalues displays indicators in log and telegram if debug is True in CS.tradeSignals
-                indicatorvalues = self.CS.tradeSignals(data = self._df_last, _df=self._df)
+                indicatorvalues = self.CS.tradeSignals(self._df_last, self._df, current_sim_date, websocket)
             except Exception as err:
                 self.CS_ready = False
                 Logger.warning(f"Custom Strategy Error: {err}")
         else: # strategy not enabled or an error occurred.
             indicatorvalues = ""
 
-        if  self.state.last_action != "BUY" and self.isBuySignal(self.state, price, dt):
+        if  self.state.last_action != "BUY" and self.isBuySignal(self.state, price, current_sim_date):
             return "BUY", indicatorvalues
         elif self.state.last_action not in ["", "SELL"] and self.isSellSignal():
             return "SELL", indicatorvalues
