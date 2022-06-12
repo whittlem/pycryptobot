@@ -800,6 +800,7 @@ class AuthAPI(AuthAPIBase):
         if not isinstance(uri, str):
             raise TypeError("URI is not a string.")
 
+        error, err = (None, None)
         trycnt, maxretry = (1, 5)
         while trycnt <= maxretry:
             try:
@@ -1217,6 +1218,7 @@ class PublicAPI(AuthAPIBase):
             raise TypeError("URI is not a string.")
 
         # If API returns an error status code, retry request up to 5 times
+        error, err = (None, None)
         trycnt, maxretry = (1, 5)
         while trycnt <= maxretry:
             try:
@@ -1233,9 +1235,6 @@ class PublicAPI(AuthAPIBase):
                     message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
                     if trycnt >= maxretry:
                         return self.handle_api_error(message, "KucoinAPIError")
-#                            Logger.warning(
-#                                f"Kucoin API request error - attempted {trycnt} times: {message}"
-#                            )
                     time.sleep(15)
                 else:
                     return resp.json()

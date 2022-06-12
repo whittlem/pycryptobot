@@ -613,6 +613,7 @@ class AuthAPI(AuthAPIBase):
         if not isinstance(uri, str):
             raise TypeError("URI is not a string.")
 
+        error, err = (None, None)
         trycnt, maxretry = (1, 5)
         while trycnt <= maxretry:
             try:
@@ -933,6 +934,7 @@ class PublicAPI(AuthAPIBase):
         if not isinstance(uri, str):
             raise TypeError("URI is not a string.")
 
+        error, err = (None, None)
         trycnt, maxretry = (1, 5)
         while trycnt <= maxretry:
             try:

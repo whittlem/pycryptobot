@@ -1,6 +1,7 @@
 import json
 import math
 import random
+import time
 import re
 from datetime import datetime, timedelta
 from typing import Union
@@ -608,6 +609,8 @@ class PyCryptoBot(BotConfig):
                     )
                 )
             ):
+                # if calling getHistoricalData, we are likely calling a couple one right after another, pause a few seconds
+                time.sleep(5)
                 df = self.getHistoricalData(
                     self.getMarket(), granularity, websocket
                 )
@@ -693,7 +696,6 @@ class PyCryptoBot(BotConfig):
 
             return bool(df_last["bull"])
         except Exception as err:
-            raise Exception(err)
             return False
 
     def is1hSMA50200Bull(self, iso8601end: str = "", websocket=None):
@@ -776,7 +778,6 @@ class PyCryptoBot(BotConfig):
 
             return bool(df_last["bull"])
         except Exception as err:
-            raise Exception(err)
             return False
 
     def is6hSMA50200Bull(self, websocket):
