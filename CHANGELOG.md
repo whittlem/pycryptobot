@@ -21,7 +21,8 @@ Upgrade library dependencies (if required):
 - added additional dataframe function to PyCyptoBot that will store additionally called dataframes dynamically and update them with ticker date like the main dataframe.  This greatly reduces the number of API calls when running SmartSwitch, checking 
 "bullonly" or wanting to check anything else on a differen granularity than what is currently running. This is used for all additional calls for live and non-live checks, but not for Sims as that has it's own cache system already.  Might be able to clean up Sim code as well in the future.
 - consolidated numerous indicators and signals in Trading_Pta.py to help prevent dataframe fragmentation
-- revised default Strategy_CS.py  to be a little less risky and include so new features.  Added extra comments to code.
+- revised default Strategy_CS.py to be a little less risky and include so new features.  Added extra comments to code.
+- shortened dataframe references in Strategy_CS.py to hopefully be less confusing for users
 - added additional dataframe features to Strategy_CS.py
 
 ## [6.4.1] - 2022-05-05

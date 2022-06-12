@@ -80,7 +80,7 @@ class TechnicalAnalysis:
 
         # enable/disable Pandas-ta module and/or TA-Lib
         self.pandas_ta = True
-        self.talib = False
+        self.talib = use_talib
 
     def getDataFrame(self) -> DataFrame:
         """Returns the Pandas DataFrame"""
