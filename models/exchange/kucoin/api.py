@@ -939,11 +939,15 @@ class AuthAPI(AuthAPIBase):
                 error = "GeneralException"
 
             if trycnt >= maxretry:
+                if err is None:
+                    err = f"Uknown Kucoin API Error: Private API call to {uri} attempted 5 times, resulted in error"
+                if error is None:
+                    error = "Unknown Error"
                 return self.handle_api_error(err, error)
             time.sleep(15)
 
         else:
-            raise Exception(F"Kucoin API Error: Private API call to {uri} attempted 5 times, resulted in error")
+            return self.handle_api_error(f"Kucoin API Error: Private API call to {uri} attempted 5 times, resulted in error", "Unknown Error")
 
     def handle_api_error(self, err: str, reason: str) -> pd.DataFrame:
         """Handle API errors"""
@@ -1258,11 +1262,15 @@ class PublicAPI(AuthAPIBase):
                 error = "GeneralException"
 
             if trycnt >= maxretry:
+                if err is None:
+                    err = f"Uknown Kucoin API Error: Public API call to {uri} attempted 5 times, resulted in error"
+                if error is None:
+                    error = "Unknown Error"
                 return self.handle_api_error(err, error)
             time.sleep(15)
 
         else:
-            raise Exception(F"Kucoin API Error: Public API call to {uri} attempted 5 times, resulted in error")
+            return self.handle_api_error(f"Kucoin API Error: Public API call to {uri} attempted 5 times, resulted in error", "Unknown Error")
 
     def handle_api_error(self, err: str, reason: str) -> dict:
         """Handle API errors"""
