@@ -978,11 +978,15 @@ class PublicAPI(AuthAPIBase):
                 error = "GeneralException"
 
             if trycnt >= maxretry:
+                if err is None:
+                    err = f"Uknown CoinbasePro API Error: Public API call to {uri} attempted 5 times, resulted in error"
+                if error is None:
+                    error = "Unknown Error"
                 return self.handle_api_error(err, error)
             time.sleep(15)
 
         else:
-            raise Exception(F"CoinbasePro API Error: Public API call to {uri} attempted 5 times, resulted in error")
+            return self.handle_api_error(f"CoinbasePro API Error: Public API call to {uri} attempted 5 times, resulted in error", "Unknown Error")
 
     def handle_api_error(self, err: str, reason: str) -> dict:
         """Handle API errors"""
