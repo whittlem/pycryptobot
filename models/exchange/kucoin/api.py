@@ -1071,40 +1071,40 @@ class PublicAPI(AuthAPIBase):
 
                 trycnt += 1
                 try:
-                    if "data" in resp:
-                        # convert the API response into a Pandas DataFrame
-                        df = pd.DataFrame(
-                            resp["data"],
-                            columns=["time", "open", "close", "high", "low", "volume", "turnover"],
-                        )
-                        # reverse the order of the response with earliest last
-                        df = df.iloc[::-1].reset_index()
+#                    if "data" in resp:
+                    # convert the API response into a Pandas DataFrame
+                    df = pd.DataFrame(
+                        resp["data"],
+                        columns=["time", "open", "close", "high", "low", "volume", "turnover"],
+                    )
+                    # reverse the order of the response with earliest last
+                    df = df.iloc[::-1].reset_index()
 
-                        try:
-                            freq = granularity.get_frequency
-                        except:
-                            freq = "D"
+                    try:
+                        freq = granularity.get_frequency
+                    except:
+                        freq = "D"
 
     #                    now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
-                        # convert the DataFrame into a time series with the date as the index/key
-                        tsidx = pd.DatetimeIndex(
-                            pd.to_datetime(df["time"], unit="s"), dtype="datetime64[ns]", freq=freq
-                        )
-                        df.set_index(tsidx, inplace=True)
-                        df = df.drop(columns=["time", "index"])
-                        df.index.names = ["ts"]
-                        df["date"] = tsidx
+                    # convert the DataFrame into a time series with the date as the index/key
+                    tsidx = pd.DatetimeIndex(
+                        pd.to_datetime(df["time"], unit="s"), dtype="datetime64[ns]", freq=freq
+                    )
+                    df.set_index(tsidx, inplace=True)
+                    df = df.drop(columns=["time", "index"])
+                    df.index.names = ["ts"]
+                    df["date"] = tsidx
 
-                        break
-                    else:
-                        if trycnt >= (maxretry):
-                            raise Exception(
-                                f"Kucoin API Error for Historical Data - attempted {trycnt} times - Error: {err}"
-                            )
-                        time.sleep(15)
+                    break
+#                    else:
+#                        if trycnt >= (maxretry):
+#                            raise Exception(
+#                                f"Kucoin API Error for Historical Data - attempted {trycnt} times - API did not return correct response"
+#                            )
+#                        time.sleep(15)
 
-                except ValueError as err:
+                except Exception as err:
                     if trycnt >= (maxretry):
                         raise Exception(
                             f"Kucoin API Error for Historical Data - attempted {trycnt} times - Error: {err}"
