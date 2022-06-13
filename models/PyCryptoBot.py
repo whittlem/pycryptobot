@@ -598,9 +598,9 @@ class PyCryptoBot(BotConfig):
         row = self.df_data[idx][2]
         try:
             if (
-                len(df) == 0
+                len(df) == 0 # empty dataframe
                 or (len(df) > 0
-                    and (
+                    and ( # if exists, only refresh at candleclose
                         datetime.timestamp(
                             datetime.utcnow()
                         ) - granularity.to_integer >= datetime.timestamp(
@@ -609,23 +609,26 @@ class PyCryptoBot(BotConfig):
                     )
                 )
             ):
-                # if calling getHistoricalData, we are likely calling a couple one right after another, pause a few seconds
-                time.sleep(5)
+                # if calling getHistoricalData, pause 1 second. With staggered starts, that should be plenty delay
+                time.sleep(1)
                 df = self.getHistoricalData(
                     self.getMarket(), granularity, websocket
                 )
                 row = -1
             else:
-                if (
-                    datetime.timestamp(
-                        datetime.utcnow()
-                    ) - 60 <= datetime.timestamp(
-                        df["date"].iloc[row]
-                    )
-                    or self.ticker_date is None
+                # if ticker hasn't run yet or hasn't updated, return the original df
+                if websocket is not None and self.ticker_date is None:
+                    return df
+                elif ( # if calling API multiple times, per iteration, ticker may not be updated yet
+                    self.ticker_date is None
+                    or datetime.timestamp(
+                            datetime.utcnow()
+                        ) - 60 <= datetime.timestamp(
+                            df["date"].iloc[row]
+                        )
                 ):
-                    return (df)
-                elif row == -2:
+                    return df
+                elif row == -2: # update the new row added for ticker if it is there
                     df.iloc[-1, df.columns.get_loc('low')] = self.ticker_price if self.ticker_price < df["low"].iloc[-1] else df["low"].iloc[-1]
                     df.iloc[-1, df.columns.get_loc('high')] = self.ticker_price if self.ticker_price > df["high"].iloc[-1] else df["high"].iloc[-1]
                     df.iloc[-1, df.columns.get_loc('close')] = self.ticker_price
@@ -633,7 +636,7 @@ class PyCryptoBot(BotConfig):
                     tsidx = pd.DatetimeIndex(df["date"])
                     df.set_index(tsidx, inplace=True)
                     df.index.name = "ts"
-                else:
+                else: # else we are adding a new row for the ticker data
                     new_row = pd.DataFrame(
                         columns=[
                             "date",
