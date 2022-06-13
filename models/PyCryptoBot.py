@@ -609,8 +609,6 @@ class PyCryptoBot(BotConfig):
                     )
                 )
             ):
-                # if calling getHistoricalData, pause 1 second. With staggered starts, that should be plenty delay
-                time.sleep(1)
                 df = self.getHistoricalData(
                     self.getMarket(), granularity, websocket
                 )
