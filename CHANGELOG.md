@@ -24,6 +24,7 @@ Upgrade library dependencies (if required):
 - revised default Strategy_CS.py to be a little less risky and include so new features.  Added extra comments to code.
 - shortened dataframe references in Strategy_CS.py to hopefully be less confusing for users
 - added additional dataframe features to Strategy_CS.py
+- fixed trades occuring any time and not only at candle close.  Can be overridden, but standard trades occur at close as they should again.
 
 ## [6.4.1] - 2022-05-05
 
