@@ -23,7 +23,7 @@ class Strategy_CS:
             from models.Trading_Pta import TechnicalAnalysis
         self.TA = TechnicalAnalysis
 
-    def tradeSignals(self, data, _df, current_sim_date, websocket):
+    def tradeSignals(self, data, df, current_sim_date, websocket):
 
         """ 
         #############################################################################################
