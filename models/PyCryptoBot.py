@@ -1,6 +1,7 @@
 import json
 import math
 import random
+import time
 import re
 from datetime import datetime, timedelta
 from typing import Union
@@ -280,58 +281,36 @@ class PyCryptoBot(BotConfig):
         if self.exchange == Exchange.BINANCE:
             api = BPublicAPI(api_url=self.getAPIURL())
 
-            if iso8601start != "" and iso8601end != "":
-                return api.getHistoricalData(
-                    market,
-                    granularity,
-                    None,
-                    iso8601start,
-                    iso8601end,
-                )
-            else:
-                return api.getHistoricalData(market, granularity, websocket)
         elif (
             self.exchange == Exchange.KUCOIN
         ):  # returns data from coinbase if not specified
             api = KPublicAPI(api_url=self.getAPIURL())
 
-            if iso8601start != "" and iso8601end == "":
-                return api.getHistoricalData(
-                    market,
-                    granularity,
-                    None,
-                    iso8601start,
-                )
-            elif iso8601start != "" and iso8601end != "":
-                return api.getHistoricalData(
-                    market,
-                    granularity,
-                    None,
-                    iso8601start,
-                    iso8601end,
-                )
-            else:
-                return api.getHistoricalData(market, granularity, websocket)
+            # Kucoin only returns 100 rows if start not specified, make sure we get the right amount
+            if not self.isSimulation() and iso8601start == "":
+                start = datetime.now() -  timedelta(minutes=(granularity.to_integer / 60) * self.setTotalPeriods())
+                iso8601start = str(start.isoformat()).split('.')[0]
+
         else:  # returns data from coinbase if not specified
             api = CBPublicAPI()
 
-            if iso8601start != "" and iso8601end == "":
-                return api.getHistoricalData(
-                    market,
-                    granularity,
-                    None,
-                    iso8601start,
-                )
-            elif iso8601start != "" and iso8601end != "":
-                return api.getHistoricalData(
-                    market,
-                    granularity,
-                    None,
-                    iso8601start,
-                    iso8601end,
-                )
-            else:
-                return api.getHistoricalData(market, granularity, websocket)
+        if iso8601start != "" and iso8601end == "" and self.exchange != Exchange.BINANCE:
+            return api.getHistoricalData(
+                market,
+                granularity,
+                None,
+                iso8601start,
+            )
+        elif iso8601start != "" and iso8601end != "":
+            return api.getHistoricalData(
+                market,
+                granularity,
+                None,
+                iso8601start,
+                iso8601end,
+            )
+        else:
+            return api.getHistoricalData(market, granularity, websocket)
 
     def getSmartSwitchDataFrame(
         self,
@@ -588,29 +567,119 @@ class PyCryptoBot(BotConfig):
     def getSellSmartSwitch(self):
         return self.sell_smart_switch
 
+    def getAdditionalDf(
+        self,
+        short_granularity,
+        websocket
+    ) -> pd.DataFrame:
+
+        granularity = Granularity.convert_to_enum(short_granularity)
+
+        idx, next_idx = (None, 0)
+        for i in range(len(self.df_data)):
+            if isinstance(self.df_data[i], list) and self.df_data[i][0] == short_granularity:
+                idx = i
+            elif isinstance(self.df_data[i], list):
+                next_idx = i + 1
+            else:
+                break
+
+        # idx list:
+        # 0 = short_granularity (1h, 6h, 1d, 5m, 15m, etc.)
+        # 1 = granularity (ONE_HOUR, SIX_HOURS, FIFTEEN_MINUTES, etc.)
+        # 2 = df row (for last candle date)
+        # 3 = DataFrame
+        if idx is None:
+            idx = next_idx
+            self.df_data[idx] = [short_granularity, granularity, -1, pd.DataFrame()]
+
+
+        df = self.df_data[idx][3]
+        row = self.df_data[idx][2]
+        try:
+            if (
+                len(df) == 0 # empty dataframe
+                or (len(df) > 0
+                    and ( # if exists, only refresh at candleclose
+                        datetime.timestamp(
+                            datetime.utcnow()
+                        ) - granularity.to_integer >= datetime.timestamp(
+                            df["date"].iloc[row]
+                        )
+                    )
+                )
+            ):
+                df = self.getHistoricalData(
+                    self.getMarket(), granularity, websocket
+                )
+                row = -1
+            else:
+                # if ticker hasn't run yet or hasn't updated, return the original df
+                if websocket is not None and self.ticker_date is None:
+                    return df
+                elif ( # if calling API multiple times, per iteration, ticker may not be updated yet
+                    self.ticker_date is None
+                    or datetime.timestamp(
+                            datetime.utcnow()
+                        ) - 60 <= datetime.timestamp(
+                            df["date"].iloc[row]
+                        )
+                ):
+                    return df
+                elif row == -2: # update the new row added for ticker if it is there
+                    df.iloc[-1, df.columns.get_loc('low')] = self.ticker_price if self.ticker_price < df["low"].iloc[-1] else df["low"].iloc[-1]
+                    df.iloc[-1, df.columns.get_loc('high')] = self.ticker_price if self.ticker_price > df["high"].iloc[-1] else df["high"].iloc[-1]
+                    df.iloc[-1, df.columns.get_loc('close')] = self.ticker_price
+                    df.iloc[-1, df.columns.get_loc('date')] = datetime.strptime(self.ticker_date, "%Y-%m-%d %H:%M:%S")
+                    tsidx = pd.DatetimeIndex(df["date"])
+                    df.set_index(tsidx, inplace=True)
+                    df.index.name = "ts"
+                else: # else we are adding a new row for the ticker data
+                    new_row = pd.DataFrame(
+                        columns=[
+                            "date",
+                            "market",
+                            "granularity",
+                            "open",
+                            "high",
+                            "close",
+                            "low",
+                            "volume",
+                        ],
+                        data=[
+                            [
+                                datetime.strptime(self.ticker_date, "%Y-%m-%d %H:%M:%S"),
+                                df["market"].iloc[-1],
+                                df["granularity"].iloc[-1],
+                                (self.ticker_price if self.ticker_price < df["close"].iloc[-1] else df["close"].iloc[-1]),
+                                (self.ticker_price if self.ticker_price > df["close"].iloc[-1] else df["close"].iloc[-1]),
+                                df["close"].iloc[-1],
+                                self.ticker_price,
+                                df["volume"].iloc[-1]
+                            ]
+                        ]
+                    )
+                    df = pd.concat([df, new_row], ignore_index = True)
+
+                    tsidx = pd.DatetimeIndex(df["date"])
+                    df.set_index(tsidx, inplace=True)
+                    df.index.name = "ts"
+                    row = -2
+
+            self.df_data[idx][3] = df
+            self.df_data[idx][2] = row
+            return df
+        except Exception as err:
+            raise Exception(f"Additional DF Error: {err}")
+
     def is1hEMA1226Bull(self, iso8601end: str = "", websocket=None):
         try:
             if self.isSimulation() and isinstance(self.ema1226_1h_cache, pd.DataFrame):
                 df_data = self.ema1226_1h_cache.loc[
                     self.ema1226_1h_cache["date"] <= iso8601end
                 ].copy()
-            elif self.exchange == Exchange.COINBASEPRO:
-                api = CBPublicAPI()
-                df_data = api.getHistoricalData(
-                    self.market, Granularity.ONE_HOUR, websocket
-                )
-                self.ema1226_1h_cache = df_data
-            elif self.exchange == Exchange.BINANCE:
-                api = BPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(
-                    self.market, Granularity.ONE_HOUR, websocket
-                )
-                self.ema1226_1h_cache = df_data
-            elif self.exchange == Exchange.KUCOIN:
-                api = KPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(
-                    self.market, Granularity.ONE_HOUR, websocket
-                )
+            elif self.getExchange() != Exchange.DUMMY:
+                df_data = self.getAdditionalDf("1h", websocket).copy()
                 self.ema1226_1h_cache = df_data
             else:
                 return False
@@ -627,7 +696,7 @@ class PyCryptoBot(BotConfig):
             df_last["bull"] = df_last["ema12"] > df_last["ema26"]
 
             return bool(df_last["bull"])
-        except Exception:
+        except Exception as err:
             return False
 
     def is1hSMA50200Bull(self, iso8601end: str = "", websocket=None):
@@ -640,23 +709,8 @@ class PyCryptoBot(BotConfig):
                 df_data = self.sma50200_1h_cache.loc[
                     self.sma50200_1h_cache["date"] <= iso8601end
                 ].copy()
-            elif self.exchange == Exchange.COINBASEPRO:
-                api = CBPublicAPI()
-                df_data = api.getHistoricalData(
-                    self.market, Granularity.ONE_HOUR, websocket
-                )
-                self.sma50200_1h_cache = df_data
-            elif self.exchange == Exchange.BINANCE:
-                api = BPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(
-                    self.market, Granularity.ONE_HOUR, websocket
-                )
-                self.sma50200_1h_cache = df_data
-            elif self.exchange == Exchange.KUCOIN:
-                api = KPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(
-                    self.market, Granularity.ONE_HOUR, websocket
-                )
+            elif self.getExchange() != Exchange.DUMMY:
+                df_data = self.getAdditionalDf("1h", websocket).copy()
                 self.sma50200_1h_cache = df_data
             else:
                 return False
@@ -682,21 +736,8 @@ class PyCryptoBot(BotConfig):
             return False
 
         try:
-            if self.exchange == Exchange.COINBASEPRO:
-                api = CBPublicAPI()
-                df_data = api.getHistoricalData(
-                    self.market, Granularity.ONE_DAY, websocket
-                )
-            elif self.exchange == Exchange.BINANCE:
-                api = BPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(
-                    self.market, Granularity.ONE_DAY, websocket
-                )
-            elif self.exchange == Exchange.KUCOIN:
-                api = KPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(
-                    self.market, Granularity.ONE_DAY, websocket
-                )
+            if self.getExchange() != Exchange.DUMMY:
+                df_data = self.getAdditionalDf("1d", websocket).copy()
             else:
                 return False  # if there is an API issue, default to False to avoid hard sells
 
@@ -719,23 +760,8 @@ class PyCryptoBot(BotConfig):
                 df_data = self.ema1226_6h_cache[
                     (self.ema1226_6h_cache["date"] <= iso8601end)
                 ].copy()
-            elif self.exchange == Exchange.COINBASEPRO:
-                api = CBPublicAPI()
-                df_data = api.getHistoricalData(
-                    self.market, Granularity.SIX_HOURS, websocket
-                )
-                self.ema1226_6h_cache = df_data
-            elif self.exchange == Exchange.BINANCE:
-                api = BPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(
-                    self.market, Granularity.SIX_HOURS, websocket
-                )
-                self.ema1226_6h_cache = df_data
-            elif self.exchange == Exchange.KUCOIN:
-                api = KPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(
-                    self.market, Granularity.SIX_HOURS, websocket
-                )
+            elif self.getExchange() != Exchange.DUMMY:
+                df_data = self.getAdditionalDf("6h", websocket).copy()
                 self.ema1226_6h_cache = df_data
             else:
                 return False
@@ -752,7 +778,7 @@ class PyCryptoBot(BotConfig):
             df_last["bull"] = df_last["ema12"] > df_last["ema26"]
 
             return bool(df_last["bull"])
-        except Exception:
+        except Exception as err:
             return False
 
     def is6hSMA50200Bull(self, websocket):
@@ -761,21 +787,8 @@ class PyCryptoBot(BotConfig):
             return False
 
         try:
-            if self.exchange == Exchange.COINBASEPRO:
-                api = CBPublicAPI()
-                df_data = api.getHistoricalData(
-                    self.market, Granularity.SIX_HOURS, websocket
-                )
-            elif self.exchange == Exchange.BINANCE:
-                api = BPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(
-                    self.market, Granularity.SIX_HOURS, websocket
-                )
-            elif self.exchange == Exchange.KUCOIN:
-                api = KPublicAPI(api_url=self.getAPIURL())
-                df_data = api.getHistoricalData(
-                    self.market, Granularity.SIX_HOURS, websocket
-                )
+            if self.getExchange() != Exchange.DUMMY:
+                df_data = self.getAdditionalDf("6h", websocket).copy()
             else:
                 return False
 

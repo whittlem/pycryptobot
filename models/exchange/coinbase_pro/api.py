@@ -613,61 +613,77 @@ class AuthAPI(AuthAPIBase):
         if not isinstance(uri, str):
             raise TypeError("URI is not a string.")
 
-        try:
-            if method == "DELETE":
-                resp = requests.delete(self._api_url + uri, auth=self)
-            elif method == "GET":
-                resp = requests.get(self._api_url + uri, auth=self)
-            elif method == "POST":
-                resp = requests.post(self._api_url + uri, json=payload, auth=self)
+        error, err = (None, None)
+        trycnt, maxretry = (1, 5)
+        while trycnt <= maxretry:
+            try:
+                if method == "DELETE":
+                    resp = requests.delete(self._api_url + uri, auth=self)
+                elif method == "GET":
+                    resp = requests.get(self._api_url + uri, auth=self)
+                elif method == "POST":
+                    resp = requests.post(self._api_url + uri, json=payload, auth=self)
 
-            if "msg" in resp.json():
-                resp_message = resp.json()["msg"]
-            elif "message" in resp.json():
-                resp_message = resp.json()["message"]
-            else:
-                resp_message = ""
+                trycnt += 1
+                resp.raise_for_status()
 
-            if resp.status_code == 401 and (
-                resp_message == "request timestamp expired"
-            ):
-                message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (hint: check your system time is using NTP)"
-                Logger.error(f"Error: {message}")
-                return {}
-            elif resp.status_code != 200:
-                if self.die_on_api_error or resp.status_code == 401:
-                    # disable traceback
-                    sys.tracebacklimit = 0
-
-                    raise Exception(
-                        f"{method.upper()} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
-                    )
+                if "msg" in resp.json():
+                    resp_message = resp.json()["msg"]
+                elif "message" in resp.json():
+                    resp_message = resp.json()["message"]
                 else:
-                    Logger.error(
-                        f"error: {method.upper()} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
-                    )
-                    return pd.DataFrame()
+                    resp_message = ""
 
-            resp.raise_for_status()
+                if resp.status_code != 200:
+                    if resp.status_code == 401 and (
+                        resp_message == "request timestamp expired"
+                    ):
+                        message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (hint: check your system time is using NTP)"
+                    else:
+                        message = f"CoinbasePro authAPI Error: {method.upper()} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
 
-            if isinstance(resp.json(), list):
-                df = pd.DataFrame.from_dict(resp.json())
-                return df
-            else:
-                df = pd.DataFrame(resp.json(), index=[0])
-                return df
+                    if self.die_on_api_error:
+                        # disable traceback
+                        sys.tracebacklimit = 0
 
-        except requests.ConnectionError as err:
-            return self.handle_api_error(err, "ConnectionError")
+                        raise Exception(message)
+                    else:
+                        if trycnt >= maxretry:
+                            Logger.error(message)
+                            return pd.DataFrame()
+                else:
+                    if isinstance(resp.json(), list):
+                        df = pd.DataFrame.from_dict(resp.json())
+                        return df
+                    else:
+                        df = pd.DataFrame(resp.json(), index=[0])
+                        return df
 
-        except requests.exceptions.HTTPError as err:
-            return self.handle_api_error(err, "HTTPError")
+            except requests.ConnectionError as err:
+                error = "ConnectionError"
 
-        except requests.Timeout as err:
-            return self.handle_api_error(err, "Timeout")
+            except requests.exceptions.HTTPError as err:
+                error = "HTTPError"
 
-        except json.decoder.JSONDecodeError as err:
-            return self.handle_api_error(err, "JSONDecodeError")
+            except requests.Timeout as err:
+                error = "Timeout"
+
+            except json.decoder.JSONDecodeError as err:
+                error = "JSONDecodeError"
+
+            except Exception as err:
+                error = "GeneralException"
+
+            if trycnt >= maxretry:
+                if err is None:
+                    err = f"Uknown CoinbasePro API Error: Private API call to {uri} attempted 5 times, resulted in error"
+                if error is None:
+                    error = "Unknown Error"
+                return self.handle_api_error(err, error)
+            time.sleep(15)
+
+        else:
+            return self.handle_api_error(f"CoinbasePro API Error: Private API call to {uri} attempted 5 times, resulted in error", "Unknown Error")
 
     def handle_api_error(self, err: str, reason: str) -> pd.DataFrame:
         """Handle API errors"""
@@ -741,90 +757,96 @@ class PublicAPI(AuthAPIBase):
             trycnt, maxretry = (0, 5)
             while trycnt < maxretry:
 
-                if iso8601start != "" and iso8601end == "":
-                    resp = self.authAPI(
-                        "GET",
-                        f"products/{market}/candles?granularity={granularity.to_integer}&start={iso8601start}",
-                    )
-                elif iso8601start != "" and iso8601end != "":
-                    resp = self.authAPI(
-                        "GET",
-                        f"products/{market}/candles?granularity={granularity.to_integer}&start={iso8601start}&end={iso8601end}",
-                    )
-                else:
-                    resp = self.authAPI(
-                        "GET", f"products/{market}/candles?granularity={granularity.to_integer}"
-                    )
+                trycnt += 1
+                try:
+                    if iso8601start != "" and iso8601end == "":
+                        resp = self.authAPI(
+                            "GET",
+                            f"products/{market}/candles?granularity={granularity.to_integer}&start={iso8601start}",
+                        )
+                    elif iso8601start != "" and iso8601end != "":
+                        resp = self.authAPI(
+                            "GET",
+                            f"products/{market}/candles?granularity={granularity.to_integer}&start={iso8601start}&end={iso8601end}",
+                        )
+                    else:
+                        resp = self.authAPI(
+                            "GET", f"products/{market}/candles?granularity={granularity.to_integer}"
+                        )
 
-                if len(resp) > 0:
-                    break
-                else:
-                    trycnt += 1
-                    if trycnt == (maxretry):
+                    if len(resp) > 0:
+                        # convert the API response into a Pandas DataFrame
+                        df = pd.DataFrame(
+                            resp, columns=["epoch", "low", "high", "open", "close", "volume"]
+                        )
+                        # reverse the order of the response with earliest last
+                        df = df.iloc[::-1].reset_index()
+
+                        try:
+                            freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity.to_integer)]
+                        except:
+                            freq = "D"
+
+                        # convert the DataFrame into a time series with the date as the index/key
+                        try:
+                            tsidx = pd.DatetimeIndex(
+                                pd.to_datetime(df["epoch"], unit="s"),
+                                dtype="datetime64[ns]",
+                                freq=freq,
+                            )
+                            df.set_index(tsidx, inplace=True)
+                            df = df.drop(columns=["epoch", "index"])
+                            df.index.names = ["ts"]
+                            df["date"] = tsidx
+                        except ValueError:
+                            tsidx = pd.DatetimeIndex(
+                                pd.to_datetime(df["epoch"], unit="s"), dtype="datetime64[ns]"
+                            )
+                            df.set_index(tsidx, inplace=True)
+                            df = df.drop(columns=["epoch", "index"])
+                            df.index.names = ["ts"]
+                            df["date"] = tsidx
+
+                        df["market"] = market
+                        df["granularity"] = granularity.to_integer
+
+                        # re-order columns
+                        df = df[
+                            [
+                                "date",
+                                "market",
+                                "granularity",
+                                "low",
+                                "high",
+                                "open",
+                                "close",
+                                "volume",
+                            ]
+                        ]
+
+                        df["low"] = df["low"].astype(float)
+                        df["high"] = df["high"].astype(float)
+                        df["open"] = df["open"].astype(float)
+                        df["close"] = df["close"].astype(float)
+                        df["volume"] = df["volume"].astype(float)
+
+                        # reset pandas dataframe index
+                        df.reset_index()
+
+                        return df
+                    else:
+                        if trycnt >= (maxretry):
+                            Logger.warning(
+                                f"CoinbasePro API Error for Historical Data - attempted {trycnt} times"
+                            )
+                        time.sleep(15)
+
+                except:
+                    if trycnt >= (maxretry):
                         Logger.warning(
                             f"CoinbasePro API Error for Historical Data - attempted {trycnt} times"
                         )
                     time.sleep(15)
-
-            # convert the API response into a Pandas DataFrame
-            df = pd.DataFrame(
-                resp, columns=["epoch", "low", "high", "open", "close", "volume"]
-            )
-            # reverse the order of the response with earliest last
-            df = df.iloc[::-1].reset_index()
-
-            try:
-                freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity.to_integer)]
-            except:
-                freq = "D"
-
-            # convert the DataFrame into a time series with the date as the index/key
-            try:
-                tsidx = pd.DatetimeIndex(
-                    pd.to_datetime(df["epoch"], unit="s"),
-                    dtype="datetime64[ns]",
-                    freq=freq,
-                )
-                df.set_index(tsidx, inplace=True)
-                df = df.drop(columns=["epoch", "index"])
-                df.index.names = ["ts"]
-                df["date"] = tsidx
-            except ValueError:
-                tsidx = pd.DatetimeIndex(
-                    pd.to_datetime(df["epoch"], unit="s"), dtype="datetime64[ns]"
-                )
-                df.set_index(tsidx, inplace=True)
-                df = df.drop(columns=["epoch", "index"])
-                df.index.names = ["ts"]
-                df["date"] = tsidx
-
-            df["market"] = market
-            df["granularity"] = granularity.to_integer
-
-            # re-order columns
-            df = df[
-                [
-                    "date",
-                    "market",
-                    "granularity",
-                    "low",
-                    "high",
-                    "open",
-                    "close",
-                    "volume",
-                ]
-            ]
-
-            df["low"] = df["low"].astype(float)
-            df["high"] = df["high"].astype(float)
-            df["open"] = df["open"].astype(float)
-            df["close"] = df["close"].astype(float)
-            df["volume"] = df["volume"].astype(float)
-
-            # reset pandas dataframe index
-            df.reset_index()
-
-        return df
 
     def getTicker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
         """Retrieves the market ticker"""
@@ -843,51 +865,43 @@ class PublicAPI(AuthAPIBase):
                         "%Y-%m-%dT%H:%M:%S",
                     ).strftime("%Y-%m-%d %H:%M:%S")
                 ticker_price = float(row["price"].values[0])
+
+                if ticker_date is None:
+                    ticker_date = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    
+                return (
+                    ticker_date,
+                    ticker_price
+                )
+
             except:
                 pass
-
-            if ticker_date is None:
-                ticker_date = now
- 
-            return (
-                ticker_date,
-                ticker_price
-            )
 
         resp = {}
         trycnt, maxretry = (1, 5)
         while trycnt <= maxretry:
 
-            resp = self.authAPI("GET", f"products/{market}/ticker")
+            try:
+                resp = self.authAPI("GET", f"products/{market}/ticker")
 
-            if "time" not in resp or "price" not in resp:
+                """Check if milliseconds (%f) are more then 6 digits. If so truncate for datetime which doesn't support more"""
+#                if len(resp["time"].split('.')[1]) > 7: resp["time"]=resp["time"][:26] + 'Z'
+
+                return (
+#                    datetime.strptime(resp["time"], "%Y-%m-%dT%H:%M:%S.%fZ").strftime(
+#                        "%Y-%m-%d %H:%M:%S"
+#                    ),
+                    datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+                    float(resp["price"]),
+                )
+            except:
                 trycnt += 1
-                if trycnt == maxretry:
+                if trycnt >= maxretry:
                     Logger.warning(
-                        f"CoinbasePro Ticker Error - 'time' or 'price' not in response - attempted {trycnt} times"
+                        f"CoinbasePro Ticker Error - attempted {trycnt} times."
                     )
-                    return (now, 0.0)
+                    return (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), 0.0)
                 time.sleep(15)
-
-            else:
-                try:
-                    """Check if milliseconds (%f) are more then 6 digits. If so truncate for datetime which doesn't support more"""
-                    if len(resp["time"].split('.')[1]) > 7: resp["time"]=resp["time"][:26] + 'Z'
-
-                    return (
-                        datetime.strptime(resp["time"], "%Y-%m-%dT%H:%M:%S.%fZ").strftime(
-                            "%Y-%m-%d %H:%M:%S"
-                        ),
-                        float(resp["price"]),
-                    )
-                except:
-                    trycnt += 1
-                    if trycnt == maxretry:
-                        Logger.warning(
-                            f"CoinbasePro Ticker Error - attempted {trycnt} times."
-                        )
-                        return (now, 0.0)
-                    time.sleep(15)
 
     def getTime(self) -> datetime:
         """Retrieves the exchange time"""
@@ -927,51 +941,52 @@ class PublicAPI(AuthAPIBase):
         if not isinstance(uri, str):
             raise TypeError("URI is not a string.")
 
-        try:
-            if method == "GET":
-                resp = requests.get(self._api_url + uri)
-            elif method == "POST":
-                resp = requests.post(self._api_url + uri, json=payload)
-
-            trycnt, maxretry = (1, 5)
-            while trycnt <= maxretry:
-                if resp.status_code != 200:
-                    resp_message = resp.json()["message"]
-                    message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
-                    if self.die_on_api_error:
-                        raise Exception(message)
-                    else:
-                        Logger.error(
-                            f"Coinbase Pro API request error - retry attempt {trycnt}: {message}"
-                        )
-                    time.sleep(15)
-                    trycnt += 1
-                else:
-                    break
-
+        error, err = (None, None)
+        trycnt, maxretry = (1, 5)
+        while trycnt <= maxretry:
+            try:
                 if method == "GET":
                     resp = requests.get(self._api_url + uri)
                 elif method == "POST":
                     resp = requests.post(self._api_url + uri, json=payload)
 
-            resp.raise_for_status()
-            return resp.json()
+                trycnt += 1
+                resp.raise_for_status()
 
-        except requests.ConnectionError as err:
-            Logger.error("requests.ConnectionError")  # remove this later
-            return self.handle_api_error(err, "ConnectionError")
+                if resp.status_code != 200:
+                    resp_message = resp.json()["message"]
+                    message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
+                    if trycnt >= maxretry:
+                        return self.handle_api_error(message, "CoinbaseProAPIError")
+                    time.sleep(15)
+                else:
+                    return resp.json()
 
-        except requests.exceptions.HTTPError as err:
-            Logger.error("requests.exceptions.HTTPError")  # remove this later
-            return self.handle_api_error(err, "HTTPError")
+            except requests.ConnectionError as err:
+                error = "ConnectionError"
 
-        except requests.Timeout as err:
-            Logger.error("requests.Timeout")  # remove this later
-            return self.handle_api_error(err, "Timeout")
+            except requests.exceptions.HTTPError as err:
+                error = "HTTPError"
 
-        except json.decoder.JSONDecodeError as err:
-            Logger.error("json.decoder.JSONDecodeError")  # remove this later
-            return self.handle_api_error(err, "JSONDecodeError")
+            except requests.Timeout as err:
+                error = "Timeout"
+
+            except json.decoder.JSONDecodeError as err:
+                error = "JSONDecodeError"
+
+            except Exception as err:
+                error = "GeneralException"
+
+            if trycnt >= maxretry:
+                if err is None:
+                    err = f"Uknown CoinbasePro API Error: Public API call to {uri} attempted 5 times, resulted in error"
+                if error is None:
+                    error = "Unknown Error"
+                return self.handle_api_error(err, error)
+            time.sleep(15)
+
+        else:
+            return self.handle_api_error(f"CoinbasePro API Error: Public API call to {uri} attempted 5 times, resulted in error", "Unknown Error")
 
     def handle_api_error(self, err: str, reason: str) -> dict:
         """Handle API errors"""
@@ -1387,12 +1402,6 @@ class WebSocketClient(WebSocket):
             )
             self.tickers.set_index(tsidx, inplace=True)
             self.tickers.index.name = "ts"
-
-            tsidx = pd.DatetimeIndex(
-                pd.to_datetime(self.candles["date"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z")
-            )
-            self.candles.set_index(tsidx, inplace=True)
-            self.candles.index.name = "ts"
 
             # set correct column types
             self.candles["open"] = self.candles["open"].astype("float64")

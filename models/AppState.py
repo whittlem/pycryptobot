@@ -88,6 +88,7 @@ class AppState:
 
         # automatic & trigger variables
         self.pandas_ta_enabled = False
+        self.trading_myPta = False
         self.prevent_loss = False
         self.tsl_max = False
         self.tsl_triggered = False
@@ -97,6 +98,7 @@ class AppState:
         self.trailing_sell = False
         self.trailing_sell_immediate = False
         self.waiting_sell_price = 0
+        self.closed_candle_row = -1
 
     def minimumOrderBase(self, base, balancechk: bool = False):
         self.app.insufficientfunds = False

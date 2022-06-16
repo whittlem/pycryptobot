@@ -136,10 +136,15 @@ class BotConfig:
         self.ema1226_6h_cache = None
         self.sma50200_1h_cache = None
 
-        self.EMA1hBull = False
-        self.EMA6hBull = False
+        self.ticker_date = None
+        self.ticker_price = None
+        self.df_data = list(range(0,10)) #[0,1,2,3,4,5,6,7,8,9]
 
         self.sim_smartswitch = False
+
+        self.usekucoincache = False
+        self.adjust_total_periods = 300
+        self.manual_trades_only = False
 
         self.recv_window = self._set_recv_window()
 
@@ -162,9 +167,6 @@ class BotConfig:
         self.enable_atr72_pcnt = True
         self.enable_buy_next = True
         self.enable_volume = False
-        self.usekucoincache = False
-        self.adjust_total_periods = 300
-        self.manual_trades_only = False
         # print(self.startmethod)
 
         # set defaults
@@ -518,11 +520,11 @@ class BotConfig:
         parser.add_argument("--buymaxsize", type=float, help="maximum size on buy")
         parser.add_argument("--buyminsize", type=float, help="minimum size on buy")
 
-        parser.add_argument("--buylastsellsize", action="store_true", help="additional check for market multiple buys")
+        parser.add_argument("--buylastsellsize", type=int, help="1 = buy size of last sell, 0 = disabled")
         parser.add_argument("--trailingbuypcnt", type=float, help="percent of increase to wait before buying")
         parser.add_argument("--trailingimmediatebuy", action="store_true", help="immediate buy if trailingbuypcnt reached")
         parser.add_argument("--trailingbuyimmediatepcnt", type=float, help="percent of increase to trigger immediate buy")
-        parser.add_argument("--marketmultibuycheck", action="store_true", help="")
+        parser.add_argument("--marketmultibuycheck", action="store_true", help="additional check for market multiple buys")
 
         parser.add_argument("--trailingsellpcnt", type=float, help="percent of decrease to wait before selling")
         parser.add_argument("--trailingimmediatesell", action="store_true", help="immediate sell if trailingsellpcnt reached")
