@@ -613,9 +613,9 @@ class AuthAPI(AuthAPIBase):
         if not isinstance(uri, str):
             raise TypeError("URI is not a string.")
 
-        error, err = (None, None)
-        trycnt, maxretry = (1, 5)
-        while trycnt <= maxretry:
+        reason, msg = (None, None)
+        trycnt, maxretry, connretry = (1, 5, 10)
+        while trycnt <= connretry:
             try:
                 if method == "DELETE":
                     resp = requests.delete(self._api_url + uri, auth=self)
@@ -627,63 +627,60 @@ class AuthAPI(AuthAPIBase):
                 trycnt += 1
                 resp.raise_for_status()
 
-                if "msg" in resp.json():
-                    resp_message = resp.json()["msg"]
-                elif "message" in resp.json():
-                    resp_message = resp.json()["message"]
-                else:
-                    resp_message = ""
-
-                if resp.status_code != 200:
-                    if resp.status_code == 401 and (
-                        resp_message == "request timestamp expired"
-                    ):
-                        message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (hint: check your system time is using NTP)"
-                    else:
-                        message = f"CoinbasePro authAPI Error: {method.upper()} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
-
-                    if self.die_on_api_error:
-                        # disable traceback
-                        sys.tracebacklimit = 0
-
-                        raise Exception(message)
-                    else:
-                        if trycnt >= maxretry:
-                            Logger.error(message)
-                            return pd.DataFrame()
-                else:
+                if resp.status_code == 200:
                     if isinstance(resp.json(), list):
                         df = pd.DataFrame.from_dict(resp.json())
                         return df
                     else:
                         df = pd.DataFrame(resp.json(), index=[0])
                         return df
+                else:
+                    if "msg" in resp.json():
+                        resp_message = resp.json()["msg"]
+                    elif "message" in resp.json():
+                        resp_message = resp.json()["message"]
+                    else:
+                        resp_message = ""
+
+                    if resp.status_code == 401 and (
+                        resp_message == "request timestamp expired"
+                    ):
+                        msg = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (hint: check your system time is using NTP)"
+                    else:
+                        msg = f"CoinbasePro authAPI Error: {method.upper()} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
+
+                    reason = "Invalid Response"
 
             except requests.ConnectionError as err:
-                error = "ConnectionError"
+                reason, msg = ("ConnectionError", err)
 
             except requests.exceptions.HTTPError as err:
-                error = "HTTPError"
+                reason, msg = ("HTTPError", err)
 
             except requests.Timeout as err:
-                error = "Timeout"
+                reason, msg = ("TimeoutError", err)
 
             except json.decoder.JSONDecodeError as err:
-                error = "JSONDecodeError"
+                reason, msg = ("JSONDecodeError", err)
 
             except Exception as err:
-                error = "GeneralException"
+                reason, msg = ("GeneralException", err)
 
             if trycnt >= maxretry:
-                if err is None:
-                    err = f"Uknown CoinbasePro API Error: Private API call to {uri} attempted 5 times, resulted in error"
-                if error is None:
-                    error = "Unknown Error"
-                return self.handle_api_error(err, error)
-            time.sleep(15)
-
+                if reason in ("ConnectionError", "HTTPError") and trycnt <= connretry:
+                    Logger.error(f"{reason}:  URI: {uri} trying again.  Attempt: {trycnt}")
+                    if trycnt > 5:
+                        time.sleep(30)
+                else:
+                    if msg is None:
+                        msg = f"Uknown CoinbasePro Private API Error: call to {uri} attempted {trycnt} times, resulted in error"
+                    if reason is None:
+                        reason = "Unknown Error"
+                    return self.handle_api_error(msg, reason)
+            else:
+                time.sleep(15)
         else:
-            return self.handle_api_error(f"CoinbasePro API Error: Private API call to {uri} attempted 5 times, resulted in error", "Unknown Error")
+            return self.handle_api_error(f"CoinbasePro API Error: call to {uri} attempted {trycnt} times without valid response", "CoinbasePro Private API Error")
 
     def handle_api_error(self, err: str, reason: str) -> pd.DataFrame:
         """Handle API errors"""
@@ -941,9 +938,9 @@ class PublicAPI(AuthAPIBase):
         if not isinstance(uri, str):
             raise TypeError("URI is not a string.")
 
-        error, err = (None, None)
-        trycnt, maxretry = (1, 5)
-        while trycnt <= maxretry:
+        reason, msg = (None, None)
+        trycnt, maxretry, connretry = (1, 5, 10)
+        while trycnt <= connretry:
             try:
                 if method == "GET":
                     resp = requests.get(self._api_url + uri)
@@ -953,40 +950,43 @@ class PublicAPI(AuthAPIBase):
                 trycnt += 1
                 resp.raise_for_status()
 
-                if resp.status_code != 200:
-                    resp_message = resp.json()["message"]
-                    message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
-                    if trycnt >= maxretry:
-                        return self.handle_api_error(message, "CoinbaseProAPIError")
-                    time.sleep(15)
-                else:
+                if resp.status_code == 200 and len(resp.json()) > 0:
                     return resp.json()
+                else:
+                    msg = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp.json()['message']}"
+                    reason = "Invalid Response"
 
             except requests.ConnectionError as err:
-                error = "ConnectionError"
+                reason, msg = ("ConnectionError", err)
 
             except requests.exceptions.HTTPError as err:
-                error = "HTTPError"
+                reason, msg = ("HTTPError", err)
 
             except requests.Timeout as err:
-                error = "Timeout"
+                reason, msg = ("TimeoutError", err)
 
             except json.decoder.JSONDecodeError as err:
-                error = "JSONDecodeError"
+                reason, msg = ("JSONDecodeError", err)
 
             except Exception as err:
-                error = "GeneralException"
+                reason, msg = ("GeneralException", err)
 
             if trycnt >= maxretry:
-                if err is None:
-                    err = f"Uknown CoinbasePro API Error: Public API call to {uri} attempted 5 times, resulted in error"
-                if error is None:
-                    error = "Unknown Error"
-                return self.handle_api_error(err, error)
-            time.sleep(15)
+                if reason in ("ConnectionError", "HTTPError") and trycnt <= connretry:
+                    Logger.error(f"{reason}:  URI: {uri} trying again.  Attempt: {trycnt}")
+                    if trycnt > 5:
+                        time.sleep(30)
+                else:
+                    if msg is None:
+                        msg = f"Uknown CoinbasePro Public API Error: call to {uri} attempted {trycnt} times, resulted in error"
+                    if reason is None:
+                        reason = "Unknown Error"
+                    return self.handle_api_error(msg, reason)
+            else:
+                time.sleep(15)
 
         else:
-            return self.handle_api_error(f"CoinbasePro API Error: Public API call to {uri} attempted 5 times, resulted in error", "Unknown Error")
+            return self.handle_api_error(f"CoinbasePro API Error: call to {uri} attempted {trycnt} times without valid response", "CoinbasePro Public API Error")
 
     def handle_api_error(self, err: str, reason: str) -> dict:
         """Handle API errors"""
