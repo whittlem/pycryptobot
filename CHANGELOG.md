@@ -12,6 +12,7 @@ Upgrade library dependencies (if required):
 
 - fixed variable "err" referenced before assignment in Kucoin and CoinbasePro API files that was introduced in v6.4.2
 - consolidated some code in Kucoin and CoinbasePro API files, eliminating a bunch of duplicated lines
+- added dataframe variable to additional execute_job function calls in pycryptobot.py to help minimize API requests
 
 ## [6.4.2] - 2022-06-12
 
