@@ -157,7 +157,7 @@ def execute_job(
                 _websocket.start()
             _app.setGranularity(_app.getGranularity())
             list(map(s.cancel, s.queue))
-            s.enter(5, 1, execute_job, (sc, _app, _state, _technical_analysis, _websocket))
+            s.enter(5, 1, execute_job, (sc, _app, _state, _technical_analysis, _websocket, trading_data))
             # _app.read_config(_app.getExchange())
             telegram_bot.updatebotstatus("active")
 
@@ -172,7 +172,7 @@ def execute_job(
             _websocket.start()
             Logger.info("Restarting job in 30 seconds...")
             s.enter(
-                30, 1, execute_job, (sc, _app, _state, _technical_analysis, _websocket)
+                30, 1, execute_job, (sc, _app, _state, _technical_analysis, _websocket, trading_data)
             )
 
     # increment _state.iterations
@@ -493,6 +493,8 @@ def execute_job(
             if not _app.isSimulation():
                 # data frame should have 300 rows or equal to adjusted total rows if set, if not retry
                 Logger.error(f"error: data frame length is < {str(_app.setTotalPeriods())} ({str(len(df))})")
+                # pause for 10 seconds to prevent multiple calls immediately
+                time.sleep(10)
                 list(map(s.cancel, s.queue))
                 s.enter(
                     300,

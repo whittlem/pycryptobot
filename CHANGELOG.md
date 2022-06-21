@@ -8,6 +8,12 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [6.4.3] - 2022-06-12
+
+- fixed variable "err" referenced before assignment in Kucoin and CoinbasePro API files that was introduced in v6.4.2
+- consolidated some code in Kucoin and CoinbasePro API files, eliminating a bunch of duplicated lines
+- added dataframe variable to additional execute_job function calls in pycryptobot.py to help minimize API requests
+
 ## [6.4.2] - 2022-06-12
 
 - changed a couple config settings so they can be disabled via command line arguments

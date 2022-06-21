@@ -800,9 +800,9 @@ class AuthAPI(AuthAPIBase):
         if not isinstance(uri, str):
             raise TypeError("URI is not a string.")
 
-        error, err = (None, None)
-        trycnt, maxretry = (1, 5)
-        while trycnt <= maxretry:
+        reason, msg = (None, None)
+        trycnt, maxretry, connretry = (1, 5, 10)
+        while trycnt <= connretry:
             try:
                 # Store the original URI for use later
                 orig_uri = uri
@@ -814,45 +814,28 @@ class AuthAPI(AuthAPIBase):
                 elif method == "GET" and use_pagination and not getting_pages:
                     uri = uri + f"&currentPage=1&pageSize={per_page}"
 
-                #print(uri)
-                #Logger.info(uri)
-
                 # Get the symbol from the URL if it exists in parameters
                 if use_order_cache and ("symbol" in (self._api_url + uri)) and not ("symbols" in (self._api_url + uri)): 
-                    #print (self._api_url + uri)
                     try:
                         symbol = parse.parse_qs(parse.urlparse(self._api_url + uri).query)['symbol'][0]
                     except:
                         pass
                     if len(symbol) == 0 : symbol = None
-                    #print(f"Symbol from URI - {symbol}")
                 else:
                     symbol = None
 
                 if method == "DELETE":
                     resp = requests.delete(self._api_url + uri, auth=self)
                 elif method == "GET":
-                    # resp = requests.request('GET', self._api_url + uri, headers=headers)
                     resp = requests.get(self._api_url + uri, auth=self)
                 elif method == "POST":
                     resp = requests.post(self._api_url + uri, json=payload, auth=self)
 
                 trycnt += 1
                 resp.raise_for_status()
-                # Logger.debug(resp.json())
-                if resp.status_code != 200:
-                    message =   f"Kucoin authAPI Error: {method.upper()} ({resp.status_code}) {self._api_url} {uri} - {resp.json()['msg']}"
 
-                    if self.die_on_api_error:
-                        # disable traceback
-                        sys.tracebacklimit = 0
-                        raise Exception(message)
-                    else:
-                        if trycnt >= maxretry:
-                            Logger.error(message)
-                            return pd.DataFrame()
-                        time.sleep(15)
-                else:
+                # Logger.debug(resp.json())
+                if resp.status_code == 200 and len(resp.json()) > 0:
                     mjson = resp.json()
                     if isinstance(mjson, list):
                         df = pd.DataFrame.from_dict(mjson)
@@ -873,8 +856,6 @@ class AuthAPI(AuthAPIBase):
                         if "pageSize" in mjson:
                             page_size = mjson["pageSize"]
                             
-                        #print(f"Pages : {current_page}/{max_pages}")
-
                     if "items" in mjson:
                         if isinstance(mjson["items"], list):
                             df = pd.DataFrame.from_dict(mjson["items"])
@@ -890,8 +871,6 @@ class AuthAPI(AuthAPIBase):
                             df = pd.DataFrame.from_dict(mjson)
                         else:
                             df = pd.DataFrame(mjson, index=[0])
-
-                    #df = df[~df.tags.notnull()]
 
                     #If a previous cache file exists - load it up into the df
                     if use_order_cache and exists(self._cache_filepath) and "v1/orders" in uri and method == "GET":
@@ -923,31 +902,41 @@ class AuthAPI(AuthAPIBase):
 
                     return df
 
+                else:
+                    msg =   f"Kucoin authAPI Error: {method.upper()} ({resp.status_code}) {self._api_url} {uri} - {resp.json()['msg']}"
+                    reason = "Invalid Response"
+
             except requests.ConnectionError as err:
-                error = "ConnectionError"
+                reason, msg = ("ConnectionError", err)
 
             except requests.exceptions.HTTPError as err:
-                error = "HTTPError"
+                reason, msg = ("HTTPError", err)
 
             except requests.Timeout as err:
-                error = "Timeout"
+                reason, msg = ("TimeoutError", err)
 
             except json.decoder.JSONDecodeError as err:
-                error = "JSONDecodeError"
+                reason, msg = ("JSONDecodeError", err)
 
             except Exception as err:
-                error = "GeneralException"
+                reason, msg = ("GeneralException", err)
 
             if trycnt >= maxretry:
-                if err is None:
-                    err = f"Uknown Kucoin API Error: Private API call to {uri} attempted 5 times, resulted in error"
-                if error is None:
-                    error = "Unknown Error"
-                return self.handle_api_error(err, error)
-            time.sleep(15)
+                if reason in ("ConnectionError", "HTTPError") and trycnt <= connretry:
+                    Logger.error(f"{reason}:  URI: {uri} trying again.  Attempt: {trycnt}")
+                    if trycnt > 5:
+                        time.sleep(30)
+                else:
+                    if msg is None:
+                        msg = f"Uknown Kucoin Private API Error: call to {uri} attempted {trycnt} times, resulted in error"
+                    if reason is None:
+                        reason = "Unknown Error"
+                    return self.handle_api_error(msg, reason)
+            else:
+                time.sleep(15)
 
         else:
-            return self.handle_api_error(f"Kucoin API Error: Private API call to {uri} attempted 5 times, resulted in error", "Unknown Error")
+            return self.handle_api_error(f"Kucoin API Error: call to {uri} attempted {trycnt} times without valid response", "Kucoin Private API Error")
 
     def handle_api_error(self, err: str, reason: str) -> pd.DataFrame:
         """Handle API errors"""
@@ -1071,38 +1060,36 @@ class PublicAPI(AuthAPIBase):
 
                 trycnt += 1
                 try:
-#                    if "data" in resp:
-                    # convert the API response into a Pandas DataFrame
-                    df = pd.DataFrame(
-                        resp["data"],
-                        columns=["time", "open", "close", "high", "low", "volume", "turnover"],
-                    )
-                    # reverse the order of the response with earliest last
-                    df = df.iloc[::-1].reset_index()
+                    if "data" in resp:
+                        # convert the API response into a Pandas DataFrame
+                        df = pd.DataFrame(
+                            resp["data"],
+                            columns=["time", "open", "close", "high", "low", "volume", "turnover"],
+                        )
+                        # reverse the order of the response with earliest last
+                        df = df.iloc[::-1].reset_index()
 
-                    try:
-                        freq = granularity.get_frequency
-                    except:
-                        freq = "D"
+                        try:
+                            freq = granularity.get_frequency
+                        except:
+                            freq = "D"
 
-    #                    now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+                        # convert the DataFrame into a time series with the date as the index/key
+                        tsidx = pd.DatetimeIndex(
+                            pd.to_datetime(df["time"], unit="s"), dtype="datetime64[ns]", freq=freq
+                        )
+                        df.set_index(tsidx, inplace=True)
+                        df = df.drop(columns=["time", "index"])
+                        df.index.names = ["ts"]
+                        df["date"] = tsidx
 
-                    # convert the DataFrame into a time series with the date as the index/key
-                    tsidx = pd.DatetimeIndex(
-                        pd.to_datetime(df["time"], unit="s"), dtype="datetime64[ns]", freq=freq
-                    )
-                    df.set_index(tsidx, inplace=True)
-                    df = df.drop(columns=["time", "index"])
-                    df.index.names = ["ts"]
-                    df["date"] = tsidx
-
-                    break
-#                    else:
-#                        if trycnt >= (maxretry):
-#                            raise Exception(
-#                                f"Kucoin API Error for Historical Data - attempted {trycnt} times - API did not return correct response"
-#                            )
-#                        time.sleep(15)
+                        break
+                    else:
+                        if trycnt >= (maxretry):
+                            raise Exception(
+                                f"Kucoin API Error for Historical Data - attempted {trycnt} times - API did not return correct response"
+                            )
+                        time.sleep(15)
 
                 except Exception as err:
                     if trycnt >= (maxretry):
@@ -1133,8 +1120,6 @@ class PublicAPI(AuthAPIBase):
             df["open"] = df["open"].astype(float).fillna(0)
             df["close"] = df["close"].astype(float).fillna(0)
             df["volume"] = df["volume"].astype(float).fillna(0)
-            # convert_columns = {'close': float}
-            # resp.asType(convert_columns)
 
             # reset pandas dataframe index
             df.reset_index()
@@ -1225,9 +1210,9 @@ class PublicAPI(AuthAPIBase):
             raise TypeError("URI is not a string.")
 
         # If API returns an error status code, retry request up to 5 times
-        error, err = (None, None)
-        trycnt, maxretry = (1, 5)
-        while trycnt <= maxretry:
+        reason, msg = (None, None)
+        trycnt, maxretry, connretry = (1, 5, 10)
+        while trycnt <= connretry:
             try:
                 if method == "GET":
                     resp = requests.get(self._api_url + uri)
@@ -1237,40 +1222,43 @@ class PublicAPI(AuthAPIBase):
                 trycnt += 1
                 resp.raise_for_status()
 
-                if resp.status_code != 200:
-                    resp_message = resp.json()["msg"]
-                    message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
-                    if trycnt >= maxretry:
-                        return self.handle_api_error(message, "KucoinAPIError")
-                    time.sleep(15)
-                else:
+                if resp.status_code == 200 and len(resp.json()) > 0:
                     return resp.json()
+                else:
+                    msg = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp.json()['msg']}"
+                    reason = "Invalid Response"
 
             except requests.ConnectionError as err:
-                error = "ConnectionError"
+                reason, msg = ("ConnectionError", err)
 
             except requests.exceptions.HTTPError as err:
-                error = "HTTPError"
+                reason, msg = ("HTTPError", err)
 
             except requests.Timeout as err:
-                error = "Timeout"
+                reason, msg = ("TimeoutError", err)
 
             except json.decoder.JSONDecodeError as err:
-                error = "JSONDecodeError"
+                reason, msg = ("JSONDecodeError", err)
 
             except Exception as err:
-                error = "GeneralException"
+                reason, msg = ("GeneralException", err)
 
             if trycnt >= maxretry:
-                if err is None:
-                    err = f"Uknown Kucoin API Error: Public API call to {uri} attempted 5 times, resulted in error"
-                if error is None:
-                    error = "Unknown Error"
-                return self.handle_api_error(err, error)
-            time.sleep(15)
+                if reason in ("ConnectionError", "HTTPError") and trycnt <= connretry:
+                    Logger.error(f"{reason}:  URI: {uri} trying again.  Attempt: {trycnt}")
+                    if trycnt > 5:
+                        time.sleep(30)
+                else:
+                    if msg is None:
+                        msg = f"Uknown Kucoin Public API Error: call to {uri} attempted {trycnt} times, resulted in error"
+                    if reason is None:
+                        reason = "Unknown Error"
+                    return self.handle_api_error(msg, reason)
+            else:
+                time.sleep(15)
 
         else:
-            return self.handle_api_error(f"Kucoin API Error: Public API call to {uri} attempted 5 times, resulted in error", "Unknown Error")
+            return self.handle_api_error(f"Kucoin API Error: call to {uri} attempted {trycnt} times without valid response", "Kucoin Public API Error")
 
     def handle_api_error(self, err: str, reason: str) -> dict:
         """Handle API errors"""
