@@ -8,6 +8,10 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [6.3.1] - 2022-06-30
+
+- hotfix for Coinbase Pro.  Exchange removed minimum trade limit and removed base_min_size variable from API.
+
 ## [6.3.0] - 2022-04-13
 
 - added pycryptobot configuration editor 
