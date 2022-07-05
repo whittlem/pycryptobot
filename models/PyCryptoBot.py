@@ -1,7 +1,6 @@
 import json
 import math
 import random
-import time
 import re
 from datetime import datetime, timedelta
 from typing import Union
@@ -1408,12 +1407,6 @@ class PyCryptoBot(BotConfig):
                         self.getDateFromISO8601Str(str(startDate)).isoformat(),
                         endDate.isoformat(),
                     )
-
-                if self.extraCandlesFound:
-                    self.simstartdate = str(pd.Series(startDate).dt.round(freq="H")[0])
-                    self.simenddate = str(pd.Series(endDate).dt.round(freq="H")[0])
-
-                self.extraCandlesFound = True
 
             return tradingData
 
