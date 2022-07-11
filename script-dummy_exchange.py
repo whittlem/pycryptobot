@@ -18,10 +18,10 @@ print (account.getBalance(), "\n")
 #account.withdrawQuoteCurrency(500)
 #print (account.getBalance())
 
-account.marketBuy(app.getMarket(), 100, 100, 20000)
+account.marketBuy(app.market, 100, 100, 20000)
 print (account.getBalance(), "\n")
 
-account.marketSell(app.getMarket(), account.getBalance(app.getBaseCurrency()), 100, 20000)
+account.marketSell(app.market, account.getBalance(app.base_currency), 100, 20000)
 print (account.getBalance(), "\n")
 
 print (account.getOrders())

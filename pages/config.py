@@ -542,7 +542,7 @@ def save_changes_buysize(
     buynearhigh,
     buynearhigh_percent,
     sellatloss,
-    nosellminpcnt,
+    no_sell_min_pcnt,
     selllowerpcnt,
 ):
     """Save changes"""
@@ -601,14 +601,14 @@ def save_changes_buysize(
 
         if "sellatloss" in sellatloss:
             tg_wrapper.helper.config[exchange]["config"].update(
-                {"nosellminpcnt": nosellminpcnt}
+                {"no_sell_min_pcnt": no_sell_min_pcnt}
             )
             tg_wrapper.helper.config[exchange]["config"].update(
                 {"selllowerpcnt": selllowerpcnt}
             )
         # else:
-        #     if "nosellminpcnt" in tg_wrapper.helper.config[exchange]["config"]:
-        #         tg_wrapper.helper.config[exchange]["config"].pop("nosellminpcnt")
+        #     if "no_sell_min_pcnt" in tg_wrapper.helper.config[exchange]["config"]:
+        #         tg_wrapper.helper.config[exchange]["config"].pop("no_sell_min_pcnt")
         #     if "selllowerpcnt" in tg_wrapper.helper.config[exchange]["config"]:
         #         tg_wrapper.helper.config[exchange]["config"].pop("selllowerpcnt")
 
@@ -745,8 +745,8 @@ def sell_at_loss(value):
     margin = 0
     if value is not None:
         if value in tg_wrapper.helper.config:
-            if "nosellminpcnt" in tg_wrapper.helper.config[value]["config"]:
-                result = tg_wrapper.helper.config[value]["config"]["nosellminpcnt"]
+            if "no_sell_min_pcnt" in tg_wrapper.helper.config[value]["config"]:
+                result = tg_wrapper.helper.config[value]["config"]["no_sell_min_pcnt"]
             if "selllowerpcnt" in tg_wrapper.helper.config[value]["config"]:
                 margin = tg_wrapper.helper.config[value]["config"]["selllowerpcnt"]
     return result, margin

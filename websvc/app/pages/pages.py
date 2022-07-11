@@ -96,7 +96,7 @@ class Pages:
             html = ""
 
             api = BPublicAPI()
-            resp = api.getMarkets24HrStats()
+            resp = api.markets24HrStats()
             for market in resp:
                 if market["lastPrice"] > market["openPrice"]:
                     html += f"""
@@ -171,7 +171,7 @@ class Pages:
             html = ""
 
             api = CPublicAPI()
-            resp = api.getMarkets24HrStats()
+            resp = api.markets24HrStats()
             for market in resp:
                 stats_30day_volume = 0
                 if "stats_30day" in resp[market]:
@@ -293,19 +293,19 @@ class Pages:
             api = BPublicAPI()
         if exchange == 'coinbasepro':
             api = CPublicAPI()
-        ticker = api.getTicker(market)
+        ticker = api.get_ticker(market)
 
-        ta = TechnicalAnalysis(api.getHistoricalData(market, g1, None))
+        ta = TechnicalAnalysis(api.get_historical_data(market, g1, None))
         ta.addAll()
         df_15m = ta.getDataFrame()
         df_15m_last = df_15m.tail(1)
 
-        ta = TechnicalAnalysis(api.getHistoricalData(market, g2, None))
+        ta = TechnicalAnalysis(api.get_historical_data(market, g2, None))
         ta.addAll()
         df_1h = ta.getDataFrame()
         df_1h_last = df_1h.tail(1)
 
-        ta = TechnicalAnalysis(api.getHistoricalData(market, g3, None))
+        ta = TechnicalAnalysis(api.get_historical_data(market, g3, None))
         ta.addAll()
         df_6h = ta.getDataFrame()
         df_6h_last = df_6h.tail(1)

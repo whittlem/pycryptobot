@@ -664,7 +664,7 @@ class AuthAPI(AuthAPIBase):
                 return True
         else:
             return False
-        
+
     def buildOrderHistoryCache(self, days_to_keep = 45, enable_purge = True) -> bool:
         """Intelligently builds an order history cache to use in subsequent api calls"""
 
@@ -687,7 +687,7 @@ class AuthAPI(AuthAPIBase):
                         break
                 except:
                     pass
-                time.sleep(5)        
+                time.sleep(5)
 
         if exists(self._cache_filepath):
             last_modified = datetime.now() - datetime.fromtimestamp(
@@ -730,7 +730,7 @@ class AuthAPI(AuthAPIBase):
         else:
             df = pd.DataFrame()
 
-        if not df.empty:                
+        if not df.empty:
             if len(df.columns) > 1:
                 if 'createdAt' in df.columns:
                     df = df.sort_values(by='createdAt', ascending=True)
@@ -750,7 +750,7 @@ class AuthAPI(AuthAPIBase):
 
             print ("Doing historic orders build... ")
             resp = self.authAPI("GET", f"api/v1/orders?startAt={startAt}", use_pagination=True)
-            if last_timestamp_check == startAt : 
+            if last_timestamp_check == startAt :
                 #print ("Hit Last timestamp check")
                 resp = self.authAPI("GET", f"api/v1/orders?", use_pagination=True)
                 break_build = True
@@ -758,13 +758,13 @@ class AuthAPI(AuthAPIBase):
                 df = df.append(resp)
                 df = df.drop_duplicates('id')
                 df = df.reset_index(drop=True)
-                
-                if 'createdAt' in df.columns: 
+
+                if 'createdAt' in df.columns:
                     df = df.sort_values(by='createdAt', ascending=True)
                     startAt = df.createdAt.iloc[-1] + 1
                     last_timestamp_check = startAt
 
-            if break_build : 
+            if break_build :
                 break
 
             time.sleep(5)
@@ -773,7 +773,7 @@ class AuthAPI(AuthAPIBase):
         # Purge anything older than a month
         if enable_purge : df = df[df['createdAt'] > purgeAfter]
         # Do final sort
-        if 'createdAt' in df.columns: 
+        if 'createdAt' in df.columns:
             df = df.sort_values(by='createdAt', ascending=True)
             startAt = df.createdAt.iloc[-1] + 1
         df = df.reset_index(drop=True)
@@ -815,7 +815,7 @@ class AuthAPI(AuthAPIBase):
                     uri = uri + f"&currentPage=1&pageSize={per_page}"
 
                 # Get the symbol from the URL if it exists in parameters
-                if use_order_cache and ("symbol" in (self._api_url + uri)) and not ("symbols" in (self._api_url + uri)): 
+                if use_order_cache and ("symbol" in (self._api_url + uri)) and not ("symbols" in (self._api_url + uri)):
                     try:
                         symbol = parse.parse_qs(parse.urlparse(self._api_url + uri).query)['symbol'][0]
                     except:
@@ -855,7 +855,7 @@ class AuthAPI(AuthAPIBase):
                             max_pages = mjson["totalPage"]
                         if "pageSize" in mjson:
                             page_size = mjson["pageSize"]
-                            
+
                     if "items" in mjson:
                         if isinstance(mjson["items"], list):
                             df = pd.DataFrame.from_dict(mjson["items"])
@@ -883,7 +883,7 @@ class AuthAPI(AuthAPIBase):
                         df = df.drop_duplicates('id')
                     else:
                         cache_df = None
-                    
+
                     if use_pagination:
                         # Get subsequent pages - if in original AuthAPI call
                         if max_pages != None:
@@ -978,7 +978,7 @@ class PublicAPI(AuthAPIBase):
 
         self._api_url = api_url
 
-    def getHistoricalData(
+    def get_historical_data(
         self,
         market: str = DEFAULT_MARKET,
         granularity: Granularity = Granularity.ONE_HOUR,
@@ -1125,7 +1125,7 @@ class PublicAPI(AuthAPIBase):
             df.reset_index()
         return df
 
-    def getTicker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
+    def get_ticker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
         """Retrieves the market ticker"""
 
         # validates the market is syntactically correct
@@ -1175,7 +1175,7 @@ class PublicAPI(AuthAPIBase):
                     return (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), 0.0)
                 time.sleep(15)
 
-    def getTime(self) -> datetime:
+    def get_time(self) -> datetime:
         """Retrieves the exchange time"""
 
         try:
@@ -1423,7 +1423,7 @@ class WebSocket(AuthAPIBase):
     def getStartTime(self) -> datetime:
         return self.start_time
 
-    def getTimeElapsed(self) -> int:
+    def get_timeElapsed(self) -> int:
         return self.time_elapsed
 
 
@@ -1525,7 +1525,7 @@ class WebSocketClient(WebSocket):
 
             # candles dataframe is empty
             if self.candles is None:
-                resp = PublicAPI().getHistoricalData(
+                resp = PublicAPI().get_historical_data(
                     str(df["market"].values[0]), self.granularity
                 )
                 if len(resp) > 0:
@@ -1573,7 +1573,7 @@ class WebSocketClient(WebSocket):
                         )
                         == 0
                     ):
-                        resp = PublicAPI().getHistoricalData(
+                        resp = PublicAPI().get_historical_data(
                             df["market"].values[0], self.granularity
                         )
                         if len(resp) > 0:

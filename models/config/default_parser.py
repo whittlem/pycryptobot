@@ -51,24 +51,24 @@ def defaultConfigParse(app, config):
                 app.is_live = 0
                 app.is_sim = 1
                 app.sim_speed = config["sim"]
-                if "simstartdate" in config:
-                    app.simstartdate = config["simstartdate"]
-                if "simenddate" in config:
-                    app.simenddate = config["simenddate"]
+                if "simstart_date" in config:
+                    app.simstart_date = config["simstart_date"]
+                if "simend_date" in config:
+                    app.simend_date = config["simend_date"]
         else:
             raise TypeError("sim must be of type str")
 
-    if "simstartdate" in config:
-        if isinstance(config["simstartdate"], str):
-            app.simstartdate = config["simstartdate"]
+    if "simstart_date" in config:
+        if isinstance(config["simstart_date"], str):
+            app.simstart_date = config["simstart_date"]
         else:
-            raise TypeError("simstartdate must be of type str and a date yyyy-mm-dd hh:mm:ss")
+            raise TypeError("simstart_date must be of type str and a date yyyy-mm-dd hh:mm:ss")
 
-    if "simenddate" in config:
-        if isinstance(config["simenddate"], str):
-            app.simenddate = config["simenddate"]
+    if "simend_date" in config:
+        if isinstance(config["simend_date"], str):
+            app.simend_date = config["simend_date"]
         else:
-            raise TypeError("simenddate must be of type str and a date yyyy-mm-dd hh:mm:ss")
+            raise TypeError("simend_date must be of type str and a date yyyy-mm-dd hh:mm:ss")
 
     if "nobuynearhighpcnt" in config:
         if isinstance(config["nobuynearhighpcnt"], (int, float, str)):
@@ -151,59 +151,59 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("selllowerpcnt must be of type int or str")
 
-    if "nosellmaxpcnt" in config:
-        if isinstance(config["nosellmaxpcnt"], (int, float, str)):
+    if "no_sell_max_pcnt" in config:
+        if isinstance(config["no_sell_max_pcnt"], (int, float, str)):
             p = re.compile(r"^\-*[0-9\.]{1,5}$")
-            if isinstance(config["nosellmaxpcnt"], str) and p.match(
-                config["nosellmaxpcnt"]
+            if isinstance(config["no_sell_max_pcnt"], str) and p.match(
+                config["no_sell_max_pcnt"]
             ):
-                if float(config["nosellmaxpcnt"]) > 0:
-                    app.nosellmaxpcnt = float(config["nosellmaxpcnt"])
+                if float(config["no_sell_max_pcnt"]) > 0:
+                    app.no_sell_max_pcnt = float(config["no_sell_max_pcnt"])
                 else:
-                    raise ValueError("nosellmaxpcnt must be positive")
+                    raise ValueError("no_sell_max_pcnt must be positive")
             elif (
-                isinstance(config["nosellmaxpcnt"], (int, float))
-                and config["nosellmaxpcnt"] >= 0
-                and config["nosellmaxpcnt"] <= 100
+                isinstance(config["no_sell_max_pcnt"], (int, float))
+                and config["no_sell_max_pcnt"] >= 0
+                and config["no_sell_max_pcnt"] <= 100
             ):
-                if float(config["nosellmaxpcnt"]) > 0:
-                    app.nosellmaxpcnt = float(config["nosellmaxpcnt"])
+                if float(config["no_sell_max_pcnt"]) > 0:
+                    app.no_sell_max_pcnt = float(config["no_sell_max_pcnt"])
                 else:
-                    raise ValueError("nosellmaxpcnt must be positive")
+                    raise ValueError("no_sell_max_pcnt must be positive")
             elif (
-                isinstance(config["nosellmaxpcnt"], (int, float))
-                and config["nosellmaxpcnt"] < 0
+                isinstance(config["no_sell_max_pcnt"], (int, float))
+                and config["no_sell_max_pcnt"] < 0
             ):
-                raise ValueError("nosellmaxpcnt must be positive")
+                raise ValueError("no_sell_max_pcnt must be positive")
         else:
-            raise TypeError("nosellmaxpcnt must be of type int or str")
+            raise TypeError("no_sell_max_pcnt must be of type int or str")
 
-    if "nosellminpcnt" in config:
-        if isinstance(config["nosellminpcnt"], (int, float, str)):
+    if "no_sell_min_pcnt" in config:
+        if isinstance(config["no_sell_min_pcnt"], (int, float, str)):
             p = re.compile(r"^\-*[0-9\.]{1,5}$")
-            if isinstance(config["nosellminpcnt"], str) and p.match(
-                config["nosellminpcnt"]
+            if isinstance(config["no_sell_min_pcnt"], str) and p.match(
+                config["no_sell_min_pcnt"]
             ):
-                if float(config["nosellminpcnt"]) < 0:
-                    app.nosellminpcnt = float(config["nosellminpcnt"])
+                if float(config["no_sell_min_pcnt"]) < 0:
+                    app.no_sell_min_pcnt = float(config["no_sell_min_pcnt"])
                 else:
-                    raise ValueError("nosellminpcnt must be negative")
+                    raise ValueError("no_sell_min_pcnt must be negative")
             elif (
-                isinstance(config["nosellminpcnt"], (int, float))
-                and config["nosellminpcnt"] >= -100
-                and config["nosellminpcnt"] <= 0
+                isinstance(config["no_sell_min_pcnt"], (int, float))
+                and config["no_sell_min_pcnt"] >= -100
+                and config["no_sell_min_pcnt"] <= 0
             ):
-                if float(config["nosellminpcnt"]) < 0:
-                    app.nosellminpcnt = float(config["nosellminpcnt"])
+                if float(config["no_sell_min_pcnt"]) < 0:
+                    app.no_sell_min_pcnt = float(config["no_sell_min_pcnt"])
                 else:
-                    raise ValueError("nosellminpcnt must be negative")
+                    raise ValueError("no_sell_min_pcnt must be negative")
             elif (
-                isinstance(config["nosellminpcnt"], (int, float))
-                and config["nosellminpcnt"] >= 0
+                isinstance(config["no_sell_min_pcnt"], (int, float))
+                and config["no_sell_min_pcnt"] >= 0
             ):
-                raise ValueError("nosellminpcnt must be negative")
+                raise ValueError("no_sell_min_pcnt must be negative")
         else:
-            raise TypeError("nosellminpcnt must be of type int or str")
+            raise TypeError("no_sell_min_pcnt must be of type int or str")
 
     if "trailingstoploss" in config:
         if isinstance(config["trailingstoploss"], (int, float, str)):
@@ -304,8 +304,8 @@ def defaultConfigParse(app, config):
                 app.stats = True
                 if "statgroup" in config:
                     app.statgroup = config["statgroup"]
-                if "statstartdate" in config:
-                    app.statstartdate = config["statstartdate"]
+                if "statstart_date" in config:
+                    app.statstart_date = config["statstart_date"]
                 if "statdetail" in config:
                     app.statdetail = config["statdetail"]
         else:
@@ -334,8 +334,8 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("preventlossmargin must be of type int or float")
     elif app.preventloss:
-        if app.nosellmaxpcnt is not None:
-            app.preventlosstrigger = app.nosellmaxpcnt
+        if app.no_sell_max_pcnt is not None:
+            app.preventlosstrigger = app.no_sell_max_pcnt
         else:
             app.preventlosstrigger = 1
 

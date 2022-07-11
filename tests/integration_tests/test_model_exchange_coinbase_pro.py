@@ -130,7 +130,7 @@ def test_getAccounts():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -163,7 +163,7 @@ def test_getAccount():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -205,7 +205,7 @@ def test_getFeesWithoutMarket():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -240,7 +240,7 @@ def test_getFeesWithMarket():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -275,7 +275,7 @@ def test_getTakerFeeWithoutMarket():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -304,7 +304,7 @@ def test_getTakerFeeWithMarket():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -333,7 +333,7 @@ def test_getMakerFeeWithoutMarket():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -362,7 +362,7 @@ def test_getMakerFeeWithMarket():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -391,7 +391,7 @@ def test_getUSDVolume():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -420,7 +420,7 @@ def test_getOrders():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -454,7 +454,7 @@ def test_getOrdersInvalidMarket():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -483,7 +483,7 @@ def test_getOrdersValidMarket():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -517,7 +517,7 @@ def test_getOrdersInvalidAction():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -546,7 +546,7 @@ def test_getOrdersValidActionBuy():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -580,7 +580,7 @@ def test_getOrdersValidActionSell():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -614,7 +614,7 @@ def test_getOrdersInvalidStatus():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -643,7 +643,7 @@ def test_getOrdersValidStatusAll():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -678,7 +678,7 @@ def test_getOrdersValidStatusOpen():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -713,7 +713,7 @@ def test_getOrdersValidStatusPending():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -748,7 +748,7 @@ def test_getOrdersValidStatusDone():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -783,7 +783,7 @@ def test_getOrdersValidStatusActive():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -803,7 +803,7 @@ def test_getOrdersValidStatusActive():
         assert len(actual) == len(expected)
         assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getTime():
+def test_get_time():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -818,7 +818,7 @@ def test_getTime():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -827,8 +827,8 @@ def test_getTime():
 
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
-    
-    resp = exchange.getTime()
+
+    resp = exchange.get_time()
     assert type(resp) is datetime
 
 def test_marketBuyInvalidMarket():
@@ -846,7 +846,7 @@ def test_marketBuyInvalidMarket():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -858,7 +858,7 @@ def test_marketBuyInvalidMarket():
 
     with pytest.raises(ValueError) as execinfo:
         exchange.marketBuy('ERROR', -1)
-    assert str(execinfo.value) == 'Coinbase Pro market is invalid.'  
+    assert str(execinfo.value) == 'Coinbase Pro market is invalid.'
 
 def test_marketBuyInvalidAmount():
     filename = 'config.json'
@@ -875,7 +875,7 @@ def test_marketBuyInvalidAmount():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -887,4 +887,4 @@ def test_marketBuyInvalidAmount():
 
     with pytest.raises(ValueError) as execinfo:
         exchange.marketBuy('XXX-YYY', 0)
-    assert str(execinfo.value) == 'Trade amount is too small (>= 10).'  
+    assert str(execinfo.value) == 'Trade amount is too small (>= 10).'

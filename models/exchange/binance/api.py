@@ -121,7 +121,7 @@ class AuthAPI(AuthAPIBase):
             self._api_secret.encode("utf-8"), uri.encode("utf-8"), hashlib.sha256
         ).hexdigest()
 
-    def getTimestamp(self):
+    def get_timestamp(self):
         return int(time.time() * 1000)
 
     def getAccounts(self) -> pd.DataFrame:
@@ -333,7 +333,7 @@ class AuthAPI(AuthAPIBase):
         except:
             return pd.DataFrame()
 
-    def getOrders( #pylint: disable=invalid-name 
+    def getOrders( #pylint: disable=invalid-name
         self,
         market: str = "",
         action: str = "",
@@ -358,7 +358,7 @@ class AuthAPI(AuthAPIBase):
                     markets = self.order_history
             else:
                 full_scan = True
-                markets = self.getMarkets()
+                markets = self.markets()
 
         # if action provided
         if action != "":
@@ -507,7 +507,7 @@ class AuthAPI(AuthAPIBase):
         except:
             return pd.DataFrame()
 
-    def getTime(self) -> datetime:
+    def get_time(self) -> datetime:
         """Retrieves the exchange time"""
 
         try:
@@ -571,7 +571,7 @@ class AuthAPI(AuthAPIBase):
         except:
             return DEFAULT_TRADE_FEE_RATE
 
-    def getTicker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
+    def get_ticker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
         """Retrieves the market ticker"""
 
         # validates the market is syntactically correct
@@ -603,7 +603,7 @@ class AuthAPI(AuthAPIBase):
                 return pd.DataFrame()
 
             if "price" in resp:
-                return (str(self.getTime()), float(resp["price"]))
+                return (str(self.get_time()), float(resp["price"]))
             else:
                 return (now, 0.0)
         except:
@@ -625,11 +625,11 @@ class AuthAPI(AuthAPIBase):
             raise TypeError("The funding amount is not numeric.")
 
         try:
-            current_price = self.getTicker(market)[1]
+            current_price = self.get_ticker(market)[1]
 
             base_quantity = np.divide(quote_quantity, current_price)
 
-            df_filters = self.getMarketInfoFilters(market)
+            df_filters = self.marketInfoFilters(market)
             step_size = float(
                 df_filters.loc[df_filters["filterType"] == "LOT_SIZE"]["stepSize"]
             )
@@ -677,7 +677,7 @@ class AuthAPI(AuthAPIBase):
             raise TypeError("The crypto amount is not numeric.")
 
         try:
-            df_filters = self.getMarketInfoFilters(market)
+            df_filters = self.marketInfoFilters(market)
             step_size = float(
                 df_filters.loc[df_filters["filterType"] == "LOT_SIZE"]["stepSize"]
             )
@@ -735,9 +735,9 @@ class AuthAPI(AuthAPIBase):
 
         query_string = urlencode(payload, True)
         if uri in signed_uri and query_string:
-            query_string = "{}&timestamp={}".format(query_string, self.getTimestamp())
+            query_string = "{}&timestamp={}".format(query_string, self.get_timestamp())
         elif uri in signed_uri:
-            query_string = "timestamp={}".format(self.getTimestamp())
+            query_string = "timestamp={}".format(self.get_timestamp())
 
         if uri in signed_uri:
             url = (
@@ -847,7 +847,7 @@ class PublicAPI(AuthAPIBase):
 
         self._api_url = api_url
 
-    def getTime(self) -> datetime:
+    def get_time(self) -> datetime:
         """Retrieves the exchange time"""
 
         try:
@@ -866,7 +866,7 @@ class PublicAPI(AuthAPIBase):
         except:
             return pd.DataFrame()
 
-    def getTicker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
+    def get_ticker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
         """Retrieves the market ticker"""
 
         # validates the market is syntactically correct
@@ -893,11 +893,11 @@ class PublicAPI(AuthAPIBase):
         resp = self.authAPI("GET", "/api/v3/ticker/price", {"symbol": market})
 
         if "price" in resp:
-            return (str(self.getTime()), float(resp["price"]))
+            return (str(self.get_time()), float(resp["price"]))
         else:
             return (now, 0.0)
 
-    def getHistoricalData(
+    def get_historical_data(
         self,
         market: str = DEFAULT_MARKET,
         granularity: Granularity = Granularity.ONE_HOUR,
@@ -1259,7 +1259,7 @@ class WebSocket(AuthAPIBase):
     def getStartTime(self) -> datetime:
         return self.start_time
 
-    def getTimeElapsed(self) -> int:
+    def get_timeElapsed(self) -> int:
         return self.time_elapsed
 
 
@@ -1412,7 +1412,7 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                     )
 
                     if self.candles is None:
-                        resp = PublicAPI().getHistoricalData(
+                        resp = PublicAPI().get_historical_data(
                             df["market"].values[0], self.granularity
                         )
                         if len(resp) > 0:

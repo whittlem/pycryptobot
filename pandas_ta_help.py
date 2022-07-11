@@ -16,7 +16,7 @@ except ImportError:
     use_talib = False
 
 #app = PyCryptoBot()
-#df = app.getHistoricalData(app.getMarket(), app.getGranularity())
+#df = app.get_historical_data(app.market, app.granularity)
 df = pd.DataFrame()
 
 # Main Help

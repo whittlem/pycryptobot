@@ -1,7 +1,6 @@
-[![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg) [![Tests](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)
-
-
 # Python Crypto Bot v6.4.3 (pycryptobot)
+
+[![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg) [![Tests](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)
 
 ## Join our chat on Telegram
 
@@ -394,8 +393,8 @@ Sell signal:
 
 Special sell cases:
 
-* "nosellminpcnt" specifies the lower margin limit to not sell above
-* "nosellmaxpcnt" specifies the upper margin limit to not sell below
+* "no_sell_min_pcnt" specifies the lower margin limit to not sell above
+* "no_sell_max_pcnt" specifies the upper margin limit to not sell below
 * If "sellatloss" is on, bot will sell if price drops below the lower Fibonacci band
 * If "sellatloss" is on and "selllowerpcnt" is specified the bot will sell at the specified amount E.g. -2 for -2% margin
 * If "sellatloss" is on and "trailingstoploss" is specified the bot will sell at the specified amount below the buy high
@@ -403,7 +402,7 @@ Special sell cases:
 * If the margin exceeds 3% and the price reaches a Fibonacci band it will sell to lock in profit
 * If the margin exceeds 3% but a strong reversal is detected with negative OBV and MACD < Signal it will sell
 * "sellatloss" set to 0 prevents selling at a loss
-* "preventloss" set to 1 to force a sell before margin is negative (losing money on active trade).  Default trigger point is 1%.  If nosellmaxpcnt is set it will be used as the default, unless preventlosstrigger is set to set a custom trigger point.
+* "preventloss" set to 1 to force a sell before margin is negative (losing money on active trade).  Default trigger point is 1%.  If no_sell_max_pcnt is set it will be used as the default, unless preventlosstrigger is set to set a custom trigger point.
 * "preventlosstrigger" is the margin set point that will trigger/allow the preventloss function to start watching the margin and will sell when margin reaches 0.1% or lower unless preventlossmargin is set.
     NOTE: to disable preventlosstrigger and use preventlossmargin only, set the trigger to 0.
 * "preventlossmargin" is the margin set point that will cause an immediate sell to prevent a loss.  If this is not set, a default of 0.1% will be used.  "preventlossmargin" can be used by itself or in conjunction with "preventlosstrigger".
@@ -414,7 +413,7 @@ Note: the trailingsell function will sell if the price is within 10% of the trai
 * "trailingsellbailoutpcnt" is a setting that is used with trailing sell and works like "trailingimmediatesell" or like "selllowerpcnt".  This is the percentage of decrease when you absolutely want to sell right away or "bailout" of the trade.  Regardless of other trailing sell settings or anything in Custom Strategies, this is the set point that if the price is dropping like a rock, you want to "bailout" NOW because you definitely don't want to wait until candle close or you're going to lose funds.   Eg: -3.0   (must be negative integer)
 * "dynamictsl" (Dynamic Trailing Stop Loss) when enabled, with the additional required settings, works like the default trailingstoploss, but dynamically increases both the trigger margin and the stoploss percentage. Set to 1 to enabled and it's disabled by default.  To use the original, static trailingstoploss, just use "trailingstoploss" and "trailingstoplosstrigger"
 * "tslmultiplier" this is a positive integer (eg. 1.5) that is multiplied by "trailingstoploss" when "trailingstoplosstrigger" is reached to set the next "trailingstoploss" level.
-* "tsltriggermultiplier" is a positive integer (eg. 1.5) that is multiplied by "trailingstoplosstrigger" when the previous trigger settings is reach to set the next "trailingstoplosstrigger" level. 
+* "tsltriggermultiplier" is a positive integer (eg. 1.5) that is multiplied by "trailingstoplosstrigger" when the previous trigger settings is reach to set the next "trailingstoplosstrigger" level.
     NOTE: both "trailingstoploss" and "trailingstoplosstrigger" settings are still required WITH "dynamictsl" as well as "tslmultipler", "tsltriggermultiplier" and "tslmaxpcnt" are also required.
 * "adjust_total_periods" is an integer > 26 and < 300 used to adjust the total periods (candles) in the current dataframe for the current market used in technical analysis.  This setting came about because Kucoin made changes to their API that is currently only returning 100 periods (candles) for responses.  Hopefully this problem will be resolved, but adjusting the total periods can be useful when trying to trade new crypto pairs that don't have a full 300 periods of data yet.
     *** Note:  if adjusting to less than 300 periods, Trading Graphs, SMA Buy Signals and "disablebullonly" will NOT work correctly as well as some of the other indicators.  Only use this setting if absolutely necessary or you know what you are doing.  Pycryptobot is designed to analyze 300 candles for each market.
@@ -493,10 +492,10 @@ In order to trade live you need to authenticate with the Coinbase Pro or Binance
 ## Trading Simulation
 
     --sim ['fast, fast-sample, slow-sample']   Sets simulation mode
-    --simstartdate                             Start date for sample simulation e.g '2021-01-15'
-    --simenddate                               End date for sample simulation or 'now'
+    --simstart_date                             Start date for sample simulation e.g '2021-01-15'
+    --simend_date                               End date for sample simulation or 'now'
 
-`simstartdate` takes priority over `simenddate` if both are given
+`simstart_date` takes priority over `simend_date` if both are given
 
 ### Simulation trades.csv
 
@@ -646,7 +645,7 @@ For telegram, add a piece to the config.json as follows:
 
     "telegram" : {
         "token" : "<token>",
-        "user_Id" : "<user id>" 
+        "user_Id" : "<user id>"
         "client_id" : "<client id>"
     }
 
@@ -737,9 +736,9 @@ To keep track of the bots performance over time you can run the stats module. e.
 
 This will analyse all the completed buy/sell trade pairs to give stats on todays trades, the trades over the last 7 days, the trades over the last 30 days, and all-time trades.
 
-An optional flag of --statstartdate can be given to ignore all trades that happened before a specified date. The date must be of the format: yyyy-mm-dd. e.g.
+An optional flag of --statstart_date can be given to ignore all trades that happened before a specified date. The date must be of the format: yyyy-mm-dd. e.g.
 
-    python3 pycryptobot.py --stats --statstartdate 2021-6-01
+    python3 pycryptobot.py --stats --statstart_date 2021-6-01
 
 To get the stats from all your bots, another optional flag of --statgroup can be used. This takes a list of markets and merges the results into one output. e.g.
 
@@ -756,7 +755,7 @@ or via the config.json file e.g.
 Note: --statgroup only accepts a group of markets if the quote currency (in this example GBP) is the same.
 
 If you want more detail than the simple summary, add the optional flag --statdetail. This will print a more detailed list of the transactions.
---statdetail can work in conjunction with --statstartdate and --statgroup.
+--statdetail can work in conjunction with --statstart_date and --statgroup.
 
 ## Upgrading the bots
 
@@ -793,7 +792,7 @@ Optional files:
 * models/Trading_myPta.py - to customize any of the indicators in Trading_Pta.py or add new ones, make a copy of Trading_Pta.py and rename it to Trading_myPta.py.
 * models/Strategy_myCS.py - to change weighted points settings, customize signal requirements or add new one, make a copy of Strategy_CS.py and rename it to Strategy_myCS.py.
     These files are both detected automatically, if they exist, and will prevent any customization from being overwritten by future git updates.  Neither is a requirement and making a copy of one by itself will work fine.  Both the original and the new custom "my" versions can exist together.  If a version exists with "my" in the filename, that will be loaded first.  If the "my" version does not exist, the original will be used instead.  If both versions exist and you choose to use the original/default, either move or rename the "my" version to prevent it from being loaded.
-Note:  For the above custom files, please note the addition of "my" to the files names. 
+Note:  For the above custom files, please note the addition of "my" to the files names.
 
 Optional TA-Lib installation.  Per the pandas-ta documentation, if TA-Lib is installed, the formulas from TA-Lib will be used in place of the pandas-ta formulas.  Pycryptobot has been programmed to do the same.  After reading the pandas-ta documentation, if you would like to use TA-Lib, just install the library.  Pycryptobot will check if it's installed and if it is, enable it automatically.  If you would like to disable it later, use the myPta file and set the use_talib variable to False.
 
@@ -833,7 +832,7 @@ Weighted point system found near the top of Strategy_CS.py in the tradeSignals f
         self.pts_to_sell = 3 # requiring fewer pts results in quicker sell signal
         # total points to trigger immediate sell if trailingsellimmediatepcnt is configured, else ignored
         self.immed_sell_pts = 6
-        
+
         # Required signals.
         # Specify how many have to be triggered
         # Buys - currently 2 of ADX, OBV or MACDLeader - add self.pts_sig_required_buy += 1 to section for each signal
@@ -862,5 +861,3 @@ Optional config settings:
 * "selltriggeroverride": 1      if enabled AND all buys signals are active AND all buy signals are STRONG, any of the built in immediate sell triggers (preventloss, trailing stoploss, etc.) will be bypassed temporarily.  See max possible pts above.  As soon as total points are below the max setting, sell triggers will be active again.  This is designed to prevent selling on a small dip in price, which is somewhat normal when the price is still climbing and all indicators are active.
 
 **Please note:  the trading indicators being used in Strategy_CS.py are NOT using all the traditional methods of generating buy and sell signals.  The idea of custom strategies is to allow users to ability to customize trade indciators in many ways and use some different views of looking at indicators.  After comparing with many charts (mostly on TradingView) some additional patterns were frequent and implemented to hopefully help prevent buying too early or selling too late.  Not every person using this software will agree with the settings being used which is why all of it is 100% customizable.  Strategy files can now be shared with other users as well.  If you don't have the technical ability to customize the code in these files, it doesn't take much reading to get a basic idea of what is needed for minor revisions.  Please put in some effort to understand the market charts and how the various indicators are designed to work before making comments or asking someone else to make customizations for you.  The pycryptobot community is filled with helpful people that are more than will to discuss trading ideas and help others use this trading bot. Please feel free to start a new discussion in our Telegram channels.
-
-

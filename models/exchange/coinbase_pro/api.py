@@ -431,7 +431,7 @@ class AuthAPI(AuthAPIBase):
         except:
             return pd.DataFrame()
 
-    def getTime(self) -> datetime:
+    def get_time(self) -> datetime:
         """Retrieves the exchange time"""
 
         try:
@@ -706,7 +706,7 @@ class PublicAPI(AuthAPIBase):
         self.die_on_api_error = False
         self._api_url = "https://api.pro.coinbase.com/"
 
-    def getHistoricalData(
+    def get_historical_data(
         self,
         market: str = DEFAULT_MARKET,
         # granularity: int = MAX_GRANULARITY,
@@ -845,7 +845,7 @@ class PublicAPI(AuthAPIBase):
                         )
                     time.sleep(15)
 
-    def getTicker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
+    def get_ticker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
         """Retrieves the market ticker"""
 
         # validates the market is syntactically correct
@@ -865,7 +865,7 @@ class PublicAPI(AuthAPIBase):
 
                 if ticker_date is None:
                     ticker_date = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-    
+
                 return (
                     ticker_date,
                     ticker_price
@@ -900,7 +900,7 @@ class PublicAPI(AuthAPIBase):
                     return (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), 0.0)
                 time.sleep(15)
 
-    def getTime(self) -> datetime:
+    def get_time(self) -> datetime:
         """Retrieves the exchange time"""
 
         try:
@@ -1151,7 +1151,7 @@ class WebSocket(AuthAPIBase):
     def getStartTime(self) -> datetime:
         return self.start_time
 
-    def getTimeElapsed(self) -> int:
+    def get_timeElapsed(self) -> int:
         return self.time_elapsed
 
 
@@ -1250,7 +1250,7 @@ class WebSocketClient(WebSocket):
 
             # candles dataframe is empty
             if self.candles is None:
-                resp = PublicAPI().getHistoricalData(
+                resp = PublicAPI().get_historical_data(
                     df["market"].values[0], self.granularity
                 )
                 if len(resp) > 0:
@@ -1298,7 +1298,7 @@ class WebSocketClient(WebSocket):
                         )
                         == 0
                     ):
-                        resp = PublicAPI().getHistoricalData(
+                        resp = PublicAPI().get_historical_data(
                             df["market"].values[0], self.granularity
                         )
                         if len(resp) > 0:

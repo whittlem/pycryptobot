@@ -4,18 +4,18 @@ from models.exchange.coinbase_pro import PublicAPI as CBPublicAPI
 
 # Coinbase Pro time
 api = CBPublicAPI()
-ts = api.getTime()
+ts = api.get_time()
 print (ts)
 
 app = PyCryptoBot(exchange='coinbasepro')
-ts = api.getTime()
+ts = api.get_time()
 print (ts)
 
 # Binance Live time
 api = BPublicAPI()
-ts = api.getTime()
+ts = api.get_time()
 print (ts)
 
 app = PyCryptoBot(exchange='binance')
-ts = api.getTime()
+ts = api.get_time()
 print (ts)

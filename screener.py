@@ -34,7 +34,7 @@ def volatility_calculator(bollinger_band_upper, bollinger_band_lower, keltner_up
     chan_20_pcnt = (b_pcnt + k_pcnt) / 2
 
     p_pcnt = abs(p_spread / Decimal(low)) * 100
-    
+
     return abs((chan_20_pcnt + p_pcnt) / 2)
 
 def load_configs():
@@ -115,7 +115,7 @@ def get_markets(app, quote_currency):
     markets = []
     quote_currency = quote_currency.upper()
     api = app.public_api
-    resp = api.getMarkets24HrStats()
+    resp = api.markets24HrStats()
     if app.exchange == CryptoExchange.BINANCE:
         for row in resp:
             if row["symbol"].endswith(quote_currency):
@@ -130,7 +130,7 @@ def get_markets(app, quote_currency):
         for result in results:
             if result["symbol"].endswith(f"-{quote_currency}"):
                 markets.append(result['symbol'])
-    
+
     return markets
 
 def process_screener_data(app, markets, quote_currency, exchange_name):
@@ -141,7 +141,7 @@ def process_screener_data(app, markets, quote_currency, exchange_name):
     debug = False
 
     ta_screener_list = [f"{re.sub('PRO', '', app.exchange.name, re.IGNORECASE)}:{re.sub('-', '', market)}" for market in markets]
-    
+
     screener_staging = [p for p in chunker(ta_screener_list, 100)]
     screener_analysis = []
     additional_indicators = ["ATR", "KltChnl.upper", "KltChnl.lower"]
@@ -149,7 +149,7 @@ def process_screener_data(app, markets, quote_currency, exchange_name):
 
     for pair_list in screener_staging:
         screener_analysis.extend([a for a in get_multiple_analysis(screener='crypto', interval=app.granularity.short, symbols=pair_list, additional_indicators=additional_indicators).values()])
-    
+
     # Take what we need and do magic, ditch the rest.
     formatted_ta = []
     for ta in screener_analysis:
@@ -163,7 +163,7 @@ def process_screener_data(app, markets, quote_currency, exchange_name):
             adx_neg_di = Decimal(ta.indicators['ADX-DI'])
             high = Decimal(ta.indicators['high']).quantize(Decimal('1e-{}'.format(8)))
             low = Decimal(ta.indicators['low']).quantize(Decimal('1e-{}'.format(8)))
-            close = Decimal(ta.indicators['close']).quantize(Decimal('1e-{}'.format(8)))            
+            close = Decimal(ta.indicators['close']).quantize(Decimal('1e-{}'.format(8)))
             # ATR normalised
             atr = (Decimal(ta.indicators['ATR']) / close * 100).quantize(Decimal('1e-{}'.format(2))) if "ATR" in ta.indicators else 0
             volume = Decimal(ta.indicators['volume'])
@@ -190,10 +190,10 @@ def process_screener_data(app, markets, quote_currency, exchange_name):
             elif rating == "BUY":
                 score += 2.5
             elif rating == "STRONG_BUY":
-                score += 5        
+                score += 5
             if (adx >= app.adx_threshold) and (adx_posi_di > adx_neg_di) and (adx_posi_di > adx):
                 if debug : print(f"ADX({adx}) >= {app.adx_threshold}")
-                score += 1 
+                score += 1
             if volume >= app.volume_threshold:
                 if debug : print(f"Volume({volume}) >= {app.volume_threshold}")
                 score += 1

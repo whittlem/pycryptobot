@@ -39,13 +39,13 @@ class BotConfig:
         self.is_verbose = 0
         self.save_graphs = 0
         self.is_sim = 0
-        self.simstartdate = None
-        self.simenddate = None
+        self.simstart_date = None
+        self.simend_date = None
         self.sim_speed = "fast"
         self.sell_upper_pcnt = None
         self.sell_lower_pcnt = None
-        self.nosellminpcnt = None
-        self.nosellmaxpcnt = None
+        self.no_sell_min_pcnt = None
+        self.no_sell_max_pcnt = None
         self.trailing_stop_loss = None
         self.trailing_stop_loss_trigger = 0
         self.dynamic_tsl = False
@@ -88,7 +88,7 @@ class BotConfig:
         self.autorestart = False
         self.stats = False
         self.statgroup = None
-        self.statstartdate = None
+        self.statstart_date = None
         self.statdetail = False
         self.nobuynearhighpcnt = 3
         self.simresultonly = False
@@ -177,7 +177,7 @@ class BotConfig:
             self.api_passphrase,
             self.market,
         ) = self._set_default_api_info(self.exchange)
-        
+
         self.read_config(kwargs["exchange"])
 
         Logger.configure(
@@ -292,7 +292,7 @@ class BotConfig:
 
         if isinstance(exchange, str):
             exchange = Exchange(exchange)
-        
+
         if not exchange:
             if (Exchange.COINBASEPRO.value or "api_pass") in self.config:
                 exchange = Exchange.COINBASEPRO
@@ -343,7 +343,7 @@ class BotConfig:
             conf[exchange.value]["market"],
         )
 
-    def getVersionFromREADME(self) -> str:
+    def get_version_from_readme(self) -> str:
         regex = r"^# Python Crypto Bot (v\d{1,3}\.\d{1,3}\.\d{1,3})"
         version = "v0.0.0"
         try:
@@ -351,10 +351,19 @@ class BotConfig:
                 for line in stream:
                     match = re.search(regex, line)
                     try:
+                        if match is None:
+                            Logger.error("Could not find version in README.md")
+                            sys.exit()
+
                         version = match.group(1)
                         break
-                    except:
+                    except Exception:
                         continue
+
+            if version == "v0.0.0":
+                Logger.error("Could not find version in README.md")
+                sys.exit()
+
             return version
         except Exception:
             raise
@@ -413,12 +422,12 @@ class BotConfig:
             help="optionally set sell lower percent limit",
         )
         parser.add_argument(
-            "--nosellminpcnt",
+            "--no_sell_min_pcnt",
             type=float,
             help="optionally set minimum margin to not sell",
         )
         parser.add_argument(
-            "--nosellmaxpcnt",
+            "--no_sell_max_pcnt",
             type=float,
             help="optionally set maximum margin to not sell",
         )
@@ -471,12 +480,12 @@ class BotConfig:
             "--sim", type=str, help="simulation modes: fast, fast-sample, slow-sample"
         )
         parser.add_argument(
-            "--simstartdate",
+            "--simstart_date",
             type=str,
             help="start date for sample simulation e.g '2021-01-15'",
         )
         parser.add_argument(
-            "--simenddate",
+            "--simend_date",
             type=str,
             help="end date for sample simulation e.g '2021-01-15' or 'now'",
         )
@@ -555,7 +564,7 @@ class BotConfig:
             "--statgroup", nargs="+", help="add multiple currency pairs to merge stats"
         )
         parser.add_argument(
-            "--statstartdate",
+            "--statstart_date",
             type=str,
             help="trades before this date are ignored in stats function e.g 2021-01-15",
         )

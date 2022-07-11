@@ -4,7 +4,7 @@ from models.exchange.coinbase_pro import AuthAPI as CAuthAPI
 
 # Coinbase Pro fees
 app = PyCryptoBot(exchange='coinbasepro')
-api = CAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIPassphrase(), app.getAPIURL())
+api = CAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIPassphrase(), app.api_url)
 #print (api.getTakerFee())
 #print (api.getTakerFee('BTC-GBP'))
 #print (api.getMakerFee())
@@ -16,7 +16,7 @@ print (app.getTakerFee())
 
 # Binance fees
 app = PyCryptoBot(exchange='binance')
-api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.getAPIURL())
+api = BAuthAPI(app.getAPIKey(), app.getAPISecret(), app.api_url)
 #print (api.getTakerFee())
 #print (api.getTakerFee('BTCGBP'))
 #print (api.getMakerFee())

@@ -253,7 +253,7 @@ class TelegramHandler:
             callback_json is not None
             and callback_json["c"] == callbacktags.GRANULARITY[0]
         ):
-            self.editor.get_granularity(update, callback_json["e"], context)
+            self.editor.granularity(update, callback_json["e"], context)
 
         # Restart Bots
         elif query.data == "restart":

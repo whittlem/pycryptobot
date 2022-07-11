@@ -6,8 +6,9 @@ from models.TradingAccount import TradingAccount
 from models.exchange.ExchangesEnum import Exchange
 from models.helper.LogHelper import Logger
 
+
 class Stats():
-    def __init__(self, app: PyCryptoBot=None, account: TradingAccount=None) -> None:
+    def __init__(self, app: PyCryptoBot = None, account: TradingAccount = None) -> None:
         self.app = app
         self.account = account
         self.order_pairs = []
@@ -19,10 +20,10 @@ class Stats():
         self.orders = self.account.getOrders(market, '', 'done')
         self.app.setMarket(market)
         if self.fiat_currency != None:
-            if self.app.getQuoteCurrency() != self.fiat_currency:
+            if self.app.quote_currency != self.fiat_currency:
                 raise ValueError("all currency pairs in statgroup must use the same quote currency")
         else:
-            self.fiat_currency = self.app.getQuoteCurrency()
+            self.fiat_currency = self.app.quote_currency
 
         # get buy/sell pairs (merge as necessary)
         last_order = None
@@ -37,7 +38,7 @@ class Stats():
                     amount = row['size']
                 if last_order in ['sell', None]:
                     last_order = 'buy'
-                    self.order_pairs.append({'buy': {'time':time, 'size': float(amount)}, 'sell': None, 'market': self.app.getMarket()})
+                    self.order_pairs.append({'buy': {'time':time, 'size': float(amount)}, 'sell': None, 'market': self.app.market})
                 else:
                     self.order_pairs[-1]['buy']['size'] += float(amount)
             else:
@@ -66,13 +67,13 @@ class Stats():
         # return [x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles]
 
     def show(self):
-        if self.app.getStats():
+        if self.app.stats:
             if self.app.statgroup:
                 for currency in self.app.statgroup:
                     self.get_data(currency)
                     sleep(5)
             else:
-                self.get_data(self.app.getMarket())
+                self.get_data(self.app.market)
             self.data_display()
 
     def data_display(self):
@@ -100,16 +101,16 @@ class Stats():
         today = datetime.today().date()
         lastweek = today - timedelta(days=7)
         lastmonth = today - timedelta(days=30)
-        if self.app.statstartdate:
+        if self.app.statstart_date:
             try:
-                start = datetime.strptime(self.app.statstartdate, '%Y-%m-%d').date()
+                start = datetime.strptime(self.app.statstart_date, '%Y-%m-%d').date()
             except:
-                raise ValueError("format of --statstartdate must be yyyy-mm-dd")
+                raise ValueError("format of --statstart_date must be yyyy-mm-dd")
         else:
             start = None
 
         # popular currencies
-        symbol = self.app.getQuoteCurrency()
+        symbol = self.app.quote_currency
         if symbol in ['USD', 'AUD', 'CAD', 'SGD', 'NZD']: symbol = '$'
         if symbol == 'EUR': symbol = '€'
         if symbol == 'GBP': symbol = '£'
@@ -203,7 +204,7 @@ class Stats():
         success = 'Total Profit/Loss:'
         width = 30
         if self.app.statgroup: header = 'MERGE'
-        else: header = self.app.getMarket()
+        else: header = self.app.market
 
         Logger.info(f'------------- TODAY : {header} --------------')
         Logger.info(trades + ' ' * (width-len(trades)) + str(len(today_per)))

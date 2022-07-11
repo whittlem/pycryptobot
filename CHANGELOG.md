@@ -19,12 +19,12 @@ Upgrade library dependencies (if required):
 - changed a couple config settings so they can be disabled via command line arguments
 - fixed CoinbasePro and Kucoin API errors for standard API access - believe all errors causing restarts are now resolved
     Only an occasional HTML Error which can't be fixed on our end.
-- moved getTicker call up pycryptobot.py to be inline with getHistoricalData and add a new row data with ticker before technical anlaysis is performed.  This creates more asynchonous data and makes output as accurate as we can based on last call.
-- changed getHistoricalData call to only be called at candle close instead of every iteration and use ticker to fill data between candle open and close.
+- moved get_ticker call up pycryptobot.py to be inline with get_historical_data and add a new row data with ticker before technical anlaysis is performed.  This creates more asynchonous data and makes output as accurate as we can based on last call.
+- changed get_historical_data call to only be called at candle close instead of every iteration and use ticker to fill data between candle open and close.
 - known problems with CoinbasePro and Kucoin websocket functions still exist, but above fixes will make websocket fixes easier
 - fixed standard indicators still being process when custom strategies are enabled
 - consolidated a bunch of locations where code was duplicated based on Exchange
-- added additional dataframe function to PyCyptoBot that will store additionally called dataframes dynamically and update them with ticker date like the main dataframe.  This greatly reduces the number of API calls when running SmartSwitch, checking 
+- added additional dataframe function to PyCyptoBot that will store additionally called dataframes dynamically and update them with ticker date like the main dataframe.  This greatly reduces the number of API calls when running SmartSwitch, checking
 "bullonly" or wanting to check anything else on a differen granularity than what is currently running. This is used for all additional calls for live and non-live checks, but not for Sims as that has it's own cache system already.  Might be able to clean up Sim code as well in the future.
 - consolidated numerous indicators and signals in Trading_Pta.py to help prevent dataframe fragmentation
 - revised default Strategy_CS.py to be a little less risky and include so new features.  Added extra comments to code.
@@ -35,7 +35,7 @@ Upgrade library dependencies (if required):
 ## [6.4.1] - 2022-05-05
 
 - reverted some recent changes to Coinbase Pro and Kucoin websocket code that caused incorrect data (still not totally right)
-- fixed last of the regular Kucoin error messages which were related to getTicker
+- fixed last of the regular Kucoin error messages which were related to get_ticker
 - added custom strategy files to gitignore so they dont get overwritten by mistake
 - Kucoin API is only return 100 rows of historical data the fix is to pass in a start date which is calculated so that it will return 300 rows of data
 - Fix for bug 'Updater' object has no attribute 'send_message'
@@ -53,7 +53,7 @@ Upgrade library dependencies (if required):
 - added option to create separate Trading_myPta.py file for user edits to prevent overwrites during updating
 - added pandas_ta_help.py file to view pandas-ta help database and test ta signals
 - added option for custom trade indicators and signals with Strategy_CS.py file
-- added option to create serapate Strategy_myCS.py file for user edits to prevent overwrites during updating 
+- added option to create serapate Strategy_myCS.py file for user edits to prevent overwrites during updating
 - added numerous customized indicators and signals in Strategy_CS.py with non-traditional settings.  Uses points system for buy/sell signals
 - added selltriggeroveride option to be used with custom strategy (if/while all signals are strong buy, don't trigger any Sells allowing for greater profit)
 - added options to trailing sell and buy that use the custom points system to trigger immediate buys or sells if the respective setting is active
@@ -66,7 +66,7 @@ Upgrade library dependencies (if required):
 
 ## [6.3.0] - 2022-04-13
 
-- added pycryptobot configuration editor 
+- added pycryptobot configuration editor
 
 ## [6.2.0] - 2022-03-15
 
@@ -197,7 +197,7 @@ Upgrade library dependencies (if required):
 
 - Added trailingstoplosstrigger to pair.json file + change percentage
 - Fixed sims with smartswitch and added the 5 minute granularity to sims
-- Added buyminsize so the bot will not buy anything below this value 
+- Added buyminsize so the bot will not buy anything below this value
 - Added sellsmartswitch this sets the sell granularity to 5 minutes once sold it will switch back to normal smartswitch
 - Added restart open orders this will start any bots that have open orders (these state is added to data.json when each bot starts)
 - Added cleandata to when the TG bot starts
@@ -334,7 +334,7 @@ Upgrade library dependencies (if required):
 
 ### Changed
 
-- Updated healthcheck to use a basic HTTPS request instead of a getTime() API call
+- Updated healthcheck to use a basic HTTPS request instead of a get_time() API call
 - Disabled Seasonal ARIMA Model ML by default --enableml
 - Removed healthcheck to reduce API calls for scaling
 
@@ -369,7 +369,7 @@ Upgrade library dependencies (if required):
 
 - update to smartswitch sim processing speed.
 - update to sim summary to include total margin and profit/loss.
-- fixed timestamp bug when using simstartdate.
+- fixed timestamp bug when using simstart_date.
 - fixed graphs in sim mode.
 - remove limit for sims using specific granularity.
 - fix for profit and loss summary for simulations
@@ -381,14 +381,14 @@ Upgrade library dependencies (if required):
 
 ### Changed
 
-- added additional error handling for Coinbase Pro getTime()
+- added additional error handling for Coinbase Pro get_time()
 
 ## [3.3.0] - 2021-08-28
 
 ### Changed
 
 - added "nobuynearhighpcnt" to specify the percentage from high that the bot should not buy if "disablebuynearhigh" is not specified.
-- added a catch and display of exception message for getTime()
+- added a catch and display of exception message for get_time()
 
 ## [3.2.15] - 2021-08-24
 
@@ -438,8 +438,8 @@ Upgrade library dependencies (if required):
 
 ### Added
 
-- 'nosellminpcnt' to specify minimum margin to not sell
-- 'nosellmaxpcnt' to specify maximum margin to not sell
+- 'no_sell_min_pcnt' to specify minimum margin to not sell
+- 'no_sell_max_pcnt' to specify maximum margin to not sell
 - fixed Stats.py issue on smaller datasets
 - fixed recvWindow issue
 - binance.us is now working
@@ -605,7 +605,7 @@ Upgrade library dependencies (if required):
 
 - use `granularity` instead of `self.getGranularity`
 
-- use `granularity` instead of `self.getGranularity()`  in `getHistoricalDateRange()` call
+- use `granularity` instead of `self.granularity`  in `getHistoricalDateRange()` call
 
 * Update README.md
 
@@ -671,7 +671,7 @@ Upgrade library dependencies (if required):
 
 ### Added
 
-- statdetail flag which gives a detailed list of transactions (works with --statstartdate and --statgroup)
+- statdetail flag which gives a detailed list of transactions (works with --statstart_date and --statgroup)
 
 ## [2.40.0] - 2021-07-03
 
@@ -689,7 +689,7 @@ Upgrade library dependencies (if required):
 
 ### Changed
 
-- Added statstartdate flag to ignore trades before a given date in stats function
+- Added statstart_date flag to ignore trades before a given date in stats function
 - Added statgroup flag to merge stats of multiple currency pairs
 - Fixed stats for coinbase pro
 
@@ -772,7 +772,7 @@ Upgrade library dependencies (if required):
 
 ### Added
 
-- Added app.getHistoricalDataChained
+- Added app.get_historical_data_chained
 
 ## [2.26.0] - 2021-06-07
 

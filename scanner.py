@@ -39,7 +39,7 @@ for exchange in config:
             raise ValueError(f"Invalid exchange: {ex}")
 
         markets = []
-        resp = api.getMarkets24HrStats()
+        resp = api.markets24HrStats()
         if ex == Exchange.BINANCE:
             for row in resp:
                 if row["symbol"].endswith(quote):
@@ -79,7 +79,7 @@ for exchange in config:
             print(f"[{ROW}/{len(df_markets)}] {market} {round((ROW/len(df_markets))*100, 2)}%")
             try:
                 if int(data["volume"]) > 0:
-                    ta = TechnicalAnalysis(api.getHistoricalData(market, GRANULARITY, None))
+                    ta = TechnicalAnalysis(api.get_historical_data(market, GRANULARITY, None))
                     ta.addEMA(12)
                     ta.addEMA(26)
                     ta.addATR(72)
@@ -115,4 +115,3 @@ for exchange in config:
         )
 
         TGBot(app, scanner=True).save_scanner_output(ex.value, quote, df_markets)
-

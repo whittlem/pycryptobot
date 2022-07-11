@@ -9,18 +9,18 @@ app = PyCryptoBot(exchange='kucoin')
 
 api = PublicAPI('https://api.kucoin.com')
 
-ts = api.getTime()
-print("getTime: " + str(ts))
+ts = api.get_time()
+print("get_time: " + str(ts))
 
-ticker = api.getTicker('BTC-USDT')
-print("getTicker: ")
+ticker = api.get_ticker('BTC-USDT')
+print("get_ticker: ")
 print(ticker)
 
-df = api.getHistoricalData('ETH-USDT', '1hour', '', '')
-print("getHistoricalData: fast")
+df = api.get_historical_data('ETH-USDT', '1hour', '', '')
+print("get_historical_data: fast")
 print(df)
-df = api.getHistoricalData('ETH-USDT', '1hour', '2021-08-03T00:00:00', '2021-08-17T00:00:00')
-print("getHistoricalData: fast-sample")
+df = api.get_historical_data('ETH-USDT', '1hour', '2021-08-03T00:00:00', '2021-08-17T00:00:00')
+print("get_historical_data: fast-sample")
 print(df)
 
 """
@@ -50,7 +50,7 @@ print(df)
 df = api.getOrders('BTC-USDT', '', 'done')
 print(df)
 
-df = api.getMarkets()
+df = api.markets()
 print (df)
 
 

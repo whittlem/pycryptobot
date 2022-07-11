@@ -417,7 +417,7 @@ def display_page(pathname):
 # Bot instance uptime tracking
 
 
-def getDateFromISO8601Str(date: str):  # pylint: disable=invalid-name
+def get_date_from_iso8601_str(date: str):  # pylint: disable=invalid-name
     """Bot instance uptime tracking"""
     now = str(datetime.now())
     # If date passed from datetime.now() remove milliseconds
@@ -488,7 +488,7 @@ def update_table(n):
                 ) as f:
                     json_data = pd.json_normalize(json.loads(f.read()))
                     json_data["pair"] = pair
-                    uptime = getDateFromISO8601Str(json_data["botcontrol.started"][0])
+                    uptime = get_date_from_iso8601_str(json_data["botcontrol.started"][0])
                     if (
                         isinstance(json_data["margin"][0], str)
                         and "%" in json_data["margin"][0]

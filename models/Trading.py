@@ -1020,7 +1020,7 @@ class TechnicalAnalysis:
             if len(pred) == 0:
                 df_last = self.df["close"].tail(1)
                 return (
-                    str(df_last.index.values[0])
+                    str(self.df_last.index.values[0])
                     .replace("T", " ")
                     .replace(".000000000", ""),
                     df_last.values[0],
@@ -1028,7 +1028,7 @@ class TechnicalAnalysis:
             else:
                 df_last = pred.tail(1)
                 return (
-                    str(df_last.index.values[0])
+                    str(self.df_last.index.values[0])
                     .replace("T", " ")
                     .replace(".000000000", ""),
                     df_last.values[0],
@@ -1138,12 +1138,12 @@ class TechnicalAnalysis:
 
             if len(df) > 0:
                 df_last = df.tail(1)
-                if float(df_last[0]) < price:
-                    Logger.info(f" Support level of {str(df_last[0])} formed at {str(df_last.index[0])}")
-                elif float(df_last[0]) > price:
-                    Logger.info(f" Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}")
+                if float(self.df_last[0]) < price:
+                    Logger.info(f" Support level of {str(self.df_last[0])} formed at {str(self.df_last.index[0])}")
+                elif float(self.df_last[0]) > price:
+                    Logger.info(f" Resistance level of {str(self.df_last[0])} formed at {str(self.df_last.index[0])}")
                 else:
-                    Logger.info(f" Support/Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}")
+                    Logger.info(f" Support/Resistance level of {str(self.df_last[0])} formed at {str(self.df_last.index[0])}")
 
     def getResistance(self, price: float = 0) -> float:
         if isinstance(price, int) or isinstance(price, float):
@@ -1445,7 +1445,7 @@ class TechnicalAnalysis:
 
         return data
 
-    def saveCSV(self, filename: str = "tradingdata.csv") -> None:
+    def saveCSV(self, filename: str = "trading_data.csv") -> None:
         """Saves the DataFrame to an uncompressed CSV."""
 
         p = compile(r"^[\w\-. ]+$")
@@ -1491,7 +1491,7 @@ class TechnicalAnalysis:
     def __isResistance(self, df, i) -> bool:
         """Is resistance level? (private function)"""
 
-        try:  
+        try:
             c1 = df["high"][i] > df["high"][i - 1]
             c2 = df["high"][i] > df["high"][i + 1]
             c3 = df["high"][i + 1] > df["high"][i + 2]

@@ -665,7 +665,7 @@ def test_getOrdersValidStatusActive():
         diff = set(actual) ^ set(expected)
         assert not diff
 
-def test_getTime():
+def test_get_time():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -688,7 +688,7 @@ def test_getTime():
     exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
-    resp = exchange.getTime()
+    resp = exchange.get_time()
     assert type(resp) is datetime
 
 def test_marketBuyInvalidMarket():

@@ -25,7 +25,7 @@ class Strategy_CS:
 
     def tradeSignals(self, data, df, current_sim_date, websocket):
 
-        """ 
+        """
         #############################################################################################
         If customizing this file it is recommended to make a copy and name it Strategy_myCS.py
         It will be loaded automatically if pandas-ta is enabled in configuration and it will not
@@ -34,7 +34,7 @@ class Strategy_CS:
         """
 
         # buy indicators - using non-traditional settings
-        # *** currently requires pandas-ta module and optional talib 
+        # *** currently requires pandas-ta module and optional talib
 
         # will output indicator values in log and after a trade in telgram when True
         debug = True
@@ -60,15 +60,15 @@ class Strategy_CS:
         # retrieve the ta results
         df_1h = ta_1h.getDataFrame()
         # name and create last row reference like main dataframe
-        data_1h = self.app.getInterval(df_1h)
+        data_1h = self.app.get_interval(df_1h)
 
         # repeat for any additional, don't recommend more than 1 or 2 additional, adds overhead and API calls
         df_6h = self.app.getAdditionalDf("6h", websocket).copy()
-        ta_6h = self.TA(df_6h, self.app.setTotalPeriods())
+        ta_6h = self.TA(df_6h, self.app.adjust_total_periods)
         ta_6h.addEMA(5,True)
         ta_6h.addEMA(10,True)
         df_6h = ta_6h.getDataFrame()
-        data_6h = self.app.getInterval(df_6h)
+        data_6h = self.app.get_interval(df_6h)
 
         # check ema crossovers (these are not standard period lengths, see comments above)
         EMA1hBull = bool(data_1h['ema5'][0] > data_1h['ema10'][0])
@@ -123,7 +123,7 @@ class Strategy_CS:
         self.sell_pts = 0
         self.pts_sig_required_buy = 0
         self.pts_sig_required_sell = 0
- 
+
         # pts_to_buy and pts_to_sell are adjusted with logic statements below based on market condition
         if ( # if sma5 is below sma10 and both are decreasing, this is badd, sell
             data['sma5'][0] < data['sma10'][0]
@@ -200,11 +200,11 @@ class Strategy_CS:
 # the below two lines are a little close to traditional RSI
 #                and data['rsi14'][0] < 65
 #                and data['rsi14'][0] > 30
-                
+
             ):
                 self.rsi_action = "strongbuy"
                 self.buy_pts += 2
-            else: 
+            else:
                 self.rsi_action = "buy"
                 self.buy_pts += 1
         elif ( # Sell if RSI percent of change is less than 0%  and MA percent of change less than 0 or RSI below MA
@@ -409,7 +409,7 @@ class Strategy_CS:
                 f" MacdlSig: {_truncate(data['macdl_sig'][0],6)} MacdLeadpc: {data['macdlead_pc'][0]}%"
                 f" Diff: {macdl_sg_diff}"
                 "\n"
-                # EMA 1h and 6h 
+                # EMA 1h and 6h
                 f"EMA 1h Bull: {EMA1hBull} EMA5_pc: {data_1h['ema5_pc'][0]} EMA 6h Bull: {EMA6hBull} EMA5_pc: {data_6h['ema5_pc'][0]}"
                 "\n"
                 # EMA/WMA
@@ -437,13 +437,13 @@ class Strategy_CS:
     def buySignal(self) -> bool:
 
         # non-Traditional buy signal criteria
-        # *** currently requires pandas-ta module and optional talib 
+        # *** currently requires pandas-ta module and optional talib
         if (
             self.buy_pts >= self.pts_to_buy
             and self.pts_sig_required_buy >= self.sig_required_buy
         ):
             if (
-                self.app.getTrailingBuyImmediatePcnt() is not None
+                self.app.trailingbuyimmediatepcnt is not None
                 and self.buy_pts >= self.immed_buy_pts
             ):
                 self.state.trailing_buy_immediate = True
@@ -457,13 +457,13 @@ class Strategy_CS:
     def sellSignal(self) -> bool:
 
         # non-Traditional sell signal criteria
-        # *** currently requires pandas-ta module and optional talib 
+        # *** currently requires pandas-ta module and optional talib
         if (
             self.sell_pts >= self.pts_to_sell
             and self.pts_sig_required_sell >= self.sig_required_sell
         ):
             if (
-                self.app.getTrailingSellImmediatePcnt() is not None
+                self.app.trailingsellimmediatepcnt is not None
                 and self.sell_pts >= self.immed_sell_pts
             ):
                 self.state.trailing_sell_immediate = True
@@ -502,4 +502,3 @@ class Strategy_CS:
             return (True,(datetime.combine(date.min,datetime.now().time()) - datetime.combine(date.min, coTime)))
         else:
             return (False,0)
-
