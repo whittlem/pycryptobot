@@ -360,7 +360,7 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderSeasonalARIMAModelPrediction(self, days=30, saveOnly=False):
+    def renderArima_model_prediction(self, days=30, saveOnly=False):
         """Render the seasonal ARIMA model prediction
 
         Parameters

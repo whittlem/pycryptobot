@@ -219,7 +219,7 @@ class TelegramBotHelper:
                     continue
                 self.remove_open_order()
 
-    def checkmanualbuysell(self) -> str:
+    def check_manual_buy_sell(self) -> str:
         result = "WAIT"
 
         if self._read_data() and "botcontrol" in self.data:

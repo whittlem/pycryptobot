@@ -5,15 +5,8 @@ from models.PyCryptoBot import truncate as _truncate
 from models.AppState import AppState
 from models.helper.LogHelper import Logger
 from os.path import exists as file_exists
-try:
-    from models.Strategy_myCS import Strategy_CS as myCS
-    strategy_myCS = True
-    myCS_error = None
-except ImportError as err:
-    strategy_myCS = False
-    myCS_error = err
-if strategy_myCS is False:
-    from models.Strategy_CS import Strategy_CS as CS
+from models.Strategy_CS import Strategy_CS as CS
+
 
 class Strategy:
     def __init__(
@@ -32,18 +25,7 @@ class Strategy:
         self.app = app
         self.state = state
         self._df = df
-
-        if app.enable_custom_strategy:
-            if strategy_myCS is False and file_exists("models/Strategy_myCS.py"):
-                raise ImportError(f"Custom Strategy Error: {myCS_error}")
-            else:
-                if strategy_myCS is True:
-                    self.CS = myCS(self.app, self.state)
-                else:
-                    self.CS = CS(self.app, self.state)
-                self.CS_ready = True
-        else:
-            self.CS_ready = False
+        self.CS_ready = False
 
         if self.app.is_sim:
             self._df_last = self.app.get_interval(df, iterations)
@@ -237,7 +219,7 @@ class Strategy:
 
         return False
 
-    def isSellTrigger(
+    def is_sell_trigger(
         self,
         app,
         state,
@@ -380,7 +362,7 @@ class Strategy:
             return True
 
         if debug:
-            Logger.debug("\n*** isSellTrigger ***\n")
+            Logger.debug("\n*** is_sell_trigger ***\n")
             Logger.debug("-- ignoring sell signal --")
             Logger.debug(
                 f"self.app.no_sell_min_pcnt is None (no_sell_min_pcnt: {self.app.no_sell_min_pcnt})"
@@ -392,7 +374,7 @@ class Strategy:
             Logger.debug("\n")
 
         if debug:
-            Logger.debug("\n*** isSellTrigger ***\n")
+            Logger.debug("\n*** is_sell_trigger ***\n")
             Logger.debug("-- loss failsafe sell at fibonacci band --")
             Logger.debug(
                 f"self.app.disablefailsafefibonaccilow is False (actual: {self.app.disablefailsafefibonaccilow})"
@@ -508,7 +490,7 @@ class Strategy:
 
         return False
 
-    def isWaitTrigger(self, margin: float = 0.0, goldencross: bool = False):
+    def is_wait_trigger(self, margin: float = 0.0, goldencross: bool = False):
         # set to true for verbose debugging
         debug = False
 
@@ -520,7 +502,7 @@ class Strategy:
             return False
 
         if debug and self.state.action != "WAIT":
-            Logger.debug("\n*** isWaitTrigger ***\n")
+            Logger.debug("\n*** is_wait_trigger ***\n")
 
         if debug and self.state.action == "BUY":
             Logger.debug(
@@ -598,7 +580,7 @@ class Strategy:
 
         return False
 
-    def checkTrailingBuy(self, state, price):
+    def check_trailing_buy(self, state, price):
 
         self.state = state
         # If buy signal, save the price and check if it decreases before buying.
@@ -647,7 +629,7 @@ class Strategy:
 
         return self.state.action, self.state.trailing_buy, trailing_action_logtext, immediate_action
 
-    def checkTrailingSell(self, state, price):
+    def check_trailing_sell(self, state, price):
 
         debug = False
 

@@ -247,7 +247,7 @@ class AppState:
             quote = 0.0 if len(df_quote) == 0 else float(df_quote.values[0])
         except:
             pass
-        orders = self.account.getOrders(self.app.market, "", "done")
+        orders = self.account.get_orders(self.app.market, "", "done")
         if len(orders) > 0:
             last_order = orders[-1:]
 

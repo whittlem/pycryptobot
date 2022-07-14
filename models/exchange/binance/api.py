@@ -271,7 +271,7 @@ class AuthAPI(AuthAPIBase):
             ]
         )
 
-    def getMakerFee(self, market: str = "") -> float:
+    def get_maker_fee(self, market: str = "") -> float:
         """Retrieves the maker fee"""
 
         if len(market):
@@ -287,7 +287,7 @@ class AuthAPI(AuthAPIBase):
 
         return float(fees["maker_fee_rate"].to_string(index=False).strip())
 
-    def getTakerFee(self, market: str = "") -> float:
+    def get_taker_fee(self, market: str = "") -> float:
         """Retrieves the taker fee"""
 
         if len(market) != None:
@@ -333,7 +333,7 @@ class AuthAPI(AuthAPIBase):
         except:
             return pd.DataFrame()
 
-    def getOrders( #pylint: disable=invalid-name
+    def get_orders( #pylint: disable=invalid-name
         self,
         market: str = "",
         action: str = "",

@@ -92,7 +92,7 @@ class TradingAccount:
             if not p.match(market):
                 raise TypeError("Kucoin market is invalid.")
 
-    def getOrders(self, market="", action="", status="all"):
+    def get_orders(self, market="", action="", status="all"):
         """Retrieves orders either live or simulation
 
         Parameters
@@ -121,13 +121,13 @@ class TradingAccount:
             if self.mode == "live":
                 # if config is provided and live connect to Binance account portfolio
                 model = BAuthAPI(
-                    self.app.getAPIKey(),
-                    self.app.getAPISecret(),
+                    self.app.api_key,
+                    self.app.api_secret,
                     self.app.api_url,
                     recv_window=self.app.getRecvWindow(),
                 )
                 # retrieve orders from live Binance account portfolio
-                self.orders = model.getOrders(market, action, status)
+                self.orders = model.get_orders(market, action, status)
                 return self.orders
             else:
                 # return dummy orders
@@ -140,14 +140,14 @@ class TradingAccount:
             if self.mode == 'live':
                 # if config is provided and live connect to Kucoin account portfolio
                 model = KAuthAPI(
-                    self.app.getAPIKey(),
-                    self.app.getAPISecret(),
-                    self.app.getAPIPassphrase(),
+                    self.app.api_key,
+                    self.app.api_secret,
+                    self.app.api_passphrase,
                     self.app.api_url,
                     use_cache=self.app.usekucoincache,
                 )
                 # retrieve orders from live Kucoin account portfolio
-                self.orders = model.getOrders(market, action, status)
+                self.orders = model.get_orders(market, action, status)
                 return self.orders
             else:
                 if market == '':
@@ -159,13 +159,13 @@ class TradingAccount:
             if self.mode == "live":
                 # if config is provided and live connect to Coinbase Pro account portfolio
                 model = CBAuthAPI(
-                    self.app.getAPIKey(),
-                    self.app.getAPISecret(),
-                    self.app.getAPIPassphrase(),
+                    self.app.api_key,
+                    self.app.api_secret,
+                    self.app.api_passphrase,
                     self.app.api_url,
                 )
                 # retrieve orders from live Coinbase Pro account portfolio
-                self.orders = model.getOrders(market, action, status)
+                self.orders = model.get_orders(market, action, status)
                 return self.orders
             else:
                 # return dummy orders
@@ -203,9 +203,9 @@ class TradingAccount:
         if self.app.exchange == Exchange.KUCOIN:
             if self.mode == 'live':
                 model = KAuthAPI(
-                    self.app.getAPIKey(),
-                    self.app.getAPISecret(),
-                    self.app.getAPIPassphrase(),
+                    self.app.api_key,
+                    self.app.api_secret,
+                    self.app.api_passphrase,
                     self.app.api_url,
                     use_cache=self.app.usekucoincache,
                 )
@@ -265,8 +265,8 @@ class TradingAccount:
         elif self.app.exchange == Exchange.BINANCE:
             if self.mode == "live":
                 model = BAuthAPI(
-                    self.app.getAPIKey(),
-                    self.app.getAPISecret(),
+                    self.app.api_key,
+                    self.app.api_secret,
                     self.app.api_url,
                     recv_window=self.app.getRecvWindow(),
                 )
@@ -331,9 +331,9 @@ class TradingAccount:
             if self.mode == "live":
                 # if config is provided and live connect to Coinbase Pro account portfolio
                 model = CBAuthAPI(
-                    self.app.getAPIKey(),
-                    self.app.getAPISecret(),
-                    self.app.getAPIPassphrase(),
+                    self.app.api_key,
+                    self.app.api_secret,
+                    self.app.api_passphrase,
                     self.app.api_url,
                 )
                 trycnt, maxretry = (0, 5)
@@ -700,13 +700,13 @@ class TradingAccount:
         if self.mode == "live":
             if self.app.exchange == Exchange.COINBASEPRO:
                 # retrieve orders from live Coinbase Pro account portfolio
-                df = self.getOrders(market, "", "done")
+                df = self.get_orders(market, "", "done")
             elif self.app.exchange == Exchange.BINANCE:
                 # retrieve orders from live Binance account portfolio
-                df = self.getOrders(market, "", "done")
+                df = self.get_orders(market, "", "done")
             elif self.app.exchange == Exchange.KUCOIN:
                 # retrieve orders from live Kucoin account portfolio
-                df = self.getOrders(market, '', 'done')
+                df = self.get_orders(market, '', 'done')
             else:
                 df = pd.DataFrame()
         else:

@@ -40,14 +40,14 @@ df = api.getFees()
 print(df)
 
 
-df = api.getMakerFee()
+df = api.get_maker_fee()
 print(df)
 
 
-df = api.getTakerFee()
+df = api.get_taker_fee()
 print(df)
 
-df = api.getOrders('BTC-USDT', '', 'done')
+df = api.get_orders('BTC-USDT', '', 'done')
 print(df)
 
 df = api.markets()
@@ -58,7 +58,7 @@ fee = api.getTradeFee('BTC-USDT')
 print (fee)
 
 
-df = api.getOrders('BTC-USDT')
+df = api.get_orders('BTC-USDT')
 print(df)
 
 resp = api.marketSell('BTC-USDT', 0.0002)

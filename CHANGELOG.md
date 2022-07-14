@@ -114,7 +114,7 @@ Upgrade library dependencies (if required):
 
 ## [5.2.4] - 2022-01-16
 
-- fix indentation problems. Incorporated GetOrders caching system (Kucoin). Misc. fixes.
+- fix indentation problems. Incorporated Get_orders caching system (Kucoin). Misc. fixes.
 
 ## [5.2.3] - 2022-01-15
 
@@ -162,12 +162,12 @@ Upgrade library dependencies (if required):
 - added preventloss option to enable selling prior to margin reaching 0% profit to prevent loss
 - added preventlosstrigger - margin set point to start watching for preventloss (see readme)
 - added preventlossmargin - margin set point to sell at for preventloss (see readme)
-- reordered some test in isSellTrigger to minimize processing on every pass under some conditions
+- reordered some test in is_sell_trigger to minimize processing on every pass under some conditions
 
 ## [5.0.2] - 2021-12-26
 
 - revised fix for change_pcnt_high variable from previous
-- fixed isSellTrigger immediate action it was waiting until candle close
+- fixed is_sell_trigger immediate action it was waiting until candle close
 
 ## [5.0.1] - 2021-12-23
 
@@ -266,7 +266,7 @@ Upgrade library dependencies (if required):
 ## [4.3.1] - 2021-10-28
 
 - fix for Kucoin margin calculation
-- fix for Kucoin getOrders not always returning a response
+- fix for Kucoin get_orders not always returning a response
 - fix for SIM smartswitching
 - Update for TG bot to show uptime with /showinfo
 
@@ -413,17 +413,17 @@ Upgrade library dependencies (if required):
 
 ### Added
 
-- Verbose debug option to isSellTrigger and isWaitTrigger
+- Verbose debug option to is_sell_trigger and is_wait_trigger
 
 ### Changed
 
-- Logic in isSellTrigger and isWaitTrigger
+- Logic in is_sell_trigger and is_wait_trigger
 
 ## [3.2.11] - 2021-08-22
 
 ### Changed
 
-- Adjustment to isWaitTrigger
+- Adjustment to is_wait_trigger
 - Tidying up repo
 - Fixed version
 
@@ -716,7 +716,7 @@ Upgrade library dependencies (if required):
 ### Changed
 
 - Refactored the new stats feature into it's own Stats class
-- Fixed a bug with getOrders() for Coinbase Pro
+- Fixed a bug with get_orders() for Coinbase Pro
 - Fixed the rounding issue with precision greater than 4
 - Fixed the dummy account which has been broken with a previous PR
 - Updated unit tests

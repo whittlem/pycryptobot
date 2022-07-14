@@ -1,10 +1,13 @@
 import os
 import sys
 import time
+import math
 import random
 import sched
 import signal
+import functools
 import pandas as pd
+from typing import Union
 from datetime import datetime, timedelta
 from urllib3.exceptions import ReadTimeoutError
 
@@ -18,12 +21,14 @@ from models.exchange.binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
 from models.exchange.coinbase_pro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
 from models.exchange.kucoin import AuthAPI as KAuthAPI, PublicAPI as KPublicAPI
 from models.helper.TelegramBotHelper import TelegramBotHelper
+from models.helper.MarginHelper import calculate_margin
 from models.TradingAccount import TradingAccount
 from models.Stats import Stats
 from models.AppState import AppState
 from models.helper.TextBoxHelper import TextBox
 from models.helper.LogHelper import Logger
 from models.Trading import TechnicalAnalysis
+from models.Strategy import Strategy
 
 pd.set_option("display.float_format", "{:.8f}".format)
 
@@ -100,7 +105,6 @@ class PyCryptoBot(BotConfig):
                 text_box.center(f"Restarting Bot {self.market}")
                 text_box.singleLine()
                 Logger.debug("Restarting Bot.")
-                # print(str(datetime.now()).format() + " - Bot has restarted")
                 self.notify_telegram(f"{self.market} bot has restarted")
                 self.telegram_bot.updatebotstatus("active")
                 self.read_config(self.exchange)
@@ -199,9 +203,9 @@ class PyCryptoBot(BotConfig):
                 self.price = float(self.trading_data.iloc[-1, self.trading_data.columns.get_loc("close")])
 
             else:
-                # set time and price with ticker data and add/update current candle
+                # set time and self.price with ticker data and add/update current candle
                 ticker = self.get_ticker(self.market, self.websocket)
-                # if 0, use last close value as price
+                # if 0, use last close value as self.price
                 self.price = self.trading_data["close"].iloc[-1] if ticker[1] == 0 else ticker[1]
                 self.ticker_date = ticker[0]
                 self.ticker_self.price = ticker[1]
@@ -217,7 +221,7 @@ class PyCryptoBot(BotConfig):
                         if self.price > self.trading_data["high"].iloc[-1]
                         else self.trading_data["high"].iloc[-1]
                     )
-                    self.trading_data.iloc[-1, self.trading_data.columns.get_loc("close")] = price
+                    self.trading_data.iloc[-1, self.trading_data.columns.get_loc("close")] = self.price
                     self.trading_data.iloc[
                         -1, self.trading_data.columns.get_loc("date")
                     ] = datetime.strptime(ticker[0], "%Y-%m-%d %H:%M:%S")
@@ -602,7 +606,7 @@ class PyCryptoBot(BotConfig):
 
             if self.price < 0.000001:
                 raise Exception(
-                    f"{self.market} is unsuitable for trading, quote price is less than 0.000001!"
+                    f"{self.market} is unsuitable for trading, quote self.price is less than 0.000001!"
                 )
 
             try:
@@ -645,6 +649,999 @@ class PyCryptoBot(BotConfig):
             except KeyError as err:
                 Logger.error(err)
                 sys.exit()
+
+            # Log data for Telegram Bot
+            self.telegram_bot.addindicators("EMA", ema12gtema26 or ema12gtema26co)
+            if not self.disablebuyelderray:
+                self.telegram_bot.addindicators("ERI", elder_ray_buy)
+            if self.disablebullonly:
+                self.telegram_bot.addindicators("BULL", goldencross)
+            if not self.disablebuymacd:
+                self.telegram_bot.addindicators("MACD", macdgtsignal or macdgtsignalco)
+            if not self.disablebuyobv:
+                self.telegram_bot.addindicators("OBV", float(obv_pc) > 0)
+
+            if self.is_sim:
+                # Reset the Strategy so that the last record is the current sim date
+                # To allow for calculations to be done on the sim date being processed
+                sdf = df[df["date"] <= current_sim_date].tail(self.adjust_total_periods)
+                strategy = Strategy(
+                    self, self.state, sdf, sdf.index.get_loc(str(current_sim_date)) + 1
+                )
+            else:
+                strategy = Strategy(self, self.state, df)
+
+            trailing_action_logtext = ""
+
+            # determine current action, indicatorvalues will be empty if custom Strategy are disabled or it's debug is False
+            self.state.action, indicatorvalues = strategy.getAction(
+                self.state, self.price, current_sim_date, self.websocket
+            )
+
+            immediate_action = False
+            margin, profit, sell_fee, change_pcnt_high = 0, 0, 0, 0
+
+            # Reset the TA so that the last record is the current sim date
+            # To allow for calculations to be done on the sim date being processed
+            if self.is_sim:
+                trading_dataCopy = (
+                    self.trading_data[self.trading_data["date"] <= current_sim_date]
+                    .tail(self.adjust_total_periods)
+                    .copy()
+                )
+                _technical_analysis = TechnicalAnalysis(
+                    trading_dataCopy, self.adjust_total_periods
+                )
+
+            if (
+                self.state.last_buy_size > 0
+                and self.state.last_buy_price > 0
+                and self.price > 0
+                and self.state.last_action == "BUY"
+            ):
+                # update last buy high
+                if self.price > self.state.last_buy_high:
+                    self.state.last_buy_high = self.price
+
+                if self.state.last_buy_high > 0:
+                    change_pcnt_high = ((self.price / self.state.last_buy_high) - 1) * 100
+                else:
+                    change_pcnt_high = 0
+
+                # buy and sell calculations
+                self.state.last_buy_fee = round(self.state.last_buy_size * self.get_taker_fee(), 8)
+                self.state.last_buy_filled = round(
+                    ((self.state.last_buy_size - self.state.last_buy_fee) / self.state.last_buy_price),
+                    8,
+                )
+
+                # if not a simulation, sync with exchange orders
+                if not self.is_sim:
+                    if self.websocket:
+                        if last_api_call_datetime.seconds > 60:
+                            self.state.exchange_last_buy = self.get_last_buy()
+                    else:
+                        self.state.exchange_last_buy = self.get_last_buy()
+                    exchange_last_buy = self.state.exchange_last_buy
+                    if exchange_last_buy is not None:
+                        if self.state.last_buy_size != exchange_last_buy["size"]:
+                            self.state.last_buy_size = exchange_last_buy["size"]
+                        if self.state.last_buy_filled != exchange_last_buy["filled"]:
+                            self.state.last_buy_filled = exchange_last_buy["filled"]
+                        if self.state.last_buy_price != exchange_last_buy["price"]:
+                            self.state.last_buy_price = exchange_last_buy["price"]
+
+                        if (
+                            self.exchange == Exchange.COINBASEPRO
+                            or self.exchange == Exchange.KUCOIN
+                        ):
+                            if self.state.last_buy_fee != exchange_last_buy["fee"]:
+                                self.state.last_buy_fee = exchange_last_buy["fee"]
+
+                margin, profit, sell_fee = calculate_margin(
+                    buy_size=self.state.last_buy_size,
+                    buy_filled=self.state.last_buy_filled,
+                    buy_price=self.state.last_buy_price,
+                    buy_fee=self.state.last_buy_fee,
+                    sell_percent=self.getSellPercent(),
+                    sell_price=self.price,
+                    sell_taker_fee=self.get_taker_fee(),
+                )
+
+                # handle immediate sell actions
+                if self.manual_trades_only is False and strategy.is_sell_trigger(
+                    self,
+                    self.state,
+                    self.price,
+                    _technical_analysis.get_trade_exit(self.price),
+                    margin,
+                    change_pcnt_high,
+                    obv_pc,
+                    macdltsignal,
+                ):
+                    self.state.action = "SELL"
+                    immediate_action = True
+
+            # handle overriding wait actions
+            # (e.g. do not sell if sell at loss disabled!, do not buy in bull if bull only, manual trades only)
+            if self.manual_trades_only is True or (
+                self.state.action != "WAIT" and strategy.is_wait_trigger(margin, goldencross)
+            ):
+                self.state.action = "WAIT"
+                immediate_action = False
+
+            # If buy signal, save the self.price and check for decrease/increase before buying.
+            if self.state.action == "BUY" and immediate_action is not True:
+                (
+                    self.state.action,
+                    self.state.trailing_buy,
+                    trailing_action_logtext,
+                    immediate_action,
+                ) = strategy.check_trailing_buy(self.state, self.price)
+            # If sell signal, save the self.price and check for decrease/increase before selling.
+            if self.state.action == "SELL" and immediate_action is not True:
+                (
+                    self.state.action,
+                    self.state.trailing_sell,
+                    trailing_action_logtext,
+                    immediate_action,
+                ) = strategy.check_trailing_sell(self.state, self.price)
+
+            if self.enableimmediatebuy:
+                if self.state.action == "BUY":
+                    immediate_action = True
+
+            if not self.is_sim and self.enabletelegrambotcontrol:
+                manual_buy_sell = self.telegram_bot.check_manual_buy_sell()
+                if not manual_buy_sell == "WAIT":
+                    self.state.action = manual_buy_sell
+                    immediate_action = True
+
+            bullbeartext = ""
+            if (
+                self.disablebullonly is True
+                or self.adjust_total_periods < 200
+                or self.df_last["sma50"].values[0] == self.df_last["sma200"].values[0]
+            ):
+                bullbeartext = ""
+            elif goldencross is True:
+                bullbeartext = " (BULL)"
+            elif goldencross is False:
+                bullbeartext = " (BEAR)"
+
+            # polling is every 5 minutes (even for hourly intervals), but only process once per interval
+            # Logger.debug("DateCheck: " + str(immediate_action) + ' ' + str(self.state.last_df_index) + ' ' + str(current_df_index))
+            if immediate_action is True or self.state.last_df_index != current_df_index:
+                text_box = TextBox(80, 22)
+
+                precision = 4
+
+                if self.price < 0.01:
+                    precision = 8
+
+                # Since precision does not change after this point, it is safe to prepare a tailored `truncate()` that would
+                # work with this precision. It should save a couple of `precision` uses, one for each `truncate()` call.
+                truncate = functools.partial(self.truncate, n=precision)
+
+                if immediate_action:
+                    self.price_text = str(self.price)
+                else:
+                    self.price_text = "Close: " + str(self.price)
+                ema_text = ""
+                if self.disablebuyema is False:
+                    ema_text = self.compare(
+                        self.df_last["ema12"].values[0],
+                        self.df_last["ema26"].values[0],
+                        "EMA12/26",
+                        precision,
+                    )
+
+                macd_text = ""
+                if self.disablebuymacd is False:
+                    macd_text = self.compare(
+                        self.df_last["macd"].values[0],
+                        self.df_last["signal"].values[0],
+                        "MACD",
+                        precision,
+                    )
+
+                obv_text = ""
+                if self.disablebuyobv is False:
+                    obv_text = (
+                        "OBV: "
+                        + truncate(self.df_last["obv"].values[0])
+                        + " ("
+                        + str(truncate(self.df_last["obv_pc"].values[0]))
+                        + "%)"
+                    )
+
+                eri_text = " |"
+                if self.disablebuyelderray is False:
+                    if elder_ray_buy is True:
+                        eri_text = "ERI: buy"
+                    elif elder_ray_sell is True:
+                        eri_text = "ERI: sell"
+
+                log_text = ""
+                if hammer is True:
+                    log_text = '* Candlestick Detected: Hammer ("Weak - Reversal - Bullish Signal - Up")'
+
+                if shooting_star is True:
+                    log_text = '* Candlestick Detected: Shooting Star ("Weak - Reversal - Bearish Pattern - Down")'
+
+                if hanging_man is True:
+                    log_text = '* Candlestick Detected: Hanging Man ("Weak - Continuation - Bearish Pattern - Down")'
+
+                if inverted_hammer is True:
+                    log_text = '* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Pattern - Up")'
+
+                if three_white_soldiers is True:
+                    log_text = '*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Bullish Pattern - Up")'
+
+                if three_black_crows is True:
+                    log_text = '* Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Pattern - Down")'
+
+                if morning_star is True:
+                    log_text = '*** Candlestick Detected: Morning Star ("Strong - Reversal - Bullish Pattern - Up")'
+
+                if evening_star is True:
+                    log_text = '*** Candlestick Detected: Evening Star ("Strong - Reversal - Bearish Pattern - Down")'
+
+                if three_line_strike is True:
+                    log_text = '** Candlestick Detected: Three Line Strike ("Reliable - Reversal - Bullish Pattern - Up")'
+
+                if abandoned_baby is True:
+                    log_text = '** Candlestick Detected: Abandoned Baby ("Reliable - Reversal - Bullish Pattern - Up")'
+
+                if morning_doji_star is True:
+                    log_text = '** Candlestick Detected: Morning Doji Star ("Reliable - Reversal - Bullish Pattern - Up")'
+
+                if evening_doji_star is True:
+                    log_text = '** Candlestick Detected: Evening Doji Star ("Reliable - Reversal - Bearish Pattern - Down")'
+
+                if two_black_gapping is True:
+                    log_text = '*** Candlestick Detected: Two Black Gapping ("Reliable - Reversal - Bearish Pattern - Down")'
+
+                if (
+                    log_text != ""
+                    and not self.is_sim
+                    or (self.is_sim and not self.simresultonly)
+                ):
+                    Logger.info(log_text)
+
+                ema_co_prefix = ""
+                ema_co_suffix = ""
+                if self.disablebuyema is False:
+                    if ema12gtema26co is True:
+                        ema_co_prefix = "*^ "
+                        ema_co_suffix = " ^* | "
+                    elif ema12ltema26co is True:
+                        ema_co_prefix = "*v "
+                        ema_co_suffix = " v* | "
+                    elif ema12gtema26 is True:
+                        ema_co_prefix = "^ "
+                        ema_co_suffix = " ^ | "
+                    elif ema12ltema26 is True:
+                        ema_co_prefix = "v "
+                        ema_co_suffix = " v | "
+                    else:
+                        ema_co_suffix = " | "
+
+                macd_co_prefix = ""
+                macd_co_suffix = ""
+                if self.disablebuymacd is False:
+                    if macdgtsignalco is True:
+                        macd_co_prefix = "*^ "
+                        macd_co_suffix = " ^* | "
+                    elif macdltsignalco is True:
+                        macd_co_prefix = "*v "
+                        macd_co_suffix = " v* | "
+                    elif macdgtsignal is True:
+                        macd_co_prefix = "^ "
+                        macd_co_suffix = " ^ | "
+                    elif macdltsignal is True:
+                        macd_co_prefix = "v "
+                        macd_co_suffix = " v | "
+                    else:
+                        macd_co_suffix = " | "
+
+                obv_prefix = ""
+                obv_suffix = ""
+                if self.disablebuyobv is False:
+                    if float(obv_pc) > 0:
+                        obv_prefix = "^ "
+                        obv_suffix = " ^ | "
+                    elif float(obv_pc) < 0:
+                        obv_prefix = "v "
+                        obv_suffix = " v | "
+                    else:
+                        obv_suffix = " | "
+
+                if not self.is_verbose:
+                    if self.state.last_action != "":
+                        # Not sure if this if is needed just preserving any existing functionality that may have been missed
+                        # Updated to show over margin and profit
+                        if not self.is_sim:
+                            output_text = (
+                                formatted_current_df_index
+                                + " | "
+                                + self.market
+                                + bullbeartext
+                                + " | "
+                                + self.print_granularity()
+                                + " | "
+                                + self.price_text
+                                + trailing_action_logtext
+                                + " | "
+                                + ema_co_prefix
+                                + ema_text
+                                + ema_co_suffix
+                                + macd_co_prefix
+                                + macd_text
+                                + macd_co_suffix
+                                + obv_prefix
+                                + obv_text
+                                + obv_suffix
+                                + eri_text
+                                + " | Action: "
+                                + self.state.action
+                                + " | Last Action: "
+                                + self.state.last_action
+                                + " | DF HIGH: "
+                                + str(df["close"].max())
+                                + " | "
+                                + "DF LOW: "
+                                + str(df["close"].min())
+                                + " | SWING: "
+                                + str(
+                                    round(
+                                        (
+                                            (df["close"].max() - df["close"].min())
+                                            / df["close"].min()
+                                        )
+                                        * 100,
+                                        2,
+                                    )
+                                )
+                                + "% |"
+                                + " CURR Price is "
+                                + str(
+                                    round(
+                                        ((self.price - df["close"].max()) / df["close"].max())
+                                        * 100,
+                                        2,
+                                    )
+                                )
+                                + "% "
+                                + "away from DF HIGH | Range: "
+                                + str(df.iloc[0, 0])
+                                + " <--> "
+                                + str(df.iloc[len(df) - 1, 0])
+                            )
+                        else:
+                            df_high = df[df["date"] <= current_sim_date]["close"].max()
+                            df_low = df[df["date"] <= current_sim_date]["close"].min()
+                            # print(df_high)
+                            output_text = (
+                                formatted_current_df_index
+                                + " | "
+                                + self.market
+                                + bullbeartext
+                                + " | "
+                                + self.print_granularity()
+                                + " | "
+                                + self.price_text
+                                + trailing_action_logtext
+                                + " | "
+                                + ema_co_prefix
+                                + ema_text
+                                + ema_co_suffix
+                                + macd_co_prefix
+                                + macd_text
+                                + macd_co_suffix
+                                + obv_prefix
+                                + obv_text
+                                + obv_suffix
+                                + eri_text
+                                + self.state.action
+                                + " | Last Action: "
+                                + self.state.last_action
+                                + " | DF HIGH: "
+                                + str(df_high)
+                                + " | "
+                                + "DF LOW: "
+                                + str(df_low)
+                                + " | SWING: "
+                                + str(round(((df_high - df_low) / df_low) * 100, 2))
+                                + "% |"
+                                + " CURR Price is "
+                                + str(round(((self.price - df_high) / df_high) * 100, 2))
+                                + "% "
+                                + "away from DF HIGH | Range: "
+                                + str(
+                                    df.iloc[self.state.iterations - self.adjust_total_periods, 0]
+                                )
+                                + " <--> "
+                                + str(df.iloc[self.state.iterations - 1, 0])
+                            )
+                    else:
+                        if not self.is_sim:
+                            output_text = (
+                                formatted_current_df_index
+                                + " | "
+                                + self.market
+                                + bullbeartext
+                                + " | "
+                                + self.print_granularity()
+                                + " | "
+                                + self.price_text
+                                + trailing_action_logtext
+                                + " | "
+                                + ema_co_prefix
+                                + ema_text
+                                + ema_co_suffix
+                                + macd_co_prefix
+                                + macd_text
+                                + macd_co_suffix
+                                + obv_prefix
+                                + obv_text
+                                + obv_suffix
+                                + eri_text
+                                + self.state.action
+                                + " | DF HIGH: "
+                                + str(df["close"].max())
+                                + " | "
+                                + "DF LOW: "
+                                + str(df["close"].min())
+                                + " | SWING: "
+                                + str(
+                                    round(
+                                        (
+                                            (df["close"].max() - df["close"].min())
+                                            / df["close"].min()
+                                        )
+                                        * 100,
+                                        2,
+                                    )
+                                )
+                                + "%"
+                                + " CURR Price is "
+                                + str(
+                                    round(
+                                        ((self.price - df["close"].max()) / df["close"].max())
+                                        * 100,
+                                        2,
+                                    )
+                                )
+                                + "% "
+                                + "away from DF HIGH | Range: "
+                                + str(df.iloc[0, 0])
+                                + " <--> "
+                                + str(df.iloc[len(df) - 1, 0])
+                            )
+                        else:
+                            df_high = df[df["date"] <= current_sim_date]["close"].max()
+                            df_low = df[df["date"] <= current_sim_date]["close"].min()
+
+                            output_text = (
+                                formatted_current_df_index
+                                + " | "
+                                + self.market
+                                + bullbeartext
+                                + " | "
+                                + self.print_granularity()
+                                + " | "
+                                + self.price_text
+                                + trailing_action_logtext
+                                + " | "
+                                + ema_co_prefix
+                                + ema_text
+                                + ema_co_suffix
+                                + macd_co_prefix
+                                + macd_text
+                                + macd_co_suffix
+                                + obv_prefix
+                                + obv_text
+                                + obv_suffix
+                                + eri_text
+                                + self.state.action
+                                + " | DF HIGH: "
+                                + str(df_high)
+                                + " | "
+                                + "DF LOW: "
+                                + str(df_low)
+                                + " | SWING: "
+                                + str(round(((df_high - df_low) / df_low) * 100, 2))
+                                + "%"
+                                + " CURR Price is "
+                                + str(round(((self.price - df_high) / df_high) * 100, 2))
+                                + "% "
+                                + "away from DF HIGH | Range: "
+                                + str(
+                                    df.iloc[self.state.iterations - self.adjust_total_periods, 0]
+                                )
+                                + " <--> "
+                                + str(df.iloc[self.state.iterations - 1, 0])
+                            )
+                    if self.state.last_action == "BUY":
+                        if self.state.last_buy_size > 0:
+                            margin_text = truncate(margin) + "%"
+                        else:
+                            margin_text = "0%"
+
+                        output_text += (
+                            trailing_action_logtext
+                            + " | (margin: "
+                            + margin_text
+                            + " delta: "
+                            + str(round(self.price - self.state.last_buy_price, precision))
+                            + ")"
+                        )
+                        if self.is_sim:
+                            # save margin for Summary if open trade
+                            self.state.open_trade_margin = margin_text
+
+                    if not self.is_sim or (
+                        self.is_sim and not self.simresultonly
+                    ):
+                        Logger.info(output_text)
+
+                    if self.enableml:
+                        # Seasonal Autoregressive Integrated Moving Average (ARIMA) model (ML prediction for 3 intervals from now)
+                        if not self.is_sim:
+                            try:
+                                prediction = (
+                                    _technical_analysis.arima_model_prediction(
+                                        int(self.granularity.to_integer / 60) * 3
+                                    )
+                                )  # 3 intervals from now
+                                Logger.info(
+                                    f"Seasonal ARIMA model predicts the closing self.price will be {str(round(prediction[1], 2))} at {prediction[0]} (delta: {round(prediction[1] - self.price, 2)})"
+                                )
+                            # pylint: disable=bare-except
+                            except:
+                                pass
+
+                    if self.state.last_action == "BUY":
+                        # display support, resistance and fibonacci levels
+                        if not self.is_sim or (
+                            self.is_sim and not self.simresultonly
+                        ):
+                            Logger.info(
+                                _technical_analysis.print_sr_fib_levels(
+                                    self.price
+                                )
+                            )
+
+                else:
+                    # set to true for verbose debugging
+                    debug = False
+
+                    if debug:
+                        Logger.debug(
+                            f"-- Iteration: {str(self.state.iterations)} --{bullbeartext}"
+                        )
+
+                    if self.state.last_action == "BUY":
+                        if self.state.last_buy_size > 0:
+                            margin_text = truncate(margin) + "%"
+                        else:
+                            margin_text = "0%"
+                            if self.is_sim:
+                                # save margin for Summary if open trade
+                                self.state.open_trade_margin = margin_text
+                        if debug:
+                            Logger.debug(f"-- Margin: {margin_text} --")
+
+                    if debug:
+                        Logger.debug(f"price: {truncate(self.price)}")
+                        Logger.debug(
+                            f'ema12: {truncate(float(self.df_last["ema12"].values[0]))}'
+                        )
+                        Logger.debug(
+                            f'ema26: {truncate(float(self.df_last["ema26"].values[0]))}'
+                        )
+                        Logger.debug(f"ema12gtema26co: {str(ema12gtema26co)}")
+                        Logger.debug(f"ema12gtema26: {str(ema12gtema26)}")
+                        Logger.debug(f"ema12ltema26co: {str(ema12ltema26co)}")
+                        Logger.debug(f"ema12ltema26: {str(ema12ltema26)}")
+                        if self.adjust_total_periods >= 50:
+                            Logger.debug(
+                                f'sma50: {truncate(float(self.df_last["sma50"].values[0]))}'
+                            )
+                        if self.adjust_total_periods >= 200:
+                            Logger.debug(
+                                f'sma200: {truncate(float(self.df_last["sma200"].values[0]))}'
+                            )
+                        Logger.debug(f'macd: {truncate(float(self.df_last["macd"].values[0]))}')
+                        Logger.debug(
+                            f'signal: {truncate(float(self.df_last["signal"].values[0]))}'
+                        )
+                        Logger.debug(f"macdgtsignal: {str(macdgtsignal)}")
+                        Logger.debug(f"macdltsignal: {str(macdltsignal)}")
+                        Logger.debug(f"obv: {str(obv)}")
+                        Logger.debug(f"obv_pc: {str(obv_pc)}")
+                        Logger.debug(f"action: {self.state.action}")
+
+                    # informational output on the most recent entry
+                    Logger.info("")
+                    text_box.doubleLine()
+                    text_box.line("Iteration", str(self.state.iterations) + bullbeartext)
+                    text_box.line("Timestamp", str(self.df_last.index.format()[0]))
+                    text_box.singleLine()
+                    text_box.line("Close", truncate(self.price))
+                    text_box.line("EMA12", truncate(float(self.df_last["ema12"].values[0])))
+                    text_box.line("EMA26", truncate(float(self.df_last["ema26"].values[0])))
+                    text_box.line("Crossing Above", str(ema12gtema26co))
+                    text_box.line("Currently Above", str(ema12gtema26))
+                    text_box.line("Crossing Below", str(ema12ltema26co))
+                    text_box.line("Currently Below", str(ema12ltema26))
+
+                    if ema12gtema26 is True and ema12gtema26co is True:
+                        text_box.line(
+                            "Condition", "EMA12 is currently crossing above EMA26"
+                        )
+                    elif ema12gtema26 is True and ema12gtema26co is False:
+                        text_box.line(
+                            "Condition",
+                            "EMA12 is currently above EMA26 and has crossed over",
+                        )
+                    elif ema12ltema26 is True and ema12ltema26co is True:
+                        text_box.line(
+                            "Condition", "EMA12 is currently crossing below EMA26"
+                        )
+                    elif ema12ltema26 is True and ema12ltema26co is False:
+                        text_box.line(
+                            "Condition",
+                            "EMA12 is currently below EMA26 and has crossed over",
+                        )
+                    else:
+                        text_box.line("Condition", "-")
+
+                    text_box.line("SMA20", truncate(float(self.df_last["sma20"].values[0])))
+                    text_box.line("SMA200", truncate(float(self.df_last["sma200"].values[0])))
+                    text_box.singleLine()
+                    text_box.line("MACD", truncate(float(self.df_last["macd"].values[0])))
+                    text_box.line("Signal", truncate(float(self.df_last["signal"].values[0])))
+                    text_box.line("Currently Above", str(macdgtsignal))
+                    text_box.line("Currently Below", str(macdltsignal))
+
+                    if macdgtsignal is True and macdgtsignalco is True:
+                        text_box.line(
+                            "Condition", "MACD is currently crossing above Signal"
+                        )
+                    elif macdgtsignal is True and macdgtsignalco is False:
+                        text_box.line(
+                            "Condition",
+                            "MACD is currently above Signal and has crossed over",
+                        )
+                    elif macdltsignal is True and macdltsignalco is True:
+                        text_box.line(
+                            "Condition", "MACD is currently crossing below Signal"
+                        )
+                    elif macdltsignal is True and macdltsignalco is False:
+                        text_box.line(
+                            "Condition",
+                            "MACD is currently below Signal and has crossed over",
+                        )
+                    else:
+                        text_box.line("Condition", "-")
+
+                    text_box.singleLine()
+                    text_box.line("Action", self.state.action)
+                    text_box.doubleLine()
+                    if self.state.last_action == "BUY":
+                        text_box.line("Margin", margin_text)
+                        text_box.doubleLine()
+
+                # if a buy signal
+                if self.state.action == "BUY":
+                    self.state.last_buy_price = self.price
+                    self.state.last_buy_high = self.state.last_buy_price
+
+                    # if live
+                    if self.is_live:
+                        ac = account.getBalance()
+                        account.basebalance_before = 0.0
+                        account.quotebalance_before = 0.0
+                        try:
+                            df_base = ac[ac["currency"] == self.base_currency][
+                                "available"
+                            ]
+                            account.basebalance_before = (
+                                0.0 if len(df_base) == 0 else float(df_base.values[0])
+                            )
+
+                            df_quote = ac[ac["currency"] == self.quote_currency][
+                                "available"
+                            ]
+                            account.quotebalance_before = (
+                                0.0 if len(df_quote) == 0 else float(df_quote.values[0])
+                            )
+                        except:
+                            pass
+
+                        if (
+                            not self.insufficientfunds
+                            and self.buyminsize < account.quotebalance_before
+                        ):
+                            if not self.isVerbose():
+                                if not self.is_sim or (
+                                    self.is_sim and not self.simresultonly
+                                ):
+                                    Logger.info(
+                                        f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {price_text} | BUY"
+                                    )
+                            else:
+                                text_box.singleLine()
+                                text_box.center("*** Executing LIVE Buy Order ***")
+                                text_box.singleLine()
+
+                            # display balances
+                            Logger.info(
+                                f"{self.base_currency} balance before order: {str(account.basebalance_before)}"
+                            )
+                            Logger.info(
+                                f"{self.quote_currency} balance before order: {str(account.quotebalance_before)}"
+                            )
+
+                            # execute a live market buy
+                            self.state.last_buy_size = float(account.quotebalance_before)
+
+                            if (
+                                self.buymaxsize
+                                and self.buylastsellsize
+                                and self.state.minimumOrderQuote(
+                                    quote=self.state.last_sell_size, balancechk=True
+                                )
+                            ):
+                                self.state.last_buy_size = self.state.last_sell_size
+                            elif (
+                                self.buymaxsize
+                                and self.state.last_buy_size > self.buymaxsize
+                            ):
+                                self.state.last_buy_size = self.buymaxsize
+
+                            # place the buy order
+                            try:
+                                resp = self.marketBuy(
+                                    self.market,
+                                    self.state.last_buy_size,
+                                    self.getBuyPercent(),
+                                )
+                                resp_error = 0
+                                # Logger.debug(resp)
+                            except Exception as err:
+                                Logger.warning(f"Trade Error: {err}")
+                                resp_error = 1
+
+                            if resp_error == 0:
+                                account.basebalance_after = 0
+                                account.quotebalance_after = 0
+                                try:
+                                    ac = account.getBalance()
+                                    df_base = ac[ac["currency"] == self.base_currency][
+                                        "available"
+                                    ]
+                                    account.basebalance_after = (
+                                        0.0
+                                        if len(df_base) == 0
+                                        else float(df_base.values[0])
+                                    )
+                                    df_quote = ac[
+                                        ac["currency"] == self.quote_currency
+                                    ]["available"]
+
+                                    account.quotebalance_after = (
+                                        0.0
+                                        if len(df_quote) == 0
+                                        else float(df_quote.values[0])
+                                    )
+                                    bal_error = 0
+                                except Exception as err:
+                                    bal_error = 1
+                                    Logger.warning(
+                                        f"Error: Balance not retrieved after trade for {app.market}.\n"
+                                        f"API Error Msg: {err}"
+                                    )
+
+                                if bal_error == 0:
+                                    self.state.trade_error_cnt = 0
+                                    self.state.trailing_buy = False
+                                    self.state.last_action = "BUY"
+                                    self.state.action = "DONE"
+                                    self.state.trailing_buy_immediate = False
+                                    self.telegram_bot.add_open_order()
+
+                                    Logger.info(
+                                        f"{self.base_currency} balance after order: {str(account.basebalance_after)}\n"
+                                        f"{self.quote_currency} balance after order: {str(account.quotebalance_after)}"
+                                    )
+
+                                    self.notify_telegram(
+                                        self.market
+                                        + " ("
+                                        + self.print_granularity()
+                                        + ") - "
+                                        + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+                                        + "\n"
+                                        + "BUY at "
+                                        + self.price_text
+                                    )
+
+                                else:
+                                    # set variable to trigger to check trade on next iteration
+                                    self.state.action = "check_action"
+                                    Logger.info(
+                                        f"{self.market} - Error occurred while checking balance after BUY. Last transaction check will happen shortly."
+                                    )
+
+                                    if not app.disabletelegramerrormsgs:
+                                        self.notify_telegram(
+                                            self.market
+                                            + " - Error occurred while checking balance after BUY. Last transaction check will happen shortly."
+                                        )
+
+                            else:  # there was a response error
+                                # only attempt BUY 3 times before exception to prevent continuous loop
+                                self.state.trade_error_cnt += 1
+                                if self.state.trade_error_cnt >= 2:  # 3 attempts made
+                                    raise Exception(
+                                        f"Trade Error: BUY transaction attempted 3 times. Check log for errors"
+                                    )
+
+                                # set variable to trigger to check trade on next iteration
+                                self.state.action = "check_action"
+                                self.state.last_action = None
+
+                                Logger.warning(
+                                    f"API Error: Unable to place buy order for {app.market}."
+                                )
+                                if not app.disabletelegramerrormsgs:
+                                    app.notify_telegram(
+                                        f"API Error: Unable to place buy order for {app.market}"
+                                    )
+                                time.sleep(30)
+
+                        else:
+                            Logger.warning(
+                                "Unable to place order, insufficient funds or buyminsize has not been reached. Check Logs."
+                            )
+
+                        state.last_api_call_datetime -= timedelta(seconds=60)
+
+                    # if not live
+                    else:
+                        if self.state.last_buy_size == 0 and self.state.last_buy_filled == 0:
+                            # Sim mode can now use buymaxsize as the amount used for a buy
+                            if self.buymaxsize != None:
+                                self.state.last_buy_size = self.buymaxsize
+                                self.state.first_buy_size = self.buymaxsize
+                            else:
+                                self.state.last_buy_size = 1000
+                                self.state.first_buy_size = 1000
+                        # add option for buy last sell size
+                        elif (
+                            self.buymaxsize != None
+                            and self.buylastsellsize
+                            and self.state.last_sell_size
+                            > self.state.minimumOrderQuote(
+                                quote=self.state.last_sell_size, balancechk=True
+                            )
+                        ):
+                            self.state.last_buy_size = self.state.last_sell_size
+
+                        self.state.buy_count = self.state.buy_count + 1
+                        self.state.buy_sum = self.state.buy_sum + self.state.last_buy_size
+                        self.state.trailing_buy = False
+                        self.state.action = "DONE"
+                        self.state.trailing_buy_immediate = False
+
+                        self.notify_telegram(
+                            self.market
+                            + " ("
+                            + self.print_granularity()
+                            + ") -  "
+                            + str(current_sim_date)
+                            + "\n - TEST BUY at "
+                            + self.price_text
+                            + "\n - Buy Size: "
+                            + str(_truncate(self.state.last_buy_size, 4))
+                        )
+
+                        if not self.isVerbose():
+                            if not self.is_sim or (
+                                self.is_sim and not self.simresultonly
+                            ):
+                                Logger.info(
+                                    f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {price_text} | BUY"
+                                )
+
+                            bands = _technical_analysis.getFibonacciRetracementLevels(
+                                float(self.price)
+                            )
+
+                            if not self.is_sim or (
+                                self.is_sim and not self.simresultonly
+                            ):
+                                _technical_analysis.printSupportResistanceLevel(
+                                    float(self.price)
+                                )
+
+                            if not self.is_sim or (
+                                self.is_sim and not self.simresultonly
+                            ):
+                                Logger.info(f" Fibonacci Retracement Levels:{str(bands)}")
+
+                            if len(bands) >= 1 and len(bands) <= 2:
+                                if len(bands) == 1:
+                                    first_key = list(bands.keys())[0]
+                                    if first_key == "ratio1":
+                                        self.state.fib_low = 0
+                                        self.state.fib_high = bands[first_key]
+                                    if first_key == "ratio1_618":
+                                        self.state.fib_low = bands[first_key]
+                                        self.state.fib_high = bands[first_key] * 2
+                                    else:
+                                        self.state.fib_low = bands[first_key]
+
+                                elif len(bands) == 2:
+                                    first_key = list(bands.keys())[0]
+                                    second_key = list(bands.keys())[1]
+                                    self.state.fib_low = bands[first_key]
+                                    self.state.fib_high = bands[second_key]
+
+                        else:
+                            text_box.singleLine()
+                            text_box.center("*** Executing TEST Buy Order ***")
+                            text_box.singleLine()
+
+                        self.trade_tracker = pd.concat(
+                            [
+                                self.trade_tracker,
+                                pd.DataFrame(
+                                    {
+                                        "Datetime": str(current_sim_date),
+                                        "Market": self.market,
+                                        "Action": "BUY",
+                                        "Price": self.price,
+                                        "Quote": self.state.last_buy_size,
+                                        "Base": float(self.state.last_buy_size) / float(self.price),
+                                        "DF_High": df[df["date"] <= current_sim_date][
+                                            "close"
+                                        ].max(),
+                                        "DF_Low": df[df["date"] <= current_sim_date][
+                                            "close"
+                                        ].min(),
+                                    },
+                                    index={0},
+                                ),
+                            ],
+                            ignore_index=True,
+                        )
+
+                        state.in_open_trade = True
+                        self.state.last_action = "BUY"
+                        state.last_api_call_datetime -= timedelta(seconds=60)
+
+                    if self.shouldSaveGraphs():
+                        if self.adjust_total_periods < 200:
+                            Logger.info(
+                                "Trading Graphs can only be generated when dataframe has more than 200 periods."
+                            )
+                        else:
+                            tradinggraphs = TradingGraphs(_technical_analysis)
+                            ts = datetime.now().timestamp()
+                            filename = f"{self.market}_{self.print_granularity()}_buy_{str(ts)}.png"
+                            # This allows graphs to be used in sim mode using the correct DF
+                            if self.isSimulation:
+                                tradinggraphs.renderEMAandMACD(
+                                    len(trading_dataCopy), "graphs/" + filename, True
+                                )
+                            else:
+                                tradinggraphs.renderEMAandMACD(
+                                    len(trading_data), "graphs/" + filename, True
+                                )
 
     def run(self):
         try:
@@ -1742,3 +2739,209 @@ class PyCryptoBot(BotConfig):
             return df
         except Exception as err:
             raise Exception(f"Additional DF Error: {err}")
+
+    def get_last_buy(self) -> dict:
+        """Retrieves the last exchange buy order and returns a dictionary"""
+
+        try:
+            if self.exchange == Exchange.COINBASEPRO:
+                api = CBAuthAPI(
+                    self.api_key,
+                    self.api_secret,
+                    self.api_passphrase,
+                    self.api_url,
+                )
+                orders = api.get_orders(self.market, "", "done")
+
+                if len(orders) == 0:
+                    return None
+
+                last_order = orders.tail(1)
+                if last_order["action"].values[0] != "buy":
+                    return None
+
+                return {
+                    "side": "buy",
+                    "market": self.market,
+                    "size": float(last_order["size"]),
+                    "filled": float(last_order["filled"]),
+                    "price": float(last_order["price"]),
+                    "fee": float(last_order["fees"]),
+                    "date": str(
+                        pd.DatetimeIndex(
+                            pd.to_datetime(last_order["created_at"]).dt.strftime(
+                                "%Y-%m-%dT%H:%M:%S.%Z"
+                            )
+                        )[0]
+                    ),
+                }
+            elif self.exchange == Exchange.KUCOIN:
+                api = KAuthAPI(
+                    self.api_key,
+                    self.api_secret,
+                    self.api_passphrase,
+                    self.api_url,
+                    use_cache=self.usekucoincache,
+                )
+                orders = api.get_orders(self.market, "", "done")
+
+                if len(orders) == 0:
+                    return None
+
+                last_order = orders.tail(1)
+                if last_order["action"].values[0] != "buy":
+                    return None
+
+                return {
+                    "side": "buy",
+                    "market": self.market,
+                    "size": float(last_order["size"]),
+                    "filled": float(last_order["filled"]),
+                    "price": float(last_order["price"]),
+                    "fee": float(last_order["fees"]),
+                    "date": str(
+                        pd.DatetimeIndex(
+                            pd.to_datetime(last_order["created_at"]).dt.strftime(
+                                "%Y-%m-%dT%H:%M:%S.%Z"
+                            )
+                        )[0]
+                    ),
+                }
+            elif self.exchange == Exchange.BINANCE:
+                api = BAuthAPI(
+                    self.api_key,
+                    self.api_secret,
+                    self.api_url,
+                    recv_window=self.recv_window,
+                )
+                orders = api.get_orders(self.market)
+
+                if len(orders) == 0:
+                    return None
+
+                last_order = orders.tail(1)
+                if last_order["action"].values[0] != "buy":
+                    return None
+
+                return {
+                    "side": "buy",
+                    "market": self.market,
+                    "size": float(last_order["size"]),
+                    "filled": float(last_order["filled"]),
+                    "price": float(last_order["price"]),
+                    "fees": float(last_order["size"] * 0.001),
+                    "date": str(
+                        pd.DatetimeIndex(
+                            pd.to_datetime(last_order["created_at"]).dt.strftime(
+                                "%Y-%m-%dT%H:%M:%S.%Z"
+                            )
+                        )[0]
+                    ),
+                }
+            else:
+                return None
+        except Exception:
+            return None
+
+    def get_taker_fee(self):
+        if self.is_sim is True and self.exchange == Exchange.COINBASEPRO:
+            return 0.005  # default lowest fee tier
+        elif self.is_sim is True and self.exchange == Exchange.BINANCE:
+            return 0.001  # default lowest fee tier
+        elif self.is_sim is True and self.exchange == Exchange.KUCOIN:
+            return 0.0015  # default lowest fee tier
+        elif self.takerfee > 0.0:
+            return self.takerfee
+        elif self.exchange == Exchange.COINBASEPRO:
+            api = CBAuthAPI(
+                self.api_key,
+                self.api_secret,
+                self.api_passphrase,
+                self.api_url,
+            )
+            self.takerfee = api.get_taker_fee()
+            return self.takerfee
+        elif self.exchange == Exchange.BINANCE:
+            api = BAuthAPI(
+                self.api_key,
+                self.api_secret,
+                self.api_url,
+                recv_window=self.recv_window,
+            )
+            self.takerfee = api.get_taker_fee()
+            return self.takerfee
+        elif self.exchange == Exchange.KUCOIN:
+            api = KAuthAPI(
+                self.api_key,
+                self.api_secret,
+                self.api_passphrase,
+                self.api_url,
+                use_cache=self.usekucoincache,
+            )
+            self.takerfee = api.get_taker_fee()
+            return self.takerfee
+        else:
+            return 0.005
+
+    def get_maker_fee(self):
+        if self.exchange == Exchange.COINBASEPRO:
+            api = CBAuthAPI(
+                self.api_key,
+                self.api_secret,
+                self.api_passphrase,
+                self.api_url,
+            )
+            return api.get_maker_fee()
+        elif self.exchange == Exchange.BINANCE:
+            api = BAuthAPI(
+                self.api_key,
+                self.api_secret,
+                self.api_url,
+                recv_window=self.recv_window,
+            )
+            return api.get_maker_fee()
+        elif self.exchange == Exchange.KUCOIN:
+            api = KAuthAPI(
+                self.api_key,
+                self.api_secret,
+                self.api_passphrase,
+                self.api_url,
+                use_cache=self.usekucoincache,
+            )
+            return api.get_maker_fee()
+        else:
+            return 0.005
+
+    def truncate(self, f: Union[int, float], n: Union[int, float]) -> str:
+        """
+        Format a given number ``f`` with a given precision ``n``.
+        """
+
+        if not isinstance(f, int) and not isinstance(f, float):
+            return "0.0"
+
+        if not isinstance(n, int) and not isinstance(n, float):
+            return "0.0"
+
+        if (f < 0.0001) and n >= 5:
+            return f"{f:.5f}"
+
+        # `{n}` inside the actual format honors the precision
+        return f"{math.floor(f * 10 ** n) / 10 ** n:.{n}f}"
+
+    def compare(self, val1, val2, label="", precision=2):
+        if val1 > val2:
+            if label == "":
+                return f"{self.truncate(val1, precision)} > {self.truncate(val2, precision)}"
+            else:
+                return f"{label}: {self.truncate(val1, precision)} > {self.truncate(val2, precision)}"
+        if val1 < val2:
+            if label == "":
+                return f"{self.truncate(val1, precision)} < {self.truncate(val2, precision)}"
+            else:
+                return f"{label}: {self.truncate(val1, precision)} < {self.truncate(val2, precision)}"
+        else:
+            if label == "":
+                return f"{self.truncate(val1, precision)} = {self.truncate(val2, precision)}"
+            else:
+                return f"{label}: {self.truncate(val1, precision)} = {self.truncate(val2, precision)}"

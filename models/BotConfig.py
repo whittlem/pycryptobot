@@ -539,7 +539,7 @@ class BotConfig:
         parser.add_argument("--trailingimmediatesell", action="store_true", help="immediate sell if trailingsellpcnt reached")
         parser.add_argument("--trailingsellimmediatepcnt", type=float, help="percent of decrease used with STRONG sell signal")
         parser.add_argument("--trailingsellbailoutpcnt", type=float, help="percent of decrease to bailout, sell immediately")
-        parser.add_argument("--selltriggeroverride", action="store_true", help="bypass isSellTrigger if STRONG buy signals")
+        parser.add_argument("--selltriggeroverride", action="store_true", help="bypass is_sell_trigger if STRONG buy signals")
         parser.add_argument(
             "--nobuynearhighpcnt",
             type=float,

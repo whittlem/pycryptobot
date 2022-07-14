@@ -218,7 +218,7 @@ class AuthAPI(AuthAPIBase):
 
         return df
 
-    def getMakerFee(self, market: str = "") -> float:
+    def get_maker_fee(self, market: str = "") -> float:
         """Retrieves maker fee"""
 
         if len(market):
@@ -234,7 +234,7 @@ class AuthAPI(AuthAPIBase):
 
         return float(fees["makerFeeRate"].to_string(index=False).strip())
 
-    def getTakerFee(self, market: str = "") -> float:
+    def get_taker_fee(self, market: str = "") -> float:
         """Retrieves taker fee"""
 
         if len(market) != None:
@@ -274,7 +274,7 @@ class AuthAPI(AuthAPIBase):
         df = df.reset_index()
         return df
 
-    def getOrders(
+    def get_orders(
         self, market: str = "", action: str = "", status: str = "all"
     ) -> pd.DataFrame:
         """Retrieves your list of orders with optional filtering"""

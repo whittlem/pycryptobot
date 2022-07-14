@@ -179,7 +179,7 @@ def test_get_taker_fee_with_market(mocker):
     assert type(exchange) is AuthAPI
 
     mocker.patch("models.exchange.binance.Client.get_trade_fee", return_value=client_response)
-    fee = exchange.getTakerFee(MOCK_MARKET)
+    fee = exchange.get_taker_fee(MOCK_MARKET)
     assert type(fee) is float
     assert fee == 0.001
 
@@ -207,7 +207,7 @@ def test_get_maker_fee_with_market(mocker):
     assert type(exchange) is AuthAPI
 
     mocker.patch("models.exchange.binance.Client.get_trade_fee", return_value=client_response)
-    fee = exchange.getMakerFee(MOCK_MARKET)
+    fee = exchange.get_maker_fee(MOCK_MARKET)
     assert type(fee) is float
     assert fee == 0.001
 
@@ -257,7 +257,7 @@ def test_get_orders(mocker):
     exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
     mocker.patch("models.exchange.binance.Client.get_all_orders", return_value=client_response)
-    df = exchange.getOrders(MOCK_MARKET)
+    df = exchange.get_orders(MOCK_MARKET)
 
     assert len(df) > 0
 

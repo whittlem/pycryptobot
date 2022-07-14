@@ -36,7 +36,7 @@ def getValidOrderMarket() -> str:
 
         time.sleep(0.5)
         exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
-        df = exchange.getOrders()
+        df = exchange.get_orders()
         if len(df) == 0:
             return DEFAULT_ORDER_MARKET
 
@@ -260,7 +260,7 @@ def test_getFeesWithMarket():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getTakerFeeWithoutMarket():
+def test_get_taker_feeWithoutMarket():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -285,11 +285,11 @@ def test_getTakerFeeWithoutMarket():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getTakerFee()
+    fee = exchange.get_taker_fee()
     assert type(fee) is float
     assert fee > 0
 
-def test_getTakerFeeWithMarket():
+def test_get_taker_feeWithMarket():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -314,11 +314,11 @@ def test_getTakerFeeWithMarket():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getTakerFee(getValidOrderMarket())
+    fee = exchange.get_taker_fee(getValidOrderMarket())
     assert type(fee) is float
     assert fee > 0
 
-def test_getMakerFeeWithoutMarket():
+def test_get_maker_feeWithoutMarket():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -343,11 +343,11 @@ def test_getMakerFeeWithoutMarket():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getMakerFee()
+    fee = exchange.get_maker_fee()
     assert type(fee) is float
     assert fee > 0
 
-def test_getMakerFeeWithMarket():
+def test_get_maker_feeWithMarket():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -372,7 +372,7 @@ def test_getMakerFeeWithMarket():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getMakerFee(getValidOrderMarket())
+    fee = exchange.get_maker_fee(getValidOrderMarket())
     assert type(fee) is float
     assert fee > 0
 
@@ -405,7 +405,7 @@ def test_getUSDVolume():
     assert type(fee) is float
     assert fee > 0
 
-def test_getOrders():
+def test_get_orders():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -430,7 +430,7 @@ def test_getOrders():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders()
+    df = exchange.get_orders()
 
     assert len(df) > 0
 
@@ -439,7 +439,7 @@ def test_getOrders():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getOrdersInvalidMarket():
+def test_get_ordersInvalidMarket():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -465,10 +465,10 @@ def test_getOrdersInvalidMarket():
     assert type(exchange) is AuthAPI
 
     with pytest.raises(ValueError) as execinfo:
-        exchange.getOrders(market='ERROR')
+        exchange.get_orders(market='ERROR')
     assert str(execinfo.value) == 'Coinbase Pro market is invalid.'
 
-def test_getOrdersValidMarket():
+def test_get_ordersValidMarket():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -493,7 +493,7 @@ def test_getOrdersValidMarket():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders(market=getValidOrderMarket())
+    df = exchange.get_orders(market=getValidOrderMarket())
 
     assert len(df) > 0
 
@@ -502,7 +502,7 @@ def test_getOrdersValidMarket():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getOrdersInvalidAction():
+def test_get_ordersInvalidAction():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -528,10 +528,10 @@ def test_getOrdersInvalidAction():
     assert type(exchange) is AuthAPI
 
     with pytest.raises(ValueError) as execinfo:
-        exchange.getOrders(action='ERROR')
+        exchange.get_orders(action='ERROR')
     assert str(execinfo.value) == 'Invalid order action.'
 
-def test_getOrdersValidActionBuy():
+def test_get_ordersValidActionBuy():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -556,7 +556,7 @@ def test_getOrdersValidActionBuy():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders(action='buy')
+    df = exchange.get_orders(action='buy')
 
     assert len(df) >= 0
 
@@ -565,7 +565,7 @@ def test_getOrdersValidActionBuy():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getOrdersValidActionSell():
+def test_get_ordersValidActionSell():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -590,7 +590,7 @@ def test_getOrdersValidActionSell():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders(action='sell')
+    df = exchange.get_orders(action='sell')
 
     assert len(df) >= 0
 
@@ -599,7 +599,7 @@ def test_getOrdersValidActionSell():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getOrdersInvalidStatus():
+def test_get_ordersInvalidStatus():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -625,10 +625,10 @@ def test_getOrdersInvalidStatus():
     assert type(exchange) is AuthAPI
 
     with pytest.raises(ValueError) as execinfo:
-        exchange.getOrders(status='ERROR')
+        exchange.get_orders(status='ERROR')
     assert str(execinfo.value) == 'Invalid order status.'
 
-def test_getOrdersValidStatusAll():
+def test_get_ordersValidStatusAll():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -653,7 +653,7 @@ def test_getOrdersValidStatusAll():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders(status='all')
+    df = exchange.get_orders(status='all')
 
     if len(df) == 0:
         pass
@@ -663,7 +663,7 @@ def test_getOrdersValidStatusAll():
         assert len(actual) == len(expected)
         assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getOrdersValidStatusOpen():
+def test_get_ordersValidStatusOpen():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -688,7 +688,7 @@ def test_getOrdersValidStatusOpen():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders(status='open')
+    df = exchange.get_orders(status='open')
 
     if len(df) == 0:
         pass
@@ -698,7 +698,7 @@ def test_getOrdersValidStatusOpen():
         assert len(actual) == len(expected)
         assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getOrdersValidStatusPending():
+def test_get_ordersValidStatusPending():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -723,7 +723,7 @@ def test_getOrdersValidStatusPending():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders(status='pending')
+    df = exchange.get_orders(status='pending')
 
     if len(df) == 0:
         pass
@@ -733,7 +733,7 @@ def test_getOrdersValidStatusPending():
         assert len(actual) == len(expected)
         assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getOrdersValidStatusDone():
+def test_get_ordersValidStatusDone():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -758,7 +758,7 @@ def test_getOrdersValidStatusDone():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders(status='done')
+    df = exchange.get_orders(status='done')
 
     if len(df) == 0:
         pass
@@ -768,7 +768,7 @@ def test_getOrdersValidStatusDone():
         assert len(actual) == len(expected)
         assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getOrdersValidStatusActive():
+def test_get_ordersValidStatusActive():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -793,7 +793,7 @@ def test_getOrdersValidStatusActive():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders(status='active')
+    df = exchange.get_orders(status='active')
 
     if len(df) == 0:
         pass

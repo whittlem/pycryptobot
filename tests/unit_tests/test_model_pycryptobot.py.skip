@@ -107,7 +107,7 @@ def test_configjson_binance_invalid_api_url():
     if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
         os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')
 
-def test_configjson_binance_invalid_api_key():
+def test_configjson_binance_invalid_api_key:
     config = {
         "binance": {
             "api_url": "https://api.binance.com",
@@ -228,7 +228,7 @@ def test_configjson_coinbasepro_invalid_api_url():
     if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
         os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')
 
-def test_configjson_coinbasepro_invalid_api_key():
+def test_configjson_coinbasepro_invalid_api_key:
     config = {
         "coinbasepro": {
             "api_url": "https://api.pro.coinbase.com",

@@ -722,7 +722,7 @@ def execute_job(
                 change_pcnt_high = 0
 
             # buy and sell calculations
-            _state.last_buy_fee = round(_state.last_buy_size * _app.getTakerFee(), 8)
+            _state.last_buy_fee = round(_state.last_buy_size * _app.get_taker_fee(), 8)
             _state.last_buy_filled = round(
                 ((_state.last_buy_size - _state.last_buy_fee) / _state.last_buy_price),
                 8,
@@ -732,9 +732,9 @@ def execute_job(
             if not _app.is_sim:
                 if _app.websocket:
                     if last_api_call_datetime.seconds > 60:
-                        _state.exchange_last_buy = _app.getLastBuy()
+                        _state.exchange_last_buy = _app.get_last_buy()
                 else:
-                    _state.exchange_last_buy = _app.getLastBuy()
+                    _state.exchange_last_buy = _app.get_last_buy()
                 exchange_last_buy = _state.exchange_last_buy
                 if exchange_last_buy is not None:
                     if _state.last_buy_size != exchange_last_buy["size"]:
@@ -758,15 +758,15 @@ def execute_job(
                 buy_fee=_state.last_buy_fee,
                 sell_percent=_app.getSellPercent(),
                 sell_price=price,
-                sell_taker_fee=_app.getTakerFee(),
+                sell_taker_fee=_app.get_taker_fee(),
             )
 
             # handle immediate sell actions
-            if _app.manual_trades_only is False and strategy.isSellTrigger(
+            if _app.manual_trades_only is False and strategy.is_sell_trigger(
                 _app,
                 _state,
                 price,
-                _technical_analysis.getTradeExit(price),
+                _technical_analysis.get_trade_exit(price),
                 margin,
                 change_pcnt_high,
                 obv_pc,
@@ -778,7 +778,7 @@ def execute_job(
         # handle overriding wait actions
         # (e.g. do not sell if sell at loss disabled!, do not buy in bull if bull only, manual trades only)
         if _app.manual_trades_only is True or (
-            _state.action != "WAIT" and strategy.isWaitTrigger(margin, goldencross)
+            _state.action != "WAIT" and strategy.is_wait_trigger(margin, goldencross)
         ):
             _state.action = "WAIT"
             immediate_action = False
@@ -790,7 +790,7 @@ def execute_job(
                 _state.trailing_buy,
                 trailing_action_logtext,
                 immediate_action,
-            ) = strategy.checkTrailingBuy(_state, price)
+            ) = strategy.check_trailing_buy(_state, price)
         # If sell signal, save the price and check for decrease/increase before selling.
         if _state.action == "SELL" and immediate_action is not True:
             (
@@ -798,14 +798,14 @@ def execute_job(
                 _state.trailing_sell,
                 trailing_action_logtext,
                 immediate_action,
-            ) = strategy.checkTrailingSell(_state, price)
+            ) = strategy.check_trailing_sell(_state, price)
 
-        if _app.enableImmediateBuy():
+        if _app.enableimmediatebuy:
             if _state.action == "BUY":
                 immediate_action = True
 
         if not _app.is_sim and _app.enabletelegrambotcontrol:
-            manual_buy_sell = telegram_bot.checkmanualbuysell()
+            manual_buy_sell = telegram_bot.check_manual_buy_sell()
             if not manual_buy_sell == "WAIT":
                 _state.action = manual_buy_sell
                 immediate_action = True
@@ -1195,12 +1195,12 @@ def execute_job(
                 ):
                     Logger.info(output_text)
 
-                if _app.enableML():
+                if _app.enableml:
                     # Seasonal Autoregressive Integrated Moving Average (ARIMA) model (ML prediction for 3 intervals from now)
                     if not _app.is_sim:
                         try:
                             prediction = (
-                                _technical_analysis.seasonalARIMAModelPrediction(
+                                _technical_analysis.arima_model_prediction(
                                     int(_app.granularity.to_integer / 60) * 3
                                 )
                             )  # 3 intervals from now
@@ -1217,7 +1217,7 @@ def execute_job(
                         _app.is_sim and not _app.simresultonly
                     ):
                         Logger.info(
-                            _technical_analysis.printSupportResistanceFibonacciLevels(
+                            _technical_analysis.print_sr_fib_levels(
                                 price
                             )
                         )
@@ -1840,7 +1840,7 @@ def execute_job(
                         buy_fee=_state.last_buy_fee,
                         sell_percent=_app.getSellPercent(),
                         sell_price=price,
-                        sell_taker_fee=_app.getTakerFee(),
+                        sell_taker_fee=_app.get_taker_fee(),
                     )
 
                     if _state.last_buy_size > 0:

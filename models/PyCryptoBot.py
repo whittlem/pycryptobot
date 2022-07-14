@@ -127,7 +127,7 @@ class PyCryptoBot(BotConfig):
     def getChatClient(self):
         return self._chat_client
 
-    def getAPIKey(self):
+    def api_key(self):
         return self.api_key
 
     def getAPISecret(self):
@@ -998,18 +998,18 @@ class PyCryptoBot(BotConfig):
             else:
                 return f"{label}: {truncate(val1, precision)} = {truncate(val2, precision)}"
 
-    def getLastBuy(self) -> dict:
+    def get_last_buy(self) -> dict:
         """Retrieves the last exchange buy order and returns a dictionary"""
 
         try:
             if self.exchange == Exchange.COINBASEPRO:
                 api = CBAuthAPI(
-                    self.getAPIKey(),
-                    self.getAPISecret(),
-                    self.getAPIPassphrase(),
+                    self.api_key,
+                    self.api_secret,
+                    self.api_passphrase,
                     self.api_url,
                 )
-                orders = api.getOrders(self.market, "", "done")
+                orders = api.get_orders(self.market, "", "done")
 
                 if len(orders) == 0:
                     return None
@@ -1035,13 +1035,13 @@ class PyCryptoBot(BotConfig):
                 }
             elif self.exchange == Exchange.KUCOIN:
                 api = KAuthAPI(
-                    self.getAPIKey(),
-                    self.getAPISecret(),
-                    self.getAPIPassphrase(),
+                    self.api_key,
+                    self.api_secret,
+                    self.api_passphrase,
                     self.api_url,
                     use_cache=self.usekucoincache,
                 )
-                orders = api.getOrders(self.market, "", "done")
+                orders = api.get_orders(self.market, "", "done")
 
                 if len(orders) == 0:
                     return None
@@ -1067,12 +1067,12 @@ class PyCryptoBot(BotConfig):
                 }
             elif self.exchange == Exchange.BINANCE:
                 api = BAuthAPI(
-                    self.getAPIKey(),
-                    self.getAPISecret(),
+                    self.api_key,
+                    self.api_secret,
                     self.api_url,
                     recv_window=self.recv_window,
                 )
-                orders = api.getOrders(self.market)
+                orders = api.get_orders(self.market)
 
                 if len(orders) == 0:
                     return None
@@ -1101,7 +1101,7 @@ class PyCryptoBot(BotConfig):
         except Exception:
             return None
 
-    def getTakerFee(self):
+    def get_taker_fee(self):
         if self.is_sim is True and self.exchange == Exchange.COINBASEPRO:
             return 0.005  # default lowest fee tier
         elif self.is_sim is True and self.exchange == Exchange.BINANCE:
@@ -1112,61 +1112,61 @@ class PyCryptoBot(BotConfig):
             return self.takerfee
         elif self.exchange == Exchange.COINBASEPRO:
             api = CBAuthAPI(
-                self.getAPIKey(),
-                self.getAPISecret(),
-                self.getAPIPassphrase(),
+                self.api_key,
+                self.api_secret,
+                self.api_passphrase,
                 self.api_url,
             )
-            self.takerfee = api.getTakerFee()
+            self.takerfee = api.get_taker_fee()
             return self.takerfee
         elif self.exchange == Exchange.BINANCE:
             api = BAuthAPI(
-                self.getAPIKey(),
-                self.getAPISecret(),
+                self.api_key,
+                self.api_secret,
                 self.api_url,
                 recv_window=self.recv_window,
             )
-            self.takerfee = api.getTakerFee()
+            self.takerfee = api.get_taker_fee()
             return self.takerfee
         elif self.exchange == Exchange.KUCOIN:
             api = KAuthAPI(
-                self.getAPIKey(),
-                self.getAPISecret(),
-                self.getAPIPassphrase(),
+                self.api_key,
+                self.api_secret,
+                self.api_passphrase,
                 self.api_url,
                 use_cache=self.usekucoincache,
             )
-            self.takerfee = api.getTakerFee()
+            self.takerfee = api.get_taker_fee()
             return self.takerfee
         else:
             return 0.005
 
-    def getMakerFee(self):
+    def get_maker_fee(self):
         if self.exchange == Exchange.COINBASEPRO:
             api = CBAuthAPI(
-                self.getAPIKey(),
-                self.getAPISecret(),
-                self.getAPIPassphrase(),
+                self.api_key,
+                self.api_secret,
+                self.api_passphrase,
                 self.api_url,
             )
-            return api.getMakerFee()
+            return api.get_maker_fee()
         elif self.exchange == Exchange.BINANCE:
             api = BAuthAPI(
-                self.getAPIKey(),
-                self.getAPISecret(),
+                self.api_key,
+                self.api_secret,
                 self.api_url,
                 recv_window=self.recv_window,
             )
-            return api.getMakerFee()
+            return api.get_maker_fee()
         elif self.exchange == Exchange.KUCOIN:
             api = KAuthAPI(
-                self.getAPIKey(),
-                self.getAPISecret(),
-                self.getAPIPassphrase(),
+                self.api_key,
+                self.api_secret,
+                self.api_passphrase,
                 self.api_url,
                 use_cache=self.usekucoincache,
             )
-            return api.getMakerFee()
+            return api.get_maker_fee()
         else:
             return 0.005
 
@@ -1178,25 +1178,25 @@ class PyCryptoBot(BotConfig):
 
             if self.exchange == Exchange.COINBASEPRO:
                 api = CBAuthAPI(
-                    self.getAPIKey(),
-                    self.getAPISecret(),
-                    self.getAPIPassphrase(),
+                    self.api_key,
+                    self.api_secret,
+                    self.api_passphrase,
                     self.api_url,
                 )
                 return api.marketBuy(market, float(truncate(quote_currency, 8)))
             elif self.exchange == Exchange.KUCOIN:
                 api = KAuthAPI(
-                    self.getAPIKey(),
-                    self.getAPISecret(),
-                    self.getAPIPassphrase(),
+                    self.api_key,
+                    self.api_secret,
+                    self.api_passphrase,
                     self.api_url,
                     use_cache=self.usekucoincache,
                 )
                 return api.marketBuy(market, float(quote_currency))
             elif self.exchange == Exchange.BINANCE:
                 api = BAuthAPI(
-                    self.getAPIKey(),
-                    self.getAPISecret(),
+                    self.api_key,
+                    self.api_secret,
                     self.api_url,
                     recv_window=self.recv_window,
                 )
@@ -1211,25 +1211,25 @@ class PyCryptoBot(BotConfig):
                     base_currency = (sell_percent / 100) * base_currency
                 if self.exchange == Exchange.COINBASEPRO:
                     api = CBAuthAPI(
-                        self.getAPIKey(),
-                        self.getAPISecret(),
-                        self.getAPIPassphrase(),
+                        self.api_key,
+                        self.api_secret,
+                        self.api_passphrase,
                         self.api_url,
                     )
                     return api.marketSell(market, base_currency)
                 elif self.exchange == Exchange.BINANCE:
                     api = BAuthAPI(
-                        self.getAPIKey(),
-                        self.getAPISecret(),
+                        self.api_key,
+                        self.api_secret,
                         self.api_url,
                         recv_window=self.recv_window,
                     )
                     return api.marketSell(market, base_currency, use_fees=self.use_sell_fee)
                 elif self.exchange == Exchange.KUCOIN:
                     api = KAuthAPI(
-                        self.getAPIKey(),
-                        self.getAPISecret(),
-                        self.getAPIPassphrase(),
+                        self.api_key,
+                        self.api_secret,
+                        self.api_passphrase,
                         self.api_url,
                         use_cache=self.usekucoincache,
                     )

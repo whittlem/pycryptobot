@@ -24,4 +24,4 @@ print (account.getBalance(), "\n")
 account.marketSell(app.market, account.getBalance(app.base_currency), 100, 20000)
 print (account.getBalance(), "\n")
 
-print (account.getOrders())
+print (account.get_orders())

@@ -112,7 +112,7 @@ def test_get_taker_fee_with_market():
     exchange = AuthAPI(app.api_key, app.api_secret)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getTakerFee()
+    fee = exchange.get_taker_fee()
     assert type(fee) is float
     assert fee == 0.0015
 
@@ -124,7 +124,7 @@ def test_get_maker_fee_with_market():
     exchange = AuthAPI(app.api_key, app.api_secret)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getMakerFee()
+    fee = exchange.get_maker_fee()
     assert type(fee) is float
     assert fee == 0.0015
 
@@ -136,7 +136,7 @@ def test_get_orders():
     exchange = AuthAPI(app.api_key, app.api_secret)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders()
+    df = exchange.get_orders()
     assert type(df) is pandas.core.frame.DataFrame
     assert len(df) > 0
 

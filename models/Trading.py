@@ -995,7 +995,7 @@ class TechnicalAnalysis:
 
         return self.seasonalARIMAModel().fittedvalues
 
-    def seasonalARIMAModelPrediction(self, minutes: int = 180) -> tuple:
+    def arima_model_prediction(self, minutes: int = 180) -> tuple:
         """Returns seasonal ARIMA model prediction
 
         Parameters
@@ -1165,7 +1165,7 @@ class TechnicalAnalysis:
 
         return price
 
-    def getTradeExit(self, price: float = 0) -> float:
+    def get_trade_exit(self, price: float = 0) -> float:
         if isinstance(price, int) or isinstance(price, float):
             if price > 0:
                 r = self.getResistance(price)
@@ -1185,7 +1185,7 @@ class TechnicalAnalysis:
 
         return price
 
-    def printSupportResistanceFibonacciLevels(self, price: float = 0) -> str:
+    def print_sr_fib_levels(self, price: float = 0) -> str:
         if isinstance(price, int) or isinstance(price, float):
             if price > 0:
                 sr = self.getSupportResistanceLevels()

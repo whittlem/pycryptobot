@@ -17,7 +17,7 @@ class Stats():
     def get_data(self, market):
         # get completed live orders
         self.app.setLive(1)
-        self.orders = self.account.getOrders(market, '', 'done')
+        self.orders = self.account.get_orders(market, '', 'done')
         self.app.setMarket(market)
         if self.fiat_currency != None:
             if self.app.quote_currency != self.fiat_currency:
