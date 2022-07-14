@@ -1,23 +1,14 @@
 """Plots (and/or saves) the graphical trading data using Matplotlib"""
 
+import re
+import sys
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-import datetime, re, sys
+from datetime import datetime
 
-# check for custom Trading files.  Errors are reported in pycryptobot.py when loaded there.
-try:
-    from models.Trading_myPta import TechnicalAnalysis
-    trading_myPta = True
-except:
-    trading_myPta = False
-if trading_myPta is False:
-    try:
-        from models.Trading_Pta import TechnicalAnalysis
-    except:
-        from models.Trading import TechnicalAnalysis
-
+from models.Trading import TechnicalAnalysis
 from models.helper.LogHelper import Logger
 
 sys.path.append(".")

@@ -237,7 +237,7 @@ class AuthAPI(AuthAPIBase):
     def get_taker_fee(self, market: str = "") -> float:
         """Retrieves taker fee"""
 
-        if len(market) != None:
+        if len(market) is not None:
             fees = self.getFees(market)
         else:
             fees = self.getFees()
@@ -886,7 +886,7 @@ class AuthAPI(AuthAPIBase):
 
                     if use_pagination:
                         # Get subsequent pages - if in original AuthAPI call
-                        if max_pages != None:
+                        if max_pages is not None:
                             if (not getting_pages) and (not use_order_cache) and (max_pages > current_page):
                                 page_counter = 1
                                 while page_counter <= max_pages:
@@ -897,7 +897,7 @@ class AuthAPI(AuthAPIBase):
                                     if page_counter == max_pages : break
 
                         #Sort by created Date and only return symbol if that was requested
-                        if symbol != None : df = df[df['symbol'] == symbol]
+                        if symbol is not None : df = df[df['symbol'] == symbol]
                         if 'createdAt' in df.columns: df = df.sort_values(by='createdAt', ascending=False)
 
                     return df

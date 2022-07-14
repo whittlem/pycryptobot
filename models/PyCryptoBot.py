@@ -1370,7 +1370,7 @@ class PyCryptoBot(BotConfig):
                     end_date = str(end_date.isoformat())
                     text_box.line("Sampling start", str(start_date))
                     text_box.line("Sampling end", str(end_date))
-                    if self.simstart_date != None and len(trading_data) < self.adjust_total_periods:
+                    if self.simstart_date is not None and len(trading_data) < self.adjust_total_periods:
                         text_box.center(f"WARNING: Using less than {str(self.adjust_total_periods)} intervals")
                         text_box.line("Interval size", str(len(trading_data)))
                     text_box.doubleLine()
@@ -1431,7 +1431,7 @@ class PyCryptoBot(BotConfig):
         text_box.line("Release", self.get_version_from_readme())
         text_box.singleLine()
 
-        if self.isVerbose():
+        if self.is_verbose:
             text_box.line("Market", self.market)
             text_box.line("Granularity", str(self.granularity) + " seconds")
             text_box.singleLine()
@@ -1445,35 +1445,35 @@ class PyCryptoBot(BotConfig):
         text_box.line("Exchange", str(self.exchange.value))
         text_box.doubleLine()
 
-        if self.sell_upper_pcnt != None:
+        if self.sell_upper_pcnt is not None:
             text_box.line(
                 "Sell Upper", str(self.sell_upper_pcnt) + "%  --sellupperpcnt  <pcnt>"
             )
 
-        if self.sell_lower_pcnt != None:
+        if self.sell_lower_pcnt is not None:
             text_box.line(
                 "Sell Lower", str(self.sell_lower_pcnt) + "%  --selllowerpcnt  <pcnt>"
             )
 
-        if self.no_sell_max_percent != None:
+        if self.no_sell_max_percent is not None:
             text_box.line(
                 "No Sell Max",
                 str(self.no_sell_max_percent) + "%  --no_sell_max_pcnt  <pcnt>",
             )
 
-        if self.no_sell_min_percent != None:
+        if self.no_sell_min_percent is not None:
             text_box.line(
                 "No Sell Min",
                 str(self.no_sell_min_percent) + "%  --no_sell_min_pcnt  <pcnt>",
             )
 
-        if self.trailingStopLoss() != None:
+        if self.trailingStopLoss() is not None:
             text_box.line(
                 "Trailing Stop Loss",
                 str(self.trailingStopLoss()) + "%  --trailingstoploss  <pcnt>",
             )
 
-        if self.trailingStopLossTrigger() != None:
+        if self.trailingStopLossTrigger() is not None:
             text_box.line(
                 "Trailing Stop Loss Trg",
                 str(self.trailingStopLossTrigger()) + "%  --trailingstoplosstrigger",
@@ -1484,19 +1484,19 @@ class PyCryptoBot(BotConfig):
                 "Dynamic Trailing Stop Loss",
                 str(self.dynamic_tsl) + "  --dynamictsl",
             )
-        if self.tsl_multiplier != None:
+        if self.tsl_multiplier is not None:
             text_box.line(
                 "Trailing Stop Loss Multiplier",
                 str(self.tsl_multiplier) + "%  --tslmultiplier  <pcnt>",
             )
 
-        if self.tsl_trigger_multiplier != None:
+        if self.tsl_trigger_multiplier is not None:
             text_box.line(
                 "Stop Loss Trigger Multiplier",
                 str(self.tsl_trigger_multiplier) + "%  --tsltriggermultiplier  <pcnt>",
             )
 
-        if self.tsl_max_pcnt != None:
+        if self.tsl_max_pcnt is not None:
             text_box.line(
                 "Stop Loss Maximum Percent",
                 str(self.tsl_max_pcnt) + "%  --tslmaxpcnt  <pcnt>",
@@ -1508,13 +1508,13 @@ class PyCryptoBot(BotConfig):
                 str(self.preventloss) + "  --preventloss",
             )
 
-        if self.preventlosstrigger != None:
+        if self.preventlosstrigger is not None:
             text_box.line(
                 "Prevent Loss Trigger",
                 str(self.preventlosstrigger) + "%  --preventlosstrigger",
             )
 
-        if self.preventlossmargin != None:
+        if self.preventlossmargin is not None:
             text_box.line(
                 "Prevent Loss Margin",
                 str(self.preventlossmargin) + "%  --preventlossmargin",
@@ -1555,14 +1555,14 @@ class PyCryptoBot(BotConfig):
             + "  --disablefailsafefibonaccilow",
         )
 
-        if self.sell_lower_pcnt != None:
+        if self.sell_lower_pcnt is not None:
             text_box.line(
                 "Sell Lower Pcnt",
                 str(not self.disablefailsafelowerpcnt)
                 + "  --disablefailsafelowerpcnt",
             )
 
-        if self.sell_upper_pcnt != None:
+        if self.sell_upper_pcnt is not None:
             text_box.line(
                 "Sell Upper Pcnt",
                 str(not self.disablefailsafelowerpcnt)
@@ -1669,7 +1669,7 @@ class PyCryptoBot(BotConfig):
                 str(self.marketmultibuycheck) + "  --marketmultibuycheck",
             )
 
-        if self.adjust_total_periods != None:
+        if self.adjust_total_periods is not None:
             text_box.line(
                 "Adjust Total Periods for Market ",
                 str(self.adjust_total_periods) + " --adjust_total_periods  <size>",

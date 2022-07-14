@@ -7,7 +7,7 @@ from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_an
 
 
 def isMarketValid(market) -> bool:
-    if market == None:
+    if market is None:
         return False
 
     p = re.compile(r"^[0-9A-Z]{4,25}$")

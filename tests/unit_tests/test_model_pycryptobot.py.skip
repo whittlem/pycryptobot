@@ -782,7 +782,7 @@ def test_configjson_binance_isverbose():
     app = PyCryptoBot(exchange='binance', filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
     assert app.exchange == 'binance'
-    assert not app.isVerbose()
+    assert not app.is_verbose
 
     try:
         config['binance']['config']['verbose'] = 1
@@ -796,7 +796,7 @@ def test_configjson_binance_isverbose():
     app = PyCryptoBot(exchange='binance', filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
     assert app.exchange == 'binance'
-    assert app.isVerbose()
+    assert app.is_verbose
 
     if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
         os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')
@@ -823,7 +823,7 @@ def test_configjson_coinbasepro_isverbose():
     app = PyCryptoBot(exchange='coinbasepro', filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
     assert app.exchange == 'coinbasepro'
-    assert not app.isVerbose()
+    assert not app.is_verbose
 
     try:
         config['coinbasepro']['config']['verbose'] = 1
@@ -837,7 +837,7 @@ def test_configjson_coinbasepro_isverbose():
     app = PyCryptoBot(exchange='coinbasepro', filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
     assert app.exchange == 'coinbasepro'
-    assert app.isVerbose()
+    assert app.is_verbose
 
     if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
         os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')

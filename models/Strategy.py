@@ -272,11 +272,11 @@ class Strategy:
             Logger.debug(f"Change Percentage {change_pcnt_high} < Stop Loss Percent {self.state.tsl_pcnt} = {change_pcnt_high < self.state.tsl_pcnt}")
             Logger.debug(f"Margin {margin} > Stop Loss Trigger  {self.state.tsl_trigger} = {margin > self.state.tsl_trigger}")
 
-        if self.state.tsl_pcnt != None:
+        if self.state.tsl_pcnt is not None:
             # dynamic trailing_stop_loss
             if self.app.dynamic_tsl:
                 if (
-                    self.app.tsl_trigger_multiplier != None
+                    self.app.tsl_trigger_multiplier is not None
                     and margin > round(self.state.tsl_trigger * self.app.tsl_trigger_multiplier)
                     and self.state.tsl_max is False
                 ):
@@ -285,7 +285,7 @@ class Strategy:
 
                 if self.state.tsl_triggered is False:
                     # check margin and set the trailingsellpcnt dynamically if enabled
-                    if self.app.tsl_trigger_multiplier != None and margin > round(self.state.tsl_trigger * self.app.tsl_trigger_multiplier):
+                    if self.app.tsl_trigger_multiplier is not None and margin > round(self.state.tsl_trigger * self.app.tsl_trigger_multiplier):
                         self.state.tsl_triggered = True
                         self.state.tsl_trigger = round(self.state.tsl_trigger * self.app.tsl_trigger_multiplier)
                         self.state.tsl_pcnt = float(round(self.state.tsl_pcnt * self.app.tsl_multiplier, 1))
@@ -335,7 +335,7 @@ class Strategy:
                 f"and self.app.sell_at_loss is True (actual: {self.app.sell_at_loss})"
             )
             Logger.debug(
-                f"and self.app.sell_lower_pcnt != None (actual: {self.app.sell_lower_pcnt})"
+                f"and self.app.sell_lower_pcnt is not None (actual: {self.app.sell_lower_pcnt})"
             )
             Logger.debug(
                 f"and margin ({margin}) < self.app.sell_lower_pcnt ({self.app.sell_lower_pcnt})"
@@ -349,7 +349,7 @@ class Strategy:
         if (
             self.app.disablefailsafelowerpcnt is False
             and self.app.sell_at_loss
-            and self.app.sell_lower_pcnt != None
+            and self.app.sell_lower_pcnt is not None
             and margin < self.app.sell_lower_pcnt
         ):
             log_text = (
@@ -412,7 +412,7 @@ class Strategy:
         if debug:
             Logger.debug("-- loss failsafe sell at trailing_stop_loss --")
             Logger.debug(
-                f"self.app.trailingStopLoss() != None (actual: {self.app.trailingStopLoss()})"
+                f"self.app.trailingStopLoss() is not None (actual: {self.app.trailingStopLoss()})"
             )
             Logger.debug(
                 f"change_pcnt_high ({change_pcnt_high}) < self.app.trailingStopLoss() ({self.app.trailingStopLoss()})"
@@ -431,7 +431,7 @@ class Strategy:
                 f"self.app.disableProfitbankUpperPcnt() is False (actual: {self.app.disableProfitbankUpperPcnt()})"
             )
             Logger.debug(
-                f"and self.app.sell_upper_pcnt != None (actual: {self.app.sell_upper_pcnt})"
+                f"and self.app.sell_upper_pcnt is not None (actual: {self.app.sell_upper_pcnt})"
             )
             Logger.debug(
                 f"and margin ({margin}) > self.app.sell_upper_pcnt ({self.app.sell_upper_pcnt})"
@@ -444,7 +444,7 @@ class Strategy:
         # profit bank at sell_upper_pcnt
         if (
             self.app.disableProfitbankUpperPcnt() is False
-            and self.app.sell_upper_pcnt != None
+            and self.app.sell_upper_pcnt is not None
             and margin > self.app.sell_upper_pcnt
         ):
             log_text = f"! Profit Bank Triggered (> {str(self.app.sell_upper_pcnt)}%)"
@@ -621,7 +621,7 @@ class Strategy:
             trailing_action_logtext = f" - Buy Chg: {str(pricechange)}%/{trailingbuypcnt}%"
             waitpcnttext += f"Ready to buy at close. Price of {self.state.waiting_buy_price}, change of {str(pricechange)}%, is greater than setting of {trailingbuypcnt}%  (+/- 10%)"
 
-        if self.app.isVerbose() and (
+        if self.app.is_verbose and (
             not self.app.is_sim
             or (self.app.is_sim and not self.app.simresultonly)
         ):
@@ -636,7 +636,7 @@ class Strategy:
         self.state = state
         # If sell signal, save the price and check if it increases before selling.
         immediate_action = False
-        if self.state.trailing_sell is True and self.state.waiting_sell_price != None:
+        if self.state.trailing_sell is True and self.state.waiting_sell_price is not None:
             pricechange = float(_truncate((self.state.waiting_sell_price - price) / self.state.waiting_sell_price * -100,2))
         else:
             self.state.waiting_sell_price = price
@@ -682,7 +682,7 @@ class Strategy:
             trailing_action_logtext = f" - Sell Chg: {str(pricechange)}%/{self.app.trailingsellpcnt}%"
             waitpcnttext += f"Sell at Close. Price of {self.state.waiting_sell_price}, change of {str(pricechange)}%, is lower than setting of {str(self.app.trailingsellpcnt)}% (+/- 10%)"
 
-        if self.app.isVerbose() and (
+        if self.app.is_verbose and (
             not self.app.is_sim
             or (self.app.is_sim and not self.app.simresultonly)
         ):

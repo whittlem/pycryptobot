@@ -19,7 +19,7 @@ class Stats():
         self.app.setLive(1)
         self.orders = self.account.get_orders(market, '', 'done')
         self.app.setMarket(market)
-        if self.fiat_currency != None:
+        if self.fiat_currency is not None:
             if self.app.quote_currency != self.fiat_currency:
                 raise ValueError("all currency pairs in statgroup must use the same quote currency")
         else:
@@ -46,7 +46,7 @@ class Stats():
                     amount = (row['filled'] * row['price']) - row['fees']
                 else:
                     amount = (float(row['filled']) * float(row['price'])) - row['fees']
-                if last_order == None: # first order is a sell (no pair)
+                if last_order is None: # first order is a sell (no pair)
                     continue
                 if last_order == 'buy':
                     last_order = 'sell'
@@ -57,10 +57,10 @@ class Stats():
                         self.order_pairs[-1]['sell']['size'] += float(amount)
         # remove open trade
         if len(self.order_pairs) > 0:
-            if self.order_pairs[-1]['sell'] == None:
+            if self.order_pairs[-1]['sell'] is None:
                 s = []
                 for order in self.order_pairs:
-                    if order["sell"] != None:
+                    if order["sell"] is not None:
                         s.append(order)
                 self.order_pairs = s
 

@@ -210,7 +210,7 @@ class TelegramHelper:
                 if "logger_level" in self.config["telegram"]
                 else "INFO"
             )
-            
+
 
     def send_telegram_message(
         self,
@@ -230,7 +230,7 @@ class TelegramHelper:
             chat_instance="",
         )
 
-        if new_message or update == None:
+        if new_message or update is None:
             context.bot.send_message(
                 chat_id=self.config["telegram"]["user_id"],
                 text=reply,

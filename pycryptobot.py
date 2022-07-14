@@ -967,7 +967,7 @@ def execute_job(
                 else:
                     obv_suffix = " | "
 
-            if not _app.isVerbose():
+            if not _app.is_verbose:
                 if _state.last_action != "":
                     # Not sure if this if is needed just preserving any existing functionality that may have been missed
                     # Updated to show over margin and profit
@@ -1374,7 +1374,7 @@ def execute_job(
                         not _app.insufficientfunds
                         and _app.buyminsize < account.quotebalance_before
                     ):
-                        if not _app.isVerbose():
+                        if not _app.is_verbose:
                             if not _app.is_sim or (
                                 _app.is_sim and not _app.simresultonly
                             ):
@@ -1523,7 +1523,7 @@ def execute_job(
                 else:
                     if _state.last_buy_size == 0 and _state.last_buy_filled == 0:
                         # Sim mode can now use buymaxsize as the amount used for a buy
-                        if _app.buymaxsize != None:
+                        if _app.buymaxsize is not None:
                             _state.last_buy_size = _app.buymaxsize
                             _state.first_buy_size = _app.buymaxsize
                         else:
@@ -1531,7 +1531,7 @@ def execute_job(
                             _state.first_buy_size = 1000
                     # add option for buy last sell size
                     elif (
-                        _app.buymaxsize != None
+                        _app.buymaxsize is not None
                         and _app.buylastsellsize
                         and _state.last_sell_size
                         > _state.minimumOrderQuote(
@@ -1558,7 +1558,7 @@ def execute_job(
                         + str(_truncate(_state.last_buy_size, 4))
                     )
 
-                    if not _app.isVerbose():
+                    if not _app.is_verbose:
                         if not _app.is_sim or (
                             _app.is_sim and not _app.simresultonly
                         ):
@@ -1656,7 +1656,7 @@ def execute_job(
             elif _state.action == "SELL":
                 # if live
                 if _app.is_live:
-                    if _app.isVerbose():
+                    if _app.is_verbose:
 
                         bands = _technical_analysis.getFibonacciRetracementLevels(
                             float(price)
@@ -1880,7 +1880,7 @@ def execute_job(
                         + ")"
                     )
 
-                    if not _app.isVerbose():
+                    if not _app.is_verbose:
                         if price > 0:
                             margin_text = truncate(margin) + "%"
                         else:
@@ -2008,7 +2008,7 @@ def execute_job(
 
                 tradesfile = _app.getTradesFile()
 
-                if _app.isVerbose():
+                if _app.is_verbose:
                     Logger.info("\n" + str(_app.trade_tracker))
                     start = str(df.head(1).index.format()[0]).replace(":", ".")
                     end = str(df.tail(1).index.format()[0]).replace(":", ".")
