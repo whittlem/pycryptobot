@@ -7,7 +7,7 @@ import time
 import numpy as np
 import pandas as pd
 
-from models.PyCryptoBot import truncate
+from utils.PyCryptoBot import truncate
 from models.exchange.ExchangesEnum import Exchange
 from models.exchange.binance import AuthAPI as BAuthAPI
 from models.exchange.coinbase_pro import AuthAPI as CBAuthAPI

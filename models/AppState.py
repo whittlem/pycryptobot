@@ -5,7 +5,6 @@ import sys
 
 from numpy import array as np_array, min as np_min, ptp as np_ptp
 
-from models.PyCryptoBot import PyCryptoBot
 from models.TradingAccount import TradingAccount
 from models.exchange.ExchangesEnum import Exchange
 from models.exchange.binance import AuthAPI as BAuthAPI
@@ -15,7 +14,7 @@ from models.helper.LogHelper import Logger
 
 
 class AppState:
-    def __init__(self, app: PyCryptoBot, account: TradingAccount) -> None:
+    def __init__(self, app, account: TradingAccount) -> None:
         if app.exchange == Exchange.BINANCE:
             self.api = BAuthAPI(
                 app.api_key,

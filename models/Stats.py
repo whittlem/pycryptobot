@@ -1,14 +1,13 @@
 import sys
 from time import sleep
 from datetime import datetime, timedelta
-from models.PyCryptoBot import PyCryptoBot
 from models.TradingAccount import TradingAccount
 from models.exchange.ExchangesEnum import Exchange
 from models.helper.LogHelper import Logger
 
 
 class Stats():
-    def __init__(self, app: PyCryptoBot = None, account: TradingAccount = None) -> None:
+    def __init__(self, app, account: TradingAccount = None) -> None:
         self.app = app
         self.account = account
         self.order_pairs = []

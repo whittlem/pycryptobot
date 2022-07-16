@@ -1,17 +1,17 @@
 from datetime import date, datetime, timedelta
 from models.AppState import AppState
-from models.PyCryptoBot import PyCryptoBot
-from models.PyCryptoBot import truncate as _truncate
+from utils.PyCryptoBot import truncate as _truncate
 from models.helper.LogHelper import Logger
 from models.TradingAccount import TradingAccount
 from models.exchange.Granularity import Granularity
 
+
 class Strategy_CS:
-    def __init__(self, app: PyCryptoBot, state: AppState) -> None:
+    def __init__(self, app, state: AppState) -> None:
         self.app = app
         self.state = state
-        self.use_adjusted_buy_pts = False # default, leave this here and change below
-        self.use_adjusted_sell_pts = False # default, leave this here and change below
+        self.use_adjusted_buy_pts = False  # default, leave this here and change below
+        self.use_adjusted_sell_pts = False  # default, leave this here and change below
         self.myCS = True
 
         if self.state.pandas_ta_enabled is False:

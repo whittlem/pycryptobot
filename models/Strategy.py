@@ -1,7 +1,6 @@
 from datetime import datetime
 from pandas import DataFrame
-from models.PyCryptoBot import PyCryptoBot
-from models.PyCryptoBot import truncate as _truncate
+from utils.PyCryptoBot import truncate as _truncate
 from models.AppState import AppState
 from models.helper.LogHelper import Logger
 from os.path import exists as file_exists
@@ -25,7 +24,7 @@ if strategy_myCS is False:
 class Strategy:
     def __init__(
         self,
-        app: PyCryptoBot = None,
+        app,
         state: AppState = AppState,
         df: DataFrame = DataFrame,
         iterations: int = 0,

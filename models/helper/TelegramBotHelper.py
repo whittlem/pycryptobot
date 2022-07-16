@@ -5,13 +5,12 @@ from time import sleep
 from datetime import datetime
 
 from pandas.core.frame import DataFrame
-from models.PyCryptoBot import PyCryptoBot
 from models.helper.LogHelper import Logger
 
 
 class TelegramBotHelper:
     """ Telegram Bot data helper """
-    def __init__(self, app: PyCryptoBot, scanner: bool = False) -> None:
+    def __init__(self, app, scanner: bool = False) -> None:
         self.app = app
         self.market = app.market
         self.exchange = app.exchange
