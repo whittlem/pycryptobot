@@ -123,9 +123,9 @@ class PyCryptoBot(BotConfig):
         # This is used by the telegram bot
         # If it not enabled in config while will always be False
         if not self.is_sim:
-            controlstatus = self.telegram_bot.checkbotcontrolstatus()
-            while controlstatus == "pause" or controlstatus == "paused":
-                if controlstatus == "pause":
+            control_status = self.telegram_bot.check_bot_control_status()
+            while control_status == "pause" or control_status == "paused":
+                if control_status == "pause":
                     text_box = TextBox(80, 22)
                     text_box.singleLine()
                     text_box.center(f"Pausing Bot {self.market}")
@@ -133,38 +133,38 @@ class PyCryptoBot(BotConfig):
                     Logger.debug("Pausing Bot.")
                     print(str(datetime.now()).format() + " - Bot is paused")
                     self.notify_telegram(f"{self.market} bot is paused")
-                    self.telegram_bot.updatebotstatus("paused")
+                    self.telegram_bot.update_bot_status("paused")
                     if self.websocket:
                         Logger.info("Stopping self.websocket...")
                         self.websocket.close()
 
                 time.sleep(30)
-                controlstatus = self.telegram_bot.checkbotcontrolstatus()
+                control_status = self.telegram_bot.check_bot_control_status()
 
-            if controlstatus == "start":
+            if control_status == "start":
                 text_box = TextBox(80, 22)
                 text_box.singleLine()
                 text_box.center(f"Restarting Bot {self.market}")
                 text_box.singleLine()
                 Logger.debug("Restarting Bot.")
                 self.notify_telegram(f"{self.market} bot has restarted")
-                self.telegram_bot.updatebotstatus("active")
+                self.telegram_bot.update_bot_status("active")
                 self.read_config(self.exchange)
                 if self.websocket:
                     Logger.info("Starting self.websocket...")
                     self.websocket.start()
 
-            if controlstatus == "exit":
+            if control_status == "exit":
                 text_box = TextBox(80, 22)
                 text_box.singleLine()
                 text_box.center(f"Closing Bot {self.market}")
                 text_box.singleLine()
                 Logger.debug("Closing Bot.")
                 self.notify_telegram(f"{self.market} bot is stopping")
-                self.telegram_bot.removeactivebot()
+                self.telegram_bot.remove_active_bot()
                 sys.exit(0)
 
-            if controlstatus == "reload":
+            if control_status == "reload":
                 text_box = TextBox(80, 22)
                 text_box.singleLine()
                 text_box.center(f"Reloading config parameters {self.market}")
@@ -195,7 +195,7 @@ class PyCryptoBot(BotConfig):
                     (),
                 )
                 # self.read_config(self.exchange)
-                self.telegram_bot.updatebotstatus("active")
+                self.telegram_bot.update_bot_status("active")
         else:
             # runs once at the start of a simulation
             if self.app_started:
@@ -664,7 +664,7 @@ class PyCryptoBot(BotConfig):
                             + "Catching SELL that occurred previously. Updating signal information."
                         )
 
-                    self.telegram_bot.closetrade(
+                    self.telegram_bot.close_trade(
                         str(self.get_date_from_iso8601_str(str(datetime.now()))),
                         0,
                         0,
@@ -724,15 +724,15 @@ class PyCryptoBot(BotConfig):
                 sys.exit()
 
             # Log data for Telegram Bot
-            self.telegram_bot.addindicators("EMA", ema12gtema26 or ema12gtema26co)
+            self.telegram_bot.add_indicators("EMA", ema12gtema26 or ema12gtema26co)
             if not self.disablebuyelderray:
-                self.telegram_bot.addindicators("ERI", elder_ray_buy)
+                self.telegram_bot.add_indicators("ERI", elder_ray_buy)
             if self.disablebullonly:
-                self.telegram_bot.addindicators("BULL", goldencross)
+                self.telegram_bot.add_indicators("BULL", goldencross)
             if not self.disablebuymacd:
-                self.telegram_bot.addindicators("MACD", macdgtsignal or macdgtsignalco)
+                self.telegram_bot.add_indicators("MACD", macdgtsignal or macdgtsignalco)
             if not self.disablebuyobv:
-                self.telegram_bot.addindicators("OBV", float(obv_pc) > 0)
+                self.telegram_bot.add_indicators("OBV", float(obv_pc) > 0)
 
             if self.is_sim:
                 # Reset the Strategy so that the last record is the current sim date
@@ -1888,7 +1888,7 @@ class PyCryptoBot(BotConfig):
                                     + ")"
                                 )
 
-                                self.telegram_bot.closetrade(
+                                self.telegram_bot.close_trade(
                                     str(self.get_date_from_iso8601_str(str(datetime.now()))),
                                     self.price_text,
                                     margin_text,
@@ -2284,7 +2284,7 @@ class PyCryptoBot(BotConfig):
                     self.notify_telegram(
                         f"      All Trades Margin: {self.truncate(self.state.margintracker, 4)}%\n  ** non-live simulation, assuming highest fees\n  ** open trade excluded from margin calculation\n"
                     )
-                    self.telegram_bot.removeactivebot()
+                    self.telegram_bot.remove_active_bot()
 
                 if self.simresultonly:
                     Logger.info(json.dumps(simulation, sort_keys=True, indent=4))
@@ -2304,7 +2304,7 @@ class PyCryptoBot(BotConfig):
                 Logger.info(
                     f'{now} | {self.market}{bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH'
                 )
-                self.telegram_bot.addinfo(
+                self.telegram_bot.add_info(
                     f'{now} | {self.market}{bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH',
                     round(self.price, 4),
                     str(round(df["close"].max(), 4)),
@@ -2323,7 +2323,7 @@ class PyCryptoBot(BotConfig):
                 and last_api_call_datetime.seconds > 60
             ):
                 # update margin for telegram bot
-                self.telegram_bot.addmargin(
+                self.telegram_bot.add_margin(
                     str(self.truncate(margin, 4) + "%")
                     if self.state.in_open_trade is True
                     else " ",
@@ -2334,7 +2334,7 @@ class PyCryptoBot(BotConfig):
                 )
 
             # Update the watchdog_ping
-            self.telegram_bot.updatewatchdogping()
+            self.telegram_bot.update_watch_dog_ping()
 
             # decrement ignored iteration
             if self.is_sim and self.smart_switch:
@@ -2493,7 +2493,7 @@ class PyCryptoBot(BotConfig):
                 )
             try:
                 try:
-                    self.telegram_bot.removeactivebot()
+                    self.telegram_bot.remove_active_bot()
                 except Exception:
                     pass
                 if self.websocket and not self.is_sim:
@@ -2509,7 +2509,7 @@ class PyCryptoBot(BotConfig):
                     f"Bot for {self.market} got an exception: {repr(e)}"
                 )
                 try:
-                    self.telegram_bot.removeactivebot()
+                    self.telegram_bot.remove_active_bot()
                 except Exception:
                     pass
             Logger.critical(repr(e))

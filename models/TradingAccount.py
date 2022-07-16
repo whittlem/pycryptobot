@@ -365,7 +365,7 @@ class TradingAccount:
                         self.balance.currency[
                             self.balance.currency.isin([currency])
                         ].empty
-                        == True
+                        is True
                     ):
                         self.balance.loc[len(self.balance)] = [currency, 0, 0, 0]
 
