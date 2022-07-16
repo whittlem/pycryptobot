@@ -20,3 +20,21 @@ def truncate(f: Union[int, float], n: Union[int, float]) -> str:
 
     # `{n}` inside the actual format honors the precision
     return f"{math.floor(f * 10 ** n) / 10 ** n:.{n}f}"
+
+
+def compare(val1, val2, label="", precision=2):
+    if val1 > val2:
+        if label == "":
+            return f"{truncate(val1, precision)} > {truncate(val2, precision)}"
+        else:
+            return f"{label}: {truncate(val1, precision)} > {truncate(val2, precision)}"
+    if val1 < val2:
+        if label == "":
+            return f"{truncate(val1, precision)} < {truncate(val2, precision)}"
+        else:
+            return f"{label}: {truncate(val1, precision)} < {truncate(val2, precision)}"
+    else:
+        if label == "":
+            return f"{truncate(val1, precision)} = {truncate(val2, precision)}"
+        else:
+            return f"{label}: {truncate(val1, precision)} = {truncate(val2, precision)}"

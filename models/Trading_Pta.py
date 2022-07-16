@@ -932,12 +932,12 @@ class TechnicalAnalysis:
         # true if sma stochrsi is above the 15
         self.df["rsi15"] = self.df["smastoch" + str(period)] > 15
         self.df["rsi15co"] = self.df.rsi15.ne(self.df.rsi15.shift())
-        self.df.loc[self.df["rsi15"] is False, "rsi15co"] = False
+        self.df.loc[self.df["rsi15"] == False, "rsi15co"] = False
 
         # true if sma stochrsi is below the 85
         self.df["rsi85"] = self.df["smastoch" + str(period)] < 85
         self.df["rsi85co"] = self.df.rsi85.ne(self.df.rsi85.shift())
-        self.df.loc[self.df["rsi85"] is False, "rsi85co"] = False
+        self.df.loc[self.df["rsi85"] == False, "rsi85co"] = False
 
     def addWilliamsR(self, period: int=20) -> None:
         """Adds the Willams %R to the DataFrame"""
@@ -1236,13 +1236,13 @@ class TechnicalAnalysis:
         self.df["ema8gtema12"] = self.df.ema8 > self.df.ema12
         # true if the current frame is where EMA8 crosses over above
         self.df["ema8gtema12co"] = self.df.ema8gtema12.ne(self.df.ema8gtema12.shift())
-        self.df.loc[self.df["ema8gtema12"] is False, "ema8gtema12co"] = False
+        self.df.loc[self.df["ema8gtema12"] == False, "ema8gtema12co"] = False
 
         # true if the EMA8 is below the EMA12
         self.df["ema8ltema12"] = self.df.ema8 < self.df.ema12
         # true if the current frame is where EMA8 crosses over below
         self.df["ema8ltema12co"] = self.df.ema8ltema12.ne(self.df.ema8ltema12.shift())
-        self.df.loc[self.df["ema8ltema12"] is False, "ema8ltema12co"] = False
+        self.df.loc[self.df["ema8ltema12"] == False, "ema8ltema12co"] = False
 
         # true if EMA12 is above the EMA26
         self.df["ema12gtema26"] = self.df.ema12 > self.df.ema26
@@ -1250,7 +1250,7 @@ class TechnicalAnalysis:
         self.df["ema12gtema26co"] = self.df.ema12gtema26.ne(
             self.df.ema12gtema26.shift()
         )
-        self.df.loc[self.df["ema12gtema26"] is False, "ema12gtema26co"] = False
+        self.df.loc[self.df["ema12gtema26"] == False, "ema12gtema26co"] = False
 
         # true if the EMA12 is below the EMA26
         self.df["ema12ltema26"] = self.df.ema12 < self.df.ema26
@@ -1258,7 +1258,7 @@ class TechnicalAnalysis:
         self.df["ema12ltema26co"] = self.df.ema12ltema26.ne(
             self.df.ema12ltema26.shift()
         )
-        self.df.loc[self.df["ema12ltema26"] is False, "ema12ltema26co"] = False
+        self.df.loc[self.df["ema12ltema26"] == False, "ema12ltema26co"] = False
 
     def addSMABuySignals(self) -> None:
         """Adds the SMA50/SMA200 buy and sell signals to the DataFrame"""
@@ -1290,7 +1290,7 @@ class TechnicalAnalysis:
         self.df["sma50gtsma200co"] = self.df.sma50gtsma200.ne(
             self.df.sma50gtsma200.shift()
         )
-        self.df.loc[self.df["sma50gtsma200"] is False, "sma50gtsma200co"] = False
+        self.df.loc[self.df["sma50gtsma200"] == False, "sma50gtsma200co"] = False
 
         # true if the SMA50 is below the SMA200
         self.df["sma50ltsma200"] = self.df.sma50 < self.df.sma200
@@ -1298,7 +1298,7 @@ class TechnicalAnalysis:
         self.df["sma50ltsma200co"] = self.df.sma50ltsma200.ne(
             self.df.sma50ltsma200.shift()
         )
-        self.df.loc[self.df["sma50ltsma200"] is False, "sma50ltsma200co"] = False
+        self.df.loc[self.df["sma50ltsma200"] == False, "sma50ltsma200co"] = False
 
     def addMACDBuySignals(self) -> None:
         """Adds the MACD/Signal buy and sell signals to the DataFrame"""
@@ -1327,7 +1327,7 @@ class TechnicalAnalysis:
         self.df["macdgtsignalco"] = self.df.macdgtsignal.ne(
             self.df.macdgtsignal.shift()
         )
-        self.df.loc[self.df["macdgtsignal"] is False, "macdgtsignalco"] = False
+        self.df.loc[self.df["macdgtsignal"] == False, "macdgtsignalco"] = False
 
         # true if the MACD is below the Signal
         self.df["macdltsignal"] = self.df.macd < self.df.signal
@@ -1335,7 +1335,7 @@ class TechnicalAnalysis:
         self.df["macdltsignalco"] = self.df.macdltsignal.ne(
             self.df.macdltsignal.shift()
         )
-        self.df.loc[self.df["macdltsignal"] is False, "macdltsignalco"] = False
+        self.df.loc[self.df["macdltsignal"] == False, "macdltsignalco"] = False
 
     def get_fib_ret_levels(self, self.price: float = 0) -> dict:
         # validates self.price is numeric

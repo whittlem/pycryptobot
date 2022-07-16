@@ -328,7 +328,7 @@ class AuthAPI(AuthAPIBase):
             else:
                 df = pd.DataFrame()
 
-            return df[df["isSpotTradingAllowed"] is True][["symbol"]].squeeze().tolist()
+            return df[df["isSpotTradingAllowed"] == True][["symbol"]].squeeze().tolist()
 
         except:
             return pd.DataFrame()
@@ -1432,7 +1432,7 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                                 data=[],
                             )
 
-                    if k["i"] == self.granularity.to_short and k["x"] is True:
+                    if k["i"] == self.granularity.to_short and k["x"] == True:
                         # check if the current candle exists
                         candle_exists = (
                             (self.candles["date"] == df["date"].values[0])

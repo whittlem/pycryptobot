@@ -110,15 +110,15 @@ class TradingGraphs:
         last_action = ""
         for idx, row in df_signals.iterrows():
             if (
-                row["ema12gtema26co"] is True
-                and row["macdgtsignal"] is True
+                row["ema12gtema26co"] == True
+                and row["macdgtsignal"] == True
                 and last_action != "buy"
             ):
                 action = "buy"
                 plt.axvline(x=idx, color="green")
             elif (
-                row["ema12ltema26"] is True
-                and row["macdltsignal"] is True
+                row["ema12ltema26"] == True
+                and row["macdltsignal"] == True
                 and action == "buy"
             ):
                 action = "sell"
@@ -458,14 +458,14 @@ class TradingGraphs:
             axis="x", which="both", bottom=False, top=False, labelbottom=False
         )
 
-        df_candlestick = self.df[self.df["astral_buy"] is True]
+        df_candlestick = self.df[self.df["astral_buy"] == True]
         df_candlestick_in_range = df_candlestick[
             df_candlestick.index >= np.min(df_subset.index)
         ]
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(idx, df_candlestick_in_range.loc[idx]["close"], "g^", markersize=8)
 
-        df_candlestick = self.df[self.df["astral_sell"] is True]
+        df_candlestick = self.df[self.df["astral_sell"] == True]
         df_candlestick_in_range = df_candlestick[
             df_candlestick.index >= np.min(df_subset.index)
         ]
@@ -522,7 +522,7 @@ class TradingGraphs:
             axis="x", which="both", bottom=False, top=False, labelbottom=False
         )
 
-        df_candlestick = self.df[self.df["three_white_soldiers"] is True]
+        df_candlestick = self.df[self.df["three_white_soldiers"] == True]
         df_candlestick_in_range = df_candlestick[
             df_candlestick.index >= np.min(df_subset.index)
         ]
@@ -535,7 +535,7 @@ class TradingGraphs:
                 label="Three White Soldiers",
             )
 
-        df_candlestick = self.df[self.df["three_black_crows"] is True]
+        df_candlestick = self.df[self.df["three_black_crows"] == True]
         df_candlestick_in_range = df_candlestick[
             df_candlestick.index >= np.min(df_subset.index)
         ]
@@ -548,7 +548,7 @@ class TradingGraphs:
                 label="Three Black Crows",
             )
 
-        df_candlestick = self.df[self.df["inverted_hammer"] is True]
+        df_candlestick = self.df[self.df["inverted_hammer"] == True]
         df_candlestick_in_range = df_candlestick[
             df_candlestick.index >= np.min(df_subset.index)
         ]
@@ -561,7 +561,7 @@ class TradingGraphs:
                 label="Inverted Hammer",
             )
 
-        df_candlestick = self.df[self.df["hammer"] is True]
+        df_candlestick = self.df[self.df["hammer"] == True]
         df_candlestick_in_range = df_candlestick[
             df_candlestick.index >= np.min(df_subset.index)
         ]
@@ -574,7 +574,7 @@ class TradingGraphs:
                 label="Hammer",
             )
 
-        df_candlestick = self.df[self.df["hanging_man"] is True]
+        df_candlestick = self.df[self.df["hanging_man"] == True]
         df_candlestick_in_range = df_candlestick[
             df_candlestick.index >= np.min(df_subset.index)
         ]
@@ -587,7 +587,7 @@ class TradingGraphs:
                 label="Hanging Man",
             )
 
-        df_candlestick = self.df[self.df["shooting_star"] is True]
+        df_candlestick = self.df[self.df["shooting_star"] == True]
         df_candlestick_in_range = df_candlestick[
             df_candlestick.index >= np.min(df_subset.index)
         ]
@@ -600,7 +600,7 @@ class TradingGraphs:
                 label="Shooting Star",
             )
 
-        df_candlestick = self.df[self.df["doji"] is True]
+        df_candlestick = self.df[self.df["doji"] == True]
         df_candlestick_in_range = df_candlestick[
             df_candlestick.index >= np.min(df_subset.index)
         ]
@@ -613,7 +613,7 @@ class TradingGraphs:
                 label="Doji",
             )
 
-        df_candlestick = self.df[self.df["three_line_strike"] is True]
+        df_candlestick = self.df[self.df["three_line_strike"] == True]
         df_candlestick_in_range = df_candlestick[
             df_candlestick.index >= np.min(df_subset.index)
         ]
@@ -626,7 +626,7 @@ class TradingGraphs:
                 label="Three Line Strike",
             )
 
-        df_candlestick = self.df[self.df["two_black_gapping"] is True]
+        df_candlestick = self.df[self.df["two_black_gapping"] == True]
         df_candlestick_in_range = df_candlestick[
             df_candlestick.index >= np.min(df_subset.index)
         ]
@@ -639,7 +639,7 @@ class TradingGraphs:
                 label="Two Black Gapping",
             )
 
-        df_candlestick = self.df[self.df["morning_star"] is True]
+        df_candlestick = self.df[self.df["morning_star"] == True]
         df_candlestick_in_range = df_candlestick[
             df_candlestick.index >= np.min(df_subset.index)
         ]
@@ -652,7 +652,7 @@ class TradingGraphs:
                 label="Morning Star",
             )
 
-        df_candlestick = self.df[self.df["evening_star"] is True]
+        df_candlestick = self.df[self.df["evening_star"] == True]
         df_candlestick_in_range = df_candlestick[
             df_candlestick.index >= np.min(df_subset.index)
         ]
@@ -665,7 +665,7 @@ class TradingGraphs:
                 label="Evening Star",
             )
 
-        df_candlestick = self.df[self.df["morning_doji_star"] is True]
+        df_candlestick = self.df[self.df["morning_doji_star"] == True]
         df_candlestick_in_range = df_candlestick[
             df_candlestick.index >= np.min(df_subset.index)
         ]
@@ -678,7 +678,7 @@ class TradingGraphs:
                 label="Morning Doji Star",
             )
 
-        df_candlestick = self.df[self.df["evening_doji_star"] is True]
+        df_candlestick = self.df[self.df["evening_doji_star"] == True]
         df_candlestick_in_range = df_candlestick[
             df_candlestick.index >= np.min(df_subset.index)
         ]
@@ -691,7 +691,7 @@ class TradingGraphs:
                 label="Evening Doji Star",
             )
 
-        df_candlestick = self.df[self.df["abandoned_baby"] is True]
+        df_candlestick = self.df[self.df["abandoned_baby"] == True]
         df_candlestick_in_range = df_candlestick[
             df_candlestick.index >= np.min(df_subset.index)
         ]

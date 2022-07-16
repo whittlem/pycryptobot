@@ -159,11 +159,11 @@ class TelegramBotHelper:
                     "trailingstoplosstriggered": float(margin.replace("%", ""))
                     > self.app.trailing_stop_loss_trigger
                     if "trailingstoplosstriggered" in self.data
-                    and self.data["trailingstoplosstriggered"] is False
+                    and self.data["trailingstoplosstriggered"] == False
                     else True,
                     "change_pcnt_high": change_pcnt_high
                     if "trailingstoplosstriggered" in self.data
-                    and self.data["trailingstoplosstriggered"] is True
+                    and self.data["trailingstoplosstriggered"] == True
                     else 0.0,
                 }
 
@@ -173,7 +173,7 @@ class TelegramBotHelper:
                             "preventlosstriggered": float(margin.replace("%", ""))
                             > self.app.preventlosstrigger
                             if "preventlosstriggered" in self.data
-                            and self.data["preventlosstriggered"] is False
+                            and self.data["preventlosstriggered"] == False
                             else True
                         }
                     )

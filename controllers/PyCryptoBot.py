@@ -1,14 +1,12 @@
 import os
 import sys
 import time
-import math
 import json
 import random
 import sched
 import signal
 import functools
 import pandas as pd
-from typing import Union
 from datetime import datetime, timedelta
 from os.path import exists as file_exists
 from urllib3.exceptions import ReadTimeoutError
@@ -31,6 +29,8 @@ from models.helper.TextBoxHelper import TextBox
 from models.helper.LogHelper import Logger
 from models.Strategy import Strategy
 from views.TradingGraphs import TradingGraphs
+from utils.PyCryptoBot import truncate as _truncate
+from utils.PyCryptoBot import compare as _compare
 
 try:
     # pyright: reportMissingImports=false
@@ -901,7 +901,7 @@ class PyCryptoBot(BotConfig):
 
                 # Since precision does not change after this point, it is safe to prepare a tailored `truncate()` that would
                 # work with this precision. It should save a couple of `precision` uses, one for each `truncate()` call.
-                truncate = functools.partial(self.truncate, n=precision)
+                truncate = functools.partial(_truncate, n=precision)
 
                 if immediate_action:
                     self.price_text = str(self.price)
@@ -909,7 +909,7 @@ class PyCryptoBot(BotConfig):
                     self.price_text = "Close: " + str(self.price)
                 ema_text = ""
                 if self.disablebuyema is False:
-                    ema_text = self.compare(
+                    ema_text = _compare(
                         self.df_last["ema12"].values[0],
                         self.df_last["ema26"].values[0],
                         "EMA12/26",
@@ -918,7 +918,7 @@ class PyCryptoBot(BotConfig):
 
                 macd_text = ""
                 if self.disablebuymacd is False:
-                    macd_text = self.compare(
+                    macd_text = _compare(
                         self.df_last["macd"].values[0],
                         self.df_last["signal"].values[0],
                         "MACD",
@@ -1081,7 +1081,7 @@ class PyCryptoBot(BotConfig):
                                     )
                                 )
                                 + "% |"
-                                + " CURR self.price is "
+                                + " CURR price is "
                                 + str(
                                     round(
                                         (
@@ -1659,7 +1659,7 @@ class PyCryptoBot(BotConfig):
                                 + "\n - TEST BUY at "
                                 + self.price_text
                                 + "\n - Buy Size: "
-                                + str(self.truncate(self.state.last_buy_size, 4))
+                                + str(_truncate(self.state.last_buy_size, 4))
                             )
 
                         if not self.is_verbose:
@@ -2177,7 +2177,7 @@ class PyCryptoBot(BotConfig):
                     Logger.info(f"  Sell Count : {str(self.state.sell_count)}")
                     Logger.info(f"   First Buy : {str(self.state.first_buy_size)}")
                     Logger.info(
-                        f"   Last Buy : {str(self.truncate(self.state.last_buy_size, 4))}"
+                        f"   Last Buy : {str(_truncate(self.state.last_buy_size, 4))}"
                     )
                 else:
                     simulation["data"]["sell_count"] = self.state.sell_count
@@ -2187,12 +2187,12 @@ class PyCryptoBot(BotConfig):
                 if self.state.sell_count > 0:
                     if not self.simresultonly:
                         Logger.info(
-                            f"   Last Sell : {self.truncate(self.state.last_sell_size, 4)}\n"
+                            f"   Last Sell : {_truncate(self.state.last_sell_size, 4)}\n"
                         )
                     else:
                         simulation["data"]["last_trade"] = {}
                         simulation["data"]["last_trade"]["size"] = float(
-                            self.truncate(self.state.last_sell_size, 2)
+                            _truncate(self.state.last_sell_size, 2)
                         )
                 else:
                     if not self.simresultonly:
@@ -2215,12 +2215,12 @@ class PyCryptoBot(BotConfig):
                     + f"   Buy Count: {self.state.buy_count}\n"
                     + f"   Sell Count: {self.state.sell_count}\n"
                     + f"   First Buy: {self.state.first_buy_size}\n"
-                    + f"   Last Buy: {str(self.truncate(self.state.last_buy_size, 4))}\n"
-                    + f"   Last Sell: {str(self.truncate(self.state.last_sell_size, 4))}\n"
+                    + f"   Last Buy: {str(_truncate(self.state.last_buy_size, 4))}\n"
+                    + f"   Last Sell: {str(_truncate(self.state.last_sell_size, 4))}\n"
                 )
 
                 if self.state.sell_count > 0:
-                    _last_trade_margin = self.truncate(
+                    _last_trade_margin = _truncate(
                         (
                             (
                                 (self.state.last_sell_size - self.state.last_buy_size)
@@ -2241,13 +2241,13 @@ class PyCryptoBot(BotConfig):
                             )
                         Logger.info("\n")
                         Logger.info(
-                            f"   All Trades Buys ({self.quote_currency}): {self.truncate(self.state.buy_tracker, 2)}"
+                            f"   All Trades Buys ({self.quote_currency}): {_truncate(self.state.buy_tracker, 2)}"
                         )
                         Logger.info(
-                            f"   All Trades Profit/Loss ({self.quote_currency}): {self.truncate(self.state.profitlosstracker, 2)} ({self.truncate(self.state.feetracker,2)} in fees)"
+                            f"   All Trades Profit/Loss ({self.quote_currency}): {_truncate(self.state.profitlosstracker, 2)} ({_truncate(self.state.feetracker,2)} in fees)"
                         )
                         Logger.info(
-                            f"   All Trades Margin : {self.truncate(self.state.margintracker, 4)}%"
+                            f"   All Trades Margin : {_truncate(self.state.margintracker, 4)}%"
                         )
                         Logger.info("\n")
                         Logger.info("  ** non-live simulation, assuming highest fees")
@@ -2261,16 +2261,16 @@ class PyCryptoBot(BotConfig):
                             "quote_currency"
                         ] = self.quote_currency
                         simulation["data"]["all_trades"]["value_buys"] = float(
-                            self.truncate(self.state.buy_tracker, 2)
+                            _truncate(self.state.buy_tracker, 2)
                         )
                         simulation["data"]["all_trades"]["profit_loss"] = float(
-                            self.truncate(self.state.profitlosstracker, 2)
+                            _truncate(self.state.profitlosstracker, 2)
                         )
                         simulation["data"]["all_trades"]["fees"] = float(
-                            self.truncate(self.state.feetracker, 2)
+                            _truncate(self.state.feetracker, 2)
                         )
                         simulation["data"]["all_trades"]["margin"] = float(
-                            self.truncate(self.state.margintracker, 4)
+                            _truncate(self.state.margintracker, 4)
                         )
 
                     ## Revised telegram Summary notification to give total margin in addition to last trade margin.
@@ -2282,7 +2282,7 @@ class PyCryptoBot(BotConfig):
                             f"\nOpen Trade Margin at end of simulation: {self.state.open_trade_margin}\n"
                         )
                     self.notify_telegram(
-                        f"      All Trades Margin: {self.truncate(self.state.margintracker, 4)}%\n  ** non-live simulation, assuming highest fees\n  ** open trade excluded from margin calculation\n"
+                        f"      All Trades Margin: {_truncate(self.state.margintracker, 4)}%\n  ** non-live simulation, assuming highest fees\n  ** open trade excluded from margin calculation\n"
                     )
                     self.telegram_bot.remove_active_bot()
 
@@ -2324,10 +2324,10 @@ class PyCryptoBot(BotConfig):
             ):
                 # update margin for telegram bot
                 self.telegram_bot.add_margin(
-                    str(self.truncate(margin, 4) + "%")
+                    str(_truncate(margin, 4) + "%")
                     if self.state.in_open_trade is True
                     else " ",
-                    str(self.truncate(profit, 2)) if self.state.in_open_trade is True else " ",
+                    str(_truncate(profit, 2)) if self.state.in_open_trade is True else " ",
                     self.price,
                     change_pcnt_high,
                     self.state.action,
@@ -3699,40 +3699,6 @@ class PyCryptoBot(BotConfig):
             return api.get_maker_fee()
         else:
             return 0.005
-
-    def truncate(self, f: Union[int, float], n: Union[int, float]) -> str:
-        """
-        Format a given number ``f`` with a given precision ``n``.
-        """
-
-        if not isinstance(f, int) and not isinstance(f, float):
-            return "0.0"
-
-        if not isinstance(n, int) and not isinstance(n, float):
-            return "0.0"
-
-        if (f < 0.0001) and n >= 5:
-            return f"{f:.5f}"
-
-        # `{n}` inside the actual format honors the precision
-        return f"{math.floor(f * 10 ** n) / 10 ** n:.{n}f}"
-
-    def compare(self, val1, val2, label="", precision=2):
-        if val1 > val2:
-            if label == "":
-                return f"{self.truncate(val1, precision)} > {self.truncate(val2, precision)}"
-            else:
-                return f"{label}: {self.truncate(val1, precision)} > {self.truncate(val2, precision)}"
-        if val1 < val2:
-            if label == "":
-                return f"{self.truncate(val1, precision)} < {self.truncate(val2, precision)}"
-            else:
-                return f"{label}: {self.truncate(val1, precision)} < {self.truncate(val2, precision)}"
-        else:
-            if label == "":
-                return f"{self.truncate(val1, precision)} = {self.truncate(val2, precision)}"
-            else:
-                return f"{label}: {self.truncate(val1, precision)} = {self.truncate(val2, precision)}"
 
     def get_buy_percent(self):
         try:

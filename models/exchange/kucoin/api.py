@@ -268,7 +268,7 @@ class AuthAPI(AuthAPIBase):
             df = pd.DataFrame(resp)
 
         # exclude pairs not available for trading
-        df = df[df["enableTrading"] is True]
+        df = df[df["enableTrading"] == True]
 
         # reset the dataframe index to start from 0
         df = df.reset_index()
