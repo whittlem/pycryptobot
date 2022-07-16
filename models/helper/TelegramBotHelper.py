@@ -21,7 +21,7 @@ class TelegramBotHelper:
         )
         self.filename = self.market + ".json"
 
-        if not self.app.is_sim and self.app.enabletelegrambotcontrol and not scanner:
+        if not self.app.is_sim and self.app.enable_telegram_bot_control() and not scanner:
             if not os.path.exists(self.botfolder):
                 os.makedirs(self.botfolder)
 
@@ -134,7 +134,7 @@ class TelegramBotHelper:
             return False
 
     def addmargin(self, margin: str = "", delta: str = "", price: str = "", change_pcnt_high: float = 0.0, signal = "WAIT"):
-        if not self.app.is_sim and self.app.enabletelegrambotcontrol:
+        if not self.app.is_sim and self.app.enable_telegram_bot_control():
             if self._read_data():
                 addmarket = {
                     "exchange": self.exchange.value,
@@ -144,7 +144,7 @@ class TelegramBotHelper:
                     "price": price,
                     "df_high": " ",
                     "from_df_high": " ",
-                    "trailingstoplosstriggered" : float(margin.replace("%", "")) > self.app.trailingStopLossTrigger() if "trailingstoplosstriggered" in self.data and self.data['trailingstoplosstriggered'] == False else True,
+                    "trailingstoplosstriggered" : float(margin.replace("%", "")) > self.app.trailing_stop_loss_trigger if "trailingstoplosstriggered" in self.data and self.data['trailingstoplosstriggered'] == False else True,
                     "change_pcnt_high" : change_pcnt_high if "trailingstoplosstriggered" in self.data and self.data['trailingstoplosstriggered'] == True else 0.0,
                     # "change_pcnt_low" : change_pcnt_high if "preventlosstriggered" in self.data and self.data['preventlosstriggered'] == True else 0.0
                 }
@@ -156,7 +156,7 @@ class TelegramBotHelper:
                 self._write_data()
 
     def updatewatchdogping(self):
-        if not self.app.is_sim and self.app.enabletelegrambotcontrol:
+        if not self.app.is_sim and self.app.enable_telegram_bot_control():
             if self._read_data() and "botcontrol" in self.data:
                 self.data["botcontrol"]["watchdog_ping"] =  datetime.now().isoformat()
                 self._write_data()
@@ -169,7 +169,7 @@ class TelegramBotHelper:
         from_df_high: str = "",
         signal ="WAIT"
     ) -> None:
-        if not self.app.is_sim and self.app.enabletelegrambotcontrol:
+        if not self.app.is_sim and self.app.enable_telegram_bot_control():
             if self._read_data():
                 addmarket = {
                     "signal": signal,
@@ -185,7 +185,7 @@ class TelegramBotHelper:
                 self._write_data()
 
     def addindicators(self, indicator, state) -> None:
-        if not self.app.is_sim and self.app.enabletelegrambotcontrol:
+        if not self.app.is_sim and self.app.enable_telegram_bot_control():
             if self._read_data():
                 if not "indicators" in self.data:
                     self.data.update({"indicators": {}})
@@ -194,7 +194,7 @@ class TelegramBotHelper:
                 self._write_data()
 
     def deletemargin(self):
-        if not self.app.is_sim and self.app.enabletelegrambotcontrol:
+        if not self.app.is_sim and self.app.enable_telegram_bot_control():
             try:
                 os.remove(
                     os.path.join(
@@ -205,7 +205,7 @@ class TelegramBotHelper:
                 pass
 
     def closetrade(self, ts, price, margin):
-        if not self.app.is_sim and self.app.enabletelegrambotcontrol:
+        if not self.app.is_sim and self.app.enable_telegram_bot_control():
             write_ok, try_count = False, 0
             while not write_ok and try_count <= 5:
                 try_count += 1
@@ -219,7 +219,7 @@ class TelegramBotHelper:
                     continue
                 self.remove_open_order()
 
-    def check_manual_buy_sell(self) -> str:
+    def checkmanualbuysell(self) -> str:
         result = "WAIT"
 
         if self._read_data() and "botcontrol" in self.data:
@@ -239,21 +239,21 @@ class TelegramBotHelper:
 
     def checkbotcontrolstatus(self) -> str:
         result = "active"
-        if not self.app.is_sim and self.app.enabletelegrambotcontrol:
+        if not self.app.is_sim and self.app.enable_telegram_bot_control():
             if self._read_data() and "botcontrol" in self.data:
                 result = self.data["botcontrol"]["status"]
 
         return result
 
     def updatebotstatus(self, status) -> None:
-        if not self.app.is_sim and self.app.enabletelegrambotcontrol:
+        if not self.app.is_sim and self.app.enable_telegram_bot_control():
             if self._read_data() and "botcontrol" in self.data:
                 if not self.data["botcontrol"]["status"] == status:
                     self.data["botcontrol"]["status"] = status
                     self._write_data()
 
     def removeactivebot(self) -> None:
-        if not self.app.is_sim and self.app.enabletelegrambotcontrol:
+        if not self.app.is_sim and self.app.enable_telegram_bot_control():
             self.deletemargin()
 
     def save_scanner_output(self, exchange, quote, output: DataFrame) -> None:
@@ -290,7 +290,7 @@ class TelegramBotHelper:
         )
 
     def add_open_order(self):
-        if not self.app.is_sim and self.app.enabletelegrambotcontrol:
+        if not self.app.is_sim and self.app.enable_telegram_bot_control():
             write_ok, try_count = False, 0
             while not write_ok and try_count <= 5:
                 try_count += 1
@@ -304,7 +304,7 @@ class TelegramBotHelper:
                     sleep(1)
 
     def remove_open_order(self):
-        if not self.app.is_sim and self.app.enabletelegrambotcontrol:
+        if not self.app.is_sim and self.app.enable_telegram_bot_control():
             write_ok, try_count = False, 0
             while not write_ok and try_count <= 5:
                 try_count += 1

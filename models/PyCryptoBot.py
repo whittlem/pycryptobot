@@ -4,7 +4,6 @@ import random
 import re
 from datetime import datetime, timedelta
 from typing import Union
-
 import pandas as pd
 import urllib3
 from urllib3.exceptions import ReadTimeoutError
@@ -287,7 +286,7 @@ class PyCryptoBot(BotConfig):
 
             # Kucoin only returns 100 rows if start not specified, make sure we get the right amount
             if not self.is_sim and iso8601start == "":
-                start = datetime.now() -  timedelta(minutes=(granularity.to_integer / 60) * self.adjust_total_periods)
+                start = datetime.now() - timedelta(minutes=(granularity.to_integer / 60) * self.adjust_total_periods)
                 iso8601start = str(start.isoformat()).split('.')[0]
 
         else:  # returns data from coinbase if not specified
@@ -392,7 +391,7 @@ class PyCryptoBot(BotConfig):
                     )
 
                     # check to see if there are an extra 300 candles available to be used, if not just use the original starting point
-                    if self.adjust_total_periods >= 300 and adding_extra_candles == True and len(df2) <= 0:
+                    if self.adjust_total_periods >= 300 and adding_extra_candles is True and len(df2) <= 0:
                         self.extra_candles_found = False
                         simstart = originalSimStart
                     else:
@@ -405,7 +404,7 @@ class PyCryptoBot(BotConfig):
                     if df_first.isoformat(
                         timespec="milliseconds"
                     ) == simstart.isoformat(timespec="milliseconds"):
-                        if adding_extra_candles == False:
+                        if adding_extra_candles is False:
                             simstart -= timedelta(
                                 minutes=(self.adjust_total_periods * (granularity.to_integer / 60))
                             )
@@ -420,8 +419,8 @@ class PyCryptoBot(BotConfig):
             if len(result_df_cache) > 0 and "morning_star" not in result_df_cache:
                 result_df_cache.sort_values(by=["date"], ascending=True, inplace=True)
 
-            if self.smart_switch == False:
-                if self.extra_candles_found == False:
+            if self.smart_switch is False:
+                if self.extra_candles_found is False:
                     text_box = TextBox(80, 26)
                     text_box.singleLine()
                     text_box.center(
@@ -592,14 +591,13 @@ class PyCryptoBot(BotConfig):
             idx = next_idx
             self.df_data[idx] = [short_granularity, granularity, -1, pd.DataFrame()]
 
-
         df = self.df_data[idx][3]
         row = self.df_data[idx][2]
         try:
             if (
-                len(df) == 0 # empty dataframe
+                len(df) == 0  # empty dataframe
                 or (len(df) > 0
-                    and ( # if exists, only refresh at candleclose
+                    and (  # if exists, only refresh at candleclose
                         datetime.timestamp(
                             datetime.utcnow()
                         ) - granularity.to_integer >= datetime.timestamp(
@@ -831,7 +829,7 @@ class PyCryptoBot(BotConfig):
     def isVerbose(self) -> bool:
         return self.is_verbose == 1
 
-    def shouldSaveGraphs(self) -> bool:
+    def should_save_graphs(self) -> bool:
         return self.save_graphs == 1
 
     def isSimulation(self) -> bool:
@@ -900,7 +898,7 @@ class PyCryptoBot(BotConfig):
     def getStats(self) -> bool:
         return self.stats
 
-    def getLastAction(self):
+    def get_last_action(self):
         return self.last_action
 
     def disableBullOnly(self) -> bool:
@@ -942,8 +940,8 @@ class PyCryptoBot(BotConfig):
     def enableInsufficientFundsLogging(self) -> bool:
         return self.enableinsufficientfundslogging
 
-    def enableTelegramBotControl(self) -> bool:
-        return self.enabletelegrambotcontrol
+    def enable_telegram_bot_control(self) -> bool:
+        return self.enable_telegram_bot_control
 
     def enableImmediateBuy(self) -> bool:
         return self.enableimmediatebuy
@@ -951,8 +949,8 @@ class PyCryptoBot(BotConfig):
     def telegramTradesOnly(self) -> bool:
         return self.telegramtradesonly
 
-    def disableTelegramErrorMsgs(self) -> bool:
-        return self.disabletelegramerrormsgs
+    def disable_telegram_error_msgs(self) -> bool:
+        return self.disable_telegram_error_msgs
 
     def enableML(self) -> bool:
         return self.enableml
@@ -1467,16 +1465,16 @@ class PyCryptoBot(BotConfig):
                 str(self.no_sell_min_percent) + "%  --no_sell_min_pcnt  <pcnt>",
             )
 
-        if self.trailingStopLoss() is not None:
+        if self.trailing_stop_loss is not None:
             text_box.line(
                 "Trailing Stop Loss",
-                str(self.trailingStopLoss()) + "%  --trailingstoploss  <pcnt>",
+                str(self.trailing_stop_loss) + "%  --trailingstoploss  <pcnt>",
             )
 
-        if self.trailingStopLossTrigger() is not None:
+        if self.trailing_stop_loss_trigger is not None:
             text_box.line(
                 "Trailing Stop Loss Trg",
-                str(self.trailingStopLossTrigger()) + "%  --trailingstoplosstrigger",
+                str(self.trailing_stop_loss_trigger) + "%  --trailingstoplosstrigger",
             )
 
         if self.dynamic_tsl:
@@ -1584,8 +1582,8 @@ class PyCryptoBot(BotConfig):
         if not self.disabletelegram:
             text_box.line(
                 "Telegram error msgs",
-                str(not self.disabletelegramerrormsgs)
-                + " --disabletelegramerrormsgs",
+                str(not self.disable_telegram_error_msgs)
+                + " --disable_telegram_error_msgs",
             )
 
         text_box.line("Enable Pandas-ta", str(self.enable_pandas_ta) + "  --enable_pandas_ta")

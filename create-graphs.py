@@ -4,7 +4,7 @@ from views.TradingGraphs import TradingGraphs
 
 #app = PyCryptoBot()
 app = PyCryptoBot('binance')
-trading_data = app.get_historical_data(app.market, app.granularity)
+trading_data = self.get_historical_data(app.market, self.granularity)
 
 technicalAnalysis = TechnicalAnalysis(trading_data)
 technicalAnalysis.addAll()

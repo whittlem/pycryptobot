@@ -20,9 +20,9 @@ from websocket import create_connection, WebSocketConnectionClosedException
 from models.exchange.Granularity import Granularity
 from models.helper.LogHelper import Logger
 
-DEFAULT_MAKER_FEE_RATE = 0.0015  # added 0.0005 to allow for price movements
-DEFAULT_TAKER_FEE_RATE = 0.0015  # added 0.0005 to allow for price movements
-DEFAULT_TRADE_FEE_RATE = 0.0015  # added 0.0005 to allow for price movements
+DEFAULT_MAKER_FEE_RATE = 0.0015  # added 0.0005 to allow for self.price movements
+DEFAULT_TAKER_FEE_RATE = 0.0015  # added 0.0005 to allow for self.price movements
+DEFAULT_TRADE_FEE_RATE = 0.0015  # added 0.0005 to allow for self.price movements
 MULTIPLIER_EQUIVALENTS = [1, 5, 15, 60, 360, 1440]
 DEFAULT_MARKET = "BTCGBP"
 
@@ -328,7 +328,7 @@ class AuthAPI(AuthAPIBase):
             else:
                 df = pd.DataFrame()
 
-            return df[df["isSpotTradingAllowed"] == True][["symbol"]].squeeze().tolist()
+            return df[df["isSpotTradingAllowed"] is True][["symbol"]].squeeze().tolist()
 
         except:
             return pd.DataFrame()

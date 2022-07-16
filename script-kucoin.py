@@ -71,14 +71,14 @@ resp = api.marketBuy('XRP-USDT', 100)
 print (resp)
 
 account = TradingAccount(app)
-balance = account.getBalance('USDT')
+balance = self.account.get_balance('USDT')
 print (balance)
 
 
 app = PyCryptoBot(exchange='kucoin')
 account = TradingAccount(app)
 state = AppState(app, account)
-state.minimumOrderBase()
-state.minimumOrderQuote()
+state.minimum_order_base()
+state.minimum_order_quote()
 
 """

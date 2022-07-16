@@ -192,7 +192,7 @@ class TradingGraphs:
             plt.show()
 
     def renderPriceEMA12EMA26(self, saveFile="", saveOnly=False):
-        """Render the price, EMA12 and EMA26
+        """Render the self.price, EMA12 and EMA26
 
         Parameters
         ----------
@@ -220,8 +220,8 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderEMAandMACD(self, period=30, saveFile="", saveOnly=False):
-        """Render the price, EMA12, EMA26 and MACD
+    def render_ema_and_macd(self, period=30, saveFile="", saveOnly=False):
+        """Render the self.price, EMA12, EMA26 and MACD
 
         Parameters
         ----------
@@ -315,7 +315,7 @@ class TradingGraphs:
             plt.show()
 
     def renderSMAandMACD(self, saveFile="", saveOnly=False):
-        """Render the price, SMA20, SMA50, and SMA200
+        """Render the self.price, SMA20, SMA50, and SMA200
 
         Parameters
         ----------
@@ -741,15 +741,15 @@ class TradingGraphs:
         market = df.iloc[0].market
         granularity = df.iloc[0].granularity
 
-        # closing price min and max values
-        price_min = df.close.min()
-        price_max = df.close.max()
+        # closing self.price min and max values
+        self.price_min = df.close.min()
+        self.price_max = df.close.max()
 
         # fibonacci retracement levels
-        diff = price_max - price_min
-        level1 = price_max - 0.236 * diff
-        level2 = price_max - 0.382 * diff
-        level3 = price_max - 0.618 * diff
+        diff = self.price_max - self.price_min
+        level1 = self.price_max - 0.236 * diff
+        level2 = self.price_max - 0.382 * diff
+        level3 = self.price_max - 0.618 * diff
 
         fig, ax = plt.subplots(
             ncols=1, figsize=(12, 6)
@@ -759,10 +759,10 @@ class TradingGraphs:
         ax = plt.subplot(111)
         ax.plot(df.close, label="price", color="black")
         ax.set_title("Fibonacci Retracement Levels")
-        ax.axhspan(level1, price_min, alpha=0.4, color="lightsalmon", label="0.618")
+        ax.axhspan(level1, self.price_min, alpha=0.4, color="lightsalmon", label="0.618")
         ax.axhspan(level3, level2, alpha=0.5, color="palegreen", label="0.382")
         ax.axhspan(level2, level1, alpha=0.5, color="palegoldenrod", label="0.236")
-        ax.axhspan(price_max, level3, alpha=0.5, color="powderblue", label="0")
+        ax.axhspan(self.price_max, level3, alpha=0.5, color="powderblue", label="0")
 
         plt.xlabel(market + " - " + str(granularity))
         plt.ylabel("Price")

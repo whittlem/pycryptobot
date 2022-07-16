@@ -11,7 +11,7 @@ DEFAULT_ORDER_MARKET = 'BTC-GBP'
 
 def getValidOrderMarket() -> str:
     filename = 'config.json'
-    assert os.path.exists(filename) == True
+    assert os.path.exists(filename) is True
     with open(filename) as config_file:
         config = json.load(config_file)
 
@@ -93,7 +93,7 @@ def test_instantiate_publicapi_without_error():
 
 def test_config_json_exists_and_valid():
     filename = 'config.json'
-    assert os.path.exists(filename) == True
+    assert os.path.exists(filename) is True
     with open(filename) as config_file:
         config = json.load(config_file)
 
@@ -178,9 +178,9 @@ def test_getAccount():
     assert len(df) > 0
 
     account = df[['id']].head(1).values[0][0]
-    assert len(account) > 0
+    assert len(self.account) > 0
 
-    df = exchange.getAccount(account)
+    df = exchange.getAccount(self.account)
     assert type(df) is pandas.core.frame.DataFrame
 
     assert len(df) == 1

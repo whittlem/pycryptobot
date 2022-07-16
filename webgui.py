@@ -128,7 +128,7 @@ dashboard_layout = html.Div(
                                 },
                                 {
                                     "name": "Price",
-                                    "id": "Current Price",
+                                    "id": "Current self.price",
                                     "type": "numeric",
                                 },
                                 dict(
@@ -166,7 +166,7 @@ dashboard_layout = html.Div(
                                 {"if": {"column_id": "Trading Pair"}, "width": "180px"},
                                 {"if": {"column_id": "Action"}, "width": "130px"},
                                 {
-                                    "if": {"column_id": "Current Price"},
+                                    "if": {"column_id": "Current self.price"},
                                     "width": "160px",
                                 },
                                 {"if": {"column_id": "Margin"}, "width": "160px"},
@@ -459,7 +459,7 @@ def update_table(n):
             "Trading Pair",
             "Exchange",
             "Action",
-            "Current Price",
+            "Current self.price",
             "From DF High",
             "DF High",
             "Margin",
@@ -521,7 +521,7 @@ def update_table(n):
                             "Action": json_data["signal"],
                             # if "margin" in json_data and json_data["margin"][0] == " "
                             # else "BUY",
-                            "Current Price": json_data["price"],
+                            "Current self.price": json_data["price"],
                             "Margin": json_data["margin"]
                             if "margin" in json_data and json_data["margin"][0] != " "
                             else "NaN",
@@ -790,5 +790,5 @@ clientside_callback(
 
 if __name__ == "__main__":
     # comment this line out if you want to run on just local machine @ 127.0.0.1:8050
-    app.run_server(host="0.0.0.0", port="8051")
-    app.run_server(debug=True)
+    self.run_server(host="0.0.0.0", port="8051")
+    self.run_server(debug=True)

@@ -32,18 +32,18 @@ def parser(app, dummy_config, args={}):
     if 'base_currency' in config and config['base_currency'] is not None:
         if not isCurrencyValid(config['base_currency']):
             raise TypeError('Base currency is invalid.')
-        app.base_currency = config['base_currency']
+        self.base_currency = config['base_currency']
 
     if 'quote_currency' in config and config['quote_currency'] is not None:
         if not isCurrencyValid(config['quote_currency']):
             raise TypeError('Quote currency is invalid.')
-        app.quote_currency = config['quote_currency']
+        self.quote_currency = config['quote_currency']
 
     if 'market' in config and config['market'] is not None:
-        app.market, app.base_currency, app.quote_currency = parseMarket(config['market'])
+        self.market, self.base_currency, self.quote_currency = parseMarket(config['market'])
 
-    if app.base_currency != '' and app.quote_currency != '':
-        app.market = app.base_currency + '-' + app.quote_currency
+    if self.base_currency != '' and self.quote_currency != '':
+        self.market = self.base_currency + '-' + self.quote_currency
 
     else:
         raise Exception('There is an error in your config dictionary')

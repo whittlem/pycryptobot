@@ -21,7 +21,7 @@ class AppState:
                 app.api_key,
                 app.api_secret,
                 app.api_url,
-                recv_window=app.recv_window,
+                recv_window=app.get_recv_window,
             )
         elif app.exchange == Exchange.COINBASEPRO:
             self.api = CAuthAPI(
@@ -36,7 +36,7 @@ class AppState:
                 app.api_secret,
                 app.api_passphrase,
                 app.api_url,
-                use_cache=app.usekucoincache,
+                use_cache=app.use_kucoin_cache,
             )
         else:
             self.api = None
@@ -81,7 +81,7 @@ class AppState:
 
         # setup variables from config that may change
         if app.trailing_stop_loss is not None:
-            self.tsl_pcnt = float(app.trailing_stop_loss())
+            self.tsl_pcnt = float(app.trailing_stop_loss)
         else:
             self.tsl_pcnt = None
         self.tsl_trigger = app.trailing_stop_loss_trigger
@@ -100,10 +100,10 @@ class AppState:
         self.waiting_sell_price = 0
         self.closed_candle_row = -1
 
-    def minimumOrderBase(self, base, balancechk: bool = False):
+    def minimum_order_base(self, base, balancechk: bool = False):
         self.app.insufficientfunds = False
         if self.app.exchange == Exchange.BINANCE:
-            df = self.api.marketInfoFilters(self.app.market)
+            df = self.api.getMarketInfoFilters(self.app.market)
             if len(df) > 0:
                 base_min = float(
                     df[df["filterType"] == "LOT_SIZE"][["minQty"]].values[0][0]
@@ -150,10 +150,10 @@ class AppState:
         else:
             return
 
-    def minimumOrderQuote(self, quote, balancechk: bool = False):
+    def minimum_order_quote(self, quote, balancechk: bool = False):
         self.app.insufficientfunds = False
         if self.app.exchange == Exchange.BINANCE:
-            df = self.api.marketInfoFilters(self.app.market)
+            df = self.api.getMarketInfoFilters(self.app.market)
 
             if len(df) > 0:
                 quote_min = float(
@@ -229,7 +229,7 @@ class AppState:
                 f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})'
             )
 
-    def getLastOrder(self):
+    def get_last_order(self):
         # if not live
         if not self.app.is_live:
             self.last_action = "SELL"
@@ -238,14 +238,14 @@ class AppState:
         base = 0.0
         quote = 0.0
 
-        ac = self.account.getBalance()
+        ac = self.account.get_balance()
         try:
             df_base = ac[ac["currency"] == self.app.base_currency]["available"]
             base = 0.0 if len(df_base) == 0 else float(df_base.values[0])
 
             df_quote = ac[ac["currency"] == self.app.quote_currency]["available"]
             quote = 0.0 if len(df_quote) == 0 else float(df_quote.values[0])
-        except:
+        except Exception:
             pass
         orders = self.account.get_orders(self.app.market, "", "done")
         if len(orders) > 0:
@@ -281,14 +281,14 @@ class AppState:
                     self.last_sell_size = float(
                         last_order[last_order.action == "sell"]["filled"]
                     ) * float(last_order[last_order.action == "sell"]["price"])
-                self.minimumOrderQuote(quote)
+                self.minimum_order_quote(quote)
                 self.last_action = "SELL"
                 self.last_buy_price = 0.0
                 self.in_open_trade = False
                 return
         else:
             if quote > 0.0:
-                self.minimumOrderQuote(quote)
+                self.minimum_order_quote(quote)
             # nil base or quote funds
             if base == 0.0 and quote == 0.0:
                 if self.app.enableinsufficientfundslogging:
@@ -313,31 +313,31 @@ class AppState:
             # If multi buy check enabled for pair, check balances to prevent multiple buys
             if (
                 self.app.marketmultibuycheck
-                and self.minimumOrderBase(base, balancechk=True)
-                and self.minimumOrderQuote(quote, balancechk=True)
+                and self.minimum_order_base(base, balancechk=True)
+                and self.minimum_order_quote(quote, balancechk=True)
             ):
                 self.last_action = "BUY"
                 Logger.warning(
                     f"Market - {self.app.market} did not return order info, but looks like there was a already a buy. Set last action to buy"
                 )
             elif order_pairs_normalised[0] < order_pairs_normalised[1]:
-                self.minimumOrderQuote(quote)
+                self.minimum_order_quote(quote)
                 self.last_action = "SELL"
             elif order_pairs_normalised[0] > order_pairs_normalised[1]:
-                self.minimumOrderBase(base)
+                self.minimum_order_base(base)
                 self.last_action = "BUY"
             else:
                 self.last_action = "WAIT"
 
             return
 
-    def initLastAction(self):
+    def init_last_action(self):
         # ignore if manually set
-        if self.app.getLastAction() is not None:
-            self.last_action = self.app.getLastAction()
+        if self.app.last_action is not None:
+            self.last_action = self.app.last_action
             return
 
-        self.getLastOrder()
+        self.get_last_order()
 
     def poll_last_action(self):
-        self.getLastOrder()
+        self.get_last_order()

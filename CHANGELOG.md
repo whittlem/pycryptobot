@@ -57,7 +57,7 @@ Upgrade library dependencies (if required):
 - added numerous customized indicators and signals in Strategy_CS.py with non-traditional settings.  Uses points system for buy/sell signals
 - added selltriggeroveride option to be used with custom strategy (if/while all signals are strong buy, don't trigger any Sells allowing for greater profit)
 - added options to trailing sell and buy that use the custom points system to trigger immediate buys or sells if the respective setting is active
-- added trailingsellbailout setting - if trailing sell is active and waiting, but price drops drastically, sell immediately at this level
+- added trailingsellbailout setting - if trailing sell is active and waiting, but self.price drops drastically, sell immediately at this level
 - revised buy/sell transactions in pycryptobot.py for better recovery if an error occurs during trade processing (revising previous fixes)
 - added adjust_total_periods config option as advanced option to adjust periods/candles to compensate for Kucoin 100 candle max (hope to fix in future), but this option can also be used for traders looking to trade newly added coins on exchanges
 - added manual_trades_only config option for users wanting HODL some coins, but still monitor margin and status.  Manual trade through Telegram Bot or on exchange.
@@ -70,7 +70,7 @@ Upgrade library dependencies (if required):
 
 ## [6.2.0] - 2022-03-15
 
-- added webgui.py this is web interface, it has some of the telegram bot functions (more will be added) and can be run standalone or along side telegram_bot.py
+- added webgui.py this is web interface, it has some of the telegram bot functions (more will be added) and can be run standalone or along side self.telegram_bot.py
 - added bot controls to webgui
 - added market scanner options to webgui (please note if using the telegram bot as well the schedules for webgui and telegram bot are separate processes)
 - added visual gauges to dashboard (current margins & last 7 day trade margin)
@@ -87,7 +87,7 @@ Upgrade library dependencies (if required):
 - fixed max bot count not always limiting the number of running bots
 - added "exchange_bot_count": <int> in scanner section of config to allow max number of bots running on each exchange
 - added screener to config editor
-- added "autostart" : <bit> in scanner section of config, if enabled, when telegram_bot.py is started it will run the market scanner and start any previous open orders.
+- added "autostart" : <bit> in scanner section of config, if enabled, when self.telegram_bot.py is started it will run the market scanner and start any previous open orders.
 - including code refactoring.
 
 ## [6.0.0] - 2022-02-08
@@ -139,8 +139,8 @@ Upgrade library dependencies (if required):
 
 - fixed spelling mistake in Kucoin api.py file
 - added balance checking to verify buy/sell trades occurred
-- revised getBalance code for Coinbase and Kucion to verify a response from API
-- revised market/symbol regex in telegram_bot.py to match rest of code
+- revised get_balance code for Coinbase and Kucion to verify a response from API
+- revised market/symbol regex in self.telegram_bot.py to match rest of code
 
 ## [5.1.3] - 2022-01-03
 
@@ -182,14 +182,14 @@ Upgrade library dependencies (if required):
 
 ## [4.6.2] - 2021-12-18
 
-- Fix bug in trailingbuypcnt code that could cause the waiting price to continually change and prevent a buy
+- Fix bug in trailingbuypcnt code that could cause the waiting self.price to continually change and prevent a buy
 - fix error when saving trade data for the first time
 - Add all option to Sell command
 - Add unit tests for TG Bot
 
 ## [4.6.1] - 2021-12-09
 
-- Add trailingbuypcnt as config option with a default of 0 and follow price lower.  See README for details.
+- Add trailingbuypcnt as config option with a default of 0 and follow self.price lower.  See README for details.
 - clean up Strategy.py debug messages with debug bool variable
 - increase market and currency regex to allow 20 characters for base currency instead of 10.
 
@@ -256,7 +256,7 @@ Upgrade library dependencies (if required):
 - Kucoin runs without any regular re-occurring errors in log
 - added trade timestamps to Telegram output
 - added Telegram config option --telegramtradesonly: will show trades, but not smart switch or last action changed
-- added Telegram config option --disabletelegramerrormsgs: will not send Logger messages to telegram
+- added Telegram config option --disable_telegram_error_msgs: will not send Logger messages to telegram
 - added ability to specify api_key_file via command line arguments with --api_key_file
 
 ## [4.3.2] - 2021-11-02
@@ -295,7 +295,7 @@ Upgrade library dependencies (if required):
 
 - Fixed issue when websockets are enabled making to many API calls (for those that are still required they will be called once per minute instead of on every iteration).
 - Added telegram bot (telegram_bot.py) this has to be run separately to pycryptobot.py
-- Added option to enable the telegram bot this does not start it, just enables writing data required for the telegram bot (--enabletelegrambotcontrol)
+- Added option to enable the telegram bot this does not start it, just enables writing data required for the telegram bot (--enable_telegram_bot_control)
 - Added user_id to telegram section in config, this is used so that only you can control the bot
 - Added datafolder to telegram section in config, this is used when running multiple bots from different folders
 - Added Telegram Bot Setup instructions text file
@@ -510,7 +510,7 @@ Upgrade library dependencies (if required):
 
 ### Changed
 
-- Updated Binance price calculation
+- Updated Binance self.price calculation
 
 ## [3.1.0] - 2021-08-07
 
@@ -756,7 +756,7 @@ Upgrade library dependencies (if required):
 
 ### Added
 
-- Added the Seasonal ARIMA machine learning model for price predictions
+- Added the Seasonal ARIMA machine learning model for self.price predictions
 
 ## [2.28.0] - 2021-06-11
 
@@ -772,7 +772,7 @@ Upgrade library dependencies (if required):
 
 ### Added
 
-- Added app.get_historical_data_chained
+- Added self.get_historical_data_chained
 
 ## [2.26.0] - 2021-06-07
 

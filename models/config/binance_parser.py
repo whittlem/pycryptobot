@@ -96,14 +96,14 @@ def parser(app, binance_config, args={}):
             if not p.match(binance_config['api_key']):
                 raise TypeError('Binance API key is invalid')
 
-            app.api_key = binance_config['api_key']
+            self.api_key = binance_config['api_key']
 
             # validates the api secret is syntactically correct
             p = re.compile(r"^[A-z0-9]{64,64}$")
             if not p.match(binance_config['api_secret']):
                 raise TypeError('Binance API secret is invalid')
 
-            app.api_secret = binance_config['api_secret']
+            self.api_secret = binance_config['api_secret']
 
             valid_urls = [
                 'https://api.binance.com/',
@@ -117,9 +117,9 @@ def parser(app, binance_config, args={}):
             if binance_config['api_url'] not in valid_urls:
                 raise ValueError('Binance API URL is invalid')
 
-            app.api_url = binance_config['api_url']
-            app.base_currency = 'BTC'
-            app.quote_currency = 'GBP'
+            self.api_url = binance_config['api_url']
+            self.base_currency = 'BTC'
+            self.quote_currency = 'GBP'
     else:
         binance_config = {}
 
@@ -130,18 +130,18 @@ def parser(app, binance_config, args={}):
     if 'base_currency' in config and config['base_currency'] is not None:
         if not isCurrencyValid(config['base_currency']):
             raise TypeError('Base currency is invalid.')
-        app.base_currency = config['base_currency']
+        self.base_currency = config['base_currency']
 
     if 'quote_currency' in config and config['quote_currency'] is not None:
         if not isCurrencyValid(config['quote_currency']):
             raise TypeError('Quote currency is invalid.')
-        app.quote_currency = config['quote_currency']
+        self.quote_currency = config['quote_currency']
 
     if 'market' in config and config['market'] is not None:
-        app.market, app.base_currency, app.quote_currency = parseMarket(config['market'])
+        self.market, self.base_currency, self.quote_currency = parseMarket(config['market'])
 
-    if app.base_currency != '' and app.quote_currency != '':
-        app.market = app.base_currency + app.quote_currency
+    if self.base_currency != '' and self.quote_currency != '':
+        self.market = self.base_currency + self.quote_currency
 
     if 'use_sell_fee' in config:
-        app.use_sell_fee = config['use_sell_fee']
+        self.use_sell_fee = config['use_sell_fee']

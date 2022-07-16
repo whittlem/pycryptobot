@@ -26,7 +26,7 @@ from urllib import parse
 MARGIN_ADJUSTMENT = 0.0025
 DEFAULT_MAKER_FEE_RATE = 0.018
 DEFAULT_TAKER_FEE_RATE = 0.018
-DEFAULT_TRADE_FEE_RATE = 0.018  # added 0.0005 to allow for price movements
+DEFAULT_TRADE_FEE_RATE = 0.018  # added 0.0005 to allow for self.price movements
 MINIMUM_TRADE_AMOUNT = 10
 SUPPORTED_GRANULARITY = [
     "1min",
@@ -201,7 +201,7 @@ class AuthAPI(AuthAPIBase):
 
         # validates the account is syntactically correct
         p = re.compile(r"^[a-f0-9\-]{24,24}$")
-        if not p.match(account):
+        if not p.match(self.account):
             self.handle_init_error("Kucoin account is invalid")
 
         return self.authAPI("GET", f"api/v1/accounts/{account}")
@@ -268,7 +268,7 @@ class AuthAPI(AuthAPIBase):
             df = pd.DataFrame(resp)
 
         # exclude pairs not available for trading
-        df = df[df["enableTrading"] == True]
+        df = df[df["enableTrading"] is True]
 
         # reset the dataframe index to start from 0
         df = df.reset_index()
@@ -371,7 +371,7 @@ class AuthAPI(AuthAPIBase):
             lambda row: str("done") if not bool(row.isActive) else str("active"), axis=1
         )
 
-        # calculates the price at the time of purchase
+        # calculates the self.price at the time of purchase
         if status != "active":
             df["price"] = df.copy().apply(
                 lambda row: (float(row.dealFunds) * 100) / (float(row.dealSize) * 100)
@@ -572,7 +572,7 @@ class AuthAPI(AuthAPIBase):
             raise TypeError("The crypto amount is not numeric.")
 
         if not isinstance(future_price, int) and not isinstance(future_price, float):
-            raise TypeError("The future crypto price is not numeric.")
+            raise TypeError("The future crypto self.price is not numeric.")
 
         order = {
             "product_id": market,

@@ -59,7 +59,7 @@ def test_instantiate_publicapi_without_error():
 
 def test_config_json_exists_and_valid():
     file = _get_config_file()
-    assert os.path.exists(file) == True
+    assert os.path.exists(file) is True
     with open(file) as config_file:
         config = json.load(config_file)
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:

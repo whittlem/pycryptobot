@@ -11,6 +11,7 @@ def isMarketValid(market) -> bool:
     p = re.compile(r"^[0-9A-Z]{1,20}\-[1-9A-Z]{2,5}$")
     return p.match(market) is not None
 
+
 def parseMarket(market):
     if not isMarketValid(market):
         raise ValueError(f'Coinbase Pro market invalid: {market}')
@@ -18,15 +19,16 @@ def parseMarket(market):
     base_currency, quote_currency = market.split('-', 2)
     return market, base_currency, quote_currency
 
+
 def parser(app, coinbase_config, args={}):
-    #print('CoinbasePro Configuration parse')
+    # print('CoinbasePro Configuration parse')
 
     if not app:
         raise Exception('No app is passed')
 
     if isinstance(coinbase_config, dict):
         if 'api_key' in coinbase_config or 'api_secret' in coinbase_config or 'api_passphrase' in coinbase_config:
-            print(f'>>> migrating api keys to coinbasepro.key <<<\n')
+            print('>>> migrating api keys to coinbasepro.key <<<\n')
 
             # create 'coinbasepro.key'
             fh = open('coinbasepro.key', 'w')
@@ -65,7 +67,7 @@ def parser(app, coinbase_config, args={}):
                 coinbase_config['api_key'] = key
                 coinbase_config['api_secret'] = secret
                 coinbase_config['api_passphrase'] = password
-            except :
+            except Exception:
                 raise RuntimeError(f"Unable to read {api_key_file}")
 
         if 'api_key' in coinbase_config and 'api_secret' in coinbase_config and \
@@ -132,4 +134,3 @@ def parser(app, coinbase_config, args={}):
             app.granularity = Granularity.convert_to_enum(int(config['granularity']))
         elif isinstance(config['granularity'], int):
             app.granularity = Granularity.convert_to_enum(config['granularity'])
-

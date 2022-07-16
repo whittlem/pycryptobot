@@ -15,40 +15,40 @@ def parser(app, logger_config):
     if 'filelog' in logger_config:
         if isinstance(logger_config['filelog'], int):
             if logger_config['filelog'] in [0, 1]:
-                app.filelog = logger_config['filelog']
+                self.filelog = logger_config['filelog']
         else:
             raise TypeError('filelog must be type of int')
 
-    if app.filelog:
+    if self.filelog:
         if 'logfile' in logger_config:
             if isinstance(logger_config['logfile'], str):
-                if app.logfile == "pycryptobot.log":
-                    app.logfile = logger_config['logfile']   
+                if self.logfile == "pycryptobot.log":
+                    self.logfile = logger_config['logfile']
             else:
                 raise TypeError('logfile must be type of str')
 
         if 'fileloglevel' in logger_config:
             if isinstance(logger_config['fileloglevel'], str):
                 if logger_config['fileloglevel'] in ('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'NOTSET'):
-                    app.fileloglevel = logger_config['fileloglevel']   
+                    self.fileloglevel = logger_config['fileloglevel']
                 else:
                     raise TypeError('fileloglevel must be one of: "CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG", "NOTSET"')
             else:
                 raise TypeError('fileloglevel must be type of str')
-        
+
     if 'consolelog' in logger_config:
         if isinstance(logger_config['consolelog'], int):
             if logger_config['consolelog'] in [0, 1]:
-                app.consolelog = logger_config['consolelog']
+                self.consolelog = logger_config['consolelog']
         else:
             raise TypeError('consolelog must be type of int')
 
-    if app.consolelog:
+    if self.consolelog:
         if 'consoleloglevel' in logger_config:
             if isinstance(logger_config['consoleloglevel'], str):
                 if logger_config['consoleloglevel'] in ('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'NOTSET'):
-                    app.consoleloglevel = logger_config['consoleloglevel']   
+                    self.consoleloglevel = logger_config['consoleloglevel']
                 else:
-                    raise TypeError('consoleloglevel must be one of: "CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG", "NOTSET"')       
+                    raise TypeError('consoleloglevel must be one of: "CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG", "NOTSET"')
             else:
                 raise TypeError('consoleloglevel must be type of str')

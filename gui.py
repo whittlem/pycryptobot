@@ -13,21 +13,21 @@ posvalue = ''
 txtbox_pos = "#38BC38"
 txtbox_neg = "#BC3838"
 ### Menu bar for display options###
-        
+
 def about():
-        app.info("info",        "Pycryptobot GUI by              Mark H. & Jared S.")
+        self.info("info",        "Pycryptobot GUI by              Mark H. & Jared S.")
 def main_bg():
-        bgvalue = app.question("Background", "Enter Hex Color Value.")
+        bgvalue = self.question("Background", "Enter Hex Color Value.")
         if bgvalue is not None:
-            app.bg = bgvalue
-        
+            self.bg = bgvalue
+
 def text_clr():
-        txvalue = app.question("Text", "Enter Hex Color Value.")
+        txvalue = self.question("Text", "Enter Hex Color Value.")
         if txvalue is not None:
-            app.text_color = txvalue
+            self.text_color = txvalue
 ### this feature not working at this time
 ##def pos_clr():
-##        posvalue = app.question("Text", "Enter Hex Color Value.")
+##        posvalue = self.question("Text", "Enter Hex Color Value.")
 ##        if txvalue is not None:
 ##            txtbox.bg = posvalue
 ##        print("Positive Color")
@@ -129,16 +129,16 @@ class GuiSetup:
         last_price = txtbox.value if txtbox.value != "" else data[key]
 
         txtbox.value = data[key] if not data[key] == " " else "N/A"
-### this line causes the price tickers to flash instead of stay a constant state   ###
+### this line causes the self.price tickers to flash instead of stay a constant state   ###
 ### originally added to turn the margin and delta boxes back to an inactive state after a sale ###
-        txtbox.bg = app.bg
-        
+        txtbox.bg = self.bg
+
         if key in ("margin", "delta") and txtbox.value != "N/A":
             txtbox.bg = (
                 "#38BC38" if float(txtbox.value.replace("%", "")) > 0 else "#BC3838"
             )
-           
-### Tickers change state with price change ###
+
+### Tickers change state with self.price change ###
         if key == "price":
             if float(last_price) < float(txtbox.value):
                 txtbox.bg = "#38BC38"
@@ -153,8 +153,8 @@ class GuiSetup:
     def update_lastaction(self, txtbox, file) -> None:
         data = self.read_file(file)
         txtbox.value = "BUY" if not data["margin"] == " " else "SELL"
-        txtbox.bg =  "#38BC38" if not data["margin"] == " " else app.bg
-        
+        txtbox.bg =  "#38BC38" if not data["margin"] == " " else self.bg
+
 
 ### Size, Color, and Title can be modified here ###
 
@@ -173,7 +173,7 @@ menu = MenuBar(app,
 tpair_label = Text(app, text=" Trading Pair", grid=[0, 1])
 exchange_label = Text(app, text="Exchange", grid=[1, 1])
 action_label = Text(app, text="Last Action", grid=[2, 1])
-curprice = Text(app, text="Current Price", grid=[3, 1])
+curprice = Text(app, text="Current self.price", grid=[3, 1])
 margin_label = Text(app, text="Margin", grid=[4, 1])
 profit_label = Text(app, text="Delta", grid=[5, 1])
 ERI_label = Text(app, text="ERI", grid=[6, 1])

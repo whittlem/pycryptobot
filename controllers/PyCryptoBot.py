@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import math
+import json
 import random
 import sched
 import signal
@@ -9,6 +10,7 @@ import functools
 import pandas as pd
 from typing import Union
 from datetime import datetime, timedelta
+from os.path import exists as file_exists
 from urllib3.exceptions import ReadTimeoutError
 
 from models.BotConfig import BotConfig
@@ -27,9 +29,27 @@ from models.Stats import Stats
 from models.AppState import AppState
 from models.helper.TextBoxHelper import TextBox
 from models.helper.LogHelper import Logger
-from models.Trading import TechnicalAnalysis
 from models.Strategy import Strategy
 from views.TradingGraphs import TradingGraphs
+
+try:
+    # pyright: reportMissingImports=false
+    if file_exists("models/Trading_myPta.py"):
+        from models.Trading_myPta import TechnicalAnalysis
+        trading_myPta = True
+        pandas_ta_enabled = True
+    else:
+        from models.Trading import TechnicalAnalysis
+        trading_myPta = False
+        pandas_ta_enabled = False
+except ModuleNotFoundError:
+    from models.Trading import TechnicalAnalysis
+    trading_myPta = False
+    pandas_ta_enabled = False
+except ImportError:
+    from models.Trading import TechnicalAnalysis
+    trading_myPta = False
+    pandas_ta_enabled = False
 
 pd.set_option("display.float_format", "{:.8f}".format)
 
@@ -37,7 +57,6 @@ pd.set_option("display.float_format", "{:.8f}".format)
 def signal_handler(signum):
     if signum == 2:
         print("Please be patient while websockets terminate!")
-        # Logger.debug(frame)
         return
 
 
@@ -53,6 +72,8 @@ class PyCryptoBot(BotConfig):
 
         self.price = 0
         self.is_live = 0
+        self.takerfee = 0.0
+        self.makerfee = 0.0
         self.websocket = None
         self.account = None
         self.state = None
@@ -62,12 +83,32 @@ class PyCryptoBot(BotConfig):
         self.trading_data = pd.DataFrame()
         self.telegram_bot = TelegramBotHelper(self)
 
-        # self.state.initLastAction()
+        self.trade_tracker = pd.DataFrame(
+            columns=[
+                "Datetime",
+                "Market",
+                "Action",
+                "Price",
+                "Base",
+                "Quote",
+                "Margin",
+                "Profit",
+                "Fee",
+                "DF_High",
+                "DF_Low",
+            ]
+        )
+
+        # variables that need defining
+        self.nosellminpcnt = None
+
+        if trading_myPta is True and pandas_ta_enabled is True:
+            self.enable_pandas_ta = True
+        else:
+            self.enable_pandas_ta = False
 
     def execute_job(self):
         """Trading bot job which runs at a scheduled interval"""
-
-        print("execute_job")
 
         if self.is_live:
             self.state.account.mode = "live"
@@ -706,7 +747,7 @@ class PyCryptoBot(BotConfig):
             trailing_action_logtext = ""
 
             # determine current action, indicatorvalues will be empty if custom Strategy are disabled or it's debug is False
-            self.state.action, indicatorvalues = strategy.getAction(
+            self.state.action, indicatorvalues = strategy.get_action(
                 self.state, self.price, current_sim_date, self.websocket
             )
 
@@ -782,7 +823,7 @@ class PyCryptoBot(BotConfig):
                     buy_filled=self.state.last_buy_filled,
                     buy_price=self.state.last_buy_price,
                     buy_fee=self.state.last_buy_fee,
-                    sell_percent=self.getSellPercent(),
+                    sell_percent=self.get_sell_percent(),
                     sell_price=self.price,
                     sell_taker_fee=self.get_taker_fee(),
                 )
@@ -826,12 +867,11 @@ class PyCryptoBot(BotConfig):
                     trailing_action_logtext,
                     immediate_action,
                 ) = strategy.check_trailing_sell(self.state, self.price)
-
             if self.enableimmediatebuy:
                 if self.state.action == "BUY":
                     immediate_action = True
 
-            if not self.is_sim and self.enabletelegrambotcontrol:
+            if not self.is_sim and self.enable_telegram_bot_control:
                 manual_buy_sell = self.telegram_bot.check_manual_buy_sell()
                 if not manual_buy_sell == "WAIT":
                     self.state.action = manual_buy_sell
@@ -944,8 +984,7 @@ class PyCryptoBot(BotConfig):
 
                 if (
                     log_text != ""
-                    and not self.is_sim
-                    or (self.is_sim and not self.simresultonly)
+                    and (not self.is_sim or (self.is_sim and not self.simresultonly))
                 ):
                     Logger.info(log_text)
 
@@ -1042,7 +1081,7 @@ class PyCryptoBot(BotConfig):
                                     )
                                 )
                                 + "% |"
-                                + " CURR Price is "
+                                + " CURR self.price is "
                                 + str(
                                     round(
                                         (
@@ -1084,7 +1123,7 @@ class PyCryptoBot(BotConfig):
                                 + obv_text
                                 + obv_suffix
                                 + eri_text
-                                + " | Action: "
+                                + "Action: "
                                 + self.state.action
                                 + " | Last Action: "
                                 + self.state.last_action
@@ -1096,7 +1135,7 @@ class PyCryptoBot(BotConfig):
                                 + " | SWING: "
                                 + str(round(((df_high - df_low) / df_low) * 100, 2))
                                 + "% |"
-                                + " CURR Price is "
+                                + " CURR self.price is "
                                 + str(
                                     round(((self.price - df_high) / df_high) * 100, 2)
                                 )
@@ -1153,7 +1192,7 @@ class PyCryptoBot(BotConfig):
                                     )
                                 )
                                 + "%"
-                                + " CURR Price is "
+                                + " CURR self.price is "
                                 + str(
                                     round(
                                         (
@@ -1204,7 +1243,7 @@ class PyCryptoBot(BotConfig):
                                 + " | SWING: "
                                 + str(round(((df_high - df_low) / df_low) * 100, 2))
                                 + "%"
-                                + " CURR Price is "
+                                + " CURR self.price is "
                                 + str(
                                     round(((self.price - df_high) / df_high) * 100, 2)
                                 )
@@ -1408,21 +1447,21 @@ class PyCryptoBot(BotConfig):
 
                     # if live
                     if self.is_live:
-                        ac = self.account.getBalance()
-                        self.account.basebalance_before = 0.0
-                        self.account.quotebalance_before = 0.0
+                        ac = self.account.get_balance()
+                        self.account.base_balance_before = 0.0
+                        self.account.quote_balance_before = 0.0
                         try:
                             df_base = ac[ac["currency"] == self.base_currency][
                                 "available"
                             ]
-                            self.account.basebalance_before = (
+                            self.account.base_balance_before = (
                                 0.0 if len(df_base) == 0 else float(df_base.values[0])
                             )
 
                             df_quote = ac[ac["currency"] == self.quote_currency][
                                 "available"
                             ]
-                            self.account.quotebalance_before = (
+                            self.account.quote_balance_before = (
                                 0.0 if len(df_quote) == 0 else float(df_quote.values[0])
                             )
                         except Exception:
@@ -1430,7 +1469,7 @@ class PyCryptoBot(BotConfig):
 
                         if (
                             not self.insufficientfunds
-                            and self.buyminsize < self.account.quotebalance_before
+                            and self.buyminsize < self.account.quote_balance_before
                         ):
                             if not self.is_verbose:
                                 if not self.is_sim or (
@@ -1446,21 +1485,21 @@ class PyCryptoBot(BotConfig):
 
                             # display balances
                             Logger.info(
-                                f"{self.base_currency} balance before order: {str(self.account.basebalance_before)}"
+                                f"{self.base_currency} balance before order: {str(self.account.base_balance_before)}"
                             )
                             Logger.info(
-                                f"{self.quote_currency} balance before order: {str(self.account.quotebalance_before)}"
+                                f"{self.quote_currency} balance before order: {str(self.account.quote_balance_before)}"
                             )
 
                             # execute a live market buy
                             self.state.last_buy_size = float(
-                                self.account.quotebalance_before
+                                self.account.quote_balance_before
                             )
 
                             if (
                                 self.buymaxsize
                                 and self.buylastsellsize
-                                and self.state.minimumOrderQuote(
+                                and self.state.minimum_order_quote(
                                     quote=self.state.last_sell_size, balancechk=True
                                 )
                             ):
@@ -1476,7 +1515,7 @@ class PyCryptoBot(BotConfig):
                                 self.marketBuy(
                                     self.market,
                                     self.state.last_buy_size,
-                                    self.getBuyPercent(),
+                                    self.get_buy_percent(),
                                 )
                                 resp_error = 0
                             except Exception as err:
@@ -1484,14 +1523,14 @@ class PyCryptoBot(BotConfig):
                                 resp_error = 1
 
                             if resp_error == 0:
-                                self.account.basebalance_after = 0
-                                self.account.quotebalance_after = 0
+                                self.account.base_balance_after = 0
+                                self.account.quote_balance_after = 0
                                 try:
-                                    ac = self.account.getBalance()
+                                    ac = self.account.get_balance()
                                     df_base = ac[ac["currency"] == self.base_currency][
                                         "available"
                                     ]
-                                    self.account.basebalance_after = (
+                                    self.account.base_balance_after = (
                                         0.0
                                         if len(df_base) == 0
                                         else float(df_base.values[0])
@@ -1500,7 +1539,7 @@ class PyCryptoBot(BotConfig):
                                         ac["currency"] == self.quote_currency
                                     ]["available"]
 
-                                    self.account.quotebalance_after = (
+                                    self.account.quote_balance_after = (
                                         0.0
                                         if len(df_quote) == 0
                                         else float(df_quote.values[0])
@@ -1522,8 +1561,8 @@ class PyCryptoBot(BotConfig):
                                     self.telegram_bot.add_open_order()
 
                                     Logger.info(
-                                        f"{self.base_currency} balance after order: {str(self.account.basebalance_after)}\n"
-                                        f"{self.quote_currency} balance after order: {str(self.account.quotebalance_after)}"
+                                        f"{self.base_currency} balance after order: {str(self.account.base_balance_after)}\n"
+                                        f"{self.quote_currency} balance after order: {str(self.account.quote_balance_after)}"
                                     )
 
                                     self.notify_telegram(
@@ -1544,7 +1583,7 @@ class PyCryptoBot(BotConfig):
                                         f"{self.market} - Error occurred while checking balance after BUY. Last transaction check will happen shortly."
                                     )
 
-                                    if not self.disabletelegramerrormsgs:
+                                    if not self.disable_telegram_error_msgs:
                                         self.notify_telegram(
                                             self.market
                                             + " - Error occurred while checking balance after BUY. Last transaction check will happen shortly."
@@ -1565,7 +1604,7 @@ class PyCryptoBot(BotConfig):
                                 Logger.warning(
                                     f"API Error: Unable to place buy order for {self.market}."
                                 )
-                                if not self.disabletelegramerrormsgs:
+                                if not self.disable_telegram_error_msgs:
                                     self.notify_telegram(
                                         f"API Error: Unable to place buy order for {self.market}"
                                     )
@@ -1596,7 +1635,7 @@ class PyCryptoBot(BotConfig):
                             self.buymaxsize is not None
                             and self.buylastsellsize
                             and self.state.last_sell_size
-                            > self.state.minimumOrderQuote(
+                            > self.state.minimum_order_quote(
                                 quote=self.state.last_sell_size, balancechk=True
                             )
                         ):
@@ -1610,17 +1649,18 @@ class PyCryptoBot(BotConfig):
                         self.state.action = "DONE"
                         self.state.trailing_buy_immediate = False
 
-                        self.notify_telegram(
-                            self.market
-                            + " ("
-                            + self.print_granularity()
-                            + ") -  "
-                            + str(current_sim_date)
-                            + "\n - TEST BUY at "
-                            + self.price_text
-                            + "\n - Buy Size: "
-                            + str(self.truncate(self.state.last_buy_size, 4))
-                        )
+                        if not self.disabletelegram:
+                            self.notify_telegram(
+                                self.market
+                                + " ("
+                                + self.print_granularity()
+                                + ") -  "
+                                + str(current_sim_date)
+                                + "\n - TEST BUY at "
+                                + self.price_text
+                                + "\n - Buy Size: "
+                                + str(self.truncate(self.state.last_buy_size, 4))
+                            )
 
                         if not self.is_verbose:
                             if not self.is_sim or (
@@ -1630,14 +1670,14 @@ class PyCryptoBot(BotConfig):
                                     f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {self.price_text} | BUY"
                                 )
 
-                            bands = _technical_analysis.getFibonacciRetracementLevels(
+                            bands = _technical_analysis.get_fib_ret_levels(
                                 float(self.price)
                             )
 
                             if not self.is_sim or (
                                 self.is_sim and not self.simresultonly
                             ):
-                                _technical_analysis.printSupportResistanceLevel(
+                                _technical_analysis.print_sup_res_level(
                                     float(self.price)
                                 )
 
@@ -1700,7 +1740,7 @@ class PyCryptoBot(BotConfig):
                         self.state.last_action = "BUY"
                         self.state.last_api_call_datetime -= timedelta(seconds=60)
 
-                    if self.shouldSaveGraphs():
+                    if self.save_graphs:
                         if self.adjust_total_periods < 200:
                             Logger.info(
                                 "Trading Graphs can only be generated when dataframe has more than 200 periods."
@@ -1710,14 +1750,666 @@ class PyCryptoBot(BotConfig):
                             ts = datetime.now().timestamp()
                             filename = f"{self.market}_{self.print_granularity()}_buy_{str(ts)}.png"
                             # This allows graphs to be used in sim mode using the correct DF
-                            if self.isSimulation:
-                                tradinggraphs.renderEMAandMACD(
+                            if self.is_sim:
+                                tradinggraphs.render_ema_and_macd(
                                     len(trading_dataCopy), "graphs/" + filename, True
                                 )
                             else:
-                                tradinggraphs.renderEMAandMACD(
+                                tradinggraphs.render_ema_and_macd(
                                     len(trading_data), "graphs/" + filename, True
                                 )
+
+                # if a sell signal
+                elif self.state.action == "SELL":
+                    # if live
+                    if self.is_live:
+                        if self.is_verbose:
+
+                            bands = _technical_analysis.get_fib_ret_levels(
+                                float(self.price)
+                            )
+
+                            if not self.is_sim or (
+                                self.is_sim and not self.simresultonly
+                            ):
+                                Logger.info(f" Fibonacci Retracement Levels:{str(bands)}")
+
+                                if len(bands) >= 1 and len(bands) <= 2:
+                                    if len(bands) == 1:
+                                        first_key = list(bands.keys())[0]
+                                        if first_key == "ratio1":
+                                            self.state.fib_low = 0
+                                            self.state.fib_high = bands[first_key]
+                                        if first_key == "ratio1_618":
+                                            self.state.fib_low = bands[first_key]
+                                            self.state.fib_high = bands[first_key] * 2
+                                        else:
+                                            self.state.fib_low = bands[first_key]
+
+                                    elif len(bands) == 2:
+                                        first_key = list(bands.keys())[0]
+                                        second_key = list(bands.keys())[1]
+                                        self.state.fib_low = bands[first_key]
+                                        self.state.fib_high = bands[second_key]
+
+                            text_box.singleLine()
+                            text_box.center("*** Executing LIVE Sell Order ***")
+                            text_box.singleLine()
+
+                        else:
+                            Logger.info(
+                                f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {self.price_text} | SELL"
+                            )
+
+                        # check balances before and display
+                        self.account.base_balance_before = 0
+                        self.account.quote_balance_before = 0
+                        try:
+                            self.account.base_balance_before = float(
+                                self.account.get_balance(self.base_currency)
+                            )
+                            self.account.quote_balance_before = float(
+                                self.account.get_balance(self.quote_currency)
+                            )
+                        except Exception:
+                            pass
+
+                        Logger.info(
+                            f"{self.base_currency} balance before order: {str(self.account.base_balance_before)}\n"
+                            f"{self.quote_currency} balance before order: {str(self.account.quote_balance_before)}"
+                        )
+
+                        # execute a live market sell
+                        baseamounttosell = (
+                            float(self.account.base_balance_before)
+                            if self.sellfullbaseamount is True
+                            else float(self.state.last_buy_filled)
+                        )
+
+                        self.account.base_balance_after = 0
+                        self.account.quote_balance_after = 0
+                        # place the sell order
+                        try:
+                            self.marketSell(
+                                self.market,
+                                baseamounttosell,
+                                self.get_sell_percent(),
+                            )
+                            resp_error = 0
+                        except Exception as err:
+                            Logger.warning(f"Trade Error: {err}")
+                            resp_error = 1
+
+                        if resp_error == 0:
+                            try:
+                                self.account.base_balance_after = float(
+                                    self.account.get_balance(self.base_currency)
+                                )
+                                self.account.quote_balance_after = float(
+                                    self.account.get_balance(self.quote_currency)
+                                )
+                                bal_error = 0
+                            except Exception as err:
+                                bal_error = 1
+                                Logger.warning(
+                                    f"Error: Balance not retrieved after trade for {self.market}.\n"
+                                    f"API Error Msg: {err}"
+                                )
+
+                            if bal_error == 0:
+                                Logger.info(
+                                    f"{self.base_currency} balance after order: {str(self.account.base_balance_after)}\n"
+                                    f"{self.quote_currency} balance after order: {str(self.account.quote_balance_after)}"
+                                )
+                                self.state.prevent_loss = False
+                                self.state.trailing_sell = False
+                                self.state.trailing_sell_immediate = False
+                                self.state.tsl_triggered = False
+                                self.state.tsl_pcnt = float(self.trailing_stop_loss)
+                                self.state.tsl_trigger = float(self.trailing_stop_loss_trigger)
+                                self.state.tsl_max = False
+                                self.state.trade_error_cnt = 0
+                                self.state.last_action = "SELL"
+                                self.state.action = "DONE"
+
+                                self.notify_telegram(
+                                    self.market
+                                    + " ("
+                                    + self.print_granularity()
+                                    + ") - "
+                                    + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+                                    + "\n"
+                                    + "SELL at "
+                                    + self.price_text
+                                    + " (margin: "
+                                    + margin_text
+                                    + ", delta: "
+                                    + str(round(self.price - self.state.last_buy_price, precision))
+                                    + ")"
+                                )
+
+                                self.telegram_bot.closetrade(
+                                    str(self.get_date_from_iso8601_str(str(datetime.now()))),
+                                    self.price_text,
+                                    margin_text,
+                                )
+
+                                if self.enableexitaftersell and self.startmethod not in (
+                                    "standard",
+                                    "telegram",
+                                ):
+                                    sys.exit(0)
+
+                            else:
+                                # set variable to trigger to check trade on next iteration
+                                self.state.action = "check_action"
+
+                                Logger.info(
+                                    self.market
+                                    + " - Error occurred while checking balance after SELL. Last transaction check will happen shortly."
+                                )
+
+                                if not self.disable_telegram_error_msgs:
+                                    self.notify_telegram(
+                                        self.market
+                                        + " - Error occurred while checking balance after SELL. Last transaction check will happen shortly."
+                                    )
+
+                        else:  # there was an error
+                            # only attempt SELL 3 times before exception to prevent continuous loop
+                            self.state.trade_error_cnt += 1
+                            if self.state.trade_error_cnt >= 2:  # 3 attempts made
+                                raise Exception(
+                                    "Trade Error: SELL transaction attempted 3 times. Check log for errors."
+                                )
+                            # set variable to trigger to check trade on next iteration
+                            self.state.action = "check_action"
+                            self.state.last_action = None
+
+                            Logger.warning(
+                                f"API Error: Unable to place SELL order for {self.market}."
+                            )
+                            if not self.disable_telegram_error_msgs:
+                                self.notify_telegram(
+                                    f"API Error: Unable to place SELL order for {self.market}"
+                                )
+                            time.sleep(30)
+
+                        self.state.last_api_call_datetime -= timedelta(seconds=60)
+
+                    # if not live
+                    else:
+                        margin, profit, sell_fee = calculate_margin(
+                            buy_size=self.state.last_buy_size,
+                            buy_filled=self.state.last_buy_filled,
+                            buy_price=self.state.last_buy_price,
+                            buy_fee=self.state.last_buy_fee,
+                            sell_percent=self.get_sell_percent(),
+                            sell_price=self.price,
+                            sell_taker_fee=self.get_taker_fee(),
+                        )
+
+                        if self.state.last_buy_size > 0:
+                            margin_text = truncate(margin) + "%"
+                        else:
+                            margin_text = "0%"
+
+                        # save last buy before this sell to use in Sim Summary
+                        self.state.previous_buy_size = self.state.last_buy_size
+                        # preserve next sell values for simulator
+                        self.state.sell_count = self.state.sell_count + 1
+                        sell_size = (self.get_sell_percent() / 100) * (
+                            (self.price / self.state.last_buy_price)
+                            * (self.state.last_buy_size - self.state.last_buy_fee)
+                        )
+                        self.state.last_sell_size = sell_size - sell_fee
+                        self.state.sell_sum = self.state.sell_sum + self.state.last_sell_size
+
+                        # added to track profit and loss margins during sim runs
+                        self.state.margintracker += float(margin)
+                        self.state.profitlosstracker += float(profit)
+                        self.state.feetracker += float(sell_fee)
+                        self.state.buy_tracker += float(self.state.last_buy_size)
+
+                        if not self.disabletelegram:
+                            self.notify_telegram(
+                                self.market
+                                + " ("
+                                + self.print_granularity()
+                                + ") "
+                                + str(current_sim_date)
+                                + "\n - TEST SELL at "
+                                + str(self.price_text)
+                                + " (margin: "
+                                + margin_text
+                                + ", delta: "
+                                + str(round(self.price - self.state.last_buy_price, precision))
+                                + ")"
+                            )
+
+                        if not self.is_verbose:
+                            if self.price > 0:
+                                margin_text = truncate(margin) + "%"
+                            else:
+                                margin_text = "0%"
+
+                            if not self.is_sim or (
+                                self.is_sim and not self.simresultonly
+                            ):
+                                Logger.info(
+                                    formatted_current_df_index
+                                    + " | "
+                                    + self.market
+                                    + " | "
+                                    + self.print_granularity()
+                                    + " | SELL | "
+                                    + str(self.price)
+                                    + " | BUY | "
+                                    + str(self.state.last_buy_price)
+                                    + " | DIFF | "
+                                    + str(self.price - self.state.last_buy_price)
+                                    + " | DIFF | "
+                                    + str(profit)
+                                    + " | MARGIN NO FEES | "
+                                    + margin_text
+                                    + " | MARGIN FEES | "
+                                    + str(round(sell_fee, precision))
+                                )
+
+                        else:
+                            text_box.singleLine()
+                            text_box.center("*** Executing TEST Sell Order ***")
+                            text_box.singleLine()
+
+                        self.trade_tracker = pd.concat(
+                            [
+                                self.trade_tracker,
+                                pd.DataFrame(
+                                    {
+                                        "Datetime": str(current_sim_date),
+                                        "Market": self.market,
+                                        "Action": "SELL",
+                                        "Price": self.price,
+                                        "Quote": self.state.last_sell_size,
+                                        "Base": self.state.last_buy_filled,
+                                        "Margin": margin,
+                                        "Profit": profit,
+                                        "Fee": sell_fee,
+                                        "DF_High": df[df["date"] <= current_sim_date][
+                                            "close"
+                                        ].max(),
+                                        "DF_Low": df[df["date"] <= current_sim_date][
+                                            "close"
+                                        ].min(),
+                                    },
+                                    index={0},
+                                ),
+                            ],
+                            ignore_index=True,
+                        )
+
+                        self.state.in_open_trade = False
+                        self.state.last_api_call_datetime -= timedelta(seconds=60)
+                        self.state.last_action = "SELL"
+                        self.state.prevent_loss = False
+                        self.state.trailing_sell = False
+                        self.state.trailing_sell_immediate = False
+                        self.state.tsl_triggered = False
+
+                        if self.trailing_stop_loss:
+                            self.state.tsl_pcnt = float(self.trailing_stop_loss)
+
+                        if self.trailing_stop_loss_trigger:
+                            self.state.tsl_trigger = float(self.trailing_stop_loss_trigger)
+
+                        self.state.tsl_max = False
+                        self.state.action = "DONE"
+
+                    if self.save_graphs:
+                        tradinggraphs = TradingGraphs(_technical_analysis)
+                        ts = datetime.now().timestamp()
+                        filename = f"{self.market}_{self.print_granularity()}_sell_{str(ts)}.png"
+                        # This allows graphs to be used in sim mode using the correct DF
+                        if self.is_sim:
+                            tradinggraphs.render_ema_and_macd(
+                                len(trading_dataCopy), "graphs/" + filename, True
+                            )
+                        else:
+                            tradinggraphs.render_ema_and_macd(
+                                len(trading_data), "graphs/" + filename, True
+                            )
+
+            self.state.last_df_index = str(self.df_last.index.format()[0])
+
+            if (
+                self.logbuysellinjson is True
+                and self.state.action == "DONE"
+                and len(self.trade_tracker) > 0
+            ):
+                Logger.info(
+                    self.trade_tracker.loc[len(self.trade_tracker) - 1].to_json()
+                )
+
+            if self.state.action == "DONE" and indicatorvalues != "":
+                self.notify_telegram(indicatorvalues)
+
+            if not self.is_live and self.state.iterations == len(df):
+                simulation = {
+                    "config": {},
+                    "data": {
+                        "open_buy_excluded": 1,
+                        "buy_count": 0,
+                        "sell_count": 0,
+                        "first_trade": {"size": 0},
+                        "last_trade": {"size": 0},
+                        "margin": 0.0,
+                    },
+                    "exchange": self.exchange,
+                }
+
+                if self.get_config() != "":
+                    simulation["config"] = self.get_config()
+
+                if not self.simresultonly:
+                    Logger.info(f"\nSimulation Summary: {self.market}")
+
+                tradesfile = self.tradesfile
+
+                if self.is_verbose:
+                    Logger.info("\n" + str(self.trade_tracker))
+                    start = str(df.head(1).index.format()[0]).replace(":", ".")
+                    end = str(df.tail(1).index.format()[0]).replace(":", ".")
+                    filename = (
+                        f"{self.market} {str(start)} - {str(end)}_{tradesfile}"
+                    )
+
+                else:
+                    filename = tradesfile
+                try:
+                    if not os.path.isabs(filename):
+                        if not os.path.exists("csv"):
+                            os.makedirs("csv")
+                        filename = os.path.join(os.curdir, "csv", filename)
+                    self.trade_tracker.to_csv(filename)
+                except OSError:
+                    Logger.critical(f"Unable to save: {filename}")
+
+                if self.state.buy_count == 0:
+                    self.state.last_buy_size = 0
+                    self.state.sell_sum = 0
+                else:
+                    self.state.sell_sum = self.state.sell_sum + self.state.last_sell_size
+
+                remove_last_buy = False
+                if self.state.buy_count > self.state.sell_count:
+                    remove_last_buy = True
+                    self.state.buy_count -= 1  # remove last buy as there has not been a corresponding sell yet
+                    self.state.last_buy_size = self.state.previous_buy_size
+                    simulation["data"]["open_buy_excluded"] = 1
+
+                    if not self.simresultonly:
+                        Logger.info(
+                            "\nWarning: simulation ended with an open trade and it will be excluded from the margin calculation."
+                        )
+                        Logger.info(
+                            "         (it is not realistic to hard sell at the end of a simulation without a sell signal)"
+                        )
+                else:
+                    simulation["data"]["open_buy_excluded"] = 0
+
+                if not self.simresultonly:
+                    Logger.info("\n")
+
+                if remove_last_buy is True:
+                    if not self.simresultonly:
+                        Logger.info(
+                            f"   Buy Count : {str(self.state.buy_count)} (open buy excluded)"
+                        )
+                    else:
+                        simulation["data"]["buy_count"] = self.state.buy_count
+                else:
+                    if not self.simresultonly:
+                        Logger.info(f"   Buy Count : {str(self.state.buy_count)}")
+                    else:
+                        simulation["data"]["buy_count"] = self.state.buy_count
+
+                if not self.simresultonly:
+                    Logger.info(f"  Sell Count : {str(self.state.sell_count)}")
+                    Logger.info(f"   First Buy : {str(self.state.first_buy_size)}")
+                    Logger.info(
+                        f"   Last Buy : {str(self.truncate(self.state.last_buy_size, 4))}"
+                    )
+                else:
+                    simulation["data"]["sell_count"] = self.state.sell_count
+                    simulation["data"]["first_trade"] = {}
+                    simulation["data"]["first_trade"]["size"] = self.state.first_buy_size
+
+                if self.state.sell_count > 0:
+                    if not self.simresultonly:
+                        Logger.info(
+                            f"   Last Sell : {self.truncate(self.state.last_sell_size, 4)}\n"
+                        )
+                    else:
+                        simulation["data"]["last_trade"] = {}
+                        simulation["data"]["last_trade"]["size"] = float(
+                            self.truncate(self.state.last_sell_size, 2)
+                        )
+                else:
+                    if not self.simresultonly:
+                        Logger.info("\n")
+                        Logger.info("      Margin : 0.00%")
+                        Logger.info("\n")
+                        Logger.info(
+                            "  ** margin is nil as a sell has not occurred during the simulation\n"
+                        )
+                    else:
+                        simulation["data"]["margin"] = 0.0
+
+                    self.notify_telegram(
+                        "      Margin: 0.00%\n  ** margin is nil as a sell has not occurred during the simulation\n"
+                    )
+
+                self.notify_telegram(
+                    "Simulation Summary\n"
+                    + f"   Market: {self.market}\n"
+                    + f"   Buy Count: {self.state.buy_count}\n"
+                    + f"   Sell Count: {self.state.sell_count}\n"
+                    + f"   First Buy: {self.state.first_buy_size}\n"
+                    + f"   Last Buy: {str(self.truncate(self.state.last_buy_size, 4))}\n"
+                    + f"   Last Sell: {str(self.truncate(self.state.last_sell_size, 4))}\n"
+                )
+
+                if self.state.sell_count > 0:
+                    _last_trade_margin = self.truncate(
+                        (
+                            (
+                                (self.state.last_sell_size - self.state.last_buy_size)
+                                / self.state.last_buy_size
+                            )
+                            * 100
+                        ),
+                        4,
+                    )
+
+                    if not self.simresultonly:
+                        Logger.info(
+                            "   Last Trade Margin : " + _last_trade_margin + "%"
+                        )
+                        if remove_last_buy:
+                            Logger.info(
+                                f"\n   Open Trade Margin at end of simulation: {self.state.open_trade_margin}"
+                            )
+                        Logger.info("\n")
+                        Logger.info(
+                            f"   All Trades Buys ({self.quote_currency}): {self.truncate(self.state.buy_tracker, 2)}"
+                        )
+                        Logger.info(
+                            f"   All Trades Profit/Loss ({self.quote_currency}): {self.truncate(self.state.profitlosstracker, 2)} ({self.truncate(self.state.feetracker,2)} in fees)"
+                        )
+                        Logger.info(
+                            f"   All Trades Margin : {self.truncate(self.state.margintracker, 4)}%"
+                        )
+                        Logger.info("\n")
+                        Logger.info("  ** non-live simulation, assuming highest fees")
+                        Logger.info(
+                            "  ** open trade excluded from margin calculation\n"
+                        )
+                    else:
+                        simulation["data"]["last_trade"]["margin"] = _last_trade_margin
+                        simulation["data"]["all_trades"] = {}
+                        simulation["data"]["all_trades"][
+                            "quote_currency"
+                        ] = self.quote_currency
+                        simulation["data"]["all_trades"]["value_buys"] = float(
+                            self.truncate(self.state.buy_tracker, 2)
+                        )
+                        simulation["data"]["all_trades"]["profit_loss"] = float(
+                            self.truncate(self.state.profitlosstracker, 2)
+                        )
+                        simulation["data"]["all_trades"]["fees"] = float(
+                            self.truncate(self.state.feetracker, 2)
+                        )
+                        simulation["data"]["all_trades"]["margin"] = float(
+                            self.truncate(self.state.margintracker, 4)
+                        )
+
+                    ## Revised telegram Summary notification to give total margin in addition to last trade margin.
+                    self.notify_telegram(
+                        f"      Last Trade Margin: {_last_trade_margin}%\n\n"
+                    )
+                    if remove_last_buy:
+                        self.notify_telegram(
+                            f"\nOpen Trade Margin at end of simulation: {self.state.open_trade_margin}\n"
+                        )
+                    self.notify_telegram(
+                        f"      All Trades Margin: {self.truncate(self.state.margintracker, 4)}%\n  ** non-live simulation, assuming highest fees\n  ** open trade excluded from margin calculation\n"
+                    )
+                    self.telegram_bot.removeactivebot()
+
+                if self.simresultonly:
+                    Logger.info(json.dumps(simulation, sort_keys=True, indent=4))
+
+        else:
+            if (
+                self.state.last_buy_size > 0
+                and self.state.last_buy_price > 0
+                and self.price > 0
+                and self.state.last_action == "BUY"
+            ):
+                # show profit and margin if already bought
+                Logger.info(
+                    f"{now} | {self.market}{bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)} {trailing_action_logtext} | Margin: {str(margin)} | Profit: {str(profit)}"
+                )
+            else:
+                Logger.info(
+                    f'{now} | {self.market}{bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH'
+                )
+                self.telegram_bot.addinfo(
+                    f'{now} | {self.market}{bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH',
+                    round(self.price, 4),
+                    str(round(df["close"].max(), 4)),
+                    str(
+                        round(
+                            ((self.price - df["close"].max()) / df["close"].max()) * 100, 2
+                        )
+                    )
+                    + "%",
+                    self.state.action,
+                )
+
+            if (
+                self.state.last_action == "BUY"
+                and self.state.in_open_trade
+                and last_api_call_datetime.seconds > 60
+            ):
+                # update margin for telegram bot
+                self.telegram_bot.addmargin(
+                    str(self.truncate(margin, 4) + "%")
+                    if self.state.in_open_trade is True
+                    else " ",
+                    str(self.truncate(profit, 2)) if self.state.in_open_trade is True else " ",
+                    self.price,
+                    change_pcnt_high,
+                    self.state.action,
+                )
+
+            # Update the watchdog_ping
+            self.telegram_bot.updatewatchdogping()
+
+            # decrement ignored iteration
+            if self.is_sim and self.smart_switch:
+                self.state.iterations = self.state.iterations - 1
+
+        # if live but not websockets
+        if not self.disabletracker and self.is_live and not self.websocket:
+            # update order tracker csv
+            if self.exchange == Exchange.BINANCE:
+                self.account.saveTrackerCSV(self.market)
+            elif (
+                self.exchange == Exchange.COINBASEPRO
+                or self.exchange == Exchange.KUCOIN
+            ):
+                self.account.saveTrackerCSV()
+
+        if self.is_sim:
+            if self.state.iterations < len(df):
+                if self.sim_speed in ["fast", "fast-sample"]:
+                    # fast processing
+                    list(map(self.s.cancel, self.s.queue))
+                    self.s.enter(
+                        0,
+                        1,
+                        self.execute_job,
+                        (),
+                    )
+                else:
+                    # slow processing
+                    list(map(self.s.cancel, self.s.queue))
+                    self.s.enter(
+                        1,
+                        1,
+                        self.execute_job,
+                        (),
+                    )
+
+        else:
+            list(map(self.s.cancel, self.s.queue))
+            if (
+                self.websocket
+                and self.websocket is not None
+                and (
+                    isinstance(self.websocket.tickers, pd.DataFrame)
+                    and len(self.websocket.tickers) == 1
+                )
+                and (
+                    isinstance(self.websocket.candles, pd.DataFrame)
+                    and len(self.websocket.candles) == self.adjust_total_periods
+                )
+            ):
+                # poll every 5 seconds (self.websocket)
+                self.s.enter(
+                    5,
+                    1,
+                    self.execute_job,
+                    (),
+                )
+            else:
+                if self.websocket and not self.is_sim:
+                    # poll every 15 seconds (waiting for self.websocket)
+                    self.s.enter(
+                        15,
+                        1,
+                        self.execute_job,
+                        (),
+                    )
+                else:
+                    # poll every 1 minute (no self.websocket)
+                    self.s.enter(
+                        60,
+                        1,
+                        self.execute_job,
+                        (),
+                    )
 
     def run(self):
         try:
@@ -1773,7 +2465,7 @@ class PyCryptoBot(BotConfig):
                         f"Restarting application after exception: {repr(e)}"
                     )
 
-                    if not self.disabletelegramerrormsgs:
+                    if not self.disable_telegram_error_msgs:
                         self.notify_telegram(
                             f"Auto restarting bot for {self.market} after exception: {repr(e)}"
                         )
@@ -1812,7 +2504,7 @@ class PyCryptoBot(BotConfig):
                 os._exit(0)
         except (BaseException, Exception) as e:  # pylint: disable=broad-except
             # catch all not managed exceptions and send a Telegram message if configured
-            if not self.disabletelegramerrormsgs:
+            if not self.disable_telegram_error_msgs:
                 self.notify_telegram(
                     f"Bot for {self.market} got an exception: {repr(e)}"
                 )
@@ -1843,6 +2535,8 @@ class PyCryptoBot(BotConfig):
         Stats(self, self.account).show()
         self.state = AppState(self, self.account)
 
+        self.state.init_last_action()
+
         if banner and not self.is_sim or (self.is_sim and not self.simresultonly):
             self._generate_banner()
 
@@ -1862,7 +2556,6 @@ class PyCryptoBot(BotConfig):
                         end_date = self.get_date_from_iso8601_str(self.simend_date)
 
                 elif self.simstart_date is not None and self.simend_date is None:
-                    # date = self.simstart_date.split('-')
                     start_date = self.get_date_from_iso8601_str(self.simstart_date)
                     end_date = start_date + timedelta(
                         minutes=(self.granularity.to_integer / 60)
@@ -2135,7 +2828,7 @@ class PyCryptoBot(BotConfig):
         if not self.disabletelegram:
             text_box.line(
                 "Telegram error msgs",
-                str(not self.disabletelegramerrormsgs) + " --disabletelegramerrormsgs",
+                str(not self.disable_telegram_error_msgs) + " --disable_telegram_error_msgs",
             )
 
         text_box.line(
@@ -2234,7 +2927,7 @@ class PyCryptoBot(BotConfig):
 
         if self.adjust_total_periods is not None:
             text_box.line(
-                "Adjust Total Periods for Market ",
+                "Adjust Total Periods",
                 str(self.adjust_total_periods) + " --adjust_total_periods  <size>",
             )
 
@@ -2939,11 +3632,11 @@ class PyCryptoBot(BotConfig):
             return None
 
     def get_taker_fee(self):
-        if self.is_sim is True and self.exchange == Exchange.COINBASEPRO:
+        if self.is_sim and self.exchange == Exchange.COINBASEPRO:
             return 0.005  # default lowest fee tier
-        elif self.is_sim is True and self.exchange == Exchange.BINANCE:
+        elif self.is_sim and self.exchange == Exchange.BINANCE:
             return 0.001  # default lowest fee tier
-        elif self.is_sim is True and self.exchange == Exchange.KUCOIN:
+        elif self.is_sim and self.exchange == Exchange.KUCOIN:
             return 0.0015  # default lowest fee tier
         elif self.takerfee > 0.0:
             return self.takerfee
@@ -3040,3 +3733,29 @@ class PyCryptoBot(BotConfig):
                 return f"{self.truncate(val1, precision)} = {self.truncate(val2, precision)}"
             else:
                 return f"{label}: {self.truncate(val1, precision)} = {self.truncate(val2, precision)}"
+
+    def get_buy_percent(self):
+        try:
+            return int(self.buypercent)
+        except Exception:  # pylint: disable=broad-except
+            return 100
+
+    def get_sell_percent(self):
+        try:
+            return int(self.sellpercent)
+        except Exception:  # pylint: disable=broad-except
+            return 100
+
+    def get_config(self) -> dict:
+        try:
+            config = json.loads(open(self.config_file, "r", encoding="utf8").read())
+
+            if self.exchange.value in config:
+                if "config" in config[self.exchange.value]:
+                    return config[self.exchange.value]["config"]
+                else:
+                    return {}
+            else:
+                return {}
+        except IOError:
+            return {}

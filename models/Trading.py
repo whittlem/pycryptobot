@@ -26,7 +26,7 @@ warnings.simplefilter("ignore", ConvergenceWarning)
 
 
 class TechnicalAnalysis:
-    def __init__(self, data=DataFrame(), total_periods: int=300) -> None:
+    def __init__(self, data=DataFrame(), total_periods: int = 300) -> None:
         """Technical Analysis object model
 
         Parameters
@@ -52,7 +52,7 @@ class TechnicalAnalysis:
                 "Data not not contain date, market, granularity, low, high, open, close, volume"
             )
 
-        if not "close" in data.columns:
+        if "close" not in data.columns:
             raise AttributeError("Pandas DataFrame 'close' column required.")
 
         if not data["close"].dtype == "float64" and not data["close"].dtype == "int64":
@@ -995,7 +995,7 @@ class TechnicalAnalysis:
 
         return self.seasonalARIMAModel().fittedvalues
 
-    def arima_model_prediction(self, minutes: int = 180) -> tuple:
+    def seasonalARIMAModelPrediction(self, minutes: int = 180) -> tuple:
         """Returns seasonal ARIMA model prediction
 
         Parameters
@@ -1020,7 +1020,7 @@ class TechnicalAnalysis:
             if len(pred) == 0:
                 df_last = self.df["close"].tail(1)
                 return (
-                    str(self.df_last.index.values[0])
+                    str(df_last.index.values[0])
                     .replace("T", " ")
                     .replace(".000000000", ""),
                     df_last.values[0],
@@ -1028,7 +1028,7 @@ class TechnicalAnalysis:
             else:
                 df_last = pred.tail(1)
                 return (
-                    str(self.df_last.index.values[0])
+                    str(df_last.index.values[0])
                     .replace("T", " ")
                     .replace(".000000000", ""),
                     df_last.values[0],
@@ -1130,20 +1130,20 @@ class TechnicalAnalysis:
         for level in self.levels:
             levels_ts[self.df.index[level[0]]] = level[1]
         # add the support levels to the DataFrame
-        return Series(levels_ts)
+        return Series(levels_ts, dtype='float64')
 
-    def printSupportResistanceLevel(self, price: float = 0) -> None:
+    def print_sup_res_level(self, price: float = 0) -> None:
         if isinstance(price, int) or isinstance(price, float):
             df = self.getSupportResistanceLevels()
 
             if len(df) > 0:
                 df_last = df.tail(1)
-                if float(self.df_last[0]) < price:
-                    Logger.info(f" Support level of {str(self.df_last[0])} formed at {str(self.df_last.index[0])}")
-                elif float(self.df_last[0]) > price:
-                    Logger.info(f" Resistance level of {str(self.df_last[0])} formed at {str(self.df_last.index[0])}")
+                if float(df_last[0]) < price:
+                    Logger.info(f" Support level of {str(df_last[0])} formed at {str(df_last.index[0])}")
+                elif float(df_last[0]) > price:
+                    Logger.info(f" Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}")
                 else:
-                    Logger.info(f" Support/Resistance level of {str(self.df_last[0])} formed at {str(self.df_last.index[0])}")
+                    Logger.info(f" Support/Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}")
 
     def getResistance(self, price: float = 0) -> float:
         if isinstance(price, int) or isinstance(price, float):
@@ -1158,7 +1158,7 @@ class TechnicalAnalysis:
     def getFibonacciUpper(self, price: float = 0) -> float:
         if isinstance(price, int) or isinstance(price, float):
             if price > 0:
-                fb = self.getFibonacciRetracementLevels()
+                fb = self.get_fib_ret_levels()
                 for f in fb.values():
                     if f > price:
                         return f
@@ -1193,7 +1193,7 @@ class TechnicalAnalysis:
                 s = price
                 for r in sr.sort_values():
                     if r > price:
-                        fb = self.getFibonacciRetracementLevels()
+                        fb = self.get_fib_ret_levels()
 
                         l = price
                         for b in fb.values():
@@ -1207,7 +1207,7 @@ class TechnicalAnalysis:
                         s = r
 
                 if len(sr) > 1 and sr.iloc[-1] < price:
-                    fb = self.getFibonacciRetracementLevels()
+                    fb = self.get_fib_ret_levels()
 
                     l = price
                     for b in fb.values():
@@ -1349,7 +1349,7 @@ class TechnicalAnalysis:
         )
         self.df.loc[self.df["macdltsignal"] == False, "macdltsignalco"] = False
 
-    def getFibonacciRetracementLevels(self, price: float = 0) -> dict:
+    def get_fib_ret_levels(self, price: float = 0) -> dict:
         # validates price is numeric
         if not isinstance(price, int) and not isinstance(price, float):
             raise TypeError("Optional price is not numeric.")
@@ -1445,7 +1445,7 @@ class TechnicalAnalysis:
 
         return data
 
-    def saveCSV(self, filename: str = "trading_data.csv") -> None:
+    def saveCSV(self, filename: str = "tradingdata.csv") -> None:
         """Saves the DataFrame to an uncompressed CSV."""
 
         p = compile(r"^[\w\-. ]+$")
@@ -1484,7 +1484,7 @@ class TechnicalAnalysis:
             c4 = df["low"][i - 1] < df["low"][i - 2]
             support = c1 and c2 and c3 and c4
             return support
-        except:
+        except Exception:
             support = False
             return support
 
@@ -1498,7 +1498,7 @@ class TechnicalAnalysis:
             c4 = df["high"][i - 1] > df["high"][i - 2]
             resistance = c1 and c2 and c3 and c4
             return resistance
-        except:
+        except Exception:
             resistance = False
             return resistance
 

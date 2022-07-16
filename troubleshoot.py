@@ -4,5 +4,5 @@ from models.PyCryptoBot import PyCryptoBot
 # from models.AppState import AppState
 
 app = PyCryptoBot()
-df = app.get_historical_data(app.market, app.granularity, None)
+df = self.get_historical_data(app.market, self.granularity, None)
 print(df)

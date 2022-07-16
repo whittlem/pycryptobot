@@ -37,7 +37,7 @@
             "disabletracker" : 1,
             "autorestart" : 1,
             "enableinsufficientfundslogging": 1,
-            "enabletelegrambotcontrol" : 1
+            "enable_telegram_bot_control" : 1
         }
     },
     "kucoin": {
@@ -78,7 +78,7 @@
             "disabletracker" : 1,
             "autorestart" : 1,
             "enableinsufficientfundslogging": 1,
-            "enabletelegrambotcontrol" : 1
+            "enable_telegram_bot_control" : 1
         }
     },
     "telegram": {

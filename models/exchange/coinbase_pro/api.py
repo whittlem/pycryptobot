@@ -161,7 +161,7 @@ class AuthAPI(AuthAPIBase):
 
         # validates the account is syntactically correct
         p = re.compile(r"^[a-f0-9\-]{36,36}$")
-        if not p.match(account):
+        if not p.match(self.account):
             self.handle_init_error("Coinbase Pro account is invalid")
 
         try:
@@ -229,7 +229,7 @@ class AuthAPI(AuthAPIBase):
                 return float(fees["usd_volume"].to_string(index=False).strip())
             else:
                 return 0
-        except:
+        except Exception:
             return 0
 
     def get_orders(
@@ -318,7 +318,7 @@ class AuthAPI(AuthAPIBase):
             df_tmp["fill_fees"] = df_tmp["fill_fees"].astype(float)
             df = df_tmp
 
-            # calculates the price at the time of purchase
+            # calculates the self.price at the time of purchase
             if status != "open":
                 df["price"] = df.copy().apply(
                     lambda row: (float(row.executed_value) * 100)
@@ -531,7 +531,7 @@ class AuthAPI(AuthAPIBase):
             raise TypeError("The crypto amount is not numeric.")
 
         if not isinstance(future_price, int) and not isinstance(future_price, float):
-            raise TypeError("The future crypto price is not numeric.")
+            raise TypeError("The future crypto self.price is not numeric.")
 
         try:
             order = {
@@ -607,7 +607,7 @@ class AuthAPI(AuthAPIBase):
         if not isinstance(method, str):
             raise TypeError("Method is not a string.")
 
-        if not method in ["DELETE", "GET", "POST"]:
+        if method not in ["DELETE", "GET", "POST"]:
             raise TypeError("Method not DELETE, GET or POST.")
 
         if not isinstance(uri, str):
@@ -678,6 +678,7 @@ class AuthAPI(AuthAPIBase):
                         reason = "Unknown Error"
                     return self.handle_api_error(msg, reason)
             else:
+                Logger.error(f"{reason}:  URI: {uri} trying again.  Attempt: {trycnt}")
                 time.sleep(15)
         else:
             return self.handle_api_error(f"CoinbasePro API Error: call to {uri} attempted {trycnt} times without valid response", "CoinbasePro Private API Error")

@@ -116,7 +116,7 @@ class Stats():
         if symbol == 'GBP': symbol = '£'
 
         if self.app.statdetail:
-            headers = ["| Num  ", "| Market     ", "| Date of Sell ", "| Price bought ", "| Price sold  ", "| Delta     ", "| Gain/Loss  |"]
+            headers = ["| Num  ", "| Market     ", "| Date of Sell ", "| self.price bought ", "| self.price sold  ", "| Delta     ", "| Gain/Loss  |"]
             border = "+"
             for header in headers:
                 border += "-" * (len(header) - 1) + '+'

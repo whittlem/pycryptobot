@@ -3,34 +3,15 @@
 import re
 from datetime import datetime
 import time
-import math
-from typing import Union
 
 import numpy as np
 import pandas as pd
 
+from models.PyCryptoBot import truncate
 from models.exchange.ExchangesEnum import Exchange
 from models.exchange.binance import AuthAPI as BAuthAPI
 from models.exchange.coinbase_pro import AuthAPI as CBAuthAPI
 from models.exchange.kucoin import AuthAPI as KAuthAPI
-
-
-def truncate(f: Union[int, float], n: Union[int, float]) -> str:
-    """
-    Format a given number ``f`` with a given precision ``n``.
-    """
-
-    if not isinstance(f, int) and not isinstance(f, float):
-        return "0.0"
-
-    if not isinstance(n, int) and not isinstance(n, float):
-        return "0.0"
-
-    if (f < 0.0001) and n >= 5:
-        return f"{f:.5f}"
-
-    # `{n}` inside the actual format honors the precision
-    return f"{math.floor(f * 10 ** n) / 10 ** n:.{n}f}"
 
 
 class TradingAccount:
@@ -60,8 +41,8 @@ class TradingAccount:
         else:
             self.mode = "test"
 
-        self.quotebalance = self.getBalance(app.quote_currency)
-        self.basebalance = self.getBalance(app.base_currency)
+        self.quotebalance = self.get_balance(app.quote_currency)
+        self.basebalance = self.get_balance(app.base_currency)
 
         self.orders = pd.DataFrame()
 
@@ -124,7 +105,7 @@ class TradingAccount:
                     self.app.api_key,
                     self.app.api_secret,
                     self.app.api_url,
-                    recv_window=self.app.getRecvWindow(),
+                    recv_window=self.app.get_recv_window,
                 )
                 # retrieve orders from live Binance account portfolio
                 self.orders = model.get_orders(market, action, status)
@@ -144,7 +125,7 @@ class TradingAccount:
                     self.app.api_secret,
                     self.app.api_passphrase,
                     self.app.api_url,
-                    use_cache=self.app.usekucoincache,
+                    use_cache=self.app.use_kucoin_cache,
                 )
                 # retrieve orders from live Kucoin account portfolio
                 self.orders = model.get_orders(market, action, status)
@@ -191,7 +172,7 @@ class TradingAccount:
                 ]
             ]
 
-    def getBalance(self, currency=""):
+    def get_balance(self, currency=""):
         """Retrieves balance either live or simulation
 
         Parameters
@@ -207,7 +188,7 @@ class TradingAccount:
                     self.app.api_secret,
                     self.app.api_passphrase,
                     self.app.api_url,
-                    use_cache=self.app.usekucoincache,
+                    use_cache=self.app.use_kucoin_cache,
                 )
                 trycnt, maxretry = (0, 5)
                 while trycnt <= maxretry:
@@ -268,7 +249,7 @@ class TradingAccount:
                     self.app.api_key,
                     self.app.api_secret,
                     self.app.api_url,
-                    recv_window=self.app.getRecvWindow(),
+                    recv_window=self.app.get_recv_window,
                 )
                 df = model.getAccount()
                 if isinstance(df, pd.DataFrame):

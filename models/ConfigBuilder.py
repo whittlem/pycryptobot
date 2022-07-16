@@ -233,7 +233,7 @@ class ConfigBuilder():
                 if self._k == 1:
                     config['kucoin']['config']['disablebullonly'] = 1
 
-            choice = input("Do you want to avoid buying when the price is too high? (1:yes:default, 2=no)? ")
+            choice = input("Do you want to avoid buying when the self.price is too high? (1:yes:default, 2=no)? ")
             if choice != '2':
                 if self._c == 1:
                     config['coinbasepro']['config']['disablebuynearhigh'] = 1

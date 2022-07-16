@@ -52,4 +52,4 @@ if __name__ == "__main__":
         Timer(1, open_browser).start()
 
     port = int(os.environ.get("PORT", http_port))
-    app.run(host=http_host, port=port, debug=args.debug)
+    self.run(host=http_host, port=port, debug=args.debug)

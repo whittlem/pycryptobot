@@ -932,12 +932,12 @@ class TechnicalAnalysis:
         # true if sma stochrsi is above the 15
         self.df["rsi15"] = self.df["smastoch" + str(period)] > 15
         self.df["rsi15co"] = self.df.rsi15.ne(self.df.rsi15.shift())
-        self.df.loc[self.df["rsi15"] == False, "rsi15co"] = False
+        self.df.loc[self.df["rsi15"] is False, "rsi15co"] = False
 
         # true if sma stochrsi is below the 85
         self.df["rsi85"] = self.df["smastoch" + str(period)] < 85
         self.df["rsi85co"] = self.df.rsi85.ne(self.df.rsi85.shift())
-        self.df.loc[self.df["rsi85"] == False, "rsi85co"] = False
+        self.df.loc[self.df["rsi85"] is False, "rsi85co"] = False
 
     def addWilliamsR(self, period: int=20) -> None:
         """Adds the Willams %R to the DataFrame"""
@@ -956,7 +956,7 @@ class TechnicalAnalysis:
         self.df["williamsr" + str(period)] = self.df["williamsr" + str(period)].replace(nan, 0)
 
     def seasonalARIMAModel(self) -> SARIMAXResultsWrapper:
-        """Returns the Seasonal ARIMA Model for price predictions"""
+        """Returns the Seasonal ARIMA Model for self.price predictions"""
 
         # hyperparameters for SARIMAX
         if not self.df.index.freq:
@@ -975,7 +975,7 @@ class TechnicalAnalysis:
         return model.fit(disp=-1)
 
     def seasonalARIMAModelFittedValues(self):  # TODO: annotate return type
-        """Returns the Seasonal ARIMA Model for price predictions"""
+        """Returns the Seasonal ARIMA Model for self.price predictions"""
 
         return self.seasonalARIMAModel().fittedvalues
 
@@ -1120,47 +1120,47 @@ class TechnicalAnalysis:
         # add the support levels to the DataFrame
         return Series(levels_ts)
 
-    def printSupportResistanceLevel(self, price: float = 0) -> None:
-        if isinstance(price, int) or isinstance(price, float):
+    def print_sup_res_level(self, self.price: float = 0) -> None:
+        if isinstance(self.price, int) or isinstance(self.price, float):
             df = self.getSupportResistanceLevels()
 
             if len(df) > 0:
                 df_last = df.tail(1)
-                if float(self.df_last[0]) < price:
+                if float(self.df_last[0]) < self.price:
                     Logger.info(f" Support level of {str(self.df_last[0])} formed at {str(self.df_last.index[0])}")
-                elif float(self.df_last[0]) > price:
+                elif float(self.df_last[0]) > self.price:
                     Logger.info(f" Resistance level of {str(self.df_last[0])} formed at {str(self.df_last.index[0])}")
                 else:
                     Logger.info(f" Support/Resistance level of {str(self.df_last[0])} formed at {str(self.df_last.index[0])}")
 
-    def getResistance(self, price: float = 0) -> float:
-        if isinstance(price, int) or isinstance(price, float):
-            if price > 0:
+    def getResistance(self, self.price: float = 0) -> float:
+        if isinstance(self.price, int) or isinstance(self.price, float):
+            if self.price > 0:
                 sr = self.getSupportResistanceLevels()
                 for r in sr.sort_values():
-                    if r > price:
+                    if r > self.price:
                         return r
 
-        return price
+        return self.price
 
-    def getFibonacciUpper(self, price: float = 0) -> float:
-        if isinstance(price, int) or isinstance(price, float):
-            if price > 0:
-                fb = self.getFibonacciRetracementLevels()
+    def getFibonacciUpper(self, self.price: float = 0) -> float:
+        if isinstance(self.price, int) or isinstance(self.price, float):
+            if self.price > 0:
+                fb = self.get_fib_ret_levels()
                 for f in fb.values():
-                    if f > price:
+                    if f > self.price:
                         return f
 
-        return price
+        return self.price
 
-    def get_trade_exit(self, price: float = 0) -> float:
-        if isinstance(price, int) or isinstance(price, float):
-            if price > 0:
-                r = self.getResistance(price)
-                f = self.getFibonacciUpper(price)
-                if price < r and price < f:
-                    r_margin = ((r - price) / price) * 100
-                    f_margin = ((f - price) / price) * 100
+    def get_trade_exit(self, self.price: float = 0) -> float:
+        if isinstance(self.price, int) or isinstance(self.price, float):
+            if self.price > 0:
+                r = self.getResistance(self.price)
+                f = self.getFibonacciUpper(self.price)
+                if self.price < r and self.price < f:
+                    r_margin = ((r - self.price) / self.price) * 100
+                    f_margin = ((f - self.price) / self.price) * 100
 
                     if r_margin > 1 and f_margin > 1 and r <= f:
                         return r
@@ -1171,21 +1171,21 @@ class TechnicalAnalysis:
                     elif f_margin > 1 and r_margin < 1:
                         return f
 
-        return price
+        return self.price
 
-    def print_sr_fib_levels(self, price: float = 0) -> str:
-        if isinstance(price, int) or isinstance(price, float):
-            if price > 0:
+    def print_sr_fib_levels(self, self.price: float = 0) -> str:
+        if isinstance(self.price, int) or isinstance(self.price, float):
+            if self.price > 0:
                 sr = self.getSupportResistanceLevels()
 
-                s = price
+                s = self.price
                 for r in sr.sort_values():
-                    if r > price:
-                        fb = self.getFibonacciRetracementLevels()
+                    if r > self.price:
+                        fb = self.get_fib_ret_levels()
 
-                        l = price
+                        l = self.price
                         for b in fb.values():
-                            if b > price:
+                            if b > self.price:
                                 return (f"support: {str(s)}, resistance: {str(r)}, fibonacci (l): {str(l)}, fibonacci (u): {str(b)}")
                             else:
                                 l = b
@@ -1194,12 +1194,12 @@ class TechnicalAnalysis:
                     else:
                         s = r
 
-                if len(sr) > 1 and sr.iloc[-1] < price:
-                    fb = self.getFibonacciRetracementLevels()
+                if len(sr) > 1 and sr.iloc[-1] < self.price:
+                    fb = self.get_fib_ret_levels()
 
-                    l = price
+                    l = self.price
                     for b in fb.values():
-                        if b > price:
+                        if b > self.price:
                             return (f"support: {str(sr.iloc[-1])}, fibonacci (l): {str(l)}, fibonacci (u): {str(b)}")
                         else:
                             l = b
@@ -1236,13 +1236,13 @@ class TechnicalAnalysis:
         self.df["ema8gtema12"] = self.df.ema8 > self.df.ema12
         # true if the current frame is where EMA8 crosses over above
         self.df["ema8gtema12co"] = self.df.ema8gtema12.ne(self.df.ema8gtema12.shift())
-        self.df.loc[self.df["ema8gtema12"] == False, "ema8gtema12co"] = False
+        self.df.loc[self.df["ema8gtema12"] is False, "ema8gtema12co"] = False
 
         # true if the EMA8 is below the EMA12
         self.df["ema8ltema12"] = self.df.ema8 < self.df.ema12
         # true if the current frame is where EMA8 crosses over below
         self.df["ema8ltema12co"] = self.df.ema8ltema12.ne(self.df.ema8ltema12.shift())
-        self.df.loc[self.df["ema8ltema12"] == False, "ema8ltema12co"] = False
+        self.df.loc[self.df["ema8ltema12"] is False, "ema8ltema12co"] = False
 
         # true if EMA12 is above the EMA26
         self.df["ema12gtema26"] = self.df.ema12 > self.df.ema26
@@ -1250,7 +1250,7 @@ class TechnicalAnalysis:
         self.df["ema12gtema26co"] = self.df.ema12gtema26.ne(
             self.df.ema12gtema26.shift()
         )
-        self.df.loc[self.df["ema12gtema26"] == False, "ema12gtema26co"] = False
+        self.df.loc[self.df["ema12gtema26"] is False, "ema12gtema26co"] = False
 
         # true if the EMA12 is below the EMA26
         self.df["ema12ltema26"] = self.df.ema12 < self.df.ema26
@@ -1258,7 +1258,7 @@ class TechnicalAnalysis:
         self.df["ema12ltema26co"] = self.df.ema12ltema26.ne(
             self.df.ema12ltema26.shift()
         )
-        self.df.loc[self.df["ema12ltema26"] == False, "ema12ltema26co"] = False
+        self.df.loc[self.df["ema12ltema26"] is False, "ema12ltema26co"] = False
 
     def addSMABuySignals(self) -> None:
         """Adds the SMA50/SMA200 buy and sell signals to the DataFrame"""
@@ -1290,7 +1290,7 @@ class TechnicalAnalysis:
         self.df["sma50gtsma200co"] = self.df.sma50gtsma200.ne(
             self.df.sma50gtsma200.shift()
         )
-        self.df.loc[self.df["sma50gtsma200"] == False, "sma50gtsma200co"] = False
+        self.df.loc[self.df["sma50gtsma200"] is False, "sma50gtsma200co"] = False
 
         # true if the SMA50 is below the SMA200
         self.df["sma50ltsma200"] = self.df.sma50 < self.df.sma200
@@ -1298,7 +1298,7 @@ class TechnicalAnalysis:
         self.df["sma50ltsma200co"] = self.df.sma50ltsma200.ne(
             self.df.sma50ltsma200.shift()
         )
-        self.df.loc[self.df["sma50ltsma200"] == False, "sma50ltsma200co"] = False
+        self.df.loc[self.df["sma50ltsma200"] is False, "sma50ltsma200co"] = False
 
     def addMACDBuySignals(self) -> None:
         """Adds the MACD/Signal buy and sell signals to the DataFrame"""
@@ -1327,7 +1327,7 @@ class TechnicalAnalysis:
         self.df["macdgtsignalco"] = self.df.macdgtsignal.ne(
             self.df.macdgtsignal.shift()
         )
-        self.df.loc[self.df["macdgtsignal"] == False, "macdgtsignalco"] = False
+        self.df.loc[self.df["macdgtsignal"] is False, "macdgtsignalco"] = False
 
         # true if the MACD is below the Signal
         self.df["macdltsignal"] = self.df.macd < self.df.signal
@@ -1335,101 +1335,101 @@ class TechnicalAnalysis:
         self.df["macdltsignalco"] = self.df.macdltsignal.ne(
             self.df.macdltsignal.shift()
         )
-        self.df.loc[self.df["macdltsignal"] == False, "macdltsignalco"] = False
+        self.df.loc[self.df["macdltsignal"] is False, "macdltsignalco"] = False
 
-    def getFibonacciRetracementLevels(self, price: float = 0) -> dict:
-        # validates price is numeric
-        if not isinstance(price, int) and not isinstance(price, float):
-            raise TypeError("Optional price is not numeric.")
+    def get_fib_ret_levels(self, self.price: float = 0) -> dict:
+        # validates self.price is numeric
+        if not isinstance(self.price, int) and not isinstance(self.price, float):
+            raise TypeError("Optional self.price is not numeric.")
 
-        price_min = self.df.close.min()
-        price_max = self.df.close.max()
+        self.price_min = self.df.close.min()
+        self.price_max = self.df.close.max()
 
-        diff = price_max - price_min
+        diff = self.price_max - self.price_min
 
         data = {}
 
-        if price != 0 and (price <= price_min):
-            data["ratio1"] = float(self.__truncate(price_min, 2))
-        elif price == 0:
-            data["ratio1"] = float(self.__truncate(price_min, 2))
+        if self.price != 0 and (self.price <= self.price_min):
+            data["ratio1"] = float(self.__truncate(self.price_min, 2))
+        elif self.price == 0:
+            data["ratio1"] = float(self.__truncate(self.price_min, 2))
 
-        if price != 0 and (price > price_min) and (price <= (price_max - 0.768 * diff)):
-            data["ratio1"] = float(self.__truncate(price_min, 2))
-            data["ratio0_768"] = float(self.__truncate(price_max - 0.768 * diff, 2))
-        elif price == 0:
-            data["ratio0_768"] = float(self.__truncate(price_max - 0.768 * diff, 2))
-
-        if (
-            price != 0
-            and (price > (price_max - 0.768 * diff))
-            and (price <= (price_max - 0.618 * diff))
-        ):
-            data["ratio0_768"] = float(self.__truncate(price_max - 0.768 * diff, 2))
-            data["ratio0_618"] = float(self.__truncate(price_max - 0.618 * diff, 2))
-        elif price == 0:
-            data["ratio0_618"] = float(self.__truncate(price_max - 0.618 * diff, 2))
+        if self.price != 0 and (self.price > self.price_min) and (self.price <= (self.price_max - 0.768 * diff)):
+            data["ratio1"] = float(self.__truncate(self.price_min, 2))
+            data["ratio0_768"] = float(self.__truncate(self.price_max - 0.768 * diff, 2))
+        elif self.price == 0:
+            data["ratio0_768"] = float(self.__truncate(self.price_max - 0.768 * diff, 2))
 
         if (
-            price != 0
-            and (price > (price_max - 0.618 * diff))
-            and (price <= (price_max - 0.5 * diff))
+            self.price != 0
+            and (self.price > (self.price_max - 0.768 * diff))
+            and (self.price <= (self.price_max - 0.618 * diff))
         ):
-            data["ratio0_618"] = float(self.__truncate(price_max - 0.618 * diff, 2))
-            data["ratio0_5"] = float(self.__truncate(price_max - 0.5 * diff, 2))
-        elif price == 0:
-            data["ratio0_5"] = float(self.__truncate(price_max - 0.5 * diff, 2))
+            data["ratio0_768"] = float(self.__truncate(self.price_max - 0.768 * diff, 2))
+            data["ratio0_618"] = float(self.__truncate(self.price_max - 0.618 * diff, 2))
+        elif self.price == 0:
+            data["ratio0_618"] = float(self.__truncate(self.price_max - 0.618 * diff, 2))
 
         if (
-            price != 0
-            and (price > (price_max - 0.5 * diff))
-            and (price <= (price_max - 0.382 * diff))
+            self.price != 0
+            and (self.price > (self.price_max - 0.618 * diff))
+            and (self.price <= (self.price_max - 0.5 * diff))
         ):
-            data["ratio0_5"] = float(self.__truncate(price_max - 0.5 * diff, 2))
-            data["ratio0_382"] = float(self.__truncate(price_max - 0.382 * diff, 2))
-        elif price == 0:
-            data["ratio0_382"] = float(self.__truncate(price_max - 0.382 * diff, 2))
+            data["ratio0_618"] = float(self.__truncate(self.price_max - 0.618 * diff, 2))
+            data["ratio0_5"] = float(self.__truncate(self.price_max - 0.5 * diff, 2))
+        elif self.price == 0:
+            data["ratio0_5"] = float(self.__truncate(self.price_max - 0.5 * diff, 2))
 
         if (
-            price != 0
-            and (price > (price_max - 0.382 * diff))
-            and (price <= (price_max - 0.286 * diff))
+            self.price != 0
+            and (self.price > (self.price_max - 0.5 * diff))
+            and (self.price <= (self.price_max - 0.382 * diff))
         ):
-            data["ratio0_382"] = float(self.__truncate(price_max - 0.382 * diff, 2))
-            data["ratio0_286"] = float(self.__truncate(price_max - 0.286 * diff, 2))
-        elif price == 0:
-            data["ratio0_286"] = float(self.__truncate(price_max - 0.286 * diff, 2))
-
-        if price != 0 and (price > (price_max - 0.286 * diff)) and (price <= price_max):
-            data["ratio0_286"] = float(self.__truncate(price_max - 0.286 * diff, 2))
-            data["ratio0"] = float(self.__truncate(price_max, 2))
-        elif price == 0:
-            data["ratio0"] = float(self.__truncate(price_max, 2))
-
-        if price != 0 and (price < (price_max + 0.272 * diff)) and (price >= price_max):
-            data["ratio0"] = float(self.__truncate(price_max, 2))
-            data["ratio1_272"] = float(self.__truncate(price_max + 0.272 * diff, 2))
-        elif price == 0:
-            data["ratio1_272"] = float(self.__truncate(price_max + 0.272 * diff, 2))
+            data["ratio0_5"] = float(self.__truncate(self.price_max - 0.5 * diff, 2))
+            data["ratio0_382"] = float(self.__truncate(self.price_max - 0.382 * diff, 2))
+        elif self.price == 0:
+            data["ratio0_382"] = float(self.__truncate(self.price_max - 0.382 * diff, 2))
 
         if (
-            price != 0
-            and (price < (price_max + 0.414 * diff))
-            and (price >= (price_max + 0.272 * diff))
+            self.price != 0
+            and (self.price > (self.price_max - 0.382 * diff))
+            and (self.price <= (self.price_max - 0.286 * diff))
         ):
-            data["ratio1_272"] = float(self.__truncate(price_max, 2))
-            data["ratio1_414"] = float(self.__truncate(price_max + 0.414 * diff, 2))
-        elif price == 0:
-            data["ratio1_414"] = float(self.__truncate(price_max + 0.414 * diff, 2))
+            data["ratio0_382"] = float(self.__truncate(self.price_max - 0.382 * diff, 2))
+            data["ratio0_286"] = float(self.__truncate(self.price_max - 0.286 * diff, 2))
+        elif self.price == 0:
+            data["ratio0_286"] = float(self.__truncate(self.price_max - 0.286 * diff, 2))
+
+        if self.price != 0 and (self.price > (self.price_max - 0.286 * diff)) and (self.price <= self.price_max):
+            data["ratio0_286"] = float(self.__truncate(self.price_max - 0.286 * diff, 2))
+            data["ratio0"] = float(self.__truncate(self.price_max, 2))
+        elif self.price == 0:
+            data["ratio0"] = float(self.__truncate(self.price_max, 2))
+
+        if self.price != 0 and (self.price < (self.price_max + 0.272 * diff)) and (self.price >= self.price_max):
+            data["ratio0"] = float(self.__truncate(self.price_max, 2))
+            data["ratio1_272"] = float(self.__truncate(self.price_max + 0.272 * diff, 2))
+        elif self.price == 0:
+            data["ratio1_272"] = float(self.__truncate(self.price_max + 0.272 * diff, 2))
 
         if (
-            price != 0
-            and (price < (price_max + 0.618 * diff))
-            and (price >= (price_max + 0.414 * diff))
+            self.price != 0
+            and (self.price < (self.price_max + 0.414 * diff))
+            and (self.price >= (self.price_max + 0.272 * diff))
         ):
-            data["ratio1_618"] = float(self.__truncate(price_max + 0.618 * diff, 2))
-        elif price == 0:
-            data["ratio1_618"] = float(self.__truncate(price_max + 0.618 * diff, 2))
+            data["ratio1_272"] = float(self.__truncate(self.price_max, 2))
+            data["ratio1_414"] = float(self.__truncate(self.price_max + 0.414 * diff, 2))
+        elif self.price == 0:
+            data["ratio1_414"] = float(self.__truncate(self.price_max + 0.414 * diff, 2))
+
+        if (
+            self.price != 0
+            and (self.price < (self.price_max + 0.618 * diff))
+            and (self.price >= (self.price_max + 0.414 * diff))
+        ):
+            data["ratio1_618"] = float(self.__truncate(self.price_max + 0.618 * diff, 2))
+        elif self.price == 0:
+            data["ratio1_618"] = float(self.__truncate(self.price_max + 0.618 * diff, 2))
 
         return data
 

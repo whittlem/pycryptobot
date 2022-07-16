@@ -354,7 +354,7 @@ class Strategy_CS:
             else:
                 self.emawma_action = "buy"
                 self.buy_pts += 1
-        elif ( # Sell when EMA starts decreasing (usually is after price starting to decrease)
+        elif ( # Sell when EMA starts decreasing (usually is after self.price starting to decrease)
             data['ema5_pc'][0] < 0
         ):
 #            self.pts_sig_required_sell += 1

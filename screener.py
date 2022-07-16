@@ -18,7 +18,7 @@ from importlib.metadata import version
 def volatility_calculator(bollinger_band_upper, bollinger_band_lower, keltner_upper, keltner_lower, high, low):
     """
     A break away from traditional volatility calculations. Based entirely
-    on the proportionate price gap between keltner channels, bolinger, and high / low averaged out
+    on the proportionate self.price gap between keltner channels, bolinger, and high / low averaged out
     """
 
     try:
@@ -57,45 +57,45 @@ def load_configs():
             exchange_config = config[ex.value]
             if ex == CryptoExchange.BINANCE:
                 binance_app = PyCryptoBot(exchange=ex)
-                binance_app.public_api = BPublicAPI(bot_config[ex.value]["api_url"])
-                binance_app.scanner_quote_currencies = exchange_config.get('quote_currency', ['USDT'])
-                binance_app.granularity = Granularity(Granularity.convert_to_enum(exchange_config.get('granularity', '1h')))
-                binance_app.adx_threshold = exchange_config.get('adx_threshold', 25)
-                binance_app.volatility_threshold = exchange_config.get('volatility_threshold', 9)
-                binance_app.minimum_volatility = exchange_config.get('minimum_volatility', 5)
-                binance_app.minimum_volume = exchange_config.get('minimum_volume', 20000)
-                binance_app.volume_threshold = exchange_config.get('volume_threshold', 20000)
-                binance_app.minimum_quote_price = exchange_config.get('minimum_quote_price', 0.0000001)
-                binance_app.selection_score = exchange_config.get('selection_score', 10)
-                binance_app.tv_screener_ratings = [rating.upper() for rating in exchange_config.get('tv_screener_ratings', ['STRONG_BUY'])]
+                binanceself.public_api = BPublicAPI(bot_config[ex.value]["api_url"])
+                binanceself.scanner_quote_currencies = exchange_config.get('quote_currency', ['USDT'])
+                binanceself.granularity = Granularity(Granularity.convert_to_enum(exchange_config.get('granularity', '1h')))
+                binanceself.adx_threshold = exchange_config.get('adx_threshold', 25)
+                binanceself.volatility_threshold = exchange_config.get('volatility_threshold', 9)
+                binanceself.minimum_volatility = exchange_config.get('minimum_volatility', 5)
+                binanceself.minimum_volume = exchange_config.get('minimum_volume', 20000)
+                binanceself.volume_threshold = exchange_config.get('volume_threshold', 20000)
+                binanceself.minimum_quote_price = exchange_config.get('minimum_quote_price', 0.0000001)
+                binanceself.selection_score = exchange_config.get('selection_score', 10)
+                binanceself.tv_screener_ratings = [rating.upper() for rating in exchange_config.get('tv_screener_ratings', ['STRONG_BUY'])]
                 exchanges_loaded.append(binance_app)
             elif ex == CryptoExchange.COINBASEPRO:
                 coinbase_app = PyCryptoBot(exchange=ex)
-                coinbase_app.public_api = CPublicAPI()
-                coinbase_app.scanner_quote_currencies = exchange_config.get('quote_currency', ['USDT'])
-                coinbase_app.granularity = Granularity(Granularity.convert_to_enum(int(exchange_config.get('granularity', '3600'))))
-                coinbase_app.adx_threshold = exchange_config.get('adx_threshold', 25)
-                coinbase_app.volatility_threshold = exchange_config.get('volatility_threshold', 9)
-                coinbase_app.minimum_volatility = exchange_config.get('minimum_volatility', 5)
-                coinbase_app.minimum_volume = exchange_config.get('minimum_volume', 20000)
-                coinbase_app.volume_threshold = exchange_config.get('volume_threshold', 20000)
-                coinbase_app.minimum_quote_price = exchange_config.get('minimum_quote_price', 0.0000001)
-                coinbase_app.selection_score = exchange_config.get('selection_score', 10)
-                coinbase_app.tv_screener_ratings = [rating.upper() for rating in exchange_config.get('tv_screener_ratings', ['STRONG_BUY'])]
+                coinbaseself.public_api = CPublicAPI()
+                coinbaseself.scanner_quote_currencies = exchange_config.get('quote_currency', ['USDT'])
+                coinbaseself.granularity = Granularity(Granularity.convert_to_enum(int(exchange_config.get('granularity', '3600'))))
+                coinbaseself.adx_threshold = exchange_config.get('adx_threshold', 25)
+                coinbaseself.volatility_threshold = exchange_config.get('volatility_threshold', 9)
+                coinbaseself.minimum_volatility = exchange_config.get('minimum_volatility', 5)
+                coinbaseself.minimum_volume = exchange_config.get('minimum_volume', 20000)
+                coinbaseself.volume_threshold = exchange_config.get('volume_threshold', 20000)
+                coinbaseself.minimum_quote_price = exchange_config.get('minimum_quote_price', 0.0000001)
+                coinbaseself.selection_score = exchange_config.get('selection_score', 10)
+                coinbaseself.tv_screener_ratings = [rating.upper() for rating in exchange_config.get('tv_screener_ratings', ['STRONG_BUY'])]
                 exchanges_loaded.append(coinbase_app)
             elif ex == CryptoExchange.KUCOIN:
                 kucoin_app = PyCryptoBot(exchange=ex)
-                kucoin_app.public_api = KPublicAPI(bot_config[ex.value]["api_url"])
-                kucoin_app.scanner_quote_currencies = exchange_config.get('quote_currency', ['USDT'])
-                kucoin_app.granularity = Granularity(Granularity.convert_to_enum(exchange_config.get('granularity', '1h')))
-                kucoin_app.adx_threshold = exchange_config.get('adx_threshold', 25)
-                kucoin_app.volatility_threshold = exchange_config.get('volatility_threshold', 9)
-                kucoin_app.minimum_volatility = exchange_config.get('minimum_volatility', 5)
-                kucoin_app.minimum_volume = exchange_config.get('minimum_volume', 20000)
-                kucoin_app.volume_threshold = exchange_config.get('volume_threshold', 20000)
-                kucoin_app.minimum_quote_price = exchange_config.get('minimum_quote_price', 0.0000001)
-                kucoin_app.selection_score = exchange_config.get('selection_score', 10)
-                kucoin_app.tv_screener_ratings = [rating.upper() for rating in exchange_config.get('tv_screener_ratings', ['STRONG_BUY'])]
+                kucoinself.public_api = KPublicAPI(bot_config[ex.value]["api_url"])
+                kucoinself.scanner_quote_currencies = exchange_config.get('quote_currency', ['USDT'])
+                kucoinself.granularity = Granularity(Granularity.convert_to_enum(exchange_config.get('granularity', '1h')))
+                kucoinself.adx_threshold = exchange_config.get('adx_threshold', 25)
+                kucoinself.volatility_threshold = exchange_config.get('volatility_threshold', 9)
+                kucoinself.minimum_volatility = exchange_config.get('minimum_volatility', 5)
+                kucoinself.minimum_volume = exchange_config.get('minimum_volume', 20000)
+                kucoinself.volume_threshold = exchange_config.get('volume_threshold', 20000)
+                kucoinself.minimum_quote_price = exchange_config.get('minimum_quote_price', 0.0000001)
+                kucoinself.selection_score = exchange_config.get('selection_score', 10)
+                kucoinself.tv_screener_ratings = [rating.upper() for rating in exchange_config.get('tv_screener_ratings', ['STRONG_BUY'])]
                 exchanges_loaded.append(kucoin_app)
             else:
                 raise ValueError(f"Invalid exchange found in config: {ex}")
@@ -114,18 +114,18 @@ def chunker(market_list, chunk_size):
 def get_markets(app, quote_currency):
     markets = []
     quote_currency = quote_currency.upper()
-    api = app.public_api
+    api = self.public_api
     resp = api.markets24HrStats()
-    if app.exchange == CryptoExchange.BINANCE:
+    if self.exchange == CryptoExchange.BINANCE:
         for row in resp:
             if row["symbol"].endswith(quote_currency):
                 markets.append(row['symbol'])
-    elif app.exchange == CryptoExchange.COINBASEPRO:
+    elif self.exchange == CryptoExchange.COINBASEPRO:
         for market in resp:
             market = str(market)
             if market.endswith(f"-{quote_currency}"):
                 markets.append(market)
-    elif app.exchange == CryptoExchange.KUCOIN:
+    elif self.exchange == CryptoExchange.KUCOIN:
         results = resp["data"]["ticker"]
         for result in results:
             if result["symbol"].endswith(f"-{quote_currency}"):
@@ -140,7 +140,7 @@ def process_screener_data(app, markets, quote_currency, exchange_name):
     # Do you want it to spit out all the debug stuff?
     debug = False
 
-    ta_screener_list = [f"{re.sub('PRO', '', app.exchange.name, re.IGNORECASE)}:{re.sub('-', '', market)}" for market in markets]
+    ta_screener_list = [f"{re.sub('PRO', '', self.exchange.name, re.IGNORECASE)}:{re.sub('-', '', market)}" for market in markets]
 
     screener_staging = [p for p in chunker(ta_screener_list, 100)]
     screener_analysis = []
@@ -191,26 +191,26 @@ def process_screener_data(app, markets, quote_currency, exchange_name):
                 score += 2.5
             elif rating == "STRONG_BUY":
                 score += 5
-            if (adx >= app.adx_threshold) and (adx_posi_di > adx_neg_di) and (adx_posi_di > adx):
-                if debug : print(f"ADX({adx}) >= {app.adx_threshold}")
+            if (adx >= self.adx_threshold) and (adx_posi_di > adx_neg_di) and (adx_posi_di > adx):
+                if debug : print(f"ADX({adx}) >= {self.adx_threshold}")
                 score += 1
-            if volume >= app.volume_threshold:
-                if debug : print(f"Volume({volume}) >= {app.volume_threshold}")
+            if volume >= self.volume_threshold:
+                if debug : print(f"Volume({volume}) >= {self.volume_threshold}")
                 score += 1
             if abs(macd) > abs(macd_signal):
                 if debug : print(f"MACD({macd}) above signal({macd_signal})")
                 score += 1
-            if volatility >= app.volatility_threshold:
-                if debug : print(f"Volatility({volatility} is above {app.volatility_threshold}")
+            if volatility >= self.volatility_threshold:
+                if debug : print(f"Volatility({volatility} is above {self.volatility_threshold}")
                 score += 1
-            if volatility < app.minimum_volatility:
-                if debug : print(f"{ta.symbol} ({volatility}) is below min volatility of {app.minimum_volatility}")
+            if volatility < self.minimum_volatility:
+                if debug : print(f"{ta.symbol} ({volatility}) is below min volatility of {self.minimum_volatility}")
                 score -= 100
-            if volume < app.minimum_volume:
-                if debug : print(f"{ta.symbol} ({volume}) is below min volume of {app.volume}")
+            if volume < self.minimum_volume:
+                if debug : print(f"{ta.symbol} ({volume}) is below min volume of {self.volume}")
                 score -= 100
-            if close < app.minimum_quote_price:
-                if debug : print(f"{ta.symbol} ({close}) is below min quote price of {app.minimum_quote_price}")
+            if close < self.minimum_quote_price:
+                if debug : print(f"{ta.symbol} ({close}) is below min quote self.price of {self.minimum_quote_price}")
                 score -= 100
             if 30 >= rsi > 20:
                 score += 1
@@ -222,10 +222,10 @@ def process_screener_data(app, markets, quote_currency, exchange_name):
                 score += 1
             #print('symbol\tscore\tvolume\tvvolatilith\tadx\tadx_posi_di\tadx_neg_di\tmacd\tmacd_signal\tbollinger_upper\tbollinger_lower\trecommend')
             #print(ta.symbol, score, volume, volatility, adx, adx_posi_di, adx_neg_di, macd, macd_signal, bollinger_upper, bollinger_lower, recommend, "\n")
-            #print(f"Symbol: {ta.symbol} Score: {score}/{app.selection_score} Rating: {rating}")
-            if (score >= app.selection_score) and (rating in app.tv_screener_ratings):
+            #print(f"Symbol: {ta.symbol} Score: {score}/{self.selection_score} Rating: {rating}")
+            if (score >= self.selection_score) and (rating in self.tv_screener_ratings):
                 relavent_ta = {}
-                if app.exchange == CryptoExchange.COINBASEPRO or app.exchange == CryptoExchange.KUCOIN:
+                if self.exchange == CryptoExchange.COINBASEPRO or self.exchange == CryptoExchange.KUCOIN:
                     relavent_ta['market'] = re.sub(rf'(.*){quote_currency}', rf'\1-{quote_currency}', ta.symbol)
                     #relavent_ta['market'] = re.sub(quote_currency,f"-{quote_currency}", ta.symbol)
                 else:
@@ -323,11 +323,11 @@ if  __name__ == '__main__':
     print('Processing, please wait...')
     bootstrap_exchanges = load_configs()
     for app in bootstrap_exchanges:
-        print(f"\n\n{app.exchange.name}")
-        for quote_currency in app.scanner_quote_currencies:
+        print(f"\n\n{self.exchange.name}")
+        for quote_currency in self.scanner_quote_currencies:
             markets = get_markets(app, quote_currency)
             try:
-                process_screener_data(app, markets, quote_currency, app.exchange.name)
+                process_screener_data(app, markets, quote_currency, self.exchange.name)
             except Exception as e:
                 print(e)
 
