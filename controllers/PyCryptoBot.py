@@ -1060,7 +1060,7 @@ class PyCryptoBot(BotConfig):
                                 + obv_text
                                 + obv_suffix
                                 + eri_text
-                                + " | Action: "
+                                + "Action: "
                                 + self.state.action
                                 + " | Last Action: "
                                 + self.state.last_action
