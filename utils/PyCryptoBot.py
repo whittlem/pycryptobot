@@ -23,6 +23,10 @@ def truncate(f: Union[int, float], n: Union[int, float]) -> str:
 
 
 def compare(val1, val2, label="", precision=2):
+    """
+    Compare two values and print a message if they are not equal.
+    """
+
     if val1 > val2:
         if label == "":
             return f"{truncate(val1, precision)} > {truncate(val2, precision)}"

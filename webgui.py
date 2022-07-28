@@ -1,4 +1,5 @@
 """ Web Gui Dashboard page """
+
 import json
 import os
 from datetime import datetime, timedelta
@@ -415,8 +416,6 @@ def display_page(pathname):
 
 
 # Bot instance uptime tracking
-
-
 def get_date_from_iso8601_str(date: str):  # pylint: disable=invalid-name
     """Bot instance uptime tracking"""
     now = str(datetime.now())
@@ -475,9 +474,9 @@ def update_table(n):
     )
     for pair in pairs_list:
         if (
-            not "data.json" in pair
+            "data.json" not in pair
             and not pair.__contains__("output.json")
-            and not "settings.json" in pair
+            and "settings.json" not in pair
         ):
             try:
                 with open(
@@ -689,8 +688,6 @@ def update_graphs1(rows, derived_virtual_selected_rows):
 
 
 # Active Margins Gauge
-
-
 @callback(
     Output("margin-current", "value"),
     Input("table-paging-and-sorting", "derived_virtual_data"),
@@ -707,8 +704,6 @@ def gauge1(rows, derived_virtual_selected_rows):
 
 
 # 7 Day Total Margins Gauge
-
-
 @callback(
     Output("margin-7Dtotal", "value"),
     Input("table-paging-and-sorting", "derived_virtual_data"),
@@ -790,5 +785,7 @@ clientside_callback(
 
 if __name__ == "__main__":
     # comment this line out if you want to run on just local machine @ 127.0.0.1:8050
-    self.run_server(host="0.0.0.0", port="8051")
-    self.run_server(debug=True)
+
+    # pyright: reportUndefinedVariable=false
+    self.run_server(host="0.0.0.0", port="8051")  # noqa
+    self.run_server(debug=True)  # noqa

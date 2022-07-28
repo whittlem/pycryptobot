@@ -393,8 +393,8 @@ Sell signal:
 
 Special sell cases:
 
-* "no_sell_min_pcnt" specifies the lower margin limit to not sell above
-* "no_sell_max_pcnt" specifies the upper margin limit to not sell below
+* "nosellminpcnt" specifies the lower margin limit to not sell above
+* "nosellmaxpcnt" specifies the upper margin limit to not sell below
 * If "sellatloss" is on, bot will sell if self.price drops below the lower Fibonacci band
 * If "sellatloss" is on and "selllowerpcnt" is specified the bot will sell at the specified amount E.g. -2 for -2% margin
 * If "sellatloss" is on and "trailingstoploss" is specified the bot will sell at the specified amount below the buy high
@@ -402,7 +402,7 @@ Special sell cases:
 * If the margin exceeds 3% and the self.price reaches a Fibonacci band it will sell to lock in profit
 * If the margin exceeds 3% but a strong reversal is detected with negative OBV and MACD < Signal it will sell
 * "sellatloss" set to 0 prevents selling at a loss
-* "preventloss" set to 1 to force a sell before margin is negative (losing money on active trade).  Default trigger point is 1%.  If no_sell_max_pcnt is set it will be used as the default, unless preventlosstrigger is set to set a custom trigger point.
+* "preventloss" set to 1 to force a sell before margin is negative (losing money on active trade).  Default trigger point is 1%.  If nosellmaxpcnt is set it will be used as the default, unless preventlosstrigger is set to set a custom trigger point.
 * "preventlosstrigger" is the margin set point that will trigger/allow the preventloss function to start watching the margin and will sell when margin reaches 0.1% or lower unless preventlossmargin is set.
     NOTE: to disable preventlosstrigger and use preventlossmargin only, set the trigger to 0.
 * "preventlossmargin" is the margin set point that will cause an immediate sell to prevent a loss.  If this is not set, a default of 0.1% will be used.  "preventlossmargin" can be used by itself or in conjunction with "preventlosstrigger".

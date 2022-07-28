@@ -7,6 +7,8 @@ import sched
 import signal
 import functools
 import pandas as pd
+from rich.console import Console
+from rich.table import Table
 from datetime import datetime, timedelta
 from os.path import exists as file_exists
 from urllib3.exceptions import ReadTimeoutError
@@ -2672,281 +2674,139 @@ class PyCryptoBot(BotConfig):
                     )
 
     def _generate_banner(self) -> None:
-        text_box = TextBox(80, 26)
-        text_box.singleLine()
-        text_box.center("Python Crypto Bot")
-        text_box.singleLine()
-        text_box.line("Release", self.get_version_from_readme())
-        text_box.singleLine()
+        table = Table(title=f"Python Crypto Bot {self.get_version_from_readme()}")
 
-        if self.is_verbose:
-            text_box.line("Market", self.market)
-            text_box.line("Granularity", str(self.granularity) + " seconds")
-            text_box.singleLine()
+        table.add_column("Item", justify="right", style="cyan", no_wrap=True)
+        table.add_column("Value", justify="left", style="green")
+        table.add_column("Description", justify="left", style="magenta")
+        table.add_column("Option", justify="left", style="white")
+
+        table.add_row("Start", str(datetime.now()), "Bot start time")
+
+        table.add_row("", "", "")
+
+        table.add_row("Exchange", str(self.exchange.value), "Crypto currency exchange", "--exchange")
+        table.add_row("Market", self.market, "Market to trade on", "--market")
+        table.add_row("Granularity", str(self.granularity).replace("Granularity.", ""), "Granularity of the data", "--granularity")
+
+        table.add_row("", "", "")
 
         if self.is_live:
-            text_box.line("Bot Mode", "LIVE - live trades using your funds!")
+            table.add_row("Bot Mode", "LIVE", "Live trades using your funds!", "--live")
         else:
-            text_box.line("Bot Mode", "TEST - test trades using dummy funds :)")
+            if self.is_sim:
+                table.add_row("Bot Mode", "SIMULATION", "Back testing using simulations", "--live")
+            else:
+                table.add_row("Bot Mode", "TEST", "Test trades using dummy funds :)", "--live")
 
-        text_box.line("Bot Started", str(datetime.now()))
-        text_box.line("Exchange", str(self.exchange.value))
-        text_box.doubleLine()
+        table.add_row("", "", "")
 
         if self.sell_upper_pcnt is not None:
-            text_box.line(
-                "Sell Upper", str(self.sell_upper_pcnt) + "%  --sellupperpcnt  <pcnt>"
-            )
+            table.add_row("Sell Upper Percent", str(self.sell_upper_pcnt), "Upper trade margin to sell at", "--sellupperpcnt")
+        else:
+            table.add_row("Sell Upper Percent", str(self.sell_upper_pcnt), "Upper trade margin to sell at", "--sellupperpcnt", style="grey62")
 
         if self.sell_lower_pcnt is not None:
-            text_box.line(
-                "Sell Lower", str(self.sell_lower_pcnt) + "%  --selllowerpcnt  <pcnt>"
-            )
+            table.add_row("Sell Upper Percent", str(self.sell_lower_pcnt), "Lower trade margin to force sell at", "--selllowerpcnt")
+        else:
+            table.add_row("Sell Lower Percent", str(self.sell_lower_pcnt), "Lower trade margin to force sell at", "--selllowerpcnt", style="grey62")
 
-        if self.no_sell_max_pcnt is not None:
-            text_box.line(
-                "No Sell Max",
-                str(self.no_sell_max_pcnt) + "%  --no_sell_max_pcnt  <pcnt>",
-            )
+        if self.nosellmaxpcnt is not None:
+            table.add_row("No Sell Max", str(self.nosellmaxpcnt), "Do not sell while trade margin is below this level", "--nosellmaxpcnt")
+        else:
+            table.add_row("No Sell Max", str(self.nosellmaxpcnt), "Do not sell while trade margin is below this level", "--nosellmaxpcnt", style="grey62")
 
-        if self.no_sell_min_pcnt is not None:
-            text_box.line(
-                "No Sell Min",
-                str(self.no_sell_min_pcnt) + "%  --no_sell_min_pcnt  <pcnt>",
-            )
+        if self.nosellminpcnt is not None:
+            table.add_row("No Sell Min", str(self.nosellminpcnt), "Do not sell while trade margin is above this level", "--nosellminpcnt")
+        else:
+            table.add_row("No Sell Min", str(self.nosellminpcnt), "Do not sell while trade margin is above this level", "--nosellminpcnt", style="grey62")
+
+        table.add_row("", "", "")
 
         if self.trailing_stop_loss is not None:
-            text_box.line(
-                "Trailing Stop Loss",
-                str(self.trailing_stop_loss) + "%  --trailingstoploss  <pcnt>",
-            )
+            table.add_row("Trailing Stop Loss", str(self.trailing_stop_loss), "Percentage below the trade margin high to sell at", "--trailing_stop_loss")
+        else:
+            table.add_row("Trailing Stop Loss", str(self.trailing_stop_loss), "Percentage below the trade margin high to sell at", "--trailing_stop_loss", style="grey62")
 
-        if self.trailing_stop_loss_trigger != 0:
-            text_box.line(
-                "Trailing Stop Loss Trg",
-                str(self.trailing_stop_loss_trigger) + "%  --trailingstoplosstrigger",
-            )
+        if self.trailing_stop_loss is not None and self.trailing_stop_loss_trigger != 0:
+            table.add_row("Trailing Stop Loss Trigger", str(self.trailing_stop_loss_trigger), "Trade margin percentage to enable the trailing stop loss", "--trailingstoplosstrigger")
+        else:
+            table.add_row("Trailing Stop Loss Trigger", str(self.trailing_stop_loss_trigger), "Trade margin percentage to enable the trailing stop loss", "--trailingstoplosstrigger", style="grey62")
 
-        if self.dynamic_tsl is True:
-            text_box.line(
-                "Dynamic Trailing Stop Loss",
-                str(self.dynamic_tsl) + "  --dynamictsl",
-            )
+        table.add_row("", "", "")
+
+        if self.dynamic_tsl is not False:
+            table.add_row("Dynamic Trailing Stop Loss", str(self.dynamic_tsl), "Please refer to the detailed explanation in the README.md", "--dynamictsl")
+        else:
+            table.add_row("Dynamic Trailing Stop Loss", str(self.dynamic_tsl), "Please refer to the detailed explanation in the README.md", "--dynamictsl", style="grey62")
 
         if self.dynamic_tsl is True and self.tsl_multiplier > 0:
-            text_box.line(
-                "Trailing Stop Loss Multiplier",
-                str(self.tsl_multiplier) + "%  --tslmultiplier  <pcnt>",
-            )
+            table.add_row("Trailing Stop Loss Multiplier", str(self.tsl_multiplier), "Please refer to the detailed explanation in the README.md", "--tslmultiplier")
+        else:
+            table.add_row("Trailing Stop Loss Multiplier", str(self.tsl_multiplier), "Please refer to the detailed explanation in the README.md", "--tslmultiplier", style="grey62")
 
         if self.dynamic_tsl is True and self.tsl_trigger_multiplier > 0:
-            text_box.line(
-                "Stop Loss Trigger Multiplier",
-                str(self.tsl_trigger_multiplier) + "%  --tsltriggermultiplier  <pcnt>",
-            )
+            table.add_row("Stop Loss Trigger Multiplier", str(self.tsl_trigger_multiplier), "Please refer to the detailed explanation in the README.md", "--tsltriggermultiplier")
+        else:
+            table.add_row("Stop Loss Trigger Multiplier", str(self.tsl_trigger_multiplier), "Please refer to the detailed explanation in the README.md", "--tsltriggermultiplier", style="grey62")
 
         if self.dynamic_tsl is True and self.tsl_max_pcnt > 0:
-            text_box.line(
-                "Stop Loss Maximum Percent",
-                str(self.tsl_max_pcnt) + "%  --tslmaxpcnt  <pcnt>",
-            )
+            table.add_row("Stop Loss Trigger Multiplier", str(self.tsl_max_pcnt), "Please refer to the detailed explanation in the README.md", "--tslmaxpcnt")
+        else:
+            table.add_row("Stop Loss Trigger Multiplier", str(self.tsl_max_pcnt), "Please refer to the detailed explanation in the README.md", "--tslmaxpcnt", style="grey62")
+
+        table.add_row("", "", "")
 
         if self.preventloss is True:
-            text_box.line(
-                "Prevent Loss",
-                str(self.preventloss) + "  --preventloss",
-            )
+            table.add_row("Prevent Loss", str(self.preventloss), "Force a sell before margin is negative", "--preventloss")
+        else:
+            table.add_row("Prevent Loss", str(self.preventloss), "Force a sell before margin is negative", "--preventloss", style="grey62")
 
         if self.preventloss is True and self.preventlosstrigger is not None:
-            text_box.line(
-                "Prevent Loss Trigger",
-                str(self.preventlosstrigger) + "%  --preventlosstrigger",
-            )
+            table.add_row("Prevent Loss Trigger", str(self.preventlosstrigger), "Margin set point that will trigge the prevent loss", "--preventlosstrigger")
+        else:
+            table.add_row("Prevent Loss Trigger", str(self.preventlosstrigger), "Margin set point that will trigge the prevent loss", "--preventlosstrigger", style="grey62")
 
         if self.preventloss is True and self.preventlossmargin is not None:
-            text_box.line(
-                "Prevent Loss Margin",
-                str(self.preventlossmargin) + "%  --preventlossmargin",
-            )
+            table.add_row("Prevent Loss Margin", str(self.preventlossmargin), "Margin set point that will cause an immediate sell to prevent loss", "--preventlossmargin")
+        else:
+            table.add_row("Prevent Loss Margin", str(self.preventlossmargin), "Margin set point that will cause an immediate sell to prevent loss", "--preventlossmargin", style="grey62")
 
-        text_box.line("Sell At Loss", str(self.sell_at_loss) + "  --sellatloss ")
-        text_box.line(
-            "Sell At Resistance", str(self.sellatresistance) + "  --sellatresistance"
-        )
-        text_box.line(
-            "Trade Bull Only", str(not self.disablebullonly) + "  --disablebullonly"
-        )
-        text_box.line(
-            "Allow Buy Near High",
-            str(not self.disablebuynearhigh) + "  --disablebuynearhigh",
-        )
+        table.add_row("", "", "")
+
+        if self.sell_at_loss is True:
+            table.add_row("Sell At Loss", str(self.sell_at_loss), "The bot will be able to sell at a loss", "--sellatloss")
+        else:
+            table.add_row("Sell At Loss", str(self.sell_at_loss), "The bot will be able to sell at a loss", "--sellatloss", style="grey62")
+
+        if self.sellatresistance is True:
+            table.add_row("Sell At Resistance", str(self.sellatresistance), "Trigger a sell if the price hits a resistance level", "--sellatresistance")
+        else:
+            table.add_row("Sell At Resistance", str(self.sellatresistance), "Trigger a sell if the price hits a resistance level", "--sellatresistance", style="grey62")
+
+        if self.sellatresistance is True:
+            table.add_row("Trade Bull Only", str(not self.disablebullonly), "Only trade in a bull market SMA50 > SMA200", "--disablebullonly")
+        else:
+            table.add_row("Trade Bull Only", str(not self.disablebullonly), "Only trade in a bull market SMA50 > SMA200", "--disablebullonly", style="grey62")
+
+        table.add_row("", "", "")
+
         if self.disablebuynearhigh:
-            text_box.line(
-                "No Buy Near High Pcnt",
-                str(self.nobuynearhighpcnt) + "%  --nobuynearhighpcnt <pcnt>",
-            )
-        text_box.line(
-            "Use Buy MACD", str(not self.disablebuymacd) + "  --disablebuymacd"
-        )
-        text_box.line("Use Buy EMA", str(not self.disablebuyema) + "  --disablebuyema")
-        text_box.line("Use Buy OBV", str(not self.disablebuyobv) + "  --disablebuyobv")
-        text_box.line(
-            "Use Buy Elder-Ray",
-            str(not self.disablebuyelderray) + "  --disablebuyelderray",
-        )
-        text_box.line(
-            "Sell Fibonacci Low",
-            str(not self.disablefailsafefibonaccilow)
-            + "  --disablefailsafefibonaccilow",
-        )
+            table.add_row("Allow Buy Near High", str(not self.disablebuynearhigh), "Prevent the bot from buying at a recent high", "--disablebuynearhigh")
+        else:
+            table.add_row("Allow Buy Near High", str(not self.disablebuynearhigh), "Prevent the bot from buying at a recent high", "--disablebuynearhigh", style="grey62")
 
-        if self.sell_lower_pcnt is not None:
-            text_box.line(
-                "Sell Lower Pcnt",
-                str(not self.disablefailsafelowerpcnt) + "  --disablefailsafelowerpcnt",
-            )
+        if self.disablebuynearhigh and self.nobuynearhighpcnt:
+            table.add_row("No Buy Near High Percent", str(self.nobuynearhighpcnt), "Prevent the bot from buying near a recent high", "--nobuynearhighpcnt")
+        else:
+            table.add_row("No Buy Near High Percent", str(self.nobuynearhighpcnt), "Prevent the bot from buying near a recent high", "--nobuynearhighpcnt", style="grey62")
 
-        if self.sell_upper_pcnt is not None:
-            text_box.line(
-                "Sell Upper Pcnt",
-                str(not self.disablefailsafelowerpcnt)
-                + "  --disableprofitbankupperpcnt",
-            )
+        table.add_row("", "", "")
 
-        text_box.line(
-            "Candlestick Reversal",
-            str(not self.disableprofitbankreversal) + "  --disableprofitbankreversal",
-        )
-        text_box.line("Telegram", str(not self.disabletelegram) + "  --disabletelegram")
+        console = Console()
+        console.print(table)
 
-        if not self.disabletelegram:
-            text_box.line(
-                "Telegram trades only",
-                str(self.telegramtradesonly) + " --telegramtradesonly",
-            )
-
-        if not self.disabletelegram:
-            text_box.line(
-                "Telegram error msgs",
-                str(not self.disable_telegram_error_msgs) + " --disable_telegram_error_msgs",
-            )
-
-        text_box.line(
-            "Enable Pandas-ta", str(self.enable_pandas_ta) + "  --enable_pandas_ta"
-        )
-        text_box.line(
-            "EnableCustom Strategy",
-            str(self.enable_custom_strategy) + "  --enable_custom_strategy",
-        )
-        text_box.line("Log", str(not self.disablelog) + "  --disablelog")
-        text_box.line("Tracker", str(not self.disabletracker) + "  --disabletracker")
-        text_box.line("Auto restart Bot", str(self.autorestart) + "  --autorestart")
-        text_box.line("Web Socket", str(self.websocket) + "  --websocket")
-        text_box.line(
-            "Insufficient Funds Logging",
-            str(self.enableinsufficientfundslogging)
-            + "  --enableinsufficientfundslogging",
-        )
-        text_box.line(
-            "Log Buy and Sell orders in JSON",
-            str(self.logbuysellinjson) + "  --logbuysellinjson",
-        )
-
-        if self.buymaxsize:
-            text_box.line(
-                "Max Buy Size", str(self.buymaxsize) + "  --buymaxsize <size>"
-            )
-
-        if self.buyminsize:
-            text_box.line(
-                "Min Buy Size", str(self.buyminsize) + "  --buyminsize <size>"
-            )
-
-        if self.buylastsellsize:
-            text_box.line(
-                "Buy Last Sell Size",
-                str(self.buylastsellsize) + "  --buylastsellsize",
-            )
-
-        if self.trailingbuypcnt:
-            text_box.line(
-                "Trailing Buy Percent",
-                str(self.trailingbuypcnt) + "  --trailingbuypcnt <size>",
-            )
-
-        if self.trailingimmediatebuy:
-            text_box.line(
-                "Immediate buy for trailingbuypcnt",
-                str(self.trailingimmediatebuy) + "  --trailingImmediateBuy",
-            )
-
-        if self.trailingbuyimmediatepcnt:
-            text_box.line(
-                "Trailing Buy Immediate Percent",
-                str(self.trailingbuyimmediatepcnt)
-                + "  --trailingbuyimmediatepcnt <size>",
-            )
-
-        if self.trailingsellpcnt:
-            text_box.line(
-                "Trailing Sell Percent",
-                str(self.trailingsellpcnt) + "  --trailingsellpcnt <size>",
-            )
-
-        if self.trailingimmediatesell:
-            text_box.line(
-                "Immediate sell for trailingsellpcnt",
-                str(self.trailingimmediatesell) + "  --trailingimmediatesell",
-            )
-
-        if self.trailingsellimmediatepcnt:
-            text_box.line(
-                "Trailing Sell Immediate Percent",
-                str(self.trailingsellimmediatepcnt)
-                + "  --trailingsellimmediatepcnt <size>",
-            )
-
-        if self.trailingsellbailoutpcnt:
-            text_box.line(
-                "Trailing Sell Bailout Percent",
-                str(self.trailingsellbailoutpcnt)
-                + "  --trailingsellbailoutpcnt <size>",
-            )
-
-        if self.sell_trigger_override:
-            text_box.line(
-                "Override SellTrigger if STRONG buy",
-                str(self.sell_trigger_override) + "  --trailingImmediateSell",
-            )
-
-        if self.marketmultibuycheck:
-            text_box.line(
-                "Check for Market Multiple Buys",
-                str(self.marketmultibuycheck) + "  --marketmultibuycheck",
-            )
-
-        if self.adjust_total_periods is not None:
-            text_box.line(
-                "Adjust Total Periods",
-                str(self.adjust_total_periods) + " --adjust_total_periods  <size>",
-            )
-
-        if self.manual_trades_only:
-            text_box.line(
-                "Manual Trading Only (HODL)",
-                str(self.manual_trades_only) + "  --manual_trades_only",
-            )
-
-        if (
-            self.disablebuyema
-            and self.disablebuymacd
-            and self.enable_custom_strategy is False
-        ):
-            text_box.center(
-                "WARNING : EMA and MACD indicators disabled, no buy events will happen"
-            )
-
-        text_box.doubleLine()
+        sys.exit()
 
     def get_date_from_iso8601_str(self, date: str):
         # if date passed from datetime.now() remove milliseconds
