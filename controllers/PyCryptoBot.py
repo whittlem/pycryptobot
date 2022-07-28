@@ -2803,6 +2803,26 @@ class PyCryptoBot(BotConfig):
 
         table.add_row("", "", "")
 
+        if not self.disablebuyema:
+            table.add_row("Use EMA12/26", str(not self.disablebuyema), "Exponential Moving Average (EMA)", "--disablebuyema")
+        else:
+            table.add_row("Use EMA12/26", str(not self.disablebuyema), "Exponential Moving Average (EMA)", "--disablebuyema", style="grey62")
+
+        if not self.disablebuymacd:
+            table.add_row("Use MACD/Signal", str(not self.disablebuymacd), "Moving Average Convergence Divergence (MACD)", "--disablebuymacd")
+        else:
+            table.add_row("Use MACD/Signal", str(not self.disablebuymacd), "Moving Average Convergence Divergence (MACD)", "--disablebuymacd", style="grey62")
+
+        if not self.disablebuyobv:
+            table.add_row("Use OBV", str(not self.disablebuyobv), "On-Balance Volume (OBV)", "--disablebuyobv")
+        else:
+            table.add_row("Use OBV", str(not self.disablebuyobv), "On-Balance Volume (OBV)", "--disablebuyobv", style="grey62")
+
+        if not self.disablebuyelderray:
+            table.add_row("Use Elder-Ray", str(not self.disablebuyelderray), "Elder-Ray Index", "--disablebuyelderray")
+        else:
+            table.add_row("Use Elder-Ray", str(not self.disablebuyelderray), "Elder-Ray Index (Elder-Ray)", "--disablebuyelderray", style="grey62")
+
         console = Console()
         console.print(table)
 
