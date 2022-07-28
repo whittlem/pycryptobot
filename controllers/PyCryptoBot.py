@@ -1585,7 +1585,7 @@ class PyCryptoBot(BotConfig):
                                         f"{self.market} - Error occurred while checking balance after BUY. Last transaction check will happen shortly."
                                     )
 
-                                    if not self.disable_telegram_error_msgs:
+                                    if not self.disabletelegramerrormsgs:
                                         self.notify_telegram(
                                             self.market
                                             + " - Error occurred while checking balance after BUY. Last transaction check will happen shortly."
@@ -1606,7 +1606,7 @@ class PyCryptoBot(BotConfig):
                                 Logger.warning(
                                     f"API Error: Unable to place buy order for {self.market}."
                                 )
-                                if not self.disable_telegram_error_msgs:
+                                if not self.disabletelegramerrormsgs:
                                     self.notify_telegram(
                                         f"API Error: Unable to place buy order for {self.market}"
                                     )
@@ -1911,7 +1911,7 @@ class PyCryptoBot(BotConfig):
                                     + " - Error occurred while checking balance after SELL. Last transaction check will happen shortly."
                                 )
 
-                                if not self.disable_telegram_error_msgs:
+                                if not self.disabletelegramerrormsgs:
                                     self.notify_telegram(
                                         self.market
                                         + " - Error occurred while checking balance after SELL. Last transaction check will happen shortly."
@@ -1931,7 +1931,7 @@ class PyCryptoBot(BotConfig):
                             Logger.warning(
                                 f"API Error: Unable to place SELL order for {self.market}."
                             )
-                            if not self.disable_telegram_error_msgs:
+                            if not self.disabletelegramerrormsgs:
                                 self.notify_telegram(
                                     f"API Error: Unable to place SELL order for {self.market}"
                                 )
@@ -2467,7 +2467,7 @@ class PyCryptoBot(BotConfig):
                         f"Restarting application after exception: {repr(e)}"
                     )
 
-                    if not self.disable_telegram_error_msgs:
+                    if not self.disabletelegramerrormsgs:
                         self.notify_telegram(
                             f"Auto restarting bot for {self.market} after exception: {repr(e)}"
                         )
@@ -2506,7 +2506,7 @@ class PyCryptoBot(BotConfig):
                 os._exit(0)
         except (BaseException, Exception) as e:  # pylint: disable=broad-except
             # catch all not managed exceptions and send a Telegram message if configured
-            if not self.disable_telegram_error_msgs:
+            if not self.disabletelegramerrormsgs:
                 self.notify_telegram(
                     f"Bot for {self.market} got an exception: {repr(e)}"
                 )
@@ -2701,6 +2701,18 @@ class PyCryptoBot(BotConfig):
 
         table.add_row("", "", "")
 
+        if self.disabletelegram is False:
+            table.add_row("Telegram Notifications", str(not self.disabletelegram), "Disable Telegram notifications", "--disabletelegram")
+        else:
+            table.add_row("Telegram Notifications", str(not self.disabletelegram), "Disable Telegram notifications", "--disabletelegram", style="grey62")
+
+        if self.disabletelegram is False and self.disable_telegram_error_msg is False:
+            table.add_row("Telegram Error Messages", str(not self.disabletelegramerrormsgs), "Disable Telegram error messages", "--disabletelegramerrormsgs")
+        else:
+            table.add_row("Telegram Error Messages", str(not self.disabletelegramerrormsgs), "Disable Telegram error messages", "--disabletelegramerrormsgs", style="grey62")
+
+        table.add_row("", "", "")
+
         if self.sell_upper_pcnt is not None:
             table.add_row("Sell Upper Percent", str(self.sell_upper_pcnt), "Upper trade margin to sell at", "--sellupperpcnt")
         else:
@@ -2784,10 +2796,20 @@ class PyCryptoBot(BotConfig):
         else:
             table.add_row("Sell At Resistance", str(self.sellatresistance), "Trigger a sell if the price hits a resistance level", "--sellatresistance", style="grey62")
 
+        if self.disablefailsafefibonaccilow is False:
+            table.add_row("Sell Fibonacci Low", str(not self.disablefailsafefibonaccilow), "Trigger a sell if the price hits a fibonacci lower level", "--disablefailsafefibonaccilow")
+        else:
+            table.add_row("Sell Fibonacci Low", str(not self.disablefailsafefibonaccilow), "Trigger a sell if the price hits a fibonacci lower level", "--disablefailsafefibonaccilow", style="grey62")
+
         if self.sellatresistance is True:
             table.add_row("Trade Bull Only", str(not self.disablebullonly), "Only trade in a bull market SMA50 > SMA200", "--disablebullonly")
         else:
             table.add_row("Trade Bull Only", str(not self.disablebullonly), "Only trade in a bull market SMA50 > SMA200", "--disablebullonly", style="grey62")
+
+        if self.disableprofitbankreversal is False:
+            table.add_row("Candlestick Reversal", str(not self.disableprofitbankreversal), "Trigger a sell at candlestick strong reversal pattern", "--disableprofitbankreversal")
+        else:
+            table.add_row("Candlestick Reversal", str(not self.disableprofitbankreversal), "Trigger a sell at candlestick strong reversal pattern", "--disableprofitbankreversal", style="grey62")
 
         table.add_row("", "", "")
 
@@ -2803,22 +2825,22 @@ class PyCryptoBot(BotConfig):
 
         table.add_row("", "", "")
 
-        if not self.disablebuyema:
+        if self.disablebuyema is False:
             table.add_row("Use EMA12/26", str(not self.disablebuyema), "Exponential Moving Average (EMA)", "--disablebuyema")
         else:
             table.add_row("Use EMA12/26", str(not self.disablebuyema), "Exponential Moving Average (EMA)", "--disablebuyema", style="grey62")
 
-        if not self.disablebuymacd:
+        if self.disablebuymacd is False:
             table.add_row("Use MACD/Signal", str(not self.disablebuymacd), "Moving Average Convergence Divergence (MACD)", "--disablebuymacd")
         else:
             table.add_row("Use MACD/Signal", str(not self.disablebuymacd), "Moving Average Convergence Divergence (MACD)", "--disablebuymacd", style="grey62")
 
-        if not self.disablebuyobv:
+        if self.disablebuyobv is False:
             table.add_row("Use OBV", str(not self.disablebuyobv), "On-Balance Volume (OBV)", "--disablebuyobv")
         else:
             table.add_row("Use OBV", str(not self.disablebuyobv), "On-Balance Volume (OBV)", "--disablebuyobv", style="grey62")
 
-        if not self.disablebuyelderray:
+        if self.disablebuyelderray is False:
             table.add_row("Use Elder-Ray", str(not self.disablebuyelderray), "Elder-Ray Index", "--disablebuyelderray")
         else:
             table.add_row("Use Elder-Ray", str(not self.disablebuyelderray), "Elder-Ray Index (Elder-Ray)", "--disablebuyelderray", style="grey62")

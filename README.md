@@ -442,7 +442,7 @@ Note: the trailingsell function will sell if the self.price is within 10% of the
     --disableprofitbankfibonaccihigh    Disable profit bank on fibonacci upper band
     --disableprofitbankreversal         Disable profit bank on strong candlestick reversal
     --disabletelegram                   Disable sending telegram messages
-    --disable_telegram_error_msgs          Disable sending error message to telegram (only trading info)
+    --disabletelegramerrormsgs          Disable sending error message to telegram (only trading info)
     --telegramtradesonly                Toggle only sending trade messages to telegram - won't send smart switch and last action messages, will still send error messages unless disabling separately
     --disablelog                        Disable writing log entries
     --disabletracker                    Disable saving CSV on buy and sell events

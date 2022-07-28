@@ -256,7 +256,7 @@ Upgrade library dependencies (if required):
 - Kucoin runs without any regular re-occurring errors in log
 - added trade timestamps to Telegram output
 - added Telegram config option --telegramtradesonly: will show trades, but not smart switch or last action changed
-- added Telegram config option --disable_telegram_error_msgs: will not send Logger messages to telegram
+- added Telegram config option --disabletelegramerrormsgs: will not send Logger messages to telegram
 - added ability to specify api_key_file via command line arguments with --api_key_file
 
 ## [4.3.2] - 2021-11-02

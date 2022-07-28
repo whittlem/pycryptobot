@@ -119,7 +119,7 @@ class BotConfig:
         self.enableimmediatebuy = False
 
         self.telegramtradesonly = False
-        self.disable_telegram_error_msgs = False
+        self.disabletelegramerrormsgs = False
 
 
         self.filelog = True
@@ -584,7 +584,7 @@ class BotConfig:
             help="Toggle Telegram trades only output"
         )
         parser.add_argument(
-            "--disable_telegram_error_msgs",
+            "--disabletelegramerrormsgs",
             action="store_true",
             help="Disable Telegram error message output"
         )
