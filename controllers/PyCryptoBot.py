@@ -76,10 +76,10 @@ class PyCryptoBot(BotConfig):
         self.is_live = 0
         self.takerfee = 0.0
         self.makerfee = 0.0
-        self.websocket = None
         self.account = None
         self.state = None
         self.technical_analysis = None
+        self.websocket_connection = None
         self.ticker_self = None
         self.df_last = pd.DataFrame()
         self.trading_data = pd.DataFrame()
@@ -137,8 +137,8 @@ class PyCryptoBot(BotConfig):
                     self.notify_telegram(f"{self.market} bot is paused")
                     self.telegram_bot.update_bot_status("paused")
                     if self.websocket:
-                        Logger.info("Stopping self.websocket...")
-                        self.websocket.close()
+                        Logger.info("Closing websocket...")
+                        self.websocket_connection.close()
 
                 time.sleep(30)
                 control_status = self.telegram_bot.check_bot_control_status()
@@ -153,8 +153,8 @@ class PyCryptoBot(BotConfig):
                 self.telegram_bot.update_bot_status("active")
                 self.read_config(self.exchange)
                 if self.websocket:
-                    Logger.info("Starting self.websocket...")
-                    self.websocket.start()
+                    Logger.info("Starting websocket...")
+                    self.websocket_connection.start()
 
             if control_status == "exit":
                 text_box = TextBox(80, 22)
@@ -174,20 +174,20 @@ class PyCryptoBot(BotConfig):
                 Logger.debug("Reloading config parameters.")
                 self.read_config(self.exchange)
                 if self.websocket:
-                    self.websocket.close()
+                    self.websocket_connection.close()
                     if self.exchange == Exchange.BINANCE:
-                        self.websocket = BWebSocketClient(
+                        self.websocket_connection = BWebSocketClient(
                             [self.market], self.granularity
                         )
                     elif self.exchange == Exchange.COINBASEPRO:
-                        self.websocket = CWebSocketClient(
+                        self.websocket_connection = CWebSocketClient(
                             [self.market], self.granularity
                         )
                     elif self.exchange == Exchange.KUCOIN:
-                        self.websocket = KWebSocketClient(
+                        self.websocket_connection = KWebSocketClient(
                             [self.market], self.granularity
                         )
-                    self.websocket.start()
+                    self.websocket_connection.start()
 
                 list(map(self.s.cancel, self.s.queue))
                 self.s.enter(
@@ -208,14 +208,14 @@ class PyCryptoBot(BotConfig):
 
                 self.app_started = False
 
-        # reset self.websocket every 23 hours if applicable
+        # reset self.websocket_connection every 23 hours if applicable
         if self.websocket and not self.is_sim:
-            if self.websocket.time_elapsed > 82800:
+            if self.websocket_connection.time_elapsed > 82800:
                 Logger.info("Websocket requires a restart every 23 hours!")
-                Logger.info("Stopping self.websocket...")
-                self.websocket.close()
-                Logger.info("Starting self.websocket...")
-                self.websocket.start()
+                Logger.info("Stopping self.websocket_connection...")
+                self.websocket_connection.close()
+                Logger.info("Starting self.websocket_connection...")
+                self.websocket_connection.start()
                 Logger.info("Restarting job in 30 seconds...")
                 self.s.enter(
                     30,
@@ -242,7 +242,7 @@ class PyCryptoBot(BotConfig):
                 )
             ):
                 self.trading_data = self.get_historical_data(
-                    self.market, self.granularity, self.websocket
+                    self.market, self.granularity, self.websocket_connection
                 )
                 self.state.closed_candle_row = -1
                 self.price = float(
@@ -253,7 +253,7 @@ class PyCryptoBot(BotConfig):
 
             else:
                 # set time and self.price with ticker data and add/update current candle
-                ticker = self.get_ticker(self.market, self.websocket)
+                ticker = self.get_ticker(self.market, self.websocket_connection)
                 # if 0, use last close value as self.price
                 self.price = (
                     self.trading_data["close"].iloc[-1] if ticker[1] == 0 else ticker[1]
@@ -750,7 +750,7 @@ class PyCryptoBot(BotConfig):
 
             # determine current action, indicatorvalues will be empty if custom Strategy are disabled or it's debug is False
             self.state.action, indicatorvalues = strategy.get_action(
-                self.state, self.price, current_sim_date, self.websocket
+                self.state, self.price, current_sim_date, self.websocket_connection
             )
 
             immediate_action = False
@@ -2343,7 +2343,7 @@ class PyCryptoBot(BotConfig):
                 self.state.iterations = self.state.iterations - 1
 
         # if live but not websockets
-        if not self.disabletracker and self.is_live and not self.websocket:
+        if not self.disabletracker and self.is_live and not self.websocket_connection:
             # update order tracker csv
             if self.exchange == Exchange.BINANCE:
                 self.account.saveTrackerCSV(self.market)
@@ -2377,18 +2377,18 @@ class PyCryptoBot(BotConfig):
         else:
             list(map(self.s.cancel, self.s.queue))
             if (
-                self.websocket
-                and self.websocket is not None
+                self.websocket_connection
+                and self.websocket_connection is not None
                 and (
-                    isinstance(self.websocket.tickers, pd.DataFrame)
-                    and len(self.websocket.tickers) == 1
+                    isinstance(self.websocket_connection.tickers, pd.DataFrame)
+                    and len(self.websocket_connection.tickers) == 1
                 )
                 and (
-                    isinstance(self.websocket.candles, pd.DataFrame)
-                    and len(self.websocket.candles) == self.adjust_total_periods
+                    isinstance(self.websocket_connection.candles, pd.DataFrame)
+                    and len(self.websocket_connection.candles) == self.adjust_total_periods
                 )
             ):
-                # poll every 5 seconds (self.websocket)
+                # poll every 5 seconds (self.websocket_connection)
                 self.s.enter(
                     5,
                     1,
@@ -2397,7 +2397,7 @@ class PyCryptoBot(BotConfig):
                 )
             else:
                 if self.websocket and not self.is_sim:
-                    # poll every 15 seconds (waiting for self.websocket)
+                    # poll every 15 seconds (waiting for self.websocket_connection)
                     self.s.enter(
                         15,
                         1,
@@ -2405,7 +2405,7 @@ class PyCryptoBot(BotConfig):
                         (),
                     )
                 else:
-                    # poll every 1 minute (no self.websocket)
+                    # poll every 1 minute (no self.websocket_connection)
                     self.s.enter(
                         60,
                         1,
@@ -2420,20 +2420,20 @@ class PyCryptoBot(BotConfig):
                 message += "Coinbase Pro bot"
                 if self.websocket and not self.is_sim:
                     print("Opening websocket to Coinbase Pro...")
-                    self.websocket = CWebSocketClient([self.market], self.granularity)
-                    self.websocket.start()
+                    self.websocket_connection = CWebSocketClient([self.market], self.granularity)
+                    self.websocket_connection.start()
             elif self.exchange == Exchange.BINANCE:
                 message += "Binance bot"
                 if self.websocket and not self.is_sim:
                     print("Opening websocket to Binance...")
-                    self.websocket = BWebSocketClient([self.market], self.granularity)
-                    self.websocket.start()
+                    self.websocket_connection = BWebSocketClient([self.market], self.granularity)
+                    self.websocket_connection.start()
             elif self.exchange == Exchange.KUCOIN:
                 message += "Kucoin bot"
                 if self.websocket and not self.is_sim:
                     print("Opening websocket to Kucoin...")
-                    self.websocket = KWebSocketClient([self.market], self.granularity)
-                    self.websocket.start()
+                    self.websocket_connection = KWebSocketClient([self.market], self.granularity)
+                    self.websocket_connection.start()
 
             smartswitchstatus = "enabled" if self.smart_switch else "disabled"
             message += f" for {self.market} using granularity {self.print_granularity()}. Smartswitch {smartswitchstatus}"
@@ -2498,8 +2498,11 @@ class PyCryptoBot(BotConfig):
                     self.telegram_bot.remove_active_bot()
                 except Exception:
                     pass
-                if self.websocket and not self.is_sim:
-                    self.websocket.close()
+                if self.websocket and self.websocket_connection and not self.is_sim:
+                    try:
+                        self.websocket_connection.close()
+                    except Exception:
+                        pass
                 sys.exit(0)
             except SystemExit:
                 # pylint: disable=protected-access
@@ -2713,6 +2716,92 @@ class PyCryptoBot(BotConfig):
 
         table.add_row("", "", "")
 
+        if self.enable_pandas_ta is True:
+            table.add_row("Enable Pandas-ta", str(self.enable_pandas_ta), "Enable Pandas Technical Analysis", "--enable_pandas_ta")
+        else:
+            table.add_row("Enable Pandas-ta", str(self.enable_pandas_ta), "Enable Pandas Technical Analysis", "--enable_pandas_ta", style="grey62")
+
+        if self.enable_custom_strategy is True:
+            table.add_row("Enable Custom Strategy", str(self.enable_custom_strategy), "Enable Custom Strategy", "--enable_custom_strategy")
+        else:
+            table.add_row("Enable Custom Strategy", str(self.enable_custom_strategy), "Enable Custom Strategy", "--enable_custom_strategy", style="grey62")
+
+        table.add_row("", "", "")
+
+        if self.disablelog is False:
+            table.add_row("Enable Log", str(not self.disablelog), "Enable Log File", "--disablelog")
+        else:
+            table.add_row("Enable Log", str(not self.disablelog), "Enable Log File", "--disablelog", style="grey62")
+
+        if self.disabletracker is False:
+            table.add_row("Enable Tracker", str(not self.disabletracker), "Enable Trade Reporting", "--disabletracker")
+        else:
+            table.add_row("Enable Tracker", str(not self.disabletracker), "Enable Trade Reporting", "--disabletracker", style="grey62")
+
+        if self.autorestart is True:
+            table.add_row("Auto Restart Bot", str(self.autorestart), "Auto restart bot on failure", "--autorestart")
+        else:
+            table.add_row("Auto Restart Bot", str(self.autorestart), "Auto restart bot on failure", "--autorestart", style="grey62")
+
+        if self.websocket is True:
+            table.add_row("Enable Websocket", str(self.websocket), "Enable websockets for data retrieval", "--websocket")
+        else:
+            table.add_row("Enable Websocket", str(self.websocket), "Enable websockets for data retrieval", "--websocket", style="grey62")
+
+        if self.enableinsufficientfundslogging is True:
+            table.add_row("Insufficient Funds Log", str(self.enableinsufficientfundslogging), "Enable insufficient funds logging", "--enableinsufficientfundslogging")
+        else:
+            table.add_row("Insufficient Funds Log", str(self.enableinsufficientfundslogging), "Enable insufficient funds logging", "--enableinsufficientfundslogging", style="grey62")
+
+        if self.logbuysellinjson is True:
+            table.add_row("JSON Log Trades", str(self.logbuysellinjson), "Log buy and sell orders in a JSON file", "--logbuysellinjson")
+        else:
+            table.add_row("JSON Log Trades", str(self.logbuysellinjson), "Log buy and sell orders in a JSON file", "--logbuysellinjson", style="grey62")
+
+        if self.manual_trades_only is False:
+            table.add_row("Manual Trading Only", str(self.manual_trades_only), "Manual Trading Only (HODL)", "--manual_trades_only")
+        else:
+            table.add_row("Manual Trading Only", str(self.manual_trades_only), "Manual Trading Only (HODL)", "--manual_trades_only", style="grey62")
+
+        table.add_row("", "", "")
+
+        if self.buyminsize:
+            table.add_row("Buy Min Size", str(self.buyminsize), "Minimum buy order size in quote currency", "--buyminsize")
+        else:
+            table.add_row("Buy Min Size", str(self.buyminsize), "Minimum buy order size in quote currency", "--buyminsize", style="grey62")
+
+        if self.buymaxsize is not None:
+            table.add_row("Buy Max Size", str(self.buymaxsize), "Maximum buy order size in quote currency", "--buymaxsize")
+        else:
+            table.add_row("Buy Max Size", str(self.buymaxsize), "Maximum buy order size in quote currency", "--buymaxsize", style="grey62")
+
+        if self.buylastsellsize is True:
+            table.add_row("Buy Last Sell Size", str(self.buylastsellsize), "Next buy order will match last sell order", "--buylastsellsize")
+        else:
+            table.add_row("Buy Last Sell Size", str(self.buylastsellsize), "Next buy order will match last sell order", "--buylastsellsize", style="grey62")
+
+        if self.trailingbuypcnt:
+            table.add_row("Trailing Buy Percent", str(self.trailingbuypcnt), "Please refer to the detailed explanation in the README.md", "--trailingbuypcnt")
+        else:
+            table.add_row("Trailing Buy Percent", str(self.trailingbuypcnt), "Please refer to the detailed explanation in the README.md", "--trailingbuypcnt", style="grey62")
+
+        if self.trailingimmediatebuy is True:
+            table.add_row("Immediate Trailing Buy", str(self.trailingimmediatebuy), "Please refer to the detailed explanation in the README.md", "--trailingimmediatebuy")
+        else:
+            table.add_row("Immediate Trailing Buy", str(self.trailingimmediatebuy), "Please refer to the detailed explanation in the README.md", "--trailingimmediatebuy", style="grey62")
+
+        if self.trailingbuyimmediatepcnt is not None:
+            table.add_row("Immediate Trailing Buy Percent", str(self.trailingbuyimmediatepcnt), "Please refer to the detailed explanation in the README.md", "--trailingbuyimmediatepcnt")
+        else:
+            table.add_row("Immediate Trailing Buy Percent", str(self.trailingbuyimmediatepcnt), "Please refer to the detailed explanation in the README.md", "--trailingbuyimmediatepcnt", style="grey62")
+
+        if self.marketmultibuycheck is True:
+            table.add_row("Multiple Buy Check", str(self.marketmultibuycheck), "Please refer to the detailed explanation in the README.md", "--marketmultibuycheck")
+        else:
+            table.add_row("Multiple Buy Check", str(self.marketmultibuycheck), "Please refer to the detailed explanation in the README.md", "--marketmultibuycheck", style="grey62")
+
+        table.add_row("", "", "")
+
         if self.sell_upper_pcnt is not None:
             table.add_row("Sell Upper Percent", str(self.sell_upper_pcnt), "Upper trade margin to sell at", "--sellupperpcnt")
         else:
@@ -2744,6 +2833,26 @@ class PyCryptoBot(BotConfig):
             table.add_row("Trailing Stop Loss Trigger", str(self.trailing_stop_loss_trigger), "Trade margin percentage to enable the trailing stop loss", "--trailingstoplosstrigger")
         else:
             table.add_row("Trailing Stop Loss Trigger", str(self.trailing_stop_loss_trigger), "Trade margin percentage to enable the trailing stop loss", "--trailingstoplosstrigger", style="grey62")
+
+        if self.trailingsellpcnt:
+            table.add_row("Trailing Sell Percent", str(self.trailingsellpcnt), "Please refer to the detailed explanation in the README.md", "--trailingsellpcnt")
+        else:
+            table.add_row("Trailing Sell Percent", str(self.trailingsellpcnt), "Please refer to the detailed explanation in the README.md", "--trailingsellpcnt", style="grey62")
+
+        if self.trailingimmediatesell is True:
+            table.add_row("Immediate Trailing Sell", str(self.trailingimmediatesell), "Please refer to the detailed explanation in the README.md", "--trailingimmediatesell")
+        else:
+            table.add_row("Immediate Trailing Sell", str(self.trailingimmediatesell), "Please refer to the detailed explanation in the README.md", "--trailingimmediatesell", style="grey62")
+
+        if self.trailingsellimmediatepcnt is not None:
+            table.add_row("Immediate Trailing Sell Percent", str(self.trailingsellimmediatepcnt), "Please refer to the detailed explanation in the README.md", "--trailingsellimmediatepcnt")
+        else:
+            table.add_row("Immediate Trailing Sell Percent", str(self.trailingsellimmediatepcnt), "Please refer to the detailed explanation in the README.md", "--trailingsellimmediatepcnt", style="grey62")
+
+        if self.trailingsellbailoutpcnt is not None:
+            table.add_row("Trailing Sell Bailout Percent", str(self.trailingsellbailoutpcnt), "Please refer to the detailed explanation in the README.md", "--trailingsellbailoutpcnt")
+        else:
+            table.add_row("Trailing Sell Bailout Percent", str(self.trailingsellbailoutpcnt), "Please refer to the detailed explanation in the README.md", "--trailingsellbailoutpcnt", style="grey62")
 
         table.add_row("", "", "")
 
@@ -2822,6 +2931,18 @@ class PyCryptoBot(BotConfig):
             table.add_row("No Buy Near High Percent", str(self.nobuynearhighpcnt), "Prevent the bot from buying near a recent high", "--nobuynearhighpcnt")
         else:
             table.add_row("No Buy Near High Percent", str(self.nobuynearhighpcnt), "Prevent the bot from buying near a recent high", "--nobuynearhighpcnt", style="grey62")
+
+        if self.adjust_total_periods:
+            table.add_row("Adjust Total Periods", str(self.adjust_total_periods), "Adjust data points in historical trading data", "--adjust_total_periods")
+        else:
+            table.add_row("Adjust Total Periods", str(self.adjust_total_periods), "Adjust data points in historical trading data", "--adjust_total_periods", style="grey62")
+
+        table.add_row("", "", "")
+
+        if self.sell_trigger_override:
+            table.add_row("Override Sell Trigger", str(self.sell_trigger_override), "Override sell trigger if strong buy", "--sell_trigger_override")
+        else:
+            table.add_row("Override Sell Trigger", str(self.sell_trigger_override), "Override sell trigger if strong buy", "--sell_trigger_override", style="grey62")
 
         table.add_row("", "", "")
 
@@ -3237,7 +3358,7 @@ class PyCryptoBot(BotConfig):
                     self.ema1226_1h_cache["date"] <= iso8601end
                 ].copy()
             elif self.exchange != Exchange.DUMMY:
-                df_data = self.get_additional_df("1h", self.websocket).copy()
+                df_data = self.get_additional_df("1h", self.websocket_connection).copy()
                 self.ema1226_1h_cache = df_data
             else:
                 return False
@@ -3264,7 +3385,7 @@ class PyCryptoBot(BotConfig):
                     self.ema1226_6h_cache["date"] <= iso8601end
                 ].copy()
             elif self.exchange != Exchange.DUMMY:
-                df_data = self.get_additional_df("6h", self.websocket).copy()
+                df_data = self.get_additional_df("6h", self.websocket_connection).copy()
                 self.ema1226_6h_cache = df_data
             else:
                 return False
@@ -3295,7 +3416,7 @@ class PyCryptoBot(BotConfig):
                     self.sma50200_1h_cache["date"] <= iso8601end
                 ].copy()
             elif self.exchange != Exchange.DUMMY:
-                df_data = self.get_additional_df("1h", self.websocket).copy()
+                df_data = self.get_additional_df("1h", self.websocket_connection).copy()
                 self.sma50200_1h_cache = df_data
             else:
                 return False
@@ -3351,7 +3472,7 @@ class PyCryptoBot(BotConfig):
                 )
             ):
                 df = self.get_historical_data(
-                    self.market, self.granularity, self.websocket
+                    self.market, self.granularity, self.websocket_connection
                 )
                 row = -1
             else:

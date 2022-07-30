@@ -385,7 +385,7 @@ def defaultConfigParse(app, config):
         else:
             raise TypeError("disablebuymacd must be of type int")
     else:
-        app.disablebuymacd = True  # default to True
+        app.disablebuymacd = False  # default to False
 
     if "disablebuyema" in config:
         if isinstance(config["disablebuyema"], int):
