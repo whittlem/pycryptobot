@@ -2969,8 +2969,6 @@ class PyCryptoBot(BotConfig):
         console = Console()
         console.print(table)
 
-        sys.exit()
-
     def get_date_from_iso8601_str(self, date: str):
         # if date passed from datetime.now() remove milliseconds
         if date.find(".") != -1:
