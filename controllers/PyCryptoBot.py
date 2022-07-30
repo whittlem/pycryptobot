@@ -9,6 +9,7 @@ import functools
 import pandas as pd
 from rich.console import Console
 from rich.table import Table
+from rich import box
 from datetime import datetime, timedelta
 from os.path import exists as file_exists
 from urllib3.exceptions import ReadTimeoutError
@@ -38,18 +39,22 @@ try:
     # pyright: reportMissingImports=false
     if file_exists("models/Trading_myPta.py"):
         from models.Trading_myPta import TechnicalAnalysis
+
         trading_myPta = True
         pandas_ta_enabled = True
     else:
         from models.Trading import TechnicalAnalysis
+
         trading_myPta = False
         pandas_ta_enabled = False
 except ModuleNotFoundError:
     from models.Trading import TechnicalAnalysis
+
     trading_myPta = False
     pandas_ta_enabled = False
 except ImportError:
     from models.Trading import TechnicalAnalysis
+
     trading_myPta = False
     pandas_ta_enabled = False
 
@@ -252,14 +257,14 @@ class PyCryptoBot(BotConfig):
                 )
 
             else:
-                # set time and self.price with ticker data and add/update current candle
+                # set time and price with ticker data and add/update current candle
                 ticker = self.get_ticker(self.market, self.websocket_connection)
                 # if 0, use last close value as self.price
                 self.price = (
                     self.trading_data["close"].iloc[-1] if ticker[1] == 0 else ticker[1]
                 )
                 self.ticker_date = ticker[0]
-                self.ticker_self.price = ticker[1]
+                self.ticker_price = ticker[1]
 
                 if self.state.closed_candle_row == -2:
                     self.trading_data.iloc[
@@ -905,10 +910,6 @@ class PyCryptoBot(BotConfig):
                 # work with this precision. It should save a couple of `precision` uses, one for each `truncate()` call.
                 truncate = functools.partial(_truncate, n=precision)
 
-                if immediate_action:
-                    self.price_text = str(self.price)
-                else:
-                    self.price_text = "Close: " + str(self.price)
                 ema_text = ""
                 if self.disablebuyema is False:
                     ema_text = _compare(
@@ -984,9 +985,8 @@ class PyCryptoBot(BotConfig):
                 if two_black_gapping is True:
                     log_text = '*** Candlestick Detected: Two Black Gapping ("Reliable - Reversal - Bearish Pattern - Down")'
 
-                if (
-                    log_text != ""
-                    and (not self.is_sim or (self.is_sim and not self.simresultonly))
+                if log_text != "" and (
+                    not self.is_sim or (self.is_sim and not self.simresultonly)
                 ):
                     Logger.info(log_text)
 
@@ -1036,10 +1036,41 @@ class PyCryptoBot(BotConfig):
                         obv_prefix = "v "
                         obv_suffix = " v | "
 
+                # TODO: add console code here
+
+                table = Table(title=" ", box=box.MINIMAL, show_header=False)
+
+                table.add_column("Date", justify="left", style="cyan", no_wrap=True)
+                table.add_column("Market", justify="left", style="white", no_wrap=True)
+                table.add_column(
+                    "Granularity", justify="left", style="white", no_wrap=True
+                )
+                table.add_column("Close", justify="left", style="white", no_wrap=True)
+
+                if trailing_action_logtext:
+                    table.add_column(
+                        "Trailing Action", justify="left", style="white", no_wrap=True
+                    )
+
+                args = [
+                    arg
+                    for arg in [
+                        formatted_current_df_index,
+                        self.market,
+                        self.print_granularity(),
+                        str(self.price),
+                        trailing_action_logtext,
+                    ]
+                    if arg
+                ]
+
+                table.add_row(*args)
+
+                console = Console()
+                console.print(table)
+
                 if not self.is_verbose:
                     if self.state.last_action != "":
-                        # Not sure if this if is needed just preserving any existing functionality that may have been missed
-                        # Updated to show over margin and profit
                         if not self.is_sim:
                             output_text = (
                                 formatted_current_df_index
@@ -1049,7 +1080,7 @@ class PyCryptoBot(BotConfig):
                                 + " | "
                                 + self.print_granularity()
                                 + " | "
-                                + self.price_text
+                                + str(self.price)
                                 + trailing_action_logtext
                                 + " | "
                                 + ema_co_prefix
@@ -1112,7 +1143,7 @@ class PyCryptoBot(BotConfig):
                                 + " | "
                                 + self.print_granularity()
                                 + " | "
-                                + self.price_text
+                                + str(self.price)
                                 + trailing_action_logtext
                                 + " | "
                                 + ema_co_prefix
@@ -1163,7 +1194,7 @@ class PyCryptoBot(BotConfig):
                                 + " | "
                                 + self.print_granularity()
                                 + " | "
-                                + self.price_text
+                                + str(self.price)
                                 + trailing_action_logtext
                                 + " | "
                                 + ema_co_prefix
@@ -1223,7 +1254,7 @@ class PyCryptoBot(BotConfig):
                                 + " | "
                                 + self.print_granularity()
                                 + " | "
-                                + self.price_text
+                                + str(self.price)
                                 + trailing_action_logtext
                                 + " | "
                                 + ema_co_prefix
@@ -1478,7 +1509,7 @@ class PyCryptoBot(BotConfig):
                                     self.is_sim and not self.simresultonly
                                 ):
                                     Logger.info(
-                                        f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {self.price_text} | BUY"
+                                        f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {str(self.price)} | BUY"
                                     )
                             else:
                                 text_box.singleLine()
@@ -1575,7 +1606,7 @@ class PyCryptoBot(BotConfig):
                                         + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
                                         + "\n"
                                         + "BUY at "
-                                        + self.price_text
+                                        + str(self.price)
                                     )
 
                                 else:
@@ -1659,7 +1690,7 @@ class PyCryptoBot(BotConfig):
                                 + ") -  "
                                 + str(current_sim_date)
                                 + "\n - TEST BUY at "
-                                + self.price_text
+                                + str(self.price)
                                 + "\n - Buy Size: "
                                 + str(_truncate(self.state.last_buy_size, 4))
                             )
@@ -1669,7 +1700,7 @@ class PyCryptoBot(BotConfig):
                                 self.is_sim and not self.simresultonly
                             ):
                                 Logger.info(
-                                    f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {self.price_text} | BUY"
+                                    f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {str(self.price)} | BUY"
                                 )
 
                             bands = _technical_analysis.get_fib_ret_levels(
@@ -1774,7 +1805,9 @@ class PyCryptoBot(BotConfig):
                             if not self.is_sim or (
                                 self.is_sim and not self.simresultonly
                             ):
-                                Logger.info(f" Fibonacci Retracement Levels:{str(bands)}")
+                                Logger.info(
+                                    f" Fibonacci Retracement Levels:{str(bands)}"
+                                )
 
                                 if len(bands) >= 1 and len(bands) <= 2:
                                     if len(bands) == 1:
@@ -1800,7 +1833,7 @@ class PyCryptoBot(BotConfig):
 
                         else:
                             Logger.info(
-                                f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {self.price_text} | SELL"
+                                f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {str(self.price)} | SELL"
                             )
 
                         # check balances before and display
@@ -1868,7 +1901,9 @@ class PyCryptoBot(BotConfig):
                                 self.state.trailing_sell_immediate = False
                                 self.state.tsl_triggered = False
                                 self.state.tsl_pcnt = float(self.trailing_stop_loss)
-                                self.state.tsl_trigger = float(self.trailing_stop_loss_trigger)
+                                self.state.tsl_trigger = float(
+                                    self.trailing_stop_loss_trigger
+                                )
                                 self.state.tsl_max = False
                                 self.state.trade_error_cnt = 0
                                 self.state.last_action = "SELL"
@@ -1882,23 +1917,36 @@ class PyCryptoBot(BotConfig):
                                     + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
                                     + "\n"
                                     + "SELL at "
-                                    + self.price_text
+                                    + str(self.price)
                                     + " (margin: "
                                     + margin_text
                                     + ", delta: "
-                                    + str(round(self.price - self.state.last_buy_price, precision))
+                                    + str(
+                                        round(
+                                            self.price - self.state.last_buy_price,
+                                            precision,
+                                        )
+                                    )
                                     + ")"
                                 )
 
                                 self.telegram_bot.close_trade(
-                                    str(self.get_date_from_iso8601_str(str(datetime.now()))),
-                                    self.price_text,
+                                    str(
+                                        self.get_date_from_iso8601_str(
+                                            str(datetime.now())
+                                        )
+                                    ),
+                                    str(self.price),
                                     margin_text,
                                 )
 
-                                if self.enableexitaftersell and self.startmethod not in (
-                                    "standard",
-                                    "telegram",
+                                if (
+                                    self.enableexitaftersell
+                                    and self.startmethod
+                                    not in (
+                                        "standard",
+                                        "telegram",
+                                    )
                                 ):
                                     sys.exit(0)
 
@@ -1965,7 +2013,9 @@ class PyCryptoBot(BotConfig):
                             * (self.state.last_buy_size - self.state.last_buy_fee)
                         )
                         self.state.last_sell_size = sell_size - sell_fee
-                        self.state.sell_sum = self.state.sell_sum + self.state.last_sell_size
+                        self.state.sell_sum = (
+                            self.state.sell_sum + self.state.last_sell_size
+                        )
 
                         # added to track profit and loss margins during sim runs
                         self.state.margintracker += float(margin)
@@ -1981,11 +2031,16 @@ class PyCryptoBot(BotConfig):
                                 + ") "
                                 + str(current_sim_date)
                                 + "\n - TEST SELL at "
-                                + str(self.price_text)
+                                + str(str(self.price))
                                 + " (margin: "
                                 + margin_text
                                 + ", delta: "
-                                + str(round(self.price - self.state.last_buy_price, precision))
+                                + str(
+                                    round(
+                                        self.price - self.state.last_buy_price,
+                                        precision,
+                                    )
+                                )
                                 + ")"
                             )
 
@@ -2062,7 +2117,9 @@ class PyCryptoBot(BotConfig):
                             self.state.tsl_pcnt = float(self.trailing_stop_loss)
 
                         if self.trailing_stop_loss_trigger:
-                            self.state.tsl_trigger = float(self.trailing_stop_loss_trigger)
+                            self.state.tsl_trigger = float(
+                                self.trailing_stop_loss_trigger
+                            )
 
                         self.state.tsl_max = False
                         self.state.action = "DONE"
@@ -2121,9 +2178,7 @@ class PyCryptoBot(BotConfig):
                     Logger.info("\n" + str(self.trade_tracker))
                     start = str(df.head(1).index.format()[0]).replace(":", ".")
                     end = str(df.tail(1).index.format()[0]).replace(":", ".")
-                    filename = (
-                        f"{self.market} {str(start)} - {str(end)}_{tradesfile}"
-                    )
+                    filename = f"{self.market} {str(start)} - {str(end)}_{tradesfile}"
 
                 else:
                     filename = tradesfile
@@ -2140,7 +2195,9 @@ class PyCryptoBot(BotConfig):
                     self.state.last_buy_size = 0
                     self.state.sell_sum = 0
                 else:
-                    self.state.sell_sum = self.state.sell_sum + self.state.last_sell_size
+                    self.state.sell_sum = (
+                        self.state.sell_sum + self.state.last_sell_size
+                    )
 
                 remove_last_buy = False
                 if self.state.buy_count > self.state.sell_count:
@@ -2184,7 +2241,9 @@ class PyCryptoBot(BotConfig):
                 else:
                     simulation["data"]["sell_count"] = self.state.sell_count
                     simulation["data"]["first_trade"] = {}
-                    simulation["data"]["first_trade"]["size"] = self.state.first_buy_size
+                    simulation["data"]["first_trade"][
+                        "size"
+                    ] = self.state.first_buy_size
 
                 if self.state.sell_count > 0:
                     if not self.simresultonly:
@@ -2312,7 +2371,9 @@ class PyCryptoBot(BotConfig):
                     str(round(df["close"].max(), 4)),
                     str(
                         round(
-                            ((self.price - df["close"].max()) / df["close"].max()) * 100, 2
+                            ((self.price - df["close"].max()) / df["close"].max())
+                            * 100,
+                            2,
                         )
                     )
                     + "%",
@@ -2329,7 +2390,9 @@ class PyCryptoBot(BotConfig):
                     str(_truncate(margin, 4) + "%")
                     if self.state.in_open_trade is True
                     else " ",
-                    str(_truncate(profit, 2)) if self.state.in_open_trade is True else " ",
+                    str(_truncate(profit, 2))
+                    if self.state.in_open_trade is True
+                    else " ",
                     self.price,
                     change_pcnt_high,
                     self.state.action,
@@ -2385,7 +2448,8 @@ class PyCryptoBot(BotConfig):
                 )
                 and (
                     isinstance(self.websocket_connection.candles, pd.DataFrame)
-                    and len(self.websocket_connection.candles) == self.adjust_total_periods
+                    and len(self.websocket_connection.candles)
+                    == self.adjust_total_periods
                 )
             ):
                 # poll every 5 seconds (self.websocket_connection)
@@ -2420,19 +2484,25 @@ class PyCryptoBot(BotConfig):
                 message += "Coinbase Pro bot"
                 if self.websocket and not self.is_sim:
                     print("Opening websocket to Coinbase Pro...")
-                    self.websocket_connection = CWebSocketClient([self.market], self.granularity)
+                    self.websocket_connection = CWebSocketClient(
+                        [self.market], self.granularity
+                    )
                     self.websocket_connection.start()
             elif self.exchange == Exchange.BINANCE:
                 message += "Binance bot"
                 if self.websocket and not self.is_sim:
                     print("Opening websocket to Binance...")
-                    self.websocket_connection = BWebSocketClient([self.market], self.granularity)
+                    self.websocket_connection = BWebSocketClient(
+                        [self.market], self.granularity
+                    )
                     self.websocket_connection.start()
             elif self.exchange == Exchange.KUCOIN:
                 message += "Kucoin bot"
                 if self.websocket and not self.is_sim:
                     print("Opening websocket to Kucoin...")
-                    self.websocket_connection = KWebSocketClient([self.market], self.granularity)
+                    self.websocket_connection = KWebSocketClient(
+                        [self.market], self.granularity
+                    )
                     self.websocket_connection.start()
 
             smartswitchstatus = "enabled" if self.smart_switch else "disabled"
@@ -2688,9 +2758,19 @@ class PyCryptoBot(BotConfig):
 
         table.add_row("", "", "")
 
-        table.add_row("Exchange", str(self.exchange.value), "Crypto currency exchange", "--exchange")
+        table.add_row(
+            "Exchange",
+            str(self.exchange.value),
+            "Crypto currency exchange",
+            "--exchange",
+        )
         table.add_row("Market", self.market, "Market to trade on", "--market")
-        table.add_row("Granularity", str(self.granularity).replace("Granularity.", ""), "Granularity of the data", "--granularity")
+        table.add_row(
+            "Granularity",
+            str(self.granularity).replace("Granularity.", ""),
+            "Granularity of the data",
+            "--granularity",
+        )
 
         table.add_row("", "", "")
 
@@ -2698,273 +2778,805 @@ class PyCryptoBot(BotConfig):
             table.add_row("Bot Mode", "LIVE", "Live trades using your funds!", "--live")
         else:
             if self.is_sim:
-                table.add_row("Bot Mode", "SIMULATION", "Back testing using simulations", "--live")
+                table.add_row(
+                    "Bot Mode", "SIMULATION", "Back testing using simulations", "--live"
+                )
             else:
-                table.add_row("Bot Mode", "TEST", "Test trades using dummy funds :)", "--live")
+                table.add_row(
+                    "Bot Mode", "TEST", "Test trades using dummy funds :)", "--live"
+                )
 
         table.add_row("", "", "")
 
         if self.disabletelegram is False:
-            table.add_row("Telegram Notifications", str(not self.disabletelegram), "Disable Telegram notifications", "--disabletelegram")
+            table.add_row(
+                "Telegram Notifications",
+                str(not self.disabletelegram),
+                "Disable Telegram notifications",
+                "--disabletelegram",
+            )
         else:
-            table.add_row("Telegram Notifications", str(not self.disabletelegram), "Disable Telegram notifications", "--disabletelegram", style="grey62")
+            table.add_row(
+                "Telegram Notifications",
+                str(not self.disabletelegram),
+                "Disable Telegram notifications",
+                "--disabletelegram",
+                style="grey62",
+            )
 
         if self.disabletelegram is False and self.disable_telegram_error_msg is False:
-            table.add_row("Telegram Error Messages", str(not self.disabletelegramerrormsgs), "Disable Telegram error messages", "--disabletelegramerrormsgs")
+            table.add_row(
+                "Telegram Error Messages",
+                str(not self.disabletelegramerrormsgs),
+                "Disable Telegram error messages",
+                "--disabletelegramerrormsgs",
+            )
         else:
-            table.add_row("Telegram Error Messages", str(not self.disabletelegramerrormsgs), "Disable Telegram error messages", "--disabletelegramerrormsgs", style="grey62")
+            table.add_row(
+                "Telegram Error Messages",
+                str(not self.disabletelegramerrormsgs),
+                "Disable Telegram error messages",
+                "--disabletelegramerrormsgs",
+                style="grey62",
+            )
 
         table.add_row("", "", "")
 
         if self.enable_pandas_ta is True:
-            table.add_row("Enable Pandas-ta", str(self.enable_pandas_ta), "Enable Pandas Technical Analysis", "--enable_pandas_ta")
+            table.add_row(
+                "Enable Pandas-ta",
+                str(self.enable_pandas_ta),
+                "Enable Pandas Technical Analysis",
+                "--enable_pandas_ta",
+            )
         else:
-            table.add_row("Enable Pandas-ta", str(self.enable_pandas_ta), "Enable Pandas Technical Analysis", "--enable_pandas_ta", style="grey62")
+            table.add_row(
+                "Enable Pandas-ta",
+                str(self.enable_pandas_ta),
+                "Enable Pandas Technical Analysis",
+                "--enable_pandas_ta",
+                style="grey62",
+            )
 
         if self.enable_custom_strategy is True:
-            table.add_row("Enable Custom Strategy", str(self.enable_custom_strategy), "Enable Custom Strategy", "--enable_custom_strategy")
+            table.add_row(
+                "Enable Custom Strategy",
+                str(self.enable_custom_strategy),
+                "Enable Custom Strategy",
+                "--enable_custom_strategy",
+            )
         else:
-            table.add_row("Enable Custom Strategy", str(self.enable_custom_strategy), "Enable Custom Strategy", "--enable_custom_strategy", style="grey62")
+            table.add_row(
+                "Enable Custom Strategy",
+                str(self.enable_custom_strategy),
+                "Enable Custom Strategy",
+                "--enable_custom_strategy",
+                style="grey62",
+            )
 
         table.add_row("", "", "")
 
         if self.disablelog is False:
-            table.add_row("Enable Log", str(not self.disablelog), "Enable Log File", "--disablelog")
+            table.add_row(
+                "Enable Log",
+                str(not self.disablelog),
+                "Enable Log File",
+                "--disablelog",
+            )
         else:
-            table.add_row("Enable Log", str(not self.disablelog), "Enable Log File", "--disablelog", style="grey62")
+            table.add_row(
+                "Enable Log",
+                str(not self.disablelog),
+                "Enable Log File",
+                "--disablelog",
+                style="grey62",
+            )
 
         if self.disabletracker is False:
-            table.add_row("Enable Tracker", str(not self.disabletracker), "Enable Trade Reporting", "--disabletracker")
+            table.add_row(
+                "Enable Tracker",
+                str(not self.disabletracker),
+                "Enable Trade Reporting",
+                "--disabletracker",
+            )
         else:
-            table.add_row("Enable Tracker", str(not self.disabletracker), "Enable Trade Reporting", "--disabletracker", style="grey62")
+            table.add_row(
+                "Enable Tracker",
+                str(not self.disabletracker),
+                "Enable Trade Reporting",
+                "--disabletracker",
+                style="grey62",
+            )
 
         if self.autorestart is True:
-            table.add_row("Auto Restart Bot", str(self.autorestart), "Auto restart bot on failure", "--autorestart")
+            table.add_row(
+                "Auto Restart Bot",
+                str(self.autorestart),
+                "Auto restart bot on failure",
+                "--autorestart",
+            )
         else:
-            table.add_row("Auto Restart Bot", str(self.autorestart), "Auto restart bot on failure", "--autorestart", style="grey62")
+            table.add_row(
+                "Auto Restart Bot",
+                str(self.autorestart),
+                "Auto restart bot on failure",
+                "--autorestart",
+                style="grey62",
+            )
 
         if self.websocket is True:
-            table.add_row("Enable Websocket", str(self.websocket), "Enable websockets for data retrieval", "--websocket")
+            table.add_row(
+                "Enable Websocket",
+                str(self.websocket),
+                "Enable websockets for data retrieval",
+                "--websocket",
+            )
         else:
-            table.add_row("Enable Websocket", str(self.websocket), "Enable websockets for data retrieval", "--websocket", style="grey62")
+            table.add_row(
+                "Enable Websocket",
+                str(self.websocket),
+                "Enable websockets for data retrieval",
+                "--websocket",
+                style="grey62",
+            )
 
         if self.enableinsufficientfundslogging is True:
-            table.add_row("Insufficient Funds Log", str(self.enableinsufficientfundslogging), "Enable insufficient funds logging", "--enableinsufficientfundslogging")
+            table.add_row(
+                "Insufficient Funds Log",
+                str(self.enableinsufficientfundslogging),
+                "Enable insufficient funds logging",
+                "--enableinsufficientfundslogging",
+            )
         else:
-            table.add_row("Insufficient Funds Log", str(self.enableinsufficientfundslogging), "Enable insufficient funds logging", "--enableinsufficientfundslogging", style="grey62")
+            table.add_row(
+                "Insufficient Funds Log",
+                str(self.enableinsufficientfundslogging),
+                "Enable insufficient funds logging",
+                "--enableinsufficientfundslogging",
+                style="grey62",
+            )
 
         if self.logbuysellinjson is True:
-            table.add_row("JSON Log Trades", str(self.logbuysellinjson), "Log buy and sell orders in a JSON file", "--logbuysellinjson")
+            table.add_row(
+                "JSON Log Trades",
+                str(self.logbuysellinjson),
+                "Log buy and sell orders in a JSON file",
+                "--logbuysellinjson",
+            )
         else:
-            table.add_row("JSON Log Trades", str(self.logbuysellinjson), "Log buy and sell orders in a JSON file", "--logbuysellinjson", style="grey62")
+            table.add_row(
+                "JSON Log Trades",
+                str(self.logbuysellinjson),
+                "Log buy and sell orders in a JSON file",
+                "--logbuysellinjson",
+                style="grey62",
+            )
 
         if self.manual_trades_only is False:
-            table.add_row("Manual Trading Only", str(self.manual_trades_only), "Manual Trading Only (HODL)", "--manual_trades_only")
+            table.add_row(
+                "Manual Trading Only",
+                str(self.manual_trades_only),
+                "Manual Trading Only (HODL)",
+                "--manual_trades_only",
+            )
         else:
-            table.add_row("Manual Trading Only", str(self.manual_trades_only), "Manual Trading Only (HODL)", "--manual_trades_only", style="grey62")
+            table.add_row(
+                "Manual Trading Only",
+                str(self.manual_trades_only),
+                "Manual Trading Only (HODL)",
+                "--manual_trades_only",
+                style="grey62",
+            )
 
         table.add_row("", "", "")
 
         if self.buyminsize:
-            table.add_row("Buy Min Size", str(self.buyminsize), "Minimum buy order size in quote currency", "--buyminsize")
+            table.add_row(
+                "Buy Min Size",
+                str(self.buyminsize),
+                "Minimum buy order size in quote currency",
+                "--buyminsize",
+            )
         else:
-            table.add_row("Buy Min Size", str(self.buyminsize), "Minimum buy order size in quote currency", "--buyminsize", style="grey62")
+            table.add_row(
+                "Buy Min Size",
+                str(self.buyminsize),
+                "Minimum buy order size in quote currency",
+                "--buyminsize",
+                style="grey62",
+            )
 
         if self.buymaxsize is not None:
-            table.add_row("Buy Max Size", str(self.buymaxsize), "Maximum buy order size in quote currency", "--buymaxsize")
+            table.add_row(
+                "Buy Max Size",
+                str(self.buymaxsize),
+                "Maximum buy order size in quote currency",
+                "--buymaxsize",
+            )
         else:
-            table.add_row("Buy Max Size", str(self.buymaxsize), "Maximum buy order size in quote currency", "--buymaxsize", style="grey62")
+            table.add_row(
+                "Buy Max Size",
+                str(self.buymaxsize),
+                "Maximum buy order size in quote currency",
+                "--buymaxsize",
+                style="grey62",
+            )
 
         if self.buylastsellsize is True:
-            table.add_row("Buy Last Sell Size", str(self.buylastsellsize), "Next buy order will match last sell order", "--buylastsellsize")
+            table.add_row(
+                "Buy Last Sell Size",
+                str(self.buylastsellsize),
+                "Next buy order will match last sell order",
+                "--buylastsellsize",
+            )
         else:
-            table.add_row("Buy Last Sell Size", str(self.buylastsellsize), "Next buy order will match last sell order", "--buylastsellsize", style="grey62")
+            table.add_row(
+                "Buy Last Sell Size",
+                str(self.buylastsellsize),
+                "Next buy order will match last sell order",
+                "--buylastsellsize",
+                style="grey62",
+            )
 
         if self.trailingbuypcnt:
-            table.add_row("Trailing Buy Percent", str(self.trailingbuypcnt), "Please refer to the detailed explanation in the README.md", "--trailingbuypcnt")
+            table.add_row(
+                "Trailing Buy Percent",
+                str(self.trailingbuypcnt),
+                "Please refer to the detailed explanation in the README.md",
+                "--trailingbuypcnt",
+            )
         else:
-            table.add_row("Trailing Buy Percent", str(self.trailingbuypcnt), "Please refer to the detailed explanation in the README.md", "--trailingbuypcnt", style="grey62")
+            table.add_row(
+                "Trailing Buy Percent",
+                str(self.trailingbuypcnt),
+                "Please refer to the detailed explanation in the README.md",
+                "--trailingbuypcnt",
+                style="grey62",
+            )
 
         if self.trailingimmediatebuy is True:
-            table.add_row("Immediate Trailing Buy", str(self.trailingimmediatebuy), "Please refer to the detailed explanation in the README.md", "--trailingimmediatebuy")
+            table.add_row(
+                "Immediate Trailing Buy",
+                str(self.trailingimmediatebuy),
+                "Please refer to the detailed explanation in the README.md",
+                "--trailingimmediatebuy",
+            )
         else:
-            table.add_row("Immediate Trailing Buy", str(self.trailingimmediatebuy), "Please refer to the detailed explanation in the README.md", "--trailingimmediatebuy", style="grey62")
+            table.add_row(
+                "Immediate Trailing Buy",
+                str(self.trailingimmediatebuy),
+                "Please refer to the detailed explanation in the README.md",
+                "--trailingimmediatebuy",
+                style="grey62",
+            )
 
         if self.trailingbuyimmediatepcnt is not None:
-            table.add_row("Immediate Trailing Buy Percent", str(self.trailingbuyimmediatepcnt), "Please refer to the detailed explanation in the README.md", "--trailingbuyimmediatepcnt")
+            table.add_row(
+                "Immediate Trailing Buy Percent",
+                str(self.trailingbuyimmediatepcnt),
+                "Please refer to the detailed explanation in the README.md",
+                "--trailingbuyimmediatepcnt",
+            )
         else:
-            table.add_row("Immediate Trailing Buy Percent", str(self.trailingbuyimmediatepcnt), "Please refer to the detailed explanation in the README.md", "--trailingbuyimmediatepcnt", style="grey62")
+            table.add_row(
+                "Immediate Trailing Buy Percent",
+                str(self.trailingbuyimmediatepcnt),
+                "Please refer to the detailed explanation in the README.md",
+                "--trailingbuyimmediatepcnt",
+                style="grey62",
+            )
 
         if self.marketmultibuycheck is True:
-            table.add_row("Multiple Buy Check", str(self.marketmultibuycheck), "Please refer to the detailed explanation in the README.md", "--marketmultibuycheck")
+            table.add_row(
+                "Multiple Buy Check",
+                str(self.marketmultibuycheck),
+                "Please refer to the detailed explanation in the README.md",
+                "--marketmultibuycheck",
+            )
         else:
-            table.add_row("Multiple Buy Check", str(self.marketmultibuycheck), "Please refer to the detailed explanation in the README.md", "--marketmultibuycheck", style="grey62")
+            table.add_row(
+                "Multiple Buy Check",
+                str(self.marketmultibuycheck),
+                "Please refer to the detailed explanation in the README.md",
+                "--marketmultibuycheck",
+                style="grey62",
+            )
 
         table.add_row("", "", "")
 
         if self.sell_upper_pcnt is not None:
-            table.add_row("Sell Upper Percent", str(self.sell_upper_pcnt), "Upper trade margin to sell at", "--sellupperpcnt")
+            table.add_row(
+                "Sell Upper Percent",
+                str(self.sell_upper_pcnt),
+                "Upper trade margin to sell at",
+                "--sellupperpcnt",
+            )
         else:
-            table.add_row("Sell Upper Percent", str(self.sell_upper_pcnt), "Upper trade margin to sell at", "--sellupperpcnt", style="grey62")
+            table.add_row(
+                "Sell Upper Percent",
+                str(self.sell_upper_pcnt),
+                "Upper trade margin to sell at",
+                "--sellupperpcnt",
+                style="grey62",
+            )
 
         if self.sell_lower_pcnt is not None:
-            table.add_row("Sell Upper Percent", str(self.sell_lower_pcnt), "Lower trade margin to force sell at", "--selllowerpcnt")
+            table.add_row(
+                "Sell Upper Percent",
+                str(self.sell_lower_pcnt),
+                "Lower trade margin to force sell at",
+                "--selllowerpcnt",
+            )
         else:
-            table.add_row("Sell Lower Percent", str(self.sell_lower_pcnt), "Lower trade margin to force sell at", "--selllowerpcnt", style="grey62")
+            table.add_row(
+                "Sell Lower Percent",
+                str(self.sell_lower_pcnt),
+                "Lower trade margin to force sell at",
+                "--selllowerpcnt",
+                style="grey62",
+            )
 
         if self.nosellmaxpcnt is not None:
-            table.add_row("No Sell Max", str(self.nosellmaxpcnt), "Do not sell while trade margin is below this level", "--nosellmaxpcnt")
+            table.add_row(
+                "No Sell Max",
+                str(self.nosellmaxpcnt),
+                "Do not sell while trade margin is below this level",
+                "--nosellmaxpcnt",
+            )
         else:
-            table.add_row("No Sell Max", str(self.nosellmaxpcnt), "Do not sell while trade margin is below this level", "--nosellmaxpcnt", style="grey62")
+            table.add_row(
+                "No Sell Max",
+                str(self.nosellmaxpcnt),
+                "Do not sell while trade margin is below this level",
+                "--nosellmaxpcnt",
+                style="grey62",
+            )
 
         if self.nosellminpcnt is not None:
-            table.add_row("No Sell Min", str(self.nosellminpcnt), "Do not sell while trade margin is above this level", "--nosellminpcnt")
+            table.add_row(
+                "No Sell Min",
+                str(self.nosellminpcnt),
+                "Do not sell while trade margin is above this level",
+                "--nosellminpcnt",
+            )
         else:
-            table.add_row("No Sell Min", str(self.nosellminpcnt), "Do not sell while trade margin is above this level", "--nosellminpcnt", style="grey62")
+            table.add_row(
+                "No Sell Min",
+                str(self.nosellminpcnt),
+                "Do not sell while trade margin is above this level",
+                "--nosellminpcnt",
+                style="grey62",
+            )
 
         table.add_row("", "", "")
 
         if self.trailing_stop_loss is not None:
-            table.add_row("Trailing Stop Loss", str(self.trailing_stop_loss), "Percentage below the trade margin high to sell at", "--trailing_stop_loss")
+            table.add_row(
+                "Trailing Stop Loss",
+                str(self.trailing_stop_loss),
+                "Percentage below the trade margin high to sell at",
+                "--trailing_stop_loss",
+            )
         else:
-            table.add_row("Trailing Stop Loss", str(self.trailing_stop_loss), "Percentage below the trade margin high to sell at", "--trailing_stop_loss", style="grey62")
+            table.add_row(
+                "Trailing Stop Loss",
+                str(self.trailing_stop_loss),
+                "Percentage below the trade margin high to sell at",
+                "--trailing_stop_loss",
+                style="grey62",
+            )
 
         if self.trailing_stop_loss is not None and self.trailing_stop_loss_trigger != 0:
-            table.add_row("Trailing Stop Loss Trigger", str(self.trailing_stop_loss_trigger), "Trade margin percentage to enable the trailing stop loss", "--trailingstoplosstrigger")
+            table.add_row(
+                "Trailing Stop Loss Trigger",
+                str(self.trailing_stop_loss_trigger),
+                "Trade margin percentage to enable the trailing stop loss",
+                "--trailingstoplosstrigger",
+            )
         else:
-            table.add_row("Trailing Stop Loss Trigger", str(self.trailing_stop_loss_trigger), "Trade margin percentage to enable the trailing stop loss", "--trailingstoplosstrigger", style="grey62")
+            table.add_row(
+                "Trailing Stop Loss Trigger",
+                str(self.trailing_stop_loss_trigger),
+                "Trade margin percentage to enable the trailing stop loss",
+                "--trailingstoplosstrigger",
+                style="grey62",
+            )
 
         if self.trailingsellpcnt:
-            table.add_row("Trailing Sell Percent", str(self.trailingsellpcnt), "Please refer to the detailed explanation in the README.md", "--trailingsellpcnt")
+            table.add_row(
+                "Trailing Sell Percent",
+                str(self.trailingsellpcnt),
+                "Please refer to the detailed explanation in the README.md",
+                "--trailingsellpcnt",
+            )
         else:
-            table.add_row("Trailing Sell Percent", str(self.trailingsellpcnt), "Please refer to the detailed explanation in the README.md", "--trailingsellpcnt", style="grey62")
+            table.add_row(
+                "Trailing Sell Percent",
+                str(self.trailingsellpcnt),
+                "Please refer to the detailed explanation in the README.md",
+                "--trailingsellpcnt",
+                style="grey62",
+            )
 
         if self.trailingimmediatesell is True:
-            table.add_row("Immediate Trailing Sell", str(self.trailingimmediatesell), "Please refer to the detailed explanation in the README.md", "--trailingimmediatesell")
+            table.add_row(
+                "Immediate Trailing Sell",
+                str(self.trailingimmediatesell),
+                "Please refer to the detailed explanation in the README.md",
+                "--trailingimmediatesell",
+            )
         else:
-            table.add_row("Immediate Trailing Sell", str(self.trailingimmediatesell), "Please refer to the detailed explanation in the README.md", "--trailingimmediatesell", style="grey62")
+            table.add_row(
+                "Immediate Trailing Sell",
+                str(self.trailingimmediatesell),
+                "Please refer to the detailed explanation in the README.md",
+                "--trailingimmediatesell",
+                style="grey62",
+            )
 
         if self.trailingsellimmediatepcnt is not None:
-            table.add_row("Immediate Trailing Sell Percent", str(self.trailingsellimmediatepcnt), "Please refer to the detailed explanation in the README.md", "--trailingsellimmediatepcnt")
+            table.add_row(
+                "Immediate Trailing Sell Percent",
+                str(self.trailingsellimmediatepcnt),
+                "Please refer to the detailed explanation in the README.md",
+                "--trailingsellimmediatepcnt",
+            )
         else:
-            table.add_row("Immediate Trailing Sell Percent", str(self.trailingsellimmediatepcnt), "Please refer to the detailed explanation in the README.md", "--trailingsellimmediatepcnt", style="grey62")
+            table.add_row(
+                "Immediate Trailing Sell Percent",
+                str(self.trailingsellimmediatepcnt),
+                "Please refer to the detailed explanation in the README.md",
+                "--trailingsellimmediatepcnt",
+                style="grey62",
+            )
 
         if self.trailingsellbailoutpcnt is not None:
-            table.add_row("Trailing Sell Bailout Percent", str(self.trailingsellbailoutpcnt), "Please refer to the detailed explanation in the README.md", "--trailingsellbailoutpcnt")
+            table.add_row(
+                "Trailing Sell Bailout Percent",
+                str(self.trailingsellbailoutpcnt),
+                "Please refer to the detailed explanation in the README.md",
+                "--trailingsellbailoutpcnt",
+            )
         else:
-            table.add_row("Trailing Sell Bailout Percent", str(self.trailingsellbailoutpcnt), "Please refer to the detailed explanation in the README.md", "--trailingsellbailoutpcnt", style="grey62")
+            table.add_row(
+                "Trailing Sell Bailout Percent",
+                str(self.trailingsellbailoutpcnt),
+                "Please refer to the detailed explanation in the README.md",
+                "--trailingsellbailoutpcnt",
+                style="grey62",
+            )
 
         table.add_row("", "", "")
 
         if self.dynamic_tsl is not False:
-            table.add_row("Dynamic Trailing Stop Loss", str(self.dynamic_tsl), "Please refer to the detailed explanation in the README.md", "--dynamictsl")
+            table.add_row(
+                "Dynamic Trailing Stop Loss",
+                str(self.dynamic_tsl),
+                "Please refer to the detailed explanation in the README.md",
+                "--dynamictsl",
+            )
         else:
-            table.add_row("Dynamic Trailing Stop Loss", str(self.dynamic_tsl), "Please refer to the detailed explanation in the README.md", "--dynamictsl", style="grey62")
+            table.add_row(
+                "Dynamic Trailing Stop Loss",
+                str(self.dynamic_tsl),
+                "Please refer to the detailed explanation in the README.md",
+                "--dynamictsl",
+                style="grey62",
+            )
 
         if self.dynamic_tsl is True and self.tsl_multiplier > 0:
-            table.add_row("Trailing Stop Loss Multiplier", str(self.tsl_multiplier), "Please refer to the detailed explanation in the README.md", "--tslmultiplier")
+            table.add_row(
+                "Trailing Stop Loss Multiplier",
+                str(self.tsl_multiplier),
+                "Please refer to the detailed explanation in the README.md",
+                "--tslmultiplier",
+            )
         else:
-            table.add_row("Trailing Stop Loss Multiplier", str(self.tsl_multiplier), "Please refer to the detailed explanation in the README.md", "--tslmultiplier", style="grey62")
+            table.add_row(
+                "Trailing Stop Loss Multiplier",
+                str(self.tsl_multiplier),
+                "Please refer to the detailed explanation in the README.md",
+                "--tslmultiplier",
+                style="grey62",
+            )
 
         if self.dynamic_tsl is True and self.tsl_trigger_multiplier > 0:
-            table.add_row("Stop Loss Trigger Multiplier", str(self.tsl_trigger_multiplier), "Please refer to the detailed explanation in the README.md", "--tsltriggermultiplier")
+            table.add_row(
+                "Stop Loss Trigger Multiplier",
+                str(self.tsl_trigger_multiplier),
+                "Please refer to the detailed explanation in the README.md",
+                "--tsltriggermultiplier",
+            )
         else:
-            table.add_row("Stop Loss Trigger Multiplier", str(self.tsl_trigger_multiplier), "Please refer to the detailed explanation in the README.md", "--tsltriggermultiplier", style="grey62")
+            table.add_row(
+                "Stop Loss Trigger Multiplier",
+                str(self.tsl_trigger_multiplier),
+                "Please refer to the detailed explanation in the README.md",
+                "--tsltriggermultiplier",
+                style="grey62",
+            )
 
         if self.dynamic_tsl is True and self.tsl_max_pcnt > 0:
-            table.add_row("Stop Loss Trigger Multiplier", str(self.tsl_max_pcnt), "Please refer to the detailed explanation in the README.md", "--tslmaxpcnt")
+            table.add_row(
+                "Stop Loss Trigger Multiplier",
+                str(self.tsl_max_pcnt),
+                "Please refer to the detailed explanation in the README.md",
+                "--tslmaxpcnt",
+            )
         else:
-            table.add_row("Stop Loss Trigger Multiplier", str(self.tsl_max_pcnt), "Please refer to the detailed explanation in the README.md", "--tslmaxpcnt", style="grey62")
+            table.add_row(
+                "Stop Loss Trigger Multiplier",
+                str(self.tsl_max_pcnt),
+                "Please refer to the detailed explanation in the README.md",
+                "--tslmaxpcnt",
+                style="grey62",
+            )
 
         table.add_row("", "", "")
 
         if self.preventloss is True:
-            table.add_row("Prevent Loss", str(self.preventloss), "Force a sell before margin is negative", "--preventloss")
+            table.add_row(
+                "Prevent Loss",
+                str(self.preventloss),
+                "Force a sell before margin is negative",
+                "--preventloss",
+            )
         else:
-            table.add_row("Prevent Loss", str(self.preventloss), "Force a sell before margin is negative", "--preventloss", style="grey62")
+            table.add_row(
+                "Prevent Loss",
+                str(self.preventloss),
+                "Force a sell before margin is negative",
+                "--preventloss",
+                style="grey62",
+            )
 
         if self.preventloss is True and self.preventlosstrigger is not None:
-            table.add_row("Prevent Loss Trigger", str(self.preventlosstrigger), "Margin set point that will trigge the prevent loss", "--preventlosstrigger")
+            table.add_row(
+                "Prevent Loss Trigger",
+                str(self.preventlosstrigger),
+                "Margin set point that will trigge the prevent loss",
+                "--preventlosstrigger",
+            )
         else:
-            table.add_row("Prevent Loss Trigger", str(self.preventlosstrigger), "Margin set point that will trigge the prevent loss", "--preventlosstrigger", style="grey62")
+            table.add_row(
+                "Prevent Loss Trigger",
+                str(self.preventlosstrigger),
+                "Margin set point that will trigge the prevent loss",
+                "--preventlosstrigger",
+                style="grey62",
+            )
 
         if self.preventloss is True and self.preventlossmargin is not None:
-            table.add_row("Prevent Loss Margin", str(self.preventlossmargin), "Margin set point that will cause an immediate sell to prevent loss", "--preventlossmargin")
+            table.add_row(
+                "Prevent Loss Margin",
+                str(self.preventlossmargin),
+                "Margin set point that will cause an immediate sell to prevent loss",
+                "--preventlossmargin",
+            )
         else:
-            table.add_row("Prevent Loss Margin", str(self.preventlossmargin), "Margin set point that will cause an immediate sell to prevent loss", "--preventlossmargin", style="grey62")
+            table.add_row(
+                "Prevent Loss Margin",
+                str(self.preventlossmargin),
+                "Margin set point that will cause an immediate sell to prevent loss",
+                "--preventlossmargin",
+                style="grey62",
+            )
 
         table.add_row("", "", "")
 
         if self.sell_at_loss is True:
-            table.add_row("Sell At Loss", str(self.sell_at_loss), "The bot will be able to sell at a loss", "--sellatloss")
+            table.add_row(
+                "Sell At Loss",
+                str(self.sell_at_loss),
+                "The bot will be able to sell at a loss",
+                "--sellatloss",
+            )
         else:
-            table.add_row("Sell At Loss", str(self.sell_at_loss), "The bot will be able to sell at a loss", "--sellatloss", style="grey62")
+            table.add_row(
+                "Sell At Loss",
+                str(self.sell_at_loss),
+                "The bot will be able to sell at a loss",
+                "--sellatloss",
+                style="grey62",
+            )
 
         if self.sellatresistance is True:
-            table.add_row("Sell At Resistance", str(self.sellatresistance), "Trigger a sell if the price hits a resistance level", "--sellatresistance")
+            table.add_row(
+                "Sell At Resistance",
+                str(self.sellatresistance),
+                "Trigger a sell if the price hits a resistance level",
+                "--sellatresistance",
+            )
         else:
-            table.add_row("Sell At Resistance", str(self.sellatresistance), "Trigger a sell if the price hits a resistance level", "--sellatresistance", style="grey62")
+            table.add_row(
+                "Sell At Resistance",
+                str(self.sellatresistance),
+                "Trigger a sell if the price hits a resistance level",
+                "--sellatresistance",
+                style="grey62",
+            )
 
         if self.disablefailsafefibonaccilow is False:
-            table.add_row("Sell Fibonacci Low", str(not self.disablefailsafefibonaccilow), "Trigger a sell if the price hits a fibonacci lower level", "--disablefailsafefibonaccilow")
+            table.add_row(
+                "Sell Fibonacci Low",
+                str(not self.disablefailsafefibonaccilow),
+                "Trigger a sell if the price hits a fibonacci lower level",
+                "--disablefailsafefibonaccilow",
+            )
         else:
-            table.add_row("Sell Fibonacci Low", str(not self.disablefailsafefibonaccilow), "Trigger a sell if the price hits a fibonacci lower level", "--disablefailsafefibonaccilow", style="grey62")
+            table.add_row(
+                "Sell Fibonacci Low",
+                str(not self.disablefailsafefibonaccilow),
+                "Trigger a sell if the price hits a fibonacci lower level",
+                "--disablefailsafefibonaccilow",
+                style="grey62",
+            )
 
         if self.sellatresistance is True:
-            table.add_row("Trade Bull Only", str(not self.disablebullonly), "Only trade in a bull market SMA50 > SMA200", "--disablebullonly")
+            table.add_row(
+                "Trade Bull Only",
+                str(not self.disablebullonly),
+                "Only trade in a bull market SMA50 > SMA200",
+                "--disablebullonly",
+            )
         else:
-            table.add_row("Trade Bull Only", str(not self.disablebullonly), "Only trade in a bull market SMA50 > SMA200", "--disablebullonly", style="grey62")
+            table.add_row(
+                "Trade Bull Only",
+                str(not self.disablebullonly),
+                "Only trade in a bull market SMA50 > SMA200",
+                "--disablebullonly",
+                style="grey62",
+            )
 
         if self.disableprofitbankreversal is False:
-            table.add_row("Candlestick Reversal", str(not self.disableprofitbankreversal), "Trigger a sell at candlestick strong reversal pattern", "--disableprofitbankreversal")
+            table.add_row(
+                "Candlestick Reversal",
+                str(not self.disableprofitbankreversal),
+                "Trigger a sell at candlestick strong reversal pattern",
+                "--disableprofitbankreversal",
+            )
         else:
-            table.add_row("Candlestick Reversal", str(not self.disableprofitbankreversal), "Trigger a sell at candlestick strong reversal pattern", "--disableprofitbankreversal", style="grey62")
+            table.add_row(
+                "Candlestick Reversal",
+                str(not self.disableprofitbankreversal),
+                "Trigger a sell at candlestick strong reversal pattern",
+                "--disableprofitbankreversal",
+                style="grey62",
+            )
 
         table.add_row("", "", "")
 
         if self.disablebuynearhigh:
-            table.add_row("Allow Buy Near High", str(not self.disablebuynearhigh), "Prevent the bot from buying at a recent high", "--disablebuynearhigh")
+            table.add_row(
+                "Allow Buy Near High",
+                str(not self.disablebuynearhigh),
+                "Prevent the bot from buying at a recent high",
+                "--disablebuynearhigh",
+            )
         else:
-            table.add_row("Allow Buy Near High", str(not self.disablebuynearhigh), "Prevent the bot from buying at a recent high", "--disablebuynearhigh", style="grey62")
+            table.add_row(
+                "Allow Buy Near High",
+                str(not self.disablebuynearhigh),
+                "Prevent the bot from buying at a recent high",
+                "--disablebuynearhigh",
+                style="grey62",
+            )
 
         if self.disablebuynearhigh and self.nobuynearhighpcnt:
-            table.add_row("No Buy Near High Percent", str(self.nobuynearhighpcnt), "Prevent the bot from buying near a recent high", "--nobuynearhighpcnt")
+            table.add_row(
+                "No Buy Near High Percent",
+                str(self.nobuynearhighpcnt),
+                "Prevent the bot from buying near a recent high",
+                "--nobuynearhighpcnt",
+            )
         else:
-            table.add_row("No Buy Near High Percent", str(self.nobuynearhighpcnt), "Prevent the bot from buying near a recent high", "--nobuynearhighpcnt", style="grey62")
+            table.add_row(
+                "No Buy Near High Percent",
+                str(self.nobuynearhighpcnt),
+                "Prevent the bot from buying near a recent high",
+                "--nobuynearhighpcnt",
+                style="grey62",
+            )
 
         if self.adjust_total_periods:
-            table.add_row("Adjust Total Periods", str(self.adjust_total_periods), "Adjust data points in historical trading data", "--adjust_total_periods")
+            table.add_row(
+                "Adjust Total Periods",
+                str(self.adjust_total_periods),
+                "Adjust data points in historical trading data",
+                "--adjust_total_periods",
+            )
         else:
-            table.add_row("Adjust Total Periods", str(self.adjust_total_periods), "Adjust data points in historical trading data", "--adjust_total_periods", style="grey62")
+            table.add_row(
+                "Adjust Total Periods",
+                str(self.adjust_total_periods),
+                "Adjust data points in historical trading data",
+                "--adjust_total_periods",
+                style="grey62",
+            )
 
         table.add_row("", "", "")
 
         if self.sell_trigger_override:
-            table.add_row("Override Sell Trigger", str(self.sell_trigger_override), "Override sell trigger if strong buy", "--sell_trigger_override")
+            table.add_row(
+                "Override Sell Trigger",
+                str(self.sell_trigger_override),
+                "Override sell trigger if strong buy",
+                "--sell_trigger_override",
+            )
         else:
-            table.add_row("Override Sell Trigger", str(self.sell_trigger_override), "Override sell trigger if strong buy", "--sell_trigger_override", style="grey62")
+            table.add_row(
+                "Override Sell Trigger",
+                str(self.sell_trigger_override),
+                "Override sell trigger if strong buy",
+                "--sell_trigger_override",
+                style="grey62",
+            )
 
         table.add_row("", "", "")
 
         if self.disablebuyema is False:
-            table.add_row("Use EMA12/26", str(not self.disablebuyema), "Exponential Moving Average (EMA)", "--disablebuyema")
+            table.add_row(
+                "Use EMA12/26",
+                str(not self.disablebuyema),
+                "Exponential Moving Average (EMA)",
+                "--disablebuyema",
+            )
         else:
-            table.add_row("Use EMA12/26", str(not self.disablebuyema), "Exponential Moving Average (EMA)", "--disablebuyema", style="grey62")
+            table.add_row(
+                "Use EMA12/26",
+                str(not self.disablebuyema),
+                "Exponential Moving Average (EMA)",
+                "--disablebuyema",
+                style="grey62",
+            )
 
         if self.disablebuymacd is False:
-            table.add_row("Use MACD/Signal", str(not self.disablebuymacd), "Moving Average Convergence Divergence (MACD)", "--disablebuymacd")
+            table.add_row(
+                "Use MACD/Signal",
+                str(not self.disablebuymacd),
+                "Moving Average Convergence Divergence (MACD)",
+                "--disablebuymacd",
+            )
         else:
-            table.add_row("Use MACD/Signal", str(not self.disablebuymacd), "Moving Average Convergence Divergence (MACD)", "--disablebuymacd", style="grey62")
+            table.add_row(
+                "Use MACD/Signal",
+                str(not self.disablebuymacd),
+                "Moving Average Convergence Divergence (MACD)",
+                "--disablebuymacd",
+                style="grey62",
+            )
 
         if self.disablebuyobv is False:
-            table.add_row("Use OBV", str(not self.disablebuyobv), "On-Balance Volume (OBV)", "--disablebuyobv")
+            table.add_row(
+                "Use OBV",
+                str(not self.disablebuyobv),
+                "On-Balance Volume (OBV)",
+                "--disablebuyobv",
+            )
         else:
-            table.add_row("Use OBV", str(not self.disablebuyobv), "On-Balance Volume (OBV)", "--disablebuyobv", style="grey62")
+            table.add_row(
+                "Use OBV",
+                str(not self.disablebuyobv),
+                "On-Balance Volume (OBV)",
+                "--disablebuyobv",
+                style="grey62",
+            )
 
         if self.disablebuyelderray is False:
-            table.add_row("Use Elder-Ray", str(not self.disablebuyelderray), "Elder-Ray Index", "--disablebuyelderray")
+            table.add_row(
+                "Use Elder-Ray",
+                str(not self.disablebuyelderray),
+                "Elder-Ray Index",
+                "--disablebuyelderray",
+            )
         else:
-            table.add_row("Use Elder-Ray", str(not self.disablebuyelderray), "Elder-Ray Index (Elder-Ray)", "--disablebuyelderray", style="grey62")
+            table.add_row(
+                "Use Elder-Ray",
+                str(not self.disablebuyelderray),
+                "Elder-Ray Index (Elder-Ray)",
+                "--disablebuyelderray",
+                style="grey62",
+            )
 
         console = Console()
         console.print(table)
