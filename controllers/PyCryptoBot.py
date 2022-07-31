@@ -9,6 +9,7 @@ import functools
 import pandas as pd
 from rich.console import Console
 from rich.table import Table
+from rich.table import Text
 from rich import box
 from datetime import datetime, timedelta
 from os.path import exists as file_exists
@@ -67,8 +68,44 @@ def signal_handler(signum):
         return
 
 
+class RichText:
+    @staticmethod
+    def number_comparison(
+        label: str = "",
+        value1: float = 0.0,
+        value2: float = 0.0,
+        highlight: bool = False,
+        disabled: bool = False
+    ) -> Text:
+        if disabled:
+            return None
+
+        color = "white"
+        operator = "="
+        if value1 > value2:
+            if highlight:
+                color = "white on green"
+            else:
+                color = "green"
+            operator = ">"
+        elif value1 < value2:
+            if highlight:
+                color = "white on red"
+            else:
+                color = "red"
+            operator = "<"
+
+        text = Text(f"{label} {value1} {operator} {value2}")
+        text.stylize("white", 0, len(label))
+        text.stylize(color, len(label) + 1, len(text))
+        return text
+
+
 class PyCryptoBot(BotConfig):
     def __init__(self, config_file: str = None, exchange: Exchange = None):
+        self.console = Console()
+        self.table_console = Table(title=" ", box=box.MINIMAL, show_header=False)
+
         self.config_file = config_file or "config.json"
         self.exchange = exchange
         super(PyCryptoBot, self).__init__(
@@ -1038,36 +1075,60 @@ class PyCryptoBot(BotConfig):
 
                 # TODO: add console code here
 
-                table = Table(title=" ", box=box.MINIMAL, show_header=False)
-
-                table.add_column("Date", justify="left", style="cyan", no_wrap=True)
-                table.add_column("Market", justify="left", style="white", no_wrap=True)
-                table.add_column(
-                    "Granularity", justify="left", style="white", no_wrap=True
+                self.table_console.add_column(
+                    "Bot #", justify="left", style="magenta", no_wrap=True
                 )
-                table.add_column("Close", justify="left", style="white", no_wrap=True)
+                self.table_console.add_column(
+                    "Date", justify="left", style="cyan", no_wrap=True
+                )
+                self.table_console.add_column(
+                    "Market", justify="left", style="yellow", no_wrap=True
+                )
+                self.table_console.add_column(
+                    "Granularity", justify="left", style="yellow", no_wrap=True
+                )
+                self.table_console.add_column(
+                    "Close", justify="left", style="green", no_wrap=True
+                )
 
-                if trailing_action_logtext:
-                    table.add_column(
-                        "Trailing Action", justify="left", style="white", no_wrap=True
+                if self.disablebuyema is False:
+                    self.table_console.add_column(
+                        "EMA12/26", justify="left", style="white", no_wrap=True
+                    )
+
+                if self.disablebuymacd is False:
+                    self.table_console.add_column(
+                        "MACD", justify="left", style="white", no_wrap=True
                     )
 
                 args = [
                     arg
                     for arg in [
+                        "Bot1",
                         formatted_current_df_index,
                         self.market,
                         self.print_granularity(),
                         str(self.price),
-                        trailing_action_logtext,
+                        RichText.number_comparison(
+                            "EMA12/26:",
+                            round(self.df_last["ema12"].values[0], 2),
+                            round(self.df_last["ema26"].values[0], 2),
+                            ema12gtema26co or ema12ltema26co,
+                            self.disablebuyema,
+                        ),
+                        RichText.number_comparison(
+                            "MACD:",
+                            round(self.df_last["macd"].values[0], 2),
+                            round(self.df_last["signal"].values[0], 2),
+                            macdgtsignalco or macdltsignalco,
+                            self.disablebuymacd,
+                        ),
                     ]
                     if arg
                 ]
 
-                table.add_row(*args)
-
-                console = Console()
-                console.print(table)
+                self.table_console.add_row(*args)
+                self.console.print(self.table_console)
 
                 if not self.is_verbose:
                     if self.state.last_action != "":
