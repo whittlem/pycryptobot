@@ -489,6 +489,8 @@ def defaultConfigParse(app, config):
                 app.disablelog = bool(config["disablelog"])
         else:
             raise TypeError("disablelog must be of type int")
+    else:
+        app.disablelog = 0  # default to False
 
     if "disabletracker" in config:
         if isinstance(config["disabletracker"], int):

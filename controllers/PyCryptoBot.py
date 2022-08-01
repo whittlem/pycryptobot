@@ -70,6 +70,31 @@ def signal_handler(signum):
 
 class RichText:
     @staticmethod
+    def styled_text(
+        input: str = "",
+        color: str = "white"
+    ) -> Text:
+        text = Text(input)
+        text.stylize(color, 0, len(input))
+        return text
+
+    @staticmethod
+    def bull_bear(
+        golden_cross: bool = False,
+        adjust_total_periods: int = 300
+    ) -> Text:
+        if adjust_total_periods < 200:
+            return None
+
+        if golden_cross:
+            text = Text("BULL")
+            text.stylize("green", 0, 4)
+        else:
+            text = Text("BEAR")
+            text.stylize("red", 0, 4)
+        return text
+
+    @staticmethod
     def number_comparison(
         label: str = "",
         value1: float = 0.0,
@@ -103,14 +128,19 @@ class RichText:
 
 class PyCryptoBot(BotConfig):
     def __init__(self, config_file: str = None, exchange: Exchange = None):
-        self.console = Console()
-        self.table_console = Table(title=" ", box=box.MINIMAL, show_header=False)
-
         self.config_file = config_file or "config.json"
         self.exchange = exchange
         super(PyCryptoBot, self).__init__(
             filename=self.config_file, exchange=self.exchange
         )
+
+        if self.disablelog:
+            self.console = Console()
+        else:
+            # self.console = Console(file=open(self.logfile, "w"))
+            self.console = Console()  # TODO: implement logfile
+
+        self.table_console = Table(title=" ", box=box.MINIMAL, show_header=False)
 
         self.s = sched.scheduler(time.time, time.sleep)
 
@@ -923,15 +953,14 @@ class PyCryptoBot(BotConfig):
 
             bullbeartext = ""
             if (
-                self.disablebullonly is True
-                or self.adjust_total_periods < 200
+                self.adjust_total_periods <= 200
                 or self.df_last["sma50"].values[0] == self.df_last["sma200"].values[0]
             ):
                 bullbeartext = ""
             elif goldencross is True:
-                bullbeartext = " (BULL)"
+                bullbeartext = "BULL"
             elif goldencross is False:
-                bullbeartext = " (BEAR)"
+                bullbeartext = "BEAR"
 
             # polling is every 5 minutes (even for hourly intervals), but only process once per interval
             # Logger.debug("DateCheck: " + str(immediate_action) + ' ' + str(self.state.last_df_index) + ' ' + str(current_df_index))
@@ -1073,42 +1102,15 @@ class PyCryptoBot(BotConfig):
                         obv_prefix = "v "
                         obv_suffix = " v | "
 
-                # TODO: add console code here
-
-                self.table_console.add_column(
-                    "Bot #", justify="left", style="magenta", no_wrap=True
-                )
-                self.table_console.add_column(
-                    "Date", justify="left", style="cyan", no_wrap=True
-                )
-                self.table_console.add_column(
-                    "Market", justify="left", style="yellow", no_wrap=True
-                )
-                self.table_console.add_column(
-                    "Granularity", justify="left", style="yellow", no_wrap=True
-                )
-                self.table_console.add_column(
-                    "Close", justify="left", style="green", no_wrap=True
-                )
-
-                if self.disablebuyema is False:
-                    self.table_console.add_column(
-                        "EMA12/26", justify="left", style="white", no_wrap=True
-                    )
-
-                if self.disablebuymacd is False:
-                    self.table_console.add_column(
-                        "MACD", justify="left", style="white", no_wrap=True
-                    )
-
                 args = [
                     arg
                     for arg in [
-                        "Bot1",
-                        formatted_current_df_index,
-                        self.market,
-                        self.print_granularity(),
-                        str(self.price),
+                        RichText.styled_text("Bot1", "magenta"),
+                        RichText.bull_bear(goldencross),
+                        RichText.styled_text(formatted_current_df_index, "white"),
+                        RichText.styled_text(self.market, "yellow"),
+                        RichText.styled_text(self.print_granularity(), "yellow"),
+                        RichText.styled_text(str(self.price), "white"),
                         RichText.number_comparison(
                             "EMA12/26:",
                             round(self.df_last["ema12"].values[0], 2),
@@ -1403,7 +1405,7 @@ class PyCryptoBot(BotConfig):
 
                     if debug:
                         Logger.debug(
-                            f"-- Iteration: {str(self.state.iterations)} --{bullbeartext}"
+                            f"-- Iteration: {str(self.state.iterations)} -- {bullbeartext}"
                         )
 
                     if self.state.last_action == "BUY":
@@ -3013,7 +3015,7 @@ class PyCryptoBot(BotConfig):
                 style="grey62",
             )
 
-        if self.manual_trades_only is False:
+        if self.manual_trades_only is True:
             table.add_row(
                 "Manual Trading Only",
                 str(self.manual_trades_only),
@@ -3639,8 +3641,7 @@ class PyCryptoBot(BotConfig):
                 style="grey62",
             )
 
-        console = Console()
-        console.print(table)
+        self.console.print(table)
 
     def get_date_from_iso8601_str(self, date: str):
         # if date passed from datetime.now() remove milliseconds
