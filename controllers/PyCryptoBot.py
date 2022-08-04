@@ -33,6 +33,7 @@ from models.helper.TextBoxHelper import TextBox
 from models.helper.LogHelper import Logger
 from models.Strategy import Strategy
 from views.TradingGraphs import TradingGraphs
+from views.PyCryptoBot import RichText
 from utils.PyCryptoBot import truncate as _truncate
 from utils.PyCryptoBot import compare as _compare
 
@@ -68,64 +69,6 @@ def signal_handler(signum):
         return
 
 
-class RichText:
-    @staticmethod
-    def styled_text(
-        input: str = "",
-        color: str = "white"
-    ) -> Text:
-        text = Text(input)
-        text.stylize(color, 0, len(input))
-        return text
-
-    @staticmethod
-    def bull_bear(
-        golden_cross: bool = False,
-        adjust_total_periods: int = 300
-    ) -> Text:
-        if adjust_total_periods < 200:
-            return None
-
-        if golden_cross:
-            text = Text("BULL")
-            text.stylize("green", 0, 4)
-        else:
-            text = Text("BEAR")
-            text.stylize("red", 0, 4)
-        return text
-
-    @staticmethod
-    def number_comparison(
-        label: str = "",
-        value1: float = 0.0,
-        value2: float = 0.0,
-        highlight: bool = False,
-        disabled: bool = False
-    ) -> Text:
-        if disabled:
-            return None
-
-        color = "white"
-        operator = "="
-        if value1 > value2:
-            if highlight:
-                color = "white on green"
-            else:
-                color = "green"
-            operator = ">"
-        elif value1 < value2:
-            if highlight:
-                color = "white on red"
-            else:
-                color = "red"
-            operator = "<"
-
-        text = Text(f"{label} {value1} {operator} {value2}")
-        text.stylize("white", 0, len(label))
-        text.stylize(color, len(label) + 1, len(text))
-        return text
-
-
 class PyCryptoBot(BotConfig):
     def __init__(self, config_file: str = None, exchange: Exchange = None):
         self.config_file = config_file or "config.json"
@@ -134,11 +77,8 @@ class PyCryptoBot(BotConfig):
             filename=self.config_file, exchange=self.exchange
         )
 
-        if self.disablelog:
-            self.console = Console()
-        else:
-            # self.console = Console(file=open(self.logfile, "w"))
-            self.console = Console()  # TODO: implement logfile
+        self.console_term = Console()  # logs to the screen
+        self.console_log = Console(file=open(self.logfile, "w"))   # logs to file
 
         self.table_console = Table(title=" ", box=box.MINIMAL, show_header=False)
 
@@ -761,11 +701,9 @@ class PyCryptoBot(BotConfig):
                 goldencross = bool(self.df_last["goldencross"].values[0])
                 macdgtsignal = bool(self.df_last["macdgtsignal"].values[0])
                 macdgtsignalco = bool(self.df_last["macdgtsignalco"].values[0])
-                ema12ltema26 = bool(self.df_last["ema12ltema26"].values[0])
                 ema12ltema26co = bool(self.df_last["ema12ltema26co"].values[0])
                 macdltsignal = bool(self.df_last["macdltsignal"].values[0])
                 macdltsignalco = bool(self.df_last["macdltsignalco"].values[0])
-                obv = float(self.df_last["obv"].values[0])
                 obv_pc = float(self.df_last["obv_pc"].values[0])
                 elder_ray_buy = bool(self.df_last["eri_buy"].values[0])
                 elder_ray_sell = bool(self.df_last["eri_sell"].values[0])
@@ -951,17 +889,6 @@ class PyCryptoBot(BotConfig):
                     self.state.action = manual_buy_sell
                     immediate_action = True
 
-            bullbeartext = ""
-            if (
-                self.adjust_total_periods <= 200
-                or self.df_last["sma50"].values[0] == self.df_last["sma200"].values[0]
-            ):
-                bullbeartext = ""
-            elif goldencross is True:
-                bullbeartext = "BULL"
-            elif goldencross is False:
-                bullbeartext = "BEAR"
-
             # polling is every 5 minutes (even for hourly intervals), but only process once per interval
             # Logger.debug("DateCheck: " + str(immediate_action) + ' ' + str(self.state.last_df_index) + ' ' + str(current_df_index))
             if immediate_action is True or self.state.last_df_index != current_df_index:
@@ -975,41 +902,6 @@ class PyCryptoBot(BotConfig):
                 # Since precision does not change after this point, it is safe to prepare a tailored `truncate()` that would
                 # work with this precision. It should save a couple of `precision` uses, one for each `truncate()` call.
                 truncate = functools.partial(_truncate, n=precision)
-
-                ema_text = ""
-                if self.disablebuyema is False:
-                    ema_text = _compare(
-                        self.df_last["ema12"].values[0],
-                        self.df_last["ema26"].values[0],
-                        "EMA12/26",
-                        precision,
-                    )
-
-                macd_text = ""
-                if self.disablebuymacd is False:
-                    macd_text = _compare(
-                        self.df_last["macd"].values[0],
-                        self.df_last["signal"].values[0],
-                        "MACD",
-                        precision,
-                    )
-
-                obv_text = ""
-                if self.disablebuyobv is False:
-                    obv_text = (
-                        "OBV: "
-                        + truncate(self.df_last["obv"].values[0])
-                        + " ("
-                        + str(truncate(self.df_last["obv_pc"].values[0]))
-                        + "%)"
-                    )
-
-                eri_text = ""
-                if self.disablebuyelderray is False:
-                    if elder_ray_buy is True:
-                        eri_text = "ERI: buy"
-                    elif elder_ray_sell is True:
-                        eri_text = "ERI: sell"
 
                 log_text = ""
                 if hammer is True:
@@ -1056,61 +948,15 @@ class PyCryptoBot(BotConfig):
                 ):
                     Logger.info(log_text)
 
-                ema_co_prefix = ""
-                ema_co_suffix = ""
-                if self.disablebuyema is False:
-                    if ema12gtema26co is True:
-                        ema_co_prefix = "*^ "
-                        ema_co_suffix = " ^* | "
-                    elif ema12ltema26co is True:
-                        ema_co_prefix = "*v "
-                        ema_co_suffix = " v* | "
-                    elif ema12gtema26 is True:
-                        ema_co_prefix = "^ "
-                        ema_co_suffix = " ^ | "
-                    elif ema12ltema26 is True:
-                        ema_co_prefix = "v "
-                        ema_co_suffix = " v | "
-                    else:
-                        ema_co_suffix = " | "
-
-                macd_co_prefix = ""
-                macd_co_suffix = ""
-                if self.disablebuymacd is False:
-                    if macdgtsignalco is True:
-                        macd_co_prefix = "*^ "
-                        macd_co_suffix = " ^* | "
-                    elif macdltsignalco is True:
-                        macd_co_prefix = "*v "
-                        macd_co_suffix = " v* | "
-                    elif macdgtsignal is True:
-                        macd_co_prefix = "^ "
-                        macd_co_suffix = " ^ | "
-                    elif macdltsignal is True:
-                        macd_co_prefix = "v "
-                        macd_co_suffix = " v | "
-                    else:
-                        macd_co_suffix = " | "
-
-                obv_prefix = ""
-                obv_suffix = ""
-                if self.disablebuyobv is False:
-                    if float(obv_pc) > 0:
-                        obv_prefix = "^ "
-                        obv_suffix = " ^ | "
-                    elif float(obv_pc) < 0:
-                        obv_prefix = "v "
-                        obv_suffix = " v | "
-
                 args = [
                     arg
                     for arg in [
                         RichText.styled_text("Bot1", "magenta"),
-                        RichText.bull_bear(goldencross),
                         RichText.styled_text(formatted_current_df_index, "white"),
                         RichText.styled_text(self.market, "yellow"),
                         RichText.styled_text(self.print_granularity(), "yellow"),
                         RichText.styled_text(str(self.price), "white"),
+                        RichText.bull_bear(goldencross),
                         RichText.number_comparison(
                             "EMA12/26:",
                             round(self.df_last["ema12"].values[0], 2),
@@ -1125,42 +971,27 @@ class PyCryptoBot(BotConfig):
                             macdgtsignalco or macdltsignalco,
                             self.disablebuymacd,
                         ),
+                        RichText.styled_text(trailing_action_logtext),
+                        RichText.on_balance_volume(self.df_last["obv"].values[0], self.df_last["obv_pc"].values[0], self.disablebuyobv),
+                        RichText.elder_ray(elder_ray_buy, elder_ray_sell, self.disablebuyelderray),
+                        RichText.action_text(self.state.action),
+                        RichText.last_action_text(self.state.last_action),
                     ]
                     if arg
                 ]
 
-                self.table_console.add_row(*args)
-                self.console.print(self.table_console)
+                if self.state.last_action != "":
+                    self.table_console.add_row(*args)
+                    self.console_term.print(self.table_console)
+                    if self.disablelog is False:
+                        self.console_log.print(self.table_console)
+                    self.table_console = Table(title=" ", box=box.MINIMAL, show_header=False)  # clear table
 
                 if not self.is_verbose:
                     if self.state.last_action != "":
                         if not self.is_sim:
                             output_text = (
-                                formatted_current_df_index
-                                + " | "
-                                + self.market
-                                + bullbeartext
-                                + " | "
-                                + self.print_granularity()
-                                + " | "
-                                + str(self.price)
-                                + trailing_action_logtext
-                                + " | "
-                                + ema_co_prefix
-                                + ema_text
-                                + ema_co_suffix
-                                + macd_co_prefix
-                                + macd_text
-                                + macd_co_suffix
-                                + obv_prefix
-                                + obv_text
-                                + obv_suffix
-                                + eri_text
-                                + "Action: "
-                                + self.state.action
-                                + " | Last Action: "
-                                + self.state.last_action
-                                + " | DF HIGH: "
+                                " | DF HIGH: "
                                 + str(df["close"].max())
                                 + " | "
                                 + "DF LOW: "
@@ -1199,31 +1030,7 @@ class PyCryptoBot(BotConfig):
                             df_low = df[df["date"] <= current_sim_date]["close"].min()
                             # print(df_high)
                             output_text = (
-                                formatted_current_df_index
-                                + " | "
-                                + self.market
-                                + bullbeartext
-                                + " | "
-                                + self.print_granularity()
-                                + " | "
-                                + str(self.price)
-                                + trailing_action_logtext
-                                + " | "
-                                + ema_co_prefix
-                                + ema_text
-                                + ema_co_suffix
-                                + macd_co_prefix
-                                + macd_text
-                                + macd_co_suffix
-                                + obv_prefix
-                                + obv_text
-                                + obv_suffix
-                                + eri_text
-                                + "Action: "
-                                + self.state.action
-                                + " | Last Action: "
-                                + self.state.last_action
-                                + " | DF HIGH: "
+                                " | DF HIGH: "
                                 + str(df_high)
                                 + " | "
                                 + "DF LOW: "
@@ -1250,28 +1057,7 @@ class PyCryptoBot(BotConfig):
                     else:
                         if not self.is_sim:
                             output_text = (
-                                formatted_current_df_index
-                                + " | "
-                                + self.market
-                                + bullbeartext
-                                + " | "
-                                + self.print_granularity()
-                                + " | "
-                                + str(self.price)
-                                + trailing_action_logtext
-                                + " | "
-                                + ema_co_prefix
-                                + ema_text
-                                + ema_co_suffix
-                                + macd_co_prefix
-                                + macd_text
-                                + macd_co_suffix
-                                + obv_prefix
-                                + obv_text
-                                + obv_suffix
-                                + eri_text
-                                + self.state.action
-                                + " | DF HIGH: "
+                                " | DF HIGH: "
                                 + str(df["close"].max())
                                 + " | "
                                 + "DF LOW: "
@@ -1310,28 +1096,7 @@ class PyCryptoBot(BotConfig):
                             df_low = df[df["date"] <= current_sim_date]["close"].min()
 
                             output_text = (
-                                formatted_current_df_index
-                                + " | "
-                                + self.market
-                                + bullbeartext
-                                + " | "
-                                + self.print_granularity()
-                                + " | "
-                                + str(self.price)
-                                + trailing_action_logtext
-                                + " | "
-                                + ema_co_prefix
-                                + ema_text
-                                + ema_co_suffix
-                                + macd_co_prefix
-                                + macd_text
-                                + macd_co_suffix
-                                + obv_prefix
-                                + obv_text
-                                + obv_suffix
-                                + eri_text
-                                + self.state.action
-                                + " | DF HIGH: "
+                                " | DF HIGH: "
                                 + str(df_high)
                                 + " | "
                                 + "DF LOW: "
@@ -1398,143 +1163,6 @@ class PyCryptoBot(BotConfig):
                             Logger.info(
                                 _technical_analysis.print_sr_fib_levels(self.price)
                             )
-
-                else:
-                    # set to true for verbose debugging
-                    debug = False
-
-                    if debug:
-                        Logger.debug(
-                            f"-- Iteration: {str(self.state.iterations)} -- {bullbeartext}"
-                        )
-
-                    if self.state.last_action == "BUY":
-                        if self.state.last_buy_size > 0:
-                            margin_text = truncate(margin) + "%"
-                        else:
-                            margin_text = "0%"
-                            if self.is_sim:
-                                # save margin for Summary if open trade
-                                self.state.open_trade_margin = margin_text
-                        if debug:
-                            Logger.debug(f"-- Margin: {margin_text} --")
-
-                    if debug:
-                        Logger.debug(f"price: {truncate(self.price)}")
-                        Logger.debug(
-                            f'ema12: {truncate(float(self.df_last["ema12"].values[0]))}'
-                        )
-                        Logger.debug(
-                            f'ema26: {truncate(float(self.df_last["ema26"].values[0]))}'
-                        )
-                        Logger.debug(f"ema12gtema26co: {str(ema12gtema26co)}")
-                        Logger.debug(f"ema12gtema26: {str(ema12gtema26)}")
-                        Logger.debug(f"ema12ltema26co: {str(ema12ltema26co)}")
-                        Logger.debug(f"ema12ltema26: {str(ema12ltema26)}")
-                        if self.adjust_total_periods >= 50:
-                            Logger.debug(
-                                f'sma50: {truncate(float(self.df_last["sma50"].values[0]))}'
-                            )
-                        if self.adjust_total_periods >= 200:
-                            Logger.debug(
-                                f'sma200: {truncate(float(self.df_last["sma200"].values[0]))}'
-                            )
-                        Logger.debug(
-                            f'macd: {truncate(float(self.df_last["macd"].values[0]))}'
-                        )
-                        Logger.debug(
-                            f'signal: {truncate(float(self.df_last["signal"].values[0]))}'
-                        )
-                        Logger.debug(f"macdgtsignal: {str(macdgtsignal)}")
-                        Logger.debug(f"macdltsignal: {str(macdltsignal)}")
-                        Logger.debug(f"obv: {str(obv)}")
-                        Logger.debug(f"obv_pc: {str(obv_pc)}")
-                        Logger.debug(f"action: {self.state.action}")
-
-                    # informational output on the most recent entry
-                    Logger.info("")
-                    text_box.doubleLine()
-                    text_box.line(
-                        "Iteration", str(self.state.iterations) + bullbeartext
-                    )
-                    text_box.line("Timestamp", str(self.df_last.index.format()[0]))
-                    text_box.singleLine()
-                    text_box.line("Close", truncate(self.price))
-                    text_box.line(
-                        "EMA12", truncate(float(self.df_last["ema12"].values[0]))
-                    )
-                    text_box.line(
-                        "EMA26", truncate(float(self.df_last["ema26"].values[0]))
-                    )
-                    text_box.line("Crossing Above", str(ema12gtema26co))
-                    text_box.line("Currently Above", str(ema12gtema26))
-                    text_box.line("Crossing Below", str(ema12ltema26co))
-                    text_box.line("Currently Below", str(ema12ltema26))
-
-                    if ema12gtema26 is True and ema12gtema26co is True:
-                        text_box.line(
-                            "Condition", "EMA12 is currently crossing above EMA26"
-                        )
-                    elif ema12gtema26 is True and ema12gtema26co is False:
-                        text_box.line(
-                            "Condition",
-                            "EMA12 is currently above EMA26 and has crossed over",
-                        )
-                    elif ema12ltema26 is True and ema12ltema26co is True:
-                        text_box.line(
-                            "Condition", "EMA12 is currently crossing below EMA26"
-                        )
-                    elif ema12ltema26 is True and ema12ltema26co is False:
-                        text_box.line(
-                            "Condition",
-                            "EMA12 is currently below EMA26 and has crossed over",
-                        )
-                    else:
-                        text_box.line("Condition", "-")
-
-                    text_box.line(
-                        "SMA20", truncate(float(self.df_last["sma20"].values[0]))
-                    )
-                    text_box.line(
-                        "SMA200", truncate(float(self.df_last["sma200"].values[0]))
-                    )
-                    text_box.singleLine()
-                    text_box.line(
-                        "MACD", truncate(float(self.df_last["macd"].values[0]))
-                    )
-                    text_box.line(
-                        "Signal", truncate(float(self.df_last["signal"].values[0]))
-                    )
-                    text_box.line("Currently Above", str(macdgtsignal))
-                    text_box.line("Currently Below", str(macdltsignal))
-
-                    if macdgtsignal is True and macdgtsignalco is True:
-                        text_box.line(
-                            "Condition", "MACD is currently crossing above Signal"
-                        )
-                    elif macdgtsignal is True and macdgtsignalco is False:
-                        text_box.line(
-                            "Condition",
-                            "MACD is currently above Signal and has crossed over",
-                        )
-                    elif macdltsignal is True and macdltsignalco is True:
-                        text_box.line(
-                            "Condition", "MACD is currently crossing below Signal"
-                        )
-                    elif macdltsignal is True and macdltsignalco is False:
-                        text_box.line(
-                            "Condition",
-                            "MACD is currently below Signal and has crossed over",
-                        )
-                    else:
-                        text_box.line("Condition", "-")
-
-                    text_box.singleLine()
-                    text_box.line("Action", self.state.action)
-                    text_box.doubleLine()
-                    if self.state.last_action == "BUY":
-                        text_box.line("Margin", margin_text)
-                        text_box.doubleLine()
 
                 # if a buy signal
                 if self.state.action == "BUY":
@@ -2422,14 +2050,14 @@ class PyCryptoBot(BotConfig):
             ):
                 # show profit and margin if already bought
                 Logger.info(
-                    f"{now} | {self.market}{bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)} {trailing_action_logtext} | Margin: {str(margin)} | Profit: {str(profit)}"
+                    f"{now} | {self.market} TODO: BULL/BEAR | {self.print_granularity()} | Current self.price: {str(self.price)} {trailing_action_logtext} | Margin: {str(margin)} | Profit: {str(profit)}"
                 )
             else:
                 Logger.info(
-                    f'{now} | {self.market}{bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH'
+                    f'{now} | {self.market} TODO: BULL/BEAR | {self.print_granularity()} | Current self.price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH'
                 )
                 self.telegram_bot.add_info(
-                    f'{now} | {self.market}{bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH',
+                    f'{now} | {self.market} TODO: BULL/BEAR | {self.print_granularity()} | Current self.price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH',
                     round(self.price, 4),
                     str(round(df["close"].max(), 4)),
                     str(
@@ -3541,7 +3169,7 @@ class PyCryptoBot(BotConfig):
                 style="grey62",
             )
 
-        if self.adjust_total_periods:
+        if self.adjust_total_periods != 300:
             table.add_row(
                 "Adjust Total Periods",
                 str(self.adjust_total_periods),
@@ -3641,7 +3269,9 @@ class PyCryptoBot(BotConfig):
                 style="grey62",
             )
 
-        self.console.print(table)
+        self.console_term.print(table)
+        if self.disablelog is False:
+            self.console_log.print(table)
 
     def get_date_from_iso8601_str(self, date: str):
         # if date passed from datetime.now() remove milliseconds

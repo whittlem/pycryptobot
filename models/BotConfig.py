@@ -107,7 +107,7 @@ class BotConfig:
         self.enable_custom_strategy = False
         self.disabletelegram = False
         self.disablelog = False
-        self.disabletracker = False
+        self.disabletracker = True
         self.enableml = False
         self.websocket = False
         self.enableexitaftersell = False
@@ -120,7 +120,6 @@ class BotConfig:
 
         self.telegramtradesonly = False
         self.disabletelegramerrormsgs = False
-
 
         self.filelog = True
         self.logfile = (
@@ -138,7 +137,7 @@ class BotConfig:
 
         self.ticker_date = None
         self.ticker_price = None
-        self.df_data = list(range(0,10)) #[0,1,2,3,4,5,6,7,8,9]
+        self.df_data = list(range(0, 10))  # [0,1,2,3,4,5,6,7,8,9]
 
         self.sim_smartswitch = False
 
@@ -196,7 +195,7 @@ class BotConfig:
                 with open(self.config_file, "r", encoding="utf8") as stream:
                     try:
                         self.config = yaml.safe_load(stream)
-                    except:
+                    except Exception:
                         try:
                             stream.seek(0)
                             self.config = json.load(stream)
@@ -218,13 +217,11 @@ class BotConfig:
                 sys.tracebacklimit = 0
                 raise ValueError(f"Invalid config: {str(err)}")
 
-            except:
+            except Exception:
                 raise
 
             # set exchange platform
-        self.exchange = self._set_exchange(exchange)
-
-            # set defaults
+        self.exchange = self._set_exchange(exchange)  # set defaults
         (
             self.api_url,
             self.api_key,
@@ -284,9 +281,7 @@ class BotConfig:
             self.fileloglevel = "NOTSET"
             self.logfile == "/dev/null"
 
-
     def _set_exchange(self, exchange: str = None) -> Exchange:
-
         if self.cli_args["exchange"] is not None:
             exchange = Exchange(self.cli_args["exchange"])
 
