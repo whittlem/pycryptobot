@@ -36,7 +36,7 @@ class RichText:
         color: str = "white",
         disabled: bool = False
     ) -> Text:
-        if disabled:
+        if disabled or input == "":
             return None
 
         text = Text(input)

@@ -948,6 +948,23 @@ class PyCryptoBot(BotConfig):
                 ):
                     Logger.info(log_text)
 
+                if not self.is_sim:
+                    df_high = df[df["date"] <= current_sim_date]["close"].max()
+                    df_low = df[df["date"] <= current_sim_date]["close"].min()
+                    range_start = str(df.iloc[0, 0])
+                    range_end = str(df.iloc[len(df) - 1, 0])
+                    iteration_text = ""
+                else:
+                    df_high = df['close'].max()
+                    df_low = df['close'].min()
+                    range_start = str(df.iloc[self.state.iterations - self.adjust_total_periods, 0])
+                    range_end = str(df.iloc[self.state.iterations - 1, 0])
+
+                    iteration_text = str(df.iloc[self.state.iterations - 1, 0])
+
+                df_swing = round(((df_high - df_low) / df_low) * 100, 2)
+                df_near_high = round(((self.price - df_high) / df_high) * 100, 2)
+
                 args = [
                     arg
                     for arg in [
@@ -976,9 +993,15 @@ class PyCryptoBot(BotConfig):
                         RichText.elder_ray(elder_ray_buy, elder_ray_sell, self.disablebuyelderray),
                         RichText.action_text(self.state.action),
                         RichText.last_action_text(self.state.last_action),
+                        RichText.styled_text(f"DF-H/L: {str(df_high)} / {str(df_low)} ({df_swing}%)", "white"),
+                        RichText.styled_text(f"Near-High: {df_near_high}%", "white"),  # price near high
+                        RichText.styled_text(f"Range: {range_start} <-> {range_end}", "white"),
+                        RichText.styled_text(f"{iteration_text}", "white"),
                     ]
                     if arg
                 ]
+
+                output_text = ""
 
                 if self.state.last_action != "":
                     self.table_console.add_row(*args)
@@ -987,146 +1010,13 @@ class PyCryptoBot(BotConfig):
                         self.console_log.print(self.table_console)
                     self.table_console = Table(title=" ", box=box.MINIMAL, show_header=False)  # clear table
 
-                if not self.is_verbose:
-                    if self.state.last_action != "":
-                        if not self.is_sim:
-                            output_text = (
-                                " | DF HIGH: "
-                                + str(df["close"].max())
-                                + " | "
-                                + "DF LOW: "
-                                + str(df["close"].min())
-                                + " | SWING: "
-                                + str(
-                                    round(
-                                        (
-                                            (df["close"].max() - df["close"].min())
-                                            / df["close"].min()
-                                        )
-                                        * 100,
-                                        2,
-                                    )
-                                )
-                                + "% |"
-                                + " CURR price is "
-                                + str(
-                                    round(
-                                        (
-                                            (self.price - df["close"].max())
-                                            / df["close"].max()
-                                        )
-                                        * 100,
-                                        2,
-                                    )
-                                )
-                                + "% "
-                                + "away from DF HIGH | Range: "
-                                + str(df.iloc[0, 0])
-                                + " <--> "
-                                + str(df.iloc[len(df) - 1, 0])
-                            )
-                        else:
-                            df_high = df[df["date"] <= current_sim_date]["close"].max()
-                            df_low = df[df["date"] <= current_sim_date]["close"].min()
-                            # print(df_high)
-                            output_text = (
-                                " | DF HIGH: "
-                                + str(df_high)
-                                + " | "
-                                + "DF LOW: "
-                                + str(df_low)
-                                + " | SWING: "
-                                + str(round(((df_high - df_low) / df_low) * 100, 2))
-                                + "% |"
-                                + " CURR self.price is "
-                                + str(
-                                    round(((self.price - df_high) / df_high) * 100, 2)
-                                )
-                                + "% "
-                                + "away from DF HIGH | Range: "
-                                + str(
-                                    df.iloc[
-                                        self.state.iterations
-                                        - self.adjust_total_periods,
-                                        0,
-                                    ]
-                                )
-                                + " <--> "
-                                + str(df.iloc[self.state.iterations - 1, 0])
-                            )
-                    else:
-                        if not self.is_sim:
-                            output_text = (
-                                " | DF HIGH: "
-                                + str(df["close"].max())
-                                + " | "
-                                + "DF LOW: "
-                                + str(df["close"].min())
-                                + " | SWING: "
-                                + str(
-                                    round(
-                                        (
-                                            (df["close"].max() - df["close"].min())
-                                            / df["close"].min()
-                                        )
-                                        * 100,
-                                        2,
-                                    )
-                                )
-                                + "%"
-                                + " CURR self.price is "
-                                + str(
-                                    round(
-                                        (
-                                            (self.price - df["close"].max())
-                                            / df["close"].max()
-                                        )
-                                        * 100,
-                                        2,
-                                    )
-                                )
-                                + "% "
-                                + "away from DF HIGH | Range: "
-                                + str(df.iloc[0, 0])
-                                + " <--> "
-                                + str(df.iloc[len(df) - 1, 0])
-                            )
-                        else:
-                            df_high = df[df["date"] <= current_sim_date]["close"].max()
-                            df_low = df[df["date"] <= current_sim_date]["close"].min()
-
-                            output_text = (
-                                " | DF HIGH: "
-                                + str(df_high)
-                                + " | "
-                                + "DF LOW: "
-                                + str(df_low)
-                                + " | SWING: "
-                                + str(round(((df_high - df_low) / df_low) * 100, 2))
-                                + "%"
-                                + " CURR self.price is "
-                                + str(
-                                    round(((self.price - df_high) / df_high) * 100, 2)
-                                )
-                                + "% "
-                                + "away from DF HIGH | Range: "
-                                + str(
-                                    df.iloc[
-                                        self.state.iterations
-                                        - self.adjust_total_periods,
-                                        0,
-                                    ]
-                                )
-                                + " <--> "
-                                + str(df.iloc[self.state.iterations - 1, 0])
-                            )
                     if self.state.last_action == "BUY":
                         if self.state.last_buy_size > 0:
                             margin_text = truncate(margin) + "%"
                         else:
                             margin_text = "0%"
 
-                        output_text += (
+                        output_text = (
                             trailing_action_logtext
                             + " | (margin: "
                             + margin_text
