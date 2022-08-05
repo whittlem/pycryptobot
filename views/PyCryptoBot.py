@@ -44,6 +44,24 @@ class RichText:
         return text
 
     @staticmethod
+    def styled_label_text(
+        label: str = "",
+        label_color: str = "white",
+        input: str = "",
+        input_color: str = "cyan",
+        disabled: bool = False
+    ) -> Text:
+        if disabled or input == "":
+            return None
+
+        label_text_msg = f"{label}: {input}"
+
+        text = Text(label_text_msg)
+        text.stylize(label_color, 0, len(label))
+        text.stylize(input_color, len(label) + 1, len(label_text_msg))
+        return text
+
+    @staticmethod
     def bull_bear(
         golden_cross: bool = False,
         adjust_total_periods: int = 300

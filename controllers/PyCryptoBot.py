@@ -78,9 +78,9 @@ class PyCryptoBot(BotConfig):
         )
 
         self.console_term = Console()  # logs to the screen
-        self.console_log = Console(file=open(self.logfile, "w"))   # logs to file
+        self.console_log = Console(file=open(self.logfile, "w"))  # logs to file
 
-        self.table_console = Table(title=" ", box=box.MINIMAL, show_header=False)
+        self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)
 
         self.s = sched.scheduler(time.time, time.sleep)
 
@@ -948,6 +948,19 @@ class PyCryptoBot(BotConfig):
                 ):
                     Logger.info(log_text)
 
+                self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)
+                self.table_console.add_row(
+                    RichText.styled_text("Bot1", "magenta"),
+                    RichText.styled_text(formatted_current_df_index, "white"),
+                    RichText.styled_text(self.market, "yellow"),
+                    RichText.styled_text(self.print_granularity(), "yellow"),
+                    RichText.styled_text("Candlestick Detected: Two Black Gapping ('Reliable - Reversal - Bearish Pattern - Down')", "violet")
+                )
+                self.console_term.print(self.table_console)
+                if self.disablelog is False:
+                    self.console_log.print(self.table_console)
+                self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)  # clear table
+
                 if not self.is_sim:
                     df_high = df[df["date"] <= current_sim_date]["close"].max()
                     df_low = df[df["date"] <= current_sim_date]["close"].min()
@@ -955,9 +968,11 @@ class PyCryptoBot(BotConfig):
                     range_end = str(df.iloc[len(df) - 1, 0])
                     iteration_text = ""
                 else:
-                    df_high = df['close'].max()
-                    df_low = df['close'].min()
-                    range_start = str(df.iloc[self.state.iterations - self.adjust_total_periods, 0])
+                    df_high = df["close"].max()
+                    df_low = df["close"].min()
+                    range_start = str(
+                        df.iloc[self.state.iterations - self.adjust_total_periods, 0]
+                    )
                     range_end = str(df.iloc[self.state.iterations - 1, 0])
 
                     iteration_text = str(df.iloc[self.state.iterations - 1, 0])
@@ -989,13 +1004,28 @@ class PyCryptoBot(BotConfig):
                             self.disablebuymacd,
                         ),
                         RichText.styled_text(trailing_action_logtext),
-                        RichText.on_balance_volume(self.df_last["obv"].values[0], self.df_last["obv_pc"].values[0], self.disablebuyobv),
-                        RichText.elder_ray(elder_ray_buy, elder_ray_sell, self.disablebuyelderray),
+                        RichText.on_balance_volume(
+                            self.df_last["obv"].values[0],
+                            self.df_last["obv_pc"].values[0],
+                            self.disablebuyobv,
+                        ),
+                        RichText.elder_ray(
+                            elder_ray_buy, elder_ray_sell, self.disablebuyelderray
+                        ),
                         RichText.action_text(self.state.action),
                         RichText.last_action_text(self.state.last_action),
-                        RichText.styled_text(f"DF-H/L: {str(df_high)} / {str(df_low)} ({df_swing}%)", "white"),
-                        RichText.styled_text(f"Near-High: {df_near_high}%", "white"),  # price near high
-                        RichText.styled_text(f"Range: {range_start} <-> {range_end}", "white"),
+                        RichText.styled_label_text(
+                            "DF-H/L",
+                            "white",
+                            f"{str(df_high)} / {str(df_low)} ({df_swing}%)",
+                            "cyan",
+                        ),
+                        RichText.styled_label_text(
+                            "Near-High", "white", f"{df_near_high}%", "cyan"
+                        ),  # price near high
+                        RichText.styled_label_text(
+                            "Range", "white", f"{range_start} <-> {range_end}", "cyan"
+                        ),
                         RichText.styled_text(f"{iteration_text}", "white"),
                     ]
                     if arg
@@ -1008,7 +1038,7 @@ class PyCryptoBot(BotConfig):
                     self.console_term.print(self.table_console)
                     if self.disablelog is False:
                         self.console_log.print(self.table_console)
-                    self.table_console = Table(title=" ", box=box.MINIMAL, show_header=False)  # clear table
+                    self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)  # clear table
 
                     if self.state.last_action == "BUY":
                         if self.state.last_buy_size > 0:
