@@ -62,6 +62,19 @@ class RichText:
         return text
 
     @staticmethod
+    def margin_text(
+        margin: str = "0%",
+        trailing_action_logtext: str = "",
+        last_action: str = "",
+        last_buy_size: float = 0.0,
+    ) -> Text:
+        if margin == 0 or last_action != "BUY":
+            return None
+
+        text = Text("MARGIN")
+        return text
+
+    @staticmethod
     def bull_bear(
         golden_cross: bool = False,
         adjust_total_periods: int = 300

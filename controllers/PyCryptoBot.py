@@ -415,7 +415,7 @@ class PyCryptoBot(BotConfig):
                         trading_dataCopy, self.adjust_total_periods
                     )
 
-                    # if 'morning_star' not in df:
+                    # if 'bool(self.df_last["morning_star"].values[0])' not in df:
                     _technical_analysis.addAll()
 
                     df = _technical_analysis.getDataFrame()
@@ -715,22 +715,6 @@ class PyCryptoBot(BotConfig):
                     else:
                         goldencross = self.is_1h_sma50200_bull(current_sim_date)
 
-                # candlestick detection
-                hammer = bool(self.df_last["hammer"].values[0])
-                inverted_hammer = bool(self.df_last["inverted_hammer"].values[0])
-                hanging_man = bool(self.df_last["hanging_man"].values[0])
-                shooting_star = bool(self.df_last["shooting_star"].values[0])
-                three_white_soldiers = bool(
-                    self.df_last["three_white_soldiers"].values[0]
-                )
-                three_black_crows = bool(self.df_last["three_black_crows"].values[0])
-                morning_star = bool(self.df_last["morning_star"].values[0])
-                evening_star = bool(self.df_last["evening_star"].values[0])
-                three_line_strike = bool(self.df_last["three_line_strike"].values[0])
-                abandoned_baby = bool(self.df_last["abandoned_baby"].values[0])
-                morning_doji_star = bool(self.df_last["morning_doji_star"].values[0])
-                evening_doji_star = bool(self.df_last["evening_doji_star"].values[0])
-                two_black_gapping = bool(self.df_last["two_black_gapping"].values[0])
             except KeyError as err:
                 Logger.error(err)
                 sys.exit()
@@ -903,70 +887,38 @@ class PyCryptoBot(BotConfig):
                 # work with this precision. It should save a couple of `precision` uses, one for each `truncate()` call.
                 truncate = functools.partial(_truncate, n=precision)
 
-                log_text = ""
-                if hammer is True:
-                    log_text = '* Candlestick Detected: Hammer ("Weak - Reversal - Bullish Signal - Up")'
+                def _candlestick(candlestick_status: str = "") -> None:
+                    if candlestick_status == "":
+                        return
 
-                if shooting_star is True:
-                    log_text = '* Candlestick Detected: Shooting Star ("Weak - Reversal - Bearish Pattern - Down")'
+                    self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)
+                    self.table_console.add_row(
+                        RichText.styled_text("Bot1", "magenta"),
+                        RichText.styled_text(formatted_current_df_index, "white"),
+                        RichText.styled_text(self.market, "yellow"),
+                        RichText.styled_text(self.print_granularity(), "yellow"),
+                        RichText.styled_text(candlestick_status, "violet")
+                    )
+                    self.console_term.print(self.table_console)
+                    if self.disablelog is False:
+                        self.console_log.print(self.table_console)
+                    self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)  # clear table
 
-                if hanging_man is True:
-                    log_text = '* Candlestick Detected: Hanging Man ("Weak - Continuation - Bearish Pattern - Down")'
-
-                if inverted_hammer is True:
-                    log_text = '* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Pattern - Up")'
-
-                if three_white_soldiers is True:
-                    log_text = '*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Bullish Pattern - Up")'
-
-                if three_black_crows is True:
-                    log_text = '* Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Pattern - Down")'
-
-                if morning_star is True:
-                    log_text = '*** Candlestick Detected: Morning Star ("Strong - Reversal - Bullish Pattern - Up")'
-
-                if evening_star is True:
-                    log_text = '*** Candlestick Detected: Evening Star ("Strong - Reversal - Bearish Pattern - Down")'
-
-                if three_line_strike is True:
-                    log_text = '** Candlestick Detected: Three Line Strike ("Reliable - Reversal - Bullish Pattern - Up")'
-
-                if abandoned_baby is True:
-                    log_text = '** Candlestick Detected: Abandoned Baby ("Reliable - Reversal - Bullish Pattern - Up")'
-
-                if morning_doji_star is True:
-                    log_text = '** Candlestick Detected: Morning Doji Star ("Reliable - Reversal - Bullish Pattern - Up")'
-
-                if evening_doji_star is True:
-                    log_text = '** Candlestick Detected: Evening Doji Star ("Reliable - Reversal - Bearish Pattern - Down")'
-
-                if two_black_gapping is True:
-                    log_text = '*** Candlestick Detected: Two Black Gapping ("Reliable - Reversal - Bearish Pattern - Down")'
-
-                if log_text != "" and (
-                    not self.is_sim or (self.is_sim and not self.simresultonly)
-                ):
-                    Logger.info(log_text)
-
-                self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)
-                self.table_console.add_row(
-                    RichText.styled_text("Bot1", "magenta"),
-                    RichText.styled_text(formatted_current_df_index, "white"),
-                    RichText.styled_text(self.market, "yellow"),
-                    RichText.styled_text(self.print_granularity(), "yellow"),
-                    RichText.styled_text("Candlestick Detected: Two Black Gapping ('Reliable - Reversal - Bearish Pattern - Down')", "violet")
-                )
-                self.console_term.print(self.table_console)
-                if self.disablelog is False:
-                    self.console_log.print(self.table_console)
-                self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)  # clear table
+                if not self.is_sim or (self.is_sim and not self.simresultonly):
+                    if bool(self.df_last["three_white_soldiers"].values[0]) is True:
+                        _candlestick("Candlestick Detected: Three White Soldiers ('Strong - Reversal - Bullish Pattern - Up')")
+                    if bool(self.df_last["three_black_crows"].values[0]) is True:
+                        _candlestick("Candlestick Detected: Three Black Crows ('Strong - Reversal - Bearish Pattern - Down')")
+                    if bool(self.df_last["morning_star"].values[0]) is True:
+                        _candlestick("Candlestick Detected: Morning Star ('Strong - Reversal - Bullish Pattern - Up')")
+                    if bool(self.df_last["evening_star"].values[0]) is True:
+                        _candlestick("Candlestick Detected: Evening Star ('Strong - Reversal - Bearish Pattern - Down')")
 
                 if not self.is_sim:
                     df_high = df[df["date"] <= current_sim_date]["close"].max()
                     df_low = df[df["date"] <= current_sim_date]["close"].min()
                     range_start = str(df.iloc[0, 0])
                     range_end = str(df.iloc[len(df) - 1, 0])
-                    iteration_text = ""
                 else:
                     df_high = df["close"].max()
                     df_low = df["close"].min()
@@ -974,8 +926,6 @@ class PyCryptoBot(BotConfig):
                         df.iloc[self.state.iterations - self.adjust_total_periods, 0]
                     )
                     range_end = str(df.iloc[self.state.iterations - 1, 0])
-
-                    iteration_text = str(df.iloc[self.state.iterations - 1, 0])
 
                 df_swing = round(((df_high - df_low) / df_low) * 100, 2)
                 df_near_high = round(((self.price - df_high) / df_high) * 100, 2)
@@ -1026,14 +976,15 @@ class PyCryptoBot(BotConfig):
                         RichText.styled_label_text(
                             "Range", "white", f"{range_start} <-> {range_end}", "cyan"
                         ),
-                        RichText.styled_text(f"{iteration_text}", "white"),
+                        RichText.margin_text(truncate(margin), trailing_action_logtext, self.state.last_action, self.state.last_buy_size)
                     ]
                     if arg
                 ]
 
                 output_text = ""
 
-                if self.state.last_action != "":
+                # if self.state.last_action != "":
+                if not self.is_sim or (self.is_sim and not self.simresultonly):
                     self.table_console.add_row(*args)
                     self.console_term.print(self.table_console)
                     if self.disablelog is False:
@@ -1059,9 +1010,6 @@ class PyCryptoBot(BotConfig):
                         if self.is_sim:
                             # save margin for Summary if open trade
                             self.state.open_trade_margin = margin_text
-
-                    if not self.is_sim or (self.is_sim and not self.simresultonly):
-                        Logger.info(output_text)
 
                     if self.enableml:
                         # Seasonal Autoregressive Integrated Moving Average (ARIMA) model (ML prediction for 3 intervals from now)
