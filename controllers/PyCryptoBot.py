@@ -914,6 +914,23 @@ class PyCryptoBot(BotConfig):
                     if bool(self.df_last["evening_star"].values[0]) is True:
                         _candlestick("Candlestick Detected: Evening Star ('Strong - Reversal - Bearish Pattern - Down')")
 
+                def _notify(notification: str = "") -> None:
+                    if notification == "":
+                        return
+
+                    self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)
+                    self.table_console.add_row(
+                        RichText.styled_text("Bot1", "magenta"),
+                        RichText.styled_text(formatted_current_df_index, "white"),
+                        RichText.styled_text(self.market, "yellow"),
+                        RichText.styled_text(self.print_granularity(), "yellow"),
+                        RichText.styled_text(notification, "violet")
+                    )
+                    self.console_term.print(self.table_console)
+                    if self.disablelog is False:
+                        self.console_log.print(self.table_console)
+                    self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)  # clear table
+
                 if not self.is_sim:
                     df_high = df[df["date"] <= current_sim_date]["close"].max()
                     df_low = df[df["date"] <= current_sim_date]["close"].min()
@@ -929,6 +946,18 @@ class PyCryptoBot(BotConfig):
 
                 df_swing = round(((df_high - df_low) / df_low) * 100, 2)
                 df_near_high = round(((self.price - df_high) / df_high) * 100, 2)
+
+                if self.state.last_action == "BUY":
+                    if self.state.last_buy_size > 0:
+                        margin_text = truncate(margin) + "%"
+                    else:
+                        margin_text = "0%"
+
+                    if self.is_sim:
+                        # save margin for summary if open trade
+                        self.state.open_trade_margin = margin_text
+                else:
+                    margin_text = ""
 
                 args = [
                     arg
@@ -976,40 +1005,18 @@ class PyCryptoBot(BotConfig):
                         RichText.styled_label_text(
                             "Range", "white", f"{range_start} <-> {range_end}", "cyan"
                         ),
-                        RichText.margin_text(truncate(margin), trailing_action_logtext, self.state.last_action, self.state.last_buy_size)
+                        RichText.margin_text(margin_text, self.state.last_action),
+                        RichText.delta_text(self.price, self.state.last_buy_price, precision, self.state.last_action),
                     ]
                     if arg
                 ]
 
-                output_text = ""
-
-                # if self.state.last_action != "":
                 if not self.is_sim or (self.is_sim and not self.simresultonly):
                     self.table_console.add_row(*args)
                     self.console_term.print(self.table_console)
                     if self.disablelog is False:
                         self.console_log.print(self.table_console)
                     self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)  # clear table
-
-                    if self.state.last_action == "BUY":
-                        if self.state.last_buy_size > 0:
-                            margin_text = truncate(margin) + "%"
-                        else:
-                            margin_text = "0%"
-
-                        output_text = (
-                            trailing_action_logtext
-                            + " | (margin: "
-                            + margin_text
-                            + " delta: "
-                            + str(
-                                round(self.price - self.state.last_buy_price, precision)
-                            )
-                            + ")"
-                        )
-                        if self.is_sim:
-                            # save margin for Summary if open trade
-                            self.state.open_trade_margin = margin_text
 
                     if self.enableml:
                         # Seasonal Autoregressive Integrated Moving Average (ARIMA) model (ML prediction for 3 intervals from now)
@@ -1018,19 +1025,18 @@ class PyCryptoBot(BotConfig):
                                 prediction = _technical_analysis.arima_model_prediction(
                                     int(self.granularity.to_integer / 60) * 3
                                 )  # 3 intervals from now
-                                Logger.info(
-                                    f"Seasonal ARIMA model predicts the closing self.price will be {str(round(prediction[1], 2))} at {prediction[0]} (delta: {round(prediction[1] - self.price, 2)})"
-                                )
-                            # pylint: disable=bare-except
+                                _notify(f"Seasonal ARIMA model predicts the closing self.price will be {str(round(prediction[1], 2))} at {prediction[0]} (delta: {round(prediction[1] - self.price, 2)})")
                             except Exception:
                                 pass
 
                     if self.state.last_action == "BUY":
                         # display support, resistance and fibonacci levels
                         if not self.is_sim or (self.is_sim and not self.simresultonly):
-                            Logger.info(
-                                _technical_analysis.print_sr_fib_levels(self.price)
-                            )
+                            pass
+                            # TODO: is this needed?
+                            # Logger.info(
+                            #     _technical_analysis.print_sr_fib_levels(self.price)
+                            # )
 
                 # if a buy signal
                 if self.state.action == "BUY":
@@ -1067,21 +1073,13 @@ class PyCryptoBot(BotConfig):
                                 if not self.is_sim or (
                                     self.is_sim and not self.simresultonly
                                 ):
-                                    Logger.info(
-                                        f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {str(self.price)} | BUY"
-                                    )
+                                    _notify(f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {str(self.price)} | BUY")
                             else:
-                                text_box.singleLine()
-                                text_box.center("*** Executing LIVE Buy Order ***")
-                                text_box.singleLine()
+                                _notify("*** Executing LIVE Buy Order ***")
 
                             # display balances
-                            Logger.info(
-                                f"{self.base_currency} balance before order: {str(self.account.base_balance_before)}"
-                            )
-                            Logger.info(
-                                f"{self.quote_currency} balance before order: {str(self.account.quote_balance_before)}"
-                            )
+                            _notify(f"{self.base_currency} balance before order: {str(self.account.base_balance_before)}")
+                            _notify(f"{self.quote_currency} balance before order: {str(self.account.quote_balance_before)}")
 
                             # execute a live market buy
                             self.state.last_buy_size = float(
@@ -1258,27 +1256,24 @@ class PyCryptoBot(BotConfig):
                             if not self.is_sim or (
                                 self.is_sim and not self.simresultonly
                             ):
-                                Logger.info(
-                                    f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {str(self.price)} | BUY"
-                                )
+                                _notify(f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {str(self.price)} | BUY")
 
                             bands = _technical_analysis.get_fib_ret_levels(
                                 float(self.price)
                             )
 
-                            if not self.is_sim or (
-                                self.is_sim and not self.simresultonly
-                            ):
-                                _technical_analysis.print_sup_res_level(
-                                    float(self.price)
-                                )
+                            # TODO: is this needed?
+                            # if not self.is_sim or (
+                            #     self.is_sim and not self.simresultonly
+                            # ):
+                            #     _technical_analysis.print_sup_res_level(
+                            #         float(self.price)
+                            #     )
 
                             if not self.is_sim or (
                                 self.is_sim and not self.simresultonly
                             ):
-                                Logger.info(
-                                    f" Fibonacci Retracement Levels:{str(bands)}"
-                                )
+                                _notify(f"Fibonacci Retracement Levels: {str(bands)}")
 
                             if len(bands) >= 1 and len(bands) <= 2:
                                 if len(bands) == 1:
@@ -1299,9 +1294,7 @@ class PyCryptoBot(BotConfig):
                                     self.state.fib_high = bands[second_key]
 
                         else:
-                            text_box.singleLine()
-                            text_box.center("*** Executing TEST Buy Order ***")
-                            text_box.singleLine()
+                            _notify("*** Executing TEST Buy Order ***")
 
                         self.trade_tracker = pd.concat(
                             [
@@ -1334,9 +1327,7 @@ class PyCryptoBot(BotConfig):
 
                     if self.save_graphs:
                         if self.adjust_total_periods < 200:
-                            Logger.info(
-                                "Trading Graphs can only be generated when dataframe has more than 200 periods."
-                            )
+                            _notify("Trading Graphs can only be generated when dataframe has more than 200 periods.")
                         else:
                             tradinggraphs = TradingGraphs(_technical_analysis)
                             ts = datetime.now().timestamp()
@@ -1364,9 +1355,7 @@ class PyCryptoBot(BotConfig):
                             if not self.is_sim or (
                                 self.is_sim and not self.simresultonly
                             ):
-                                Logger.info(
-                                    f" Fibonacci Retracement Levels:{str(bands)}"
-                                )
+                                _notify(f"Fibonacci Retracement Levels: {str(bands)}")
 
                                 if len(bands) >= 1 and len(bands) <= 2:
                                     if len(bands) == 1:
@@ -1386,14 +1375,10 @@ class PyCryptoBot(BotConfig):
                                         self.state.fib_low = bands[first_key]
                                         self.state.fib_high = bands[second_key]
 
-                            text_box.singleLine()
-                            text_box.center("*** Executing LIVE Sell Order ***")
-                            text_box.singleLine()
+                            _notify("*** Executing LIVE Sell Order ***")
 
                         else:
-                            Logger.info(
-                                f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {str(self.price)} | SELL"
-                            )
+                            _notify(f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {str(self.price)} | SELL")
 
                         # check balances before and display
                         self.account.base_balance_before = 0
@@ -1408,10 +1393,8 @@ class PyCryptoBot(BotConfig):
                         except Exception:
                             pass
 
-                        Logger.info(
-                            f"{self.base_currency} balance before order: {str(self.account.base_balance_before)}\n"
-                            f"{self.quote_currency} balance before order: {str(self.account.quote_balance_before)}"
-                        )
+                        _notify(f"{self.base_currency} balance before order: {str(self.account.base_balance_before)}")
+                        _notify(f"{self.quote_currency} balance before order: {str(self.account.quote_balance_before)}")
 
                         # execute a live market sell
                         baseamounttosell = (

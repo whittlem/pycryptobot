@@ -63,15 +63,46 @@ class RichText:
 
     @staticmethod
     def margin_text(
-        margin: str = "0%",
-        trailing_action_logtext: str = "",
-        last_action: str = "",
-        last_buy_size: float = 0.0,
+        margin_text: str = "",
+        last_action: str = "WAIT",
     ) -> Text:
-        if margin == 0 or last_action != "BUY":
+        if margin_text == "" or last_action != "BUY":
             return None
 
-        text = Text("MARGIN")
+        margin_msg = f"Margin: {margin_text}"
+        text = Text(margin_msg)
+
+        if margin_text == "0%":
+            text.stylize("white", 0, len(margin_msg))
+        elif margin_text.startswith("-"):
+            text.stylize("white", 0, 5)
+            text.stylize("red", 7, len(margin_msg))
+        else:
+            text.stylize("white", 0, 5)
+            text.stylize("green", 7, len(margin_msg))
+
+        return text
+
+    @staticmethod
+    def delta_text(
+        price: float = 0.0,
+        last_buy_price: float = 0.0,
+        precision: int = 2,
+        last_action: str = "WAIT",
+    ) -> Text:
+        if price == 0.0 or last_buy_price == 0.0 or last_action != "BUY":
+            return None
+
+        delta_msg = f"Delta: {str(round(price - last_buy_price, precision))}"
+        text = Text(delta_msg)
+
+        if delta_msg.startswith("Delta: -"):
+            text.stylize("white", 0, 5)
+            text.stylize("red", 7, len(delta_msg))
+        else:
+            text.stylize("white", 0, 5)
+            text.stylize("green", 7, len(delta_msg))
+
         return text
 
     @staticmethod
