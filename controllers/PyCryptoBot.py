@@ -9,8 +9,6 @@ import functools
 import pandas as pd
 from rich.console import Console
 from rich.table import Table
-from rich.table import Text
-from rich import box
 from datetime import datetime, timedelta
 from os.path import exists as file_exists
 from urllib3.exceptions import ReadTimeoutError
@@ -140,50 +138,33 @@ class PyCryptoBot(BotConfig):
             control_status = self.telegram_bot.check_bot_control_status()
             while control_status == "pause" or control_status == "paused":
                 if control_status == "pause":
-                    text_box = TextBox(80, 22)
-                    text_box.singleLine()
-                    text_box.center(f"Pausing Bot {self.market}")
-                    text_box.singleLine()
-                    Logger.debug("Pausing Bot.")
-                    print(str(datetime.now()).format() + " - Bot is paused")
+                    RichText.notify("Pausing bot", self, "normal")
                     self.notify_telegram(f"{self.market} bot is paused")
                     self.telegram_bot.update_bot_status("paused")
                     if self.websocket:
-                        Logger.info("Closing websocket...")
+                        RichText.notify("Closing websocket...", self, "normal")
                         self.websocket_connection.close()
 
                 time.sleep(30)
                 control_status = self.telegram_bot.check_bot_control_status()
 
             if control_status == "start":
-                text_box = TextBox(80, 22)
-                text_box.singleLine()
-                text_box.center(f"Restarting Bot {self.market}")
-                text_box.singleLine()
-                Logger.debug("Restarting Bot.")
+                RichText.notify("Restarting bot", self, "normal")
                 self.notify_telegram(f"{self.market} bot has restarted")
                 self.telegram_bot.update_bot_status("active")
                 self.read_config(self.exchange)
                 if self.websocket:
-                    Logger.info("Starting websocket...")
+                    RichText.notify("Starting websocket...", self, "normal")
                     self.websocket_connection.start()
 
             if control_status == "exit":
-                text_box = TextBox(80, 22)
-                text_box.singleLine()
-                text_box.center(f"Closing Bot {self.market}")
-                text_box.singleLine()
-                Logger.debug("Closing Bot.")
+                RichText.notify("Closing Bot {self.market}", self, "normal")
                 self.notify_telegram(f"{self.market} bot is stopping")
                 self.telegram_bot.remove_active_bot()
                 sys.exit(0)
 
             if control_status == "reload":
-                text_box = TextBox(80, 22)
-                text_box.singleLine()
-                text_box.center(f"Reloading config parameters {self.market}")
-                text_box.singleLine()
-                Logger.debug("Reloading config parameters.")
+                RichText.notify(f"Reloading config parameters {self.market}", self, "normal")
                 self.read_config(self.exchange)
                 if self.websocket:
                     self.websocket_connection.close()
@@ -223,12 +204,12 @@ class PyCryptoBot(BotConfig):
         # reset self.websocket_connection every 23 hours if applicable
         if self.websocket and not self.is_sim:
             if self.websocket_connection.time_elapsed > 82800:
-                Logger.info("Websocket requires a restart every 23 hours!")
-                Logger.info("Stopping self.websocket_connection...")
+                RichText.notify("Websocket requires a restart every 23 hours!", self, "normal")
+                RichText.notify("Stopping websocket...", self, "normal")
                 self.websocket_connection.close()
-                Logger.info("Starting self.websocket_connection...")
+                RichText.notify("Starting websocket...", self, "normal")
                 self.websocket_connection.start()
-                Logger.info("Restarting job in 30 seconds...")
+                RichText.notify("Restarting job in 30 seconds...", self, "normal")
                 self.s.enter(
                     30,
                     1,
@@ -876,8 +857,6 @@ class PyCryptoBot(BotConfig):
             # polling is every 5 minutes (even for hourly intervals), but only process once per interval
             # Logger.debug("DateCheck: " + str(immediate_action) + ' ' + str(self.state.last_df_index) + ' ' + str(current_df_index))
             if immediate_action is True or self.state.last_df_index != current_df_index:
-                text_box = TextBox(80, 22)
-
                 precision = 4
 
                 if self.price < 0.01:

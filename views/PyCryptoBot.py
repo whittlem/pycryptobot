@@ -1,7 +1,37 @@
 from rich.table import Text
+from rich.table import Table
+from rich.console import Console
+from datetime import datetime
 
 
-class RichText:
+class RichText():
+    @staticmethod
+    def notify(notification: str = "", app: object = None, level: str = "normal") -> None:
+        if notification == "":
+            return
+
+        if level == "warning":
+            color = "dark_orange"
+        elif level == "error":
+            color = "red1"
+        elif level == "critical":
+            color = "red1 blink"
+        else:
+            color = "violet"
+
+        table_console = Table(title=None, box=None, show_header=False, show_footer=False)
+        table_console.add_row(
+            RichText.styled_text("Bot1", "magenta"),
+            RichText.styled_text(datetime.today().strftime("%Y-%m-%d %H:%M:%S"), "white"),
+            RichText.styled_text(app.market, "yellow"),
+            RichText.styled_text(str(app.granularity.to_integer), "yellow"),
+            RichText.styled_text(notification, color)
+        )
+        console_term = Console()
+        console_term.print(table_console)
+        if app.disablelog is False:
+            app.console_log.print(table_console)
+
     @staticmethod
     def action_text(
         action: str = "WAIT"
