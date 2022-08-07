@@ -457,9 +457,7 @@ class PyCryptoBot(BotConfig):
         ):
 
             if not self.is_sim or (self.is_sim and not self.simresultonly):
-                Logger.info(
-                    "*** open order detected smart switching to 300 (5 min) granularity ***"
-                )
+                RichText.notify("Open order detected smart switching to 300 (5 min) granularity.", self, "normal")
 
             if not self.telegramtradesonly:
                 self.notify_telegram(
@@ -483,9 +481,7 @@ class PyCryptoBot(BotConfig):
         ):
 
             if not self.is_sim or (self.is_sim and not self.simresultonly):
-                Logger.info(
-                    "*** sell detected smart switching to 3600 (1 hour) granularity ***"
-                )
+                RichText.notify("Sell detected smart switching to 3600 (1 hour) granularity.", self, "normal")
             if not self.telegramtradesonly:
                 self.notify_telegram(
                     self.market
@@ -507,9 +503,7 @@ class PyCryptoBot(BotConfig):
             and self.is_6h_ema1226_bull(current_sim_date) is True
         ):
             if not self.is_sim or (self.is_sim and not self.simresultonly):
-                Logger.info(
-                    "*** smart switch from granularity 3600 (1 hour) to 900 (15 min) ***"
-                )
+                RichText.notify("Smart switch from granularity 3600 (1 hour) to 900 (15 min).", self, "normal")
 
             if self.is_sim:
                 self.sim_smartswitch = True
@@ -533,9 +527,7 @@ class PyCryptoBot(BotConfig):
             and self.is_6h_ema1226_bull(current_sim_date) is False
         ):
             if not self.is_sim or (self.is_sim and not self.simresultonly):
-                Logger.info(
-                    "*** smart switch from granularity 900 (15 min) to 3600 (1 hour) ***"
-                )
+                RichText.notify("Smart switch from granularity 900 (15 min) to 3600 (1 hour).", self, "normal")
 
             if self.is_sim:
                 self.sim_smartswitch = True
@@ -555,7 +547,7 @@ class PyCryptoBot(BotConfig):
         ):
             if len(df) < 250:
                 # data frame should have 250 rows, if not retry
-                Logger.error(f"error: data frame length is < 250 ({str(len(df))})")
+                RichText.notify(f"Data frame length is < 250 ({str(len(df))})", self, "error")
                 list(map(self.s.cancel, self.s.queue))
                 self.s.enter(300, 1, self.execute_job, ())
         else:
@@ -565,9 +557,8 @@ class PyCryptoBot(BotConfig):
             ):  # If 300 is required, set adjust_total_periods in config to 305.
                 if not self.is_sim:
                     # data frame should have 300 rows or equal to adjusted total rows if set, if not retry
-                    Logger.error(
-                        f"error: data frame length is < {str(self.adjust_total_periods)} ({str(len(df))})"
-                    )
+                    RichText.notify(f"error: data frame length is < {str(self.adjust_total_periods)} ({str(len(df))})", self, "error")
+
                     # pause for 10 seconds to prevent multiple calls immediately
                     time.sleep(10)
                     list(map(self.s.cancel, self.s.queue))
@@ -592,9 +583,8 @@ class PyCryptoBot(BotConfig):
                     self.state.poll_last_action()
 
                 if last_action_current != self.state.last_action:
-                    Logger.info(
-                        f"last_action change detected from {last_action_current} to {self.state.last_action}"
-                    )
+                    RichText.notify(f"Last action change detected from {last_action_current} to {self.state.last_action}.", self, "normal")
+
                     if not self.telegramtradesonly:
                         self.notify_telegram(
                             f"{self.market} last_action change detected from {last_action_current} to {self.state.last_action}"
