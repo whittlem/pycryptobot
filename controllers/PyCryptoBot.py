@@ -914,9 +914,18 @@ class PyCryptoBot(BotConfig):
                     if bool(self.df_last["evening_star"].values[0]) is True:
                         _candlestick("Candlestick Detected: Evening Star ('Strong - Reversal - Bearish Pattern - Down')")
 
-                def _notify(notification: str = "") -> None:
+                def _notify(notification: str = "", level: str = "normal") -> None:
                     if notification == "":
                         return
+
+                    if level == "warning":
+                        color = "dark_orange"
+                    elif level == "error":
+                        color = "red1"
+                    elif level == "critical":
+                        color = "red1 blink"
+                    else:
+                        color = "violet"
 
                     self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)
                     self.table_console.add_row(
@@ -924,7 +933,7 @@ class PyCryptoBot(BotConfig):
                         RichText.styled_text(formatted_current_df_index, "white"),
                         RichText.styled_text(self.market, "yellow"),
                         RichText.styled_text(self.print_granularity(), "yellow"),
-                        RichText.styled_text(notification, "violet")
+                        RichText.styled_text(notification, color)
                     )
                     self.console_term.print(self.table_console)
                     if self.disablelog is False:
@@ -1031,12 +1040,8 @@ class PyCryptoBot(BotConfig):
 
                     if self.state.last_action == "BUY":
                         # display support, resistance and fibonacci levels
-                        if not self.is_sim or (self.is_sim and not self.simresultonly):
-                            pass
-                            # TODO: is this needed?
-                            # Logger.info(
-                            #     _technical_analysis.print_sr_fib_levels(self.price)
-                            # )
+                        if not self.is_sim:
+                            _notify(_technical_analysis.print_sr_fib_levels(self.price))
 
                 # if a buy signal
                 if self.state.action == "BUY":
@@ -1109,7 +1114,7 @@ class PyCryptoBot(BotConfig):
                                 )
                                 resp_error = 0
                             except Exception as err:
-                                Logger.warning(f"Trade Error: {err}")
+                                _notify(f"Trade Error: {err}", "warning")
                                 resp_error = 1
 
                             if resp_error == 0:
@@ -1137,10 +1142,8 @@ class PyCryptoBot(BotConfig):
                                     bal_error = 0
                                 except Exception as err:
                                     bal_error = 1
-                                    Logger.warning(
-                                        f"Error: Balance not retrieved after trade for {self.market}.\n"
-                                        f"API Error Msg: {err}"
-                                    )
+                                    _notify(f"Error: Balance not retrieved after trade for {self.market}", "warning")
+                                    _notify(f"API Error Msg: {err}", "warning")
 
                                 if bal_error == 0:
                                     self.state.trade_error_cnt = 0
@@ -1150,10 +1153,8 @@ class PyCryptoBot(BotConfig):
                                     self.state.trailing_buy_immediate = False
                                     self.telegram_bot.add_open_order()
 
-                                    Logger.info(
-                                        f"{self.base_currency} balance after order: {str(self.account.base_balance_after)}\n"
-                                        f"{self.quote_currency} balance after order: {str(self.account.quote_balance_after)}"
-                                    )
+                                    _notify(f"{self.base_currency} balance after order: {str(self.account.base_balance_after)}")
+                                    _notify(f"{self.quote_currency} balance after order: {str(self.account.quote_balance_after)}")
 
                                     self.notify_telegram(
                                         self.market
@@ -1169,9 +1170,7 @@ class PyCryptoBot(BotConfig):
                                 else:
                                     # set variable to trigger to check trade on next iteration
                                     self.state.action = "check_action"
-                                    Logger.info(
-                                        f"{self.market} - Error occurred while checking balance after BUY. Last transaction check will happen shortly."
-                                    )
+                                    _notify(f"{self.market} - Error occurred while checking balance after BUY. Last transaction check will happen shortly.")
 
                                     if not self.disabletelegramerrormsgs:
                                         self.notify_telegram(
@@ -1191,9 +1190,8 @@ class PyCryptoBot(BotConfig):
                                 self.state.action = "check_action"
                                 self.state.last_action = None
 
-                                Logger.warning(
-                                    f"API Error: Unable to place buy order for {self.market}."
-                                )
+                                _notify(f"API Error: Unable to place buy order for {self.market}.", "warning")
+
                                 if not self.disabletelegramerrormsgs:
                                     self.notify_telegram(
                                         f"API Error: Unable to place buy order for {self.market}"
@@ -1201,9 +1199,7 @@ class PyCryptoBot(BotConfig):
                                 time.sleep(30)
 
                         else:
-                            Logger.warning(
-                                "Unable to place order, insufficient funds or buyminsize has not been reached. Check Logs."
-                            )
+                            _notify("Unable to place order, insufficient funds or buyminsize has not been reached. Check Logs.", "warning")
 
                         self.state.last_api_call_datetime -= timedelta(seconds=60)
 
@@ -1262,18 +1258,11 @@ class PyCryptoBot(BotConfig):
                                 float(self.price)
                             )
 
-                            # TODO: is this needed?
-                            # if not self.is_sim or (
-                            #     self.is_sim and not self.simresultonly
-                            # ):
-                            #     _technical_analysis.print_sup_res_level(
-                            #         float(self.price)
-                            #     )
-
-                            if not self.is_sim or (
-                                self.is_sim and not self.simresultonly
-                            ):
+                            if not self.is_sim:
                                 _notify(f"Fibonacci Retracement Levels: {str(bands)}")
+                                _technical_analysis.print_sup_res_level(
+                                    float(self.price)
+                                )
 
                             if len(bands) >= 1 and len(bands) <= 2:
                                 if len(bands) == 1:
@@ -1414,7 +1403,7 @@ class PyCryptoBot(BotConfig):
                             )
                             resp_error = 0
                         except Exception as err:
-                            Logger.warning(f"Trade Error: {err}")
+                            _notify(f"Trade Error: {err}", "warning")
                             resp_error = 1
 
                         if resp_error == 0:
@@ -1428,16 +1417,13 @@ class PyCryptoBot(BotConfig):
                                 bal_error = 0
                             except Exception as err:
                                 bal_error = 1
-                                Logger.warning(
-                                    f"Error: Balance not retrieved after trade for {self.market}.\n"
-                                    f"API Error Msg: {err}"
-                                )
+                                _notify(f"Error: Balance not retrieved after trade for {self.market}.", "warning")
+                                _notify(f"API Error Msg: {err}", "warning")
 
                             if bal_error == 0:
-                                Logger.info(
-                                    f"{self.base_currency} balance after order: {str(self.account.base_balance_after)}\n"
-                                    f"{self.quote_currency} balance after order: {str(self.account.quote_balance_after)}"
-                                )
+                                _notify(f"{self.base_currency} balance after order: {str(self.account.base_balance_after)}")
+                                _notify(f"{self.quote_currency} balance after order: {str(self.account.quote_balance_after)}")
+
                                 self.state.prevent_loss = False
                                 self.state.trailing_sell = False
                                 self.state.trailing_sell_immediate = False
@@ -1496,10 +1482,7 @@ class PyCryptoBot(BotConfig):
                                 # set variable to trigger to check trade on next iteration
                                 self.state.action = "check_action"
 
-                                Logger.info(
-                                    self.market
-                                    + " - Error occurred while checking balance after SELL. Last transaction check will happen shortly."
-                                )
+                                _notify(f"{self.market} - Error occurred while checking balance after SELL. Last transaction check will happen shortly.", "error")
 
                                 if not self.disabletelegramerrormsgs:
                                     self.notify_telegram(
@@ -1518,9 +1501,8 @@ class PyCryptoBot(BotConfig):
                             self.state.action = "check_action"
                             self.state.last_action = None
 
-                            Logger.warning(
-                                f"API Error: Unable to place SELL order for {self.market}."
-                            )
+                            _notify(f"API Error: Unable to place SELL order for {self.market}.", "warning")
+
                             if not self.disabletelegramerrormsgs:
                                 self.notify_telegram(
                                     f"API Error: Unable to place SELL order for {self.market}"
@@ -1595,7 +1577,8 @@ class PyCryptoBot(BotConfig):
                             if not self.is_sim or (
                                 self.is_sim and not self.simresultonly
                             ):
-                                Logger.info(
+                                # TODO: improve this
+                                _notify(
                                     formatted_current_df_index
                                     + " | "
                                     + self.market
@@ -1616,9 +1599,7 @@ class PyCryptoBot(BotConfig):
                                 )
 
                         else:
-                            text_box.singleLine()
-                            text_box.center("*** Executing TEST Sell Order ***")
-                            text_box.singleLine()
+                            _notify("*** Executing TEST Sell Order ***")
 
                         self.trade_tracker = pd.concat(
                             [
@@ -1687,9 +1668,7 @@ class PyCryptoBot(BotConfig):
                 and self.state.action == "DONE"
                 and len(self.trade_tracker) > 0
             ):
-                Logger.info(
-                    self.trade_tracker.loc[len(self.trade_tracker) - 1].to_json()
-                )
+                _notify(self.trade_tracker.loc[len(self.trade_tracker) - 1].to_json())
 
             if self.state.action == "DONE" and indicatorvalues != "":
                 self.notify_telegram(indicatorvalues)
@@ -1731,7 +1710,7 @@ class PyCryptoBot(BotConfig):
                         filename = os.path.join(os.curdir, "csv", filename)
                     self.trade_tracker.to_csv(filename)
                 except OSError:
-                    Logger.critical(f"Unable to save: {filename}")
+                    _notify(f"Unable to save: {filename}", "critical")
 
                 if self.state.buy_count == 0:
                     self.state.last_buy_size = 0
@@ -1893,6 +1872,8 @@ class PyCryptoBot(BotConfig):
                     Logger.info(json.dumps(simulation, sort_keys=True, indent=4))
 
         else:
+            bullbeartext = "BULL" if goldencross else "BEAR"
+
             if (
                 self.state.last_buy_size > 0
                 and self.state.last_buy_price > 0
@@ -1901,14 +1882,14 @@ class PyCryptoBot(BotConfig):
             ):
                 # show profit and margin if already bought
                 Logger.info(
-                    f"{now} | {self.market} TODO: BULL/BEAR | {self.print_granularity()} | Current self.price: {str(self.price)} {trailing_action_logtext} | Margin: {str(margin)} | Profit: {str(profit)}"
+                    f"{now} | {self.market} {bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)} {trailing_action_logtext} | Margin: {str(margin)} | Profit: {str(profit)}"
                 )
             else:
                 Logger.info(
-                    f'{now} | {self.market} TODO: BULL/BEAR | {self.print_granularity()} | Current self.price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH'
+                    f'{now} | {self.market} {bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH'
                 )
                 self.telegram_bot.add_info(
-                    f'{now} | {self.market} TODO: BULL/BEAR | {self.print_granularity()} | Current self.price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH',
+                    f'{now} | {self.market} {bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH',
                     round(self.price, 4),
                     str(round(df["close"].max(), 4)),
                     str(
