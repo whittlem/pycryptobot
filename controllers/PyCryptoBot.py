@@ -3147,6 +3147,32 @@ class PyCryptoBot(BotConfig):
         simstart: str = "",
         simend: str = "",
     ) -> pd.DataFrame:
+        def _notify(notification: str = "", level: str = "normal") -> None:
+            if notification == "":
+                return
+
+            if level == "warning":
+                color = "dark_orange"
+            elif level == "error":
+                color = "red1"
+            elif level == "critical":
+                color = "red1 blink"
+            else:
+                color = "violet"
+
+            self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)
+            self.table_console.add_row(
+                RichText.styled_text("Bot1", "magenta"),
+                RichText.styled_text(datetime.today().strftime("%Y-%m-%d %H:%M:%S"), "white"),
+                RichText.styled_text(self.market, "yellow"),
+                RichText.styled_text(self.print_granularity(), "yellow"),
+                RichText.styled_text(notification, color)
+            )
+            self.console_term.print(self.table_console)
+            if self.disablelog is False:
+                self.console_log.print(self.table_console)
+            self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)  # clear table
+
         if self.is_sim:
             df_first = None
             df_last = None
@@ -3168,23 +3194,16 @@ class PyCryptoBot(BotConfig):
                 else:
                     result_df_cache = pd.DataFrame()
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 # if df = None create a new data frame
                 result_df_cache = pd.DataFrame()
 
             if df_first is None and df_last is None:
-                text_box = TextBox(80, 26)
-
                 if not self.is_sim or (self.is_sim and not self.simresultonly):
-                    text_box.singleLine()
                     if self.smart_switch:
-                        text_box.center(
-                            f"*** Getting smartswitch ({granularity.to_short}) market data ***"
-                        )
+                        _notify(f"Retieving smart switch {granularity.to_short} market data from the exchange.")
                     else:
-                        text_box.center(
-                            f"*** Getting ({granularity.to_short}) market data ***"
-                        )
+                        _notify(f"Retrieving {granularity.to_short} market data from the exchange.")
 
                 df_first = simend
                 df_first -= timedelta(minutes=((granularity.to_integer / 60) * 200))
@@ -3254,23 +3273,13 @@ class PyCryptoBot(BotConfig):
                         adding_extra_candles = True
                         self.extra_candles_found = True
 
-                if not self.is_sim or (self.is_sim and not self.simresultonly):
-                    text_box.doubleLine()
-
             if len(result_df_cache) > 0 and "morning_star" not in result_df_cache:
                 result_df_cache.sort_values(by=["date"], ascending=True, inplace=True)
 
             if self.smart_switch is False:
                 if self.extra_candles_found is False:
-                    text_box = TextBox(80, 26)
-                    text_box.singleLine()
-                    text_box.center(
-                        f"{str(self.exchange.value)} is not returning data for the requested start date."
-                    )
-                    text_box.center(
-                        f"Switching to earliest start date: {str(result_df_cache.head(1).index.format()[0])}"
-                    )
-                    text_box.singleLine()
+                    _notify(f"{str(self.exchange.value)} is not returning data for the requested start date.")
+                    _notify(f"Switching to earliest start date: {str(result_df_cache.head(1).index.format()[0])}.")
                     self.simstart_date = str(result_df_cache.head(1).index.format()[0])
 
             return result_df_cache.copy()
