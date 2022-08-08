@@ -10,6 +10,7 @@ import pandas as pd
 from regex import R
 from rich.console import Console
 from rich.table import Table
+from rich.text import Text
 from rich import box
 from datetime import datetime, timedelta
 from os.path import exists as file_exists
@@ -1755,48 +1756,6 @@ class PyCryptoBot(BotConfig):
 
                 remove_last_buy = True
 
-                if not self.simresultonly:
-                    Logger.info("\n")
-
-                if not self.simresultonly:
-                    Logger.info(f"  Sell Count : {str(self.state.sell_count)}")
-                    Logger.info(f"   First Buy : {str(self.state.first_buy_size)}")
-                    Logger.info(
-                        f"   Last Buy : {str(_truncate(self.state.last_buy_size, 4))}"
-                    )
-                else:
-                    simulation["data"]["sell_count"] = self.state.sell_count
-                    simulation["data"]["first_trade"] = {}
-                    simulation["data"]["first_trade"][
-                        "size"
-                    ] = self.state.first_buy_size
-
-                if self.state.sell_count > 0:
-                    if not self.simresultonly:
-                        Logger.info(
-                            f"   Last Sell : {_truncate(self.state.last_sell_size, 4)}\n"
-                        )
-                    else:
-                        simulation["data"]["last_trade"] = {}
-                        simulation["data"]["last_trade"]["size"] = float(
-                            _truncate(self.state.last_sell_size, 2)
-                        )
-                else:
-                    if not self.simresultonly:
-                        Logger.info("\n")
-                        Logger.info("      Margin : 0.00%")
-                        Logger.info("\n")
-                        Logger.info(
-                            "  ** margin is nil as a sell has not occurred during the simulation\n"
-                        )
-                    else:
-                        simulation["data"]["margin"] = 0.0
-
-                    if not self.disabletelegram:
-                        self.notify_telegram(
-                            "      Margin: 0.00%\n  ** margin is nil as a sell has not occurred during the simulation\n"
-                        )
-
                 if not self.disabletelegram:
                     self.notify_telegram(
                         "Simulation Summary\n"
@@ -2320,20 +2279,65 @@ class PyCryptoBot(BotConfig):
             simulation["data"]["open_buy_excluded"] = 1
 
             if not self.simresultonly:
-                table.add_row("Warning", "Simulation ended with an open trade and it will be excluded from the margin calculation.")
+                table.add_row("Warning", Text("Simulation ended with an open trade and it will be excluded from the margin calculation.", style="orange1"))
+                table.add_row("")
         else:
             simulation["data"]["open_buy_excluded"] = 0
 
         if remove_last_buy is True:
             if not self.simresultonly:
-                table.add_row("Buy Count", f"{str(self.state.buy_count)} (open buy order excluded)")
+                table.add_row("Buy Count", Text(f"{str(self.state.buy_count)} (open buy order excluded)", "orange1"), style="white")
             else:
                 simulation["data"]["buy_count"] = self.state.buy_count
         else:
             if not self.simresultonly:
-                table.add_row("Buy Count", f"{str(self.state.buy_count)}")
+                table.add_row("Buy Count", f"{str(self.state.buy_count)}", style="white")
             else:
                 simulation["data"]["buy_count"] = self.state.buy_count
+
+        if not self.simresultonly:
+            table.add_row("Sell Count", str(self.state.sell_count), style="white")
+
+            table.add_row("")
+            table.add_row("First Buy", Text(str(self.state.first_buy_size), style="white"), style="white")
+
+            if self.state.last_sell_size > self.state.last_buy_size:
+                table.add_row("Last Buy", Text(str(self.state.last_buy_size), style="bright_green"), style="white")
+            elif self.state.last_buy_size == self.state.last_sell_size:
+                table.add_row("Last Buy", Text(str(self.state.last_buy_size), style="orange1"), style="white")
+            else:
+                table.add_row("Last Buy", Text(str(self.state.last_buy_size), style="bright_red"), style="white")
+        else:
+            simulation["data"]["sell_count"] = self.state.sell_count
+            simulation["data"]["first_trade"] = {}
+            simulation["data"]["first_trade"]["size"] = self.state.first_buy_size
+
+        if self.state.sell_count > 0:
+            if not self.simresultonly:
+                if self.state.last_sell_size > self.state.last_buy_size:
+                    table.add_row("Last Sell", Text(_truncate(self.state.last_sell_size, 4), style="bright_green"), style="white")
+                elif self.state.last_buy_size == self.state.last_sell_size:
+                    table.add_row("Last Sell", Text(_truncate(self.state.last_sell_size, 4), style="orange1"), style="white")
+                else:
+                    table.add_row("Last Sell", Text(_truncate(self.state.last_sell_size, 4), style="bright_red"), style="white")
+                table.add_row("")
+            else:
+                simulation["data"]["last_trade"] = {}
+                simulation["data"]["last_trade"]["size"] = float(
+                    _truncate(self.state.last_sell_size, 2)
+                )
+        else:
+            if not self.simresultonly:
+                table.add_row("")
+                table.add_row("Margin", "0.00% (margin is nil as a sell has not occurred during the simulation)")
+                table.add_row("")
+            else:
+                simulation["data"]["margin"] = 0.0
+
+            if not self.disabletelegram:
+                self.notify_telegram(
+                    "      Margin: 0.00%\n  ** margin is nil as a sell has not occurred during the simulation\n"
+                )
 
         if self.simresultonly:
             return simulation
