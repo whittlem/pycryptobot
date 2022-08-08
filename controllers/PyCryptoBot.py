@@ -95,8 +95,6 @@ class PyCryptoBot(BotConfig):
         self.technical_analysis = None
         self.websocket_connection = None
         self.ticker_self = None
-        self.df = pd.DataFrame()
-        self.df_fist = pd.DataFrame()
         self.df_last = pd.DataFrame()
         self.trading_data = pd.DataFrame()
         self.telegram_bot = TelegramBotHelper(self)
@@ -1753,69 +1751,12 @@ class PyCryptoBot(BotConfig):
             # summary at the end of the simulation
             if not self.is_live and self.state.iterations == len(df):
                 simulation = self._simulation_summary()
-                self._simulation_orders_save()
+                self._simulation_save_orders()
 
-                tradesfile = self.tradesfile
-                print(tradesfile)
-
-                if self.is_verbose:
-                    Logger.info("\n" + str(self.trade_tracker))
-                    start = str(self.df.head(1).index.format()[0]).replace(":",
-                    ".")
-                    end = str(self.df.tail(1).index.format()[0]).replace(":", ".")
-                    filename = f"{self.market} {str(start)} - {str(end)}_{tradesfile}"
-
-                else:
-                    filename = tradesfile
-                try:
-                    if not os.path.isabs(filename):
-                        if not os.path.exists("csv"):
-                            os.makedirs("csv")
-                        filename = os.path.join(os.curdir, "csv", filename)
-                    self.trade_tracker.to_csv(filename)
-                except OSError:
-                    _notify(f"Unable to save: {filename}", "critical")
-
-                if self.state.buy_count == 0:
-                    self.state.last_buy_size = 0
-                    self.state.sell_sum = 0
-                else:
-                    self.state.sell_sum = (
-                        self.state.sell_sum + self.state.last_sell_size
-                    )
-
-                remove_last_buy = False
-                if self.state.buy_count > self.state.sell_count:
-                    remove_last_buy = True
-                    self.state.buy_count -= 1  # remove last buy as there has not been a corresponding sell yet
-                    self.state.last_buy_size = self.state.previous_buy_size
-                    simulation["data"]["open_buy_excluded"] = 1
-
-                    if not self.simresultonly:
-                        Logger.info(
-                            "\nWarning: simulation ended with an open trade and it will be excluded from the margin calculation."
-                        )
-                        Logger.info(
-                            "         (it is not realistic to hard sell at the end of a simulation without a sell signal)"
-                        )
-                else:
-                    simulation["data"]["open_buy_excluded"] = 0
+                remove_last_buy = True
 
                 if not self.simresultonly:
                     Logger.info("\n")
-
-                if remove_last_buy is True:
-                    if not self.simresultonly:
-                        Logger.info(
-                            f"   Buy Count : {str(self.state.buy_count)} (open buy excluded)"
-                        )
-                    else:
-                        simulation["data"]["buy_count"] = self.state.buy_count
-                else:
-                    if not self.simresultonly:
-                        Logger.info(f"   Buy Count : {str(self.state.buy_count)}")
-                    else:
-                        simulation["data"]["buy_count"] = self.state.buy_count
 
                 if not self.simresultonly:
                     Logger.info(f"  Sell Count : {str(self.state.sell_count)}")
@@ -2358,30 +2299,63 @@ class PyCryptoBot(BotConfig):
         if self.get_config() != "":
             simulation["config"] = self.get_config()
 
+        if self.state.buy_count == 0:
+            self.state.last_buy_size = 0
+            self.state.sell_sum = 0
+        else:
+            self.state.sell_sum = (
+                self.state.sell_sum + self.state.last_sell_size
+            )
+
+        table = Table(title=f"Simulation Summary: {self.market}", box=box.SQUARE, min_width=40, border_style="white", show_header=False)
+
+        table.add_column("Item", justify="right", style="white", no_wrap=True)
+        table.add_column("Value", justify="left", style="cyan")
+
+        remove_last_buy = False
+        if self.state.buy_count > self.state.sell_count:
+            remove_last_buy = True
+            self.state.buy_count -= 1  # remove last buy as there has not been a corresponding sell yet
+            self.state.last_buy_size = self.state.previous_buy_size
+            simulation["data"]["open_buy_excluded"] = 1
+
+            if not self.simresultonly:
+                table.add_row("Warning", "Simulation ended with an open trade and it will be excluded from the margin calculation.")
+        else:
+            simulation["data"]["open_buy_excluded"] = 0
+
+        if remove_last_buy is True:
+            if not self.simresultonly:
+                table.add_row("Buy Count", f"{str(self.state.buy_count)} (open buy order excluded)")
+            else:
+                simulation["data"]["buy_count"] = self.state.buy_count
+        else:
+            if not self.simresultonly:
+                table.add_row("Buy Count", f"{str(self.state.buy_count)}")
+            else:
+                simulation["data"]["buy_count"] = self.state.buy_count
+
         if self.simresultonly:
             return simulation
 
         print("")  # blank line above table
 
-        table = Table(title=f"Simulation Summary: {self.market}", box=box.HEAVY_EDGE, min_width=40, border_style="white")
-        table.add_row("")
-
         self.console_term.print(table)
-        print(simulation)  # remove this
         return simulation
 
-    def _simulation_orders_save(self) -> None:
-        start = str(self.df_first.index.format()[0]).replace(":", ".")
-        end = str(self.df_last.index.format()[0]).replace(":", ".")
-        filename = f"{self.market} {str(self.granularity).replace('Granularity: ', '')} {str(start)} - {str(end)}_{self.tradesfile}"
+    def _simulation_save_orders(self) -> None:
+        if not self.disabletracker:
+            start = str(self.trading_data.head(1).index.format()[0]).replace(":", ".")
+            end = str(self.trading_data.tail(1).index.format()[0]).replace(":", ".")
+            filename = f"{self.market} {str(self.granularity.to_integer)} {str(start)} - {str(end)}_{self.tradesfile}"
 
-        try:
-            if not os.path.isabs(self.tradesfile):
-                if not os.path.exists("csv"):
-                    os.makedirs("csv")
-            self.trade_tracker.to_csv(os.path.join(os.curdir, "csv", self.tradesfile))
-        except OSError:
-            self._notify(f"Unable to save: {self.tradesfile}", "critical")
+            try:
+                if not os.path.isabs(filename):
+                    if not os.path.exists("csv"):
+                        os.makedirs("csv")
+                self.trade_tracker.to_csv(os.path.join(os.curdir, "csv", filename))
+            except OSError:
+                Logger.error(f"Unable to save: {filename}", "critical")
 
     def _generate_banner(self) -> None:
         table = Table(title=f"Python Crypto Bot {self.get_version_from_readme()}")
