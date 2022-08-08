@@ -10,6 +10,7 @@ import pandas as pd
 from regex import R
 from rich.console import Console
 from rich.table import Table
+from rich import box
 from datetime import datetime, timedelta
 from os.path import exists as file_exists
 from urllib3.exceptions import ReadTimeoutError
@@ -94,6 +95,8 @@ class PyCryptoBot(BotConfig):
         self.technical_analysis = None
         self.websocket_connection = None
         self.ticker_self = None
+        self.df = pd.DataFrame()
+        self.df_fist = pd.DataFrame()
         self.df_last = pd.DataFrame()
         self.trading_data = pd.DataFrame()
         self.telegram_bot = TelegramBotHelper(self)
@@ -1747,32 +1750,19 @@ class PyCryptoBot(BotConfig):
             if self.state.action == "DONE" and indicatorvalues != "" and not self.disabletelegram:
                 self.notify_telegram(indicatorvalues)
 
+            # summary at the end of the simulation
             if not self.is_live and self.state.iterations == len(df):
-                simulation = {
-                    "config": {},
-                    "data": {
-                        "open_buy_excluded": 1,
-                        "buy_count": 0,
-                        "sell_count": 0,
-                        "first_trade": {"size": 0},
-                        "last_trade": {"size": 0},
-                        "margin": 0.0,
-                    },
-                    "exchange": self.exchange,
-                }
-
-                if self.get_config() != "":
-                    simulation["config"] = self.get_config()
-
-                if not self.simresultonly:
-                    Logger.info(f"\nSimulation Summary: {self.market}")
+                simulation = self._simulation_summary()
+                self._simulation_orders_save()
 
                 tradesfile = self.tradesfile
+                print(tradesfile)
 
                 if self.is_verbose:
                     Logger.info("\n" + str(self.trade_tracker))
-                    start = str(df.head(1).index.format()[0]).replace(":", ".")
-                    end = str(df.tail(1).index.format()[0]).replace(":", ".")
+                    start = str(self.df.head(1).index.format()[0]).replace(":",
+                    ".")
+                    end = str(self.df.tail(1).index.format()[0]).replace(":", ".")
                     filename = f"{self.market} {str(start)} - {str(end)}_{tradesfile}"
 
                 else:
@@ -2350,6 +2340,48 @@ class PyCryptoBot(BotConfig):
                         self.get_date_from_iso8601_str(str(start_date)).isoformat(),
                         end_date.isoformat(),
                     )
+
+    def _simulation_summary(self) -> dict:
+        simulation = {
+            "config": {},
+            "data": {
+                "open_buy_excluded": 1,
+                "buy_count": 0,
+                "sell_count": 0,
+                "first_trade": {"size": 0},
+                "last_trade": {"size": 0},
+                "margin": 0.0,
+            },
+            "exchange": str(self.exchange).replace("Exchange.", "").lower(),
+        }
+
+        if self.get_config() != "":
+            simulation["config"] = self.get_config()
+
+        if self.simresultonly:
+            return simulation
+
+        print("")  # blank line above table
+
+        table = Table(title=f"Simulation Summary: {self.market}", box=box.HEAVY_EDGE, min_width=40, border_style="white")
+        table.add_row("")
+
+        self.console_term.print(table)
+        print(simulation)  # remove this
+        return simulation
+
+    def _simulation_orders_save(self) -> None:
+        start = str(self.df_first.index.format()[0]).replace(":", ".")
+        end = str(self.df_last.index.format()[0]).replace(":", ".")
+        filename = f"{self.market} {str(self.granularity).replace('Granularity: ', '')} {str(start)} - {str(end)}_{self.tradesfile}"
+
+        try:
+            if not os.path.isabs(self.tradesfile):
+                if not os.path.exists("csv"):
+                    os.makedirs("csv")
+            self.trade_tracker.to_csv(os.path.join(os.curdir, "csv", self.tradesfile))
+        except OSError:
+            self._notify(f"Unable to save: {self.tradesfile}", "critical")
 
     def _generate_banner(self) -> None:
         table = Table(title=f"Python Crypto Bot {self.get_version_from_readme()}")
