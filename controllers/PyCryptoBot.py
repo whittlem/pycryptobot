@@ -1998,6 +1998,7 @@ class PyCryptoBot(BotConfig):
         self.state.init_last_action()
 
         if self.is_sim:
+            # initial amounts for sims
             self.state.last_buy_size = 1000
             self.state.first_buy_size = 1000
 
