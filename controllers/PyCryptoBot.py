@@ -941,6 +941,8 @@ class PyCryptoBot(BotConfig):
                         color = "red1"
                     elif level == "critical":
                         color = "red1 blink"
+                    elif level == "info":
+                        color = "yellow blink"
                     else:
                         color = "violet"
 
@@ -1108,9 +1110,7 @@ class PyCryptoBot(BotConfig):
                                 if not self.is_sim or (
                                     self.is_sim and not self.simresultonly
                                 ):
-                                    _notify(
-                                        f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {str(self.price)} | BUY"
-                                    )
+                                    _notify(f"*** Executing SIMULATION Buy Order at {str(self.price)} ***", "info")
                             else:
                                 _notify("*** Executing LIVE Buy Order ***")
 
@@ -1301,9 +1301,7 @@ class PyCryptoBot(BotConfig):
                             if not self.is_sim or (
                                 self.is_sim and not self.simresultonly
                             ):
-                                _notify(
-                                    f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {str(self.price)} | BUY"
-                                )
+                                _notify(f"*** Executing SIMULATION Buy Order at {str(self.price)} ***", "info")
 
                             bands = _technical_analysis.get_fib_ret_levels(
                                 float(self.price)
@@ -1650,26 +1648,7 @@ class PyCryptoBot(BotConfig):
                             if not self.is_sim or (
                                 self.is_sim and not self.simresultonly
                             ):
-                                # TODO: improve this
-                                _notify(
-                                    formatted_current_df_index
-                                    + " | "
-                                    + self.market
-                                    + " | "
-                                    + self.print_granularity()
-                                    + " | SELL | "
-                                    + str(self.price)
-                                    + " | BUY | "
-                                    + str(self.state.last_buy_price)
-                                    + " | DIFF | "
-                                    + str(self.price - self.state.last_buy_price)
-                                    + " | DIFF | "
-                                    + str(profit)
-                                    + " | MARGIN NO FEES | "
-                                    + margin_text
-                                    + " | MARGIN FEES | "
-                                    + str(round(sell_fee, precision))
-                                )
+                                _notify(f"*** Executing SIMULATION Sell Order at {str(self.price)} | Buy: {str(self.state.last_buy_price)} ({str(self.price - self.state.last_buy_price)}) | Profit: {str(profit)} on {_truncate(self.state.last_buy_size, precision)} | Fees: {str(round(sell_fee, precision))} | Margin: {margin_text} ***", "info")
 
                         else:
                             _notify("*** Executing TEST Sell Order ***")
