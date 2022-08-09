@@ -1,4 +1,4 @@
-# Python Crypto Bot v6.4.3 (pycryptobot)
+# Python Crypto Bot v7.0.0 (pycryptobot)
 
 [![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg) [![Tests](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)
 
