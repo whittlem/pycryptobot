@@ -1265,9 +1265,6 @@ class PyCryptoBot(BotConfig):
                             if self.buymaxsize is not None:
                                 self.state.last_buy_size = self.buymaxsize
                                 self.state.first_buy_size = self.buymaxsize
-                            else:
-                                self.state.last_buy_size = 1000
-                                self.state.first_buy_size = 1000
                         # add option for buy last sell size
                         elif (
                             self.buymaxsize is not None
@@ -1720,6 +1717,9 @@ class PyCryptoBot(BotConfig):
                                 self.trailing_stop_loss_trigger
                             )
 
+                        # adjust the next simulation buy with the current balance
+                        self.state.last_buy_size += profit
+
                         self.state.tsl_max = False
                         self.state.action = "DONE"
 
@@ -2018,6 +2018,10 @@ class PyCryptoBot(BotConfig):
 
         self.state.init_last_action()
 
+        if self.is_sim:
+            self.state.last_buy_size = 1000
+            self.state.first_buy_size = 1000
+
         if banner and not self.is_sim or (self.is_sim and not self.simresultonly):
             self._generate_banner()
 
@@ -2214,11 +2218,11 @@ class PyCryptoBot(BotConfig):
 
             table.add_row("")
             if self.state.last_sell_size > self.state.last_buy_size:
-                table.add_row(f"Last Buy Order ({self.quote_currency})", Text(str(self.state.last_buy_size), style="bright_green"), style="white")
+                table.add_row(f"Last Buy Order ({self.quote_currency})", Text(_truncate(self.state.last_buy_size, 4), style="bright_green"), style="white")
             elif self.state.last_buy_size == self.state.last_sell_size:
-                table.add_row(f"Last Buy Order ({self.quote_currency})", Text(str(self.state.last_buy_size), style="orange1"), style="white")
+                table.add_row(f"Last Buy Order ({self.quote_currency})", Text(_truncate(self.state.last_buy_size, 4), style="orange1"), style="white")
             else:
-                table.add_row(f"Last Buy Order ({self.quote_currency})", Text(str(self.state.last_buy_size), style="bright_red"), style="white")
+                table.add_row(f"Last Buy Order ({self.quote_currency})", Text(_truncate(self.state.last_buy_size, 4), style="bright_red"), style="white")
         else:
             simulation["data"]["sell_count"] = self.state.sell_count
             simulation["data"]["first_trade"] = {}
