@@ -1751,97 +1751,8 @@ class PyCryptoBot(BotConfig):
 
             # summary at the end of the simulation
             if not self.is_live and self.state.iterations == len(df):
-                simulation = self._simulation_summary()
+                self._simulation_summary()
                 self._simulation_save_orders()
-
-                remove_last_buy = True
-
-                if not self.disabletelegram:
-                    self.notify_telegram(
-                        "Simulation Summary\n"
-                        + f"   Market: {self.market}\n"
-                        + f"   Buy Count: {self.state.buy_count}\n"
-                        + f"   Sell Count: {self.state.sell_count}\n"
-                        + f"   First Buy: {self.state.first_buy_size}\n"
-                        + f"   Last Buy: {str(_truncate(self.state.last_buy_size, 4))}\n"
-                        + f"   Last Sell: {str(_truncate(self.state.last_sell_size, 4))}\n"
-                    )
-
-                if self.state.sell_count > 0:
-                    _last_trade_margin = _truncate(
-                        (
-                            (
-                                (self.state.last_sell_size - self.state.last_buy_size)
-                                / self.state.last_buy_size
-                            )
-                            * 100
-                        ),
-                        4,
-                    )
-
-                    if not self.simresultonly:
-                        Logger.info(
-                            "   Last Trade Margin : " + _last_trade_margin + "%"
-                        )
-                        if remove_last_buy:
-                            Logger.info(
-                                f"\n   Open Trade Margin at end of simulation: {self.state.open_trade_margin}"
-                            )
-                        Logger.info("\n")
-                        Logger.info(
-                            f"   All Trades Buys ({self.quote_currency}): {_truncate(self.state.buy_tracker, 2)}"
-                        )
-                        Logger.info(
-                            f"   All Trades Profit/Loss ({self.quote_currency}): {_truncate(self.state.profitlosstracker, 2)} ({_truncate(self.state.feetracker,2)} in fees)"
-                        )
-                        Logger.info(
-                            f"   All Trades Margin : {_truncate(self.state.margintracker, 4)}%"
-                        )
-                        Logger.info("\n")
-                        Logger.info("  ** non-live simulation, assuming highest fees")
-                        Logger.info(
-                            "  ** open trade excluded from margin calculation\n"
-                        )
-                    else:
-                        simulation["data"]["last_trade"]["margin"] = _last_trade_margin
-                        simulation["data"]["all_trades"] = {}
-                        simulation["data"]["all_trades"][
-                            "quote_currency"
-                        ] = self.quote_currency
-                        simulation["data"]["all_trades"]["value_buys"] = float(
-                            _truncate(self.state.buy_tracker, 2)
-                        )
-                        simulation["data"]["all_trades"]["profit_loss"] = float(
-                            _truncate(self.state.profitlosstracker, 2)
-                        )
-                        simulation["data"]["all_trades"]["fees"] = float(
-                            _truncate(self.state.feetracker, 2)
-                        )
-                        simulation["data"]["all_trades"]["margin"] = float(
-                            _truncate(self.state.margintracker, 4)
-                        )
-
-                    ## Revised telegram Summary notification to give total margin in addition to last trade margin.
-                    if not self.disabletelegram:
-                        self.notify_telegram(
-                            f"      Last Trade Margin: {_last_trade_margin}%\n\n"
-                        )
-
-                    if remove_last_buy and not self.disabletelegram:
-                        self.notify_telegram(
-                            f"\nOpen Trade Margin at end of simulation: {self.state.open_trade_margin}\n"
-                        )
-
-                    if not self.disabletelegram:
-                        self.notify_telegram(
-                            f"      All Trades Margin: {_truncate(self.state.margintracker, 4)}%\n  ** non-live simulation, assuming highest fees\n  ** open trade excluded from margin calculation\n"
-                        )
-
-                    if not self.disabletelegram:
-                        self.telegram_bot.remove_active_bot()
-
-                if self.simresultonly:
-                    RichText.notify(json.dumps(simulation, sort_keys=True, indent=4), self, "normal")
 
         else:
             bullbeartext = "BULL" if goldencross else "BEAR"
@@ -2299,14 +2210,15 @@ class PyCryptoBot(BotConfig):
             table.add_row("Sell Count", str(self.state.sell_count), style="white")
 
             table.add_row("")
-            table.add_row("First Buy", Text(str(self.state.first_buy_size), style="white"), style="white")
+            table.add_row(f"First Buy Order ({self.quote_currency})", Text(str(self.state.first_buy_size), style="white"), style="white")
 
+            table.add_row("")
             if self.state.last_sell_size > self.state.last_buy_size:
-                table.add_row("Last Buy", Text(str(self.state.last_buy_size), style="bright_green"), style="white")
+                table.add_row(f"Last Buy Order ({self.quote_currency})", Text(str(self.state.last_buy_size), style="bright_green"), style="white")
             elif self.state.last_buy_size == self.state.last_sell_size:
-                table.add_row("Last Buy", Text(str(self.state.last_buy_size), style="orange1"), style="white")
+                table.add_row(f"Last Buy Order ({self.quote_currency})", Text(str(self.state.last_buy_size), style="orange1"), style="white")
             else:
-                table.add_row("Last Buy", Text(str(self.state.last_buy_size), style="bright_red"), style="white")
+                table.add_row(f"Last Buy Order ({self.quote_currency})", Text(str(self.state.last_buy_size), style="bright_red"), style="white")
         else:
             simulation["data"]["sell_count"] = self.state.sell_count
             simulation["data"]["first_trade"] = {}
@@ -2315,12 +2227,11 @@ class PyCryptoBot(BotConfig):
         if self.state.sell_count > 0:
             if not self.simresultonly:
                 if self.state.last_sell_size > self.state.last_buy_size:
-                    table.add_row("Last Sell", Text(_truncate(self.state.last_sell_size, 4), style="bright_green"), style="white")
+                    table.add_row(f"Last Sell Order ({self.quote_currency})", Text(_truncate(self.state.last_sell_size, 4), style="bright_green"), style="white")
                 elif self.state.last_buy_size == self.state.last_sell_size:
-                    table.add_row("Last Sell", Text(_truncate(self.state.last_sell_size, 4), style="orange1"), style="white")
+                    table.add_row(f"Last Sell Order ({self.quote_currency})", Text(_truncate(self.state.last_sell_size, 4), style="orange1"), style="white")
                 else:
-                    table.add_row("Last Sell", Text(_truncate(self.state.last_sell_size, 4), style="bright_red"), style="white")
-                table.add_row("")
+                    table.add_row(f"Last Sell Order ({self.quote_currency})", Text(_truncate(self.state.last_sell_size, 4), style="bright_red"), style="white")
             else:
                 simulation["data"]["last_trade"] = {}
                 simulation["data"]["last_trade"]["size"] = float(
@@ -2339,12 +2250,99 @@ class PyCryptoBot(BotConfig):
                     "      Margin: 0.00%\n  ** margin is nil as a sell has not occurred during the simulation\n"
                 )
 
+        if not self.disabletelegram:
+            self.notify_telegram(
+                "Simulation Summary\n"
+                + f"   Market: {self.market}\n"
+                + f"   Buy Count: {self.state.buy_count}\n"
+                + f"   Sell Count: {self.state.sell_count}\n"
+                + f"   First Buy: {self.state.first_buy_size}\n"
+                + f"   Last Buy: {str(_truncate(self.state.last_buy_size, 4))}\n"
+                + f"   Last Sell: {str(_truncate(self.state.last_sell_size, 4))}\n"
+            )
+
+        if self.state.sell_count > 0:
+            _last_trade_margin = _truncate(
+                (
+                    (
+                        (self.state.last_sell_size - self.state.last_buy_size)
+                        / self.state.last_buy_size
+                    )
+                    * 100
+                ),
+                4,
+            )
+
+            if not self.simresultonly:
+                if float(_last_trade_margin) > 0:
+                    table.add_row("Last Trade Margin", Text(f"{_last_trade_margin}%", style="bright_green"), style="white")
+                elif float(_last_trade_margin) < 0:
+                    table.add_row("Last Trade Margin", Text(f"{_last_trade_margin}%", style="bright_red"), style="white")
+                else:
+                    table.add_row("Last Trade Margin", Text(f"{_last_trade_margin}%", style="orange1"), style="white")
+
+                if remove_last_buy:
+                    table.add_row("")
+                    table.add_row("Open Trade Margin", Text(f"{self.state.open_trade_margin} (open trade excluded from margin calculation)", style="orange1"), style="white")
+
+                table.add_row("")
+                table.add_row(f"Total Buy Volume ({self.quote_currency})", Text(_truncate(self.state.buy_tracker, 2), style="white"), style="white")
+
+                table.add_row("")
+                if self.state.profitlosstracker > 0:
+                    table.add_row(f"All Trades Profit/Loss ({self.quote_currency})", Text(f"{_truncate(self.state.profitlosstracker, 2)} ({_truncate(self.state.feetracker,2)} in fees)", style="bright_green"), style="white")
+                    table.add_row(f"All Trades Margin ({self.quote_currency})", Text(f"{_truncate(self.state.margintracker, 4)}% (non-live simulation, assuming highest fees)", style="bright_green"), style="white")
+                elif self.state.profitlosstracker < 0:
+                    table.add_row(f"All Trades Profit/Loss ({self.quote_currency})", Text(f"{_truncate(self.state.profitlosstracker, 2)} ({_truncate(self.state.feetracker,2)} in fees)", style="bright_red"), style="white")
+                    table.add_row(f"All Trades Margin ({self.quote_currency})", Text(f"{_truncate(self.state.margintracker, 4)}% (non-live simulation, assuming highest fees)", style="bright_red"), style="white")
+                else:
+                    table.add_row(f"All Trades Profit/Loss ({self.quote_currency})", Text(f"{_truncate(self.state.profitlosstracker, 2)} ({_truncate(self.state.feetracker,2)} in fees)", style="orange1"), style="white")
+                    table.add_row(f"All Trades Margin ({self.quote_currency})", Text(f"{_truncate(self.state.margintracker, 4)}% (non-live simulation, assuming highest fees)", style="orange1"), style="white")
+            else:
+                simulation["data"]["last_trade"]["margin"] = _last_trade_margin
+                simulation["data"]["all_trades"] = {}
+                simulation["data"]["all_trades"][
+                    "quote_currency"
+                ] = self.quote_currency
+                simulation["data"]["all_trades"]["value_buys"] = float(
+                    _truncate(self.state.buy_tracker, 2)
+                )
+                simulation["data"]["all_trades"]["profit_loss"] = float(
+                    _truncate(self.state.profitlosstracker, 2)
+                )
+                simulation["data"]["all_trades"]["fees"] = float(
+                    _truncate(self.state.feetracker, 2)
+                )
+                simulation["data"]["all_trades"]["margin"] = float(
+                    _truncate(self.state.margintracker, 4)
+                )
+
+            ## revised telegram Summary notification to give total margin in addition to last trade margin.
+            if not self.disabletelegram:
+                self.notify_telegram(
+                    f"      Last Trade Margin: {_last_trade_margin}%\n\n"
+                )
+
+            if remove_last_buy and not self.disabletelegram:
+                self.notify_telegram(
+                    f"\nOpen Trade Margin at end of simulation: {self.state.open_trade_margin}\n"
+                )
+
+            if not self.disabletelegram:
+                self.notify_telegram(
+                    f"      All Trades Margin: {_truncate(self.state.margintracker, 4)}%\n  ** non-live simulation, assuming highest fees\n  ** open trade excluded from margin calculation\n"
+                )
+
+            if not self.disabletelegram:
+                self.telegram_bot.remove_active_bot()
+
         if self.simresultonly:
-            return simulation
+            Logger.info(json.dumps(simulation, sort_keys=True, indent=4))
+        else:
+            print("")  # blank line above table
+            self.console_term.print(table)
+            print("")  # blank line below table
 
-        print("")  # blank line above table
-
-        self.console_term.print(table)
         return simulation
 
     def _simulation_save_orders(self) -> None:
