@@ -244,7 +244,7 @@ def process_screener_data(app, markets, quote_currency, exchange_name):
                 relavent_ta['rsi'] = rsi
                 relavent_ta['stoch_d'] = stoch_d
                 relavent_ta['stoch_k'] = stoch_k
-                relavent_ta['williamsR'] = williams_r
+                relavent_ta['williamsr'] = williams_r
                 relavent_ta['rating'] = rating
                 relavent_ta['score'] = score
                 ## Hack a percentage from the recommendation which would take into account all the indicators rather than just ATR
@@ -266,8 +266,8 @@ def process_screener_data(app, markets, quote_currency, exchange_name):
     if formatted_ta:
         # Stick it in a DF for the bots
         df_markets = pd.DataFrame(formatted_ta)
-        df_markets = df_markets[["market", "score", "recommend", "volume", "volatility", "adx", "adx+di", "adx-di", "macd", "macd.signal", "bollinger_upper", "bollinger_lower", "rsi", "stoch_d", "stoch_k", "williamsR", "rating", "buy_next", "atr72_pcnt"]]
-        df_markets.columns = ["market", "score", "recommend", "volume", "volatility", "adx", "adx+di", "adx-di", "macd", "macd.signal", "bollinger_upper", "bollinger_lower", "rsi", "stoch_d", "stoch_k", "williamsR", "rating", "buy_next", "atr72_pcnt"]
+        df_markets = df_markets[["market", "score", "recommend", "volume", "volatility", "adx", "adx+di", "adx-di", "macd", "macd.signal", "bollinger_upper", "bollinger_lower", "rsi", "stoch_d", "stoch_k", "williamsr", "rating", "buy_next", "atr72_pcnt"]]
+        df_markets.columns = ["market", "score", "recommend", "volume", "volatility", "adx", "adx+di", "adx-di", "macd", "macd.signal", "bollinger_upper", "bollinger_lower", "rsi", "stoch_d", "stoch_k", "williamsr", "rating", "buy_next", "atr72_pcnt"]
         df_markets["score"] = df_markets["score"].astype(float).round(0).astype(int)
         df_markets["recommend"] = df_markets["recommend"].astype(float)
         df_markets["volume"] = df_markets["volume"].astype(float).round(0).astype(int)
@@ -282,7 +282,7 @@ def process_screener_data(app, markets, quote_currency, exchange_name):
         df_markets['rsi'] = df_markets['rsi'].astype(float)
         df_markets['stoch_d'] = df_markets['stoch_d'].astype(float)
         df_markets['stoch_k'] = df_markets['stoch_k'].astype(float)
-        df_markets['williamsR'] = df_markets['williamsR'].astype(float)
+        df_markets['williamsr'] = df_markets['williamsr'].astype(float)
         df_markets['atr72_pcnt'] = df_markets['atr72_pcnt'].astype(float)
 
         df_markets.sort_values(by=["market"], ascending=True, inplace=True)

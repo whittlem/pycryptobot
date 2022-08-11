@@ -80,10 +80,10 @@ for exchange in config:
             try:
                 if int(data["volume"]) > 0:
                     ta = TechnicalAnalysis(api.get_historical_data(market, GRANULARITY, None))
-                    ta.addEMA(12)
-                    ta.addEMA(26)
-                    ta.addATR(72)
-                    df_1h = ta.getDataFrame()
+                    ta.add_ema(12)
+                    ta.add_ema(26)
+                    ta.add_atr(72)
+                    df_1h = ta.get_df()
                     df_1h["ema12ltema26"] = df_1h.ema12 < df_1h.ema26
                     df_1h_last = df_1h.tail(1)
 

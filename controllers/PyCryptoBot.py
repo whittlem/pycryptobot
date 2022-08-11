@@ -406,9 +406,9 @@ class PyCryptoBot(BotConfig):
                     )
 
                     # if 'bool(self.df_last["morning_star"].values[0])' not in df:
-                    _technical_analysis.addAll()
+                    _technical_analysis.add_all()
 
-                    df = _technical_analysis.getDataFrame()
+                    df = _technical_analysis.get_df()
 
                     self.sim_smartswitch = False
 
@@ -419,16 +419,16 @@ class PyCryptoBot(BotConfig):
                 )
 
                 if "morning_star" not in df:
-                    _technical_analysis.addAll()
+                    _technical_analysis.add_all()
 
-                df = _technical_analysis.getDataFrame()
+                df = _technical_analysis.get_df()
 
         else:
             _technical_analysis = TechnicalAnalysis(
                 self.trading_data, len(self.trading_data)
             )
-            _technical_analysis.addAll()
-            df = _technical_analysis.getDataFrame()
+            _technical_analysis.add_all()
+            df = _technical_analysis.get_df()
 
         if self.is_sim:
             self.df_last = self.get_interval(df, self.state.iterations)
@@ -1073,7 +1073,7 @@ class PyCryptoBot(BotConfig):
                     if self.state.last_action == "BUY":
                         # display support, resistance and fibonacci levels
                         if not self.is_sim:
-                            _notify(_technical_analysis.print_sr_fib_levels(self.price))
+                            _notify(_technical_analysis.print_support_resistance_fibonacci_levels(self.price))
 
                 # if a buy signal
                 if self.state.action == "BUY":
@@ -1303,13 +1303,13 @@ class PyCryptoBot(BotConfig):
                             ):
                                 _notify(f"*** Executing SIMULATION Buy Order at {str(self.price)} ***", "info")
 
-                            bands = _technical_analysis.get_fib_ret_levels(
+                            bands = _technical_analysis.get_fibonacci_retracement_levels(
                                 float(self.price)
                             )
 
                             if not self.is_sim:
                                 _notify(f"Fibonacci Retracement Levels: {str(bands)}")
-                                _technical_analysis.print_sup_res_level(
+                                _technical_analysis.print_support_resistance_levels(
                                     float(self.price)
                                 )
 
@@ -1388,7 +1388,7 @@ class PyCryptoBot(BotConfig):
                     if self.is_live:
                         if self.is_verbose:
 
-                            bands = _technical_analysis.get_fib_ret_levels(
+                            bands = _technical_analysis.get_fibonacci_retracement_levels(
                                 float(self.price)
                             )
 
@@ -3597,12 +3597,12 @@ class PyCryptoBot(BotConfig):
             ta = TechnicalAnalysis(df_data)
 
             if "ema12" not in df_data:
-                ta.addEMA(12)
+                ta.add_ema(12)
 
             if "ema26" not in df_data:
-                ta.addEMA(26)
+                ta.add_ema(26)
 
-            df_last = ta.getDataFrame().copy().iloc[-1, :]
+            df_last = ta.get_df().copy().iloc[-1, :]
             df_last["bull"] = df_last["ema12"] > df_last["ema26"]
 
             return bool(df_last["bull"])
@@ -3624,12 +3624,12 @@ class PyCryptoBot(BotConfig):
             ta = TechnicalAnalysis(df_data)
 
             if "ema12" not in df_data:
-                ta.addEMA(12)
+                ta.add_ema(12)
 
             if "ema26" not in df_data:
-                ta.addEMA(26)
+                ta.add_ema(26)
 
-            df_last = ta.getDataFrame().copy().iloc[-1, :]
+            df_last = ta.get_df().copy().iloc[-1, :]
             df_last["bull"] = df_last["ema12"] > df_last["ema26"]
 
             return bool(df_last["bull"])
@@ -3655,12 +3655,12 @@ class PyCryptoBot(BotConfig):
             ta = TechnicalAnalysis(df_data)
 
             if "sma50" not in df_data:
-                ta.addSMA(50)
+                ta.add_sma(50)
 
             if "sma200" not in df_data:
-                ta.addSMA(200)
+                ta.add_sma(200)
 
-            df_last = ta.getDataFrame().copy().iloc[-1, :]
+            df_last = ta.get_df().copy().iloc[-1, :]
             df_last["bull"] = df_last["sma50"] > df_last["sma200"]
 
             return bool(df_last["bull"])

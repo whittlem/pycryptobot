@@ -296,18 +296,18 @@ class Pages:
         ticker = api.get_ticker(market)
 
         ta = TechnicalAnalysis(api.get_historical_data(market, g1, None))
-        ta.addAll()
-        df_15m = ta.getDataFrame()
+        ta.add_all()
+        df_15m = ta.get_df()
         df_15m_last = df_15m.tail(1)
 
         ta = TechnicalAnalysis(api.get_historical_data(market, g2, None))
-        ta.addAll()
-        df_1h = ta.getDataFrame()
+        ta.add_all()
+        df_1h = ta.get_df()
         df_1h_last = df_1h.tail(1)
 
         ta = TechnicalAnalysis(api.get_historical_data(market, g3, None))
-        ta.addAll()
-        df_6h = ta.getDataFrame()
+        ta.add_all()
+        df_6h = ta.get_df()
         df_6h_last = df_6h.tail(1)
 
         if exchange == 'binance':
@@ -442,7 +442,7 @@ class Pages:
             adx14_6h_desc = 'Weak Trend Up'
 
         def arima_predictions(even_rows: bool = True):
-            results_ARIMA = ta.seasonalARIMAModel()
+            results_ARIMA = ta.seasonal_arima_model()
             start_date = df_1h.last_valid_index()
             end_date = start_date + datetime.timedelta(days=3)
             arima_pred = results_ARIMA.predict(

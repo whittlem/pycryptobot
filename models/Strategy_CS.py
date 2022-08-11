@@ -54,20 +54,20 @@ class Strategy_CS:
         df_1h = self.app.getAdditionalDf("1h", websocket).copy()
         # set variable to call technical analysis in Trading_Pta (or myPta)
         ta_1h = self.TA(df_1h)
-        # add any individual signals/inicators or addAll()
-        ta_1h.addEMA(5,True)
-        ta_1h.addEMA(10,True)
+        # add any individual signals/inicators or add_all()
+        ta_1h.add_ema(5,True)
+        ta_1h.add_ema(10,True)
         # retrieve the ta results
-        df_1h = ta_1h.getDataFrame()
+        df_1h = ta_1h.get_df()
         # name and create last row reference like main dataframe
         data_1h = self.app.get_interval(df_1h)
 
         # repeat for any additional, don't recommend more than 1 or 2 additional, adds overhead and API calls
         df_6h = self.app.getAdditionalDf("6h", websocket).copy()
         ta_6h = self.TA(df_6h, self.app.adjust_total_periods)
-        ta_6h.addEMA(5,True)
-        ta_6h.addEMA(10,True)
-        df_6h = ta_6h.getDataFrame()
+        ta_6h.add_ema(5,True)
+        ta_6h.add_ema(10,True)
+        df_6h = ta_6h.get_df()
         data_6h = self.app.get_interval(df_6h)
 
         # check ema crossovers (these are not standard period lengths, see comments above)
@@ -426,7 +426,7 @@ class Strategy_CS:
                 # OHCL
                 f"Open: {data['open'][0]} High: {data['high'][0]}"
                 f" Close: {data['close'][0]} Low: {data['low'][0]}"
-                f" WilliamsR {_truncate(data['williamsr20'][0],2)}"
+                f" williamsr {_truncate(data['williamsr20'][0],2)}"
             )
             Logger.info(indicatorvalues)
         else:

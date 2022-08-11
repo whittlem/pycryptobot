@@ -7,7 +7,7 @@ app = PyCryptoBot('binance')
 trading_data = self.get_historical_data(app.market, self.granularity)
 
 technicalAnalysis = TechnicalAnalysis(trading_data)
-technicalAnalysis.addAll()
+technicalAnalysis.add_all()
 
 tradinggraphs = TradingGraphs(technicalAnalysis)
 tradinggraphs.renderFibonacciRetracement(True)

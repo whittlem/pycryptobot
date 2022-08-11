@@ -82,67 +82,67 @@ class TechnicalAnalysis:
         self.pandas_ta = True
         self.talib = use_talib
 
-    def getDataFrame(self) -> DataFrame:
+    def get_df(self) -> DataFrame:
         """Returns the Pandas DataFrame"""
 
         return self.df
 
-    def addAll(self) -> None:
+    def add_all(self) -> None:
         """Adds analysis to the DataFrame"""
 
-        self.addChangePct()
+        self.add_change_pcnt()
 
-        self.addCMA()
+        self.add_cma()
         # for SMA and EMA, add True if wanting to add pcnt of chg to dataframe
-        self.addSMA(5, True)
-        self.addSMA(10, True)
-        self.addSMA(20)
+        self.add_sma(5, True)
+        self.add_sma(10, True)
+        self.add_sma(20)
         if self.total_periods >= 50:
-            self.addSMA(50, True)
+            self.add_sma(50, True)
         if self.total_periods >= 100:
-            self.addSMA(100, True)
+            self.add_sma(100, True)
         if self.total_periods >= 200:
-            self.addSMA(200)
-        self.addEMA(5, True) # add True if wanting to add pcnt of chg to dataframe
-        self.addEMA(9)
-        self.addEMA(12)
-        self.addEMA(26)
-        self.addGoldenCross()
-        self.addDeathCross()
-        self.addFibonacciBollingerBands()
+            self.add_sma(200)
+        self.add_ema(5, True) # add True if wanting to add pcnt of chg to dataframe
+        self.add_ema(9)
+        self.add_ema(12)
+        self.add_ema(26)
+        self.add_golden_cross()
+        self.add_death_cross()
+        self.add_fibonacci_bollinger_bands()
 
-        self.addRSI(14,14,True) # add MA period to add Moving Average and True to add pcnt of change
+        self.add_rsi(14,14,True) # add MA period to add Moving Average and True to add pcnt of change
 #        self.addStochasticRSI(14)
-        self.addWilliamsR() # default period is 20, add an integer to change default
-        self.addMACD() # add fast, slow, signal to be used, defaults to 12, 26, 9
-        self.addOBV(8) # integer is ma_period and is optional, default is 5
-        self.addElderRayIndex()
+        self.add_williamsr() # default period is 20, add an integer to change default
+        self.add_macd() # add fast, slow, signal to be used, defaults to 12, 26, 9
+        self.add_obv(8) # integer is ma_period and is optional, default is 5
+        self.add_elder_ray_index()
 
-        self.addEMABuySignals()
+        self.add_ema_buy_signals()
         if self.total_periods >= 200:
-            self.addSMABuySignals()
-        self.addMACDBuySignals()
-        self.addADXBuySignals()
-        self.addEMA_WMAsignal(5,5) # EMA with WMA smoothing
+            self.add_sma_buy_signals()
+        self.add_macd_buy_signals()
+        self.add_adx_buy_signals()
+        self.add_ema_WMAsignal(5,5) # EMA with WMA smoothing
 
         self.ta_MACDLead() # add fast, slow, signal to be used, defaults to 12, 26, 9
 
-        self.addCandleAstralBuy()
-        self.addCandleAstralSell()
-        self.addCandleHammer()
-        self.addCandleInvertedHammer()
-        self.addCandleShootingStar()
-        self.addCandleHangingMan()
-        self.addCandleThreeWhiteSoldiers()
-        self.addCandleThreeBlackCrows()
-        self.addCandleDoji()
-        self.addCandleThreeLineStrike()
-        self.addCandleTwoBlackGapping()
-        self.addCandleMorningStar()
-        self.addCandleEveningStar()
-        self.addCandleAbandonedBaby()
-        self.addCandleMorningDojiStar()
-        self.addCandleEveningDojiStar()
+        self.add_candle_astral_buy()
+        self.add_candle_astral_sell()
+        self.add_candle_hammer()
+        self.add_candle_inverted_hammer()
+        self.add_candle_shooting_star()
+        self.add_candle_hanging_man()
+        self.add_candle_three_white_soldiers()
+        self.add_candle_three_black_crows()
+        self.add_candle_doji()
+        self.add_candle_three_line_strike()
+        self.add_candle_two_black_gapping()
+        self.add_candle_morning_star()
+        self.add_candle_evening_star()
+        self.add_candle_abandoned_baby()
+        self.add_candle_morning_doji_star()
+        self.add_candle_evening_doji_star()
 
     """Candlestick References
     https://commodity.com/technical-analysis
@@ -151,7 +151,7 @@ class TechnicalAnalysis:
     https://www.incrediblecharts.com/candlestick_patterns/candlestick-patterns-strongest.php
     """
 
-    def candleHammer(self) -> Series:
+    def candle_hammer(self) -> Series:
         """* Candlestick Detected: Hammer ("Weak - Reversal - Bullish Signal - Up"""
 
         return (
@@ -175,10 +175,10 @@ class TechnicalAnalysis:
             )
         )
 
-    def addCandleHammer(self) -> None:
-        self.df["hammer"] = self.candleHammer()
+    def add_candle_hammer(self) -> None:
+        self.df["hammer"] = self.candle_hammer()
 
-    def candleShootingStar(self) -> Series:
+    def candle_shooting_star(self) -> Series:
         """* Candlestick Detected: Shooting Star ("Weak - Reversal - Bearish Pattern - Down")"""
 
         return (
@@ -196,10 +196,10 @@ class TechnicalAnalysis:
             )
         )
 
-    def addCandleShootingStar(self) -> None:
-        self.df["shooting_star"] = self.candleShootingStar()
+    def add_candle_shooting_star(self) -> None:
+        self.df["shooting_star"] = self.candle_shooting_star()
 
-    def candleHangingMan(self) -> Series:
+    def candle_hanging_man(self) -> Series:
         """* Candlestick Detected: Hanging Man ("Weak - Continuation - Bearish Pattern - Down")"""
 
         return (
@@ -225,10 +225,10 @@ class TechnicalAnalysis:
             & (self.df["high"].shift(2) < self.df["open"])
         )
 
-    def addCandleHangingMan(self) -> None:
-        self.df["hanging_man"] = self.candleHangingMan()
+    def add_candle_hanging_man(self) -> None:
+        self.df["hanging_man"] = self.candle_hanging_man()
 
-    def candleInvertedHammer(self) -> Series:
+    def candle_inverted_hammer(self) -> Series:
         """* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Pattern - Up")"""
 
         return (
@@ -248,10 +248,10 @@ class TechnicalAnalysis:
             )
         )
 
-    def addCandleInvertedHammer(self) -> None:
-        self.df["inverted_hammer"] = self.candleInvertedHammer()
+    def add_candle_inverted_hammer(self) -> None:
+        self.df["inverted_hammer"] = self.candle_inverted_hammer()
 
-    def candleThreeWhiteSoldiers(self) -> Series:
+    def candle_three_white_soldiers(self) -> Series:
         """*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Bullish Pattern - Up")"""
 
         return (
@@ -276,10 +276,10 @@ class TechnicalAnalysis:
             )
         )
 
-    def addCandleThreeWhiteSoldiers(self) -> None:
-        self.df["three_white_soldiers"] = self.candleThreeWhiteSoldiers()
+    def add_candle_three_white_soldiers(self) -> None:
+        self.df["three_white_soldiers"] = self.candle_three_white_soldiers()
 
-    def candleThreeBlackCrows(self) -> Series:
+    def candle_three_black_crows(self) -> Series:
         """* Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Pattern - Down")"""
 
         return (
@@ -304,10 +304,10 @@ class TechnicalAnalysis:
             )
         )
 
-    def addCandleThreeBlackCrows(self) -> None:
-        self.df["three_black_crows"] = self.candleThreeBlackCrows()
+    def add_candle_three_black_crows(self) -> None:
+        self.df["three_black_crows"] = self.candle_three_black_crows()
 
-    def candleDoji(self) -> Series:
+    def candle_doji(self) -> Series:
         """! Candlestick Detected: Doji ("Indecision")"""
 
         return (
@@ -328,8 +328,8 @@ class TechnicalAnalysis:
             )
         )
 
-    def addCandleDoji(self) -> None:
-        self.df["doji"] = self.candleDoji()
+    def add_candle_doji(self) -> None:
+        self.df["doji"] = self.candle_doji()
 
     def candleThreeLineStrike(self) -> Series:
         """** Candlestick Detected: Three Line Strike ("Reliable - Reversal - Bullish Pattern - Up")"""
@@ -361,7 +361,7 @@ class TechnicalAnalysis:
             )
         )
 
-    def addCandleThreeLineStrike(self) -> None:
+    def add_candle_three_line_strike(self) -> None:
         self.df["three_line_strike"] = self.candleThreeLineStrike()
 
     def candleTwoBlackGapping(self) -> Series:
@@ -380,10 +380,10 @@ class TechnicalAnalysis:
             & (self.df["high"].shift(1) < self.df["low"].shift(2))
         )
 
-    def addCandleTwoBlackGapping(self) -> None:
+    def add_candle_two_black_gapping(self) -> None:
         self.df["two_black_gapping"] = self.candleTwoBlackGapping()
 
-    def candleMorningStar(self) -> Series:
+    def candle_morning_star(self) -> Series:
         """*** Candlestick Detected: Morning Star ("Strong - Reversal - Bullish Pattern - Up")"""
 
         return (
@@ -400,10 +400,10 @@ class TechnicalAnalysis:
             )
         )
 
-    def addCandleMorningStar(self) -> None:
-        self.df["morning_star"] = self.candleMorningStar()
+    def add_candle_morning_star(self) -> None:
+        self.df["morning_star"] = self.candle_morning_star()
 
-    def candleEveningStar(self) -> ndarray:
+    def candle_evening_star(self) -> ndarray:
         """*** Candlestick Detected: Evening Star ("Strong - Reversal - Bearish Pattern - Down")"""
 
         return (
@@ -420,10 +420,10 @@ class TechnicalAnalysis:
             )
         )
 
-    def addCandleEveningStar(self) -> None:
-        self.df["evening_star"] = self.candleEveningStar()
+    def add_candle_evening_star(self) -> None:
+        self.df["evening_star"] = self.candle_evening_star()
 
-    def candleAbandonedBaby(self):
+    def candle_abandoned_baby(self):
         """** Candlestick Detected: Abandoned Baby ("Reliable - Reversal - Bullish Pattern - Up")"""
 
         return (
@@ -433,10 +433,10 @@ class TechnicalAnalysis:
             & (self.df["high"].shift(1) < self.df["low"].shift(2))
         )
 
-    def addCandleAbandonedBaby(self) -> None:
-        self.df["abandoned_baby"] = self.candleAbandonedBaby()
+    def add_candle_abandoned_baby(self) -> None:
+        self.df["abandoned_baby"] = self.candle_abandoned_baby()
 
-    def candleMorningDojiStar(self) -> Series:
+    def candle_morning_doji_star(self) -> Series:
         """** Candlestick Detected: Morning Doji Star ("Reliable - Reversal - Bullish Pattern - Up")"""
 
         return (self.df["close"].shift(2) < self.df["open"].shift(2)) & (
@@ -475,10 +475,10 @@ class TechnicalAnalysis:
             3 * abs(self.df["close"].shift(1) - self.df["open"].shift(1))
         )
 
-    def addCandleMorningDojiStar(self) -> None:
-        self.df["morning_doji_star"] = self.candleMorningDojiStar()
+    def add_candle_morning_doji_star(self) -> None:
+        self.df["morning_doji_star"] = self.candle_morning_doji_star()
 
-    def candleEveningDojiStar(self) -> Series:
+    def candle_evening_doji_star(self) -> Series:
         """** Candlestick Detected: Evening Doji Star ("Reliable - Reversal - Bearish Pattern - Down")"""
 
         return (self.df["close"].shift(2) > self.df["open"].shift(2)) & (
@@ -517,10 +517,10 @@ class TechnicalAnalysis:
             3 * abs(self.df["close"].shift(1) - self.df["open"].shift(1))
         )
 
-    def addCandleEveningDojiStar(self) -> None:
-        self.df["evening_doji_star"] = self.candleEveningDojiStar()
+    def add_candle_evening_doji_star(self) -> None:
+        self.df["evening_doji_star"] = self.candle_evening_doji_star()
 
-    def candleAstralBuy(self) -> Series:
+    def candle_astral_buy(self) -> Series:
         """*** Candlestick Detected: Astral Buy (Fibonacci 3, 5, 8)"""
 
         return (
@@ -542,10 +542,10 @@ class TechnicalAnalysis:
             & (self.df["low"].shift(7) < self.df["low"].shift(12))
         )
 
-    def addCandleAstralBuy(self) -> None:
-        self.df["astral_buy"] = self.candleAstralBuy()
+    def add_candle_astral_buy(self) -> None:
+        self.df["astral_buy"] = self.candle_astral_buy()
 
-    def candleAstralSell(self) -> Series:
+    def candle_astral_sell(self) -> Series:
         """*** Candlestick Detected: Astral Sell (Fibonacci 3, 5, 8)"""
 
         return (
@@ -567,10 +567,10 @@ class TechnicalAnalysis:
             & (self.df["high"].shift(7) > self.df["high"].shift(12))
         )
 
-    def addCandleAstralSell(self, period: int = 14) -> None:
-        self.df["astral_sell"] = self.candleAstralSell()
+    def add_candle_astral_sell(self, period: int = 14) -> None:
+        self.df["astral_sell"] = self.candle_astral_sell()
 
-    def addADXBuySignals(self, interval: int = 14) -> None:
+    def add_adx_buy_signals(self, interval: int = 14) -> None:
         """Adds Average Directional Index (ADX) buy and sell signals to the DataFrame"""
 
         data = self.ta_ADX(interval)
@@ -579,7 +579,7 @@ class TechnicalAnalysis:
         self.df["+di" + str(interval)] = data["+di" + str(interval)]
         self.df["adx" + str(interval)] = data["adx" + str(interval)]
 
-    def addADX(self, interval: int = 14) -> None:
+    def add_adx(self, interval: int = 14) -> None:
         """Adds Average Directional Index (ADX)"""
 
         """Average Directional Index (ADX)"""
@@ -619,7 +619,7 @@ class TechnicalAnalysis:
             ]
         ]
 
-    def addATR(self, interval: int = 14) -> None:
+    def add_atr(self, interval: int = 14) -> None:
         """Adds Average True Range (ATR)"""
 
         """Average True Range (ATX)"""
@@ -638,32 +638,32 @@ class TechnicalAnalysis:
         )
         self.df["atr" + str(interval)] = self.df["atr" + str(interval)].fillna(0)
 
-    def changePct(self) -> DataFrame:
+    def change_pcnt(self) -> DataFrame:
         """Close change percentage"""
 
         close_pc = self.df["close"] / self.df["close"].shift(1) - 1
         close_pc = close_pc.fillna(0)
         return close_pc
 
-    def addChangePct(self) -> None:
+    def add_change_pcnt(self) -> None:
         """Adds the close percentage to the DataFrame"""
 
-        self.df["close_pc"] = self.changePct()
+        self.df["close_pc"] = self.change_pcnt()
 
         # cumulative returns
         self.df["close_cpc"] = (1 + self.df["close_pc"]).cumprod() - 1
 
-    def cumulativeMovingAverage(self) -> float:
+    def cumulative_moving_average(self) -> float:
         """Calculates the Cumulative Moving Average (CMA)"""
 
         return self.df.close.expanding().mean()
 
-    def addCMA(self) -> None:
+    def add_cma(self) -> None:
         """Adds the Cumulative Moving Average (CMA) to the DataFrame"""
 
-        self.df["cma"] = self.cumulativeMovingAverage()
+        self.df["cma"] = self.cumulative_moving_average()
 
-    def exponentialMovingAverage(self, period: int) -> float:
+    def exponential_moving_average(self, period: int) -> float:
         """Calculates the Exponential Moving Average (EMA)"""
 
         if not isinstance(period, int):
@@ -677,17 +677,17 @@ class TechnicalAnalysis:
 
         return self.df.close.ewm(span=period, adjust=False, min_periods=period).mean()
 
-    def addEMA(self, period: int, addPC: bool = False) -> None:
+    def add_ema(self, period: int, addPC: bool = False) -> None:
         """Adds the Exponential Moving Average (EMA) the DateFrame"""
 
         if not isinstance(period, int):
             raise TypeError("Period parameter is not perioderic.")
 
         if period > self.total_periods or period < 5 or period > 200:
-            raise ValueError(f"addEMA{period} Period is out of range")
+            raise ValueError(f"add_ema{period} Period is out of range")
 
         if len(self.df) < period:
-            raise Exception("addEMA Data range too small.")
+            raise Exception("add_ema Data range too small.")
 
         self.df["ema" + str(period)] = ta.ema(self.df["close"], length=period, talib=self.talib)
         self.df["ema" + str(period)] = self.df["ema" + str(period)].fillna(0)
@@ -695,7 +695,7 @@ class TechnicalAnalysis:
         if addPC:
             self.df["ema" + str(period) + "_pc"] = round(self.df["ema" + str(period)].pct_change() * 100, 2)
 
-    def addEMA_WMAsignal(self, ema_period: int, wma_period: int) -> None:
+    def add_ema_WMAsignal(self, ema_period: int, wma_period: int) -> None:
         """Adds EMA with WMA smoothing option to the DateFrame"""
 
         if not isinstance(ema_period, int) or not isinstance(wma_period, int):
@@ -708,15 +708,15 @@ class TechnicalAnalysis:
             raise ValueError(f"WMA{wma_period} Period is out of range")
 
         if len(self.df) < ema_period or len(self.df) < wma_period:
-            raise Exception("addEMA_WMA Data range too small.")
+            raise Exception("add_ema_WMA Data range too small.")
 
         if "ema" + str(ema_period) not in self.df:
-            self.addEMA(ema_period, True)
+            self.add_ema(ema_period, True)
 
         self.df["ema" + str(ema_period) + "_wma" + str(wma_period)] = ta.wma(close=self.df["ema" + str(ema_period)], length=wma_period, talib=self.talib)
         self.df["ema" + str(ema_period) + "_wma" + str(wma_period)] = self.df["ema" + str(ema_period) + "_wma" + str(wma_period)].fillna(0)
 
-    def calculateStochasticRelativeStrengthIndex(
+    def calculate_stochastic_relative_strength_index(
         self, series: int, interval: int = 14
     ) -> float:
         """Calculates the Stochastic RSI on a Pandas series of RSI"""
@@ -734,7 +734,7 @@ class TechnicalAnalysis:
             series.rolling(interval).max() - series.rolling(interval).min()
         )
 
-    def addFibonacciBollingerBands(
+    def add_fibonacci_bollinger_bands(
         self, interval: int = 20, multiplier: int = 3
     ) -> None:
         """Adds Fibonacci Bollinger Bands."""
@@ -792,7 +792,7 @@ class TechnicalAnalysis:
 
         return df
 
-    def addMACD(self, fast: int=12, slow: int=26, sig: int=9) -> None:
+    def add_macd(self, fast: int=12, slow: int=26, sig: int=9) -> None:
         """Adds the Moving Average Convergence Divergence (MACD) to the DataFrame"""
 
         df = self.ta_MACD(fast,slow,sig)
@@ -827,7 +827,7 @@ class TechnicalAnalysis:
         df["macdlead_pc"] = round((df["macdlead"] - df["macdlead"].shift()) / abs(df["macdlead"]) * 100, 2)
         self.df["macdlead_pc"] = df["macdlead_pc"].fillna(0)
 
-    def addOBV(self, ma_period: int = 5) -> None:
+    def add_obv(self, ma_period: int = 5) -> None:
         """Add the On-Balance Volume (OBV) to the DataFrame"""
 
         self.df["obv"] = ta.obv(close=self.df["close"], volume=self.df["volume"], talib=self.talib)
@@ -840,7 +840,7 @@ class TechnicalAnalysis:
         self.df["obvsm_pc"] = round(self.df["obvsm"].pct_change() * 100, 2)
         self.df["obvsm_pc"] = self.df["obvsm_pc"].fillna(0)
 
-    def stochasticRelativeStrengthIndex(self, period) -> DataFrame:
+    def stochastic_relative_strength_index(self, period) -> DataFrame:
         """Calculate the Stochastic Relative Strength Index (Stochastic RSI)"""
 
         if not isinstance(period, int):
@@ -850,44 +850,44 @@ class TechnicalAnalysis:
             raise ValueError("Stochastic RSI Period is out of range")
 
         if "rsi" + str(period) not in self.df:
-            self.addRSI(period)
+            self.add_rsi(period)
 
         # calculate relative strength index
-        stochrsi = self.calculateStochasticRelativeStrengthIndex(
+        stochrsi = self.calculate_stochastic_relative_strength_index(
             self.df["rsi" + str(period)], period
         )
         # default to midway-50 for first entries
         stochrsi = stochrsi.fillna(0.5)
         return stochrsi
 
-    def williamsR(self, period) -> DataFrame:
+    def williamsr(self, period) -> DataFrame:
         """Calculate the Williams %R"""
 
         if not isinstance(period, int):
             raise TypeError("Period parameter is not perioderic.")
 
         if period < 7 or period > 21:
-            raise ValueError("WilliamsR Period is out of range")
+            raise ValueError("williamsr Period is out of range")
 
         return (
             (self.df["high"].rolling(14).max() - self.df["close"]) /
             (self.df["high"].rolling(14).max() - self.df["low"].rolling(14).min())
         ) * -100
 
-    def addRSI(self, period: int, ma_period: int = 0, addPC: bool = False) -> None:
+    def add_rsi(self, period: int, ma_period: int = 0, addPC: bool = False) -> None:
         """Adds the Relative Strength Index (RSI) to the DataFrame"""
 
         if not isinstance(period, int):
-            raise TypeError("addRSI Period parameter is not perioderic.")
+            raise TypeError("add_rsi Period parameter is not perioderic.")
 
         if not isinstance(ma_period, int):
-            raise TypeError("addRSI MA Period parameter is not perioderic.")
+            raise TypeError("add_rsi MA Period parameter is not perioderic.")
 
         if period < 7 or period > 21:
-            raise ValueError("addRSI Period is out of range")
+            raise ValueError("add_rsi Period is out of range")
 
         if ma_period < 5 or ma_period > 25:
-            raise ValueError("addRSI MA Period is out of range")
+            raise ValueError("add_rsi MA Period is out of range")
 
         self.df["rsi" + str(period)] = ta.rsi(close=self.df["close"], length=period, talib=self.talib)
         self.df["rsi" + str(period)] = self.df["rsi" + str(period)].fillna(0)
@@ -918,7 +918,7 @@ class TechnicalAnalysis:
         if period < 7 or period > 21:
             raise ValueError("add Stochastic RSI Period is out of range")
 
-        self.df["stochrsi" + str(period)] = self.stochasticRelativeStrengthIndex(period)
+        self.df["stochrsi" + str(period)] = self.stochastic_relative_strength_index(period)
         self.df["stochrsi" + str(period)] = self.df["stochrsi" + str(period)].replace(
             nan, 0.5
         )
@@ -939,23 +939,23 @@ class TechnicalAnalysis:
         self.df["rsi85co"] = self.df.rsi85.ne(self.df.rsi85.shift())
         self.df.loc[self.df["rsi85"] == False, "rsi85co"] = False
 
-    def addWilliamsR(self, period: int=20) -> None:
+    def add_williamsr(self, period: int=20) -> None:
         """Adds the Willams %R to the DataFrame"""
 
         if not isinstance(period, int):
             raise TypeError("Period parameter is not perioderic.")
 
         if period < 7 or period > 21:
-            raise ValueError("addWilliamsR Period is out of range")
+            raise ValueError("add_williamsr Period is out of range")
 
-#        self.df["williamsr" + str(period)] = self.williamsR(period)
+#        self.df["williamsr" + str(period)] = self.williamsr(period)
 #        self.df["williamsr" + str(period)] = self.df["williamsr" + str(period)].replace(
 #            nan, -50
 #        )
         self.df["williamsr" + str(period)] = ta.willr(high=self.df["high"], low=self.df["low"], close=self.df["close"], length=period, talib=self.talib)
         self.df["williamsr" + str(period)] = self.df["williamsr" + str(period)].replace(nan, 0)
 
-    def seasonalARIMAModel(self) -> SARIMAXResultsWrapper:
+    def seasonal_arima_model(self) -> SARIMAXResultsWrapper:
         """Returns the Seasonal ARIMA Model for self.price predictions"""
 
         # hyperparameters for SARIMAX
@@ -974,10 +974,10 @@ class TechnicalAnalysis:
         )
         return model.fit(disp=-1)
 
-    def seasonalARIMAModelFittedValues(self):  # TODO: annotate return type
+    def seasonal_arima_model_fitted_values(self):  # TODO: annotate return type
         """Returns the Seasonal ARIMA Model for self.price predictions"""
 
-        return self.seasonalARIMAModel().fittedvalues
+        return self.seasonal_arima_model().fittedvalues
 
     def arima_model_prediction(self, minutes: int = 180) -> tuple:
         """Returns seasonal ARIMA model prediction
@@ -994,7 +994,7 @@ class TechnicalAnalysis:
         if minutes < 1 or minutes > 4320:
             raise ValueError("Predication minutes is out of range")
 
-        results_ARIMA = self.seasonalARIMAModel()
+        results_ARIMA = self.seasonal_arima_model()
 
         start_ts = self.df.last_valid_index()
         end_ts = start_ts + timedelta(minutes=minutes)
@@ -1022,7 +1022,7 @@ class TechnicalAnalysis:
 
         return None
 
-    def simpleMovingAverage(self, period: int) -> float:
+    def simple_moving_average(self, period: int) -> float:
         """Calculates the Simple Moving Average (SMA)"""
 
         if not isinstance(period, int):
@@ -1036,17 +1036,17 @@ class TechnicalAnalysis:
 
         return self.df.close.rolling(period, min_periods=1).mean()
 
-    def addSMA(self, period: int, addPC: bool = False) -> None:
+    def add_sma(self, period: int, addPC: bool = False) -> None:
         """Add the Simple Moving Average (SMA) to the DataFrame"""
 
         if not isinstance(period, int):
             raise TypeError("Period parameter is not perioderic.")
 
         if period > self.total_periods or period < 5 or period > 200:
-            raise ValueError(f"addSMA{period} Period is out of range")
+            raise ValueError(f"add_sma{period} Period is out of range")
 
         if len(self.df) < period:
-            raise Exception("addSMA Data range too small.")
+            raise Exception("add_sma Data range too small.")
 
         self.df["sma" + str(period)] = ta.sma(self.df["close"], length=period, talib=self.talib)
         self.df["sma" + str(period)] = self.df["sma" + str(period)].fillna(0)
@@ -1054,7 +1054,7 @@ class TechnicalAnalysis:
         if addPC:
             self.df["sma" + str(period) + "_pc"] = round(self.df["sma" + str(period)].pct_change() * 100, 3)
 
-    def addGoldenCross(self) -> None:
+    def add_golden_cross(self) -> None:
         """Add Golden Cross SMA50 over SMA200"""
 
         if self.total_periods < 200:
@@ -1062,14 +1062,14 @@ class TechnicalAnalysis:
             return
 
         if "sma50" not in self.df:
-            self.addSMA(50)
+            self.add_sma(50)
 
         if "sma200" not in self.df:
-            self.addSMA(200)
+            self.add_sma(200)
 
         self.df["goldencross"] = self.df["sma50"] > self.df["sma200"]
 
-    def addDeathCross(self) -> None:
+    def add_death_cross(self) -> None:
         """Add Death Cross SMA50 over SMA200"""
 
         if self.total_periods < 200:
@@ -1078,19 +1078,19 @@ class TechnicalAnalysis:
             return
 
         if "sma50" not in self.df:
-            self.addSMA(50)
+            self.add_sma(50)
 
         if "sma200" not in self.df:
-            self.addSMA(200)
+            self.add_sma(200)
 
         self.df["deathcross"] = self.df["sma50"] < self.df["sma200"]
         self.df["bullsma50"] = self.df["sma50"] > self.df["sma50"].shift(1)
 
-    def addElderRayIndex(self) -> None:
+    def add_elder_ray_index(self) -> None:
         """Add Elder Ray Index"""
 
         if "ema13" not in self.df:
-            self.addEMA(13)
+            self.add_ema(13)
 
         self.df["elder_ray_bull"] = self.df["high"] - self.df["ema13"]
         self.df["elder_ray_bear"] = self.df["low"] - self.df["ema13"]
@@ -1109,20 +1109,20 @@ class TechnicalAnalysis:
             & (self.df["elder_ray_bull"] < self.df["elder_ray_bull"].shift(1))
         ) | ((self.df["elder_ray_bear"] < self.df["elder_ray_bear"].shift(1)))
 
-    def getSupportResistanceLevels(self) -> Series:
+    def get_support_resistance_levels(self) -> Series:
         """Calculate the Support and Resistance Levels"""
 
         self.levels = []
-        self.__calculateSupportResistenceLevels()
+        self._calculate_support_resistence_levels()
         levels_ts = {}
         for level in self.levels:
             levels_ts[self.df.index[level[0]]] = level[1]
         # add the support levels to the DataFrame
         return Series(levels_ts)
 
-    def print_sup_res_level(self, self.price: float = 0) -> None:
+    def print_support_resistance_levels(self, self.price: float = 0) -> None:
         if isinstance(self.price, int) or isinstance(self.price, float):
-            df = self.getSupportResistanceLevels()
+            df = self.get_support_resistance_levels()
 
             if len(df) > 0:
                 df_last = df.tail(1)
@@ -1133,20 +1133,20 @@ class TechnicalAnalysis:
                 else:
                     Logger.info(f" Support/Resistance level of {str(self.df_last[0])} formed at {str(self.df_last.index[0])}")
 
-    def getResistance(self, self.price: float = 0) -> float:
+    def get_resistance(self, self.price: float = 0) -> float:
         if isinstance(self.price, int) or isinstance(self.price, float):
             if self.price > 0:
-                sr = self.getSupportResistanceLevels()
+                sr = self.get_support_resistance_levels()
                 for r in sr.sort_values():
                     if r > self.price:
                         return r
 
         return self.price
 
-    def getFibonacciUpper(self, self.price: float = 0) -> float:
+    def get_fibonacci_upper(self, self.price: float = 0) -> float:
         if isinstance(self.price, int) or isinstance(self.price, float):
             if self.price > 0:
-                fb = self.get_fib_ret_levels()
+                fb = self.get_fibonacci_retracement_levels()
                 for f in fb.values():
                     if f > self.price:
                         return f
@@ -1156,8 +1156,8 @@ class TechnicalAnalysis:
     def get_trade_exit(self, self.price: float = 0) -> float:
         if isinstance(self.price, int) or isinstance(self.price, float):
             if self.price > 0:
-                r = self.getResistance(self.price)
-                f = self.getFibonacciUpper(self.price)
+                r = self.get_resistance(self.price)
+                f = self.get_fibonacci_upper(self.price)
                 if self.price < r and self.price < f:
                     r_margin = ((r - self.price) / self.price) * 100
                     f_margin = ((f - self.price) / self.price) * 100
@@ -1173,15 +1173,15 @@ class TechnicalAnalysis:
 
         return self.price
 
-    def print_sr_fib_levels(self, self.price: float = 0) -> str:
+    def print_support_resistance_fibonacci_levels(self, self.price: float = 0) -> str:
         if isinstance(self.price, int) or isinstance(self.price, float):
             if self.price > 0:
-                sr = self.getSupportResistanceLevels()
+                sr = self.get_support_resistance_levels()
 
                 s = self.price
                 for r in sr.sort_values():
                     if r > self.price:
-                        fb = self.get_fib_ret_levels()
+                        fb = self.get_fibonacci_retracement_levels()
 
                         l = self.price
                         for b in fb.values():
@@ -1195,7 +1195,7 @@ class TechnicalAnalysis:
                         s = r
 
                 if len(sr) > 1 and sr.iloc[-1] < self.price:
-                    fb = self.get_fib_ret_levels()
+                    fb = self.get_fibonacci_retracement_levels()
 
                     l = self.price
                     for b in fb.values():
@@ -1206,7 +1206,7 @@ class TechnicalAnalysis:
 
         return ""
 
-    def addEMABuySignals(self) -> None:
+    def add_ema_buy_signals(self) -> None:
         """Adds the EMA12/EMA26 buy and sell signals to the DataFrame"""
 
         if not isinstance(self.df, DataFrame):
@@ -1224,13 +1224,13 @@ class TechnicalAnalysis:
             )
 
         if not "ema8" in self.df.columns:
-            self.addEMA(8)
+            self.add_ema(8)
 
         if not "ema12" in self.df.columns:
-            self.addEMA(12)
+            self.add_ema(12)
 
         if not "ema26" in self.df.columns:
-            self.addEMA(26)
+            self.add_ema(26)
 
         # true if EMA8 is above the EMA12
         self.df["ema8gtema12"] = self.df.ema8 > self.df.ema12
@@ -1260,11 +1260,11 @@ class TechnicalAnalysis:
         )
         self.df.loc[self.df["ema12ltema26"] == False, "ema12ltema26co"] = False
 
-    def addSMABuySignals(self) -> None:
+    def add_sma_buy_signals(self) -> None:
         """Adds the SMA50/SMA200 buy and sell signals to the DataFrame"""
 
         if self.total_periods < 200:
-            raise ValueError("addSMABuySignals Period is out of range")
+            raise ValueError("add_sma_buy_signals Period is out of range")
 
         if not isinstance(self.df, DataFrame):
             raise TypeError("Pandas DataFrame required.")
@@ -1281,8 +1281,8 @@ class TechnicalAnalysis:
             )
 
         if not "sma50" or not "sma200" in self.df.columns:
-            self.addSMA(50)
-            self.addSMA(200)
+            self.add_sma(50)
+            self.add_sma(200)
 
         # true if SMA50 is above the SMA200
         self.df["sma50gtsma200"] = self.df.sma50 > self.df.sma200
@@ -1300,7 +1300,7 @@ class TechnicalAnalysis:
         )
         self.df.loc[self.df["sma50ltsma200"] == False, "sma50ltsma200co"] = False
 
-    def addMACDBuySignals(self) -> None:
+    def add_macd_buy_signals(self) -> None:
         """Adds the MACD/Signal buy and sell signals to the DataFrame"""
 
         if not isinstance(self.df, DataFrame):
@@ -1318,8 +1318,8 @@ class TechnicalAnalysis:
             )
 
         if not "macd" or not "signal" in self.df.columns:
-            self.addMACD()
-            self.addOBV()
+            self.add_macd()
+            self.add_obv()
 
         # true if MACD is above the Signal
         self.df["macdgtsignal"] = self.df.macd > self.df.signal
@@ -1337,7 +1337,7 @@ class TechnicalAnalysis:
         )
         self.df.loc[self.df["macdltsignal"] == False, "macdltsignalco"] = False
 
-    def get_fib_ret_levels(self, self.price: float = 0) -> dict:
+    def get_fibonacci_retracement_levels(self, self.price: float = 0) -> dict:
         # validates self.price is numeric
         if not isinstance(self.price, int) and not isinstance(self.price, float):
             raise TypeError("Optional self.price is not numeric.")
@@ -1350,90 +1350,90 @@ class TechnicalAnalysis:
         data = {}
 
         if self.price != 0 and (self.price <= self.price_min):
-            data["ratio1"] = float(self.__truncate(self.price_min, 2))
+            data["ratio1"] = float(self._truncate(self.price_min, 2))
         elif self.price == 0:
-            data["ratio1"] = float(self.__truncate(self.price_min, 2))
+            data["ratio1"] = float(self._truncate(self.price_min, 2))
 
         if self.price != 0 and (self.price > self.price_min) and (self.price <= (self.price_max - 0.768 * diff)):
-            data["ratio1"] = float(self.__truncate(self.price_min, 2))
-            data["ratio0_768"] = float(self.__truncate(self.price_max - 0.768 * diff, 2))
+            data["ratio1"] = float(self._truncate(self.price_min, 2))
+            data["ratio0_768"] = float(self._truncate(self.price_max - 0.768 * diff, 2))
         elif self.price == 0:
-            data["ratio0_768"] = float(self.__truncate(self.price_max - 0.768 * diff, 2))
+            data["ratio0_768"] = float(self._truncate(self.price_max - 0.768 * diff, 2))
 
         if (
             self.price != 0
             and (self.price > (self.price_max - 0.768 * diff))
             and (self.price <= (self.price_max - 0.618 * diff))
         ):
-            data["ratio0_768"] = float(self.__truncate(self.price_max - 0.768 * diff, 2))
-            data["ratio0_618"] = float(self.__truncate(self.price_max - 0.618 * diff, 2))
+            data["ratio0_768"] = float(self._truncate(self.price_max - 0.768 * diff, 2))
+            data["ratio0_618"] = float(self._truncate(self.price_max - 0.618 * diff, 2))
         elif self.price == 0:
-            data["ratio0_618"] = float(self.__truncate(self.price_max - 0.618 * diff, 2))
+            data["ratio0_618"] = float(self._truncate(self.price_max - 0.618 * diff, 2))
 
         if (
             self.price != 0
             and (self.price > (self.price_max - 0.618 * diff))
             and (self.price <= (self.price_max - 0.5 * diff))
         ):
-            data["ratio0_618"] = float(self.__truncate(self.price_max - 0.618 * diff, 2))
-            data["ratio0_5"] = float(self.__truncate(self.price_max - 0.5 * diff, 2))
+            data["ratio0_618"] = float(self._truncate(self.price_max - 0.618 * diff, 2))
+            data["ratio0_5"] = float(self._truncate(self.price_max - 0.5 * diff, 2))
         elif self.price == 0:
-            data["ratio0_5"] = float(self.__truncate(self.price_max - 0.5 * diff, 2))
+            data["ratio0_5"] = float(self._truncate(self.price_max - 0.5 * diff, 2))
 
         if (
             self.price != 0
             and (self.price > (self.price_max - 0.5 * diff))
             and (self.price <= (self.price_max - 0.382 * diff))
         ):
-            data["ratio0_5"] = float(self.__truncate(self.price_max - 0.5 * diff, 2))
-            data["ratio0_382"] = float(self.__truncate(self.price_max - 0.382 * diff, 2))
+            data["ratio0_5"] = float(self._truncate(self.price_max - 0.5 * diff, 2))
+            data["ratio0_382"] = float(self._truncate(self.price_max - 0.382 * diff, 2))
         elif self.price == 0:
-            data["ratio0_382"] = float(self.__truncate(self.price_max - 0.382 * diff, 2))
+            data["ratio0_382"] = float(self._truncate(self.price_max - 0.382 * diff, 2))
 
         if (
             self.price != 0
             and (self.price > (self.price_max - 0.382 * diff))
             and (self.price <= (self.price_max - 0.286 * diff))
         ):
-            data["ratio0_382"] = float(self.__truncate(self.price_max - 0.382 * diff, 2))
-            data["ratio0_286"] = float(self.__truncate(self.price_max - 0.286 * diff, 2))
+            data["ratio0_382"] = float(self._truncate(self.price_max - 0.382 * diff, 2))
+            data["ratio0_286"] = float(self._truncate(self.price_max - 0.286 * diff, 2))
         elif self.price == 0:
-            data["ratio0_286"] = float(self.__truncate(self.price_max - 0.286 * diff, 2))
+            data["ratio0_286"] = float(self._truncate(self.price_max - 0.286 * diff, 2))
 
         if self.price != 0 and (self.price > (self.price_max - 0.286 * diff)) and (self.price <= self.price_max):
-            data["ratio0_286"] = float(self.__truncate(self.price_max - 0.286 * diff, 2))
-            data["ratio0"] = float(self.__truncate(self.price_max, 2))
+            data["ratio0_286"] = float(self._truncate(self.price_max - 0.286 * diff, 2))
+            data["ratio0"] = float(self._truncate(self.price_max, 2))
         elif self.price == 0:
-            data["ratio0"] = float(self.__truncate(self.price_max, 2))
+            data["ratio0"] = float(self._truncate(self.price_max, 2))
 
         if self.price != 0 and (self.price < (self.price_max + 0.272 * diff)) and (self.price >= self.price_max):
-            data["ratio0"] = float(self.__truncate(self.price_max, 2))
-            data["ratio1_272"] = float(self.__truncate(self.price_max + 0.272 * diff, 2))
+            data["ratio0"] = float(self._truncate(self.price_max, 2))
+            data["ratio1_272"] = float(self._truncate(self.price_max + 0.272 * diff, 2))
         elif self.price == 0:
-            data["ratio1_272"] = float(self.__truncate(self.price_max + 0.272 * diff, 2))
+            data["ratio1_272"] = float(self._truncate(self.price_max + 0.272 * diff, 2))
 
         if (
             self.price != 0
             and (self.price < (self.price_max + 0.414 * diff))
             and (self.price >= (self.price_max + 0.272 * diff))
         ):
-            data["ratio1_272"] = float(self.__truncate(self.price_max, 2))
-            data["ratio1_414"] = float(self.__truncate(self.price_max + 0.414 * diff, 2))
+            data["ratio1_272"] = float(self._truncate(self.price_max, 2))
+            data["ratio1_414"] = float(self._truncate(self.price_max + 0.414 * diff, 2))
         elif self.price == 0:
-            data["ratio1_414"] = float(self.__truncate(self.price_max + 0.414 * diff, 2))
+            data["ratio1_414"] = float(self._truncate(self.price_max + 0.414 * diff, 2))
 
         if (
             self.price != 0
             and (self.price < (self.price_max + 0.618 * diff))
             and (self.price >= (self.price_max + 0.414 * diff))
         ):
-            data["ratio1_618"] = float(self.__truncate(self.price_max + 0.618 * diff, 2))
+            data["ratio1_618"] = float(self._truncate(self.price_max + 0.618 * diff, 2))
         elif self.price == 0:
-            data["ratio1_618"] = float(self.__truncate(self.price_max + 0.618 * diff, 2))
+            data["ratio1_618"] = float(self._truncate(self.price_max + 0.618 * diff, 2))
 
         return data
 
-    def saveCSV(self, filename: str = "trading_data.csv") -> None:
+    def save_csv(self, filename: str = "trading_data.csv") -> None:
         """Saves the DataFrame to an uncompressed CSV."""
 
         p = compile(r"^[\w\-. ]+$")
@@ -1448,21 +1448,21 @@ class TechnicalAnalysis:
         except OSError:
             Logger.critical(f"Unable to save: {filename}")
 
-    def __calculateSupportResistenceLevels(self):
+    def _calculate_support_resistence_levels(self):
         """Support and Resistance levels. (private function)"""
 
         for i in range(2, self.df.shape[0] - 2):
-            if self.__isSupport(self.df, i):
+            if self._is_support(self.df, i):
                 l = self.df["low"][i]
-                if self.__isFarFromLevel(l):
+                if self._is_far_from_level(l):
                     self.levels.append((i, l))
-            elif self.__isResistance(self.df, i):
+            elif self._is_resistance(self.df, i):
                 l = self.df["high"][i]
-                if self.__isFarFromLevel(l):
+                if self._is_far_from_level(l):
                     self.levels.append((i, l))
         return self.levels
 
-    def __isSupport(self, df, i) -> bool:
+    def _is_support(self, df, i) -> bool:
         """Is support level? (private function)"""
 
         try:
@@ -1476,7 +1476,7 @@ class TechnicalAnalysis:
             support = False
             return support
 
-    def __isResistance(self, df, i) -> bool:
+    def _is_resistance(self, df, i) -> bool:
         """Is resistance level? (private function)"""
 
         try:
@@ -1490,11 +1490,11 @@ class TechnicalAnalysis:
             resistance = False
             return resistance
 
-    def __isFarFromLevel(self, l) -> float:
+    def _is_far_from_level(self, l) -> float:
         """Is far from support level? (private function)"""
 
         s = mean(self.df["high"] - self.df["low"])
         return np_sum([abs(l - x) < s for x in self.levels]) == 0
 
-    def __truncate(self, f, n) -> float:
+    def _truncate(self, f, n) -> float:
         return floor(f * 10 ** n) / 10 ** n

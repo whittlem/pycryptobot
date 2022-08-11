@@ -34,10 +34,10 @@ class TradingGraphs:
         self.technical_analysis = technical_analysis
 
         # stores the pandas dataframe from technical_analysis object
-        self.df = technical_analysis.getDataFrame()
+        self.df = technical_analysis.get_df()
 
         # stores the support and resistance levels from technical_analysis object
-        self.levels = technical_analysis.getSupportResistanceLevels()
+        self.levels = technical_analysis.get_support_resistance_levels()
 
         # set graph format
         plt.style.use("seaborn")
@@ -284,7 +284,7 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderSeasonalARIMAModel(self, saveFile="", saveOnly=False):
+    def renderseasonal_arima_model(self, saveFile="", saveOnly=False):
         """Render the seasonal ARIMA model
 
         Parameters
@@ -295,7 +295,7 @@ class TradingGraphs:
             Save the figure without displaying it
         """
 
-        fittedValues = self.technical_analysis.seasonalARIMAModelFittedValues()
+        fittedValues = self.technical_analysis.seasonal_arima_model_fitted_values()
 
         plt.plot(self.df["close"], label="original")
         plt.plot(fittedValues, color="red", label="fitted")
@@ -363,7 +363,7 @@ class TradingGraphs:
         """
 
         # get dataframe from technical analysis object
-        df = self.technical_analysis.getDataFrame()
+        df = self.technical_analysis.get_df()
 
         if not isinstance(days, int):
             raise TypeError("Prediction days is not numeric.")
@@ -375,7 +375,7 @@ class TradingGraphs:
         market = df.iloc[0].market
         granularity = df.iloc[0].granularity
 
-        results_ARIMA = self.technical_analysis.seasonalARIMAModel()
+        results_ARIMA = self.technical_analysis.seasonal_arima_model()
 
         df = pd.DataFrame(self.df["close"])
         start_date = df.last_valid_index()
@@ -431,7 +431,7 @@ class TradingGraphs:
 
     def renderCandlestickAstralPattern(self, period=30, saveOnly=False):
         # get dataframe from technical analysis object
-        df = self.technical_analysis.getDataFrame()
+        df = self.technical_analysis.get_df()
 
         if not isinstance(period, int):
             raise TypeError("Period parameter is not perioderic.")
@@ -495,7 +495,7 @@ class TradingGraphs:
 
     def renderCandlesticks(self, period=30, saveOnly=False):
         # get dataframe from technical analysis object
-        df = self.technical_analysis.getDataFrame()
+        df = self.technical_analysis.get_df()
 
         if not isinstance(period, int):
             raise TypeError("Period parameter is not perioderic.")
@@ -735,7 +735,7 @@ class TradingGraphs:
         """
 
         # get dataframe from technical analysis object
-        df = self.technical_analysis.getDataFrame()
+        df = self.technical_analysis.get_df()
 
         # extract market and granularity from trading dataframe
         market = df.iloc[0].market
@@ -795,7 +795,7 @@ class TradingGraphs:
         """
 
         # get dataframe from technical analysis object
-        df = self.technical_analysis.getDataFrame()
+        df = self.technical_analysis.get_df()
 
         # extract market and granularity from trading dataframe
         market = df.iloc[0].market
@@ -886,7 +886,7 @@ class TradingGraphs:
         """
 
         # get dataframe from technical analysis object
-        df = self.technical_analysis.getDataFrame()
+        df = self.technical_analysis.get_df()
 
         # extract market and granularity from trading dataframe
         market = df.iloc[0].market
@@ -921,7 +921,7 @@ class TradingGraphs:
         """
 
         # get dataframe from technical analysis object
-        df = self.technical_analysis.getDataFrame()
+        df = self.technical_analysis.get_df()
 
         pd.plotting.scatter_matrix(
             df[["close", "close_pc", "close_cpc"]],
@@ -942,7 +942,7 @@ class TradingGraphs:
         """
 
         # get dataframe from technical analysis object
-        df = self.technical_analysis.getDataFrame()
+        df = self.technical_analysis.get_df()
 
         # extract market and granularity from trading dataframe
         market = df.iloc[0].market

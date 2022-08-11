@@ -4,7 +4,7 @@ from statsmodels.compat.pandas import assert_series_equal, assert_frame_equal
 from models.Trading import TechnicalAnalysis
 
 
-def test_should_calculate_addChangePct():
+def test_should_calculate_add_change_pcnt():
     """
       Adds the close percentage to the DataFrame : close_pc
       Adds the cumulative returns the DataFrame : close_cpc
@@ -26,10 +26,10 @@ def test_should_calculate_addChangePct():
     ta = TechnicalAnalysis(df)
 
     # WHEN calculate the percentage evolution and cumulative returns percentage
-    ta.addChangePct()
+    ta.add_change_pcnt()
 
     # THEN percentage evolution and cumulative returns percentage should be added to dataframe
-    actual = ta.getDataFrame()
+    actual = ta.get_df()
 
     close_pc = [
         calculate_percentage_evol(closes_list[0], closes_list[0]),
@@ -61,7 +61,7 @@ def test_should_calculate_addChangePct():
     assert_frame_equal(actual, expected)
 
 
-def test_should_calculate_addCMA():
+def test_should_calculate_add_cma():
     """
       Adds the Cumulative Moving Average (CMA) to the DataFrame : cma
     """
@@ -80,10 +80,10 @@ def test_should_calculate_addCMA():
     ta = TechnicalAnalysis(df)
 
     # WHEN calculate the cumulative moving average
-    ta.addCMA()
+    ta.add_cma()
 
     # THEN Cumulative Moving Average should be added to dataframe
-    actual = ta.getDataFrame()
+    actual = ta.get_df()
     expected = pd.DataFrame({
         'date': ['2021-10-10 14:30:00',
                  '2021-10-10 14:31:00',
@@ -104,7 +104,7 @@ def test_should_calculate_addCMA():
     assert_frame_equal(actual, expected)
 
 
-def test_should_calculate_addSMA_20():
+def test_should_calculate_add_sma_20():
     """
       Add the Simple Moving Average (SMA) to the DataFrame :
     """
@@ -141,10 +141,10 @@ def test_should_calculate_addSMA_20():
     ta = TechnicalAnalysis(df)
 
     # WHEN calculate the cumulative moving average 20
-    ta.addSMA(20)
+    ta.add_sma(20)
 
     # THEN
-    actual = ta.getDataFrame()
+    actual = ta.get_df()
     expected = pd.DataFrame({
         'date': ['2021-10-10 14:30:00',
                  '2021-10-10 14:31:00',
