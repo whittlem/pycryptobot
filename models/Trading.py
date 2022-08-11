@@ -88,7 +88,6 @@ class TechnicalAnalysis:
         self.addFibonacciBollingerBands()
 
         self.addRSI(14)
-        self.addStochasticRSI(14)
         self.addWilliamsR(14)
         self.addMACD()
         self.addOBV()
@@ -853,11 +852,8 @@ class TechnicalAnalysis:
                     ),
                 ),
             ).cumsum()
-        except:
+        except Exception:
             return 0
-            pass
-
-        #Logger.info(f"Close: {self.df['close']} Close -1: {self.df['close'].shift(1)} On Balance Volume: {OBV}")
 
     def addOBV(self) -> None:
         """Add the On-Balance Volume (OBV) to the DataFrame"""
@@ -910,10 +906,10 @@ class TechnicalAnalysis:
         if period < 7 or period > 21:
             raise ValueError("Period is out of range")
 
-        return (
-            (self.df["high"].rolling(14).max() - self.df["close"]) /
-            (self.df["high"].rolling(14).max() - self.df["low"].rolling(14).min())
-        ) * -100
+        dividend = self.df["high"].rolling(14).max() - self.df["close"]
+        divisor = self.df["high"].rolling(14).max() - self.df["low"].rolling(14).min()
+
+        return (dividend / divisor) * -100
 
     def addRSI(self, period: int) -> None:
         """Adds the Relative Strength Index (RSI) to the DataFrame"""
@@ -926,36 +922,6 @@ class TechnicalAnalysis:
 
         self.df["rsi" + str(period)] = self.relativeStrengthIndex(period)
         self.df["rsi" + str(period)] = self.df["rsi" + str(period)].replace(nan, 50)
-
-    def addStochasticRSI(self, period: int) -> None:
-        """Adds the Stochastic Relative Strength Index (RSI) to the DataFrame"""
-
-        if not isinstance(period, int):
-            raise TypeError("Period parameter is not perioderic.")
-
-        if period < 7 or period > 21:
-            raise ValueError("Period is out of range")
-
-        self.df["stochrsi" + str(period)] = self.stochasticRelativeStrengthIndex(period)
-        self.df["stochrsi" + str(period)] = self.df["stochrsi" + str(period)].replace(
-            nan, 0.5
-        )
-
-        # sma3 stoch rsi
-        self.df["smastoch" + str(period)] = (
-            100 * self.df["stochrsi" + str(period)].rolling(3, min_periods=1).mean()
-        )
-        self.df["rsi_value"] = self.df["smastoch" + str(period)]
-
-        # true if sma stochrsi is above the 15
-        self.df["rsi15"] = self.df["smastoch" + str(period)] > 15
-        self.df["rsi15co"] = self.df.rsi15.ne(self.df.rsi15.shift())
-        self.df.loc[self.df["rsi15"] == False, "rsi15co"] = False
-
-        # true if sma stochrsi is below the 85
-        self.df["rsi85"] = self.df["smastoch" + str(period)] < 85
-        self.df["rsi85co"] = self.df.rsi85.ne(self.df.rsi85.shift())
-        self.df.loc[self.df["rsi85"] == False, "rsi85co"] = False
 
     def addWilliamsR(self, period: int) -> None:
         """Adds the Willams %R to the DataFrame"""
@@ -1130,7 +1096,7 @@ class TechnicalAnalysis:
         for level in self.levels:
             levels_ts[self.df.index[level[0]]] = level[1]
         # add the support levels to the DataFrame
-        return Series(levels_ts, dtype='float64')
+        return Series(levels_ts, dtype="float64")
 
     def print_sup_res_level(self, price: float = 0) -> None:
         if isinstance(price, int) or isinstance(price, float):
@@ -1139,11 +1105,17 @@ class TechnicalAnalysis:
             if len(df) > 0:
                 df_last = df.tail(1)
                 if float(df_last[0]) < price:
-                    Logger.info(f" Support level of {str(df_last[0])} formed at {str(df_last.index[0])}")
+                    Logger.info(
+                        f" Support level of {str(df_last[0])} formed at {str(df_last.index[0])}"
+                    )
                 elif float(df_last[0]) > price:
-                    Logger.info(f" Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}")
+                    Logger.info(
+                        f" Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}"
+                    )
                 else:
-                    Logger.info(f" Support/Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}")
+                    Logger.info(
+                        f" Support/Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}"
+                    )
 
     def getResistance(self, price: float = 0) -> float:
         if isinstance(price, int) or isinstance(price, float):
@@ -1195,12 +1167,12 @@ class TechnicalAnalysis:
                     if r > price:
                         fb = self.get_fib_ret_levels()
 
-                        l = price
+                        low = price
                         for b in fb.values():
                             if b > price:
-                                return (f"support: {str(s)}, resistance: {str(r)}, fibonacci (l): {str(l)}, fibonacci (u): {str(b)}")
+                                return f"support: {str(s)}, resistance: {str(r)}, fibonacci (l): {str(low)}, fibonacci (u): {str(b)}"
                             else:
-                                l = b
+                                low = b
 
                         break
                     else:
@@ -1209,12 +1181,12 @@ class TechnicalAnalysis:
                 if len(sr) > 1 and sr.iloc[-1] < price:
                     fb = self.get_fib_ret_levels()
 
-                    l = price
+                    low = price
                     for b in fb.values():
                         if b > price:
-                            return (f"support: {str(sr.iloc[-1])}, fibonacci (l): {str(l)}, fibonacci (u): {str(b)}")
+                            return f"support: {str(sr.iloc[-1])}, fibonacci (l): {str(low)}, fibonacci (u): {str(b)}"
                         else:
-                            l = b
+                            low = b
 
         return ""
 
@@ -1224,7 +1196,7 @@ class TechnicalAnalysis:
         if not isinstance(self.df, DataFrame):
             raise TypeError("Pandas DataFrame required.")
 
-        if not "close" in self.df.columns:
+        if "close" not in self.df.columns:
             raise AttributeError("Pandas DataFrame 'close' column required.")
 
         if (
@@ -1235,13 +1207,13 @@ class TechnicalAnalysis:
                 "Pandas DataFrame 'close' column not int64 or float64."
             )
 
-        if not "ema8" in self.df.columns:
+        if "ema8" not in self.df.columns:
             self.addEMA(8)
 
-        if not "ema12" in self.df.columns:
+        if "ema12" not in self.df.columns:
             self.addEMA(12)
 
-        if not "ema26" in self.df.columns:
+        if "ema26" not in self.df.columns:
             self.addEMA(26)
 
         # true if EMA8 is above the EMA12
@@ -1281,7 +1253,7 @@ class TechnicalAnalysis:
         if not isinstance(self.df, DataFrame):
             raise TypeError("Pandas DataFrame required.")
 
-        if not "close" in self.df.columns:
+        if "close" not in self.df.columns:
             raise AttributeError("Pandas DataFrame 'close' column required.")
 
         if (
@@ -1292,7 +1264,7 @@ class TechnicalAnalysis:
                 "Pandas DataFrame 'close' column not int64 or float64."
             )
 
-        if not "sma50" or not "sma200" in self.df.columns:
+        if not "sma50" or "sma200" not in self.df.columns:
             self.addSMA(50)
             self.addSMA(200)
 
@@ -1318,7 +1290,7 @@ class TechnicalAnalysis:
         if not isinstance(self.df, DataFrame):
             raise TypeError("Pandas DataFrame required.")
 
-        if not "close" in self.df.columns:
+        if "close" not in self.df.columns:
             raise AttributeError("Pandas DataFrame 'close' column required.")
 
         if (
@@ -1329,7 +1301,7 @@ class TechnicalAnalysis:
                 "Pandas DataFrame 'close' column not int64 or float64."
             )
 
-        if not "macd" or not "signal" in self.df.columns:
+        if not "macd" or "signal" not in self.df.columns:
             self.addMACD()
             self.addOBV()
 
@@ -1465,13 +1437,13 @@ class TechnicalAnalysis:
 
         for i in range(2, self.df.shape[0] - 2):
             if self.__isSupport(self.df, i):
-                l = self.df["low"][i]
-                if self.__isFarFromLevel(l):
-                    self.levels.append((i, l))
+                level = self.df["low"][i]
+                if self.__isFarFromLevel(level):
+                    self.levels.append((i, level))
             elif self.__isResistance(self.df, i):
-                l = self.df["high"][i]
-                if self.__isFarFromLevel(l):
-                    self.levels.append((i, l))
+                level = self.df["high"][i]
+                if self.__isFarFromLevel(level):
+                    self.levels.append((i, level))
         return self.levels
 
     def __isSupport(self, df, i) -> bool:
@@ -1502,11 +1474,11 @@ class TechnicalAnalysis:
             resistance = False
             return resistance
 
-    def __isFarFromLevel(self, l) -> float:
+    def __isFarFromLevel(self, level) -> float:
         """Is far from support level? (private function)"""
 
         s = mean(self.df["high"] - self.df["low"])
-        return np_sum([abs(l - x) < s for x in self.levels]) == 0
+        return np_sum([abs(level - x) < s for x in self.levels]) == 0
 
     def __truncate(self, f, n) -> float:
-        return floor(f * 10 ** n) / 10 ** n
+        return floor(f * 10**n) / 10**n
