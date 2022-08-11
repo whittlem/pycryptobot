@@ -727,7 +727,9 @@ class TechnicalAnalysis:
 
         self.df["ema" + str(period)] = self.exponential_moving_average(period)
 
-    def calculate_relative_strength_index(self, series: int, interval: int = 14) -> float:
+    def calculate_relative_strength_index(
+        self, series: int, interval: int = 14
+    ) -> float:
         """Calculates the RSI on a Pandas series of closing prices."""
 
         if not isinstance(series, Series):
@@ -1223,13 +1225,17 @@ class TechnicalAnalysis:
         self.df["ema8gtema12"] = self.df.ema8 > self.df.ema12
         # true if the current frame is where EMA8 crosses over above
         self.df["ema8gtema12co"] = self.df.ema8gtema12.ne(self.df.ema8gtema12.shift())
-        self.df.loc[self.df["ema8gtema12"] == False, "ema8gtema12co"] = False  # noqa: E712
+        self.df.loc[
+            self.df["ema8gtema12"] == False, "ema8gtema12co"  # noqa: E712
+        ] = False
 
         # true if the EMA8 is below the EMA12
         self.df["ema8ltema12"] = self.df.ema8 < self.df.ema12
         # true if the current frame is where EMA8 crosses over below
         self.df["ema8ltema12co"] = self.df.ema8ltema12.ne(self.df.ema8ltema12.shift())
-        self.df.loc[self.df["ema8ltema12"] == False, "ema8ltema12co"] = False  # noqa: E712
+        self.df.loc[
+            self.df["ema8ltema12"] == False, "ema8ltema12co"  # noqa: E712
+        ] = False
 
         # true if EMA12 is above the EMA26
         self.df["ema12gtema26"] = self.df.ema12 > self.df.ema26
@@ -1237,7 +1243,9 @@ class TechnicalAnalysis:
         self.df["ema12gtema26co"] = self.df.ema12gtema26.ne(
             self.df.ema12gtema26.shift()
         )
-        self.df.loc[self.df["ema12gtema26"] == False, "ema12gtema26co"] = False  # noqa: E712
+        self.df.loc[
+            self.df["ema12gtema26"] == False, "ema12gtema26co"  # noqa: E712
+        ] = False
 
         # true if the EMA12 is below the EMA26
         self.df["ema12ltema26"] = self.df.ema12 < self.df.ema26
@@ -1245,7 +1253,9 @@ class TechnicalAnalysis:
         self.df["ema12ltema26co"] = self.df.ema12ltema26.ne(
             self.df.ema12ltema26.shift()
         )
-        self.df.loc[self.df["ema12ltema26"] == False, "ema12ltema26co"] = False  # noqa: E712
+        self.df.loc[
+            self.df["ema12ltema26"] == False, "ema12ltema26co"  # noqa: E712
+        ] = False
 
     def add_sma_buy_signals(self) -> None:
         """Adds the SMA50/SMA200 buy and sell signals to the DataFrame"""
@@ -1274,34 +1284,34 @@ class TechnicalAnalysis:
         # true if SMA5 is above the SMA8
         self.df["sma5gtsma8"] = self.df.sma5 > self.df.sma8
         # true if the current frame is where SMA5 crosses over above
-        self.df["sma5gtsma8co"] = self.df.sma5gtsma8.ne(
-            self.df.sma5gtsma8.shift()
-        )
-        self.df.loc[self.df["sma5gtsma8"] == False, "sma5gtsma8co"] = False  # noqa: E712
+        self.df["sma5gtsma8co"] = self.df.sma5gtsma8.ne(self.df.sma5gtsma8.shift())
+        self.df.loc[
+            self.df["sma5gtsma8"] == False, "sma5gtsma8co"  # noqa: E712
+        ] = False
 
         # true if the SMA5 is below the SMA8
         self.df["sma5ltsma8"] = self.df.sma5 < self.df.sma8
         # true if the current frame is where SMA5 crosses over below
-        self.df["sma5ltsma8co"] = self.df.sma5ltsma8.ne(
-            self.df.sma5ltsma8.shift()
-        )
-        self.df.loc[self.df["sma5ltsma8"] == False, "sma5ltsma8co"] = False  # noqa: E712
+        self.df["sma5ltsma8co"] = self.df.sma5ltsma8.ne(self.df.sma5ltsma8.shift())
+        self.df.loc[
+            self.df["sma5ltsma8"] == False, "sma5ltsma8co"  # noqa: E712
+        ] = False
 
         # true if SMA8 is above the SMA13
         self.df["sma8gtsma13"] = self.df.sma8 > self.df.sma13
         # true if the current frame is where SMA8 crosses over above
-        self.df["sma8gtsma13co"] = self.df.sma8gtsma13.ne(
-            self.df.sma8gtsma13.shift()
-        )
-        self.df.loc[self.df["sma8gtsma13"] == False, "sma8gtsma13co"] = False  # noqa: E712
+        self.df["sma8gtsma13co"] = self.df.sma8gtsma13.ne(self.df.sma8gtsma13.shift())
+        self.df.loc[
+            self.df["sma8gtsma13"] == False, "sma8gtsma13co"  # noqa: E712
+        ] = False
 
         # true if the SMA8 is below the SMA13
         self.df["sma8ltsma13"] = self.df.sma8 < self.df.sma13
         # true if the current frame is where SMA8 crosses over below
-        self.df["sma8ltsma13co"] = self.df.sma8ltsma13.ne(
-            self.df.sma8ltsma13.shift()
-        )
-        self.df.loc[self.df["sma8ltsma13"] == False, "sma8ltsma13co"] = False  # noqa: E712
+        self.df["sma8ltsma13co"] = self.df.sma8ltsma13.ne(self.df.sma8ltsma13.shift())
+        self.df.loc[
+            self.df["sma8ltsma13"] == False, "sma8ltsma13co"  # noqa: E712
+        ] = False
 
         # true if SMA50 is above the SMA200
         self.df["sma50gtsma200"] = self.df.sma50 > self.df.sma200
@@ -1309,7 +1319,9 @@ class TechnicalAnalysis:
         self.df["sma50gtsma200co"] = self.df.sma50gtsma200.ne(
             self.df.sma50gtsma200.shift()
         )
-        self.df.loc[self.df["sma50gtsma200"] == False, "sma50gtsma200co"] = False  # noqa: E712
+        self.df.loc[
+            self.df["sma50gtsma200"] == False, "sma50gtsma200co"  # noqa: E712
+        ] = False
 
         # true if the SMA50 is below the SMA200
         self.df["sma50ltsma200"] = self.df.sma50 < self.df.sma200
@@ -1317,7 +1329,9 @@ class TechnicalAnalysis:
         self.df["sma50ltsma200co"] = self.df.sma50ltsma200.ne(
             self.df.sma50ltsma200.shift()
         )
-        self.df.loc[self.df["sma50ltsma200"] == False, "sma50ltsma200co"] = False  # noqa: E712
+        self.df.loc[
+            self.df["sma50ltsma200"] == False, "sma50ltsma200co"  # noqa: E712
+        ] = False
 
     def add_macd_buy_signals(self) -> None:
         """Adds the MACD/Signal buy and sell signals to the DataFrame"""
@@ -1346,7 +1360,9 @@ class TechnicalAnalysis:
         self.df["macdgtsignalco"] = self.df.macdgtsignal.ne(
             self.df.macdgtsignal.shift()
         )
-        self.df.loc[self.df["macdgtsignal"] == False, "macdgtsignalco"] = False  # noqa: E712
+        self.df.loc[
+            self.df["macdgtsignal"] == False, "macdgtsignalco"  # noqa: E712
+        ] = False
 
         # true if the MACD is below the Signal
         self.df["macdltsignal"] = self.df.macd < self.df.signal
@@ -1354,7 +1370,9 @@ class TechnicalAnalysis:
         self.df["macdltsignalco"] = self.df.macdltsignal.ne(
             self.df.macdltsignal.shift()
         )
-        self.df.loc[self.df["macdltsignal"] == False, "macdltsignalco"] = False  # noqa: E712
+        self.df.loc[
+            self.df["macdltsignal"] == False, "macdltsignalco"  # noqa: E712
+        ] = False
 
     def get_fibonacci_retracement_levels(self, price: float = 0) -> dict:
         # validates price is numeric
