@@ -162,7 +162,9 @@ class BotConfig:
 
         self.exchange = self._set_exchange(kwargs["exchange"])
 
-        self.startmethod = self.cli_args["startmethod"] if self.cli_args["startmethod"] else "standard"
+        self.startmethod = (
+            self.cli_args["startmethod"] if self.cli_args["startmethod"] else "standard"
+        )
         self.enable_atr72_pcnt = True
         self.enable_buy_next = True
         self.enable_volume = False
@@ -187,7 +189,7 @@ class BotConfig:
             consoleloglevel=self.consoleloglevel,
         )
 
-# read and set config from file
+    # read and set config from file
     def read_config(self, exchange):
         if os.path.isfile(self.config_file):
             self.config_provided = True
@@ -231,14 +233,27 @@ class BotConfig:
         ) = self._set_default_api_info(self.exchange)
 
         if self.config_provided:
-            if self.exchange == Exchange.COINBASEPRO and self.exchange.value in self.config:
-                coinbaseProConfigParser(self, self.config[self.exchange.value], self.cli_args)
+            if (
+                self.exchange == Exchange.COINBASEPRO
+                and self.exchange.value in self.config
+            ):
+                coinbaseProConfigParser(
+                    self, self.config[self.exchange.value], self.cli_args
+                )
 
-            elif self.exchange == Exchange.BINANCE and self.exchange.value in self.config:
-                binanceConfigParser(self, self.config[self.exchange.value], self.cli_args)
+            elif (
+                self.exchange == Exchange.BINANCE and self.exchange.value in self.config
+            ):
+                binanceConfigParser(
+                    self, self.config[self.exchange.value], self.cli_args
+                )
 
-            elif self.exchange == Exchange.KUCOIN and self.exchange.value in self.config:
-                kucoinConfigParser(self, self.config[self.exchange.value], self.cli_args)
+            elif (
+                self.exchange == Exchange.KUCOIN and self.exchange.value in self.config
+            ):
+                kucoinConfigParser(
+                    self, self.config[self.exchange.value], self.cli_args
+                )
 
             elif self.exchange == Exchange.DUMMY and self.exchange.value in self.config:
                 dummyConfigParser(self, self.config[self.exchange.value], self.cli_args)
@@ -256,10 +271,26 @@ class BotConfig:
                 self.telegram = True
 
             if "scanner" in self.config:
-                self.enableexitaftersell = self.config["scanner"]["enableexitaftersell"] if "enableexitaftersell" in self.config["scanner"] else False
-                self.enable_buy_next = True if "enable_buy_now" not in self.config["scanner"] else self.config["scanner"]["enable_buy_now"]
-                self.enable_atr72_pcnt = True if "enable_atr72_pcnt" not in self.config["scanner"] else self.config["scanner"]["enable_atr72_pcnt"]
-                self.enable_volume = False if "enable_volume" not in self.config["scanner"] else self.config["scanner"]["enable_volume"]
+                self.enableexitaftersell = (
+                    self.config["scanner"]["enableexitaftersell"]
+                    if "enableexitaftersell" in self.config["scanner"]
+                    else False
+                )
+                self.enable_buy_next = (
+                    True
+                    if "enable_buy_now" not in self.config["scanner"]
+                    else self.config["scanner"]["enable_buy_now"]
+                )
+                self.enable_atr72_pcnt = (
+                    True
+                    if "enable_atr72_pcnt" not in self.config["scanner"]
+                    else self.config["scanner"]["enable_atr72_pcnt"]
+                )
+                self.enable_volume = (
+                    False
+                    if "enable_volume" not in self.config["scanner"]
+                    else self.config["scanner"]["enable_volume"]
+                )
 
             if "logger" in self.config:
                 loggerConfigParser(self, self.config["logger"])
@@ -524,17 +555,57 @@ class BotConfig:
         parser.add_argument("--buymaxsize", type=float, help="maximum size on buy")
         parser.add_argument("--buyminsize", type=float, help="minimum size on buy")
 
-        parser.add_argument("--buylastsellsize", type=int, help="1 = buy size of last sell, 0 = disabled")
-        parser.add_argument("--trailingbuypcnt", type=float, help="percent of increase to wait before buying")
-        parser.add_argument("--trailingimmediatebuy", action="store_true", help="immediate buy if trailingbuypcnt reached")
-        parser.add_argument("--trailingbuyimmediatepcnt", type=float, help="percent of increase to trigger immediate buy")
-        parser.add_argument("--marketmultibuycheck", action="store_true", help="additional check for market multiple buys")
+        parser.add_argument(
+            "--buylastsellsize",
+            type=int,
+            help="1 = buy size of last sell, 0 = disabled",
+        )
+        parser.add_argument(
+            "--trailingbuypcnt",
+            type=float,
+            help="percent of increase to wait before buying",
+        )
+        parser.add_argument(
+            "--trailingimmediatebuy",
+            action="store_true",
+            help="immediate buy if trailingbuypcnt reached",
+        )
+        parser.add_argument(
+            "--trailingbuyimmediatepcnt",
+            type=float,
+            help="percent of increase to trigger immediate buy",
+        )
+        parser.add_argument(
+            "--marketmultibuycheck",
+            action="store_true",
+            help="additional check for market multiple buys",
+        )
 
-        parser.add_argument("--trailingsellpcnt", type=float, help="percent of decrease to wait before selling")
-        parser.add_argument("--trailingimmediatesell", action="store_true", help="immediate sell if trailingsellpcnt reached")
-        parser.add_argument("--trailingsellimmediatepcnt", type=float, help="percent of decrease used with STRONG sell signal")
-        parser.add_argument("--trailingsellbailoutpcnt", type=float, help="percent of decrease to bailout, sell immediately")
-        parser.add_argument("--selltriggeroverride", action="store_true", help="bypass is_sell_trigger if STRONG buy signals")
+        parser.add_argument(
+            "--trailingsellpcnt",
+            type=float,
+            help="percent of decrease to wait before selling",
+        )
+        parser.add_argument(
+            "--trailingimmediatesell",
+            action="store_true",
+            help="immediate sell if trailingsellpcnt reached",
+        )
+        parser.add_argument(
+            "--trailingsellimmediatepcnt",
+            type=float,
+            help="percent of decrease used with STRONG sell signal",
+        )
+        parser.add_argument(
+            "--trailingsellbailoutpcnt",
+            type=float,
+            help="percent of decrease to bailout, sell immediately",
+        )
+        parser.add_argument(
+            "--selltriggeroverride",
+            action="store_true",
+            help="bypass is_sell_trigger if STRONG buy signals",
+        )
         parser.add_argument(
             "--nobuynearhighpcnt",
             type=float,
@@ -576,12 +647,12 @@ class BotConfig:
         parser.add_argument(
             "--telegramtradesonly",
             action="store_true",
-            help="Toggle Telegram trades only output"
+            help="Toggle Telegram trades only output",
         )
         parser.add_argument(
             "--disabletelegramerrormsgs",
             action="store_true",
-            help="Disable Telegram error message output"
+            help="Disable Telegram error message output",
         )
 
         # disable defaults
@@ -648,17 +719,33 @@ class BotConfig:
             action="store_true",
             help="Enable Machine Learning E.g. seasonal ARIMA model for predictions",
         )
-        parser.add_argument("--enable_pandas_ta", action="store_true", help="Enable Pandas-ta")
-        parser.add_argument("--enable_custom_strategy", action="store_true", help="EnableCustom Strategy")
+        parser.add_argument(
+            "--enable_pandas_ta", action="store_true", help="Enable Pandas-ta"
+        )
+        parser.add_argument(
+            "--enable_custom_strategy",
+            action="store_true",
+            help="EnableCustom Strategy",
+        )
         parser.add_argument("--websocket", action="store_true", help="Enable websocket")
-        parser.add_argument("--logbuysellinjson", action="store_true", help="Enable logging orders in json format")
-        parser.add_argument("--startmethod", type=str, help="Enable logging orders in json format")
+        parser.add_argument(
+            "--logbuysellinjson",
+            action="store_true",
+            help="Enable logging orders in json format",
+        )
+        parser.add_argument(
+            "--startmethod", type=str, help="Enable logging orders in json format"
+        )
         parser.add_argument(
             "--adjust_total_periods",
             type=float,
             help="adjust total periods available for market analysis",
         )
-        parser.add_argument("--manual_trades_only", action="store_true", help="Manual Trades Only (HODL)")
+        parser.add_argument(
+            "--manual_trades_only",
+            action="store_true",
+            help="Manual Trades Only (HODL)",
+        )
 
         # pylint: disable=unused-variable
         args, unknown = parser.parse_known_args()

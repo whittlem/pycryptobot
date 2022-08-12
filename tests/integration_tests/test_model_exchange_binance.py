@@ -715,5 +715,5 @@ def test_marketBuyInvalidMarket():
     assert type(exchange) is AuthAPI
 
     with pytest.raises(ValueError) as execinfo:
-        exchange.marketBuy('ERROR', -1)
+        exchange.market_buy('ERROR', -1)
     assert str(execinfo.value) == 'Binance market is invalid.'

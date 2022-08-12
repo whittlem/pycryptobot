@@ -170,8 +170,8 @@ print(df)
 
 app = PyCryptoBot(exchange='binance')
 api = BAuthAPI(app.api_key, self.api_secret, self.api_url)
-resp = api.marketSell('SHIBUSDT', 2485964.0, test=True)
-#resp = api.marketSell('SHIBUSDT', 2485964.0)
+resp = api.market_sell('SHIBUSDT', 2485964.0, test=True)
+#resp = api.market_sell('SHIBUSDT', 2485964.0)
 print (resp)
 
 app = PyCryptoBot(exchange='binance')
@@ -188,8 +188,8 @@ print(df)
 
 app = PyCryptoBot(exchange='binance')
 api = BAuthAPI(app.api_key, self.api_secret, self.api_url)
-resp = api.marketBuy('MATICUSDT', 15.58064897, test=True)
-#resp = api.marketBuy('MATICUSDT', 15.58064897)
+resp = api.market_buy('MATICUSDT', 15.58064897, test=True)
+#resp = api.market_buy('MATICUSDT', 15.58064897)
 print (resp)
 
 app = PyCryptoBot(exchange='binance')

@@ -5,4 +5,4 @@ with open('config.json') as config_file:
     config = json.load(config_file)
 
 account = TradingAccount(config)
-account.saveTrackerCSV()
+account.save_tracker_csv()

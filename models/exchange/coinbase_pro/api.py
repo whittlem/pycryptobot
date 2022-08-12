@@ -447,7 +447,7 @@ class AuthAPI(AuthAPIBase):
             Logger.error(f"Error: {e}")
             return None
 
-    def marketBuy(self, market: str = "", quote_quantity: float = 0) -> pd.DataFrame:
+    def market_buy(self, market: str = "", quote_quantity: float = 0) -> pd.DataFrame:
         """Executes a market buy providing a funding amount"""
 
         # validates the market is syntactically correct
@@ -493,7 +493,7 @@ class AuthAPI(AuthAPIBase):
         except Exception:
             return pd.DataFrame()
 
-    def marketSell(self, market: str = "", base_quantity: float = 0) -> pd.DataFrame:
+    def market_sell(self, market: str = "", base_quantity: float = 0) -> pd.DataFrame:
         """Executes a market sell providing a crypto amount"""
 
         if not self._isMarketValid(market):

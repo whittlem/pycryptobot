@@ -609,7 +609,7 @@ class AuthAPI(AuthAPIBase):
         except:
             return (now, 0.0)
 
-    def marketBuy(
+    def market_buy(
         self, market: str = "", quote_quantity: float = 0, test: bool = False
     ) -> list:
         """Executes a market buy providing a funding amount"""
@@ -661,10 +661,10 @@ class AuthAPI(AuthAPIBase):
             return resp
         except Exception as err:
             ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-            Logger.error(f"{ts} Binance  marketBuy {str(err)}")
+            Logger.error(f"{ts} Binance  market_buy {str(err)}")
             return []
 
-    def marketSell(
+    def market_sell(
         self, market: str = "", base_quantity: float = 0, test: bool = False, use_fees: bool = True
     ) -> list:
         """Executes a market sell providing a crypto amount"""
@@ -710,7 +710,7 @@ class AuthAPI(AuthAPIBase):
             return resp
         except Exception as err:
             ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-            Logger.error(f"{ts} Binance  marketSell {str(err)}")
+            Logger.error(f"{ts} Binance  market_sell {str(err)}")
             return []
 
     def authAPI(self, method: str, uri: str, payload: str = {}) -> dict:

@@ -22,12 +22,17 @@ from datetime import datetime, timedelta
 from statsmodels.tsa.statespace.sarimax import SARIMAX, SARIMAXResultsWrapper
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
 from models.helper.LogHelper import Logger
+
 #####  Setup custom Trading.py file for pandas_ta
+
 try:
+    # pyright: reportMissingImports=false
     import pandas_ta as ta
-except ImportError as err:
-    raise SystemExit(f"Pandas-ta Error: {err}")
+    use_pandas_ta = True
+except ImportError:
+    use_pandas_ta = False
 try:
+    # pyright: reportMissingImports=false
     import talib
     use_talib = True
 except ImportError:
@@ -37,7 +42,7 @@ warnings.simplefilter("ignore", ConvergenceWarning)
 
 
 class TechnicalAnalysis:
-    def __init__(self, data=DataFrame(), total_periods: int=300) -> None:
+    def __init__(self, data=DataFrame(), total_periods: int = 300) -> None:
         """Technical Analysis object model
 
         Parameters
@@ -63,7 +68,7 @@ class TechnicalAnalysis:
                 "Data not not contain date, market, granularity, low, high, open, close, volume"
             )
 
-        if not "close" in data.columns:
+        if "close" not in data.columns:
             raise AttributeError("Pandas DataFrame 'close' column required.")
 
         if not data["close"].dtype == "float64" and not data["close"].dtype == "int64":
@@ -103,7 +108,7 @@ class TechnicalAnalysis:
             self.add_sma(100, True)
         if self.total_periods >= 200:
             self.add_sma(200)
-        self.add_ema(5, True) # add True if wanting to add pcnt of chg to dataframe
+        self.add_ema(5, True)  # add True if wanting to add pcnt of chg to dataframe
         self.add_ema(9)
         self.add_ema(12)
         self.add_ema(26)
@@ -111,11 +116,10 @@ class TechnicalAnalysis:
         self.add_death_cross()
         self.add_fibonacci_bollinger_bands()
 
-        self.add_rsi(14,14,True) # add MA period to add Moving Average and True to add pcnt of change
-#        self.addStochasticRSI(14)
-        self.add_williamsr() # default period is 20, add an integer to change default
-        self.add_macd() # add fast, slow, signal to be used, defaults to 12, 26, 9
-        self.add_obv(8) # integer is ma_period and is optional, default is 5
+        self.add_rsi(14, 14, True)  # add MA period to add Moving Average and True to add pcnt of change
+        self.add_williamsr()  # default period is 20, add an integer to change default
+        self.add_macd()  # add fast, slow, signal to be used, defaults to 12, 26, 9
+        self.add_obv(8)  # integer is ma_period and is optional, default is 5
         self.add_elder_ray_index()
 
         self.add_ema_buy_signals()
@@ -123,9 +127,9 @@ class TechnicalAnalysis:
             self.add_sma_buy_signals()
         self.add_macd_buy_signals()
         self.add_adx_buy_signals()
-        self.add_ema_WMAsignal(5,5) # EMA with WMA smoothing
+        self.add_ema_WMAsignal(5, 5)  # EMA with WMA smoothing
 
-        self.ta_MACDLead() # add fast, slow, signal to be used, defaults to 12, 26, 9
+        self.ta_MACDLead()  # add fast, slow, signal to be used, defaults to 12, 26, 9
 
         self.add_candle_astral_buy()
         self.add_candle_astral_sell()
@@ -766,7 +770,7 @@ class TechnicalAnalysis:
         self.df["fbb_lower0_786"] = sma - (0.786 * sd)
         self.df["fbb_lower1"] = sma - (1 * sd)
 
-    def ta_MACD(self, fast: int=12, slow: int=26, sig: int=9) -> DataFrame:
+    def ta_MACD(self, fast: int = 12, slow: int = 26, sig: int = 9) -> DataFrame:
         """Calculates the Moving Average Convergence Divergence (MACD)"""
         """Using EMA Oscillator and SMA Signal Length of 5"""
         """Traditional uses EMA Oscillator and EMA Signal"""
@@ -792,15 +796,15 @@ class TechnicalAnalysis:
 
         return df
 
-    def add_macd(self, fast: int=12, slow: int=26, sig: int=9) -> None:
+    def add_macd(self, fast: int = 12, slow: int = 26, sig: int = 9) -> None:
         """Adds the Moving Average Convergence Divergence (MACD) to the DataFrame"""
 
-        df = self.ta_MACD(fast,slow,sig)
+        df = self.ta_MACD(fast, slow, sig)
         self.df["macd"] = df["macd"]
         self.df["signal"] = df["signal"]
         self.df["macd_pc"] = df["macd_pc"]
 
-    def ta_MACDLead(self, fast: int=12, slow: int=26, sig: int=9) -> None:
+    def ta_MACDLead(self, fast: int = 12, slow: int = 26, sig: int = 9) -> None:
         """Adds the Leading Moving Average Convergence Divergence (MACDLead) to the DataFrame"""
 
         df = self.df.copy()
@@ -867,12 +871,12 @@ class TechnicalAnalysis:
             raise TypeError("Period parameter is not perioderic.")
 
         if period < 7 or period > 21:
-            raise ValueError("williamsr Period is out of range")
+            raise ValueError("Period is out of range")
 
-        return (
-            (self.df["high"].rolling(14).max() - self.df["close"]) /
-            (self.df["high"].rolling(14).max() - self.df["low"].rolling(14).min())
-        ) * -100
+        dividend = self.df["high"].rolling(14).max() - self.df["close"]
+        divisor = self.df["high"].rolling(14).max() - self.df["low"].rolling(14).min()
+
+        return (dividend / divisor) * -100
 
     def add_rsi(self, period: int, ma_period: int = 0, addPC: bool = False) -> None:
         """Adds the Relative Strength Index (RSI) to the DataFrame"""
@@ -896,10 +900,7 @@ class TechnicalAnalysis:
             self.df["rsi" + str(period) + "_pc"] = round(self.df["rsi" + str(period)].pct_change() * 100, 2)
             self.df["rsi" + str(period) + "_pc"] = self.df["rsi" + str(period) + "_pc"].fillna(0)
 
-        if ma_period >=5:
-#           self.df["rsima" + str(ma_period)] = ta.vwma(
-#               close=self.df["rsi" + str(period)], volume=self.df["volume"], length=(ma_period), talib=self.talib
-#           )
+        if ma_period >= 5:
             self.df["rsima" + str(ma_period)] = ta.rma(
                 close=self.df["rsi" + str(period)], volume=self.df["volume"], length=(ma_period), talib=self.talib
             )
@@ -932,14 +933,14 @@ class TechnicalAnalysis:
         # true if sma stochrsi is above the 15
         self.df["rsi15"] = self.df["smastoch" + str(period)] > 15
         self.df["rsi15co"] = self.df.rsi15.ne(self.df.rsi15.shift())
-        self.df.loc[self.df["rsi15"] == False, "rsi15co"] = False
+        self.df.loc[self.df["rsi15"] == False, "rsi15co"] = False  # noqa: E712
 
         # true if sma stochrsi is below the 85
         self.df["rsi85"] = self.df["smastoch" + str(period)] < 85
         self.df["rsi85co"] = self.df.rsi85.ne(self.df.rsi85.shift())
-        self.df.loc[self.df["rsi85"] == False, "rsi85co"] = False
+        self.df.loc[self.df["rsi85"] == False, "rsi85co"] = False  # noqa: E712
 
-    def add_williamsr(self, period: int=20) -> None:
+    def add_williamsr(self, period: int = 20) -> None:
         """Adds the Willams %R to the DataFrame"""
 
         if not isinstance(period, int):
@@ -948,10 +949,6 @@ class TechnicalAnalysis:
         if period < 7 or period > 21:
             raise ValueError("add_williamsr Period is out of range")
 
-#        self.df["williamsr" + str(period)] = self.williamsr(period)
-#        self.df["williamsr" + str(period)] = self.df["williamsr" + str(period)].replace(
-#            nan, -50
-#        )
         self.df["williamsr" + str(period)] = ta.willr(high=self.df["high"], low=self.df["low"], close=self.df["close"], length=period, talib=self.talib)
         self.df["williamsr" + str(period)] = self.df["williamsr" + str(period)].replace(nan, 0)
 
@@ -1120,20 +1117,20 @@ class TechnicalAnalysis:
         # add the support levels to the DataFrame
         return Series(levels_ts)
 
-    def print_support_resistance_levels(self, self.price: float = 0) -> None:
+    def print_support_resistance_levels(self, price: float = 0) -> None:
         if isinstance(self.price, int) or isinstance(self.price, float):
             df = self.get_support_resistance_levels()
 
             if len(df) > 0:
                 df_last = df.tail(1)
-                if float(self.df_last[0]) < self.price:
-                    Logger.info(f" Support level of {str(self.df_last[0])} formed at {str(self.df_last.index[0])}")
-                elif float(self.df_last[0]) > self.price:
-                    Logger.info(f" Resistance level of {str(self.df_last[0])} formed at {str(self.df_last.index[0])}")
+                if float(df_last[0]) < price:
+                    Logger.info(f" Support level of {str(df_last[0])} formed at {str(df_last.index[0])}")
+                elif float(df_last[0]) > price:
+                    Logger.info(f" Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}")
                 else:
-                    Logger.info(f" Support/Resistance level of {str(self.df_last[0])} formed at {str(self.df_last.index[0])}")
+                    Logger.info(f" Support/Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}")
 
-    def get_resistance(self, self.price: float = 0) -> float:
+    def get_resistance(self, price: float = 0) -> float:
         if isinstance(self.price, int) or isinstance(self.price, float):
             if self.price > 0:
                 sr = self.get_support_resistance_levels()
@@ -1143,7 +1140,7 @@ class TechnicalAnalysis:
 
         return self.price
 
-    def get_fibonacci_upper(self, self.price: float = 0) -> float:
+    def get_fibonacci_upper(self, price: float = 0) -> float:
         if isinstance(self.price, int) or isinstance(self.price, float):
             if self.price > 0:
                 fb = self.get_fibonacci_retracement_levels()
@@ -1153,7 +1150,7 @@ class TechnicalAnalysis:
 
         return self.price
 
-    def get_trade_exit(self, self.price: float = 0) -> float:
+    def get_trade_exit(self, price: float = 0) -> float:
         if isinstance(self.price, int) or isinstance(self.price, float):
             if self.price > 0:
                 r = self.get_resistance(self.price)
@@ -1173,36 +1170,36 @@ class TechnicalAnalysis:
 
         return self.price
 
-    def print_support_resistance_fibonacci_levels(self, self.price: float = 0) -> str:
-        if isinstance(self.price, int) or isinstance(self.price, float):
-            if self.price > 0:
+    def print_support_resistance_fibonacci_levels(self, price: float = 0) -> str:
+        if isinstance(price, int) or isinstance(price, float):
+            if price > 0:
                 sr = self.get_support_resistance_levels()
 
-                s = self.price
+                s = price
                 for r in sr.sort_values():
-                    if r > self.price:
+                    if r > price:
                         fb = self.get_fibonacci_retracement_levels()
 
-                        l = self.price
+                        low = price
                         for b in fb.values():
-                            if b > self.price:
-                                return (f"support: {str(s)}, resistance: {str(r)}, fibonacci (l): {str(l)}, fibonacci (u): {str(b)}")
+                            if b > price:
+                                return f"support: {str(s)}, resistance: {str(r)}, fibonacci (l): {str(low)}, fibonacci (u): {str(b)}"
                             else:
-                                l = b
+                                low = b
 
                         break
                     else:
                         s = r
 
-                if len(sr) > 1 and sr.iloc[-1] < self.price:
+                if len(sr) > 1 and sr.iloc[-1] < price:
                     fb = self.get_fibonacci_retracement_levels()
 
-                    l = self.price
+                    low = price
                     for b in fb.values():
-                        if b > self.price:
-                            return (f"support: {str(sr.iloc[-1])}, fibonacci (l): {str(l)}, fibonacci (u): {str(b)}")
+                        if b > price:
+                            return f"support: {str(sr.iloc[-1])}, fibonacci (l): {str(low)}, fibonacci (u): {str(b)}"
                         else:
-                            l = b
+                            low = b
 
         return ""
 
@@ -1212,7 +1209,7 @@ class TechnicalAnalysis:
         if not isinstance(self.df, DataFrame):
             raise TypeError("Pandas DataFrame required.")
 
-        if not "close" in self.df.columns:
+        if "close" not in self.df.columns:
             raise AttributeError("Pandas DataFrame 'close' column required.")
 
         if (
@@ -1223,26 +1220,26 @@ class TechnicalAnalysis:
                 "Pandas DataFrame 'close' column not int64 or float64."
             )
 
-        if not "ema8" in self.df.columns:
+        if "ema8" not in self.df.columns:
             self.add_ema(8)
 
-        if not "ema12" in self.df.columns:
+        if "ema12" not in self.df.columns:
             self.add_ema(12)
 
-        if not "ema26" in self.df.columns:
+        if "ema26" not in self.df.columns:
             self.add_ema(26)
 
         # true if EMA8 is above the EMA12
         self.df["ema8gtema12"] = self.df.ema8 > self.df.ema12
         # true if the current frame is where EMA8 crosses over above
         self.df["ema8gtema12co"] = self.df.ema8gtema12.ne(self.df.ema8gtema12.shift())
-        self.df.loc[self.df["ema8gtema12"] == False, "ema8gtema12co"] = False
+        self.df.loc[self.df["ema8gtema12"] == False, "ema8gtema12co"] = False  # noqa: E712
 
         # true if the EMA8 is below the EMA12
         self.df["ema8ltema12"] = self.df.ema8 < self.df.ema12
         # true if the current frame is where EMA8 crosses over below
         self.df["ema8ltema12co"] = self.df.ema8ltema12.ne(self.df.ema8ltema12.shift())
-        self.df.loc[self.df["ema8ltema12"] == False, "ema8ltema12co"] = False
+        self.df.loc[self.df["ema8ltema12"] == False, "ema8ltema12co"] = False  # noqa: E712
 
         # true if EMA12 is above the EMA26
         self.df["ema12gtema26"] = self.df.ema12 > self.df.ema26
@@ -1250,7 +1247,7 @@ class TechnicalAnalysis:
         self.df["ema12gtema26co"] = self.df.ema12gtema26.ne(
             self.df.ema12gtema26.shift()
         )
-        self.df.loc[self.df["ema12gtema26"] == False, "ema12gtema26co"] = False
+        self.df.loc[self.df["ema12gtema26"] == False, "ema12gtema26co"] = False  # noqa: E712
 
         # true if the EMA12 is below the EMA26
         self.df["ema12ltema26"] = self.df.ema12 < self.df.ema26
@@ -1258,7 +1255,7 @@ class TechnicalAnalysis:
         self.df["ema12ltema26co"] = self.df.ema12ltema26.ne(
             self.df.ema12ltema26.shift()
         )
-        self.df.loc[self.df["ema12ltema26"] == False, "ema12ltema26co"] = False
+        self.df.loc[self.df["ema12ltema26"] == False, "ema12ltema26co"] = False  # noqa: E712
 
     def add_sma_buy_signals(self) -> None:
         """Adds the SMA50/SMA200 buy and sell signals to the DataFrame"""
@@ -1269,7 +1266,7 @@ class TechnicalAnalysis:
         if not isinstance(self.df, DataFrame):
             raise TypeError("Pandas DataFrame required.")
 
-        if not "close" in self.df.columns:
+        if "close" not in self.df.columns:
             raise AttributeError("Pandas DataFrame 'close' column required.")
 
         if (
@@ -1280,7 +1277,7 @@ class TechnicalAnalysis:
                 "Pandas DataFrame 'close' column not int64 or float64."
             )
 
-        if not "sma50" or not "sma200" in self.df.columns:
+        if not "sma50" or "sma200" not in self.df.columns:
             self.add_sma(50)
             self.add_sma(200)
 
@@ -1290,7 +1287,7 @@ class TechnicalAnalysis:
         self.df["sma50gtsma200co"] = self.df.sma50gtsma200.ne(
             self.df.sma50gtsma200.shift()
         )
-        self.df.loc[self.df["sma50gtsma200"] == False, "sma50gtsma200co"] = False
+        self.df.loc[self.df["sma50gtsma200"] == False, "sma50gtsma200co"] = False  # noqa: E712
 
         # true if the SMA50 is below the SMA200
         self.df["sma50ltsma200"] = self.df.sma50 < self.df.sma200
@@ -1298,7 +1295,7 @@ class TechnicalAnalysis:
         self.df["sma50ltsma200co"] = self.df.sma50ltsma200.ne(
             self.df.sma50ltsma200.shift()
         )
-        self.df.loc[self.df["sma50ltsma200"] == False, "sma50ltsma200co"] = False
+        self.df.loc[self.df["sma50ltsma200"] == False, "sma50ltsma200co"] = False  # noqa: E712
 
     def add_macd_buy_signals(self) -> None:
         """Adds the MACD/Signal buy and sell signals to the DataFrame"""
@@ -1306,7 +1303,7 @@ class TechnicalAnalysis:
         if not isinstance(self.df, DataFrame):
             raise TypeError("Pandas DataFrame required.")
 
-        if not "close" in self.df.columns:
+        if "close" not in self.df.columns:
             raise AttributeError("Pandas DataFrame 'close' column required.")
 
         if (
@@ -1317,7 +1314,7 @@ class TechnicalAnalysis:
                 "Pandas DataFrame 'close' column not int64 or float64."
             )
 
-        if not "macd" or not "signal" in self.df.columns:
+        if not "macd" or "signal" not in self.df.columns:
             self.add_macd()
             self.add_obv()
 
@@ -1327,7 +1324,7 @@ class TechnicalAnalysis:
         self.df["macdgtsignalco"] = self.df.macdgtsignal.ne(
             self.df.macdgtsignal.shift()
         )
-        self.df.loc[self.df["macdgtsignal"] == False, "macdgtsignalco"] = False
+        self.df.loc[self.df["macdgtsignal"] == False, "macdgtsignalco"] = False  # noqa: E712
 
         # true if the MACD is below the Signal
         self.df["macdltsignal"] = self.df.macd < self.df.signal
@@ -1335,9 +1332,9 @@ class TechnicalAnalysis:
         self.df["macdltsignalco"] = self.df.macdltsignal.ne(
             self.df.macdltsignal.shift()
         )
-        self.df.loc[self.df["macdltsignal"] == False, "macdltsignalco"] = False
+        self.df.loc[self.df["macdltsignal"] == False, "macdltsignalco"] = False  # noqa: E712
 
-    def get_fibonacci_retracement_levels(self, self.price: float = 0) -> dict:
+    def get_fibonacci_retracement_levels(self, price: float = 0) -> dict:
         # validates self.price is numeric
         if not isinstance(self.price, int) and not isinstance(self.price, float):
             raise TypeError("Optional self.price is not numeric.")
@@ -1453,13 +1450,13 @@ class TechnicalAnalysis:
 
         for i in range(2, self.df.shape[0] - 2):
             if self._is_support(self.df, i):
-                l = self.df["low"][i]
-                if self._is_far_from_level(l):
-                    self.levels.append((i, l))
+                level = self.df["low"][i]
+                if self._is_far_from_level(level):
+                    self.levels.append((i, level))
             elif self._is_resistance(self.df, i):
-                l = self.df["high"][i]
-                if self._is_far_from_level(l):
-                    self.levels.append((i, l))
+                level = self.df["high"][i]
+                if self._is_far_from_level(level):
+                    self.levels.append((i, level))
         return self.levels
 
     def _is_support(self, df, i) -> bool:
@@ -1472,7 +1469,7 @@ class TechnicalAnalysis:
             c4 = df["low"][i - 1] < df["low"][i - 2]
             support = c1 and c2 and c3 and c4
             return support
-        except:
+        except Exception:
             support = False
             return support
 
@@ -1486,15 +1483,15 @@ class TechnicalAnalysis:
             c4 = df["high"][i - 1] > df["high"][i - 2]
             resistance = c1 and c2 and c3 and c4
             return resistance
-        except:
+        except Exception:
             resistance = False
             return resistance
 
-    def _is_far_from_level(self, l) -> float:
+    def _is_far_from_level(self, level) -> float:
         """Is far from support level? (private function)"""
 
         s = mean(self.df["high"] - self.df["low"])
-        return np_sum([abs(l - x) < s for x in self.levels]) == 0
+        return np_sum([abs(level - x) < s for x in self.levels]) == 0
 
     def _truncate(self, f, n) -> float:
-        return floor(f * 10 ** n) / 10 ** n
+        return floor(f * 10**n) / 10**n

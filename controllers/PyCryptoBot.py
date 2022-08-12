@@ -1143,7 +1143,7 @@ class PyCryptoBot(BotConfig):
 
                             # place the buy order
                             try:
-                                self.marketBuy(
+                                self.market_buy(
                                     self.market,
                                     self.state.last_buy_size,
                                     self.get_buy_percent(),
@@ -1453,7 +1453,7 @@ class PyCryptoBot(BotConfig):
                         self.account.quote_balance_after = 0
                         # place the sell order
                         try:
-                            self.marketSell(
+                            self.market_sell(
                                 self.market,
                                 baseamounttosell,
                                 self.get_sell_percent(),
@@ -1794,12 +1794,12 @@ class PyCryptoBot(BotConfig):
         if not self.disabletracker and self.is_live and not self.websocket_connection:
             # update order tracker csv
             if self.exchange == Exchange.BINANCE:
-                self.account.saveTrackerCSV(self.market)
+                self.account.save_tracker_csv(self.market)
             elif (
                 self.exchange == Exchange.COINBASEPRO
                 or self.exchange == Exchange.KUCOIN
             ):
-                self.account.saveTrackerCSV()
+                self.account.save_tracker_csv()
 
         if self.is_sim:
             if self.state.iterations < len(df):

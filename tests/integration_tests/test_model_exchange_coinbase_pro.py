@@ -857,7 +857,7 @@ def test_marketBuyInvalidMarket():
     assert type(exchange) is AuthAPI
 
     with pytest.raises(ValueError) as execinfo:
-        exchange.marketBuy('ERROR', -1)
+        exchange.market_buy('ERROR', -1)
     assert str(execinfo.value) == 'Coinbase Pro market is invalid.'
 
 def test_marketBuyInvalidAmount():
@@ -886,5 +886,5 @@ def test_marketBuyInvalidAmount():
     assert type(exchange) is AuthAPI
 
     with pytest.raises(ValueError) as execinfo:
-        exchange.marketBuy('XXX-YYY', 0)
+        exchange.market_buy('XXX-YYY', 0)
     assert str(execinfo.value) == 'Trade amount is too small (>= 10).'

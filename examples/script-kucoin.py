@@ -61,13 +61,13 @@ print (fee)
 df = api.get_orders('BTC-USDT')
 print(df)
 
-resp = api.marketSell('BTC-USDT', 0.0002)
+resp = api.market_sell('BTC-USDT', 0.0002)
 print (resp)
 
 
-resp = api.marketBuy('BTC-USDT', 100)
+resp = api.market_buy('BTC-USDT', 100)
 print (resp)
-resp = api.marketBuy('XRP-USDT', 100)
+resp = api.market_buy('XRP-USDT', 100)
 print (resp)
 
 account = TradingAccount(app)

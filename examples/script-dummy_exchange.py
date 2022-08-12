@@ -6,22 +6,22 @@ app = PyCryptoBot(exchange='dummy')
 account = TradingAccount(app)
 #print (self.account.get_balance())
 
-#account.depositBaseCurrency(0.5)
+#account.deposit_base_currency(0.5)
 #print (self.account.get_balance())
 
-account.depositQuoteCurrency(1000)
+account.deposit_quote_currency(1000)
 print (self.account.get_balance(), "\n")
 
-#account.withdrawBaseCurrency(0.5)
+#account.withdraw_base_currency(0.5)
 #print (self.account.get_balance())
 
-#account.withdrawQuoteCurrency(500)
+#account.withdraw_quote_currency(500)
 #print (self.account.get_balance())
 
-account.marketBuy(app.market, 100, 100, 20000)
+account.market_buy(app.market, 100, 100, 20000)
 print (self.account.get_balance(), "\n")
 
-account.marketSell(app.market, self.account.get_balance(app.base_currency), 100, 20000)
+account.market_sell(app.market, self.account.get_balance(app.base_currency), 100, 20000)
 print (self.account.get_balance(), "\n")
 
 print (self.account.get_orders())
