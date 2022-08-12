@@ -386,7 +386,7 @@ class PyCryptoBot(BotConfig):
                                 trading_data.index.get_loc(str(simDate)) + 1
                             )
                             dateFound = True
-                        except Exception:  # pylint: disable=bare-except
+                        except Exception:
                             simDate += timedelta(seconds=self.granularity.value[0])
 
                     if (

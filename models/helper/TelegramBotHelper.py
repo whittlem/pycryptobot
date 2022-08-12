@@ -16,9 +16,7 @@ class TelegramBotHelper:
         self.market = app.market
         self.exchange = app.exchange
         self.botfolder = "telegram_data"
-        self.botpath = os.path.join(
-            self.app.telegramdatafolder, self.botfolder, self.market
-        )
+        self.botpath = os.path.join(self.app.telegramdatafolder, self.botfolder, self.market)
         self.filename = self.market + ".json"
 
         if not self.app.is_sim and self.app.enable_telegram_bot_control and not scanner:
@@ -27,24 +25,16 @@ class TelegramBotHelper:
 
             self.data = {}
 
-            if not os.path.exists(
-                os.path.join(self.app.telegramdatafolder, "telegram_data")
-            ):
+            if not os.path.exists(os.path.join(self.app.telegramdatafolder, "telegram_data")):
                 os.mkdir(os.path.join(self.app.telegramdatafolder, "telegram_data"))
 
-            if os.path.isfile(
-                os.path.join(
-                    self.app.telegramdatafolder, "telegram_data", self.filename
-                )
-            ):
+            if os.path.isfile(os.path.join(self.app.telegramdatafolder, "telegram_data", self.filename)):
                 if not self._read_data():
                     self.create_bot_data()
             else:
                 self.create_bot_data()
 
-            if os.path.isfile(
-                os.path.join(self.app.telegramdatafolder, "telegram_data", "data.json")
-            ):
+            if os.path.isfile(os.path.join(self.app.telegramdatafolder, "telegram_data", "data.json")):
 
                 write_ok, try_count = False, 0
                 while not write_ok and try_count <= 5:
@@ -156,24 +146,19 @@ class TelegramBotHelper:
                     "price": price,
                     "df_high": " ",
                     "from_df_high": " ",
-                    "trailingstoplosstriggered": float(margin.replace("%", ""))
-                    > self.app.trailing_stop_loss_trigger
-                    if "trailingstoplosstriggered" in self.data
-                    and self.data["trailingstoplosstriggered"] == False
+                    "trailingstoplosstriggered": float(margin.replace("%", "")) > self.app.trailing_stop_loss_trigger
+                    if "trailingstoplosstriggered" in self.data and self.data["trailingstoplosstriggered"] is False
                     else True,
                     "change_pcnt_high": change_pcnt_high
-                    if "trailingstoplosstriggered" in self.data
-                    and self.data["trailingstoplosstriggered"] == True
+                    if "trailingstoplosstriggered" in self.data and self.data["trailingstoplosstriggered"] is True
                     else 0.0,
                 }
 
                 if self.app.preventloss:
                     self.data.update(
                         {
-                            "preventlosstriggered": float(margin.replace("%", ""))
-                            > self.app.preventlosstrigger
-                            if "preventlosstriggered" in self.data
-                            and self.data["preventlosstriggered"] == False
+                            "preventlosstriggered": float(margin.replace("%", "")) > self.app.preventlosstrigger
+                            if "preventlosstriggered" in self.data and self.data["preventlosstriggered"] is False
                             else True
                         }
                     )
@@ -222,11 +207,7 @@ class TelegramBotHelper:
     def delete_margin(self):
         if not self.app.is_sim and self.app.enable_telegram_bot_control:
             try:
-                os.remove(
-                    os.path.join(
-                        self.app.telegramdatafolder, "telegram_data", self.filename
-                    )
-                )
+                os.remove(os.path.join(self.app.telegramdatafolder, "telegram_data", self.filename))
             except FileNotFoundError:
                 pass
 
@@ -236,9 +217,7 @@ class TelegramBotHelper:
             while not write_ok and try_count <= 5:
                 try_count += 1
                 self._read_data("data.json")
-                self.data["trades"].update(
-                    {ts: {"pair": self.market, "price": price, "margin": margin}}
-                )
+                self.data["trades"].update({ts: {"pair": self.market, "price": price, "margin": margin}})
                 write_ok = self._write_data("data.json")
                 if not write_ok:
                     sleep(1)
@@ -326,9 +305,7 @@ class TelegramBotHelper:
                 if self.market in self.data["opentrades"]:
                     if self.exchange != self.data["opentrades"][self.market]:
                         return
-                self.data["opentrades"].update(
-                    {self.market: {"exchange": self.exchange.value}}
-                )
+                self.data["opentrades"].update({self.market: {"exchange": self.exchange.value}})
                 write_ok = self._write_data("data.json")
                 if not write_ok:
                     sleep(1)

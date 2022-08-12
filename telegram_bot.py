@@ -611,7 +611,7 @@ class TelegramBot(TelegramBotBase):
                     sleep(30)
                 self.updater.start_polling()
                 return
-        except:  # pylint: disable=bare-except
+        except Exception:
             pass
 
     def done(self, update, context):
@@ -623,7 +623,7 @@ class TelegramBot(TelegramBotBase):
         try:
             urllib.request.urlopen("https://api.telegram.org")
             return True
-        except:  # pylint: disable=bare-except
+        except Exception:
             print("No internet connection")
             return False
 

@@ -117,9 +117,7 @@ class AuthAPI(AuthAPIBase):
         }.get(method, "GET")
 
     def createHash(self, uri: str = ""):
-        return hmac.new(
-            self._api_secret.encode("utf-8"), uri.encode("utf-8"), hashlib.sha256
-        ).hexdigest()
+        return hmac.new(self._api_secret.encode("utf-8"), uri.encode("utf-8"), hashlib.sha256).hexdigest()
 
     def get_timestamp(self):
         return int(time.time() * 1000)
@@ -129,9 +127,7 @@ class AuthAPI(AuthAPIBase):
 
         # GET /api/v3/account
         try:
-            resp = self.authAPI(
-                "GET", "/api/v3/account", {"recvWindow": self.recv_window}
-            )
+            resp = self.authAPI("GET", "/api/v3/account", {"recvWindow": self.recv_window})
 
             # unexpected data, then return
             if len(resp) == 0 or "balances" not in resp:
@@ -198,7 +194,7 @@ class AuthAPI(AuthAPIBase):
                 ]
             ]
 
-        except:
+        except Exception:
             return pd.DataFrame()
 
     def getAccount(self) -> pd.DataFrame:
@@ -243,7 +239,7 @@ class AuthAPI(AuthAPIBase):
 
             df["volume"] = df["volume"].astype(float)
             volume = np.round(float(df[["volume"]].mean()))
-        except:
+        except Exception:
             pass
 
         # GET /api/v3/account
@@ -280,9 +276,7 @@ class AuthAPI(AuthAPIBase):
             fees = self.getFees()
 
         if len(fees) == 0 or "maker_fee_rate" not in fees:
-            Logger.error(
-                f"error: 'maker_fee_rate' not in fees (using {DEFAULT_MAKER_FEE_RATE} as a fallback)"
-            )
+            Logger.error(f"error: 'maker_fee_rate' not in fees (using {DEFAULT_MAKER_FEE_RATE} as a fallback)")
             return DEFAULT_MAKER_FEE_RATE
 
         return float(fees["maker_fee_rate"].to_string(index=False).strip())
@@ -296,9 +290,7 @@ class AuthAPI(AuthAPIBase):
             fees = self.getFees()
 
         if len(fees) == 0 or "taker_fee_rate" not in fees:
-            Logger.error(
-                f"error: 'taker_fee_rate' not in fees (using {DEFAULT_TAKER_FEE_RATE} as a fallback)"
-            )
+            Logger.error(f"error: 'taker_fee_rate' not in fees (using {DEFAULT_TAKER_FEE_RATE} as a fallback)")
             return DEFAULT_TAKER_FEE_RATE
 
         return float(fees["taker_fee_rate"].to_string(index=False).strip())
@@ -328,18 +320,12 @@ class AuthAPI(AuthAPIBase):
             else:
                 df = pd.DataFrame()
 
-            return df[df["isSpotTradingAllowed"] == True][["symbol"]].squeeze().tolist()
+            return df[df["isSpotTradingAllowed"] == True][["symbol"]].squeeze().tolist()  # noqa: E712
 
-        except:
+        except Exception:
             return pd.DataFrame()
 
-    def get_orders( #pylint: disable=invalid-name
-        self,
-        market: str = "",
-        action: str = "",
-        status: str = "done",
-        order_history: list = []
-    ) -> pd.DataFrame: #pylint: disable=dangerous-default-value
+    def get_orders(self, market: str = "", action: str = "", status: str = "done", order_history: list = []) -> pd.DataFrame:
         """Retrieves your list of orders with optional filtering"""
 
         # if market provided
@@ -363,11 +349,11 @@ class AuthAPI(AuthAPIBase):
         # if action provided
         if action != "":
             # validates action is either a buy or sell
-            if not action in ["buy", "sell"]:
+            if action not in ["buy", "sell"]:
                 raise ValueError("Invalid order action.")
 
         # validates status is either open, canceled, pending, done, active, or all
-        if not status in ["open", "canceled", "pending", "done", "active", "all"]:
+        if status not in ["open", "canceled", "pending", "done", "active", "all"]:
             raise ValueError("Invalid order status.")
 
         try:
@@ -407,9 +393,7 @@ class AuthAPI(AuthAPIBase):
                         df = pd.concat([df, df_tmp])
 
                 if full_scan is True:
-                    print(
-                        f"add to order history to prevent full scan: {self.order_history}"
-                    )
+                    print(f"add to order history to prevent full scan: {self.order_history}")
             else:
                 # GET /api/v3/allOrders
                 resp = self.authAPI(
@@ -504,7 +488,7 @@ class AuthAPI(AuthAPIBase):
 
             return df
 
-        except:
+        except Exception:
             return pd.DataFrame()
 
     def get_time(self) -> datetime:
@@ -541,7 +525,7 @@ class AuthAPI(AuthAPIBase):
 
             return df
 
-        except:
+        except Exception:
             return df
 
     def getTradeFee(self, market: str) -> float:
@@ -568,7 +552,7 @@ class AuthAPI(AuthAPIBase):
             else:
                 return DEFAULT_TRADE_FEE_RATE
 
-        except:
+        except Exception:
             return DEFAULT_TRADE_FEE_RATE
 
     def get_ticker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
@@ -591,7 +575,7 @@ class AuthAPI(AuthAPIBase):
                     float(row["price"].values[0]),
                 )
 
-            except:
+            except Exception:
                 return (now, 0.0)
 
         try:
@@ -606,12 +590,10 @@ class AuthAPI(AuthAPIBase):
                 return (str(self.get_time()), float(resp["price"]))
             else:
                 return (now, 0.0)
-        except:
+        except Exception:
             return (now, 0.0)
 
-    def market_buy(
-        self, market: str = "", quote_quantity: float = 0, test: bool = False
-    ) -> list:
+    def market_buy(self, market: str = "", quote_quantity: float = 0, test: bool = False) -> list:
         """Executes a market buy providing a funding amount"""
 
         # validates the market is syntactically correct
@@ -619,9 +601,7 @@ class AuthAPI(AuthAPIBase):
             raise ValueError("Binance market is invalid.")
 
         # validates quote_quantity is either an integer or float
-        if not isinstance(quote_quantity, int) and not isinstance(
-            quote_quantity, float
-        ):
+        if not isinstance(quote_quantity, int) and not isinstance(quote_quantity, float):
             raise TypeError("The funding amount is not numeric.")
 
         try:
@@ -630,16 +610,14 @@ class AuthAPI(AuthAPIBase):
             base_quantity = np.divide(quote_quantity, current_price)
 
             df_filters = self.marketInfoFilters(market)
-            step_size = float(
-                df_filters.loc[df_filters["filterType"] == "LOT_SIZE"]["stepSize"]
-            )
+            step_size = float(df_filters.loc[df_filters["filterType"] == "LOT_SIZE"]["stepSize"])
             precision = int(round(-math.log(step_size, 10), 0))
 
             # remove fees
             base_quantity = base_quantity - (base_quantity * self.getTradeFee(market))
 
             # execute market buy
-            stepper = 10.0 ** precision
+            stepper = 10.0**precision
             truncated = math.trunc(stepper * base_quantity) / stepper
 
             order = {
@@ -664,9 +642,7 @@ class AuthAPI(AuthAPIBase):
             Logger.error(f"{ts} Binance  market_buy {str(err)}")
             return []
 
-    def market_sell(
-        self, market: str = "", base_quantity: float = 0, test: bool = False, use_fees: bool = True
-    ) -> list:
+    def market_sell(self, market: str = "", base_quantity: float = 0, test: bool = False, use_fees: bool = True) -> list:
         """Executes a market sell providing a crypto amount"""
 
         # validates the market is syntactically correct
@@ -678,9 +654,7 @@ class AuthAPI(AuthAPIBase):
 
         try:
             df_filters = self.marketInfoFilters(market)
-            step_size = float(
-                df_filters.loc[df_filters["filterType"] == "LOT_SIZE"]["stepSize"]
-            )
+            step_size = float(df_filters.loc[df_filters["filterType"] == "LOT_SIZE"]["stepSize"])
             precision = int(round(-math.log(step_size, 10), 0))
 
             # remove fees
@@ -688,7 +662,7 @@ class AuthAPI(AuthAPIBase):
                 base_quantity = base_quantity - (base_quantity * self.getTradeFee(market))
 
             # execute market sell
-            stepper = 10.0 ** precision
+            stepper = 10.0**precision
             truncated = math.trunc(stepper * base_quantity) / stepper
 
             order = {
@@ -719,7 +693,7 @@ class AuthAPI(AuthAPIBase):
         if not isinstance(method, str):
             raise TypeError("Method is not a string.")
 
-        if not method in ["GET", "POST"]:
+        if method not in ["GET", "POST"]:
             raise TypeError("Method not GET or POST.")
 
         if not isinstance(uri, str):
@@ -740,14 +714,7 @@ class AuthAPI(AuthAPIBase):
             query_string = "timestamp={}".format(self.get_timestamp())
 
         if uri in signed_uri:
-            url = (
-                self._api_url
-                + uri
-                + "?"
-                + query_string
-                + "&signature="
-                + self.createHash(query_string)
-            )
+            url = self._api_url + uri + "?" + query_string + "&signature=" + self.createHash(query_string)
         else:
             url = self._api_url + uri + "?" + query_string
 
@@ -763,10 +730,7 @@ class AuthAPI(AuthAPIBase):
             else:
                 resp_message = ""
 
-            if resp.status_code == 400 and (
-                resp_message
-                == "Timestamp for this request is outside of the recvWindow."
-            ):
+            if resp.status_code == 400 and (resp_message == "Timestamp for this request is outside of the recvWindow."):
                 message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (hint: increase recvWindow with --recvWindow <5000-60000>)"
                 Logger.error(f"Error: {message}")
                 return {}
@@ -774,9 +738,7 @@ class AuthAPI(AuthAPIBase):
                 message = f"{method} Invalid order quantity (hint: (binance only) try using use_sell_fee: 0)"
                 Logger.error(f"{message}")
                 return {}
-            elif resp.status_code == 429 and (
-                resp_message.startswith("Too much request weight used")
-            ):
+            elif resp.status_code == 429 and (resp_message.startswith("Too much request weight used")):
                 message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (sleeping for 5 seconds to prevent being banned)"
                 Logger.error(f"Error: {message}")
                 time.sleep(5)
@@ -863,7 +825,7 @@ class PublicAPI(AuthAPIBase):
 
         try:
             return self.authAPI("GET", "/api/v3/ticker/24hr")
-        except:
+        except Exception:
             return pd.DataFrame()
 
     def get_ticker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
@@ -886,7 +848,7 @@ class PublicAPI(AuthAPIBase):
                     float(row["price"].values[0]),
                 )
 
-            except:
+            except Exception:
                 return (now, 0.0)
 
         # GET /api/v3/ticker/price
@@ -921,17 +883,12 @@ class PublicAPI(AuthAPIBase):
                 try:
                     df = websocket.candles.loc[websocket.candles["market"] == market]
                     using_websocket = True
-                except:
+                except Exception:
                     pass
 
         if websocket is None or (websocket is not None and using_websocket is False):
             if iso8601start != "" and iso8601end == "":
-                startTime = int(
-                    datetime.timestamp(
-                        datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")
-                    )
-                    * 1000
-                )
+                startTime = int(datetime.timestamp(datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")) * 1000)
 
                 # GET /api/v3/klines
                 resp = self.authAPI(
@@ -945,12 +902,7 @@ class PublicAPI(AuthAPIBase):
                     },
                 )
             elif iso8601start != "" and iso8601end != "":
-                startTime = int(
-                    datetime.timestamp(
-                        datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")
-                    )
-                    * 1000
-                )
+                startTime = int(datetime.timestamp(datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")) * 1000)
 
                 # GET /api/v3/klines
                 resp = self.authAPI(
@@ -1000,7 +952,7 @@ class PublicAPI(AuthAPIBase):
 
             try:
                 freq = granularity.get_frequency
-            except:
+            except Exception:
                 freq = "D"
 
             # convert the DataFrame into a time series with the date as the index/key
@@ -1015,9 +967,7 @@ class PublicAPI(AuthAPIBase):
                 df.index.names = ["ts"]
                 df["date"] = tsidx
             except ValueError:
-                tsidx = pd.DatetimeIndex(
-                    pd.to_datetime(df["open_time"], unit="s"), dtype="datetime64[ns]"
-                )
+                tsidx = pd.DatetimeIndex(pd.to_datetime(df["open_time"], unit="s"), dtype="datetime64[ns]")
                 df.set_index(tsidx, inplace=True)
                 df = df.drop(columns=["open_time"])
                 df.index.names = ["ts"]
@@ -1059,7 +1009,7 @@ class PublicAPI(AuthAPIBase):
         if not isinstance(method, str):
             raise TypeError("Method is not a string.")
 
-        if not method in ["GET", "POST"]:
+        if method not in ["GET", "POST"]:
             raise TypeError("Method not GET or POST.")
 
         if not isinstance(uri, str):
@@ -1196,7 +1146,7 @@ class WebSocket(AuthAPIBase):
         self.start_time = datetime.now()
 
     def _keepalive(self, interval=30):
-        if (self.ws is not None) and (hasattr(self.ws,"connected")):
+        if (self.ws is not None) and (hasattr(self.ws, "connected")):
             while self.ws.connected:
                 self.ws.ping("keepalive")
                 time.sleep(interval)
@@ -1253,7 +1203,7 @@ class WebSocket(AuthAPIBase):
             self.candles = None
             self.start_time = None
             self.time_elapsed = 0
-        except:
+        except Exception:
             pass
 
     def getStartTime(self) -> datetime:
@@ -1324,18 +1274,11 @@ class WebSocketClient(WebSocket, AuthAPIBase):
 
     def on_message(self, msg):
         if self.start_time is not None:
-            self.time_elapsed = round(
-                (datetime.now() - self.start_time).total_seconds()
-            )
+            self.time_elapsed = round((datetime.now() - self.start_time).total_seconds())
 
         if "e" in msg:
             df = None
-            if (
-                msg["e"] == "24hrMiniTicker"
-                and "E" in msg
-                and "s" in msg
-                and "c" in msg
-            ):
+            if msg["e"] == "24hrMiniTicker" and "E" in msg and "s" in msg and "c" in msg:
                 # create dataframe from websocket message
                 df = pd.DataFrame(
                     columns=["date", "market", "price"],
@@ -1359,32 +1302,16 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                     self.tickers = df
                 # append future entries without duplicates
                 elif self.tickers is not None and len(df) > 0:
-                    self.tickers = (
-                        pd.concat([self.tickers, df])
-                        .drop_duplicates(subset="market", keep="last")
-                        .reset_index(drop=True)
-                    )
+                    self.tickers = pd.concat([self.tickers, df]).drop_duplicates(subset="market", keep="last").reset_index(drop=True)
 
                 # convert dataframes to a time series
-                tsidx = pd.DatetimeIndex(
-                    pd.to_datetime(self.tickers["date"]).dt.strftime(
-                        "%Y-%m-%dT%H:%M:%S.%Z"
-                    )
-                )
+                tsidx = pd.DatetimeIndex(pd.to_datetime(self.tickers["date"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z"))
                 self.tickers.set_index(tsidx, inplace=True)
                 self.tickers.index.name = "ts"
 
             if msg["e"] == "kline" and "s" in msg and "k" in msg:
                 k = msg["k"]
-                if (
-                    "i" in k
-                    and "t" in k
-                    and "o" in k
-                    and "h" in k
-                    and "c" in k
-                    and "l" in k
-                    and "v" in k
-                ):
+                if "i" in k and "t" in k and "o" in k and "h" in k and "c" in k and "l" in k and "v" in k:
                     # create dataframe from websocket message
                     df = pd.DataFrame(
                         columns=[
@@ -1399,7 +1326,7 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                         ],
                         data=[
                             [
-                                self.convert_time(k["t"]), # - timedelta(hours=1),
+                                self.convert_time(k["t"]),  # - timedelta(hours=1),
                                 msg["s"],
                                 k["i"],
                                 float(k["l"]),
@@ -1412,9 +1339,7 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                     )
 
                     if self.candles is None:
-                        resp = PublicAPI().get_historical_data(
-                            df["market"].values[0], self.granularity
-                        )
+                        resp = PublicAPI().get_historical_data(df["market"].values[0], self.granularity)
                         if len(resp) > 0:
                             self.candles = resp
                         else:
@@ -1432,20 +1357,13 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                                 data=[],
                             )
 
-                    if k["i"] == self.granularity.to_short and k["x"] == True:
+                    if k["i"] == self.granularity.to_short and k["x"] is True:
                         # check if the current candle exists
-                        candle_exists = (
-                            (self.candles["date"] == df["date"].values[0])
-                            & (self.candles["market"] == df["market"].values[0])
-                        ).any()
+                        candle_exists = ((self.candles["date"] == df["date"].values[0]) & (self.candles["market"] == df["market"].values[0])).any()
                         if not candle_exists:
-                            self.candles = pd.concat([self.candles, df]) #self.candles.append(df)
+                            self.candles = pd.concat([self.candles, df])  # self.candles.append(df)
 
-                        tsidx = pd.DatetimeIndex(
-                            pd.to_datetime(self.candles["date"]).dt.strftime(
-                                "%Y-%m-%dT%H:%M:%S.%Z"
-                            )
-                        )
+                        tsidx = pd.DatetimeIndex(pd.to_datetime(self.candles["date"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z"))
                         self.candles.set_index(tsidx, inplace=True)
                         self.candles.index.name = "ts"
 
@@ -1459,7 +1377,6 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                         self.candles["high"] = self.candles["high"].astype("float64")
                         self.candles["close"] = self.candles["close"].astype("float64")
                         self.candles["low"] = self.candles["low"].astype("float64")
-                        self.candles["volume"] = self.candles["volume"].astype(
-                            "float64"
-                        )
+                        self.candles["volume"] = self.candles["volume"].astype("float64")
+
         self.message_count += 1

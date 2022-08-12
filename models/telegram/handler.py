@@ -3,7 +3,7 @@ import datetime
 import json
 from apscheduler.schedulers.background import BackgroundScheduler
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
-from telegram.ext import  CallbackContext
+from telegram.ext import CallbackContext
 
 from models.telegram import callbacktags
 from models.telegram.control import TelegramControl
@@ -44,31 +44,21 @@ class TelegramHandler:
         keyboard = [
             [InlineKeyboardButton("Notifications", callback_data="botsettings")],
             [
-                InlineKeyboardButton(
-                    "\U0001F4D6 View config", callback_data="showconfig"
-                ),
-                InlineKeyboardButton(
-                    "Edit config \U00002699", callback_data="editconfig"
-                ),
+                InlineKeyboardButton("\U0001F4D6 View config", callback_data="showconfig"),
+                InlineKeyboardButton("Edit config \U00002699", callback_data="editconfig"),
             ],
             [
-                InlineKeyboardButton(
-                    "\U0001F4B0 Trade Summary", callback_data="closed"
-                ),
+                InlineKeyboardButton("\U0001F4B0 Trade Summary", callback_data="closed"),
             ],
             [
                 InlineKeyboardButton("\U0001F4B0 Sell", callback_data="sell"),
                 InlineKeyboardButton("\U0001FA99 Buy", callback_data="buy"),
             ],
             [
-                InlineKeyboardButton(
-                    "\U0001F50E Market Scanner", callback_data="scanner"
-                ),
+                InlineKeyboardButton("\U0001F50E Market Scanner", callback_data="scanner"),
             ],
             [
-                InlineKeyboardButton(
-                    "\U0001F9FE Restart open orders", callback_data="reopen"
-                ),
+                InlineKeyboardButton("\U0001F9FE Restart open orders", callback_data="reopen"),
             ],
             [
                 InlineKeyboardButton("\U000023F8 pausebot(s)", callback_data="pause"),
@@ -79,9 +69,7 @@ class TelegramHandler:
                 InlineKeyboardButton("stopbot(s) \U0001F534", callback_data="stop"),
             ],
             [
-                InlineKeyboardButton(
-                    "\U0000267B Restart active bots", callback_data="restart"
-                ),
+                InlineKeyboardButton("\U0000267B Restart active bots", callback_data="restart"),
             ],
             [
                 InlineKeyboardButton("\U00002139 Bot Status", callback_data="status"),
@@ -90,9 +78,7 @@ class TelegramHandler:
             [
                 InlineKeyboardButton(
                     "Cancel",
-                    callback_data=self.helper.create_callback_data(
-                        callbacktags.CANCEL[0]
-                    ),
+                    callback_data=self.helper.create_callback_data(callbacktags.CANCEL[0]),
                 )
             ],  # "cancel")],
         ]
@@ -109,14 +95,12 @@ class TelegramHandler:
         callback_json = None
         try:
             callback_json = json.loads(query.data)
-        except:  # pylint: disable=bare-except
+        except Exception:
             pass
 
         # Default Cancel Button
         if callback_json is not None and callback_json["c"] == callbacktags.CANCEL[0]:
-            self.helper.send_telegram_message(
-                update, "\U00002757 User Cancelled Request", new_message=False
-            )
+            self.helper.send_telegram_message(update, "\U00002757 User Cancelled Request", new_message=False)
 
         # Default Back Button
         if callback_json is not None and callback_json["c"] == callbacktags.BACK[0]:
@@ -163,104 +147,61 @@ class TelegramHandler:
         elif query.data == "editconfig":
             self.helper.load_config()
             self.ask_exchange_options(update, "edit")
-        elif (
-            callback_json is not None
-            and callback_json["c"] == "edit"
-            and callback_json["e"] == "screener"
-        ):
+        elif callback_json is not None and callback_json["c"] == "edit" and callback_json["e"] == "screener":
             self.ask_exchange_options(update, callbacktags.SCREENER)
         elif callback_json is not None and callback_json["c"] == callbacktags.SCREENER:
             self.editor.get_config_options(update, context, callback_json["e"])
         elif callback_json is not None and callback_json["c"] == "edit":
             update.callback_query.data = callback_json["e"]
             self.editor.get_config_options(update, context)
-        elif (
-            callback_json is not None and callback_json["c"] == callbacktags.DISABLE[0]
-        ):
+        elif callback_json is not None and callback_json["c"] == callbacktags.DISABLE[0]:
             self.editor.disable_option(callback_json["e"], callback_json["p"])
-            self.editor.get_config_options(
-                update, context, callback_json["e"]
-            )  # refresh buttons
+            self.editor.get_config_options(update, context, callback_json["e"])  # refresh buttons
         elif callback_json is not None and callback_json["c"] == callbacktags.ENABLE[0]:
             self.editor.enable_option(callback_json["e"], callback_json["p"])
-            self.editor.get_config_options(
-                update, context, callback_json["e"]
-            )  # refresh buttons
+            self.editor.get_config_options(update, context, callback_json["e"])  # refresh buttons
         elif callback_json is not None and callback_json["c"] == callbacktags.FLOAT[0]:
             self.ask_percent_value(update, "float")
-        elif (
-            callback_json is not None and callback_json["c"] == callbacktags.INTEGER[0]
-        ):
+        elif callback_json is not None and callback_json["c"] == callbacktags.INTEGER[0]:
             self.ask_percent_value(update, "integer")
-        elif (
-            callback_json is not None
-            and callback_json["c"] == callbacktags.INCREASEINT[0]
-        ):
+        elif callback_json is not None and callback_json["c"] == callbacktags.INCREASEINT[0]:
             unit_size = 1
-            self.editor.increase_value(
-                callback_json["e"], callback_json["p"], unit_size
-            )
+            self.editor.increase_value(callback_json["e"], callback_json["p"], unit_size)
             typestr = "integer"
             self.ask_percent_value(update, typestr)
-        elif (
-            callback_json is not None
-            and callback_json["c"] == callbacktags.INCREASEFLOAT[0]
-        ):
+        elif callback_json is not None and callback_json["c"] == callbacktags.INCREASEFLOAT[0]:
             unit_size = 0.1
-            self.editor.increase_value(
-                callback_json["e"], callback_json["p"], unit_size
-            )
+            self.editor.increase_value(callback_json["e"], callback_json["p"], unit_size)
             typestr = "float"
             self.ask_percent_value(update, typestr)
-        elif (
-            callback_json is not None
-            and callback_json["c"] == callbacktags.DECREASEINT[0]
-        ):
+        elif callback_json is not None and callback_json["c"] == callbacktags.DECREASEINT[0]:
             unit_size = 1
-            self.editor.decrease_value(
-                callback_json["e"], callback_json["p"], unit_size
-            )
+            self.editor.decrease_value(callback_json["e"], callback_json["p"], unit_size)
             typestr = "integer"
             self.ask_percent_value(update, typestr)
-        elif (
-            callback_json is not None
-            and callback_json["c"] == callbacktags.DECREASEFLOAT[0]
-        ):
+        elif callback_json is not None and callback_json["c"] == callbacktags.DECREASEFLOAT[0]:
             unit_size = 0.1
-            self.editor.decrease_value(
-                callback_json["e"], callback_json["p"], unit_size
-            )
+            self.editor.decrease_value(callback_json["e"], callback_json["p"], unit_size)
             typestr = "float"
             self.ask_percent_value(update, typestr)
         elif callback_json is not None and callback_json["c"] == callbacktags.DONE[0]:
             self.editor.get_config_options(update, context, int(callback_json["e"]))
 
-        elif (
-            callback_json is not None
-            and callback_json["c"] == callbacktags.SAVECONFIG[0]
-        ):
+        elif callback_json is not None and callback_json["c"] == callbacktags.SAVECONFIG[0]:
             self.editor.save_updated_config(update)
             self.helper.load_config()
             self.ask_exchange_options(update, "edit")
 
-        elif (
-            callback_json is not None
-            and callback_json["c"] == callbacktags.RELOADCONFIG[0]
-        ):
+        elif callback_json is not None and callback_json["c"] == callbacktags.RELOADCONFIG[0]:
             update.callback_query.data = "all"
             self.control.action_bot_response(update, "reload", "reload", context=context, status="active")
-        elif (
-            callback_json is not None
-            and callback_json["c"] == callbacktags.GRANULARITY[0]
-        ):
+        elif callback_json is not None and callback_json["c"] == callbacktags.GRANULARITY[0]:
             self.editor.granularity(update, callback_json["e"], context)
 
         # Restart Bots
         elif query.data == "restart":
             self.control.ask_restart_bot_list(update)
-        elif (
-            callback_json is not None and callback_json["c"] == callbacktags.RESTART[0]
-        ):
+        elif callback_json is not None and callback_json["c"] == callbacktags.RESTART[0]:
             update.callback_query.data = callback_json["p"]
             self.control.restart_bot_response(update)
 
@@ -299,10 +240,7 @@ class TelegramHandler:
         elif callback_json is not None and callback_json["c"] == callbacktags.BUY[0]:
             update.callback_query.data = f"{callback_json['p']}"
             self.ask_confimation(update, callbacktags.CONFIRMBUY)
-        elif (
-            callback_json is not None
-            and callback_json["c"] == callbacktags.CONFIRMBUY[0]
-        ):
+        elif callback_json is not None and callback_json["c"] == callbacktags.CONFIRMBUY[0]:
             update.callback_query.data = callback_json["p"]
             self.actions.buy_response(update, context)
 
@@ -312,10 +250,7 @@ class TelegramHandler:
         elif callback_json is not None and callback_json["c"] == callbacktags.SELL[0]:
             update.callback_query.data = f"{callback_json['p']}"
             self.ask_confimation(update, callbacktags.CONFIRMSELL)
-        elif (
-            callback_json is not None
-            and callback_json["c"] == callbacktags.CONFIRMSELL[0]
-        ):
+        elif callback_json is not None and callback_json["c"] == callbacktags.CONFIRMSELL[0]:
             update.callback_query.data = callback_json["p"]
             self.actions.sell_response(update, context)
 
@@ -349,10 +284,7 @@ class TelegramHandler:
             self._remove_scheduled_job(update, context)
 
         # Delete Exceptions
-        elif (
-            callback_json is not None
-            and callback_json["c"] == callbacktags.REMOVEEXCEPTION[0]
-        ):
+        elif callback_json is not None and callback_json["c"] == callbacktags.REMOVEEXCEPTION[0]:
             update.callback_query.data = callback_json["p"]
             self.actions.remove_exception_callback(update)
 
@@ -376,98 +308,66 @@ class TelegramHandler:
             [
                 InlineKeyboardButton(
                     "Last 24Hrs",
-                    callback_data=self.helper.create_callback_data(
-                        callbacktags.TRADES, "", callbacktags.TRADES24H
-                    ),  # f"stop_{query.data.replace('bot_', '')}"
+                    callback_data=self.helper.create_callback_data(callbacktags.TRADES, "", callbacktags.TRADES24H),  # f"stop_{query.data.replace('bot_', '')}"
                 )
             ],
             [
                 InlineKeyboardButton(
                     "Last 7 Days",
-                    callback_data=self.helper.create_callback_data(
-                        callbacktags.TRADES, "", callbacktags.TRADES7D
-                    ),  # f"stop_{query.data.replace('bot_', '')}"
+                    callback_data=self.helper.create_callback_data(callbacktags.TRADES, "", callbacktags.TRADES7D),  # f"stop_{query.data.replace('bot_', '')}"
                 ),
                 InlineKeyboardButton(
                     "Last 14 Days",
-                    callback_data=self.helper.create_callback_data(
-                        callbacktags.TRADES, "", callbacktags.TRADES14D
-                    ),  # f"stop_{query.data.replace('bot_', '')}"
+                    callback_data=self.helper.create_callback_data(callbacktags.TRADES, "", callbacktags.TRADES14D),  # f"stop_{query.data.replace('bot_', '')}"
                 ),
             ],
             [
                 InlineKeyboardButton(
                     "Last 31 Days",
-                    callback_data=self.helper.create_callback_data(
-                        callbacktags.TRADES, "", callbacktags.TRADES1M
-                    ),  # f"stop_{query.data.replace('bot_', '')}"
+                    callback_data=self.helper.create_callback_data(callbacktags.TRADES, "", callbacktags.TRADES1M),  # f"stop_{query.data.replace('bot_', '')}"
                 )
             ],
             [
                 InlineKeyboardButton(
                     "All",
-                    callback_data=self.helper.create_callback_data(
-                        callbacktags.TRADES, "", callbacktags.TRADESALL
-                    ),  # f"stop_{query.data.replace('bot_', '')}"
+                    callback_data=self.helper.create_callback_data(callbacktags.TRADES, "", callbacktags.TRADESALL),  # f"stop_{query.data.replace('bot_', '')}"
                 )
             ],
             [
                 InlineKeyboardButton(
                     "\U000025C0 Back",
-                    callback_data=self.helper.create_callback_data(
-                        callbacktags.BACK[0]
-                    ),
+                    callback_data=self.helper.create_callback_data(callbacktags.BACK[0]),
                 )
             ],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
         reply = "<b>Select trade summary period:</b>"
-        self.helper.send_telegram_message(
-            update, reply, reply_markup, context=context, new_message=False
-        )
+        self.helper.send_telegram_message(update, reply, reply_markup, context=context, new_message=False)
 
     def get_bot_options(self, update):
         """individual bot controls"""
         query = update.callback_query
 
         keyboard = [
+            [InlineKeyboardButton("Stop", callback_data=f"stop_{query.data.replace('bot_', '')}")],
             [
-                InlineKeyboardButton(
-                    "Stop", callback_data=f"stop_{query.data.replace('bot_', '')}"
-                )
+                InlineKeyboardButton("Restart", callback_data=f"restart_{query.data.replace('bot_', '')}"),
             ],
             [
-                InlineKeyboardButton(
-                    "Restart", callback_data=f"restart_{query.data.replace('bot_', '')}"
-                ),
+                InlineKeyboardButton("Pause", callback_data=f"pause_{query.data.replace('bot_', '')}"),
+                InlineKeyboardButton("Resume", callback_data=f"resume_{query.data.replace('bot_', '')}"),
             ],
-            [
-                InlineKeyboardButton(
-                    "Pause", callback_data=f"pause_{query.data.replace('bot_', '')}"
-                ),
-                InlineKeyboardButton(
-                    "Resume", callback_data=f"resume_{query.data.replace('bot_', '')}"
-                ),
-            ],
-            [
-                InlineKeyboardButton(
-                    "Sell", callback_data=f"sell_{query.data.replace('bot_', '')}"
-                )
-            ],
+            [InlineKeyboardButton("Sell", callback_data=f"sell_{query.data.replace('bot_', '')}")],
             [
                 InlineKeyboardButton(
                     "\U000025C0 Back",
-                    callback_data=self.helper.create_callback_data(
-                        callbacktags.BACK[0]
-                    ),
+                    callback_data=self.helper.create_callback_data(callbacktags.BACK[0]),
                 )
             ],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
         reply = f"<b>{query.data.replace('bot_', '')} Actions:</b>"
-        self.helper.send_telegram_message(
-            update, reply, reply_markup, new_message=False
-        )
+        self.helper.send_telegram_message(update, reply, reply_markup, new_message=False)
 
     def get_scanner_options(self, update):
         """get scanner/screener options"""
@@ -480,9 +380,7 @@ class TelegramHandler:
             [
                 InlineKeyboardButton(
                     "\U000025C0 Back",
-                    callback_data=self.helper.create_callback_data(
-                        callbacktags.BACK[0]
-                    ),
+                    callback_data=self.helper.create_callback_data(callbacktags.BACK[0]),
                 )
             ],
         ]
@@ -509,38 +407,28 @@ class TelegramHandler:
             [
                 InlineKeyboardButton(
                     "Active Orders",
-                    callback_data=self.helper.create_callback_data(
-                        callbacktags.MARGIN[0], "", "orders"
-                    ),
+                    callback_data=self.helper.create_callback_data(callbacktags.MARGIN[0], "", "orders"),
                 ),
                 InlineKeyboardButton(
                     "Active Pairs",
-                    callback_data=self.helper.create_callback_data(
-                        callbacktags.MARGIN[0], "", "pairs"
-                    ),
+                    callback_data=self.helper.create_callback_data(callbacktags.MARGIN[0], "", "pairs"),
                 ),
                 InlineKeyboardButton(
                     "All",
-                    callback_data=self.helper.create_callback_data(
-                        callbacktags.MARGIN[0], "", "all"
-                    ),
+                    callback_data=self.helper.create_callback_data(callbacktags.MARGIN[0], "", "all"),
                 ),
             ],
             [
                 InlineKeyboardButton(
                     "\U000025C0 Back",
-                    callback_data=self.helper.create_callback_data(
-                        callbacktags.BACK[0]
-                    ),
+                    callback_data=self.helper.create_callback_data(callbacktags.BACK[0]),
                 )
             ],
         ]
 
         reply_markup = InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
         reply = "<b>Make your selection</b>"
-        self.helper.send_telegram_message(
-            update, reply, reply_markup, context=context, new_message=False
-        )
+        self.helper.send_telegram_message(update, reply, reply_markup, context=context, new_message=False)
 
     def ask_exchange_options(self, update: Update, callback: str = "ex"):
         """get exchanges from config file"""
@@ -554,9 +442,7 @@ class TelegramHandler:
                 buttons.append(
                     InlineKeyboardButton(
                         exchange.capitalize(),
-                        callback_data=self.helper.create_callback_data(
-                            callback, exchange
-                        ),  # f"{callback}_{exchange}"
+                        callback_data=self.helper.create_callback_data(callback, exchange),  # f"{callback}_{exchange}"
                     )
                 )
         i = 0
@@ -564,9 +450,7 @@ class TelegramHandler:
             buttons.append(
                 InlineKeyboardButton(
                     "Screener",
-                    callback_data=self.helper.create_callback_data(
-                        callback, "screener"
-                    ),  # f"{callback}_screener"
+                    callback_data=self.helper.create_callback_data(callback, "screener"),  # f"{callback}_screener"
                 )
             )
         while i <= len(buttons) - 1:
@@ -582,9 +466,7 @@ class TelegramHandler:
                 [
                     InlineKeyboardButton(
                         "Reload all running bots",
-                        callback_data=self.helper.create_callback_data(
-                            callbacktags.RELOADCONFIG[0]
-                        ),  # "reload_config"
+                        callback_data=self.helper.create_callback_data(callbacktags.RELOADCONFIG[0]),  # "reload_config"
                     )
                 ]
             )
@@ -592,18 +474,14 @@ class TelegramHandler:
             [
                 InlineKeyboardButton(
                     "\U000025C0 Back",
-                    callback_data=self.helper.create_callback_data(
-                        callbacktags.BACK[0]
-                    ),
+                    callback_data=self.helper.create_callback_data(callbacktags.BACK[0]),
                 )
             ]
         )
 
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        self.helper.send_telegram_message(
-            update, "<b>Select exchange</b>", reply_markup, new_message=False
-        )
+        self.helper.send_telegram_message(update, "<b>Select exchange</b>", reply_markup, new_message=False)
 
     def ask_percent_value(self, update, typestr):
         """get button to increase values"""
@@ -614,7 +492,7 @@ class TelegramHandler:
             callback_json = json.loads(query.data)
             exchange = callback_json["e"]
             prop = callback_json["p"]
-        except: #pylint: disable=bare-except
+        except Exception:
             split_callback = query.data.split("_")
             exchange, prop = (
                 split_callback[0],
@@ -624,16 +502,12 @@ class TelegramHandler:
                 prop = split_callback[3]
 
         cb_data_decrease = self.helper.create_callback_data(
-            callbacktags.DECREASEINT[0]
-            if typestr == "integer"
-            else callbacktags.DECREASEFLOAT[0],
+            callbacktags.DECREASEINT[0] if typestr == "integer" else callbacktags.DECREASEFLOAT[0],
             f"{exchange}",
             prop,
         )
         cb_data_increase = self.helper.create_callback_data(
-            callbacktags.INCREASEINT[0]
-            if typestr == "integer"
-            else callbacktags.INCREASEFLOAT[0],
+            callbacktags.INCREASEINT[0] if typestr == "integer" else callbacktags.INCREASEFLOAT[0],
             f"{exchange}",
             prop,
         )
@@ -646,20 +520,14 @@ class TelegramHandler:
             [
                 InlineKeyboardButton(
                     "\U000025C0 Done",
-                    callback_data=self.helper.create_callback_data(
-                        callbacktags.DONE[0], exchange, prop
-                    ),
+                    callback_data=self.helper.create_callback_data(callbacktags.DONE[0], exchange, prop),
                 )
             ],
         ]
         if self.editor.exchange_convert(int(exchange)) != "scanner":
-            config_value = self.helper.config[
-                self.editor.exchange_convert(int(exchange))
-            ]["config"][prop]
+            config_value = self.helper.config[self.editor.exchange_convert(int(exchange))]["config"][prop]
         else:
-            config_value = self.helper.config[
-                self.editor.exchange_convert(int(exchange))
-            ][prop]
+            config_value = self.helper.config[self.editor.exchange_convert(int(exchange))][prop]
         if typestr == "integer":
             self.helper.send_telegram_message(
                 update,
@@ -682,33 +550,24 @@ class TelegramHandler:
             [
                 InlineKeyboardButton(
                     "Confirm",
-                    callback_data=self.helper.create_callback_data(
-                        trade_choice[0], "", query.data
-                    ),
+                    callback_data=self.helper.create_callback_data(trade_choice[0], "", query.data),
                 )  # f"confirm_{query.data}"),
             ],
             [
                 InlineKeyboardButton(
                     "Cancel",
-                    callback_data=self.helper.create_callback_data(
-                        callbacktags.CANCEL[0]
-                    ),
+                    callback_data=self.helper.create_callback_data(callbacktags.CANCEL[0]),
                 )
             ],  # )],
         ]
 
         reply_markup = InlineKeyboardMarkup(keyboard, one_time_keyboard=True)
         reply = f"<b>Are you sure you want to {trade_choice[1]}?</b>"
-        self.helper.send_telegram_message(
-            update, reply, reply_markup, new_message=False
-        )
+        self.helper.send_telegram_message(update, reply, reply_markup, new_message=False)
 
     def _check_scheduled_job(self, update=None, context=None) -> bool:
         """check if scanner/screener is scheduled to run, add if not"""
-        if (
-            self.helper.config["scanner"]["autoscandelay"] > 0
-            and len(self.scannerSchedule.get_jobs()) == 0
-        ):
+        if self.helper.config["scanner"]["autoscandelay"] > 0 and len(self.scannerSchedule.get_jobs()) == 0:
             if not self.scannerSchedule.running:
                 self.scannerSchedule.start()
 
@@ -724,13 +583,8 @@ class TelegramHandler:
                 misfire_grace_time=10,
             )
 
-            reply = (
-                "<b>Scan job schedule created to run every "
-                f"{self.helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705"
-            )
-            self.helper.send_telegram_message(
-                update, reply, context=context, new_message=False
-            )
+            reply = "<b>Scan job schedule created to run every " f"{self.helper.config['scanner']['autoscandelay']} hour(s)</b> \u2705"
+            self.helper.send_telegram_message(update, reply, context=context, new_message=False)
             return True
         return False
 
@@ -744,9 +598,7 @@ class TelegramHandler:
         else:
             reply = "<b>No scheduled job found!</b>"
 
-        self.helper.send_telegram_message(
-            update, reply, context=context, new_message=False
-        )
+        self.helper.send_telegram_message(update, reply, context=context, new_message=False)
 
     # def conversation_handler(self, update, ) -> ConversationHandler:
     #     return ConversationHandler(
