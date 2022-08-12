@@ -213,7 +213,7 @@ Upgrade library dependencies (if required):
 - Add config option for buylastsellsize
 - Add buylastsellsize to Simulations
 - Add retry loop to Coinbase Public API call
-- Increase isMarketValid to 10 chars for base currency regex
+- Increase is_market_valid to 10 chars for base currency regex
 - Add marketmultibuycheck config option to prevent multiple buys with some problem market pairs
 - some minor file formatting cleanup with VSCode format command
 

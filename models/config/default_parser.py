@@ -13,12 +13,12 @@ def merge_config_and_args(exchange_config, args):
     return new_config
 
 
-def isCurrencyValid(currency):
+def is_currency_valid(currency):
     p = re.compile(r"^[0-9A-Z]{1,20}$")
     return p.match(currency)
 
 
-def defaultConfigParse(app, config):
+def default_config_parse(app, config):
     if "live" in config:
         if isinstance(config["live"], int):
             if config["live"] in [0, 1]:

@@ -1,15 +1,15 @@
 import re
 
-from .default_parser import isCurrencyValid, defaultConfigParse, merge_config_and_args
+from .default_parser import is_currency_valid, default_config_parse, merge_config_and_args
 
 
-def isMarketValid(market) -> bool:
+def is_market_valid(market) -> bool:
     p = re.compile(r"^[0-9A-Z]{1,20}\-[1-9A-Z]{2,5}$")
     return p.match(market) is not None
 
 
-def parseMarket(market):
-    if not isMarketValid(market):
+def parse_market(market):
+    if not is_market_valid(market):
         raise ValueError(f'Dummy market invalid: {market}')
 
     base_currency, quote_currency = market.split('-', 2)
@@ -17,8 +17,6 @@ def parseMarket(market):
 
 
 def parser(app, dummy_config, args={}):
-    #print('Dummy Configuration parse')
-
     if not dummy_config:
         raise Exception('There is an error in your config dictionary')
 
@@ -27,23 +25,22 @@ def parser(app, dummy_config, args={}):
 
     config = merge_config_and_args(dummy_config, args)
 
-    defaultConfigParse(app, config)
+    default_config_parse(app, config)
 
     if 'base_currency' in config and config['base_currency'] is not None:
-        if not isCurrencyValid(config['base_currency']):
+        if not is_currency_valid(config['base_currency']):
             raise TypeError('Base currency is invalid.')
-        self.base_currency = config['base_currency']
+        base_currency = config['base_currency']
 
     if 'quote_currency' in config and config['quote_currency'] is not None:
-        if not isCurrencyValid(config['quote_currency']):
+        if not is_currency_valid(config['quote_currency']):
             raise TypeError('Quote currency is invalid.')
-        self.quote_currency = config['quote_currency']
+        quote_currency = config['quote_currency']
 
     if 'market' in config and config['market'] is not None:
-        self.market, self.base_currency, self.quote_currency = parseMarket(config['market'])
+        market, base_currency, quote_currency = parse_market(config['market'])
 
-    if self.base_currency != '' and self.quote_currency != '':
-        self.market = self.base_currency + '-' + self.quote_currency
-
+    if base_currency != '' and quote_currency != '':
+        market = base_currency + '-' + quote_currency  # noqa: F841
     else:
         raise Exception('There is an error in your config dictionary')
