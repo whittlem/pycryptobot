@@ -15,9 +15,12 @@ class Strategy_CS:
         self.myCS = True
 
         if self.state.pandas_ta_enabled is False:
-            raise ImportError("This Custom Strategy requires pandas_ta, but pandas_ta module is not loaded. Are requirements-advanced.txt modules installed?")
+            raise ImportError(
+                "This Custom Strategy requires pandas_ta, but pandas_ta module is not loaded. Are requirements-advanced.txt modules installed?"
+            )
 
         if self.state.trading_myPta is True:
+            # pyright: reportMissingImports=false
             from models.Trading_myPta import TechnicalAnalysis
         else:
             from models.Trading_Pta import TechnicalAnalysis
@@ -55,8 +58,8 @@ class Strategy_CS:
         # set variable to call technical analysis in Trading_Pta (or myPta)
         ta_1h = self.TA(df_1h)
         # add any individual signals/inicators or add_all()
-        ta_1h.add_ema(5,True)
-        ta_1h.add_ema(10,True)
+        ta_1h.add_ema(5, True)
+        ta_1h.add_ema(10, True)
         # retrieve the ta results
         df_1h = ta_1h.get_df()
         # name and create last row reference like main dataframe
@@ -65,28 +68,32 @@ class Strategy_CS:
         # repeat for any additional, don't recommend more than 1 or 2 additional, adds overhead and API calls
         df_6h = self.app.getAdditionalDf("6h", websocket).copy()
         ta_6h = self.TA(df_6h, self.app.adjust_total_periods)
-        ta_6h.add_ema(5,True)
-        ta_6h.add_ema(10,True)
+        ta_6h.add_ema(5, True)
+        ta_6h.add_ema(10, True)
         df_6h = ta_6h.get_df()
         data_6h = self.app.get_interval(df_6h)
 
         # check ema crossovers (these are not standard period lengths, see comments above)
-        EMA1hBull = bool(data_1h['ema5'][0] > data_1h['ema10'][0])
-        EMA6hBull = bool(data_6h['ema5'][0] > data_6h['ema10'][0])
+        EMA1hBull = bool(data_1h["ema5"][0] > data_1h["ema10"][0])
+        EMA6hBull = bool(data_6h["ema5"][0] > data_6h["ema10"][0])
 
         # create some variables to calculate difference between 2 signals
         # these can be used in evaluations below and are not in the dataframe to help keep it cleaner, make
         # changing/adding easier and we only need diff for last row anyway
         # Usage:  self.calcDiff(firstSignal, secondSignal)
         # a negative value means the first signal is below the second signal
-        rsi_ma_diff = self.calcDiff(data['rsi14'][0], data['rsima14'][0]) # RSI and MA
-        di_diff = self.calcDiff(data['+di14'][0], data['-di14'][0]) # ADX di+ and di-
-        macd_sg_diff = self.calcDiff(data['macd'][0], data['signal'][0]) # Macd and Signal
-        obv_sm_diff = self.calcDiff(data['obv'][0], data['obvsm'][0]) # OBV and SM
-        macdl_sg_diff = self.calcDiff(data['macdlead'][0], data['macdl_sig'][0]) # MacdLeader and Signal
-        sma5_10_diff = self.calcDiff(data['sma5'][0], data['sma10'][0])
-        sma10_50_diff = self.calcDiff(data['sma10'][0], data['sma50'][0])
-        sma50_100_diff = self.calcDiff(data['sma50'][0], data['sma100'][0])
+        rsi_ma_diff = self.calcDiff(data["rsi14"][0], data["rsima14"][0])  # RSI and MA
+        di_diff = self.calcDiff(data["+di14"][0], data["-di14"][0])  # ADX di+ and di-
+        macd_sg_diff = self.calcDiff(
+            data["macd"][0], data["signal"][0]
+        )  # Macd and Signal
+        obv_sm_diff = self.calcDiff(data["obv"][0], data["obvsm"][0])  # OBV and SM
+        macdl_sg_diff = self.calcDiff(
+            data["macdlead"][0], data["macdl_sig"][0]
+        )  # MacdLeader and Signal
+        sma5_10_diff = self.calcDiff(data["sma5"][0], data["sma10"][0])
+        sma10_50_diff = self.calcDiff(data["sma10"][0], data["sma50"][0])
+        sma50_100_diff = self.calcDiff(data["sma50"][0], data["sma100"][0])
 
         # to disable any indicator used in this file, set the buy and sell pts to 0 or comment out
         # the lines for buy and sell pts.
@@ -97,7 +104,7 @@ class Strategy_CS:
         self.max_pts = 12
         self.sell_override_pts = 10
         # total points required to buy
-        self.pts_to_buy = 9 # more points requires more signals to activate, less risk
+        self.pts_to_buy = 9  # more points requires more signals to activate, less risk
         # total points to trigger immediate buy if trailingbuyimmediatepcnt is configured, else ignored
         self.immed_buy_pts = 11
         # use adjusted buy or sell pts? Set to True or False, default is false if not added
@@ -107,7 +114,7 @@ class Strategy_CS:
         self.use_adjusted_sell_pts = False
 
         # total points required to sell
-        self.pts_to_sell = 3 # requiring fewer pts results in quicker sell signal
+        self.pts_to_sell = 3  # requiring fewer pts results in quicker sell signal
         # total points to trigger immediate sell if trailingsellimmediatepcnt is configured, else ignored
         self.immed_sell_pts = 6
 
@@ -116,7 +123,7 @@ class Strategy_CS:
         # Buys - currently requires Macd, RSI, OBV - add self.pts_sig_required_buy += 1 to section for each signal
         self.sig_required_buy = 3
         # Sells - currently 0 - add self.pts_sig_required_sell += 1 to section for each signal
-        self.sig_required_sell = 0 # set to 0 for default
+        self.sig_required_sell = 0  # set to 0 for default
 
         # don't edit these, need to start at 0
         self.buy_pts = 0
@@ -125,40 +132,40 @@ class Strategy_CS:
         self.pts_sig_required_sell = 0
 
         # pts_to_buy and pts_to_sell are adjusted with logic statements below based on market condition
-        if ( # if sma5 is below sma10 and both are decreasing, this is badd, sell
-            data['sma5'][0] < data['sma10'][0]
-            and data['sma5_pc'][0] < 0
-            and data['sma10_pc'][0] < 0
+        if (  # if sma5 is below sma10 and both are decreasing, this is badd, sell
+            data["sma5"][0] < data["sma10"][0]
+            and data["sma5_pc"][0] < 0
+            and data["sma10_pc"][0] < 0
         ):
             self.market_trend = "High risk, no buying, Sell NOW!"
             self.pts_to_buy = 100
             self.pts_to_sell = 3
             self.immed_sell_pts = 5
             self.sell_override_pts = 100
-        elif ( # if sma5 is above sma 10 and both are increasing, things are getting better see SMA5/SMA10 below for pts
-            data['sma5'][0] > data['sma10'][0]
-            and data['sma5_pc'][0] > 0.1
-            and data['sma10_pc'][0] > 0.1
-            and data_1h['ema5_pc'][0] > 0
+        elif (  # if sma5 is above sma 10 and both are increasing, things are getting better see SMA5/SMA10 below for pts
+            data["sma5"][0] > data["sma10"][0]
+            and data["sma5_pc"][0] > 0.1
+            and data["sma10_pc"][0] > 0.1
+            and data_1h["ema5_pc"][0] > 0
         ):
-            if ( # if sma10 is above sma50 and both or increasing, we are getting even better
-                data['sma10'][0] > data['sma50'][0]
-                and data['sma50_pc'][0] > 0
+            if (  # if sma10 is above sma50 and both or increasing, we are getting even better
+                data["sma10"][0] > data["sma50"][0]
+                and data["sma50_pc"][0] > 0
                 and EMA1hBull is True
-                and data_1h['ema5_pc'][0] > 0
-                and data_6h['ema5_pc'][0] > 0
-            ): # SMA10/SMA50 points
+                and data_1h["ema5_pc"][0] > 0
+                and data_6h["ema5_pc"][0] > 0
+            ):  # SMA10/SMA50 points
                 self.market_trend = "Less risk, buy medium points"
                 self.pts_to_buy = 9
                 self.immed_buy_pts = 10
                 self.pts_to_sell = 4
                 self.immed_sell_pts = 7
-                if ( # if sma50 is above sma100 and both increasing, we are much better
-                    data['sma50'][0] > data['sma100'][0]
-                    and data['sma100_pc'][0] > 0
+                if (  # if sma50 is above sma100 and both increasing, we are much better
+                    data["sma50"][0] > data["sma100"][0]
+                    and data["sma100_pc"][0] > 0
                     and EMA6hBull is True
-                    and data_6h['ema5_pc'][0] > 0
-                ): # SMA50/SMA100 points
+                    and data_6h["ema5_pc"][0] > 0
+                ):  # SMA50/SMA100 points
                     self.market_trend = "Low risk, buy! buy! buy!"
                     self.pts_to_buy = 8
                     self.immed_buy_pts = 9
@@ -171,53 +178,51 @@ class Strategy_CS:
                 self.pts_to_sell = 3
                 self.immed_sell_pts = 5
                 self.sell_override_pts = 100
-# to make this a lower risk config by default, this level is disabled for buying
-#                self.pts_to_buy = 10
-#                self.immed_buy_pts = 11
+        # to make this a lower risk config by default, this level is disabled for buying
+        #                self.pts_to_buy = 10
+        #                self.immed_buy_pts = 11
         else:
             self.market_trend = "Too risky, don't buy yet"
             self.pts_to_buy = 100
             self.pts_to_sell = 3
             self.immed_sell_pts = 5
             self.sell_override_pts = 100
-# to make this a lower risk config by default, this level is disabled for buying
-#            self.pts_to_buy = 10
-#            self.immed_buy_pts = 11
+        # to make this a lower risk config by default, this level is disabled for buying
+        #            self.pts_to_buy = 10
+        #            self.immed_buy_pts = 11
 
         # RSI with SMMA, percent RSI is above MA for strength
-        if ( # Buy when RSI is increasing and above MA by 3%
-            rsi_ma_diff >= 3 #15
-            and data['rsima14_pc'][0] > 0
-            and data['rsi14_pc'][0] > 0
-# the below two lines are a little close to traditional RSI
-#            and data['rsi14'][0] > 20
-#            and data['rsi14'][0] < 70
+        if (  # Buy when RSI is increasing and above MA by 3%
+            rsi_ma_diff >= 3  # 15
+            and data["rsima14_pc"][0] > 0
+            and data["rsi14_pc"][0] > 0
+            # the below two lines are a little close to traditional RSI
+            #            and data['rsi14'][0] > 20
+            #            and data['rsi14'][0] < 70
         ):
             self.pts_sig_required_buy += 1
-            if ( # Strong when RSI is 10% above MA
-                (rsi_ma_diff > 10
-                    or data['rsi14_pc'][0] >= 3)
-# the below two lines are a little close to traditional RSI
-#                and data['rsi14'][0] < 65
-#                and data['rsi14'][0] > 30
-
+            if (
+                rsi_ma_diff > 10
+                or data["rsi14_pc"][0] >= 3
+                # the below two lines are a little close to traditional RSI
+                #                and data['rsi14'][0] < 65
+                #                and data['rsi14'][0] > 30
             ):
                 self.rsi_action = "strongbuy"
                 self.buy_pts += 2
             else:
                 self.rsi_action = "buy"
                 self.buy_pts += 1
-        elif ( # Sell if RSI percent of change is less than 0%  and MA percent of change less than 0 or RSI below MA
-            data['rsi14_pc'][0] < 0
-            and (rsi_ma_diff < 0
-                or data['rsima14_pc'][0] < 0)
+        elif data[  # Sell if RSI percent of change is less than 0%  and MA percent of change less than 0 or RSI below MA
+            "rsi14_pc"
+        ][
+            0
+        ] < 0 and (
+            rsi_ma_diff < 0 or data["rsima14_pc"][0] < 0
         ):
-#            self.pts_sig_required_sell += 1
+            # self.pts_sig_required_sell += 1
             # Strong when RSI is less than -8% bellow MA or MA pcnt of change < -3%
-            if (
-                rsi_ma_diff < -8
-                or data['rsima14_pc'][0] < -3
-            ):
+            if rsi_ma_diff < -8 or data["rsima14_pc"][0] < -3:
                 self.rsi_action = "strongsell"
                 self.sell_pts += 2
             else:
@@ -227,28 +232,24 @@ class Strategy_CS:
             self.rsi_action = "wait"
 
         # ADX with percentage of difference between DI+ & DI- for strength
-        if ( # DI+ above DI- and a difference of 20% and ADX > 20
-            data['+di14'][0] > data['-di14'][0]
+        if (  # DI+ above DI- and a difference of 20% and ADX > 20
+            data["+di14"][0] > data["-di14"][0]
             and di_diff > 20
-            and data['adx14'][0] > 20
+            and data["adx14"][0] > 20
         ):
-#            self.pts_sig_required_buy += 1
-            if ( # Strong if ADX is > 30, DI difference greater than 30%
-                data['adx14'][0] > 30
-                and di_diff > 30
+            # self.pts_sig_required_buy += 1
+            if (  # Strong if ADX is > 30, DI difference greater than 30%
+                data["adx14"][0] > 30 and di_diff > 30
             ):
                 self.adx_action = "strongbuy"
                 self.buy_pts += 2
             else:
                 self.adx_action = "buy"
                 self.buy_pts += 1
-        elif ( # Sell if DI+ is below DI-
-            data['+di14'][0] < data['-di14'][0]
-        ):
-#            self.pts_sig_required_sell += 1
-            if ( # Strong if DI difference is below -10% or DI+ precent of change is less than 0
-                di_diff < -10
-                or data['+di_pc'][0] < 0
+        elif data["+di14"][0] < data["-di14"][0]:  # Sell if DI+ is below DI-
+            # self.pts_sig_required_sell += 1
+            if (  # Strong if DI difference is below -10% or DI+ precent of change is less than 0
+                di_diff < -10 or data["+di_pc"][0] < 0
             ):
                 self.adx_action = "strongsell"
                 self.sell_pts += 2
@@ -260,27 +261,23 @@ class Strategy_CS:
 
         # MACD signal variation using EMA Oscillator & SMA Signal
         # in addition to typical > 0 and crossover indicators
-        if ( # buy when MACD is climbing and above Signal by 15% or more
+        if (  # buy when MACD is climbing and above Signal by 15% or more
             macd_sg_diff > 15
-            and data['macd_pc'][0] > 0 # Percent of change > 0 also indicates MACD > 0
+            and data["macd_pc"][0] > 0  # Percent of change > 0 also indicates MACD > 0
         ):
             self.pts_sig_required_buy += 1
-            if ( # Strong when difference > 30% or percent of change greater than 8%
-                macd_sg_diff > 30
-                or data['macd_pc'][0] > 8
+            if (  # Strong when difference > 30% or percent of change greater than 8%
+                macd_sg_diff > 30 or data["macd_pc"][0] > 8
             ):
                 self.macd_action = "strongbuy"
                 self.buy_pts += 2
             else:
                 self.macd_action = "buy"
                 self.buy_pts += 1
-        elif ( # Sell when macd percent of change is below 0
-            data['macd_pc'][0] < 0
-        ):
-#            self.pts_sig_required_sell += 1
-            if ( # Strong if diff between MACD and SIG is < 0 or macd percent of change less than -8%
-                macd_sg_diff < 0
-                or data['macd_pc'][0] < -8
+        elif data["macd_pc"][0] < 0:  # Sell when macd percent of change is below 0
+            # self.pts_sig_required_sell += 1
+            if (  # Strong if diff between MACD and SIG is < 0 or macd percent of change less than -8%
+                macd_sg_diff < 0 or data["macd_pc"][0] < -8
             ):
                 self.macd_action = "strongsell"
                 self.sell_pts += 2
@@ -291,18 +288,16 @@ class Strategy_CS:
             self.macd_action = "wait"
 
         # OBV and SMA8 - when OBV is above its SMA, buy and sell when below or decreasing
-        if ( # Buy when OBV is 0.5% above SMA and SMA change percent >= 0
-            obv_sm_diff > 0.5
-            and data['obvsm_pc'][0] > 0
+        if (  # Buy when OBV is 0.5% above SMA and SMA change percent >= 0
+            obv_sm_diff > 0.5 and data["obvsm_pc"][0] > 0
         ):
             self.pts_sig_required_buy += 1
             self.obv_action = "buy"
             self.buy_pts += 1
-        elif ( # Sell when OBV/SMA diff < 0 above SMA percent of change < 0
-            obv_sm_diff < 0
-               or data['obvsm_pc'][0] < 0
+        elif (  # Sell when OBV/SMA diff < 0 above SMA percent of change < 0
+            obv_sm_diff < 0 or data["obvsm_pc"][0] < 0
         ):
-#            self.pts_sig_required_sell += 1
+            # self.pts_sig_required_sell += 1
             self.obv_action = "sell"
             self.sell_pts += 1
         else:
@@ -310,27 +305,24 @@ class Strategy_CS:
 
         # MACD Leader signal.....
         # for short trading in pycryptobot, we check that MacdLeader > Macdl_sig and upward trend
-        if ( # MACDL above Signal by 1% and MACDL change > 3%
+        if (  # MACDL above Signal by 1% and MACDL change > 3%
             macdl_sg_diff > 1
-            and data['macdlead_pc'][0] > 3 # Percent of change > 10 also indicates MACD > 0
+            and data["macdlead_pc"][0]
+            > 3  # Percent of change > 10 also indicates MACD > 0
         ):
-#            self.pts_sig_required_buy += 1
-            if ( # Strong when MACDL is above Signal by 30% or macd leader percent of change > 10
-                macdl_sg_diff > 30
-                or data['macdlead_pc'][0] > 10
+            # self.pts_sig_required_buy += 1
+            if (  # Strong when MACDL is above Signal by 30% or macd leader percent of change > 10
+                macdl_sg_diff > 30 or data["macdlead_pc"][0] > 10
             ):
                 self.macdl_action = "strongbuy"
                 self.buy_pts += 2
             else:
                 self.macdl_action = "buy"
                 self.buy_pts += 1
-        elif ( # Sell when MACDL Starts decreasing
-            data['macdlead_pc'][0] < 0
-        ):
-#            self.pts_sig_required_sell += 1
-            if ( # Strong when MACDL is < 1% above signal or macd leader percent of change < -5
-                macdl_sg_diff < 1
-                or data['macdlead_pc'][0] < -5
+        elif data["macdlead_pc"][0] < 0:  # Sell when MACDL Starts decreasing
+            # self.pts_sig_required_sell += 1
+            if (  # Strong when MACDL is < 1% above signal or macd leader percent of change < -5
+                macdl_sg_diff < 1 or data["macdlead_pc"][0] < -5
             ):
                 self.macdl_action = "strongsell"
                 self.sell_pts += 2
@@ -341,25 +333,22 @@ class Strategy_CS:
             self.macdl_action = "wait"
 
         # EMA5/WMA5 crossover signal
-        if ( # EMA above WMA and EMA percent of change > 0.1%
-            data['ema5'][0] > data['ema5_wma5'][0]
-            and data['ema5_pc'][0] > 0.1
+        if (  # EMA above WMA and EMA percent of change > 0.1%
+            data["ema5"][0] > data["ema5_wma5"][0] and data["ema5_pc"][0] > 0.1
         ):
-#            self.pts_sig_required_buy += 1
-            if ( # Strong when EMA_pc > 5
-                data['ema5_pc'][0] > 5
-            ):
+            # self.pts_sig_required_buy += 1
+            if data["ema5_pc"][0] > 5:  # Strong when EMA_pc > 5
                 self.emawma_action = "strongbuy"
                 self.buy_pts += 2
             else:
                 self.emawma_action = "buy"
                 self.buy_pts += 1
-        elif ( # Sell when EMA starts decreasing (usually is after self.price starting to decrease)
-            data['ema5_pc'][0] < 0
+        elif (  # Sell when EMA starts decreasing (usually is after self.price starting to decrease)
+            data["ema5_pc"][0] < 0
         ):
-#            self.pts_sig_required_sell += 1
+            # self.pts_sig_required_sell += 1
             # strong when ema drops below wma
-            if data['ema5'][0] < data['ema5_wma5'][0]:
+            if data["ema5"][0] < data["ema5_wma5"][0]:
                 self.emawma_action = "strongsell"
                 self.sell_pts += 2
             else:
@@ -478,7 +467,7 @@ class Strategy_CS:
 
         # used to calculate the difference between two values as a percentage
         # negative result means first value is below second value
-        return (round((first - second) / abs(first) * 100, 2))
+        return round((first - second) / abs(first) * 100, 2)
 
     def setCoTime(self, first, second, coTime):
 
@@ -492,13 +481,25 @@ class Strategy_CS:
         else:
             return None
 
-    def checkGtTime(self, coTime, length): # -> bool:
+    def checkGtTime(self, coTime, length):  # -> bool:
 
         # used to calculate how long the crossover has been in place
         # currently variables in place for SMA crossovers only
         # self.app.sma5gtsma10time, self.app.sma10gtsma50time, self.app.sma50gtsma100time
 
-        if coTime is not None and ((datetime.combine(date.min,datetime.now().time()) - datetime.combine(date.min, coTime)) > timedelta(minutes=length)):
-            return (True,(datetime.combine(date.min,datetime.now().time()) - datetime.combine(date.min, coTime)))
+        if coTime is not None and (
+            (
+                datetime.combine(date.min, datetime.now().time())
+                - datetime.combine(date.min, coTime)
+            )
+            > timedelta(minutes=length)
+        ):
+            return (
+                True,
+                (
+                    datetime.combine(date.min, datetime.now().time())
+                    - datetime.combine(date.min, coTime)
+                ),
+            )
         else:
-            return (False,0)
+            return (False, 0)

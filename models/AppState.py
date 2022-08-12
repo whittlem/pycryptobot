@@ -164,7 +164,9 @@ class AppState:
                     if self.app.enableinsufficientfundslogging:
                         self.app.insufficientfunds = True
 
-                        Logger.warning(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})")
+                        Logger.warning(
+                            f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})"
+                        )
                         return
 
                     sys.tracebacklimit = 0

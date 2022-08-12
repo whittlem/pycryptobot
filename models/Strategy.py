@@ -122,10 +122,7 @@ class Strategy:
             return False
 
         # required technical indicators for buy signal strategy
-        required_indicators = [
-            "ema12gtema26co",
-            "macdgtsignal"
-        ]
+        required_indicators = ["ema12gtema26co", "macdgtsignal"]
 
         for indicator in required_indicators:
             if indicator not in self._df_last:
@@ -142,7 +139,8 @@ class Strategy:
                 or self.app.disablebuymacd
             )
             and (
-                float(self._df_last["obv_pc"].values[0]) > -5  # TODO: why is this hard coded?
+                float(self._df_last["obv_pc"].values[0])
+                > -5  # TODO: why is this hard coded?
                 or self.app.disablebuyobv
             )
             and (
@@ -168,7 +166,8 @@ class Strategy:
             )
             and bool(self._df_last["macdgtsignalco"].values[0]) is True
             and (
-                float(self._df_last["obv_pc"].values[0]) > -5  # TODO: why is this hard coded?
+                float(self._df_last["obv_pc"].values[0])
+                > -5  # TODO: why is this hard coded?
                 or self.app.disablebuyobv
             )
             and (
@@ -266,8 +265,7 @@ class Strategy:
                     f"{self.app.market} - reached prevent loss trigger of {self.app.preventlosstrigger}%.  Watch margin ({self.app.preventlossmargin}%) to prevent loss."
                 )
             elif (
-                self.state.prevent_loss is True
-                and margin <= self.app.preventlossmargin
+                self.state.prevent_loss is True and margin <= self.app.preventlossmargin
             ) or (  # trigger of 0 disables trigger check and only checks margin set point
                 self.app.preventlosstrigger == 0
                 and margin <= self.app.preventlossmargin
@@ -543,8 +541,7 @@ class Strategy:
         if (
             self.state.prevent_loss is True and margin <= self.app.preventlossmargin
         ) or (  # trigger of 0 disables trigger check and only checks margin set point
-            self.app.preventlosstrigger == 0
-            and margin <= self.app.preventlossmargin
+            self.app.preventlosstrigger == 0 and margin <= self.app.preventlossmargin
         ):
             return False
 
@@ -580,11 +577,7 @@ class Strategy:
             Logger.debug("\n")
 
         # configuration specifies to not sell at a loss
-        if (
-            self.state.action == "SELL"
-            and not self.app.sell_at_loss
-            and margin <= 0
-        ):
+        if self.state.action == "SELL" and not self.app.sell_at_loss and margin <= 0:
             if not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly):
                 log_text = "! Ignore Sell Signal (No Sell At Loss)"
                 Logger.warning(log_text)
@@ -757,7 +750,9 @@ class Strategy:
                 trailing_action_logtext = f" - Wait Chg: {str(pricechange)}%"
                 waitpcnttext += f"Waiting to sell until {self.state.waiting_sell_price} stops increasing - change {str(pricechange)}%"
             else:
-                trailing_action_logtext = f" - Wait Chg: {str(pricechange)}%/{self.app.trailingsellpcnt}%"
+                trailing_action_logtext = (
+                    f" - Wait Chg: {str(pricechange)}%/{self.app.trailingsellpcnt}%"
+                )
                 waitpcnttext += f"Waiting to sell until price of {self.state.waiting_sell_price} decreases {self.app.trailingsellpcnt}% (+/- 10%) - change {str(pricechange)}%"
         else:
             self.state.action = "SELL"

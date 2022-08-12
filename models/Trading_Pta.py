@@ -28,12 +28,14 @@ from models.helper.LogHelper import Logger
 try:
     # pyright: reportMissingImports=false
     import pandas_ta as ta
+
     use_pandas_ta = True
 except ImportError:
     use_pandas_ta = False
 try:
     # pyright: reportMissingImports=false
     import talib
+
     use_talib = True
 except ImportError:
     use_talib = False
@@ -77,7 +79,7 @@ class TechnicalAnalysis:
             )
 
         # treat infinite values as nan
-        pd.set_option('use_inf_as_na', True)
+        pd.set_option("use_inf_as_na", True)
 
         self.df = data
         self.levels = []
@@ -116,7 +118,9 @@ class TechnicalAnalysis:
         self.add_death_cross()
         self.add_fibonacci_bollinger_bands()
 
-        self.add_rsi(14, 14, True)  # add MA period to add Moving Average and True to add pcnt of change
+        self.add_rsi(
+            14, 14, True
+        )  # add MA period to add Moving Average and True to add pcnt of change
         self.add_williamsr()  # default period is 20, add an integer to change default
         self.add_macd()  # add fast, slow, signal to be used, defaults to 12, 26, 9
         self.add_obv(8)  # integer is ma_period and is optional, default is 5
@@ -605,7 +609,14 @@ class TechnicalAnalysis:
     def ta_ADX(self, interval: int = 14) -> DataFrame:
 
         df = self.df.copy()
-        df = df.ta.adx(high=df["high"], low=df["low"], close=df["close"], length=interval, mamode="sma", talib=self.talib)
+        df = df.ta.adx(
+            high=df["high"],
+            low=df["low"],
+            close=df["close"],
+            length=interval,
+            mamode="sma",
+            talib=self.talib,
+        )
 
         df["-di" + str(interval)] = df["DMN_" + str(interval)].fillna(0)
         df["+di" + str(interval)] = df["DMP_" + str(interval)].fillna(0)
@@ -619,7 +630,7 @@ class TechnicalAnalysis:
                 "-di" + str(interval),
                 "+di" + str(interval),
                 "adx" + str(interval),
-                "+di_pc"
+                "+di_pc",
             ]
         ]
 
@@ -638,7 +649,12 @@ class TechnicalAnalysis:
             raise Exception("Data range too small.")
 
         self.df["atr" + str(interval)] = ta.atr(
-            high=self.df["high"], low=self.df["low"], close=self.df["close"], length=interval, mamode="sma", talib=self.talib
+            high=self.df["high"],
+            low=self.df["low"],
+            close=self.df["close"],
+            length=interval,
+            mamode="sma",
+            talib=self.talib,
         )
         self.df["atr" + str(interval)] = self.df["atr" + str(interval)].fillna(0)
 
@@ -693,11 +709,15 @@ class TechnicalAnalysis:
         if len(self.df) < period:
             raise Exception("add_ema Data range too small.")
 
-        self.df["ema" + str(period)] = ta.ema(self.df["close"], length=period, talib=self.talib)
+        self.df["ema" + str(period)] = ta.ema(
+            self.df["close"], length=period, talib=self.talib
+        )
         self.df["ema" + str(period)] = self.df["ema" + str(period)].fillna(0)
 
         if addPC:
-            self.df["ema" + str(period) + "_pc"] = round(self.df["ema" + str(period)].pct_change() * 100, 2)
+            self.df["ema" + str(period) + "_pc"] = round(
+                self.df["ema" + str(period)].pct_change() * 100, 2
+            )
 
     def add_ema_WMAsignal(self, ema_period: int, wma_period: int) -> None:
         """Adds EMA with WMA smoothing option to the DateFrame"""
@@ -717,8 +737,12 @@ class TechnicalAnalysis:
         if "ema" + str(ema_period) not in self.df:
             self.add_ema(ema_period, True)
 
-        self.df["ema" + str(ema_period) + "_wma" + str(wma_period)] = ta.wma(close=self.df["ema" + str(ema_period)], length=wma_period, talib=self.talib)
-        self.df["ema" + str(ema_period) + "_wma" + str(wma_period)] = self.df["ema" + str(ema_period) + "_wma" + str(wma_period)].fillna(0)
+        self.df["ema" + str(ema_period) + "_wma" + str(wma_period)] = ta.wma(
+            close=self.df["ema" + str(ema_period)], length=wma_period, talib=self.talib
+        )
+        self.df["ema" + str(ema_period) + "_wma" + str(wma_period)] = self.df[
+            "ema" + str(ema_period) + "_wma" + str(wma_period)
+        ].fillna(0)
 
     def calculate_stochastic_relative_strength_index(
         self, series: int, interval: int = 14
@@ -778,10 +802,10 @@ class TechnicalAnalysis:
             raise Exception("ta_MACD Data range too small.")
 
         df = self.df.copy()
-#        df = df.ta.macd(close=df['close'], fast=8, slow=21, signal=5, talib=self.talib)
-#        df["macd"] = df["MACD_8_21_5"].fillna(0)
-#        df["signal"] = df["MACDs_8_21_5"].fillna(0)
-#        df["hist"] = df["MACDh_8_21_5"].fillna(0)
+        #        df = df.ta.macd(close=df['close'], fast=8, slow=21, signal=5, talib=self.talib)
+        #        df["macd"] = df["MACD_8_21_5"].fillna(0)
+        #        df["signal"] = df["MACDs_8_21_5"].fillna(0)
+        #        df["hist"] = df["MACDh_8_21_5"].fillna(0)
 
         # modified MACD, above is traditional MACD
         df["fast_ma"] = ta.ema(close=df["close"], length=fast, talib=self.talib)
@@ -791,7 +815,9 @@ class TechnicalAnalysis:
         df["macd"] = df["macd"].fillna(0)
         df["signal"] = df["signal"].fillna(0)
 
-        df["macd_pc"] = round((df["macd"] - df["macd"].shift()) / abs(df["macd"]) * 100, 2)
+        df["macd_pc"] = round(
+            (df["macd"] - df["macd"].shift()) / abs(df["macd"]) * 100, 2
+        )
         df["macd_pc"] = df["macd_pc"].fillna(0)
 
         return df
@@ -809,35 +835,53 @@ class TechnicalAnalysis:
 
         df = self.df.copy()
 
-        df['sema'] = ta.rma(df["close"], length=fast, talib=self.talib)
-        df['lema'] = ta.rma(df["close"], length=slow, talib=self.talib)
-        df['sema'] = df['sema'].fillna(0)
-        df['lema'] = df['lema'].fillna(0)
+        df["sema"] = ta.rma(df["close"], length=fast, talib=self.talib)
+        df["lema"] = ta.rma(df["close"], length=slow, talib=self.talib)
+        df["sema"] = df["sema"].fillna(0)
+        df["lema"] = df["lema"].fillna(0)
 
-        df['i1'] = df['sema'] + ta.rma(df["close"] - df['sema'], length=fast, talib=self.talib)
-        df['i2'] = df['lema'] + ta.rma(df["close"] - df['lema'], length=slow, talib=self.talib)
-        df['i1'] = df['i1'].fillna(0)
-        df['i2'] = df['i2'].fillna(0)
+        df["i1"] = df["sema"] + ta.rma(
+            df["close"] - df["sema"], length=fast, talib=self.talib
+        )
+        df["i2"] = df["lema"] + ta.rma(
+            df["close"] - df["lema"], length=slow, talib=self.talib
+        )
+        df["i1"] = df["i1"].fillna(0)
+        df["i2"] = df["i2"].fillna(0)
 
-        df['macdlead'] = df['i1'] - df['i2']
+        df["macdlead"] = df["i1"] - df["i2"]
         self.df["macdlead"] = df["macdlead"].fillna(0)
 
         df2 = self.df.copy()
-        df2 = df2.ta.macd(close=df2['close'], fast=fast, slow=slow, signal=sig, talib=self.talib)
-        self.df["macdl"] = df2["MACD_" + str(fast) + "_" + str(slow) + "_" + str(sig)].fillna(0)
-        self.df["macdl_sig"] = df2["MACDs_" + str(fast) + "_" + str(slow) + "_" + str(sig)].fillna(0)
-        self.df["macdl_hist"] = df2["MACDh_" + str(fast) + "_" + str(slow) + "_" + str(sig)].fillna(0)
+        df2 = df2.ta.macd(
+            close=df2["close"], fast=fast, slow=slow, signal=sig, talib=self.talib
+        )
+        self.df["macdl"] = df2[
+            "MACD_" + str(fast) + "_" + str(slow) + "_" + str(sig)
+        ].fillna(0)
+        self.df["macdl_sig"] = df2[
+            "MACDs_" + str(fast) + "_" + str(slow) + "_" + str(sig)
+        ].fillna(0)
+        self.df["macdl_hist"] = df2[
+            "MACDh_" + str(fast) + "_" + str(slow) + "_" + str(sig)
+        ].fillna(0)
 
-        df["macdlead_pc"] = round((df["macdlead"] - df["macdlead"].shift()) / abs(df["macdlead"]) * 100, 2)
+        df["macdlead_pc"] = round(
+            (df["macdlead"] - df["macdlead"].shift()) / abs(df["macdlead"]) * 100, 2
+        )
         self.df["macdlead_pc"] = df["macdlead_pc"].fillna(0)
 
     def add_obv(self, ma_period: int = 5) -> None:
         """Add the On-Balance Volume (OBV) to the DataFrame"""
 
-        self.df["obv"] = ta.obv(close=self.df["close"], volume=self.df["volume"], talib=self.talib)
+        self.df["obv"] = ta.obv(
+            close=self.df["close"], volume=self.df["volume"], talib=self.talib
+        )
         self.df["obv"] = self.df["obv"].fillna(0)
-#        self.df['obvsm'] = ta.sma(self.df["obv"], length=ma_period, talib=self.talib)
-        self.df['obvsm'] = ta.vwma(self.df["obv"], volume=self.df["volume"], length=ma_period, talib=self.talib)
+        #        self.df['obvsm'] = ta.sma(self.df["obv"], length=ma_period, talib=self.talib)
+        self.df["obvsm"] = ta.vwma(
+            self.df["obv"], volume=self.df["volume"], length=ma_period, talib=self.talib
+        )
         self.df["obvsm"] = self.df["obvsm"].fillna(0)
         self.df["obv_pc"] = round(self.df["obv"].pct_change() * 100, 2)
         self.df["obv_pc"] = self.df["obv_pc"].fillna(0)
@@ -893,22 +937,37 @@ class TechnicalAnalysis:
         if ma_period < 5 or ma_period > 25:
             raise ValueError("add_rsi MA Period is out of range")
 
-        self.df["rsi" + str(period)] = ta.rsi(close=self.df["close"], length=period, talib=self.talib)
+        self.df["rsi" + str(period)] = ta.rsi(
+            close=self.df["close"], length=period, talib=self.talib
+        )
         self.df["rsi" + str(period)] = self.df["rsi" + str(period)].fillna(0)
 
         if addPC is True:
-            self.df["rsi" + str(period) + "_pc"] = round(self.df["rsi" + str(period)].pct_change() * 100, 2)
-            self.df["rsi" + str(period) + "_pc"] = self.df["rsi" + str(period) + "_pc"].fillna(0)
+            self.df["rsi" + str(period) + "_pc"] = round(
+                self.df["rsi" + str(period)].pct_change() * 100, 2
+            )
+            self.df["rsi" + str(period) + "_pc"] = self.df[
+                "rsi" + str(period) + "_pc"
+            ].fillna(0)
 
         if ma_period >= 5:
             self.df["rsima" + str(ma_period)] = ta.rma(
-                close=self.df["rsi" + str(period)], volume=self.df["volume"], length=(ma_period), talib=self.talib
+                close=self.df["rsi" + str(period)],
+                volume=self.df["volume"],
+                length=(ma_period),
+                talib=self.talib,
             )
-            self.df["rsima" + str(ma_period)] = self.df["rsima" + str(ma_period)].fillna(0)
+            self.df["rsima" + str(ma_period)] = self.df[
+                "rsima" + str(ma_period)
+            ].fillna(0)
 
             if addPC is True:
-                self.df["rsima" + str(ma_period) + "_pc"] = round(self.df["rsima" + str(ma_period)].pct_change() * 100, 2)
-                self.df["rsima" + str(ma_period) + "_pc"] = self.df["rsima" + str(ma_period) + "_pc"].fillna(0)
+                self.df["rsima" + str(ma_period) + "_pc"] = round(
+                    self.df["rsima" + str(ma_period)].pct_change() * 100, 2
+                )
+                self.df["rsima" + str(ma_period) + "_pc"] = self.df[
+                    "rsima" + str(ma_period) + "_pc"
+                ].fillna(0)
 
     def addStochasticRSI(self, period: int) -> None:
         """Adds the Stochastic Relative Strength Index (RSI) to the DataFrame"""
@@ -919,7 +978,9 @@ class TechnicalAnalysis:
         if period < 7 or period > 21:
             raise ValueError("add Stochastic RSI Period is out of range")
 
-        self.df["stochrsi" + str(period)] = self.stochastic_relative_strength_index(period)
+        self.df["stochrsi" + str(period)] = self.stochastic_relative_strength_index(
+            period
+        )
         self.df["stochrsi" + str(period)] = self.df["stochrsi" + str(period)].replace(
             nan, 0.5
         )
@@ -949,8 +1010,16 @@ class TechnicalAnalysis:
         if period < 7 or period > 21:
             raise ValueError("add_williamsr Period is out of range")
 
-        self.df["williamsr" + str(period)] = ta.willr(high=self.df["high"], low=self.df["low"], close=self.df["close"], length=period, talib=self.talib)
-        self.df["williamsr" + str(period)] = self.df["williamsr" + str(period)].replace(nan, 0)
+        self.df["williamsr" + str(period)] = ta.willr(
+            high=self.df["high"],
+            low=self.df["low"],
+            close=self.df["close"],
+            length=period,
+            talib=self.talib,
+        )
+        self.df["williamsr" + str(period)] = self.df["williamsr" + str(period)].replace(
+            nan, 0
+        )
 
     def seasonal_arima_model(self) -> SARIMAXResultsWrapper:
         """Returns the Seasonal ARIMA Model for self.price predictions"""
@@ -1045,11 +1114,15 @@ class TechnicalAnalysis:
         if len(self.df) < period:
             raise Exception("add_sma Data range too small.")
 
-        self.df["sma" + str(period)] = ta.sma(self.df["close"], length=period, talib=self.talib)
+        self.df["sma" + str(period)] = ta.sma(
+            self.df["close"], length=period, talib=self.talib
+        )
         self.df["sma" + str(period)] = self.df["sma" + str(period)].fillna(0)
 
         if addPC:
-            self.df["sma" + str(period) + "_pc"] = round(self.df["sma" + str(period)].pct_change() * 100, 3)
+            self.df["sma" + str(period) + "_pc"] = round(
+                self.df["sma" + str(period)].pct_change() * 100, 3
+            )
 
     def add_golden_cross(self) -> None:
         """Add Golden Cross SMA50 over SMA200"""
@@ -1124,11 +1197,17 @@ class TechnicalAnalysis:
             if len(df) > 0:
                 df_last = df.tail(1)
                 if float(df_last[0]) < price:
-                    Logger.info(f" Support level of {str(df_last[0])} formed at {str(df_last.index[0])}")
+                    Logger.info(
+                        f" Support level of {str(df_last[0])} formed at {str(df_last.index[0])}"
+                    )
                 elif float(df_last[0]) > price:
-                    Logger.info(f" Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}")
+                    Logger.info(
+                        f" Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}"
+                    )
                 else:
-                    Logger.info(f" Support/Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}")
+                    Logger.info(
+                        f" Support/Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}"
+                    )
 
     def get_resistance(self, price: float = 0) -> float:
         if isinstance(self.price, int) or isinstance(self.price, float):
@@ -1233,13 +1312,17 @@ class TechnicalAnalysis:
         self.df["ema8gtema12"] = self.df.ema8 > self.df.ema12
         # true if the current frame is where EMA8 crosses over above
         self.df["ema8gtema12co"] = self.df.ema8gtema12.ne(self.df.ema8gtema12.shift())
-        self.df.loc[self.df["ema8gtema12"] == False, "ema8gtema12co"] = False  # noqa: E712
+        self.df.loc[
+            self.df["ema8gtema12"] == False, "ema8gtema12co"  # noqa: E712
+        ] = False
 
         # true if the EMA8 is below the EMA12
         self.df["ema8ltema12"] = self.df.ema8 < self.df.ema12
         # true if the current frame is where EMA8 crosses over below
         self.df["ema8ltema12co"] = self.df.ema8ltema12.ne(self.df.ema8ltema12.shift())
-        self.df.loc[self.df["ema8ltema12"] == False, "ema8ltema12co"] = False  # noqa: E712
+        self.df.loc[
+            self.df["ema8ltema12"] == False, "ema8ltema12co"  # noqa: E712
+        ] = False
 
         # true if EMA12 is above the EMA26
         self.df["ema12gtema26"] = self.df.ema12 > self.df.ema26
@@ -1247,7 +1330,9 @@ class TechnicalAnalysis:
         self.df["ema12gtema26co"] = self.df.ema12gtema26.ne(
             self.df.ema12gtema26.shift()
         )
-        self.df.loc[self.df["ema12gtema26"] == False, "ema12gtema26co"] = False  # noqa: E712
+        self.df.loc[
+            self.df["ema12gtema26"] == False, "ema12gtema26co"  # noqa: E712
+        ] = False
 
         # true if the EMA12 is below the EMA26
         self.df["ema12ltema26"] = self.df.ema12 < self.df.ema26
@@ -1255,7 +1340,9 @@ class TechnicalAnalysis:
         self.df["ema12ltema26co"] = self.df.ema12ltema26.ne(
             self.df.ema12ltema26.shift()
         )
-        self.df.loc[self.df["ema12ltema26"] == False, "ema12ltema26co"] = False  # noqa: E712
+        self.df.loc[
+            self.df["ema12ltema26"] == False, "ema12ltema26co"  # noqa: E712
+        ] = False
 
     def add_sma_buy_signals(self) -> None:
         """Adds the SMA50/SMA200 buy and sell signals to the DataFrame"""
@@ -1287,7 +1374,9 @@ class TechnicalAnalysis:
         self.df["sma50gtsma200co"] = self.df.sma50gtsma200.ne(
             self.df.sma50gtsma200.shift()
         )
-        self.df.loc[self.df["sma50gtsma200"] == False, "sma50gtsma200co"] = False  # noqa: E712
+        self.df.loc[
+            self.df["sma50gtsma200"] == False, "sma50gtsma200co"  # noqa: E712
+        ] = False
 
         # true if the SMA50 is below the SMA200
         self.df["sma50ltsma200"] = self.df.sma50 < self.df.sma200
@@ -1295,7 +1384,9 @@ class TechnicalAnalysis:
         self.df["sma50ltsma200co"] = self.df.sma50ltsma200.ne(
             self.df.sma50ltsma200.shift()
         )
-        self.df.loc[self.df["sma50ltsma200"] == False, "sma50ltsma200co"] = False  # noqa: E712
+        self.df.loc[
+            self.df["sma50ltsma200"] == False, "sma50ltsma200co"  # noqa: E712
+        ] = False
 
     def add_macd_buy_signals(self) -> None:
         """Adds the MACD/Signal buy and sell signals to the DataFrame"""
@@ -1324,7 +1415,9 @@ class TechnicalAnalysis:
         self.df["macdgtsignalco"] = self.df.macdgtsignal.ne(
             self.df.macdgtsignal.shift()
         )
-        self.df.loc[self.df["macdgtsignal"] == False, "macdgtsignalco"] = False  # noqa: E712
+        self.df.loc[
+            self.df["macdgtsignal"] == False, "macdgtsignalco"  # noqa: E712
+        ] = False
 
         # true if the MACD is below the Signal
         self.df["macdltsignal"] = self.df.macd < self.df.signal
@@ -1332,7 +1425,9 @@ class TechnicalAnalysis:
         self.df["macdltsignalco"] = self.df.macdltsignal.ne(
             self.df.macdltsignal.shift()
         )
-        self.df.loc[self.df["macdltsignal"] == False, "macdltsignalco"] = False  # noqa: E712
+        self.df.loc[
+            self.df["macdltsignal"] == False, "macdltsignalco"  # noqa: E712
+        ] = False
 
     def get_fibonacci_retracement_levels(self, price: float = 0) -> dict:
         # validates self.price is numeric
@@ -1351,7 +1446,11 @@ class TechnicalAnalysis:
         elif self.price == 0:
             data["ratio1"] = float(self._truncate(self.price_min, 2))
 
-        if self.price != 0 and (self.price > self.price_min) and (self.price <= (self.price_max - 0.768 * diff)):
+        if (
+            self.price != 0
+            and (self.price > self.price_min)
+            and (self.price <= (self.price_max - 0.768 * diff))
+        ):
             data["ratio1"] = float(self._truncate(self.price_min, 2))
             data["ratio0_768"] = float(self._truncate(self.price_max - 0.768 * diff, 2))
         elif self.price == 0:
@@ -1397,13 +1496,21 @@ class TechnicalAnalysis:
         elif self.price == 0:
             data["ratio0_286"] = float(self._truncate(self.price_max - 0.286 * diff, 2))
 
-        if self.price != 0 and (self.price > (self.price_max - 0.286 * diff)) and (self.price <= self.price_max):
+        if (
+            self.price != 0
+            and (self.price > (self.price_max - 0.286 * diff))
+            and (self.price <= self.price_max)
+        ):
             data["ratio0_286"] = float(self._truncate(self.price_max - 0.286 * diff, 2))
             data["ratio0"] = float(self._truncate(self.price_max, 2))
         elif self.price == 0:
             data["ratio0"] = float(self._truncate(self.price_max, 2))
 
-        if self.price != 0 and (self.price < (self.price_max + 0.272 * diff)) and (self.price >= self.price_max):
+        if (
+            self.price != 0
+            and (self.price < (self.price_max + 0.272 * diff))
+            and (self.price >= self.price_max)
+        ):
             data["ratio0"] = float(self._truncate(self.price_max, 2))
             data["ratio1_272"] = float(self._truncate(self.price_max + 0.272 * diff, 2))
         elif self.price == 0:
