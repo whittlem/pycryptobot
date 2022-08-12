@@ -1,10 +1,13 @@
-from models.PyCryptoBot import PyCryptoBot
-from models.Trading import TechnicalAnalysis
-from views.TradingGraphs import TradingGraphs
+import sys
+sys.path.insert(0, ".")
 
-#app = PyCryptoBot()
+from controllers.PyCryptoBot import PyCryptoBot  # noqa: E402
+from models.Trading import TechnicalAnalysis  # noqa: E402
+from views.TradingGraphs import TradingGraphs  # noqa: E402
+
+# app = PyCryptoBot()
 app = PyCryptoBot('binance')
-trading_data = self.get_historical_data(app.market, self.granularity)
+trading_data = app.get_historical_data(app.market, app.granularity, None)
 
 technicalAnalysis = TechnicalAnalysis(trading_data)
 technicalAnalysis.add_all()

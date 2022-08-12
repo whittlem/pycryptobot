@@ -1,17 +1,13 @@
 """Plots (and/or saves) the graphical trading data using Matplotlib"""
 
-import re
-import sys
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from models.Trading import TechnicalAnalysis
 from models.helper.LogHelper import Logger
-
-sys.path.append(".")
 
 
 class TradingGraphs:
@@ -379,7 +375,7 @@ class TradingGraphs:
 
         df = pd.DataFrame(self.df["close"])
         start_date = df.last_valid_index()
-        end_date = start_date + datetime.timedelta(days=days)
+        end_date = start_date + timedelta(days=days)
         pred = results_ARIMA.predict(
             start=str(start_date), end=str(end_date), dynamic=True
         )
