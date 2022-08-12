@@ -9,10 +9,10 @@ from views.TradingGraphs import TradingGraphs  # noqa: E402
 app = PyCryptoBot('binance')
 trading_data = app.get_historical_data(app.market, app.granularity, None)
 
-technicalAnalysis = TechnicalAnalysis(trading_data)
-technicalAnalysis.add_all()
+technical_analysis = TechnicalAnalysis(trading_data)
+technical_analysis.add_all()
 
-tradinggraphs = TradingGraphs(technicalAnalysis)
+tradinggraphs = TradingGraphs(technical_analysis)
 tradinggraphs.renderFibonacciRetracement(True)
 tradinggraphs.renderSupportResistance(True)
 tradinggraphs.renderCandlesticks(30, True)

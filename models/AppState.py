@@ -1,8 +1,6 @@
 """Application state class"""
-
-import datetime
 import sys
-
+from datetime import datetime, timedelta
 from numpy import array as np_array, min as np_min, ptp as np_ptp
 
 from models.TradingAccount import TradingAccount
@@ -73,7 +71,7 @@ class AppState:
         self.buy_tracker = 0
         self.trade_error_cnt = 0
 
-        self.last_api_call_datetime = datetime.datetime.now() - datetime.timedelta(
+        self.last_api_call_datetime = datetime.now() - timedelta(
             minutes=2
         )
         self.exchange_last_buy = None
@@ -165,7 +163,7 @@ class AppState:
                         self.app.insufficientfunds = True
 
                         Logger.warning(
-                            f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})"
+                            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})"
                         )
                         return
 

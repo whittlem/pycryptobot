@@ -1,6 +1,7 @@
 """ Telegram Bot Request Handler """
-import datetime
+
 import json
+from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
 from telegram.ext import CallbackContext
@@ -579,7 +580,7 @@ class TelegramHandler:
                 args=(update, context, self.helper.use_default_scanner),
                 trigger="interval",
                 minutes=self.helper.config["scanner"]["autoscandelay"] * 60,
-                name=f"Volume Auto Scanner ({datetime.datetime.now().isoformat()})",
+                name=f"Volume Auto Scanner ({datetime.now().isoformat()})",
                 misfire_grace_time=10,
             )
 
