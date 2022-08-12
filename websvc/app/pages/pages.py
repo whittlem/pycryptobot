@@ -2,7 +2,7 @@ import re
 import sys
 import datetime
 
-sys.path.append(".")
+# sys.path.append(".")
 # pylint: disable=import-error
 from models.Trading import TechnicalAnalysis
 from models.exchange.binance import PublicAPI as BPublicAPI
@@ -264,7 +264,7 @@ class Pages:
 
     @staticmethod
     def technical_analysis(exchange: str, market: str, g1, g2, g3) -> str:
-        if exchange == 'binance':
+        if exchange == "binance":
             if not isBinanceMarketValid(market):
                 return f"""
                 {header()}
@@ -275,7 +275,7 @@ class Pages:
                 </div>
                 {footer()}
                 """
-        elif exchange == 'coinbasepro':
+        elif exchange == "coinbasepro":
             if not isCoinbaseMarketValid(market):
                 return f"""
                 {header()}
@@ -289,9 +289,9 @@ class Pages:
         else:
             return "Invalid Exchange!"
 
-        if exchange == 'binance':
+        if exchange == "binance":
             api = BPublicAPI()
-        if exchange == 'coinbasepro':
+        if exchange == "coinbasepro":
             api = CPublicAPI()
         ticker = api.get_ticker(market)
 
@@ -310,136 +310,172 @@ class Pages:
         df_6h = ta.get_df()
         df_6h_last = df_6h.tail(1)
 
-        if exchange == 'binance':
-            exchange_name = 'Binance'
-        elif exchange == 'coinbasepro':
-            exchange_name = 'Coinbase Pro'
+        if exchange == "binance":
+            exchange_name = "Binance"
+        elif exchange == "coinbasepro":
+            exchange_name = "Coinbase Pro"
 
-        rsi14_15m_class = 'table-normal'
-        rsi14_15m_desc = 'Uneventful'
-        if df_15m_last['rsi14'].values[0] > 70:
-            rsi14_15m_class = 'table-danger'
-            rsi14_15m_desc = 'Overbought (Sell)'
-        elif df_15m_last['rsi14'].values[0] < 30:
-            rsi14_15m_class = 'table-success'
-            rsi14_15m_desc = 'Oversold (Buy)'
+        rsi14_15m_class = "table-normal"
+        rsi14_15m_desc = "Uneventful"
+        if df_15m_last["rsi14"].values[0] > 70:
+            rsi14_15m_class = "table-danger"
+            rsi14_15m_desc = "Overbought (Sell)"
+        elif df_15m_last["rsi14"].values[0] < 30:
+            rsi14_15m_class = "table-success"
+            rsi14_15m_desc = "Oversold (Buy)"
 
-        rsi14_1h_class = 'table-normal'
-        rsi14_1h_desc = 'Uneventful'
-        if df_1h_last['rsi14'].values[0] > 70:
-            rsi14_1h_class = 'table-danger'
-            rsi14_1h_desc = 'Overbought (Sell)'
-        elif df_1h_last['rsi14'].values[0] < 30:
-            rsi14_1h_class = 'table-success'
-            rsi14_1h_desc = 'Oversold (Buy)'
+        rsi14_1h_class = "table-normal"
+        rsi14_1h_desc = "Uneventful"
+        if df_1h_last["rsi14"].values[0] > 70:
+            rsi14_1h_class = "table-danger"
+            rsi14_1h_desc = "Overbought (Sell)"
+        elif df_1h_last["rsi14"].values[0] < 30:
+            rsi14_1h_class = "table-success"
+            rsi14_1h_desc = "Oversold (Buy)"
 
-        rsi14_6h_class = 'table-normal'
-        rsi14_6h_desc = 'Uneventful'
-        if df_6h_last['rsi14'].values[0] > 70:
-            rsi14_6h_class = 'table-danger'
-            rsi14_6h_desc = 'Overbought (Sell)'
-        elif df_6h_last['rsi14'].values[0] < 30:
-            rsi14_6h_class = 'table-success'
-            rsi14_6h_desc = 'Oversold (Buy)'
+        rsi14_6h_class = "table-normal"
+        rsi14_6h_desc = "Uneventful"
+        if df_6h_last["rsi14"].values[0] > 70:
+            rsi14_6h_class = "table-danger"
+            rsi14_6h_desc = "Overbought (Sell)"
+        elif df_6h_last["rsi14"].values[0] < 30:
+            rsi14_6h_class = "table-success"
+            rsi14_6h_desc = "Oversold (Buy)"
 
-        stochrsi14_15m_class = 'table-normal'
-        stochrsi14_15m_desc = 'Uneventful'
-        if df_6h_last['stochrsi14'].values[0] > 0.8:
-            stochrsi14_6h_class = 'table-danger'
-            stochrsi14_6h_desc = 'Overbought (Sell)'
-        elif df_6h_last['stochrsi14'].values[0] < 0.2:
-            stochrsi14_6h_class = 'table-success'
-            stochrsi14_6h_desc = 'Oversold (Buy)'
+        stochrsi14_15m_class = "table-normal"
+        stochrsi14_15m_desc = "Uneventful"
+        if df_6h_last["stochrsi14"].values[0] > 0.8:
+            stochrsi14_6h_class = "table-danger"
+            stochrsi14_6h_desc = "Overbought (Sell)"
+        elif df_6h_last["stochrsi14"].values[0] < 0.2:
+            stochrsi14_6h_class = "table-success"
+            stochrsi14_6h_desc = "Oversold (Buy)"
 
-        stochrsi14_1h_class = 'table-normal'
-        stochrsi14_1h_desc = 'Uneventful'
-        if df_1h_last['stochrsi14'].values[0] > 0.8:
-            stochrsi14_1h_class = 'table-danger'
-            stochrsi14_1h_desc = 'Overbought (Sell)'
-        elif df_1h_last['stochrsi14'].values[0] < 0.2:
-            stochrsi14_1h_class = 'table-success'
-            stochrsi14_1h_desc = 'Oversold (Buy)'
+        stochrsi14_1h_class = "table-normal"
+        stochrsi14_1h_desc = "Uneventful"
+        if df_1h_last["stochrsi14"].values[0] > 0.8:
+            stochrsi14_1h_class = "table-danger"
+            stochrsi14_1h_desc = "Overbought (Sell)"
+        elif df_1h_last["stochrsi14"].values[0] < 0.2:
+            stochrsi14_1h_class = "table-success"
+            stochrsi14_1h_desc = "Oversold (Buy)"
 
-        stochrsi14_6h_class = 'table-normal'
-        stochrsi14_6h_desc = 'Uneventful'
-        if df_6h_last['stochrsi14'].values[0] > 0.8:
-            stochrsi14_6h_class = 'table-danger'
-            stochrsi14_6h_desc = 'Overbought (Sell)'
-        elif df_6h_last['stochrsi14'].values[0] < 0.2:
-            stochrsi14_6h_class = 'table-success'
-            stochrsi14_6h_desc = 'Oversold (Buy)'
+        stochrsi14_6h_class = "table-normal"
+        stochrsi14_6h_desc = "Uneventful"
+        if df_6h_last["stochrsi14"].values[0] > 0.8:
+            stochrsi14_6h_class = "table-danger"
+            stochrsi14_6h_desc = "Overbought (Sell)"
+        elif df_6h_last["stochrsi14"].values[0] < 0.2:
+            stochrsi14_6h_class = "table-success"
+            stochrsi14_6h_desc = "Oversold (Buy)"
 
-        williamsr14_15m_class = 'table-normal'
-        williamsr14_15m_desc = 'Uneventful'
-        if df_15m_last['williamsr14'].values[0] > -20:
-            williamsr14_15m_class = 'table-danger'
-            williamsr14_15m_desc = 'Overbought (Sell)'
-        elif df_15m_last['williamsr14'].values[0] < -80:
-            williamsr14_15m_class = 'table-success'
-            williamsr14_15m_desc = 'Oversold (Buy)'
+        williamsr14_15m_class = "table-normal"
+        williamsr14_15m_desc = "Uneventful"
+        if df_15m_last["williamsr14"].values[0] > -20:
+            williamsr14_15m_class = "table-danger"
+            williamsr14_15m_desc = "Overbought (Sell)"
+        elif df_15m_last["williamsr14"].values[0] < -80:
+            williamsr14_15m_class = "table-success"
+            williamsr14_15m_desc = "Oversold (Buy)"
 
-        williamsr14_1h_class = 'table-normal'
-        williamsr14_1h_desc = 'Uneventful'
-        if df_1h_last['williamsr14'].values[0] > -20:
-            williamsr14_1h_class = 'table-danger'
-            williamsr14_1h_desc = 'Overbought (Sell)'
-        elif df_1h_last['williamsr14'].values[0] < -80:
-            williamsr14_1h_class = 'table-success'
-            williamsr14_1h_desc = 'Oversold (Buy)'
+        williamsr14_1h_class = "table-normal"
+        williamsr14_1h_desc = "Uneventful"
+        if df_1h_last["williamsr14"].values[0] > -20:
+            williamsr14_1h_class = "table-danger"
+            williamsr14_1h_desc = "Overbought (Sell)"
+        elif df_1h_last["williamsr14"].values[0] < -80:
+            williamsr14_1h_class = "table-success"
+            williamsr14_1h_desc = "Oversold (Buy)"
 
-        williamsr14_6h_class = 'table-normal'
-        williamsr14_6h_desc = 'Uneventful'
-        if df_6h_last['williamsr14'].values[0] > -20:
-            williamsr14_6h_class = 'table-danger'
-            williamsr14_6h_desc = 'Overbought (Sell)'
-        elif df_6h_last['williamsr14'].values[0] < -80:
-            williamsr14_6h_class = 'table-success'
-            williamsr14_6h_desc = 'Oversold (Buy)'
+        williamsr14_6h_class = "table-normal"
+        williamsr14_6h_desc = "Uneventful"
+        if df_6h_last["williamsr14"].values[0] > -20:
+            williamsr14_6h_class = "table-danger"
+            williamsr14_6h_desc = "Overbought (Sell)"
+        elif df_6h_last["williamsr14"].values[0] < -80:
+            williamsr14_6h_class = "table-success"
+            williamsr14_6h_desc = "Oversold (Buy)"
 
-        adx14_15m_class = 'table-normal'
-        adx14_15m_desc = 'Normal Trend'
-        if df_15m_last['adx14'].values[0] > 25 and df_15m_last['ema12'].values[0] >= df_15m_last['ema26'].values[0]:
-            adx14_15m_class = 'table-success'
-            adx14_15m_desc = 'Strong Trend Up'
-        elif df_15m_last['adx14'].values[0] > 25 and df_15m_last['ema12'].values[0] < df_15m_last['ema26'].values[0]:
-            adx14_15m_class = 'table-danger'
-            adx14_15m_desc = 'Strong Trend Down'
-        elif df_15m_last['adx14'].values[0] < 20 and df_15m_last['ema12'].values[0] >= df_15m_last['ema26'].values[0]:
-            adx14_15m_class = 'table-success'
-            adx14_15m_desc = 'Weak Trend Up'
-        elif df_15m_last['adx14'].values[0] < 20 and df_15m_last['ema12'].values[0] < df_15m_last['ema26'].values[0]:
-            adx14_15m_class = 'table-danger'
-            adx14_15m_desc = 'Weak Trend Up'
+        adx14_15m_class = "table-normal"
+        adx14_15m_desc = "Normal Trend"
+        if (
+            df_15m_last["adx14"].values[0] > 25
+            and df_15m_last["ema12"].values[0] >= df_15m_last["ema26"].values[0]
+        ):
+            adx14_15m_class = "table-success"
+            adx14_15m_desc = "Strong Trend Up"
+        elif (
+            df_15m_last["adx14"].values[0] > 25
+            and df_15m_last["ema12"].values[0] < df_15m_last["ema26"].values[0]
+        ):
+            adx14_15m_class = "table-danger"
+            adx14_15m_desc = "Strong Trend Down"
+        elif (
+            df_15m_last["adx14"].values[0] < 20
+            and df_15m_last["ema12"].values[0] >= df_15m_last["ema26"].values[0]
+        ):
+            adx14_15m_class = "table-success"
+            adx14_15m_desc = "Weak Trend Up"
+        elif (
+            df_15m_last["adx14"].values[0] < 20
+            and df_15m_last["ema12"].values[0] < df_15m_last["ema26"].values[0]
+        ):
+            adx14_15m_class = "table-danger"
+            adx14_15m_desc = "Weak Trend Up"
 
-        adx14_1h_class = 'table-normal'
-        adx14_1h_desc = 'Normal Trend'
-        if df_1h_last['adx14'].values[0] > 25 and df_1h_last['ema12'].values[0] >= df_1h_last['ema26'].values[0]:
-            adx14_1h_class = 'table-success'
-            adx14_1h_desc = 'Strong Trend Up'
-        elif df_1h_last['adx14'].values[0] > 25 and df_1h_last['ema12'].values[0] < df_1h_last['ema26'].values[0]:
-            adx14_1h_class = 'table-danger'
-            adx14_1h_desc = 'Strong Trend Down'
-        elif df_1h_last['adx14'].values[0] < 20 and df_1h_last['ema12'].values[0] >= df_1h_last['ema26'].values[0]:
-            adx14_1h_class = 'table-success'
-            adx14_1h_desc = 'Weak Trend Up'
-        elif df_1h_last['adx14'].values[0] < 20 and df_1h_last['ema12'].values[0] < df_1h_last['ema26'].values[0]:
-            adx14_1h_class = 'table-danger'
-            adx14_1h_desc = 'Weak Trend Up'
+        adx14_1h_class = "table-normal"
+        adx14_1h_desc = "Normal Trend"
+        if (
+            df_1h_last["adx14"].values[0] > 25
+            and df_1h_last["ema12"].values[0] >= df_1h_last["ema26"].values[0]
+        ):
+            adx14_1h_class = "table-success"
+            adx14_1h_desc = "Strong Trend Up"
+        elif (
+            df_1h_last["adx14"].values[0] > 25
+            and df_1h_last["ema12"].values[0] < df_1h_last["ema26"].values[0]
+        ):
+            adx14_1h_class = "table-danger"
+            adx14_1h_desc = "Strong Trend Down"
+        elif (
+            df_1h_last["adx14"].values[0] < 20
+            and df_1h_last["ema12"].values[0] >= df_1h_last["ema26"].values[0]
+        ):
+            adx14_1h_class = "table-success"
+            adx14_1h_desc = "Weak Trend Up"
+        elif (
+            df_1h_last["adx14"].values[0] < 20
+            and df_1h_last["ema12"].values[0] < df_1h_last["ema26"].values[0]
+        ):
+            adx14_1h_class = "table-danger"
+            adx14_1h_desc = "Weak Trend Up"
 
-        adx14_6h_class = 'table-normal'
-        adx14_6h_desc = 'Normal Trend'
-        if df_6h_last['adx14'].values[0] > 25 and df_6h_last['ema12'].values[0] >= df_6h_last['ema26'].values[0]:
-            adx14_6h_class = 'table-success'
-            adx14_6h_desc = 'Strong Trend Up'
-        elif df_6h_last['adx14'].values[0] > 25 and df_6h_last['ema12'].values[0] < df_6h_last['ema26'].values[0]:
-            adx14_6h_class = 'table-danger'
-            adx14_6h_desc = 'Strong Trend Down'
-        elif df_6h_last['adx14'].values[0] < 20 and df_6h_last['ema12'].values[0] >= df_6h_last['ema26'].values[0]:
-            adx14_6h_class = 'table-success'
-            adx14_6h_desc = 'Weak Trend Up'
-        elif df_6h_last['adx14'].values[0] < 20 and df_6h_last['ema12'].values[0] < df_6h_last['ema26'].values[0]:
-            adx14_6h_class = 'table-danger'
-            adx14_6h_desc = 'Weak Trend Up'
+        adx14_6h_class = "table-normal"
+        adx14_6h_desc = "Normal Trend"
+        if (
+            df_6h_last["adx14"].values[0] > 25
+            and df_6h_last["ema12"].values[0] >= df_6h_last["ema26"].values[0]
+        ):
+            adx14_6h_class = "table-success"
+            adx14_6h_desc = "Strong Trend Up"
+        elif (
+            df_6h_last["adx14"].values[0] > 25
+            and df_6h_last["ema12"].values[0] < df_6h_last["ema26"].values[0]
+        ):
+            adx14_6h_class = "table-danger"
+            adx14_6h_desc = "Strong Trend Down"
+        elif (
+            df_6h_last["adx14"].values[0] < 20
+            and df_6h_last["ema12"].values[0] >= df_6h_last["ema26"].values[0]
+        ):
+            adx14_6h_class = "table-success"
+            adx14_6h_desc = "Weak Trend Up"
+        elif (
+            df_6h_last["adx14"].values[0] < 20
+            and df_6h_last["ema12"].values[0] < df_6h_last["ema26"].values[0]
+        ):
+            adx14_6h_class = "table-danger"
+            adx14_6h_desc = "Weak Trend Up"
 
         def arima_predictions(even_rows: bool = True):
             results_ARIMA = ta.seasonal_arima_model()
@@ -1014,4 +1050,4 @@ class Pages:
         </div>
 
         {footer()}
-        """
+        """   # noqa: W292

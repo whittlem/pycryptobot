@@ -2,10 +2,10 @@
     "python.formatting.provider": "black",
     "python.formatting.blackArgs": [
         "--line-length",
-        "88"
+        "160"
     ],
     "python.linting.flake8Args": [
-        "--max-line-length=88",
+        "--max-line-length=160",
         "--ignore=E203,E266,E501,W503,F403,F401",
     ],
 }
