@@ -91,7 +91,7 @@ def test_getAccount():
     exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getAccount()
+    df = exchange.get_account()
     assert type(df) is pandas.core.frame.DataFrame
 
     actual = df.columns.to_list()
@@ -99,7 +99,7 @@ def test_getAccount():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getFeesWithoutMarket():
+def test_get_fees_without_market():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -122,7 +122,7 @@ def test_getFeesWithoutMarket():
     exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getFees()
+    df = exchange.get_fees()
     assert type(df) is pandas.core.frame.DataFrame
 
     assert len(df) > 1
@@ -132,7 +132,7 @@ def test_getFeesWithoutMarket():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getFeesWithMarket():
+def test_get_fees_with_market():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -155,7 +155,7 @@ def test_getFeesWithMarket():
     exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getFees(VALID_ORDER_MARKET)
+    df = exchange.get_fees(VALID_ORDER_MARKET)
     assert type(df) is pandas.core.frame.DataFrame
 
     assert len(df) == 1
@@ -165,7 +165,7 @@ def test_getFeesWithMarket():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-def test_get_taker_feeWithoutMarket():
+def test_get_taker_fee_without_market():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -192,7 +192,7 @@ def test_get_taker_feeWithoutMarket():
     assert type(fees) is pandas.core.frame.DataFrame
     assert len(fees) > 0
 
-def test_get_taker_feeWithMarket():
+def test_get_taker_fee_with_market():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -219,7 +219,7 @@ def test_get_taker_feeWithMarket():
     assert type(fee) is float
     assert fee > 0
 
-def test_get_maker_feeWithoutMarket():
+def test_get_maker_fee_without_market():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -246,7 +246,7 @@ def test_get_maker_feeWithoutMarket():
     assert type(fees) is pandas.core.frame.DataFrame
     assert len(fees) > 0
 
-def test_get_maker_feeWithMarket():
+def test_get_maker_fee_with_market():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -334,7 +334,7 @@ def test_get_ordersInvalidMarket():
         exchange.get_orders(market='ERROR')
     assert str(execinfo.value) == 'Binance market is invalid.'
 
-def test_get_ordersValidMarket():
+def test_get_orders_valid_market():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -368,7 +368,7 @@ def test_get_ordersValidMarket():
     diff = set(actual) ^ set(expected)
     assert not diff
 
-def test_get_ordersInvalidAction():
+def test_get_orders_invalid_action():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -395,7 +395,7 @@ def test_get_ordersInvalidAction():
         exchange.get_orders(action='ERROR')
     assert str(execinfo.value) == 'Invalid order action.'
 
-def test_get_ordersValidActionBuy():
+def test_get_orders_valid_action_buy():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -429,7 +429,7 @@ def test_get_ordersValidActionBuy():
     diff = set(actual) ^ set(expected)
     assert not diff
 
-def test_get_ordersValidActionSell():
+def test_get_orders_valid_action_sell():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -463,7 +463,7 @@ def test_get_ordersValidActionSell():
     diff = set(actual) ^ set(expected)
     assert not diff
 
-def test_get_ordersInvalidStatus():
+def test_get_orders_invalid_status():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -490,7 +490,7 @@ def test_get_ordersInvalidStatus():
         exchange.get_orders(status='ERROR')
     assert str(execinfo.value) == 'Invalid order status.'
 
-def test_get_ordersValidStatusAll():
+def test_get_orders_valid_status_all():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -525,7 +525,7 @@ def test_get_ordersValidStatusAll():
         diff = set(actual) ^ set(expected)
         assert not diff
 
-def test_get_ordersValidStatusOpen():
+def test_get_orders_valid_status_open():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -560,7 +560,7 @@ def test_get_ordersValidStatusOpen():
         diff = set(actual) ^ set(expected)
         assert not diff
 
-def test_get_ordersValidStatusPending():
+def test_get_orders_valid_status_pending():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -595,7 +595,7 @@ def test_get_ordersValidStatusPending():
         diff = set(actual) ^ set(expected)
         assert not diff
 
-def test_get_ordersValidStatusDone():
+def test_get_orders_valid_status_done():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -630,7 +630,7 @@ def test_get_ordersValidStatusDone():
         diff = set(actual) ^ set(expected)
         assert not diff
 
-def test_get_ordersValidStatusActive():
+def test_get_orders_valid_status_active():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -691,7 +691,7 @@ def test_get_time():
     resp = exchange.get_time()
     assert type(resp) is datetime
 
-def test_marketBuyInvalidMarket():
+def test_market_buy_invalid_market():
     filename = 'config.json'
 
     with open(filename) as config_file:

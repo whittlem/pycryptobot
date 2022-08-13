@@ -1,4 +1,5 @@
-import json, time
+import json
+import time
 from threading import Thread
 from websocket import create_connection, WebSocketConnectionClosedException
 
@@ -17,7 +18,15 @@ def main():
             json.dumps(
                 {
                     "method": "SUBSCRIBE",
-                    "params": ["btcusdt@miniTicker","btcusdt@kline_1m","btcusdt@kline_5m","btcusdt@kline_15m","btcusdt@kline_1h","btcusdt@kline_6h","btcusdt@kline_1d"],
+                    "params": [
+                        "btcusdt@miniTicker",
+                        "btcusdt@kline_1m",
+                        "btcusdt@kline_5m",
+                        "btcusdt@kline_15m",
+                        "btcusdt@kline_1h",
+                        "btcusdt@kline_6h",
+                        "btcusdt@kline_1d",
+                    ],
                     "id": 1,
                 }
             )

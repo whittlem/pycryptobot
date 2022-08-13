@@ -38,7 +38,7 @@ class TradingGraphs:
         # set graph format
         plt.style.use("seaborn")
 
-    def renderBuySellSignalEMA1226(self, saveFile="", saveOnly=False):
+    def render_buy_sell_signal_ema226(self, saveFile="", saveOnly=False):
         """Render the EMA12 and EMA26 buy and sell signals
 
         Parameters
@@ -77,7 +77,7 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderBuySellSignalEMA1226MACD(self, saveFile="", saveOnly=False):
+    def render_buy_sell_signal_ema226_macd(self, saveFile="", saveOnly=False):
         """Render the EMA12, EMA26 and MACD buy and sell signals
 
         Parameters
@@ -143,7 +143,7 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderFibonacciBollingerBands(self, period=50, saveFile="", saveOnly=False):
+    def render_fibonacci_bollinger_bands(self, period=50, saveFile="", saveOnly=False):
         """Render FibonacciBollingerBands"""
 
         if not isinstance(period, int):
@@ -187,7 +187,7 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderPriceEMA12EMA26(self, saveFile="", saveOnly=False):
+    def render_price_ema12_ema26(self, saveFile="", saveOnly=False):
         """Render the self.price, EMA12 and EMA26
 
         Parameters
@@ -280,7 +280,7 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderseasonal_arima_model(self, saveFile="", saveOnly=False):
+    def render_seasonal_arima_model(self, saveFile="", saveOnly=False):
         """Render the seasonal ARIMA model
 
         Parameters
@@ -310,7 +310,7 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderSMAandMACD(self, saveFile="", saveOnly=False):
+    def render_sma_and_macd(self, saveFile="", saveOnly=False):
         """Render the self.price, SMA20, SMA50, and SMA200
 
         Parameters
@@ -347,7 +347,7 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderArima_model_prediction(self, days=30, saveOnly=False):
+    def render_arima_model_prediction(self, days=30, saveOnly=False):
         """Render the seasonal ARIMA model prediction
 
         Parameters
@@ -425,7 +425,7 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderCandlestickAstralPattern(self, period=30, saveOnly=False):
+    def render_candle_stick_astral_pattern(self, period=30, saveOnly=False):
         # get dataframe from technical analysis object
         df = self.technical_analysis.get_df()
 
@@ -489,7 +489,7 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderCandlesticks(self, period=30, saveOnly=False):
+    def render_candle_sticks(self, period=30, saveOnly=False):
         # get dataframe from technical analysis object
         df = self.technical_analysis.get_df()
 
@@ -721,7 +721,7 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderFibonacciRetracement(self, saveOnly=False):
+    def render_fibonacci_retracement(self, saveOnly=False):
         """Render Fibonacci Retracement Levels
 
         Parameters
@@ -781,7 +781,7 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderSupportResistance(self, saveOnly=False):
+    def render_support_resistance(self, saveOnly=False):
         """Render Support and Resistance Levels
 
         Parameters
@@ -872,7 +872,7 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderPercentageChangeHistogram(self, show_desc=True):
+    def render_percentage_change_histogram(self, show_desc=True):
         """Render Percentage Change Histogram
 
         Parameters
@@ -907,7 +907,7 @@ class TradingGraphs:
         if show_desc is True:
             Logger.info(df["close_pc"].describe())
 
-    def renderPercentageChangeScatterMatrix(self):
+    def render_percentage_change_scatter_matrix(self):
         """Render Percentage Change Scatter Matrix
 
         Parameters
@@ -928,7 +928,7 @@ class TradingGraphs:
         plt.tight_layout()
         plt.show()
 
-    def renderCumulativeReturn(self):
+    def render_cumulative_return(self):
         """Render Percentage Change Histogram
 
         Parameters

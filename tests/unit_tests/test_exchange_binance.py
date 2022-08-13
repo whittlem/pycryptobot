@@ -26,7 +26,7 @@ def test_api_v3_account1():
             json=json.load(fh),
             status=200,
         )
-        df = api.getAccounts()
+        df = api.get_accounts()
         fh.close()
 
         assert len(df) > 1
@@ -95,7 +95,7 @@ def test_get_fees_with_market():
     exchange = AuthAPI(app.api_key, self.api_secret)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getFees()
+    df = exchange.get_fees()
     assert type(df) is pandas.core.frame.DataFrame
     assert len(df) == 1
 

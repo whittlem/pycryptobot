@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import signal
+
 from models.exchange.binance import WebSocketClient as BWebSocketClient
 
 
@@ -26,10 +27,7 @@ try:
     message_count = 0
     while True:
         if websocket:
-            if (
-                message_count != websocket.message_count
-                and websocket.tickers is not None
-            ):
+            if message_count != websocket.message_count and websocket.tickers is not None:
                 cls()
                 print("\nMessageCount =", "%i \n" % websocket.message_count)
                 print(websocket.candles)

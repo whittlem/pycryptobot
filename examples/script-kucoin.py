@@ -1,8 +1,12 @@
+import sys
 from datetime import datetime
-from models.PyCryptoBot import PyCryptoBot
-from models.TradingAccount import TradingAccount
-from models.AppState import AppState
-from models.exchange.kucoin import AuthAPI as AuthAPI, PublicAPI as PublicAPI
+
+sys.path.insert(0, ".")
+
+from controllers.PyCryptoBot import PyCryptoBot  # noqa: E402
+from models.TradingAccount import TradingAccount  # noqa: E402
+from models.AppState import AppState  # noqa: E402
+from models.exchange.kucoin import AuthAPI as AuthAPI, PublicAPI as PublicAPI  # noqa: E402
 
 """
 app = PyCryptoBot(exchange='kucoin')
@@ -28,15 +32,15 @@ print(df)
 """
 api = AuthAPI(api_key, api_secret, api_passphrase, url)
 
-df = api.getAccounts()
-print("getAccounts:")
+df = api.get_accounts()
+print("get_accounts:")
 print(df)
 
-df = api.getAccount('6113cf2c4270260006395aad')
+df = api.get_account('6113cf2c4270260006395aad')
 print(df)
 
 
-df = api.getFees()
+df = api.get_fees()
 print(df)
 
 

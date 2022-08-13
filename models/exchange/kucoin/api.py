@@ -43,7 +43,7 @@ DEFAULT_MARKET = "BTC-USDT"
 
 
 class AuthAPIBase:
-    def _isMarketValid(self, market: str) -> bool:
+    def _is_market_valid(self, market: str) -> bool:
         p = re.compile(r"^[0-9A-Z]{1,20}\-[1-9A-Z]{2,5}$")
         if p.match(market):
             return True
@@ -177,11 +177,11 @@ class AuthAPI(AuthAPIBase):
 
         return request
 
-    def getAccounts(self) -> pd.DataFrame:
+    def get_accounts(self) -> pd.DataFrame:
         """Retrieves your list of accounts"""
 
         # GET /accounts
-        df = self.authAPI("GET", "api/v1/accounts?type=trade")
+        df = self.auth_api("GET", "api/v1/accounts?type=trade")
 
         if len(df) == 0:
             return pd.DataFrame()
@@ -194,7 +194,7 @@ class AuthAPI(AuthAPIBase):
         df = df.reset_index()
         return df
 
-    def getAccount(self, account: str) -> pd.DataFrame:
+    def get_account(self, account: str) -> pd.DataFrame:
         """Retrieves a specific account"""
 
         # validates the account is syntactically correct
@@ -202,12 +202,12 @@ class AuthAPI(AuthAPIBase):
         if not p.match(self.account):
             self.handle_init_error("Kucoin account is invalid")
 
-        return self.authAPI("GET", f"api/v1/accounts/{account}")
+        return self.auth_api("GET", f"api/v1/accounts/{account}")
 
-    def getFees(self, market: str = "") -> pd.DataFrame:
+    def get_fees(self, market: str = "") -> pd.DataFrame:
         """Retrieves market fees"""
 
-        df = self.authAPI("GET", "api/v1/base-fee")
+        df = self.auth_api("GET", "api/v1/base-fee")
 
         if len(market):
             df["market"] = market
@@ -220,9 +220,9 @@ class AuthAPI(AuthAPIBase):
         """Retrieves maker fee"""
 
         if len(market):
-            fees = self.getFees(market)
+            fees = self.get_fees(market)
         else:
-            fees = self.getFees()
+            fees = self.get_fees()
 
         if len(fees) == 0 or "makerFeeRate" not in fees:
             Logger.error(f"error: 'makerFeeRate' not in fees (using {DEFAULT_MAKER_FEE_RATE} as a fallback)")
@@ -234,9 +234,9 @@ class AuthAPI(AuthAPIBase):
         """Retrieves taker fee"""
 
         if len(market) is not None:
-            fees = self.getFees(market)
+            fees = self.get_fees(market)
         else:
-            fees = self.getFees()
+            fees = self.get_fees()
 
         if len(fees) == 0 or "takerFeeRate" not in fees:
             Logger.error(f"error: 'takerFeeRate' not in fees (using {DEFAULT_TAKER_FEE_RATE} as a fallback)")
@@ -244,17 +244,17 @@ class AuthAPI(AuthAPIBase):
 
         return float(fees["takerFeeRate"].to_string(index=False).strip())
 
-    def getUSDVolume(self) -> float:
+    def get_usd_volume(self) -> float:
         """Retrieves USD volume"""
 
-        fees = self.getFees()
+        fees = self.get_fees()
         return float(fees["usd_volume"].to_string(index=False).strip())
 
     def getMarkets(self) -> list:
         """Retrieves a list of markets on the exchange"""
 
         # GET /api/v1/symbols
-        resp = self.authAPI("GET", "api/v1/symbols")
+        resp = self.auth_api("GET", "api/v1/symbols")
 
         if isinstance(resp, list):
             df = pd.DataFrame.from_dict(resp)
@@ -274,7 +274,7 @@ class AuthAPI(AuthAPIBase):
         # if market provided
         if market != "":
             # validates the market is syntactically correct
-            if not self._isMarketValid(market):
+            if not self._is_market_valid(market):
                 raise ValueError("Kucoin market is invalid.")
 
         # if action provided
@@ -292,7 +292,7 @@ class AuthAPI(AuthAPIBase):
             self.buildOrderHistoryCache()
 
         # GET /orders?status
-        resp = self.authAPI("GET", f"api/v1/orders?symbol={market}", use_order_cache=self.usekucoincache, use_pagination=self.usepagination)
+        resp = self.auth_api("GET", f"api/v1/orders?symbol={market}", use_order_cache=self.usekucoincache, use_pagination=self.usepagination)
         if len(resp) > 0:
             if status == "active":
                 df = resp.copy()[
@@ -478,7 +478,7 @@ class AuthAPI(AuthAPIBase):
         """Executes a market buy providing a funding amount"""
 
         # validates the market is syntactically correct
-        if not self._isMarketValid(market):
+        if not self._is_market_valid(market):
             raise ValueError("Kucoin market is invalid.")
 
         # validates quote_quantity is either an integer or float
@@ -498,7 +498,7 @@ class AuthAPI(AuthAPIBase):
             "symbol": market,
             "type": "market",
             "side": "buy",
-            "funds": self.marketQuoteIncrement(market, quote_quantity),
+            "funds": self.market_quote_increment(market, quote_quantity),
         }
 
         # Logger.debug(order)
@@ -507,12 +507,12 @@ class AuthAPI(AuthAPIBase):
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
 
         # place order and return result
-        return model.authAPI("POST", "api/v1/orders", order)
+        return model.auth_api("POST", "api/v1/orders", order)
 
     def market_sell(self, market: str = "", base_quantity: float = 0) -> pd.DataFrame:
         """Executes a market sell providing a crypto amount"""
 
-        if not self._isMarketValid(market):
+        if not self._is_market_valid(market):
             raise ValueError("Kucoin market is invalid.")
 
         if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
@@ -526,18 +526,18 @@ class AuthAPI(AuthAPIBase):
             "symbol": market,
             "type": "market",
             "side": "sell",
-            "size": self.marketBaseIncrement(market, base_quantity),
+            "size": self.market_base_Increment(market, base_quantity),
         }
 
         # Logger.debug(order)
 
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
-        return model.authAPI("POST", "api/v1/orders", order)
+        return model.auth_api("POST", "api/v1/orders", order)
 
-    def limitSell(self, market: str = "", base_quantity: float = 0, future_price: float = 0) -> pd.DataFrame:
+    def limit_sell(self, market: str = "", base_quantity: float = 0, future_price: float = 0) -> pd.DataFrame:
         """Initiates a limit sell order"""
 
-        if not self._isMarketValid(market):
+        if not self._is_market_valid(market):
             raise ValueError("Kucoin market is invalid.")
 
         if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
@@ -550,20 +550,20 @@ class AuthAPI(AuthAPIBase):
             "product_id": market,
             "type": "limit",
             "side": "sell",
-            "size": self.marketBaseIncrement(market, base_quantity),
+            "size": self.market_base_Increment(market, base_quantity),
             "price": future_price,
         }
 
         # Logger.debug(order)
 
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
-        return model.authAPI("POST", "orders", order)
+        return model.auth_api("POST", "orders", order)
 
     def getTradeFee(self, market: str) -> float:
         """Retrieves the trade fees"""
 
         # GET /sapi/v1/asset/tradeFee
-        resp = self.authAPI(
+        resp = self.auth_api(
             "GET",
             f"api/v1/trade-fees?symbols={market}",
         )
@@ -573,19 +573,19 @@ class AuthAPI(AuthAPIBase):
         else:
             return DEFAULT_TRADE_FEE_RATE
 
-    def cancelOrders(self, market: str = "") -> pd.DataFrame:
+    def cancel_orders(self, market: str = "") -> pd.DataFrame:
         """Cancels an order"""
 
-        if not self._isMarketValid(market):
+        if not self._is_market_valid(market):
             raise ValueError("Kucoin market is invalid.")
 
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
-        return model.authAPI("DELETE", "orders")
+        return model.auth_api("DELETE", "orders")
 
-    def marketBaseIncrement(self, market, amount) -> float:
+    def market_base_Increment(self, market, amount) -> float:
         """Retrieves the market base increment"""
         pMarket = market.split("-")[0]
-        product = self.authAPI("GET", f"api/v1/symbols?{pMarket}")
+        product = self.auth_api("GET", f"api/v1/symbols?{pMarket}")
 
         for ind in product.index:
             if product["symbol"][ind] == market:
@@ -602,10 +602,10 @@ class AuthAPI(AuthAPIBase):
 
         return floor(amount * 10**nb_digits) / 10**nb_digits
 
-    def marketQuoteIncrement(self, market, amount) -> float:
+    def market_quote_increment(self, market, amount) -> float:
         """Retrieves the market quote increment"""
 
-        products = self.authAPI("GET", f"api/v1/symbols?{market}")
+        products = self.auth_api("GET", f"api/v1/symbols?{market}")
 
         for ind in products.index:
             if products["symbol"][ind] == market:
@@ -706,10 +706,10 @@ class AuthAPI(AuthAPIBase):
                 fp.close()
 
             print("Doing historic orders build... ")
-            resp = self.authAPI("GET", f"api/v1/orders?startAt={startAt}", use_pagination=True)
+            resp = self.auth_api("GET", f"api/v1/orders?startAt={startAt}", use_pagination=True)
             if last_timestamp_check == startAt:
                 # print ("Hit Last timestamp check")
-                resp = self.authAPI("GET", "api/v1/orders?", use_pagination=True)
+                resp = self.auth_api("GET", "api/v1/orders?", use_pagination=True)
                 break_build = True
             if len(resp) > 0:
                 df = df.append(resp)
@@ -747,7 +747,7 @@ class AuthAPI(AuthAPIBase):
             os.remove(self._cache_lock_filepath)
         return df
 
-    def authAPI(
+    def auth_api(
         self,
         method: str,
         uri: str,
@@ -862,7 +862,7 @@ class AuthAPI(AuthAPIBase):
                                 while page_counter <= max_pages:
                                     time.sleep(10)
                                     page_counter += 1
-                                    append_df = self.authAPI(
+                                    append_df = self.auth_api(
                                         method=method, uri=orig_uri, payload=payload, getting_pages=True, page_num=page_counter, per_page=per_page
                                     )
                                     df = df.append(append_df)
@@ -878,7 +878,7 @@ class AuthAPI(AuthAPIBase):
                     return df
 
                 else:
-                    msg = f"Kucoin authAPI Error: {method.upper()} ({resp.status_code}) {self._api_url} {uri} - {resp.json()['msg']}"
+                    msg = f"Kucoin auth_api Error: {method.upper()} ({resp.status_code}) {self._api_url} {uri} - {resp.json()['msg']}"
                     reason = "Invalid Response"
 
             except requests.ConnectionError as err:
@@ -964,7 +964,7 @@ class PublicAPI(AuthAPIBase):
         """Retrieves historical market data"""
 
         # validates the market is syntactically correct
-        if not self._isMarketValid(market):
+        if not self._is_market_valid(market):
             raise TypeError("Kucoin market required.")
 
         # validates granularity is an integer
@@ -1001,7 +1001,7 @@ class PublicAPI(AuthAPIBase):
 
                 if iso8601start != "" and iso8601end == "":
                     startTime = int(datetime.timestamp(datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")))
-                    resp = self.authAPI(
+                    resp = self.auth_api(
                         "GET",
                         f"api/v1/market/candles?type={granularity.to_medium}&symbol={market}&startAt={startTime}",
                     )
@@ -1009,12 +1009,12 @@ class PublicAPI(AuthAPIBase):
                     startTime = int(datetime.timestamp(datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")))
 
                     endTime = int(datetime.timestamp(datetime.strptime(iso8601end, "%Y-%m-%dT%H:%M:%S")))
-                    resp = self.authAPI(
+                    resp = self.auth_api(
                         "GET",
                         f"api/v1/market/candles?type={granularity.to_medium}&symbol={market}&startAt={startTime}&endAt={endTime}",
                     )
                 else:
-                    resp = self.authAPI(
+                    resp = self.auth_api(
                         "GET",
                         f"api/v1/market/candles?type={granularity.to_medium}&symbol={market}",
                     )
@@ -1082,7 +1082,7 @@ class PublicAPI(AuthAPIBase):
         """Retrieves the market ticker"""
 
         # validates the market is syntactically correct
-        if not self._isMarketValid(market):
+        if not self._is_market_valid(market):
             raise TypeError("Kucoin market required.")
 
         # now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
@@ -1106,7 +1106,7 @@ class PublicAPI(AuthAPIBase):
         trycnt, maxretry = (1, 5)
         while trycnt <= maxretry:
             try:
-                resp = self.authAPI("GET", f"api/v1/market/orderbook/level1?symbol={market}")
+                resp = self.auth_api("GET", f"api/v1/market/orderbook/level1?symbol={market}")
                 return (
                     datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
                     float(resp["data"]["price"]),
@@ -1123,7 +1123,7 @@ class PublicAPI(AuthAPIBase):
         """Retrieves the exchange time"""
 
         try:
-            resp = self.authAPI("GET", "api/v1/timestamp")
+            resp = self.auth_api("GET", "api/v1/timestamp")
             # epoch = int(resp["data"] / 1000)
             return self.convert_time(int(resp["data"]))
             # return datetime.fromtimestamp(epoch)
@@ -1131,17 +1131,17 @@ class PublicAPI(AuthAPIBase):
             return None
 
     def getSocketToken(self):
-        return self.authAPI("POST", "api/v1/bullet-public")
+        return self.auth_api("POST", "api/v1/bullet-public")
 
-    def getMarkets24HrStats(self) -> pd.DataFrame():
+    def get_markets_24hr_stats(self) -> pd.DataFrame():
         """Retrieves exchange markets 24hr stats"""
 
         try:
-            return self.authAPI("GET", "api/v1/market/allTickers")
+            return self.auth_api("GET", "api/v1/market/allTickers")
         except Exception:
             return pd.DataFrame()
 
-    def authAPI(self, method: str, uri: str, payload: str = "") -> dict:
+    def auth_api(self, method: str, uri: str, payload: str = "") -> dict:
         """Initiates a REST API call"""
 
         if not isinstance(method, str):
@@ -1376,7 +1376,7 @@ class WebSocketClient(WebSocket):
 
         for market in markets:
             # validates the market is syntactically correct
-            if not self._isMarketValid(market):
+            if not self._is_market_valid(market):
                 raise ValueError("Kucoin market is invalid.")
 
         # validates granularity is an integer

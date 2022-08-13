@@ -108,7 +108,7 @@ class AppState:
                 base = float(base)
 
         elif self.app.exchange == Exchange.COINBASEPRO:
-            product = self.api.authAPI("GET", f"products/{self.app.market}")
+            product = self.api.auth_api("GET", f"products/{self.app.market}")
             if len(product) == 0:
                 sys.tracebacklimit = 0
                 raise Exception(f"Market not found! ({self.app.market})")
@@ -117,7 +117,7 @@ class AppState:
             base_min = float(product["base_min_size"])
 
         elif self.app.exchange == Exchange.KUCOIN:
-            resp = self.api.authAPI("GET", "api/v1/symbols")
+            resp = self.api.auth_api("GET", "api/v1/symbols")
             product = resp[resp["symbol"] == self.app.market]
             if len(product) == 0:
                 sys.tracebacklimit = 0
@@ -180,25 +180,25 @@ class AppState:
                 raise Exception(f"Market not found! ({self.app.market})")
 
         elif self.app.exchange == Exchange.COINBASEPRO:
-            product = self.api.authAPI("GET", f"products/{self.app.market}")
+            product = self.api.auth_api("GET", f"products/{self.app.market}")
             if len(product) == 0:
                 sys.tracebacklimit = 0
                 raise Exception(f"Market not found! ({self.app.market})")
 
-            ticker = self.api.authAPI("GET", f"products/{self.app.market}/ticker")
+            ticker = self.api.auth_api("GET", f"products/{self.app.market}/ticker")
             price = float(ticker["price"])
 
             quote = float(quote)
             base_min = float(product["base_min_size"])
 
         elif self.app.exchange == Exchange.KUCOIN:
-            resp = self.api.authAPI("GET", "api/v1/symbols")
+            resp = self.api.auth_api("GET", "api/v1/symbols")
             product = resp[resp["symbol"] == self.app.market]
             if len(product) == 0:
                 sys.tracebacklimit = 0
                 raise Exception(f"Market not found! ({self.app.market})")
 
-            ticker = self.api.authAPI(
+            ticker = self.api.auth_api(
                 "GET", f"api/v1/market/orderbook/level1?symbol={self.app.market}"
             )
 

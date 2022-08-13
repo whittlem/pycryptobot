@@ -1,42 +1,43 @@
-# from models.PyCryptoBot import PyCryptoBot
-# from models.Trading import TechnicalAnalysis
-# from models.TradingAccount import TradingAccount
-# from models.AppState import AppState
-import numpy as np
-import pandas as pd
-try:
-    # pyright: reportMissingImports=false
-    import pandas_ta as ta
-    use_pandas_ta = True
-except ImportError:
-    use_pandas_ta = False
-try:
-    # pyright: reportMissingImports=false
-    import talib
-    use_talib = True
-except ImportError:
-    use_talib = False
+import sys
 
-# app = PyCryptoBot()
-# df = self.get_historical_data(app.market, self.granularity)
-df = pd.DataFrame()
+sys.path.insert(0, ".")
 
-# Main Help
+import pandas as pd  # noqa: E402
+import pandas_ta as ta  # noqa: E402
+
+from controllers.PyCryptoBot import PyCryptoBot  # noqa: E402
+
+app = PyCryptoBot()
+df = app.get_historical_data(app.market, app.granularity, None)
+
 # help(ta)
+# help(ta.sma)
 
 # List Indicators
-# df.ta.indicators()
+df.ta.indicators()
 
-# Help for specific item
-help(ta.ema)
+rsi = ta.rsi(df["close"], length=14, fillna=50)
+print(rsi)
 
-# ta.cdl_pattern(name="doji")
+df.ta.rsi(length=14, append=True, fillna=50)
 
-# df = df.ta.cdl_pattern(name="doji")
+df.ta.ema(length=12, append=True, fillna=df.close)
+df.ta.ema(length=26, append=True, fillna=df.close)
+
+df["ema12"] = ta.ema(df["close"], length=12, fillna=df.close)
+df["ema26"] = ta.ema(df["close"], length=12, fillna=df.close)
+
+sma10 = df.ta.sma(10, fillna=df.close)
+sma50 = df.ta.sma(50, fillna=df.close)
+sma100 = df.ta.sma(100, fillna=df.close)
+df = pd.concat([df, sma10, sma50, sma100], axis=1)
+
+df.ta.cdl_pattern(name="doji", append=True)
+# df.ta.donchian(lower_length=10, upper_length=15, append=True)
 
 # print(self.df)
 # print(self.df.shift())
 
-# print (df)
-
-exit()
+print(df.columns)
+print(df.head())
+# print(rsi)

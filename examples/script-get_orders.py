@@ -1,13 +1,17 @@
-from models.PyCryptoBot import PyCryptoBot
+import sys
 
-app = PyCryptoBot(exchange='coinbasepro')
-print (app.exchange)
+sys.path.insert(0, ".")
 
-app = PyCryptoBot(exchange='binance')
-print (app.exchange)
+from controllers.PyCryptoBot import PyCryptoBot  # noqa: E402
 
-app = PyCryptoBot(exchange='dummy')
-print (app.exchange)
+app = PyCryptoBot(exchange="coinbasepro")
+print(app.exchange)
+
+app = PyCryptoBot(exchange="binance")
+print(app.exchange)
+
+app = PyCryptoBot(exchange="dummy")
+print(app.exchange)
 
 app = PyCryptoBot()
-print (app.exchange)
+print(app.exchange)

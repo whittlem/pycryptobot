@@ -28,7 +28,7 @@ DEFAULT_MARKET = "BTCGBP"
 
 
 class AuthAPIBase:
-    def _isMarketValid(self, market: str) -> bool:
+    def _is_market_valid(self, market: str) -> bool:
         p = re.compile(r"^[A-Z0-9]{5,17}$")
         if p.match(market):
             return True
@@ -122,12 +122,12 @@ class AuthAPI(AuthAPIBase):
     def get_timestamp(self):
         return int(time.time() * 1000)
 
-    def getAccounts(self) -> pd.DataFrame:
+    def get_accounts(self) -> pd.DataFrame:
         """Retrieves your list of accounts"""
 
         # GET /api/v3/account
         try:
-            resp = self.authAPI("GET", "/api/v3/account", {"recvWindow": self.recv_window})
+            resp = self.auth_api("GET", "/api/v3/account", {"recvWindow": self.recv_window})
 
             # unexpected data, then return
             if len(resp) == 0 or "balances" not in resp:
@@ -197,18 +197,18 @@ class AuthAPI(AuthAPIBase):
         except Exception:
             return pd.DataFrame()
 
-    def getAccount(self) -> pd.DataFrame:
+    def get_account(self) -> pd.DataFrame:
         """Retrieves all accounts for Binance as there is no specific account id"""
 
-        return self.getAccounts()
+        return self.get_accounts()
 
-    def getFees(self, market: str = "") -> pd.DataFrame:
+    def get_fees(self, market: str = "") -> pd.DataFrame:
         """Retrieves a account fees"""
 
         volume = 0
         try:
             # GET /api/v3/klines
-            resp = self.authAPI(
+            resp = self.auth_api(
                 "GET",
                 "/api/v3/klines",
                 {"symbol": "BTCUSDT", "interval": "1d", "limit": 30},
@@ -243,7 +243,7 @@ class AuthAPI(AuthAPIBase):
             pass
 
         # GET /api/v3/account
-        resp = self.authAPI("GET", "/api/v3/account", {"recvWindow": self.recv_window})
+        resp = self.auth_api("GET", "/api/v3/account", {"recvWindow": self.recv_window})
 
         # unexpected data, then return
         if len(resp) == 0:
@@ -271,9 +271,9 @@ class AuthAPI(AuthAPIBase):
         """Retrieves the maker fee"""
 
         if len(market):
-            fees = self.getFees(market)
+            fees = self.get_fees(market)
         else:
-            fees = self.getFees()
+            fees = self.get_fees()
 
         if len(fees) == 0 or "maker_fee_rate" not in fees:
             Logger.error(f"error: 'maker_fee_rate' not in fees (using {DEFAULT_MAKER_FEE_RATE} as a fallback)")
@@ -285,9 +285,9 @@ class AuthAPI(AuthAPIBase):
         """Retrieves the taker fee"""
 
         if len(market) is not None:
-            fees = self.getFees(market)
+            fees = self.get_fees(market)
         else:
-            fees = self.getFees()
+            fees = self.get_fees()
 
         if len(fees) == 0 or "taker_fee_rate" not in fees:
             Logger.error(f"error: 'taker_fee_rate' not in fees (using {DEFAULT_TAKER_FEE_RATE} as a fallback)")
@@ -295,10 +295,10 @@ class AuthAPI(AuthAPIBase):
 
         return float(fees["taker_fee_rate"].to_string(index=False).strip())
 
-    def getUSDVolume(self) -> float:
+    def get_usd_volume(self) -> float:
         """Retrieves the USD volume"""
 
-        fees = self.getFees()
+        fees = self.get_fees()
         return float(fees["usd_volume"].to_string(index=False).strip())
 
     def getMarkets(self) -> list:
@@ -306,7 +306,7 @@ class AuthAPI(AuthAPIBase):
 
         try:
             # GET /api/v3/exchangeInfo
-            resp = self.authAPI("GET", "/api/v3/exchangeInfo")
+            resp = self.auth_api("GET", "/api/v3/exchangeInfo")
 
             # unexpected data, then return
             if len(resp) == 0:
@@ -332,14 +332,14 @@ class AuthAPI(AuthAPIBase):
         markets = None
         if market != "":
             # validates the market is syntactically correct
-            if not self._isMarketValid(market):
+            if not self._is_market_valid(market):
                 raise ValueError("Binance market is invalid.")
         else:
             if len(order_history) > 0 or status != "all":
                 full_scan = False
                 self.order_history = order_history
                 if len(self.order_history) > 0:
-                    if self._isMarketValid(market) and market not in self.order_history:
+                    if self._is_market_valid(market) and market not in self.order_history:
                         self.order_history.append(market)
                     markets = self.order_history
             else:
@@ -364,7 +364,7 @@ class AuthAPI(AuthAPIBase):
                         print(f"scanning {market} order history.")
 
                     # GET /api/v3/allOrders
-                    resp = self.authAPI(
+                    resp = self.auth_api(
                         "GET",
                         "/api/v3/allOrders",
                         {"symbol": market, "recvWindow": self.recv_window},
@@ -396,7 +396,7 @@ class AuthAPI(AuthAPIBase):
                     print(f"add to order history to prevent full scan: {self.order_history}")
             else:
                 # GET /api/v3/allOrders
-                resp = self.authAPI(
+                resp = self.auth_api(
                     "GET",
                     "/api/v3/allOrders",
                     {"symbol": market, "recvWindow": self.recv_window},
@@ -496,7 +496,7 @@ class AuthAPI(AuthAPIBase):
 
         try:
             # GET /api/v3/time
-            resp = self.authAPI("GET", "/api/v3/time")
+            resp = self.auth_api("GET", "/api/v3/time")
             return self.convert_time(int(resp["serverTime"])) - timedelta(hours=1)
         except Exception as e:
             Logger.error(f"Error: {e}")
@@ -509,7 +509,7 @@ class AuthAPI(AuthAPIBase):
 
         try:
             # GET /api/v3/exchangeInfo
-            resp = self.authAPI("GET", "/api/v3/exchangeInfo", {"symbol": market})
+            resp = self.auth_api("GET", "/api/v3/exchangeInfo", {"symbol": market})
 
             # unexpected data, then return
             if len(resp) == 0:
@@ -537,7 +537,7 @@ class AuthAPI(AuthAPIBase):
 
         try:
             # GET /sapi/v1/asset/tradeFee
-            resp = self.authAPI(
+            resp = self.auth_api(
                 "GET",
                 "/sapi/v1/asset/tradeFee",
                 {"symbol": market, "recvWindow": self.recv_window},
@@ -559,7 +559,7 @@ class AuthAPI(AuthAPIBase):
         """Retrieves the market ticker"""
 
         # validates the market is syntactically correct
-        if not self._isMarketValid(market):
+        if not self._is_market_valid(market):
             raise TypeError("Binance market required.")
 
         now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
@@ -580,7 +580,7 @@ class AuthAPI(AuthAPIBase):
 
         try:
             # GET /api/v3/ticker/price
-            resp = self.authAPI("GET", "/api/v3/ticker/price", {"symbol": market})
+            resp = self.auth_api("GET", "/api/v3/ticker/price", {"symbol": market})
 
             # unexpected data, then return
             if len(resp) == 0:
@@ -597,7 +597,7 @@ class AuthAPI(AuthAPIBase):
         """Executes a market buy providing a funding amount"""
 
         # validates the market is syntactically correct
-        if not self._isMarketValid(market):
+        if not self._is_market_valid(market):
             raise ValueError("Binance market is invalid.")
 
         # validates quote_quantity is either an integer or float
@@ -632,9 +632,9 @@ class AuthAPI(AuthAPIBase):
 
             # POST /api/v3/order/test
             if test is True:
-                resp = self.authAPI("POST", "/api/v3/order/test", order)
+                resp = self.auth_api("POST", "/api/v3/order/test", order)
             else:
-                resp = self.authAPI("POST", "/api/v3/order", order)
+                resp = self.auth_api("POST", "/api/v3/order", order)
 
             return resp
         except Exception as err:
@@ -646,7 +646,7 @@ class AuthAPI(AuthAPIBase):
         """Executes a market sell providing a crypto amount"""
 
         # validates the market is syntactically correct
-        if not self._isMarketValid(market):
+        if not self._is_market_valid(market):
             raise ValueError("Binance market is invalid.")
 
         if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
@@ -677,9 +677,9 @@ class AuthAPI(AuthAPIBase):
 
             # POST /api/v3/order/test
             if test is True:
-                resp = self.authAPI("POST", "/api/v3/order/test", order)
+                resp = self.auth_api("POST", "/api/v3/order/test", order)
             else:
-                resp = self.authAPI("POST", "/api/v3/order", order)
+                resp = self.auth_api("POST", "/api/v3/order", order)
 
             return resp
         except Exception as err:
@@ -687,7 +687,7 @@ class AuthAPI(AuthAPIBase):
             Logger.error(f"{ts} Binance  market_sell {str(err)}")
             return []
 
-    def authAPI(self, method: str, uri: str, payload: str = {}) -> dict:
+    def auth_api(self, method: str, uri: str, payload: str = {}) -> dict:
         """Initiates a REST API call to the exchange"""
 
         if not isinstance(method, str):
@@ -814,17 +814,17 @@ class PublicAPI(AuthAPIBase):
 
         try:
             # GET /api/v3/time
-            resp = self.authAPI("GET", "/api/v3/time")
+            resp = self.auth_api("GET", "/api/v3/time")
             return self.convert_time(int(resp["serverTime"])) - timedelta(hours=1)
         except Exception as e:
             Logger.error(f"Error: {e}")
             return None
 
-    def getMarkets24HrStats(self) -> pd.DataFrame():
+    def get_markets_24hr_stats(self) -> pd.DataFrame():
         """Retrieves exchange markets 24hr stats"""
 
         try:
-            return self.authAPI("GET", "/api/v3/ticker/24hr")
+            return self.auth_api("GET", "/api/v3/ticker/24hr")
         except Exception:
             return pd.DataFrame()
 
@@ -832,7 +832,7 @@ class PublicAPI(AuthAPIBase):
         """Retrieves the market ticker"""
 
         # validates the market is syntactically correct
-        if not self._isMarketValid(market):
+        if not self._is_market_valid(market):
             raise TypeError("Binance market required.")
 
         now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
@@ -852,7 +852,7 @@ class PublicAPI(AuthAPIBase):
                 return (now, 0.0)
 
         # GET /api/v3/ticker/price
-        resp = self.authAPI("GET", "/api/v3/ticker/price", {"symbol": market})
+        resp = self.auth_api("GET", "/api/v3/ticker/price", {"symbol": market})
 
         if "price" in resp:
             return (str(self.get_time()), float(resp["price"]))
@@ -870,7 +870,7 @@ class PublicAPI(AuthAPIBase):
         """Retrieves historical market data"""
 
         # validates the market is syntactically correct
-        if not self._isMarketValid(market):
+        if not self._is_market_valid(market):
             raise TypeError("Binance market required.")
 
         # validates the ISO 8601 end date is a string (if provided)
@@ -891,7 +891,7 @@ class PublicAPI(AuthAPIBase):
                 startTime = int(datetime.timestamp(datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")) * 1000)
 
                 # GET /api/v3/klines
-                resp = self.authAPI(
+                resp = self.auth_api(
                     "GET",
                     "/api/v3/klines",
                     {
@@ -905,7 +905,7 @@ class PublicAPI(AuthAPIBase):
                 startTime = int(datetime.timestamp(datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")) * 1000)
 
                 # GET /api/v3/klines
-                resp = self.authAPI(
+                resp = self.auth_api(
                     "GET",
                     "/api/v3/klines",
                     {
@@ -917,7 +917,7 @@ class PublicAPI(AuthAPIBase):
                 )
             else:
                 # GET /api/v3/klines
-                resp = self.authAPI(
+                resp = self.auth_api(
                     "GET",
                     "/api/v3/klines",
                     {"symbol": market, "interval": granularity.to_short, "limit": 300},
@@ -1003,7 +1003,7 @@ class PublicAPI(AuthAPIBase):
 
         return df
 
-    def authAPI(self, method: str, uri: str, payload: str = {}) -> dict:
+    def auth_api(self, method: str, uri: str, payload: str = {}) -> dict:
         """Initiates a REST API call to exchange"""
 
         if not isinstance(method, str):
@@ -1226,7 +1226,7 @@ class WebSocketClient(WebSocket, AuthAPIBase):
 
         for market in markets:
             # validates the market is syntactically correct
-            if not self._isMarketValid(market):
+            if not self._is_market_valid(market):
                 raise ValueError("Binance market is invalid.")
 
         valid_urls = [

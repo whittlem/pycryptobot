@@ -3473,7 +3473,7 @@ class PyCryptoBot(BotConfig):
         if max_iterations == 1:
             return df1
 
-        def getPreviousDateRange(df: pd.DataFrame = None) -> tuple:
+        def get_previous_date_range(df: pd.DataFrame = None) -> tuple:
             end_date = df["date"].min() - timedelta(
                 seconds=(granularity.to_integer / 60)
             )
@@ -3483,7 +3483,7 @@ class PyCryptoBot(BotConfig):
         iterations = 0
         result_df = pd.DataFrame()
         while iterations < (max_iterations - 1):
-            start_date, end_date = getPreviousDateRange(df1)
+            start_date, end_date = get_previous_date_range(df1)
             df2 = self.get_historical_data(
                 market, granularity, None, start_date, end_date
             )

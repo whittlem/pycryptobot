@@ -2,7 +2,7 @@ import time
 import json
 import pandas as pd
 
-from models.PyCryptoBot import PyCryptoBot
+from controllers.PyCryptoBot import PyCryptoBot
 from models.exchange import kucoin
 from models.helper.TelegramBotHelper import TelegramBotHelper as TGBot
 from models.Trading import TechnicalAnalysis
@@ -13,17 +13,18 @@ from models.exchange.Granularity import Granularity
 from models.exchange.ExchangesEnum import Exchange
 
 GRANULARITY = Granularity(Granularity.ONE_HOUR)
+
 try:
     with open("scanner.json", encoding='utf8') as json_file:
         config = json.load(json_file)
 except IOError as err:
-    print (err)
+    print(err)
 
 try:
     with open("config.json", encoding='utf8') as json_file:
         bot_config = json.load(json_file)
 except IOError as err:
-    print (err)
+    print(err)
 
 for exchange in config:
     ex = Exchange(exchange)
@@ -39,7 +40,7 @@ for exchange in config:
             raise ValueError(f"Invalid exchange: {ex}")
 
         markets = []
-        resp = api.markets24HrStats()
+        resp = api.get_markets_24hr_stats()
         if ex == Exchange.BINANCE:
             for row in resp:
                 if row["symbol"].endswith(quote):
@@ -55,7 +56,6 @@ for exchange in config:
                 if result["symbol"].endswith(f"-{quote}"):
                     markets.append(result)
 
-
         df_markets = pd.DataFrame(markets)
 
         if ex == Exchange.BINANCE:
@@ -64,7 +64,6 @@ for exchange in config:
             df_markets = df_markets[["market", "last", "volume"]]
         elif ex == Exchange.KUCOIN:
             df_markets = df_markets[["symbol", "last", "volValue"]]
-
 
         df_markets.columns = ["market", "price", "volume"]
         df_markets["price"] = df_markets["price"].astype(float)

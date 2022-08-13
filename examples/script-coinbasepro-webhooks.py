@@ -1,4 +1,5 @@
-import json, time
+import json
+import time
 from threading import Thread
 from websocket import create_connection, WebSocketConnectionClosedException
 
@@ -17,7 +18,7 @@ def main():
             json.dumps(
                 {
                     "type": "subscribe",
-                    "product_ids": ['BTC-USD'],
+                    "product_ids": ["BTC-USD"],
                     "channels": ["matches"],
                 }
             )

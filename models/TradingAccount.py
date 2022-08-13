@@ -192,7 +192,7 @@ class TradingAccount:
                 )
                 trycnt, maxretry = (0, 5)
                 while trycnt <= maxretry:
-                    df = model.getAccounts()
+                    df = model.get_accounts()
 
                     if isinstance(df, pd.DataFrame) and len(df) > 0:
                         if currency == "":
@@ -291,7 +291,7 @@ class TradingAccount:
                     self.app.api_url,
                     recv_window=self.app.get_recv_window,
                 )
-                df = model.getAccount()
+                df = model.get_account()
                 if isinstance(df, pd.DataFrame):
                     if currency == "":
                         # retrieve all balances
@@ -395,7 +395,7 @@ class TradingAccount:
                 )
                 trycnt, maxretry = (0, 5)
                 while trycnt <= maxretry:
-                    df = model.getAccounts()
+                    df = model.get_accounts()
 
                     if len(df) > 0:
                         # retrieve all balances, but check the resp

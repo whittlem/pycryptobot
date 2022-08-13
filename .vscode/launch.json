@@ -5,7 +5,7 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "pycryptobot.py",
+            "program": "python.py",
             "console": "integratedTerminal",
             "args": []
         }

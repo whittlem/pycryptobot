@@ -1,27 +1,31 @@
-from models.PyCryptoBot import PyCryptoBot
-from models.exchange.binance import AuthAPI as BAuthAPI
-from models.exchange.coinbase_pro import AuthAPI as CAuthAPI
+import sys
+
+sys.path.insert(0, ".")
+
+from controllers.PyCryptoBot import PyCryptoBot  # noqa: E402
+from models.exchange.binance import AuthAPI as BAuthAPI  # noqa: E402
+from models.exchange.coinbase_pro import AuthAPI as CAuthAPI  # noqa: E402
 
 # Coinbase Pro fees
-app = PyCryptoBot(exchange='coinbasepro')
-api = CAuthAPI(app.api_key, self.api_secret, self.api_passphrase, self.api_url)
-#print (api.get_taker_fee())
-#print (api.get_taker_fee('BTC-GBP'))
-#print (api.get_maker_fee())
-#print (api.get_maker_fee('BTC-GBP'))
-#print (api.getFees('BTCGBP'))
-#print (api.getFees())
-print (app.get_maker_fee())
-print (app.get_taker_fee())
+app = PyCryptoBot(exchange="coinbasepro")
+api = CAuthAPI(app.api_key, app.api_secret, app.api_passphrase, app.api_url)
+# print (api.get_taker_fee())
+# print (api.get_taker_fee('BTC-GBP'))
+# print (api.get_maker_fee())
+# print (api.get_maker_fee('BTC-GBP'))
+# print (api.get_fees('BTCGBP'))
+# print (api.get_fees())
+print(app.get_maker_fee())
+print(app.get_taker_fee())
 
 # Binance fees
-app = PyCryptoBot(exchange='binance')
-api = BAuthAPI(app.api_key, self.api_secret, self.api_url)
-#print (api.get_taker_fee())
-#print (api.get_taker_fee('BTCGBP'))
-#print (api.get_maker_fee())
-#print (api.get_maker_fee('BTCGBP'))
-#print (api.getFees('BTCGBP'))
-#print (api.getFees())
-print (app.get_maker_fee())
-print (app.get_taker_fee())
+app = PyCryptoBot(exchange="binance")
+api = BAuthAPI(app.api_key, app.api_secret, app.api_url)
+# print (api.get_taker_fee())
+# print (api.get_taker_fee('BTCGBP'))
+# print (api.get_maker_fee())
+# print (api.get_maker_fee('BTCGBP'))
+# print (api.get_fees('BTCGBP'))
+# print (api.get_fees())
+print(app.get_maker_fee())
+print(app.get_taker_fee())

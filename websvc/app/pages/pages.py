@@ -42,14 +42,14 @@ def footer() -> str:
     """
 
 
-def isBinanceMarketValid(market: str) -> bool:
+def is_binance_market_valid(market: str) -> bool:
     p = re.compile(r"^[A-Z0-9]{5,12}$")
     if p.match(market):
         return True
     return False
 
 
-def isCoinbaseMarketValid(market: str) -> bool:
+def is_coinbase_market_valid(market: str) -> bool:
     p = re.compile(r"^[0-9A-Z]{1,20}\-[1-9A-Z]{2,5}$")
     if p.match(market):
         return True
@@ -265,7 +265,7 @@ class Pages:
     @staticmethod
     def technical_analysis(exchange: str, market: str, g1, g2, g3) -> str:
         if exchange == "binance":
-            if not isBinanceMarketValid(market):
+            if not is_binance_market_valid(market):
                 return f"""
                 {header()}
                 <h4>Invalid Market!</h4>
@@ -276,7 +276,7 @@ class Pages:
                 {footer()}
                 """
         elif exchange == "coinbasepro":
-            if not isCoinbaseMarketValid(market):
+            if not is_coinbase_market_valid(market):
                 return f"""
                 {header()}
                 <h4>Invalid Market!</h4>

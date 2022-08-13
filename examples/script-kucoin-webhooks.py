@@ -2,8 +2,12 @@ import os
 import sys
 import time
 import signal
-from models.exchange.kucoin import WebSocketClient as KWebSocketClient
-from models.exchange.Granularity import Granularity
+
+sys.path.insert(0, ".")
+
+from models.exchange.kucoin import WebSocketClient as KWebSocketClient  # noqa: E402
+from models.exchange.Granularity import Granularity  # noqa: E402
+
 
 def cls():
     os.system("cls" if os.name == "nt" else "clear")
@@ -24,7 +28,6 @@ try:
             if (
                 message_count != websocket.message_count
                 and websocket.tickers is not None
-#                and websocket.candles is not None
             ):
                 cls()
                 print("\nMessageCount =", "%i \n" % websocket.message_count)

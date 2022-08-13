@@ -21,10 +21,7 @@ try:
     message_count = 0
     while True:
         if websocket:
-            if (
-                message_count != websocket.message_count
-                and websocket.tickers is not None
-            ):
+            if message_count != websocket.message_count and websocket.tickers is not None:
                 cls()
                 print(f"Start time: {websocket.getStartTime()}")
                 print(f"Time elapsed: {websocket.time_elapsed} seconds")

@@ -5,6 +5,7 @@ import signal
 from models.exchange.coinbase_pro import WebSocketClient as CWebSocketClient
 from models.exchange.Granularity import Granularity
 
+
 def cls():
     os.system("cls" if os.name == "nt" else "clear")
 
@@ -23,7 +24,6 @@ try:
         if websocket:
             if (
                 message_count != websocket.message_count
-#                and websocket.tickers is not None
                 and websocket.candles is not None
             ):
                 cls()
