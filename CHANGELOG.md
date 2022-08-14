@@ -59,7 +59,7 @@ Upgrade library dependencies (if required):
 - added options to trailing sell and buy that use the custom points system to trigger immediate buys or sells if the respective setting is active
 - added trailingsellbailout setting - if trailing sell is active and waiting, but self.price drops drastically, sell immediately at this level
 - revised buy/sell transactions in pycryptobot.py for better recovery if an error occurs during trade processing (revising previous fixes)
-- added adjust_total_periods config option as advanced option to adjust periods/candles to compensate for Kucoin 100 candle max (hope to fix in future), but this option can also be used for traders looking to trade newly added coins on exchanges
+- added adjusttotalperiods config option as advanced option to adjust periods/candles to compensate for Kucoin 100 candle max (hope to fix in future), but this option can also be used for traders looking to trade newly added coins on exchanges
 - added manual_trades_only config option for users wanting HODL some coins, but still monitor margin and status.  Manual trade through Telegram Bot or on exchange.
 - made a few spell corrections
 - added some new comments in places needing them

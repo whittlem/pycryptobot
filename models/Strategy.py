@@ -249,7 +249,7 @@ class Strategy:
         # if ALL CUSTOM signals are still buy and strength is strong don't trigger a sell yet
         if (  # Custom Strategy loaded
             self.CS_ready
-            and self.app.sell_trigger_override is True
+            and self.app.selltriggeroverride is True
             and self.CS.buy_pts >= self.CS.sell_override_pts
         ):
             return False

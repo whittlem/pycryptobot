@@ -415,7 +415,7 @@ Note: the trailingsell function will sell if the self.price is within 10% of the
 * "tslmultiplier" this is a positive integer (eg. 1.5) that is multiplied by "trailingstoploss" when "trailingstoplosstrigger" is reached to set the next "trailingstoploss" level.
 * "tsltriggermultiplier" is a positive integer (eg. 1.5) that is multiplied by "trailingstoplosstrigger" when the previous trigger settings is reach to set the next "trailingstoplosstrigger" level.
     NOTE: both "trailingstoploss" and "trailingstoplosstrigger" settings are still required WITH "dynamictsl" as well as "tslmultipler", "tsltriggermultiplier" and "tslmaxpcnt" are also required.
-* "adjust_total_periods" is an integer > 26 and < 300 used to adjust the total periods (candles) in the current dataframe for the current market used in technical analysis.  This setting came about because Kucoin made changes to their API that is currently only returning 100 periods (candles) for responses.  Hopefully this problem will be resolved, but adjusting the total periods can be useful when trying to trade new crypto pairs that don't have a full 300 periods of data yet.
+* "adjusttotalperiods" is an integer > 26 and < 300 used to adjust the total periods (candles) in the current dataframe for the current market used in technical analysis.  This setting came about because Kucoin made changes to their API that is currently only returning 100 periods (candles) for responses.  Hopefully this problem will be resolved, but adjusting the total periods can be useful when trying to trade new crypto pairs that don't have a full 300 periods of data yet.
     *** Note:  if adjusting to less than 300 periods, Trading Graphs, SMA Buy Signals and "disablebullonly" will NOT work correctly as well as some of the other indicators.  Only use this setting if absolutely necessary or you know what you are doing.  Pycryptobot is designed to analyze 300 candles for each market.
 
 ## Optional Options
@@ -818,7 +818,7 @@ Weighted point system found near the top of Strategy_CS.py in the tradeSignals f
 
     The below are the defaults as currently set in Strategy_CS.py
 
-        # max possible points - this is used if sell_trigger_override setting is True, this value is used (see optional settings below)
+        # max possible points - this is used if selltriggeroverride setting is True, this value is used (see optional settings below)
         self.max_pts = 11
         # total points required to buy
         self.pts_to_buy = 8 # more points requires more signals to activate, less risk

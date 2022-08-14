@@ -82,7 +82,7 @@ class BotConfig:
         self.trailingimmediatesell = False
         self.trailingsellimmediatepcnt = None
         self.trailingsellbailoutpcnt = None
-        self.sell_trigger_override = False
+        self.selltriggeroverride = False
 
         self.sellatresistance = False
         self.autorestart = False
@@ -142,7 +142,7 @@ class BotConfig:
         self.sim_smartswitch = False
 
         self.usekucoincache = False
-        self.adjust_total_periods = 300
+        self.adjusttotalperiods = 300
         self.manual_trades_only = False
 
         self.recv_window = self._set_recv_window()
@@ -606,11 +606,6 @@ class BotConfig:
             action="store_true",
             help="bypass is_sell_trigger if STRONG buy signals",
         )
-        parser.add_argument(
-            "--nobuynearhighpcnt",
-            type=float,
-            help="optionally set the percent of the high for buying near high if enabled",
-        )
 
         # optional options
         parser.add_argument(
@@ -660,25 +655,6 @@ class BotConfig:
             "--disablebullonly",
             action="store_true",
             help="disable only buying in bull market",
-        )
-        parser.add_argument(
-            "--disablebuynearhigh",
-            action="store_true",
-            help="disable buy within 3 percent of high",
-        )
-        parser.add_argument(
-            "--disablebuymacd", action="store_true", help="disable macd buy signal"
-        )
-        parser.add_argument(
-            "--disablebuyema", action="store_true", help="disable ema buy signal"
-        )
-        parser.add_argument(
-            "--disablebuyobv", action="store_true", help="disable obv buy signal"
-        )
-        parser.add_argument(
-            "--disablebuyelderray",
-            action="store_true",
-            help="disable elder ray buy signal",
         )
         parser.add_argument(
             "--disablefailsafefibonaccilow",
@@ -737,11 +713,6 @@ class BotConfig:
             "--startmethod", type=str, help="Enable logging orders in json format"
         )
         parser.add_argument(
-            "--adjust_total_periods",
-            type=float,
-            help="adjust total periods available for market analysis",
-        )
-        parser.add_argument(
             "--manual_trades_only",
             action="store_true",
             help="Manual Trades Only (HODL)",
@@ -750,7 +721,38 @@ class BotConfig:
         # TODO: arguments v2
 
         parser.add_argument(
-            "--ema1226", type=int, help="Enable EMA12/EMA26 Crossovers"
+            "--buynearhigh",
+            type=int,
+            help="Prevent the bot from buying at a recent high",
+        )
+        parser.add_argument(
+            "--buynearhighpcnt",
+            type=float,
+            help="Percentage from the range high to not buy",
+        )
+        parser.add_argument(
+            "--adjusttotalperiods",
+            type=int,
+            help="Adjust data points in historical trading data",
+        )
+
+        parser.add_argument(
+            "--selltriggeroverride <0|1>",
+            action="store_true",
+            help="Override sell trigger if strong buy",
+        )
+
+        parser.add_argument(
+            "--ema1226", type=int, help="Enable EMA12/EMA26 crossovers"
+        )
+        parser.add_argument(
+            "--macdsignal", type=int, help="Enable MACD/Signal crossovers"
+        )
+        parser.add_argument(
+            "--obv", type=int, help="Enable On-Balance Volume (OBV)"
+        )
+        parser.add_argument(
+            "--elderray", type=int, help="Enable Elder-Ray Indices"
         )
 
         # pylint: disable=unused-variable

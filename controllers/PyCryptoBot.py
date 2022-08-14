@@ -74,16 +74,12 @@ class PyCryptoBot(BotConfig):
     def __init__(self, config_file: str = None, exchange: Exchange = None):
         self.config_file = config_file or "config.json"
         self.exchange = exchange
-        super(PyCryptoBot, self).__init__(
-            filename=self.config_file, exchange=self.exchange
-        )
+        super(PyCryptoBot, self).__init__(filename=self.config_file, exchange=self.exchange)
 
         self.console_term = Console()  # logs to the screen
         self.console_log = Console(file=open(self.logfile, "w"))  # logs to file
 
-        self.table_console = Table(
-            title=None, box=None, show_header=False, show_footer=False
-        )
+        self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)
 
         self.s = sched.scheduler(time.time, time.sleep)
 
@@ -116,7 +112,7 @@ class PyCryptoBot(BotConfig):
             ]
         )
 
-        # variables that need defining
+        # default config variable options
         self.nosellminpcnt = None
 
         if trading_myPta is True and pandas_ta_enabled is True:
@@ -169,24 +165,16 @@ class PyCryptoBot(BotConfig):
                 sys.exit(0)
 
             if control_status == "reload":
-                RichText.notify(
-                    f"Reloading config parameters {self.market}", self, "normal"
-                )
+                RichText.notify(f"Reloading config parameters {self.market}", self, "normal")
                 self.read_config(self.exchange)
                 if self.websocket:
                     self.websocket_connection.close()
                     if self.exchange == Exchange.BINANCE:
-                        self.websocket_connection = BWebSocketClient(
-                            [self.market], self.granularity
-                        )
+                        self.websocket_connection = BWebSocketClient([self.market], self.granularity)
                     elif self.exchange == Exchange.COINBASEPRO:
-                        self.websocket_connection = CWebSocketClient(
-                            [self.market], self.granularity
-                        )
+                        self.websocket_connection = CWebSocketClient([self.market], self.granularity)
                     elif self.exchange == Exchange.KUCOIN:
-                        self.websocket_connection = KWebSocketClient(
-                            [self.market], self.granularity
-                        )
+                        self.websocket_connection = KWebSocketClient([self.market], self.granularity)
                     self.websocket_connection.start()
 
                 list(map(self.s.cancel, self.s.queue))
@@ -202,18 +190,14 @@ class PyCryptoBot(BotConfig):
             # runs once at the start of a simulation
             if self.app_started:
                 if self.simstart_date is not None:
-                    self.state.iterations = self.trading_data.index.get_loc(
-                        str(self.get_date_from_iso8601_str(self.simstart_date))
-                    )
+                    self.state.iterations = self.trading_data.index.get_loc(str(self.get_date_from_iso8601_str(self.simstart_date)))
 
                 self.app_started = False
 
         # reset self.websocket_connection every 23 hours if applicable
         if self.websocket and not self.is_sim:
             if self.websocket_connection.time_elapsed > 82800:
-                RichText.notify(
-                    "Websocket requires a restart every 23 hours!", self, "normal"
-                )
+                RichText.notify("Websocket requires a restart every 23 hours!", self, "normal")
                 RichText.notify("Stopping websocket...", self, "normal")
                 self.websocket_connection.close()
                 RichText.notify("Starting websocket...", self, "normal")
@@ -243,47 +227,27 @@ class PyCryptoBot(BotConfig):
                     )
                 )
             ):
-                self.trading_data = self.get_historical_data(
-                    self.market, self.granularity, self.websocket_connection
-                )
+                self.trading_data = self.get_historical_data(self.market, self.granularity, self.websocket_connection)
                 self.state.closed_candle_row = -1
-                self.price = float(
-                    self.trading_data.iloc[
-                        -1, self.trading_data.columns.get_loc("close")
-                    ]
-                )
+                self.price = float(self.trading_data.iloc[-1, self.trading_data.columns.get_loc("close")])
 
             else:
                 # set time and price with ticker data and add/update current candle
                 ticker = self.get_ticker(self.market, self.websocket_connection)
                 # if 0, use last close value as self.price
-                self.price = (
-                    self.trading_data["close"].iloc[-1] if ticker[1] == 0 else ticker[1]
-                )
+                self.price = self.trading_data["close"].iloc[-1] if ticker[1] == 0 else ticker[1]
                 self.ticker_date = ticker[0]
                 self.ticker_price = ticker[1]
 
                 if self.state.closed_candle_row == -2:
-                    self.trading_data.iloc[
-                        -1, self.trading_data.columns.get_loc("low")
-                    ] = (
-                        self.price
-                        if self.price < self.trading_data["low"].iloc[-1]
-                        else self.trading_data["low"].iloc[-1]
+                    self.trading_data.iloc[-1, self.trading_data.columns.get_loc("low")] = (
+                        self.price if self.price < self.trading_data["low"].iloc[-1] else self.trading_data["low"].iloc[-1]
                     )
-                    self.trading_data.iloc[
-                        -1, self.trading_data.columns.get_loc("high")
-                    ] = (
-                        self.price
-                        if self.price > self.trading_data["high"].iloc[-1]
-                        else self.trading_data["high"].iloc[-1]
+                    self.trading_data.iloc[-1, self.trading_data.columns.get_loc("high")] = (
+                        self.price if self.price > self.trading_data["high"].iloc[-1] else self.trading_data["high"].iloc[-1]
                     )
-                    self.trading_data.iloc[
-                        -1, self.trading_data.columns.get_loc("close")
-                    ] = self.price
-                    self.trading_data.iloc[
-                        -1, self.trading_data.columns.get_loc("date")
-                    ] = datetime.strptime(ticker[0], "%Y-%m-%d %H:%M:%S")
+                    self.trading_data.iloc[-1, self.trading_data.columns.get_loc("close")] = self.price
+                    self.trading_data.iloc[-1, self.trading_data.columns.get_loc("date")] = datetime.strptime(ticker[0], "%Y-%m-%d %H:%M:%S")
                     tsidx = pd.DatetimeIndex(self.trading_data["date"])
                     self.trading_data.set_index(tsidx, inplace=True)
                     self.trading_data.index.name = "ts"
@@ -297,16 +261,8 @@ class PyCryptoBot(BotConfig):
                                 datetime.strptime(ticker[0], "%Y-%m-%d %H:%M:%S"),
                                 self.trading_data["market"].iloc[-1],
                                 self.trading_data["granularity"].iloc[-1],
-                                (
-                                    self.price
-                                    if self.price < self.trading_data["close"].iloc[-1]
-                                    else self.trading_data["close"].iloc[-1]
-                                ),
-                                (
-                                    self.price
-                                    if self.price > self.trading_data["close"].iloc[-1]
-                                    else self.trading_data["close"].iloc[-1]
-                                ),
+                                (self.price if self.price < self.trading_data["close"].iloc[-1] else self.trading_data["close"].iloc[-1]),
+                                (self.price if self.price > self.trading_data["close"].iloc[-1] else self.trading_data["close"].iloc[-1]),
                                 self.trading_data["close"].iloc[-1],
                                 self.price,
                                 self.trading_data["volume"].iloc[-1],
@@ -339,25 +295,17 @@ class PyCryptoBot(BotConfig):
                     if self.simstart_date is not None:
                         start_date = self.get_date_from_iso8601_str(self.simstart_date)
                     else:
-                        start_date = self.get_date_from_iso8601_str(
-                            str(df.head(1).index.format()[0])
-                        )
+                        start_date = self.get_date_from_iso8601_str(str(df.head(1).index.format()[0]))
 
                     if self.simend_date is not None:
                         if self.simend_date == "now":
-                            end_date = self.get_date_from_iso8601_str(
-                                str(datetime.now())
-                            )
+                            end_date = self.get_date_from_iso8601_str(str(datetime.now()))
                         else:
                             end_date = self.get_date_from_iso8601_str(self.simend_date)
                     else:
-                        end_date = self.get_date_from_iso8601_str(
-                            str(df.tail(1).index.format()[0])
-                        )
+                        end_date = self.get_date_from_iso8601_str(str(df.tail(1).index.format()[0]))
 
-                    simDate = self.get_date_from_iso8601_str(
-                        str(self.state.last_df_index)
-                    )
+                    simDate = self.get_date_from_iso8601_str(str(self.state.last_df_index))
 
                     trading_data = self.get_smart_switch_historical_data_chained(
                         self.market,
@@ -382,28 +330,19 @@ class PyCryptoBot(BotConfig):
                     dateFound = False
                     while dateFound is False:
                         try:
-                            self.state.iterations = (
-                                trading_data.index.get_loc(str(simDate)) + 1
-                            )
+                            self.state.iterations = trading_data.index.get_loc(str(simDate)) + 1
                             dateFound = True
                         except Exception:
                             simDate += timedelta(seconds=self.granularity.value[0])
 
-                    if (
-                        self.get_date_from_iso8601_str(str(simDate)).isoformat()
-                        == self.get_date_from_iso8601_str(
-                            str(self.state.last_df_index)
-                        ).isoformat()
-                    ):
+                    if self.get_date_from_iso8601_str(str(simDate)).isoformat() == self.get_date_from_iso8601_str(str(self.state.last_df_index)).isoformat():
                         self.state.iterations += 1
 
                     if self.state.iterations == 0:
                         self.state.iterations = 1
 
                     trading_dataCopy = trading_data.copy()
-                    _technical_analysis = TechnicalAnalysis(
-                        trading_dataCopy, self.adjust_total_periods
-                    )
+                    _technical_analysis = TechnicalAnalysis(trading_dataCopy, self.adjusttotalperiods)
 
                     # if 'bool(self.df_last["morning_star"].values[0])' not in df:
                     _technical_analysis.add_all()
@@ -414,9 +353,7 @@ class PyCryptoBot(BotConfig):
 
             elif self.smart_switch == 1 and _technical_analysis is None:
                 trading_dataCopy = trading_data.copy()
-                _technical_analysis = TechnicalAnalysis(
-                    trading_dataCopy, self.adjust_total_periods
-                )
+                _technical_analysis = TechnicalAnalysis(trading_dataCopy, self.adjusttotalperiods)
 
                 if "morning_star" not in df:
                     _technical_analysis.add_all()
@@ -424,9 +361,7 @@ class PyCryptoBot(BotConfig):
                 df = _technical_analysis.get_df()
 
         else:
-            _technical_analysis = TechnicalAnalysis(
-                self.trading_data, len(self.trading_data)
-            )
+            _technical_analysis = TechnicalAnalysis(self.trading_data, len(self.trading_data))
             _technical_analysis.add_all()
             df = _technical_analysis.get_df()
 
@@ -441,11 +376,7 @@ class PyCryptoBot(BotConfig):
         else:
             current_df_index = self.state.last_df_index
 
-        formatted_current_df_index = (
-            f"{current_df_index} 00:00:00"
-            if len(current_df_index) == 10
-            else current_df_index
-        )
+        formatted_current_df_index = f"{current_df_index} 00:00:00" if len(current_df_index) == 10 else current_df_index
 
         current_sim_date = formatted_current_df_index
 
@@ -474,10 +405,7 @@ class PyCryptoBot(BotConfig):
                 )
 
             if not self.telegramtradesonly:
-                self.notify_telegram(
-                    self.market
-                    + " open order detected smart switching to 300 (5 min) granularity"
-                )
+                self.notify_telegram(self.market + " open order detected smart switching to 300 (5 min) granularity")
 
             if self.is_sim:
                 self.sim_smartswitch = True
@@ -501,10 +429,7 @@ class PyCryptoBot(BotConfig):
                     "normal",
                 )
             if not self.telegramtradesonly:
-                self.notify_telegram(
-                    self.market
-                    + " sell detected smart switching to 3600 (1 hour) granularity"
-                )
+                self.notify_telegram(self.market + " sell detected smart switching to 3600 (1 hour) granularity")
             if self.is_sim:
                 self.sim_smartswitch = True
 
@@ -531,10 +456,7 @@ class PyCryptoBot(BotConfig):
                 self.sim_smartswitch = True
 
             if not self.telegramtradesonly:
-                self.notify_telegram(
-                    self.market
-                    + " smart switch from granularity 3600 (1 hour) to 900 (15 min)"
-                )
+                self.notify_telegram(self.market + " smart switch from granularity 3600 (1 hour) to 900 (15 min)")
 
             self.granularity = Granularity.FIFTEEN_MINUTES
             list(map(self.s.cancel, self.s.queue))
@@ -559,34 +481,25 @@ class PyCryptoBot(BotConfig):
                 self.sim_smartswitch = True
 
             if not self.telegramtradesonly:
-                self.notify_telegram(
-                    f"{self.market} smart switch from granularity 900 (15 min) to 3600 (1 hour)"
-                )
+                self.notify_telegram(f"{self.market} smart switch from granularity 900 (15 min) to 3600 (1 hour)")
 
             self.granularity = Granularity.ONE_HOUR
             list(map(self.s.cancel, self.s.queue))
             self.s.enter(5, 1, self.execute_job, ())
 
-        if (
-            self.exchange == Exchange.BINANCE
-            and self.granularity == Granularity.ONE_DAY
-        ):
+        if self.exchange == Exchange.BINANCE and self.granularity == Granularity.ONE_DAY:
             if len(df) < 250:
                 # data frame should have 250 rows, if not retry
-                RichText.notify(
-                    f"Data frame length is < 250 ({str(len(df))})", self, "error"
-                )
+                RichText.notify(f"Data frame length is < 250 ({str(len(df))})", self, "error")
                 list(map(self.s.cancel, self.s.queue))
                 self.s.enter(300, 1, self.execute_job, ())
         else:
             # verify 300 rows - subtract 5 to allow small buffer if API is acting up.
-            if (
-                len(df) < self.adjust_total_periods - 5
-            ):  # If 300 is required, set adjust_total_periods in config to 305.
+            if len(df) < self.adjusttotalperiods - 5:  # If 300 is required, set adjusttotalperiods in config to 305.
                 if not self.is_sim:
                     # data frame should have 300 rows or equal to adjusted total rows if set, if not retry
                     RichText.notify(
-                        f"error: data frame length is < {str(self.adjust_total_periods)} ({str(len(df))})",
+                        f"error: data frame length is < {str(self.adjusttotalperiods)} ({str(len(df))})",
                         self,
                         "error",
                     )
@@ -622,16 +535,11 @@ class PyCryptoBot(BotConfig):
                     )
 
                     if not self.telegramtradesonly:
-                        self.notify_telegram(
-                            f"{self.market} last_action change detected from {last_action_current} to {self.state.last_action}"
-                        )
+                        self.notify_telegram(f"{self.market} last_action change detected from {last_action_current} to {self.state.last_action}")
 
                 # this is used to reset variables if error occurred during trade process
                 # make sure signals and telegram info is set correctly, close bot if needed on sell
-                if (
-                    self.state.action == "check_action"
-                    and self.state.last_action == "BUY"
-                ):
+                if self.state.action == "check_action" and self.state.last_action == "BUY":
                     self.state.trade_error_cnt = 0
                     self.state.trailing_buy = False
                     self.state.action = None
@@ -654,10 +562,7 @@ class PyCryptoBot(BotConfig):
                             + "Catching BUY that occurred previously. Updating signal information."
                         )
 
-                elif (
-                    self.state.action == "check_action"
-                    and self.state.last_action == "SELL"
-                ):
+                elif self.state.action == "check_action" and self.state.last_action == "SELL":
                     self.state.prevent_loss = False
                     self.state.trailing_sell = False
                     self.state.trailing_sell_immediate = False
@@ -691,15 +596,11 @@ class PyCryptoBot(BotConfig):
                         0,
                     )
 
-                    if self.enableexitaftersell and self.startmethod not in (
-                        "standard",
-                    ):
+                    if self.enableexitaftersell and self.startmethod not in ("standard",):
                         sys.exit(0)
 
             if self.price < 0.000001:
-                raise Exception(
-                    f"{self.market} is unsuitable for trading, quote self.price is less than 0.000001!"
-                )
+                raise Exception(f"{self.market} is unsuitable for trading, quote self.price is less than 0.000001!")
 
             try:
                 # technical indicators
@@ -717,7 +618,7 @@ class PyCryptoBot(BotConfig):
 
                 # if simulation, set goldencross based on actual sim date
                 if self.is_sim:
-                    if self.adjust_total_periods < 200:
+                    if self.adjusttotalperiods < 200:
                         goldencross = False
                     else:
                         goldencross = self.is_1h_sma50200_bull(current_sim_date)
@@ -740,19 +641,15 @@ class PyCryptoBot(BotConfig):
             if self.is_sim:
                 # Reset the Strategy so that the last record is the current sim date
                 # To allow for calculations to be done on the sim date being processed
-                sdf = df[df["date"] <= current_sim_date].tail(self.adjust_total_periods)
-                strategy = Strategy(
-                    self, self.state, sdf, sdf.index.get_loc(str(current_sim_date)) + 1
-                )
+                sdf = df[df["date"] <= current_sim_date].tail(self.adjusttotalperiods)
+                strategy = Strategy(self, self.state, sdf, sdf.index.get_loc(str(current_sim_date)) + 1)
             else:
                 strategy = Strategy(self, self.state, df)
 
             trailing_action_logtext = ""
 
             # determine current action, indicatorvalues will be empty if custom Strategy are disabled or it's debug is False
-            self.state.action, indicatorvalues = strategy.get_action(
-                self.state, self.price, current_sim_date, self.websocket_connection
-            )
+            self.state.action, indicatorvalues = strategy.get_action(self.state, self.price, current_sim_date, self.websocket_connection)
 
             immediate_action = False
             margin, profit, sell_fee, change_pcnt_high = 0, 0, 0, 0
@@ -760,41 +657,23 @@ class PyCryptoBot(BotConfig):
             # Reset the TA so that the last record is the current sim date
             # To allow for calculations to be done on the sim date being processed
             if self.is_sim:
-                trading_dataCopy = (
-                    self.trading_data[self.trading_data["date"] <= current_sim_date]
-                    .tail(self.adjust_total_periods)
-                    .copy()
-                )
-                _technical_analysis = TechnicalAnalysis(
-                    trading_dataCopy, self.adjust_total_periods
-                )
+                trading_dataCopy = self.trading_data[self.trading_data["date"] <= current_sim_date].tail(self.adjusttotalperiods).copy()
+                _technical_analysis = TechnicalAnalysis(trading_dataCopy, self.adjusttotalperiods)
 
-            if (
-                self.state.last_buy_size > 0
-                and self.state.last_buy_price > 0
-                and self.price > 0
-                and self.state.last_action == "BUY"
-            ):
+            if self.state.last_buy_size > 0 and self.state.last_buy_price > 0 and self.price > 0 and self.state.last_action == "BUY":
                 # update last buy high
                 if self.price > self.state.last_buy_high:
                     self.state.last_buy_high = self.price
 
                 if self.state.last_buy_high > 0:
-                    change_pcnt_high = (
-                        (self.price / self.state.last_buy_high) - 1
-                    ) * 100
+                    change_pcnt_high = ((self.price / self.state.last_buy_high) - 1) * 100
                 else:
                     change_pcnt_high = 0
 
                 # buy and sell calculations
-                self.state.last_buy_fee = round(
-                    self.state.last_buy_size * self.get_taker_fee(), 8
-                )
+                self.state.last_buy_fee = round(self.state.last_buy_size * self.get_taker_fee(), 8)
                 self.state.last_buy_filled = round(
-                    (
-                        (self.state.last_buy_size - self.state.last_buy_fee)
-                        / self.state.last_buy_price
-                    ),
+                    ((self.state.last_buy_size - self.state.last_buy_fee) / self.state.last_buy_price),
                     8,
                 )
 
@@ -814,10 +693,7 @@ class PyCryptoBot(BotConfig):
                         if self.state.last_buy_price != exchange_last_buy["price"]:
                             self.state.last_buy_price = exchange_last_buy["price"]
 
-                        if (
-                            self.exchange == Exchange.COINBASEPRO
-                            or self.exchange == Exchange.KUCOIN
-                        ):
+                        if self.exchange == Exchange.COINBASEPRO or self.exchange == Exchange.KUCOIN:
                             if self.state.last_buy_fee != exchange_last_buy["fee"]:
                                 self.state.last_buy_fee = exchange_last_buy["fee"]
 
@@ -847,10 +723,7 @@ class PyCryptoBot(BotConfig):
 
             # handle overriding wait actions
             # (e.g. do not sell if sell at loss disabled!, do not buy in bull if bull only, manual trades only)
-            if self.manual_trades_only is True or (
-                self.state.action != "WAIT"
-                and strategy.is_wait_trigger(margin, goldencross)
-            ):
+            if self.manual_trades_only is True or (self.state.action != "WAIT" and strategy.is_wait_trigger(margin, goldencross)):
                 self.state.action = "WAIT"
                 immediate_action = False
 
@@ -896,9 +769,7 @@ class PyCryptoBot(BotConfig):
                     if candlestick_status == "":
                         return
 
-                    self.table_console = Table(
-                        title=None, box=None, show_header=False, show_footer=False
-                    )
+                    self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)
                     self.table_console.add_row(
                         RichText.styled_text("Bot1", "magenta"),
                         RichText.styled_text(formatted_current_df_index, "white"),
@@ -909,27 +780,17 @@ class PyCryptoBot(BotConfig):
                     self.console_term.print(self.table_console)
                     if self.disablelog is False:
                         self.console_log.print(self.table_console)
-                    self.table_console = Table(
-                        title=None, box=None, show_header=False, show_footer=False
-                    )  # clear table
+                    self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)  # clear table
 
                 if not self.is_sim or (self.is_sim and not self.simresultonly):
                     if bool(self.df_last["three_white_soldiers"].values[0]) is True:
-                        _candlestick(
-                            "Candlestick Detected: Three White Soldiers ('Strong - Reversal - Bullish Pattern - Up')"
-                        )
+                        _candlestick("Candlestick Detected: Three White Soldiers ('Strong - Reversal - Bullish Pattern - Up')")
                     if bool(self.df_last["three_black_crows"].values[0]) is True:
-                        _candlestick(
-                            "Candlestick Detected: Three Black Crows ('Strong - Reversal - Bearish Pattern - Down')"
-                        )
+                        _candlestick("Candlestick Detected: Three Black Crows ('Strong - Reversal - Bearish Pattern - Down')")
                     if bool(self.df_last["morning_star"].values[0]) is True:
-                        _candlestick(
-                            "Candlestick Detected: Morning Star ('Strong - Reversal - Bullish Pattern - Up')"
-                        )
+                        _candlestick("Candlestick Detected: Morning Star ('Strong - Reversal - Bullish Pattern - Up')")
                     if bool(self.df_last["evening_star"].values[0]) is True:
-                        _candlestick(
-                            "Candlestick Detected: Evening Star ('Strong - Reversal - Bearish Pattern - Down')"
-                        )
+                        _candlestick("Candlestick Detected: Evening Star ('Strong - Reversal - Bearish Pattern - Down')")
 
                 def _notify(notification: str = "", level: str = "normal") -> None:
                     if notification == "":
@@ -946,9 +807,7 @@ class PyCryptoBot(BotConfig):
                     else:
                         color = "violet"
 
-                    self.table_console = Table(
-                        title=None, box=None, show_header=False, show_footer=False
-                    )
+                    self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)
                     self.table_console.add_row(
                         RichText.styled_text("Bot1", "magenta"),
                         RichText.styled_text(formatted_current_df_index, "white"),
@@ -959,9 +818,7 @@ class PyCryptoBot(BotConfig):
                     self.console_term.print(self.table_console)
                     if self.disablelog is False:
                         self.console_log.print(self.table_console)
-                    self.table_console = Table(
-                        title=None, box=None, show_header=False, show_footer=False
-                    )  # clear table
+                    self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)  # clear table
 
                 if not self.is_sim:
                     df_high = df[df["date"] <= current_sim_date]["close"].max()
@@ -971,9 +828,7 @@ class PyCryptoBot(BotConfig):
                 else:
                     df_high = df["close"].max()
                     df_low = df["close"].min()
-                    range_start = str(
-                        df.iloc[self.state.iterations - self.adjust_total_periods, 0]
-                    )
+                    range_start = str(df.iloc[self.state.iterations - self.adjusttotalperiods, 0])
                     range_end = str(df.iloc[self.state.iterations - 1, 0])
 
                 df_swing = round(((df_high - df_low) / df_low) * 100, 2)
@@ -1020,9 +875,7 @@ class PyCryptoBot(BotConfig):
                             self.df_last["obv_pc"].values[0],
                             self.disablebuyobv,
                         ),
-                        RichText.elder_ray(
-                            elder_ray_buy, elder_ray_sell, self.disablebuyelderray
-                        ),
+                        RichText.elder_ray(elder_ray_buy, elder_ray_sell, self.disablebuyelderray),
                         RichText.action_text(self.state.action),
                         RichText.last_action_text(self.state.last_action),
                         RichText.styled_label_text(
@@ -1031,9 +884,7 @@ class PyCryptoBot(BotConfig):
                             f"{str(df_high)} / {str(df_low)} ({df_swing}%)",
                             "cyan",
                         ),
-                        RichText.styled_label_text(
-                            "Near-High", "white", f"{df_near_high}%", "cyan"
-                        ),  # price near high
+                        RichText.styled_label_text("Near-High", "white", f"{df_near_high}%", "cyan"),  # price near high
                         # RichText.styled_label_text(
                         #     "Range", "white", f"{range_start} <-> {range_end}", "cyan"
                         # ),
@@ -1053,17 +904,13 @@ class PyCryptoBot(BotConfig):
                     self.console_term.print(self.table_console)
                     if self.disablelog is False:
                         self.console_log.print(self.table_console)
-                    self.table_console = Table(
-                        title=None, box=None, show_header=False, show_footer=False
-                    )  # clear table
+                    self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)  # clear table
 
                     if self.enableml:
                         # Seasonal Autoregressive Integrated Moving Average (ARIMA) model (ML prediction for 3 intervals from now)
                         if not self.is_sim:
                             try:
-                                prediction = _technical_analysis.arima_model_prediction(
-                                    int(self.granularity.to_integer / 60) * 3
-                                )  # 3 intervals from now
+                                prediction = _technical_analysis.arima_model_prediction(int(self.granularity.to_integer / 60) * 3)  # 3 intervals from now
                                 _notify(
                                     f"Seasonal ARIMA model predicts the closing self.price will be {str(round(prediction[1], 2))} at {prediction[0]} (delta: {round(prediction[1] - self.price, 2)})"
                                 )
@@ -1086,59 +933,31 @@ class PyCryptoBot(BotConfig):
                         self.account.base_balance_before = 0.0
                         self.account.quote_balance_before = 0.0
                         try:
-                            df_base = ac[ac["currency"] == self.base_currency][
-                                "available"
-                            ]
-                            self.account.base_balance_before = (
-                                0.0 if len(df_base) == 0 else float(df_base.values[0])
-                            )
+                            df_base = ac[ac["currency"] == self.base_currency]["available"]
+                            self.account.base_balance_before = 0.0 if len(df_base) == 0 else float(df_base.values[0])
 
-                            df_quote = ac[ac["currency"] == self.quote_currency][
-                                "available"
-                            ]
-                            self.account.quote_balance_before = (
-                                0.0 if len(df_quote) == 0 else float(df_quote.values[0])
-                            )
+                            df_quote = ac[ac["currency"] == self.quote_currency]["available"]
+                            self.account.quote_balance_before = 0.0 if len(df_quote) == 0 else float(df_quote.values[0])
                         except Exception:
                             pass
 
-                        if (
-                            not self.insufficientfunds
-                            and self.buyminsize < self.account.quote_balance_before
-                        ):
+                        if not self.insufficientfunds and self.buyminsize < self.account.quote_balance_before:
                             if not self.is_verbose:
-                                if not self.is_sim or (
-                                    self.is_sim and not self.simresultonly
-                                ):
+                                if not self.is_sim or (self.is_sim and not self.simresultonly):
                                     _notify(f"*** Executing SIMULATION Buy Order at {str(self.price)} ***", "info")
                             else:
                                 _notify("*** Executing LIVE Buy Order ***")
 
                             # display balances
-                            _notify(
-                                f"{self.base_currency} balance before order: {str(self.account.base_balance_before)}"
-                            )
-                            _notify(
-                                f"{self.quote_currency} balance before order: {str(self.account.quote_balance_before)}"
-                            )
+                            _notify(f"{self.base_currency} balance before order: {str(self.account.base_balance_before)}")
+                            _notify(f"{self.quote_currency} balance before order: {str(self.account.quote_balance_before)}")
 
                             # execute a live market buy
-                            self.state.last_buy_size = float(
-                                self.account.quote_balance_before
-                            )
+                            self.state.last_buy_size = float(self.account.quote_balance_before)
 
-                            if (
-                                self.buymaxsize
-                                and self.buylastsellsize
-                                and self.state.minimum_order_quote(
-                                    quote=self.state.last_sell_size, balancechk=True
-                                )
-                            ):
+                            if self.buymaxsize and self.buylastsellsize and self.state.minimum_order_quote(quote=self.state.last_sell_size, balancechk=True):
                                 self.state.last_buy_size = self.state.last_sell_size
-                            elif (
-                                self.buymaxsize
-                                and self.state.last_buy_size > self.buymaxsize
-                            ):
+                            elif self.buymaxsize and self.state.last_buy_size > self.buymaxsize:
                                 self.state.last_buy_size = self.buymaxsize
 
                             # place the buy order
@@ -1158,23 +977,11 @@ class PyCryptoBot(BotConfig):
                                 self.account.quote_balance_after = 0
                                 try:
                                     ac = self.account.get_balance()
-                                    df_base = ac[ac["currency"] == self.base_currency][
-                                        "available"
-                                    ]
-                                    self.account.base_balance_after = (
-                                        0.0
-                                        if len(df_base) == 0
-                                        else float(df_base.values[0])
-                                    )
-                                    df_quote = ac[
-                                        ac["currency"] == self.quote_currency
-                                    ]["available"]
+                                    df_base = ac[ac["currency"] == self.base_currency]["available"]
+                                    self.account.base_balance_after = 0.0 if len(df_base) == 0 else float(df_base.values[0])
+                                    df_quote = ac[ac["currency"] == self.quote_currency]["available"]
 
-                                    self.account.quote_balance_after = (
-                                        0.0
-                                        if len(df_quote) == 0
-                                        else float(df_quote.values[0])
-                                    )
+                                    self.account.quote_balance_after = 0.0 if len(df_quote) == 0 else float(df_quote.values[0])
                                     bal_error = 0
                                 except Exception as err:
                                     bal_error = 1
@@ -1192,12 +999,8 @@ class PyCryptoBot(BotConfig):
                                     self.state.trailing_buy_immediate = False
                                     self.telegram_bot.add_open_order()
 
-                                    _notify(
-                                        f"{self.base_currency} balance after order: {str(self.account.base_balance_after)}"
-                                    )
-                                    _notify(
-                                        f"{self.quote_currency} balance after order: {str(self.account.quote_balance_after)}"
-                                    )
+                                    _notify(f"{self.base_currency} balance after order: {str(self.account.base_balance_after)}")
+                                    _notify(f"{self.quote_currency} balance after order: {str(self.account.quote_balance_after)}")
 
                                     if not self.disabletelegram:
                                         self.notify_telegram(
@@ -1214,23 +1017,18 @@ class PyCryptoBot(BotConfig):
                                 else:
                                     # set variable to trigger to check trade on next iteration
                                     self.state.action = "check_action"
-                                    _notify(
-                                        f"{self.market} - Error occurred while checking balance after BUY. Last transaction check will happen shortly."
-                                    )
+                                    _notify(f"{self.market} - Error occurred while checking balance after BUY. Last transaction check will happen shortly.")
 
                                     if not self.disabletelegramerrormsgs:
                                         self.notify_telegram(
-                                            self.market
-                                            + " - Error occurred while checking balance after BUY. Last transaction check will happen shortly."
+                                            self.market + " - Error occurred while checking balance after BUY. Last transaction check will happen shortly."
                                         )
 
                             else:  # there was a response error
                                 # only attempt BUY 3 times before exception to prevent continuous loop
                                 self.state.trade_error_cnt += 1
                                 if self.state.trade_error_cnt >= 2:  # 3 attempts made
-                                    raise Exception(
-                                        "Trade Error: BUY transaction attempted 3 times. Check log for errors"
-                                    )
+                                    raise Exception("Trade Error: BUY transaction attempted 3 times. Check log for errors")
 
                                 # set variable to trigger to check trade on next iteration
                                 self.state.action = "check_action"
@@ -1242,9 +1040,7 @@ class PyCryptoBot(BotConfig):
                                 )
 
                                 if not self.disabletelegramerrormsgs:
-                                    self.notify_telegram(
-                                        f"API Error: Unable to place buy order for {self.market}"
-                                    )
+                                    self.notify_telegram(f"API Error: Unable to place buy order for {self.market}")
                                 time.sleep(30)
 
                         else:
@@ -1257,10 +1053,7 @@ class PyCryptoBot(BotConfig):
 
                     # if not live
                     else:
-                        if (
-                            self.state.last_buy_size == 0
-                            and self.state.last_buy_filled == 0
-                        ):
+                        if self.state.last_buy_size == 0 and self.state.last_buy_filled == 0:
                             # Sim mode can now use buymaxsize as the amount used for a buy
                             if self.buymaxsize is not None:
                                 self.state.last_buy_size = self.buymaxsize
@@ -1269,17 +1062,12 @@ class PyCryptoBot(BotConfig):
                         elif (
                             self.buymaxsize is not None
                             and self.buylastsellsize
-                            and self.state.last_sell_size
-                            > self.state.minimum_order_quote(
-                                quote=self.state.last_sell_size, balancechk=True
-                            )
+                            and self.state.last_sell_size > self.state.minimum_order_quote(quote=self.state.last_sell_size, balancechk=True)
                         ):
                             self.state.last_buy_size = self.state.last_sell_size
 
                         self.state.buy_count = self.state.buy_count + 1
-                        self.state.buy_sum = (
-                            self.state.buy_sum + self.state.last_buy_size
-                        )
+                        self.state.buy_sum = self.state.buy_sum + self.state.last_buy_size
                         self.state.trailing_buy = False
                         self.state.action = "DONE"
                         self.state.trailing_buy_immediate = False
@@ -1298,20 +1086,14 @@ class PyCryptoBot(BotConfig):
                             )
 
                         if not self.is_verbose:
-                            if not self.is_sim or (
-                                self.is_sim and not self.simresultonly
-                            ):
+                            if not self.is_sim or (self.is_sim and not self.simresultonly):
                                 _notify(f"*** Executing SIMULATION Buy Order at {str(self.price)} ***", "info")
 
-                            bands = _technical_analysis.get_fibonacci_retracement_levels(
-                                float(self.price)
-                            )
+                            bands = _technical_analysis.get_fibonacci_retracement_levels(float(self.price))
 
                             if not self.is_sim:
                                 _notify(f"Fibonacci Retracement Levels: {str(bands)}")
-                                _technical_analysis.print_support_resistance_levels(
-                                    float(self.price)
-                                )
+                                _technical_analysis.print_support_resistance_levels(float(self.price))
 
                             if len(bands) >= 1 and len(bands) <= 2:
                                 if len(bands) == 1:
@@ -1344,14 +1126,9 @@ class PyCryptoBot(BotConfig):
                                         "Action": "BUY",
                                         "Price": self.price,
                                         "Quote": self.state.last_buy_size,
-                                        "Base": float(self.state.last_buy_size)
-                                        / float(self.price),
-                                        "DF_High": df[df["date"] <= current_sim_date][
-                                            "close"
-                                        ].max(),
-                                        "DF_Low": df[df["date"] <= current_sim_date][
-                                            "close"
-                                        ].min(),
+                                        "Base": float(self.state.last_buy_size) / float(self.price),
+                                        "DF_High": df[df["date"] <= current_sim_date]["close"].max(),
+                                        "DF_Low": df[df["date"] <= current_sim_date]["close"].min(),
                                     },
                                     index={0},
                                 ),
@@ -1364,23 +1141,17 @@ class PyCryptoBot(BotConfig):
                         self.state.last_api_call_datetime -= timedelta(seconds=60)
 
                     if self.save_graphs:
-                        if self.adjust_total_periods < 200:
-                            _notify(
-                                "Trading Graphs can only be generated when dataframe has more than 200 periods."
-                            )
+                        if self.adjusttotalperiods < 200:
+                            _notify("Trading Graphs can only be generated when dataframe has more than 200 periods.")
                         else:
                             tradinggraphs = TradingGraphs(_technical_analysis)
                             ts = datetime.now().timestamp()
                             filename = f"{self.market}_{self.print_granularity()}_buy_{str(ts)}.png"
                             # This allows graphs to be used in sim mode using the correct DF
                             if self.is_sim:
-                                tradinggraphs.render_ema_and_macd(
-                                    len(trading_dataCopy), "graphs/" + filename, True
-                                )
+                                tradinggraphs.render_ema_and_macd(len(trading_dataCopy), "graphs/" + filename, True)
                             else:
-                                tradinggraphs.render_ema_and_macd(
-                                    len(trading_data), "graphs/" + filename, True
-                                )
+                                tradinggraphs.render_ema_and_macd(len(trading_data), "graphs/" + filename, True)
 
                 # if a sell signal
                 elif self.state.action == "SELL":
@@ -1388,13 +1159,9 @@ class PyCryptoBot(BotConfig):
                     if self.is_live:
                         if self.is_verbose:
 
-                            bands = _technical_analysis.get_fibonacci_retracement_levels(
-                                float(self.price)
-                            )
+                            bands = _technical_analysis.get_fibonacci_retracement_levels(float(self.price))
 
-                            if not self.is_sim or (
-                                self.is_sim and not self.simresultonly
-                            ):
+                            if not self.is_sim or (self.is_sim and not self.simresultonly):
                                 _notify(f"Fibonacci Retracement Levels: {str(bands)}")
 
                                 if len(bands) >= 1 and len(bands) <= 2:
@@ -1418,36 +1185,22 @@ class PyCryptoBot(BotConfig):
                             _notify("*** Executing LIVE Sell Order ***")
 
                         else:
-                            _notify(
-                                f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {str(self.price)} | SELL"
-                            )
+                            _notify(f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {str(self.price)} | SELL")
 
                         # check balances before and display
                         self.account.base_balance_before = 0
                         self.account.quote_balance_before = 0
                         try:
-                            self.account.base_balance_before = float(
-                                self.account.get_balance(self.base_currency)
-                            )
-                            self.account.quote_balance_before = float(
-                                self.account.get_balance(self.quote_currency)
-                            )
+                            self.account.base_balance_before = float(self.account.get_balance(self.base_currency))
+                            self.account.quote_balance_before = float(self.account.get_balance(self.quote_currency))
                         except Exception:
                             pass
 
-                        _notify(
-                            f"{self.base_currency} balance before order: {str(self.account.base_balance_before)}"
-                        )
-                        _notify(
-                            f"{self.quote_currency} balance before order: {str(self.account.quote_balance_before)}"
-                        )
+                        _notify(f"{self.base_currency} balance before order: {str(self.account.base_balance_before)}")
+                        _notify(f"{self.quote_currency} balance before order: {str(self.account.quote_balance_before)}")
 
                         # execute a live market sell
-                        baseamounttosell = (
-                            float(self.account.base_balance_before)
-                            if self.sellfullbaseamount is True
-                            else float(self.state.last_buy_filled)
-                        )
+                        baseamounttosell = float(self.account.base_balance_before) if self.sellfullbaseamount is True else float(self.state.last_buy_filled)
 
                         self.account.base_balance_after = 0
                         self.account.quote_balance_after = 0
@@ -1465,12 +1218,8 @@ class PyCryptoBot(BotConfig):
 
                         if resp_error == 0:
                             try:
-                                self.account.base_balance_after = float(
-                                    self.account.get_balance(self.base_currency)
-                                )
-                                self.account.quote_balance_after = float(
-                                    self.account.get_balance(self.quote_currency)
-                                )
+                                self.account.base_balance_after = float(self.account.get_balance(self.base_currency))
+                                self.account.quote_balance_after = float(self.account.get_balance(self.quote_currency))
                                 bal_error = 0
                             except Exception as err:
                                 bal_error = 1
@@ -1481,21 +1230,15 @@ class PyCryptoBot(BotConfig):
                                 _notify(f"API Error Msg: {err}", "warning")
 
                             if bal_error == 0:
-                                _notify(
-                                    f"{self.base_currency} balance after order: {str(self.account.base_balance_after)}"
-                                )
-                                _notify(
-                                    f"{self.quote_currency} balance after order: {str(self.account.quote_balance_after)}"
-                                )
+                                _notify(f"{self.base_currency} balance after order: {str(self.account.base_balance_after)}")
+                                _notify(f"{self.quote_currency} balance after order: {str(self.account.quote_balance_after)}")
 
                                 self.state.prevent_loss = False
                                 self.state.trailing_sell = False
                                 self.state.trailing_sell_immediate = False
                                 self.state.tsl_triggered = False
                                 self.state.tsl_pcnt = float(self.trailing_stop_loss)
-                                self.state.tsl_trigger = float(
-                                    self.trailing_stop_loss_trigger
-                                )
+                                self.state.tsl_trigger = float(self.trailing_stop_loss_trigger)
                                 self.state.tsl_max = False
                                 self.state.trade_error_cnt = 0
                                 self.state.last_action = "SELL"
@@ -1524,22 +1267,14 @@ class PyCryptoBot(BotConfig):
                                     )
 
                                 self.telegram_bot.close_trade(
-                                    str(
-                                        self.get_date_from_iso8601_str(
-                                            str(datetime.now())
-                                        )
-                                    ),
+                                    str(self.get_date_from_iso8601_str(str(datetime.now()))),
                                     str(self.price),
                                     margin_text,
                                 )
 
-                                if (
-                                    self.enableexitaftersell
-                                    and self.startmethod
-                                    not in (
-                                        "standard",
-                                        "telegram",
-                                    )
+                                if self.enableexitaftersell and self.startmethod not in (
+                                    "standard",
+                                    "telegram",
                                 ):
                                     sys.exit(0)
 
@@ -1554,17 +1289,14 @@ class PyCryptoBot(BotConfig):
 
                                 if not self.disabletelegramerrormsgs:
                                     self.notify_telegram(
-                                        self.market
-                                        + " - Error occurred while checking balance after SELL. Last transaction check will happen shortly."
+                                        self.market + " - Error occurred while checking balance after SELL. Last transaction check will happen shortly."
                                     )
 
                         else:  # there was an error
                             # only attempt SELL 3 times before exception to prevent continuous loop
                             self.state.trade_error_cnt += 1
                             if self.state.trade_error_cnt >= 2:  # 3 attempts made
-                                raise Exception(
-                                    "Trade Error: SELL transaction attempted 3 times. Check log for errors."
-                                )
+                                raise Exception("Trade Error: SELL transaction attempted 3 times. Check log for errors.")
                             # set variable to trigger to check trade on next iteration
                             self.state.action = "check_action"
                             self.state.last_action = None
@@ -1575,9 +1307,7 @@ class PyCryptoBot(BotConfig):
                             )
 
                             if not self.disabletelegramerrormsgs:
-                                self.notify_telegram(
-                                    f"API Error: Unable to place SELL order for {self.market}"
-                                )
+                                self.notify_telegram(f"API Error: Unable to place SELL order for {self.market}")
                             time.sleep(30)
 
                         self.state.last_api_call_datetime -= timedelta(seconds=60)
@@ -1604,13 +1334,10 @@ class PyCryptoBot(BotConfig):
                         # preserve next sell values for simulator
                         self.state.sell_count = self.state.sell_count + 1
                         sell_size = (self.get_sell_percent() / 100) * (
-                            (self.price / self.state.last_buy_price)
-                            * (self.state.last_buy_size - self.state.last_buy_fee)
+                            (self.price / self.state.last_buy_price) * (self.state.last_buy_size - self.state.last_buy_fee)
                         )
                         self.state.last_sell_size = sell_size - sell_fee
-                        self.state.sell_sum = (
-                            self.state.sell_sum + self.state.last_sell_size
-                        )
+                        self.state.sell_sum = self.state.sell_sum + self.state.last_sell_size
 
                         # added to track profit and loss margins during sim runs
                         self.state.margintracker += float(margin)
@@ -1645,10 +1372,11 @@ class PyCryptoBot(BotConfig):
                             else:
                                 margin_text = "0%"
 
-                            if not self.is_sim or (
-                                self.is_sim and not self.simresultonly
-                            ):
-                                _notify(f"*** Executing SIMULATION Sell Order at {str(self.price)} | Buy: {str(self.state.last_buy_price)} ({str(self.price - self.state.last_buy_price)}) | Profit: {str(profit)} on {_truncate(self.state.last_buy_size, precision)} | Fees: {str(round(sell_fee, precision))} | Margin: {margin_text} ***", "info")
+                            if not self.is_sim or (self.is_sim and not self.simresultonly):
+                                _notify(
+                                    f"*** Executing SIMULATION Sell Order at {str(self.price)} | Buy: {str(self.state.last_buy_price)} ({str(self.price - self.state.last_buy_price)}) | Profit: {str(profit)} on {_truncate(self.state.last_buy_size, precision)} | Fees: {str(round(sell_fee, precision))} | Margin: {margin_text} ***",
+                                    "info",
+                                )
 
                         else:
                             _notify("*** Executing TEST Sell Order ***")
@@ -1667,12 +1395,8 @@ class PyCryptoBot(BotConfig):
                                         "Margin": margin,
                                         "Profit": profit,
                                         "Fee": sell_fee,
-                                        "DF_High": df[df["date"] <= current_sim_date][
-                                            "close"
-                                        ].max(),
-                                        "DF_Low": df[df["date"] <= current_sim_date][
-                                            "close"
-                                        ].min(),
+                                        "DF_High": df[df["date"] <= current_sim_date]["close"].max(),
+                                        "DF_Low": df[df["date"] <= current_sim_date]["close"].min(),
                                     },
                                     index={0},
                                 ),
@@ -1692,9 +1416,7 @@ class PyCryptoBot(BotConfig):
                             self.state.tsl_pcnt = float(self.trailing_stop_loss)
 
                         if self.trailing_stop_loss_trigger:
-                            self.state.tsl_trigger = float(
-                                self.trailing_stop_loss_trigger
-                            )
+                            self.state.tsl_trigger = float(self.trailing_stop_loss_trigger)
 
                         # adjust the next simulation buy with the current balance
                         self.state.last_buy_size += profit
@@ -1708,21 +1430,13 @@ class PyCryptoBot(BotConfig):
                         filename = f"{self.market}_{self.print_granularity()}_sell_{str(ts)}.png"
                         # This allows graphs to be used in sim mode using the correct DF
                         if self.is_sim:
-                            tradinggraphs.render_ema_and_macd(
-                                len(trading_dataCopy), "graphs/" + filename, True
-                            )
+                            tradinggraphs.render_ema_and_macd(len(trading_dataCopy), "graphs/" + filename, True)
                         else:
-                            tradinggraphs.render_ema_and_macd(
-                                len(trading_data), "graphs/" + filename, True
-                            )
+                            tradinggraphs.render_ema_and_macd(len(trading_data), "graphs/" + filename, True)
 
             self.state.last_df_index = str(self.df_last.index.format()[0])
 
-            if (
-                self.logbuysellinjson is True
-                and self.state.action == "DONE"
-                and len(self.trade_tracker) > 0
-            ):
+            if self.logbuysellinjson is True and self.state.action == "DONE" and len(self.trade_tracker) > 0:
                 _notify(self.trade_tracker.loc[len(self.trade_tracker) - 1].to_json())
 
             if self.state.action == "DONE" and indicatorvalues != "" and not self.disabletelegram:
@@ -1736,12 +1450,7 @@ class PyCryptoBot(BotConfig):
         else:
             bullbeartext = "BULL" if goldencross else "BEAR"
 
-            if (
-                self.state.last_buy_size > 0
-                and self.state.last_buy_price > 0
-                and self.price > 0
-                and self.state.last_action == "BUY"
-            ):
+            if self.state.last_buy_size > 0 and self.state.last_buy_price > 0 and self.price > 0 and self.state.last_action == "BUY":
                 # show profit and margin if already bought
                 Logger.info(
                     f"{now} | {self.market} {bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)} {trailing_action_logtext} | Margin: {str(margin)} | Profit: {str(profit)}"
@@ -1756,8 +1465,7 @@ class PyCryptoBot(BotConfig):
                     str(round(df["close"].max(), 4)),
                     str(
                         round(
-                            ((self.price - df["close"].max()) / df["close"].max())
-                            * 100,
+                            ((self.price - df["close"].max()) / df["close"].max()) * 100,
                             2,
                         )
                     )
@@ -1765,19 +1473,11 @@ class PyCryptoBot(BotConfig):
                     self.state.action,
                 )
 
-            if (
-                self.state.last_action == "BUY"
-                and self.state.in_open_trade
-                and last_api_call_datetime.seconds > 60
-            ):
+            if self.state.last_action == "BUY" and self.state.in_open_trade and last_api_call_datetime.seconds > 60:
                 # update margin for telegram bot
                 self.telegram_bot.add_margin(
-                    str(_truncate(margin, 4) + "%")
-                    if self.state.in_open_trade is True
-                    else " ",
-                    str(_truncate(profit, 2))
-                    if self.state.in_open_trade is True
-                    else " ",
+                    str(_truncate(margin, 4) + "%") if self.state.in_open_trade is True else " ",
+                    str(_truncate(profit, 2)) if self.state.in_open_trade is True else " ",
                     self.price,
                     change_pcnt_high,
                     self.state.action,
@@ -1795,10 +1495,7 @@ class PyCryptoBot(BotConfig):
             # update order tracker csv
             if self.exchange == Exchange.BINANCE:
                 self.account.save_tracker_csv(self.market)
-            elif (
-                self.exchange == Exchange.COINBASEPRO
-                or self.exchange == Exchange.KUCOIN
-            ):
+            elif self.exchange == Exchange.COINBASEPRO or self.exchange == Exchange.KUCOIN:
                 self.account.save_tracker_csv()
 
         if self.is_sim:
@@ -1827,15 +1524,8 @@ class PyCryptoBot(BotConfig):
             if (
                 self.websocket_connection
                 and self.websocket_connection is not None
-                and (
-                    isinstance(self.websocket_connection.tickers, pd.DataFrame)
-                    and len(self.websocket_connection.tickers) == 1
-                )
-                and (
-                    isinstance(self.websocket_connection.candles, pd.DataFrame)
-                    and len(self.websocket_connection.candles)
-                    == self.adjust_total_periods
-                )
+                and (isinstance(self.websocket_connection.tickers, pd.DataFrame) and len(self.websocket_connection.tickers) == 1)
+                and (isinstance(self.websocket_connection.candles, pd.DataFrame) and len(self.websocket_connection.candles) == self.adjusttotalperiods)
             ):
                 # poll every 5 seconds (self.websocket_connection)
                 self.s.enter(
@@ -1869,25 +1559,19 @@ class PyCryptoBot(BotConfig):
                 message += "Coinbase Pro bot"
                 if self.websocket and not self.is_sim:
                     print("Opening websocket to Coinbase Pro...")
-                    self.websocket_connection = CWebSocketClient(
-                        [self.market], self.granularity
-                    )
+                    self.websocket_connection = CWebSocketClient([self.market], self.granularity)
                     self.websocket_connection.start()
             elif self.exchange == Exchange.BINANCE:
                 message += "Binance bot"
                 if self.websocket and not self.is_sim:
                     print("Opening websocket to Binance...")
-                    self.websocket_connection = BWebSocketClient(
-                        [self.market], self.granularity
-                    )
+                    self.websocket_connection = BWebSocketClient([self.market], self.granularity)
                     self.websocket_connection.start()
             elif self.exchange == Exchange.KUCOIN:
                 message += "Kucoin bot"
                 if self.websocket and not self.is_sim:
                     print("Opening websocket to Kucoin...")
-                    self.websocket_connection = KWebSocketClient(
-                        [self.market], self.granularity
-                    )
+                    self.websocket_connection = KWebSocketClient([self.market], self.granularity)
                     self.websocket_connection.start()
 
             smartswitchstatus = "enabled" if self.smart_switch else "disabled"
@@ -1902,9 +1586,7 @@ class PyCryptoBot(BotConfig):
             if self.is_sim and self.simend_date:
                 try:
                     # if simend_date is set, then remove trailing data points
-                    self.trading_data = self.trading_data[
-                        self.trading_data["date"] <= self.simend_date
-                    ]
+                    self.trading_data = self.trading_data[self.trading_data["date"] <= self.simend_date]
                 except Exception:
                     pass
 
@@ -1918,14 +1600,10 @@ class PyCryptoBot(BotConfig):
                 if self.autorestart:
                     # Wait 30 second and try to relaunch application
                     time.sleep(30)
-                    Logger.critical(
-                        f"Restarting application after exception: {repr(e)}"
-                    )
+                    Logger.critical(f"Restarting application after exception: {repr(e)}")
 
                     if not self.disabletelegram:
-                        self.notify_telegram(
-                            f"Auto restarting bot for {self.market} after exception: {repr(e)}"
-                        )
+                        self.notify_telegram(f"Auto restarting bot for {self.market} after exception: {repr(e)}")
 
                     # Cancel the events queue
                     map(self.s.cancel, self.s.queue)
@@ -1940,14 +1618,10 @@ class PyCryptoBot(BotConfig):
         except (KeyboardInterrupt, SystemExit):
             if self.websocket and not self.is_sim:
                 signal.signal(signal.SIGINT, signal_handler)  # disable ctrl/cmd+c
-                Logger.warning(
-                    f"{str(datetime.now())} bot is closing via keyboard interrupt,"
-                )
+                Logger.warning(f"{str(datetime.now())} bot is closing via keyboard interrupt,")
                 Logger.warning("Please wait while threads complete gracefully....")
             else:
-                Logger.warning(
-                    f"{str(datetime.now())} bot is closed via keyboard interrupt..."
-                )
+                Logger.warning(f"{str(datetime.now())} bot is closed via keyboard interrupt...")
             try:
                 try:
                     self.telegram_bot.remove_active_bot()
@@ -1965,9 +1639,7 @@ class PyCryptoBot(BotConfig):
         except (BaseException, Exception) as e:  # pylint: disable=broad-except
             # catch all not managed exceptions and send a Telegram message if configured
             if not self.disabletelegramerrormsgs:
-                self.notify_telegram(
-                    f"Bot for {self.market} got an exception: {repr(e)}"
-                )
+                self.notify_telegram(f"Bot for {self.market} got an exception: {repr(e)}")
                 try:
                     self.telegram_bot.remove_active_bot()
                 except Exception:
@@ -2013,7 +1685,6 @@ class PyCryptoBot(BotConfig):
                 attempts = 0
 
                 if self.simstart_date is not None and self.simend_date is not None:
-
                     start_date = self.get_date_from_iso8601_str(self.simstart_date)
 
                     if self.simend_date == "now":
@@ -2023,10 +1694,7 @@ class PyCryptoBot(BotConfig):
 
                 elif self.simstart_date is not None and self.simend_date is None:
                     start_date = self.get_date_from_iso8601_str(self.simstart_date)
-                    end_date = start_date + timedelta(
-                        minutes=(self.granularity.to_integer / 60)
-                        * self.adjust_total_periods
-                    )
+                    end_date = start_date + timedelta(minutes=(self.granularity.to_integer / 60) * self.adjusttotalperiods)
 
                 elif self.simend_date is not None and self.simstart_date is None:
                     if self.simend_date == "now":
@@ -2034,31 +1702,19 @@ class PyCryptoBot(BotConfig):
                     else:
                         end_date = self.get_date_from_iso8601_str(self.simend_date)
 
-                    start_date = end_date - timedelta(
-                        minutes=(self.granularity.to_integer / 60)
-                        * self.adjust_total_periods
-                    )
+                    start_date = end_date - timedelta(minutes=(self.granularity.to_integer / 60) * self.adjusttotalperiods)
 
                 else:
-                    end_date = self.get_date_from_iso8601_str(
-                        str(pd.Series(datetime.now()).dt.round(freq="H")[0])
-                    )
+                    end_date = self.get_date_from_iso8601_str(str(pd.Series(datetime.now()).dt.round(freq="H")[0]))
                     if self.exchange == Exchange.COINBASEPRO:
-                        end_date -= timedelta(
-                            hours=random.randint(0, 8760 * 3)
-                        )  # 3 years in hours
+                        end_date -= timedelta(hours=random.randint(0, 8760 * 3))  # 3 years in hours
                     else:
                         end_date -= timedelta(hours=random.randint(0, 8760 * 1))
 
                     start_date = self.get_date_from_iso8601_str(str(end_date))
-                    start_date -= timedelta(
-                        minutes=(self.granularity.to_integer / 60)
-                        * self.adjust_total_periods
-                    )
+                    start_date -= timedelta(minutes=(self.granularity.to_integer / 60) * self.adjusttotalperiods)
 
-                while (
-                    len(self.trading_data) < self.adjust_total_periods and attempts < 10
-                ):
+                while len(self.trading_data) < self.adjusttotalperiods and attempts < 10:
                     if end_date.isoformat() > datetime.now().isoformat():
                         end_date = datetime.now()
                     if self.smart_switch == 1:
@@ -2086,9 +1742,9 @@ class PyCryptoBot(BotConfig):
 
                 self.extra_candles_found = True
 
-                if len(self.trading_data) < self.adjust_total_periods:
+                if len(self.trading_data) < self.adjusttotalperiods:
                     raise Exception(
-                        f"Unable to retrieve {str(self.adjust_total_periods)} random sets of data between {start_date} and {end_date} in 10 attempts."
+                        f"Unable to retrieve {str(self.adjusttotalperiods)} random sets of data between {start_date} and {end_date} in 10 attempts."
                     )
 
                 if banner:
@@ -2097,13 +1753,8 @@ class PyCryptoBot(BotConfig):
                     end_date = str(end_date.isoformat())
                     text_box.line("Sampling start", str(start_date))
                     text_box.line("Sampling end", str(end_date))
-                    if (
-                        self.simstart_date is None
-                        and len(self.trading_data) < self.adjust_total_periods
-                    ):
-                        text_box.center(
-                            f"WARNING: Using less than {str(self.adjust_total_periods)} intervals"
-                        )
+                    if self.simstart_date is None and len(self.trading_data) < self.adjusttotalperiods:
+                        text_box.center(f"WARNING: Using less than {str(self.adjusttotalperiods)} intervals")
                         text_box.line("Interval size", str(len(self.trading_data)))
                     text_box.doubleLine()
 
@@ -2113,10 +1764,7 @@ class PyCryptoBot(BotConfig):
                 end_date = start_date
                 start_date = pd.Series(start_date).dt.round(freq="H")[0]
                 end_date = pd.Series(end_date).dt.round(freq="H")[0]
-                start_date -= timedelta(
-                    minutes=(self.granularity.to_integer / 60)
-                    * self.adjust_total_periods
-                )
+                start_date -= timedelta(minutes=(self.granularity.to_integer / 60) * self.adjusttotalperiods)
 
                 if end_date.isoformat() > datetime.now().isoformat():
                     end_date = datetime.now()
@@ -2158,9 +1806,7 @@ class PyCryptoBot(BotConfig):
             self.state.last_buy_size = 0
             self.state.sell_sum = 0
         else:
-            self.state.sell_sum = (
-                self.state.sell_sum + self.state.last_sell_size
-            )
+            self.state.sell_sum = self.state.sell_sum + self.state.last_sell_size
 
         table = Table(title=f"Simulation Summary: {self.market}", box=box.SQUARE, min_width=40, border_style="white", show_header=False)
 
@@ -2212,16 +1858,16 @@ class PyCryptoBot(BotConfig):
         if self.state.sell_count > 0:
             if not self.simresultonly:
                 if self.state.last_sell_size > self.state.last_buy_size:
-                    table.add_row(f"Last Sell Order ({self.quote_currency})", Text(_truncate(self.state.last_sell_size, 4), style="bright_green"), style="white")
+                    table.add_row(
+                        f"Last Sell Order ({self.quote_currency})", Text(_truncate(self.state.last_sell_size, 4), style="bright_green"), style="white"
+                    )
                 elif self.state.last_buy_size == self.state.last_sell_size:
                     table.add_row(f"Last Sell Order ({self.quote_currency})", Text(_truncate(self.state.last_sell_size, 4), style="orange1"), style="white")
                 else:
                     table.add_row(f"Last Sell Order ({self.quote_currency})", Text(_truncate(self.state.last_sell_size, 4), style="bright_red"), style="white")
             else:
                 simulation["data"]["last_trade"] = {}
-                simulation["data"]["last_trade"]["size"] = float(
-                    _truncate(self.state.last_sell_size, 2)
-                )
+                simulation["data"]["last_trade"]["size"] = float(_truncate(self.state.last_sell_size, 2))
         else:
             if not self.simresultonly:
                 table.add_row("")
@@ -2231,9 +1877,7 @@ class PyCryptoBot(BotConfig):
                 simulation["data"]["margin"] = 0.0
 
             if not self.disabletelegram:
-                self.notify_telegram(
-                    "      Margin: 0.00%\n  ** margin is nil as a sell has not occurred during the simulation\n"
-                )
+                self.notify_telegram("      Margin: 0.00%\n  ** margin is nil as a sell has not occurred during the simulation\n")
 
         if not self.disabletelegram:
             self.notify_telegram(
@@ -2248,13 +1892,7 @@ class PyCryptoBot(BotConfig):
 
         if self.state.sell_count > 0:
             _last_trade_margin = _truncate(
-                (
-                    (
-                        (self.state.last_sell_size - self.state.last_buy_size)
-                        / self.state.last_buy_size
-                    )
-                    * 100
-                ),
+                (((self.state.last_sell_size - self.state.last_buy_size) / self.state.last_buy_size) * 100),
                 4,
             )
 
@@ -2268,50 +1906,64 @@ class PyCryptoBot(BotConfig):
 
                 if remove_last_buy:
                     table.add_row("")
-                    table.add_row("Open Trade Margin", Text(f"{self.state.open_trade_margin} (open trade excluded from margin calculation)", style="orange1"), style="white")
+                    table.add_row(
+                        "Open Trade Margin",
+                        Text(f"{self.state.open_trade_margin} (open trade excluded from margin calculation)", style="orange1"),
+                        style="white",
+                    )
 
                 table.add_row("")
                 table.add_row(f"Total Buy Volume ({self.quote_currency})", Text(_truncate(self.state.buy_tracker, 2), style="white"), style="white")
 
                 table.add_row("")
                 if self.state.profitlosstracker > 0:
-                    table.add_row(f"All Trades Profit/Loss ({self.quote_currency})", Text(f"{_truncate(self.state.profitlosstracker, 2)} ({_truncate(self.state.feetracker,2)} in fees)", style="bright_green"), style="white")
-                    table.add_row(f"All Trades Margin ({self.quote_currency})", Text(f"{_truncate(self.state.margintracker, 4)}% (non-live simulation, assuming highest fees)", style="bright_green"), style="white")
+                    table.add_row(
+                        f"All Trades Profit/Loss ({self.quote_currency})",
+                        Text(f"{_truncate(self.state.profitlosstracker, 2)} ({_truncate(self.state.feetracker,2)} in fees)", style="bright_green"),
+                        style="white",
+                    )
+                    table.add_row(
+                        f"All Trades Margin ({self.quote_currency})",
+                        Text(f"{_truncate(self.state.margintracker, 4)}% (non-live simulation, assuming highest fees)", style="bright_green"),
+                        style="white",
+                    )
                 elif self.state.profitlosstracker < 0:
-                    table.add_row(f"All Trades Profit/Loss ({self.quote_currency})", Text(f"{_truncate(self.state.profitlosstracker, 2)} ({_truncate(self.state.feetracker,2)} in fees)", style="bright_red"), style="white")
-                    table.add_row(f"All Trades Margin ({self.quote_currency})", Text(f"{_truncate(self.state.margintracker, 4)}% (non-live simulation, assuming highest fees)", style="bright_red"), style="white")
+                    table.add_row(
+                        f"All Trades Profit/Loss ({self.quote_currency})",
+                        Text(f"{_truncate(self.state.profitlosstracker, 2)} ({_truncate(self.state.feetracker,2)} in fees)", style="bright_red"),
+                        style="white",
+                    )
+                    table.add_row(
+                        f"All Trades Margin ({self.quote_currency})",
+                        Text(f"{_truncate(self.state.margintracker, 4)}% (non-live simulation, assuming highest fees)", style="bright_red"),
+                        style="white",
+                    )
                 else:
-                    table.add_row(f"All Trades Profit/Loss ({self.quote_currency})", Text(f"{_truncate(self.state.profitlosstracker, 2)} ({_truncate(self.state.feetracker,2)} in fees)", style="orange1"), style="white")
-                    table.add_row(f"All Trades Margin ({self.quote_currency})", Text(f"{_truncate(self.state.margintracker, 4)}% (non-live simulation, assuming highest fees)", style="orange1"), style="white")
+                    table.add_row(
+                        f"All Trades Profit/Loss ({self.quote_currency})",
+                        Text(f"{_truncate(self.state.profitlosstracker, 2)} ({_truncate(self.state.feetracker,2)} in fees)", style="orange1"),
+                        style="white",
+                    )
+                    table.add_row(
+                        f"All Trades Margin ({self.quote_currency})",
+                        Text(f"{_truncate(self.state.margintracker, 4)}% (non-live simulation, assuming highest fees)", style="orange1"),
+                        style="white",
+                    )
             else:
                 simulation["data"]["last_trade"]["margin"] = _last_trade_margin
                 simulation["data"]["all_trades"] = {}
-                simulation["data"]["all_trades"][
-                    "quote_currency"
-                ] = self.quote_currency
-                simulation["data"]["all_trades"]["value_buys"] = float(
-                    _truncate(self.state.buy_tracker, 2)
-                )
-                simulation["data"]["all_trades"]["profit_loss"] = float(
-                    _truncate(self.state.profitlosstracker, 2)
-                )
-                simulation["data"]["all_trades"]["fees"] = float(
-                    _truncate(self.state.feetracker, 2)
-                )
-                simulation["data"]["all_trades"]["margin"] = float(
-                    _truncate(self.state.margintracker, 4)
-                )
+                simulation["data"]["all_trades"]["quote_currency"] = self.quote_currency
+                simulation["data"]["all_trades"]["value_buys"] = float(_truncate(self.state.buy_tracker, 2))
+                simulation["data"]["all_trades"]["profit_loss"] = float(_truncate(self.state.profitlosstracker, 2))
+                simulation["data"]["all_trades"]["fees"] = float(_truncate(self.state.feetracker, 2))
+                simulation["data"]["all_trades"]["margin"] = float(_truncate(self.state.margintracker, 4))
 
             ## revised telegram Summary notification to give total margin in addition to last trade margin.
             if not self.disabletelegram:
-                self.notify_telegram(
-                    f"      Last Trade Margin: {_last_trade_margin}%\n\n"
-                )
+                self.notify_telegram(f"      Last Trade Margin: {_last_trade_margin}%\n\n")
 
             if remove_last_buy and not self.disabletelegram:
-                self.notify_telegram(
-                    f"\nOpen Trade Margin at end of simulation: {self.state.open_trade_margin}\n"
-                )
+                self.notify_telegram(f"\nOpen Trade Margin at end of simulation: {self.state.open_trade_margin}\n")
 
             if not self.disabletelegram:
                 self.notify_telegram(
@@ -2376,13 +2028,9 @@ class PyCryptoBot(BotConfig):
             table.add_row("Bot Mode", "LIVE", "Live trades using your funds!", "--live")
         else:
             if self.is_sim:
-                table.add_row(
-                    "Bot Mode", "SIMULATION", "Back testing using simulations", "--live"
-                )
+                table.add_row("Bot Mode", "SIMULATION", "Back testing using simulations", "--live")
             else:
-                table.add_row(
-                    "Bot Mode", "TEST", "Test trades using dummy funds :)", "--live"
-                )
+                table.add_row("Bot Mode", "TEST", "Test trades using dummy funds :)", "--live")
 
         table.add_row("", "", "")
 
@@ -3042,139 +2690,98 @@ class PyCryptoBot(BotConfig):
                 style="grey62",
             )
 
+        def config_option_row_int(
+            item: str = None, store_name: str = None, description: str = None, break_below: bool = False, store_default: int = 0, arg_name: str = None
+        ) -> bool:
+            if item is None or store_name is None or description is None:
+                return False
+
+            if arg_name is None:
+                arg_name = store_name
+
+            if getattr(self, store_name) != store_default:
+                table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <num>")
+            else:
+                table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <num>", style="grey62")
+
+            if break_below is True:
+                table.add_row("", "", "")
+
+            return True
+
+        def config_option_row_float(
+            item: str = None, store_name: str = None, description: str = None, break_below: bool = False, store_default: float = 0, arg_name: str = None
+        ) -> bool:
+            if item is None or store_name is None or description is None:
+                return False
+
+            if arg_name is None:
+                arg_name = store_name
+
+            if getattr(self, store_name) != store_default:
+                table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <num>")
+            else:
+                table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <num>", style="grey62")
+
+            if break_below is True:
+                table.add_row("", "", "")
+
+            return True
+
+        def config_option_row_bool(
+            item: str = None,
+            store_name: str = None,
+            description: str = None,
+            break_below: bool = False,
+            store_invert: bool = False,
+            store_default: bool = None,
+            arg_name: str = None,
+        ) -> bool:
+            if item is None or store_name is None or description is None:
+                return False
+
+            if arg_name is None:
+                arg_name = store_name
+
+            if store_invert is True:
+                if getattr(self, store_name) is False and not getattr(self, store_name) is not store_default:
+                    table.add_row(item, str(not getattr(self, store_name)), description, f"--{arg_name} <1|0>")
+                else:
+                    table.add_row(item, str(not getattr(self, store_name)), description, f"--{arg_name} <1|0>", style="grey62")
+            else:
+                if getattr(self, store_name) is True and getattr(self, store_name) is not store_default:
+                    table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <1|0>")
+                else:
+                    table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <1|0>", style="grey62")
+
+            if break_below is True:
+                table.add_row("", "", "")
+
+            return True
+
         table.add_row("", "", "")
 
-        if self.disablebuynearhigh:
-            table.add_row(
-                "Allow Buy Near High",
-                str(not self.disablebuynearhigh),
-                "Prevent the bot from buying at a recent high",
-                "--disablebuynearhigh",
-            )
-        else:
-            table.add_row(
-                "Allow Buy Near High",
-                str(not self.disablebuynearhigh),
-                "Prevent the bot from buying at a recent high",
-                "--disablebuynearhigh",
-                style="grey62",
-            )
+        config_option_row_bool(
+            "Allow Buy Near High",
+            "disablebuynearhigh",
+            "Prevent the bot from buying at a recent high",
+            store_invert=True,
+            store_default=True,
+            arg_name="buynearhigh",
+        )
+        config_option_row_float(
+            "No Buy Near High Percent", "nobuynearhighpcnt", "Percentage from the range high to not buy", store_default=3.0, arg_name="buynearhighpcnt"
+        )
+        config_option_row_int(
+            "Adjust Total Periods", "adjusttotalperiods", "Adjust data points in historical trading data", break_below=True, store_default=300
+        )
 
-        if self.disablebuynearhigh and self.nobuynearhighpcnt:
-            table.add_row(
-                "No Buy Near High Percent",
-                str(self.nobuynearhighpcnt),
-                "Prevent the bot from buying near a recent high",
-                "--nobuynearhighpcnt",
-            )
-        else:
-            table.add_row(
-                "No Buy Near High Percent",
-                str(self.nobuynearhighpcnt),
-                "Prevent the bot from buying near a recent high",
-                "--nobuynearhighpcnt",
-                style="grey62",
-            )
+        config_option_row_bool("Override Sell Trigger", "selltriggeroverride", "Override sell trigger if strong buy", break_below=True)
 
-        if self.adjust_total_periods != 300:
-            table.add_row(
-                "Adjust Total Periods",
-                str(self.adjust_total_periods),
-                "Adjust data points in historical trading data",
-                "--adjust_total_periods",
-            )
-        else:
-            table.add_row(
-                "Adjust Total Periods",
-                str(self.adjust_total_periods),
-                "Adjust data points in historical trading data",
-                "--adjust_total_periods",
-                style="grey62",
-            )
-
-        table.add_row("", "", "")
-
-        if self.sell_trigger_override:
-            table.add_row(
-                "Override Sell Trigger",
-                str(self.sell_trigger_override),
-                "Override sell trigger if strong buy",
-                "--sell_trigger_override",
-            )
-        else:
-            table.add_row(
-                "Override Sell Trigger",
-                str(self.sell_trigger_override),
-                "Override sell trigger if strong buy",
-                "--sell_trigger_override",
-                style="grey62",
-            )
-
-        table.add_row("", "", "")
-
-        if self.disablebuyema is False:
-            table.add_row(
-                "Use EMA12/26",
-                str(not self.disablebuyema),
-                "Exponential Moving Average (EMA)",
-                "--ema1226",
-            )
-        else:
-            table.add_row(
-                "Use EMA12/26",
-                str(not self.disablebuyema),
-                "Exponential Moving Average (EMA)",
-                "--ema1226",
-                style="grey62",
-            )
-
-        if self.disablebuymacd is False:
-            table.add_row(
-                "Use MACD/Signal",
-                str(not self.disablebuymacd),
-                "Moving Average Convergence Divergence (MACD)",
-                "--macdsignal",
-            )
-        else:
-            table.add_row(
-                "Use MACD/Signal",
-                str(not self.disablebuymacd),
-                "Moving Average Convergence Divergence (MACD)",
-                "--macdsignal",
-                style="grey62",
-            )
-
-        if self.disablebuyobv is False:
-            table.add_row(
-                "Use OBV",
-                str(not self.disablebuyobv),
-                "On-Balance Volume (OBV)",
-                "--disablebuyobv",
-            )
-        else:
-            table.add_row(
-                "Use OBV",
-                str(not self.disablebuyobv),
-                "On-Balance Volume (OBV)",
-                "--disablebuyobv",
-                style="grey62",
-            )
-
-        if self.disablebuyelderray is False:
-            table.add_row(
-                "Use Elder-Ray",
-                str(not self.disablebuyelderray),
-                "Elder-Ray Index",
-                "--disablebuyelderray",
-            )
-        else:
-            table.add_row(
-                "Use Elder-Ray",
-                str(not self.disablebuyelderray),
-                "Elder-Ray Index (Elder-Ray)",
-                "--disablebuyelderray",
-                style="grey62",
-            )
+        config_option_row_bool("Use EMA12/26", "disablebuyema", "Exponential Moving Average (EMA)", store_invert=True, arg_name="ema1226")
+        config_option_row_bool("Use MACD/Signal", "disablebuymacd", "Moving Average Convergence Divergence (MACD)", store_invert=True, arg_name="macdsignal")
+        config_option_row_bool("On-Balance Volume (OBV)", "disablebuyobv", "On-Balance Volume (OBV)", store_invert=True, arg_name="obv")
+        config_option_row_bool("Use Elder-Ray", "disablebuyelderray", "Elder-Ray Index (Elder-Ray)", break_below=True, store_invert=True, arg_name="elderray")
 
         self.console_term.print(table)
         if self.disablelog is False:
@@ -3235,14 +2842,10 @@ class PyCryptoBot(BotConfig):
             else:
                 color = "violet"
 
-            self.table_console = Table(
-                title=None, box=None, show_header=False, show_footer=False
-            )
+            self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)
             self.table_console.add_row(
                 RichText.styled_text("Bot1", "magenta"),
-                RichText.styled_text(
-                    datetime.today().strftime("%Y-%m-%d %H:%M:%S"), "white"
-                ),
+                RichText.styled_text(datetime.today().strftime("%Y-%m-%d %H:%M:%S"), "white"),
                 RichText.styled_text(self.market, "yellow"),
                 RichText.styled_text(self.print_granularity(), "yellow"),
                 RichText.styled_text(notification, color),
@@ -3250,9 +2853,7 @@ class PyCryptoBot(BotConfig):
             self.console_term.print(self.table_console)
             if self.disablelog is False:
                 self.console_log.print(self.table_console)
-            self.table_console = Table(
-                title=None, box=None, show_header=False, show_footer=False
-            )  # clear table
+            self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)  # clear table
 
         if self.is_sim:
             df_first = None
@@ -3266,12 +2867,8 @@ class PyCryptoBot(BotConfig):
             try:
                 # if df already has data get first and last record date
                 if len(df) > 0:
-                    df_first = self.get_date_from_iso8601_str(
-                        str(df.head(1).index.format()[0])
-                    )
-                    df_last = self.get_date_from_iso8601_str(
-                        str(df.tail(1).index.format()[0])
-                    )
+                    df_first = self.get_date_from_iso8601_str(str(df.head(1).index.format()[0]))
+                    df_last = self.get_date_from_iso8601_str(str(df.tail(1).index.format()[0]))
                 else:
                     result_df_cache = pd.DataFrame()
 
@@ -3282,13 +2879,9 @@ class PyCryptoBot(BotConfig):
             if df_first is None and df_last is None:
                 if not self.is_sim or (self.is_sim and not self.simresultonly):
                     if self.smart_switch:
-                        _notify(
-                            f"Retieving smart switch {granularity.to_short} market data from the exchange."
-                        )
+                        _notify(f"Retieving smart switch {granularity.to_short} market data from the exchange.")
                     else:
-                        _notify(
-                            f"Retrieving {granularity.to_short} market data from the exchange."
-                        )
+                        _notify(f"Retrieving {granularity.to_short} market data from the exchange.")
 
                 df_first = simend
                 df_first -= timedelta(minutes=((granularity.to_integer / 60) * 200))
@@ -3303,23 +2896,13 @@ class PyCryptoBot(BotConfig):
                 result_df_cache = df1
                 originalSimStart = self.get_date_from_iso8601_str(str(simstart))
                 adding_extra_candles = False
-                while df_first.isoformat(timespec="milliseconds") > simstart.isoformat(
+                while df_first.isoformat(timespec="milliseconds") > simstart.isoformat(timespec="milliseconds") or df_first.isoformat(
                     timespec="milliseconds"
-                ) or df_first.isoformat(
-                    timespec="milliseconds"
-                ) > originalSimStart.isoformat(
-                    timespec="milliseconds"
-                ):
+                ) > originalSimStart.isoformat(timespec="milliseconds"):
                     end_date = df_first
-                    df_first -= timedelta(
-                        minutes=(
-                            self.adjust_total_periods * (granularity.to_integer / 60)
-                        )
-                    )
+                    df_first -= timedelta(minutes=(self.adjusttotalperiods * (granularity.to_integer / 60)))
 
-                    if df_first.isoformat(timespec="milliseconds") < simstart.isoformat(
-                        timespec="milliseconds"
-                    ):
+                    if df_first.isoformat(timespec="milliseconds") < simstart.isoformat(timespec="milliseconds"):
                         df_first = self.get_date_from_iso8601_str(str(simstart))
 
                     df2 = self.get_historical_data(
@@ -3331,30 +2914,17 @@ class PyCryptoBot(BotConfig):
                     )
 
                     # check to see if there are an extra 300 candles available to be used, if not just use the original starting point
-                    if (
-                        self.adjust_total_periods >= 300
-                        and adding_extra_candles is True
-                        and len(df2) <= 0
-                    ):
+                    if self.adjusttotalperiods >= 300 and adding_extra_candles is True and len(df2) <= 0:
                         self.extra_candles_found = False
                         simstart = originalSimStart
                     else:
-                        result_df_cache = pd.concat(
-                            [df2.copy(), df1.copy()]
-                        ).drop_duplicates()
+                        result_df_cache = pd.concat([df2.copy(), df1.copy()]).drop_duplicates()
                         df1 = result_df_cache
 
                     # create df with 300 candles or adjusted total periods before the required start_date to match live
-                    if df_first.isoformat(
-                        timespec="milliseconds"
-                    ) == simstart.isoformat(timespec="milliseconds"):
+                    if df_first.isoformat(timespec="milliseconds") == simstart.isoformat(timespec="milliseconds"):
                         if adding_extra_candles is False:
-                            simstart -= timedelta(
-                                minutes=(
-                                    self.adjust_total_periods
-                                    * (granularity.to_integer / 60)
-                                )
-                            )
+                            simstart -= timedelta(minutes=(self.adjusttotalperiods * (granularity.to_integer / 60)))
                         adding_extra_candles = True
                         self.extra_candles_found = True
 
@@ -3363,12 +2933,8 @@ class PyCryptoBot(BotConfig):
 
             if self.smart_switch is False:
                 if self.extra_candles_found is False:
-                    _notify(
-                        f"{str(self.exchange.value)} is not returning data for the requested start date."
-                    )
-                    _notify(
-                        f"Switching to earliest start date: {str(result_df_cache.head(1).index.format()[0])}."
-                    )
+                    _notify(f"{str(self.exchange.value)} is not returning data for the requested start date.")
+                    _notify(f"Switching to earliest start date: {str(result_df_cache.head(1).index.format()[0])}.")
                     self.simstart_date = str(result_df_cache.head(1).index.format()[0])
 
             return result_df_cache.copy()
@@ -3382,82 +2948,48 @@ class PyCryptoBot(BotConfig):
     ) -> pd.DataFrame:
         if self.is_sim:
             if self.sell_smart_switch == 1:
-                self.ema1226_5m_cache = self.get_smart_switch_df(
-                    self.ema1226_5m_cache, market, Granularity.FIVE_MINUTES, start, end
-                )
-            self.ema1226_15m_cache = self.get_smart_switch_df(
-                self.ema1226_15m_cache, market, Granularity.FIFTEEN_MINUTES, start, end
-            )
-            self.ema1226_1h_cache = self.get_smart_switch_df(
-                self.ema1226_1h_cache, market, Granularity.ONE_HOUR, start, end
-            )
-            self.ema1226_6h_cache = self.get_smart_switch_df(
-                self.ema1226_6h_cache, market, Granularity.SIX_HOURS, start, end
-            )
+                self.ema1226_5m_cache = self.get_smart_switch_df(self.ema1226_5m_cache, market, Granularity.FIVE_MINUTES, start, end)
+            self.ema1226_15m_cache = self.get_smart_switch_df(self.ema1226_15m_cache, market, Granularity.FIFTEEN_MINUTES, start, end)
+            self.ema1226_1h_cache = self.get_smart_switch_df(self.ema1226_1h_cache, market, Granularity.ONE_HOUR, start, end)
+            self.ema1226_6h_cache = self.get_smart_switch_df(self.ema1226_6h_cache, market, Granularity.SIX_HOURS, start, end)
 
             if len(self.ema1226_15m_cache) == 0:
-                raise Exception(
-                    f"No data return for selected date range {start} - {end}"
-                )
+                raise Exception(f"No data return for selected date range {start} - {end}")
 
             if not self.extra_candles_found:
                 if granularity == Granularity.FIVE_MINUTES:
                     if (
-                        self.get_date_from_iso8601_str(
-                            str(self.ema1226_5m_cache.index.format()[0])
-                        ).isoformat()
+                        self.get_date_from_iso8601_str(str(self.ema1226_5m_cache.index.format()[0])).isoformat()
                         != self.get_date_from_iso8601_str(start).isoformat()
                     ):
                         text_box = TextBox(80, 26)
                         text_box.singleLine()
-                        text_box.center(
-                            f"{str(self.exchange.value)}is not returning data for the requested start date."
-                        )
-                        text_box.center(
-                            f"Switching to earliest start date: {str(self.ema1226_5m_cache.head(1).index.format()[0])}"
-                        )
+                        text_box.center(f"{str(self.exchange.value)}is not returning data for the requested start date.")
+                        text_box.center(f"Switching to earliest start date: {str(self.ema1226_5m_cache.head(1).index.format()[0])}")
                         text_box.singleLine()
-                        self.simstart_date = str(
-                            self.ema1226_5m_cache.head(1).index.format()[0]
-                        )
+                        self.simstart_date = str(self.ema1226_5m_cache.head(1).index.format()[0])
                 elif granularity == Granularity.FIFTEEN_MINUTES:
                     if (
-                        self.get_date_from_iso8601_str(
-                            str(self.ema1226_15m_cache.index.format()[0])
-                        ).isoformat()
+                        self.get_date_from_iso8601_str(str(self.ema1226_15m_cache.index.format()[0])).isoformat()
                         != self.get_date_from_iso8601_str(start).isoformat()
                     ):
                         text_box = TextBox(80, 26)
                         text_box.singleLine()
-                        text_box.center(
-                            f"{str(self.exchange.value)}is not returning data for the requested start date."
-                        )
-                        text_box.center(
-                            f"Switching to earliest start date: {str(self.ema1226_15m_cache.head(1).index.format()[0])}"
-                        )
+                        text_box.center(f"{str(self.exchange.value)}is not returning data for the requested start date.")
+                        text_box.center(f"Switching to earliest start date: {str(self.ema1226_15m_cache.head(1).index.format()[0])}")
                         text_box.singleLine()
-                        self.simstart_date = str(
-                            self.ema1226_15m_cache.head(1).index.format()[0]
-                        )
+                        self.simstart_date = str(self.ema1226_15m_cache.head(1).index.format()[0])
                 else:
                     if (
-                        self.get_date_from_iso8601_str(
-                            str(self.ema1226_1h_cache.index.format()[0])
-                        ).isoformat()
+                        self.get_date_from_iso8601_str(str(self.ema1226_1h_cache.index.format()[0])).isoformat()
                         != self.get_date_from_iso8601_str(start).isoformat()
                     ):
                         text_box = TextBox(80, 26)
                         text_box.singleLine()
-                        text_box.center(
-                            f"{str(self.exchange.value)} is not returning data for the requested start date."
-                        )
-                        text_box.center(
-                            f"Switching to earliest start date: {str(self.ema1226_1h_cache.head(1).index.format()[0])}"
-                        )
+                        text_box.center(f"{str(self.exchange.value)} is not returning data for the requested start date.")
+                        text_box.center(f"Switching to earliest start date: {str(self.ema1226_1h_cache.head(1).index.format()[0])}")
                         text_box.singleLine()
-                        self.simstart_date = str(
-                            self.ema1226_1h_cache.head(1).index.format()[0]
-                        )
+                        self.simstart_date = str(self.ema1226_1h_cache.head(1).index.format()[0])
 
             if granularity == Granularity.FIFTEEN_MINUTES:
                 return self.ema1226_15m_cache
@@ -3466,28 +2998,22 @@ class PyCryptoBot(BotConfig):
             else:
                 return self.ema1226_1h_cache
 
-    def get_historical_data_chained(
-        self, market, granularity: Granularity, max_iterations: int = 1
-    ) -> pd.DataFrame:
+    def get_historical_data_chained(self, market, granularity: Granularity, max_iterations: int = 1) -> pd.DataFrame:
         df1 = self.get_historical_data(market, granularity, None)
 
         if max_iterations == 1:
             return df1
 
         def get_previous_date_range(df: pd.DataFrame = None) -> tuple:
-            end_date = df["date"].min() - timedelta(
-                seconds=(granularity.to_integer / 60)
-            )
-            new_start = df["date"].min() - timedelta(hours=self.adjust_total_periods)
+            end_date = df["date"].min() - timedelta(seconds=(granularity.to_integer / 60))
+            new_start = df["date"].min() - timedelta(hours=self.adjusttotalperiods)
             return (str(new_start).replace(" ", "T"), str(end_date).replace(" ", "T"))
 
         iterations = 0
         result_df = pd.DataFrame()
         while iterations < (max_iterations - 1):
             start_date, end_date = get_previous_date_range(df1)
-            df2 = self.get_historical_data(
-                market, granularity, None, start_date, end_date
-            )
+            df2 = self.get_historical_data(market, granularity, None, start_date, end_date)
             result_df = pd.concat([df2, df1]).drop_duplicates()
             df1 = result_df
             iterations = iterations + 1
@@ -3508,26 +3034,18 @@ class PyCryptoBot(BotConfig):
         if self.exchange == Exchange.BINANCE:
             api = BPublicAPI(api_url=self.api_url)
 
-        elif (
-            self.exchange == Exchange.KUCOIN
-        ):  # returns data from coinbase if not specified
+        elif self.exchange == Exchange.KUCOIN:  # returns data from coinbase if not specified
             api = KPublicAPI(api_url=self.api_url)
 
             # Kucoin only returns 100 rows if start not specified, make sure we get the right amount
             if not self.is_sim and iso8601start == "":
-                start = datetime.now() - timedelta(
-                    minutes=(granularity.to_integer / 60) * self.adjust_total_periods
-                )
+                start = datetime.now() - timedelta(minutes=(granularity.to_integer / 60) * self.adjusttotalperiods)
                 iso8601start = str(start.isoformat()).split(".")[0]
 
         else:  # returns data from coinbase if not specified
             api = CBPublicAPI()
 
-        if (
-            iso8601start != ""
-            and iso8601end == ""
-            and self.exchange != Exchange.BINANCE
-        ):
+        if iso8601start != "" and iso8601end == "" and self.exchange != Exchange.BINANCE:
             return api.get_historical_data(
                 market,
                 granularity,
@@ -3570,9 +3088,7 @@ class PyCryptoBot(BotConfig):
         else:
             return ""
 
-    def get_interval(
-        self, df: pd.DataFrame = pd.DataFrame(), iterations: int = 0
-    ) -> pd.DataFrame:
+    def get_interval(self, df: pd.DataFrame = pd.DataFrame(), iterations: int = 0) -> pd.DataFrame:
         if len(df) == 0:
             return df
 
@@ -3586,9 +3102,7 @@ class PyCryptoBot(BotConfig):
     def is_1h_ema1226_bull(self, iso8601end: str = ""):
         try:
             if self.is_sim and isinstance(self.ema1226_1h_cache, pd.DataFrame):
-                df_data = self.ema1226_1h_cache.loc[
-                    self.ema1226_1h_cache["date"] <= iso8601end
-                ].copy()
+                df_data = self.ema1226_1h_cache.loc[self.ema1226_1h_cache["date"] <= iso8601end].copy()
             elif self.exchange != Exchange.DUMMY:
                 df_data = self.get_additional_df("1h", self.websocket_connection).copy()
                 self.ema1226_1h_cache = df_data
@@ -3613,9 +3127,7 @@ class PyCryptoBot(BotConfig):
     def is_6h_ema1226_bull(self, iso8601end: str = ""):
         try:
             if self.is_sim and isinstance(self.ema1226_1h_cache, pd.DataFrame):
-                df_data = self.ema1226_6h_cache.loc[
-                    self.ema1226_6h_cache["date"] <= iso8601end
-                ].copy()
+                df_data = self.ema1226_6h_cache.loc[self.ema1226_6h_cache["date"] <= iso8601end].copy()
             elif self.exchange != Exchange.DUMMY:
                 df_data = self.get_additional_df("6h", self.websocket_connection).copy()
                 self.ema1226_6h_cache = df_data
@@ -3639,14 +3151,12 @@ class PyCryptoBot(BotConfig):
 
     def is_1h_sma50200_bull(self, iso8601end: str = ""):
         # if periods adjusted and less than 200
-        if self.adjust_total_periods < 200:
+        if self.adjusttotalperiods < 200:
             return False
 
         try:
             if self.is_sim and isinstance(self.sma50200_1h_cache, pd.DataFrame):
-                df_data = self.sma50200_1h_cache.loc[
-                    self.sma50200_1h_cache["date"] <= iso8601end
-                ].copy()
+                df_data = self.sma50200_1h_cache.loc[self.sma50200_1h_cache["date"] <= iso8601end].copy()
             elif self.exchange != Exchange.DUMMY:
                 df_data = self.get_additional_df("1h", self.websocket_connection).copy()
                 self.sma50200_1h_cache = df_data
@@ -3673,10 +3183,7 @@ class PyCryptoBot(BotConfig):
 
         idx, next_idx = (None, 0)
         for i in range(len(self.df_data)):
-            if (
-                isinstance(self.df_data[i], list)
-                and self.df_data[i][0] == short_granularity
-            ):
+            if isinstance(self.df_data[i], list) and self.df_data[i][0] == short_granularity:
                 idx = i
             elif isinstance(self.df_data[i], list):
                 next_idx = i + 1
@@ -3699,13 +3206,10 @@ class PyCryptoBot(BotConfig):
             if len(df) == 0 or (  # empty dataframe
                 len(df) > 0
                 and (  # if exists, only refresh at candleclose
-                    datetime.timestamp(datetime.utcnow()) - granularity.to_integer
-                    >= datetime.timestamp(df["date"].iloc[row])
+                    datetime.timestamp(datetime.utcnow()) - granularity.to_integer >= datetime.timestamp(df["date"].iloc[row])
                 )
             ):
-                df = self.get_historical_data(
-                    self.market, self.granularity, self.websocket_connection
-                )
+                df = self.get_historical_data(self.market, self.granularity, self.websocket_connection)
                 row = -1
             else:
                 # if ticker hasn't run yet or hasn't updated, return the original df
@@ -3713,25 +3217,13 @@ class PyCryptoBot(BotConfig):
                     return df
                 elif self.ticker_date is None or datetime.timestamp(  # if calling API multiple times, per iteration, ticker may not be updated yet
                     datetime.utcnow()
-                ) - 60 <= datetime.timestamp(
-                    df["date"].iloc[row]
-                ):
+                ) - 60 <= datetime.timestamp(df["date"].iloc[row]):
                     return df
                 elif row == -2:  # update the new row added for ticker if it is there
-                    df.iloc[-1, df.columns.get_loc("low")] = (
-                        self.ticker_price
-                        if self.ticker_price < df["low"].iloc[-1]
-                        else df["low"].iloc[-1]
-                    )
-                    df.iloc[-1, df.columns.get_loc("high")] = (
-                        self.ticker_price
-                        if self.ticker_price > df["high"].iloc[-1]
-                        else df["high"].iloc[-1]
-                    )
+                    df.iloc[-1, df.columns.get_loc("low")] = self.ticker_price if self.ticker_price < df["low"].iloc[-1] else df["low"].iloc[-1]
+                    df.iloc[-1, df.columns.get_loc("high")] = self.ticker_price if self.ticker_price > df["high"].iloc[-1] else df["high"].iloc[-1]
                     df.iloc[-1, df.columns.get_loc("close")] = self.ticker_price
-                    df.iloc[-1, df.columns.get_loc("date")] = datetime.strptime(
-                        self.ticker_date, "%Y-%m-%d %H:%M:%S"
-                    )
+                    df.iloc[-1, df.columns.get_loc("date")] = datetime.strptime(self.ticker_date, "%Y-%m-%d %H:%M:%S")
                     tsidx = pd.DatetimeIndex(df["date"])
                     df.set_index(tsidx, inplace=True)
                     df.index.name = "ts"
@@ -3749,21 +3241,11 @@ class PyCryptoBot(BotConfig):
                         ],
                         data=[
                             [
-                                datetime.strptime(
-                                    self.ticker_date, "%Y-%m-%d %H:%M:%S"
-                                ),
+                                datetime.strptime(self.ticker_date, "%Y-%m-%d %H:%M:%S"),
                                 df["market"].iloc[-1],
                                 df["granularity"].iloc[-1],
-                                (
-                                    self.ticker_price
-                                    if self.ticker_price < df["close"].iloc[-1]
-                                    else df["close"].iloc[-1]
-                                ),
-                                (
-                                    self.ticker_price
-                                    if self.ticker_price > df["close"].iloc[-1]
-                                    else df["close"].iloc[-1]
-                                ),
+                                (self.ticker_price if self.ticker_price < df["close"].iloc[-1] else df["close"].iloc[-1]),
+                                (self.ticker_price if self.ticker_price > df["close"].iloc[-1] else df["close"].iloc[-1]),
                                 df["close"].iloc[-1],
                                 self.ticker_price,
                                 df["volume"].iloc[-1],
@@ -3810,13 +3292,7 @@ class PyCryptoBot(BotConfig):
                     "filled": float(last_order["filled"]),
                     "price": float(last_order["price"]),
                     "fee": float(last_order["fees"]),
-                    "date": str(
-                        pd.DatetimeIndex(
-                            pd.to_datetime(last_order["created_at"]).dt.strftime(
-                                "%Y-%m-%dT%H:%M:%S.%Z"
-                            )
-                        )[0]
-                    ),
+                    "date": str(pd.DatetimeIndex(pd.to_datetime(last_order["created_at"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z"))[0]),
                 }
             elif self.exchange == Exchange.KUCOIN:
                 api = KAuthAPI(
@@ -3842,13 +3318,7 @@ class PyCryptoBot(BotConfig):
                     "filled": float(last_order["filled"]),
                     "price": float(last_order["price"]),
                     "fee": float(last_order["fees"]),
-                    "date": str(
-                        pd.DatetimeIndex(
-                            pd.to_datetime(last_order["created_at"]).dt.strftime(
-                                "%Y-%m-%dT%H:%M:%S.%Z"
-                            )
-                        )[0]
-                    ),
+                    "date": str(pd.DatetimeIndex(pd.to_datetime(last_order["created_at"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z"))[0]),
                 }
             elif self.exchange == Exchange.BINANCE:
                 api = BAuthAPI(
@@ -3873,13 +3343,7 @@ class PyCryptoBot(BotConfig):
                     "filled": float(last_order["filled"]),
                     "price": float(last_order["price"]),
                     "fees": float(last_order["size"] * 0.001),
-                    "date": str(
-                        pd.DatetimeIndex(
-                            pd.to_datetime(last_order["created_at"]).dt.strftime(
-                                "%Y-%m-%dT%H:%M:%S.%Z"
-                            )
-                        )[0]
-                    ),
+                    "date": str(pd.DatetimeIndex(pd.to_datetime(last_order["created_at"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z"))[0]),
                 }
             else:
                 return None

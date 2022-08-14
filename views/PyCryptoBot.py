@@ -122,8 +122,8 @@ class RichText:
         return text
 
     @staticmethod
-    def bull_bear(golden_cross: bool = False, adjust_total_periods: int = 300) -> Text:
-        if adjust_total_periods < 200:
+    def bull_bear(golden_cross: bool = False, adjusttotalperiods: int = 300) -> Text:
+        if adjusttotalperiods < 200:
             return None
 
         if golden_cross:

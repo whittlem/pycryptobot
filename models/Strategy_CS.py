@@ -67,7 +67,7 @@ class Strategy_CS:
 
         # repeat for any additional, don't recommend more than 1 or 2 additional, adds overhead and API calls
         df_6h = self.app.getAdditionalDf("6h", websocket).copy()
-        ta_6h = self.TA(df_6h, self.app.adjust_total_periods)
+        ta_6h = self.TA(df_6h, self.app.adjusttotalperiods)
         ta_6h.add_ema(5, True)
         ta_6h.add_ema(10, True)
         df_6h = ta_6h.get_df()
@@ -99,7 +99,7 @@ class Strategy_CS:
         # the lines for buy and sell pts.
         # ** Be sure to adjust total counts below.
 
-        # max possible points - this is used if sell_trigger_override setting is True, this value is used
+        # max possible points - this is used if selltriggeroverride setting is True, this value is used
         # if using smartswitch granularity, recommend lowering each pt total by 1 pt due to the EMA Bull being disabled
         self.max_pts = 12
         self.sell_override_pts = 10
