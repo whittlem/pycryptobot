@@ -1034,9 +1034,9 @@ class PyCryptoBot(BotConfig):
                         RichText.styled_label_text(
                             "Near-High", "white", f"{df_near_high}%", "cyan"
                         ),  # price near high
-                        RichText.styled_label_text(
-                            "Range", "white", f"{range_start} <-> {range_end}", "cyan"
-                        ),
+                        # RichText.styled_label_text(
+                        #     "Range", "white", f"{range_start} <-> {range_end}", "cyan"
+                        # ),
                         RichText.margin_text(margin_text, self.state.last_action),
                         RichText.delta_text(
                             self.price,

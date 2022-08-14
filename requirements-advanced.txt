@@ -1,2 +1,0 @@
-# this file is for additional modules needed for advanced options
-pandas-ta # optional module to use alternate Technical Analysis functions
