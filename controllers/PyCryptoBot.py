@@ -2004,6 +2004,7 @@ class PyCryptoBot(BotConfig):
 
         if banner and not self.is_sim or (self.is_sim and not self.simresultonly):
             self._generate_banner()
+            # sys.exit()  # TODO: remove this
 
         self.app_started = True
         # run the first job immediately after starting
@@ -3116,14 +3117,14 @@ class PyCryptoBot(BotConfig):
                 "Use EMA12/26",
                 str(not self.disablebuyema),
                 "Exponential Moving Average (EMA)",
-                "--disablebuyema",
+                "--ema1226",
             )
         else:
             table.add_row(
                 "Use EMA12/26",
                 str(not self.disablebuyema),
                 "Exponential Moving Average (EMA)",
-                "--disablebuyema",
+                "--ema1226",
                 style="grey62",
             )
 
@@ -3132,14 +3133,14 @@ class PyCryptoBot(BotConfig):
                 "Use MACD/Signal",
                 str(not self.disablebuymacd),
                 "Moving Average Convergence Divergence (MACD)",
-                "--disablebuymacd",
+                "--macdsignal",
             )
         else:
             table.add_row(
                 "Use MACD/Signal",
                 str(not self.disablebuymacd),
                 "Moving Average Convergence Divergence (MACD)",
-                "--disablebuymacd",
+                "--macdsignal",
                 style="grey62",
             )
 

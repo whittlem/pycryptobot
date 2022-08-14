@@ -1,4 +1,6 @@
 import re
+import sys
+from xmlrpc.client import Boolean
 
 from models.exchange.Granularity import Granularity
 
@@ -706,3 +708,34 @@ def default_config_parse(app, config):
                 app.manual_trades_only = bool(config["manual_trades_only"])
         else:
             raise TypeError("manual_trades_only must be of type int")
+
+    # TODO: arguments v2
+
+    def config_option(option_name: str=None, option_default=True, store_name: str=None, store_invert: bool=False) -> bool:
+        if option_name is None or store_name is None:
+            return False
+
+        if store_name in config:
+            option_name = store_name  # prefer legacy config if it exists
+            store_invert = False   # legacy config does not need to be inverted
+
+        if option_name in config:
+            if isinstance(config[option_name], int):
+                if config[option_name] in [0, 1]:
+                    if store_invert is True:
+                        setattr(app, store_name, bool(not config[option_name]))
+                    else:
+                        setattr(app, store_name, bool(config[option_name]))
+            else:
+                raise TypeError(f"{option_name} must be of type int (0 or 1)")
+        else:
+            if store_invert is True:
+                setattr(app, store_name, (not option_default))  # default (if inverted - disabled)
+            else:
+                setattr(app, store_name, option_default)  # default
+
+        return True
+
+    config_option(option_name="ema1226", option_default=True, store_name="disablebuyema", store_invert=True)
+    config_option(option_name="macdsignal", option_default=True, store_name="disablebuymacd", store_invert=True)
+    

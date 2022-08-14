@@ -747,6 +747,12 @@ class BotConfig:
             help="Manual Trades Only (HODL)",
         )
 
+        # TODO: arguments v2
+
+        parser.add_argument(
+            "--ema1226", type=int, help="Enable EMA12/EMA26 Crossovers"
+        )
+
         # pylint: disable=unused-variable
         args, unknown = parser.parse_known_args()
         return vars(args)
