@@ -642,7 +642,7 @@ class AuthAPI(AuthAPIBase):
                         time.sleep(30)
                 else:
                     if msg is None:
-                        msg = f"Uknown CoinbasePro Private API Error: call to {uri} attempted {trycnt} times, resulted in error"
+                        msg = f"Unknown CoinbasePro Private API Error: call to {uri} attempted {trycnt} times, resulted in error"
                     if reason is None:
                         reason = "Unknown Error"
                     return self.handle_api_error(msg, reason)
@@ -916,7 +916,7 @@ class PublicAPI(AuthAPIBase):
                         time.sleep(30)
                 else:
                     if msg is None:
-                        msg = f"Uknown CoinbasePro Public API Error: call to {uri} attempted {trycnt} times, resulted in error"
+                        msg = f"Unknown CoinbasePro Public API Error: call to {uri} attempted {trycnt} times, resulted in error"
                     if reason is None:
                         reason = "Unknown Error"
                     return self.handle_api_error(msg, reason)

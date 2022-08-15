@@ -171,7 +171,7 @@ class Strategy_CS:
                     self.immed_buy_pts = 9
                     self.pts_to_sell = 5
                     self.immed_sell_pts = 8
-            # SMA5/SMA10 pooint below
+            # SMA5/SMA10 point below
             else:
                 self.market_trend = "Risky, don't buy yet"
                 self.pts_to_buy = 100
@@ -221,7 +221,7 @@ class Strategy_CS:
             rsi_ma_diff < 0 or data["rsima14_pc"][0] < 0
         ):
             # self.pts_sig_required_sell += 1
-            # Strong when RSI is less than -8% bellow MA or MA pcnt of change < -3%
+            # Strong when RSI is less than -8% below MA or MA pcnt of change < -3%
             if rsi_ma_diff < -8 or data["rsima14_pc"][0] < -3:
                 self.rsi_action = "strongsell"
                 self.sell_pts += 2
@@ -248,7 +248,7 @@ class Strategy_CS:
                 self.buy_pts += 1
         elif data["+di14"][0] < data["-di14"][0]:  # Sell if DI+ is below DI-
             # self.pts_sig_required_sell += 1
-            if (  # Strong if DI difference is below -10% or DI+ precent of change is less than 0
+            if (  # Strong if DI difference is below -10% or DI+ percent of change is less than 0
                 di_diff < -10 or data["+di_pc"][0] < 0
             ):
                 self.adx_action = "strongsell"

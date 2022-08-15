@@ -6,7 +6,7 @@ from models.helper.LogHelper import Logger
 
 def parser(app, logger_config):
     if not logger_config:
-        raise Exception("There is an error in your config dictionnary")
+        raise Exception("There is an error in your config dictionary")
 
     if not app:
         raise Exception("No app is passed")

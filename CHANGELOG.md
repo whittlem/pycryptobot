@@ -19,18 +19,18 @@ Upgrade library dependencies (if required):
 - changed a couple config settings so they can be disabled via command line arguments
 - fixed CoinbasePro and Kucoin API errors for standard API access - believe all errors causing restarts are now resolved
     Only an occasional HTML Error which can't be fixed on our end.
-- moved get_ticker call up pycryptobot.py to be inline with get_historical_data and add a new row data with ticker before technical anlaysis is performed.  This creates more asynchonous data and makes output as accurate as we can based on last call.
+- moved get_ticker call up pycryptobot.py to be inline with get_historical_data and add a new row data with ticker before technical anlaysis is performed.  This creates moreasynchronous data and makes output as accurate as we can based on last call.
 - changed get_historical_data call to only be called at candle close instead of every iteration and use ticker to fill data between candle open and close.
 - known problems with CoinbasePro and Kucoin websocket functions still exist, but above fixes will make websocket fixes easier
 - fixed standard indicators still being process when custom strategies are enabled
 - consolidated a bunch of locations where code was duplicated based on Exchange
 - added additional dataframe function to PyCyptoBot that will store additionally called dataframes dynamically and update them with ticker date like the main dataframe.  This greatly reduces the number of API calls when running SmartSwitch, checking
-"bullonly" or wanting to check anything else on a differen granularity than what is currently running. This is used for all additional calls for live and non-live checks, but not for Sims as that has it's own cache system already.  Might be able to clean up Sim code as well in the future.
+"bullonly" or wanting to check anything else on a different granularity than what is currently running. This is used for all additional calls for live and non-live checks, but not for Sims as that has it's own cache system already.  Might be able to clean up Sim code as well in the future.
 - consolidated numerous indicators and signals in Trading_Pta.py to help prevent dataframe fragmentation
 - revised default Strategy_CS.py to be a little less risky and include so new features.  Added extra comments to code.
 - shortened dataframe references in Strategy_CS.py to hopefully be less confusing for users
 - added additional dataframe features to Strategy_CS.py
-- fixed trades occuring any time and not only at candle close.  Can be overridden, but standard trades occur at close as they should again.
+- fixed trades occurring any time and not only at candle close.  Can be overridden, but standard trades occur at close as they should again.
 
 ## [6.4.1] - 2022-05-05
 

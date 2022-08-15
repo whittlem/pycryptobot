@@ -19,4 +19,5 @@ bottleneck
 dash
 dash-daq
 dash-bootstrap-components
+codespell
 rich

@@ -2883,7 +2883,7 @@ class PyCryptoBot(BotConfig):
             if df_first is None and df_last is None:
                 if not self.is_sim or (self.is_sim and not self.simresultonly):
                     if self.smart_switch:
-                        _notify(f"Retieving smart switch {granularity.to_short} market data from the exchange.")
+                        _notify(f"Retrieving smart switch {granularity.to_short} market data from the exchange.")
                     else:
                         _notify(f"Retrieving {granularity.to_short} market data from the exchange.")
 
