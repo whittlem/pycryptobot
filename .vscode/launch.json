@@ -7,7 +7,7 @@
             "request": "launch",
             "program": "pycryptobot.py",
             "console": "integratedTerminal",
-            "args": [ "--buynearhigh", "0" ]
+            "args": [ "--bullonly", "0" ]
         }
     ]
 }

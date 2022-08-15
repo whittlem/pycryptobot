@@ -340,15 +340,6 @@ def default_config_parse(app, config):
         else:
             raise TypeError("disableprofitbankupperpcnt must be of type int")
 
-    if "disableprofitbankreversal" in config:
-        if isinstance(config["disableprofitbankreversal"], int):
-            if config["disableprofitbankreversal"] in [0, 1]:
-                app.disableprofitbankreversal = bool(config["disableprofitbankreversal"])
-        else:
-            raise TypeError("disableprofitbankreversal must be of type int")
-    else:
-        app.disableprofitbankreversal = True  # default to True
-
     if "enable_pandas_ta" in config:
         if isinstance(config["enable_pandas_ta"], int):
             if config["enable_pandas_ta"] in [0, 1]:
@@ -679,6 +670,12 @@ def default_config_parse(app, config):
                 setattr(app, store_name, option_default)  # default
 
         return True
+
+    config_option_bool(option_name="sellatloss", option_default=True, store_name="sellatloss", store_invert=False)
+    config_option_bool(option_name="sellatresistance", option_default=False, store_name="sellatresistance", store_invert=False)
+    config_option_bool(option_name="sellatfibonaccilow", option_default=False, store_name="disablefailsafefibonaccilow", store_invert=True)
+    config_option_bool(option_name="bullonly", option_default=False, store_name="disablebullonly", store_invert=True)
+    config_option_bool(option_name="profitbankreversal", option_default=False, store_name="disableprofitbankreversal", store_invert=True)
 
     config_option_bool(option_name="buynearhigh", option_default=True, store_name="disablebuynearhigh", store_invert=True)
     config_option_float(option_name="buynearhighpcnt", option_default=3.0, store_name="nobuynearhighpcnt", value_min=0, value_max=100)

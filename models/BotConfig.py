@@ -435,9 +435,6 @@ class BotConfig:
             help="coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc.",
         )
         parser.add_argument(
-            "--sellatloss", type=int, help="toggle if bot should sell at a loss"
-        )
-        parser.add_argument(
             "--sellupperpcnt",
             type=float,
             help="optionally set sell upper percent limit",
@@ -609,11 +606,6 @@ class BotConfig:
 
         # optional options
         parser.add_argument(
-            "--sellatresistance",
-            action="store_true",
-            help="sell at resistance or upper fibonacci band",
-        )
-        parser.add_argument(
             "--autorestart",
             action="store_true",
             help="Auto restart the bot in case of exception",
@@ -651,16 +643,6 @@ class BotConfig:
         )
 
         # disable defaults
-        parser.add_argument(
-            "--disablebullonly",
-            action="store_true",
-            help="disable only buying in bull market",
-        )
-        parser.add_argument(
-            "--disablefailsafefibonaccilow",
-            action="store_true",
-            help="disable failsafe sell on fibonacci lower band",
-        )
         parser.add_argument(
             "--disablefailsafelowerpcnt",
             action="store_true",
@@ -719,6 +701,31 @@ class BotConfig:
         )
 
         # TODO: arguments v2
+
+        parser.add_argument(
+            "--bullonly",
+            type=int,
+            help="Only trade in a bull market SMA50 > SMA200",
+        )
+
+        parser.add_argument(
+            "--sellatloss", type=int, help="Allow a sell if the profit margin is negative"
+        )
+        parser.add_argument(
+            "--sellatresistance",
+            type=int,
+            help="Sell if the price hits a resistance level",
+        )
+        parser.add_argument(
+            "--sellatfibonaccilow",
+            type=int,
+            help="Sell if the price hits a fibonacci lower level",
+        )
+        parser.add_argument(
+            "--profitbankreversal",
+            type=int,
+            help="Sell at candlestick strong reversal pattern",
+        )
 
         parser.add_argument(
             "--buynearhigh",

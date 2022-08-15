@@ -2608,88 +2608,6 @@ class PyCryptoBot(BotConfig):
                 style="grey62",
             )
 
-        table.add_row("", "", "")
-
-        if self.sell_at_loss is True:
-            table.add_row(
-                "Sell At Loss",
-                str(self.sell_at_loss),
-                "The bot will be able to sell at a loss",
-                "--sellatloss",
-            )
-        else:
-            table.add_row(
-                "Sell At Loss",
-                str(self.sell_at_loss),
-                "The bot will be able to sell at a loss",
-                "--sellatloss",
-                style="grey62",
-            )
-
-        if self.sellatresistance is True:
-            table.add_row(
-                "Sell At Resistance",
-                str(self.sellatresistance),
-                "Trigger a sell if the price hits a resistance level",
-                "--sellatresistance",
-            )
-        else:
-            table.add_row(
-                "Sell At Resistance",
-                str(self.sellatresistance),
-                "Trigger a sell if the price hits a resistance level",
-                "--sellatresistance",
-                style="grey62",
-            )
-
-        if self.disablefailsafefibonaccilow is False:
-            table.add_row(
-                "Sell Fibonacci Low",
-                str(not self.disablefailsafefibonaccilow),
-                "Trigger a sell if the price hits a fibonacci lower level",
-                "--disablefailsafefibonaccilow",
-            )
-        else:
-            table.add_row(
-                "Sell Fibonacci Low",
-                str(not self.disablefailsafefibonaccilow),
-                "Trigger a sell if the price hits a fibonacci lower level",
-                "--disablefailsafefibonaccilow",
-                style="grey62",
-            )
-
-        if self.sellatresistance is True:
-            table.add_row(
-                "Trade Bull Only",
-                str(not self.disablebullonly),
-                "Only trade in a bull market SMA50 > SMA200",
-                "--disablebullonly",
-            )
-        else:
-            table.add_row(
-                "Trade Bull Only",
-                str(not self.disablebullonly),
-                "Only trade in a bull market SMA50 > SMA200",
-                "--disablebullonly",
-                style="grey62",
-            )
-
-        if self.disableprofitbankreversal is False:
-            table.add_row(
-                "Candlestick Reversal",
-                str(not self.disableprofitbankreversal),
-                "Trigger a sell at candlestick strong reversal pattern",
-                "--disableprofitbankreversal",
-            )
-        else:
-            table.add_row(
-                "Candlestick Reversal",
-                str(not self.disableprofitbankreversal),
-                "Trigger a sell at candlestick strong reversal pattern",
-                "--disableprofitbankreversal",
-                style="grey62",
-            )
-
         def config_option_row_int(
             item: str = None, store_name: str = None, description: str = None, break_below: bool = False, default_value: int = 0, arg_name: str = None
         ) -> bool:
@@ -2760,6 +2678,13 @@ class PyCryptoBot(BotConfig):
             return True
 
         table.add_row("", "", "")
+
+        config_option_row_bool("Buy Bull Only", "disablebullonly", "Only trade in a bull market SMA50 > SMA200", break_below=True, store_invert=True, default_value=False, arg_name="bullonly")
+
+        config_option_row_bool("Sell At Loss", "sellatloss", "Allow a sell if the profit margin is negative", store_invert=False, default_value=True, arg_name="sellatloss")
+        config_option_row_bool("Sell At Resistance", "sellatresistance", "Sell if the price hits a resistance level", store_invert=False, default_value=False, arg_name="sellatresistance")
+        config_option_row_bool("Sell At Fibonacci Low", "disablefailsafefibonaccilow", "Sell if the price hits a fibonacci lower level", store_invert=True, default_value=False, arg_name="sellatfibonaccilow")
+        config_option_row_bool("Sell Candlestick Reversal", "disableprofitbankreversal", "Sell at candlestick strong reversal pattern", break_below=True, store_invert=True, default_value=False, arg_name="profitbankreversal")
 
         config_option_row_bool(
             "Allow Buy Near High",
