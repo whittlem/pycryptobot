@@ -1676,7 +1676,7 @@ class PyCryptoBot(BotConfig):
 
         if banner and not self.is_sim or (self.is_sim and not self.simresultonly):
             self._generate_banner()
-            # sys.exit()  # TODO: remove this
+            sys.exit()  # TODO: remove this
 
         self.app_started = True
         # run the first job immediately after starting
@@ -2691,7 +2691,7 @@ class PyCryptoBot(BotConfig):
             )
 
         def config_option_row_int(
-            item: str = None, store_name: str = None, description: str = None, break_below: bool = False, store_default: int = 0, arg_name: str = None
+            item: str = None, store_name: str = None, description: str = None, break_below: bool = False, default_value: int = 0, arg_name: str = None
         ) -> bool:
             if item is None or store_name is None or description is None:
                 return False
@@ -2699,7 +2699,7 @@ class PyCryptoBot(BotConfig):
             if arg_name is None:
                 arg_name = store_name
 
-            if getattr(self, store_name) != store_default:
+            if getattr(self, store_name) != default_value:
                 table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <num>")
             else:
                 table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <num>", style="grey62")
@@ -2710,7 +2710,7 @@ class PyCryptoBot(BotConfig):
             return True
 
         def config_option_row_float(
-            item: str = None, store_name: str = None, description: str = None, break_below: bool = False, store_default: float = 0, arg_name: str = None
+            item: str = None, store_name: str = None, description: str = None, break_below: bool = False, default_value: float = 0, arg_name: str = None
         ) -> bool:
             if item is None or store_name is None or description is None:
                 return False
@@ -2718,7 +2718,7 @@ class PyCryptoBot(BotConfig):
             if arg_name is None:
                 arg_name = store_name
 
-            if getattr(self, store_name) != store_default:
+            if getattr(self, store_name) != default_value:
                 table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <num>")
             else:
                 table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <num>", style="grey62")
@@ -2734,7 +2734,7 @@ class PyCryptoBot(BotConfig):
             description: str = None,
             break_below: bool = False,
             store_invert: bool = False,
-            store_default: bool = None,
+            default_value: bool = False,
             arg_name: str = None,
         ) -> bool:
             if item is None or store_name is None or description is None:
@@ -2744,12 +2744,12 @@ class PyCryptoBot(BotConfig):
                 arg_name = store_name
 
             if store_invert is True:
-                if getattr(self, store_name) is False and not getattr(self, store_name) is not store_default:
+                if not getattr(self, store_name) is not default_value:
                     table.add_row(item, str(not getattr(self, store_name)), description, f"--{arg_name} <1|0>")
                 else:
                     table.add_row(item, str(not getattr(self, store_name)), description, f"--{arg_name} <1|0>", style="grey62")
             else:
-                if getattr(self, store_name) is True and getattr(self, store_name) is not store_default:
+                if getattr(self, store_name) is not default_value:
                     table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <1|0>")
                 else:
                     table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <1|0>", style="grey62")
@@ -2766,22 +2766,26 @@ class PyCryptoBot(BotConfig):
             "disablebuynearhigh",
             "Prevent the bot from buying at a recent high",
             store_invert=True,
-            store_default=True,
+            default_value=True,
             arg_name="buynearhigh",
         )
         config_option_row_float(
-            "No Buy Near High Percent", "nobuynearhighpcnt", "Percentage from the range high to not buy", store_default=3.0, arg_name="buynearhighpcnt"
+            "No Buy Near High Percent", "nobuynearhighpcnt", "Percentage from the range high to not buy", default_value=3.0, arg_name="buynearhighpcnt"
         )
         config_option_row_int(
-            "Adjust Total Periods", "adjusttotalperiods", "Adjust data points in historical trading data", break_below=True, store_default=300
+            "Adjust Total Periods", "adjusttotalperiods", "Adjust data points in historical trading data", break_below=True, default_value=300
         )
 
-        config_option_row_bool("Override Sell Trigger", "selltriggeroverride", "Override sell trigger if strong buy", break_below=True)
+        config_option_row_bool("Override Sell Trigger", "selltriggeroverride", "Override sell trigger if strong buy", break_below=True, default_value=False)
 
-        config_option_row_bool("Use EMA12/26", "disablebuyema", "Exponential Moving Average (EMA)", store_invert=True, arg_name="ema1226")
-        config_option_row_bool("Use MACD/Signal", "disablebuymacd", "Moving Average Convergence Divergence (MACD)", store_invert=True, arg_name="macdsignal")
-        config_option_row_bool("On-Balance Volume (OBV)", "disablebuyobv", "On-Balance Volume (OBV)", store_invert=True, arg_name="obv")
-        config_option_row_bool("Use Elder-Ray", "disablebuyelderray", "Elder-Ray Index (Elder-Ray)", break_below=True, store_invert=True, arg_name="elderray")
+        config_option_row_bool("Use EMA12/26", "disablebuyema", "Exponential Moving Average (EMA)", store_invert=True, default_value=True, arg_name="ema1226")
+        config_option_row_bool(
+            "Use MACD/Signal", "disablebuymacd", "Moving Average Convergence Divergence (MACD)", store_invert=True, default_value=True, arg_name="macdsignal"
+        )
+        config_option_row_bool("On-Balance Volume (OBV)", "disablebuyobv", "On-Balance Volume (OBV)", store_invert=True, default_value=False, arg_name="obv")
+        config_option_row_bool(
+            "Use Elder-Ray", "disablebuyelderray", "Elder-Ray Index (Elder-Ray)", break_below=True, store_invert=True, default_value=False, arg_name="elderray"
+        )
 
         self.console_term.print(table)
         if self.disablelog is False:

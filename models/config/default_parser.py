@@ -680,7 +680,7 @@ def default_config_parse(app, config):
 
         return True
 
-    config_option_bool(option_name="buynearhigh", option_default=False, store_name="disablebuynearhigh", store_invert=True)
+    config_option_bool(option_name="buynearhigh", option_default=True, store_name="disablebuynearhigh", store_invert=True)
     config_option_float(option_name="buynearhighpcnt", option_default=3.0, store_name="nobuynearhighpcnt", value_min=0, value_max=100)
     config_option_int(option_name="adjusttotalperiods", option_default=300, store_name="adjusttotalperiods", value_min=200, value_max=500)
 
