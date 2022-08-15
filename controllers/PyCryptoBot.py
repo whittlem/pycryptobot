@@ -548,7 +548,7 @@ class PyCryptoBot(BotConfig):
                     if not self.disabletelegram:
                         self.telegram_bot.add_open_order()
 
-                    RichText.notify(f"{self.market} ({self.print_granularity}) - {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}", self, "warning")
+                    RichText.notify(f"{self.market} ({self.print_granularity()}) - {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}", self, "warning")
                     RichText.notify("Catching BUY that occurred previously. Updating signal information.", self, "warning")
 
                     if not self.telegramtradesonly and not self.disabletelegram:
@@ -575,7 +575,7 @@ class PyCryptoBot(BotConfig):
                     self.telegram_bot.remove_open_order()
 
                     Logger.warning(
-                        f"{self.market} ({self.print_granularity}) - {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                        f"{self.market} ({self.print_granularity()}) - {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}\n"
                         f"Catching SELL that occurred previously. Updating signal information."
                     )
 
@@ -828,8 +828,8 @@ class PyCryptoBot(BotConfig):
                 else:
                     df_high = df["close"].max()
                     df_low = df["close"].min()
-                    range_start = str(df.iloc[self.state.iterations - self.adjusttotalperiods, 0])
-                    range_end = str(df.iloc[self.state.iterations - 1, 0])
+                    range_start = str(df.iloc[self.state.iterations - self.adjusttotalperiods, 0])  # noqa: F841
+                    range_end = str(df.iloc[self.state.iterations - 1, 0])  # noqa: F841
 
                 df_swing = round(((df_high - df_low) / df_low) * 100, 2)
                 df_near_high = round(((self.price - df_high) / df_high) * 100, 2)

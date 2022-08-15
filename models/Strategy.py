@@ -81,7 +81,7 @@ class Strategy:
                     + " | "
                     + self.app.market
                     + " | "
-                    + self.app.print_granularity
+                    + self.app.print_granularity()
                     + " | Ignoring Buy Signal (price "
                     + str(price)
                     + " within "
@@ -116,7 +116,7 @@ class Strategy:
 
         # if standard EMA and MACD are disabled, do not run below tests
         if self.app.disablebuyema and self.app.disablebuymacd:
-            log_text = f"{str(now)} | {self.app.market} | {self.app.print_granularity} | EMA, MACD indicators are disabled"
+            log_text = f"{str(now)} | {self.app.market} | {self.app.print_granularity()} | EMA, MACD indicators are disabled"
             Logger.warning(log_text)
 
             return False
@@ -203,7 +203,7 @@ class Strategy:
         if self.app.disablebuyema and self.app.disablebuymacd:
             # if custom trade signals is enabled, don't alert, just return False
             if self.CS_ready is False:
-                log_text = f"{str(datetime.now())} | {self.app.market} | {self.app.print_granularity} | "
+                log_text = f"{str(datetime.now())} | {self.app.market} | {self.app.print_granularity()} | "
                 log_text += " EMA, MACD indicators are needed for standard signals and they are disabled."
                 Logger.warning(log_text)
 
@@ -350,7 +350,7 @@ class Strategy:
                 # Telgram debug output
                 if not self.app.disabletelegram:
                     self.app.notifyTelegram(
-                        f"{self.app.market} ({self.app.print_granularity})\n{debugtext}"
+                        f"{self.app.market} ({self.app.print_granularity()})\n{debugtext}"
                     )
 
             if (
@@ -365,7 +365,7 @@ class Strategy:
 
                 if not self.app.disabletelegram:
                     self.app.notifyTelegram(
-                        f"{self.app.market} ({self.app.print_granularity}) {log_text}"
+                        f"{self.app.market} ({self.app.print_granularity()}) {log_text}"
                     )
 
                 return True
@@ -402,7 +402,7 @@ class Strategy:
             Logger.warning(log_text)
             if not self.app.disabletelegram:
                 self.app.notifyTelegram(
-                    f"{self.app.market} ({self.app.print_granularity}) {log_text}"
+                    f"{self.app.market} ({self.app.print_granularity()}) {log_text}"
                 )
             return True
 
@@ -450,7 +450,7 @@ class Strategy:
             )
             Logger.warning(log_text)
             self.app.notifyTelegram(
-                f"{self.app.market} ({self.app.print_granularity}) {log_text}"
+                f"{self.app.market} ({self.app.print_granularity()}) {log_text}"
             )
             return True
 
@@ -497,7 +497,7 @@ class Strategy:
                 Logger.warning(log_text)
             if not self.app.disabletelegram:
                 self.app.notifyTelegram(
-                    f"{self.app.market} ({self.app.print_granularity}) {log_text}"
+                    f"{self.app.market} ({self.app.print_granularity()}) {log_text}"
                 )
             return True
 
@@ -527,7 +527,7 @@ class Strategy:
             if not (not self.app.sell_at_loss and margin <= 0):
                 if not self.app.disabletelegram:
                     self.app.notifyTelegram(
-                        f"{self.app.market} ({self.app.print_granularity}) {log_text}"
+                        f"{self.app.market} ({self.app.print_granularity()}) {log_text}"
                     )
             return True
 
@@ -635,7 +635,7 @@ class Strategy:
             pricechange = 0
             self.state.trailing_buy = True
 
-        waitpcnttext = f"** {self.app.market} ({self.app.print_granularity}) - "
+        waitpcnttext = f"** {self.app.market} ({self.app.print_granularity()}) - "
         if price < self.state.waiting_buy_price:
             self.state.waiting_buy_price = price
             self.state.action = "WAIT"
@@ -713,7 +713,7 @@ class Strategy:
             pricechange = 0
             self.state.trailing_sell = True
 
-        waitpcnttext = f"** {self.app.market} ({self.app.print_granularity}) - "
+        waitpcnttext = f"** {self.app.market} ({self.app.print_granularity()}) - "
         if price >= self.state.waiting_sell_price:
             self.state.waiting_sell_price = price
             self.state.action = "WAIT"

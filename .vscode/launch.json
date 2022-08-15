@@ -7,7 +7,7 @@
             "request": "launch",
             "program": "pycryptobot.py",
             "console": "integratedTerminal",
-            "args": []
+            "args": [ "--sim", "fast" ]
         }
     ]
 }
