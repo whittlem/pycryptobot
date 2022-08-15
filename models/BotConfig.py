@@ -56,8 +56,8 @@ class BotConfig:
         self.smart_switch = 1
         self.sell_smart_switch = 0
         self.preventloss = False
-        self.preventlosstrigger = None
-        self.preventlossmargin = None
+        self.preventlosstrigger = 1.0
+        self.preventlossmargin = 0.1
 
         self.telegram = False
 
@@ -97,8 +97,8 @@ class BotConfig:
         self.disablebuynearhigh = False
         self.disablebuymacd = False
         self.disablebuyema = False
-        self.disablebuyobv = False
-        self.disablebuyelderray = False
+        self.disablebuyobv = True
+        self.disablebuyelderray = True
         self.disablefailsafefibonaccilow = False
         self.disablefailsafelowerpcnt = False
         self.disableprofitbankupperpcnt = False
@@ -485,21 +485,6 @@ class BotConfig:
             help="maximum dynamic trailingstoploss percent allowed",
         )
         parser.add_argument(
-            "--preventloss",
-            action="store_true",
-            help="optionally sell before margin is negative",
-        )
-        parser.add_argument(
-            "--preventlosstrigger",
-            type=float,
-            help="optionally set when the trigger when preventloss should start",
-        )
-        parser.add_argument(
-            "--preventlossmargin",
-            type=float,
-            help="optionally set margin to sell at regardless of other settings",
-        )
-        parser.add_argument(
             "--sim", type=str, help="simulation modes: fast, fast-sample, slow-sample"
         )
         parser.add_argument(
@@ -703,14 +688,30 @@ class BotConfig:
         # TODO: arguments v2
 
         parser.add_argument(
+            "--preventloss",
+            type=int,
+            help="Sell before margin is negative",
+        )
+        parser.add_argument(
+            "--preventlosstrigger",
+            type=float,
+            help="Margin that will trigger the prevent loss",
+        )
+        parser.add_argument(
+            "--preventlossmargin",
+            type=float,
+            help="Margin that will cause an immediate sell to prevent loss",
+        )
+        parser.add_argument(
+            "--sellatloss", type=int, help="Allow a sell if the profit margin is negative"
+        )
+
+        parser.add_argument(
             "--bullonly",
             type=int,
             help="Only trade in a bull market SMA50 > SMA200",
         )
 
-        parser.add_argument(
-            "--sellatloss", type=int, help="Allow a sell if the profit margin is negative"
-        )
         parser.add_argument(
             "--sellatresistance",
             type=int,

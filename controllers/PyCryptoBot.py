@@ -112,9 +112,6 @@ class PyCryptoBot(BotConfig):
             ]
         )
 
-        # default config variable options
-        self.nosellminpcnt = None
-
         if trading_myPta is True and pandas_ta_enabled is True:
             self.enable_pandas_ta = True
         else:
@@ -1676,7 +1673,7 @@ class PyCryptoBot(BotConfig):
 
         if banner and not self.is_sim or (self.is_sim and not self.simresultonly):
             self._generate_banner()
-            sys.exit()  # TODO: remove this
+            # sys.exit()  # TODO: remove this
 
         self.app_started = True
         # run the first job immediately after starting
@@ -2558,56 +2555,6 @@ class PyCryptoBot(BotConfig):
                 style="grey62",
             )
 
-        table.add_row("", "", "")
-
-        if self.preventloss is True:
-            table.add_row(
-                "Prevent Loss",
-                str(self.preventloss),
-                "Force a sell before margin is negative",
-                "--preventloss",
-            )
-        else:
-            table.add_row(
-                "Prevent Loss",
-                str(self.preventloss),
-                "Force a sell before margin is negative",
-                "--preventloss",
-                style="grey62",
-            )
-
-        if self.preventloss is True and self.preventlosstrigger is not None:
-            table.add_row(
-                "Prevent Loss Trigger",
-                str(self.preventlosstrigger),
-                "Margin set point that will trigge the prevent loss",
-                "--preventlosstrigger",
-            )
-        else:
-            table.add_row(
-                "Prevent Loss Trigger",
-                str(self.preventlosstrigger),
-                "Margin set point that will trigge the prevent loss",
-                "--preventlosstrigger",
-                style="grey62",
-            )
-
-        if self.preventloss is True and self.preventlossmargin is not None:
-            table.add_row(
-                "Prevent Loss Margin",
-                str(self.preventlossmargin),
-                "Margin set point that will cause an immediate sell to prevent loss",
-                "--preventlossmargin",
-            )
-        else:
-            table.add_row(
-                "Prevent Loss Margin",
-                str(self.preventlossmargin),
-                "Margin set point that will cause an immediate sell to prevent loss",
-                "--preventlossmargin",
-                style="grey62",
-            )
-
         def config_option_row_int(
             item: str = None, store_name: str = None, description: str = None, break_below: bool = False, default_value: int = 0, arg_name: str = None
         ) -> bool:
@@ -2679,9 +2626,17 @@ class PyCryptoBot(BotConfig):
 
         table.add_row("", "", "")
 
+        config_option_row_bool("Prevent Loss", "preventloss", "Force a sell before margin is negative", store_invert=False, default_value=False, arg_name="preventloss")
+        config_option_row_float(
+            "Prevent Loss Trigger", "preventlosstrigger", "Margin that will trigger the prevent loss", default_value=1.0, arg_name="preventlosstrigger"
+        )
+        config_option_row_float(
+            "Prevent Loss Margin", "preventlossmargin", "Margin that will cause an immediate sell to prevent loss", default_value=0.1, arg_name="preventlossmargin"
+        )
+        config_option_row_bool("Sell At Loss", "sellatloss", "Allow a sell if the profit margin is negative", break_below=True, store_invert=False, default_value=True, arg_name="sellatloss")
+
         config_option_row_bool("Buy Bull Only", "disablebullonly", "Only trade in a bull market SMA50 > SMA200", break_below=True, store_invert=True, default_value=False, arg_name="bullonly")
 
-        config_option_row_bool("Sell At Loss", "sellatloss", "Allow a sell if the profit margin is negative", store_invert=False, default_value=True, arg_name="sellatloss")
         config_option_row_bool("Sell At Resistance", "sellatresistance", "Sell if the price hits a resistance level", store_invert=False, default_value=False, arg_name="sellatresistance")
         config_option_row_bool("Sell At Fibonacci Low", "disablefailsafefibonaccilow", "Sell if the price hits a fibonacci lower level", store_invert=True, default_value=False, arg_name="sellatfibonaccilow")
         config_option_row_bool("Sell Candlestick Reversal", "disableprofitbankreversal", "Sell at candlestick strong reversal pattern", break_below=True, store_invert=True, default_value=False, arg_name="profitbankreversal")

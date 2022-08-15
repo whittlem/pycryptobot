@@ -671,7 +671,11 @@ def default_config_parse(app, config):
 
         return True
 
+    config_option_bool(option_name="preventloss", option_default=False, store_name="preventloss", store_invert=False)
+    config_option_float(option_name="preventlosstrigger", option_default=1.0, store_name="nobuynearhighpcnt", value_min=0, value_max=100)
+    config_option_float(option_name="preventlossmargin", option_default=0.1, store_name="nobuynearhighpcnt", value_min=0, value_max=100)
     config_option_bool(option_name="sellatloss", option_default=True, store_name="sellatloss", store_invert=False)
+
     config_option_bool(option_name="sellatresistance", option_default=False, store_name="sellatresistance", store_invert=False)
     config_option_bool(option_name="sellatfibonaccilow", option_default=False, store_name="disablefailsafefibonaccilow", store_invert=True)
     config_option_bool(option_name="bullonly", option_default=False, store_name="disablebullonly", store_invert=True)
