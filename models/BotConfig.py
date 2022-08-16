@@ -435,26 +435,6 @@ class BotConfig:
             help="coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc.",
         )
         parser.add_argument(
-            "--sellupperpcnt",
-            type=float,
-            help="optionally set sell upper percent limit",
-        )
-        parser.add_argument(
-            "--selllowerpcnt",
-            type=float,
-            help="optionally set sell lower percent limit",
-        )
-        parser.add_argument(
-            "--nosellminpcnt",
-            type=float,
-            help="optionally set minimum margin to not sell",
-        )
-        parser.add_argument(
-            "--nosellmaxpcnt",
-            type=float,
-            help="optionally set maximum margin to not sell",
-        )
-        parser.add_argument(
             "--sim", type=str, help="simulation modes: fast, fast-sample, slow-sample"
         )
         parser.add_argument(
@@ -630,6 +610,27 @@ class BotConfig:
         )
 
         # TODO: arguments v2
+
+        parser.add_argument(
+            "--sellupperpcnt",
+            type=float,
+            help="Upper trade margin to sell",
+        )
+        parser.add_argument(
+            "--selllowerpcnt",
+            type=float,
+            help="Lower trade margin to sell",
+        )
+        parser.add_argument(
+            "--nosellminpcnt",
+            type=float,
+            help="Do not sell while trade margin is below this level",
+        )
+        parser.add_argument(
+            "--nosellmaxpcnt",
+            type=float,
+            help="Do not sell while trade margin is above this level",
+        )
 
         parser.add_argument(
             "--preventloss",

@@ -2327,72 +2327,6 @@ class PyCryptoBot(BotConfig):
                 style="grey62",
             )
 
-        table.add_row("", "", "")
-
-        if self.sell_upper_pcnt is not None:
-            table.add_row(
-                "Sell Upper Percent",
-                str(self.sell_upper_pcnt),
-                "Upper trade margin to sell at",
-                "--sellupperpcnt",
-            )
-        else:
-            table.add_row(
-                "Sell Upper Percent",
-                str(self.sell_upper_pcnt),
-                "Upper trade margin to sell at",
-                "--sellupperpcnt",
-                style="grey62",
-            )
-
-        if self.sell_lower_pcnt is not None:
-            table.add_row(
-                "Sell Upper Percent",
-                str(self.sell_lower_pcnt),
-                "Lower trade margin to force sell at",
-                "--selllowerpcnt",
-            )
-        else:
-            table.add_row(
-                "Sell Lower Percent",
-                str(self.sell_lower_pcnt),
-                "Lower trade margin to force sell at",
-                "--selllowerpcnt",
-                style="grey62",
-            )
-
-        if self.nosellmaxpcnt is not None:
-            table.add_row(
-                "No Sell Max",
-                str(self.nosellmaxpcnt),
-                "Do not sell while trade margin is below this level",
-                "--nosellmaxpcnt",
-            )
-        else:
-            table.add_row(
-                "No Sell Max",
-                str(self.nosellmaxpcnt),
-                "Do not sell while trade margin is below this level",
-                "--nosellmaxpcnt",
-                style="grey62",
-            )
-
-        if self.nosellminpcnt is not None:
-            table.add_row(
-                "No Sell Min",
-                str(self.nosellminpcnt),
-                "Do not sell while trade margin is above this level",
-                "--nosellminpcnt",
-            )
-        else:
-            table.add_row(
-                "No Sell Min",
-                str(self.nosellminpcnt),
-                "Do not sell while trade margin is above this level",
-                "--nosellminpcnt",
-                style="grey62",
-            )
-
         def config_option_row_int(
             item: str = None, store_name: str = None, description: str = None, break_below: bool = False, default_value: int = 0, arg_name: str = None
         ) -> bool:
@@ -2464,6 +2398,19 @@ class PyCryptoBot(BotConfig):
 
         table.add_row("", "", "")
 
+        config_option_row_float(
+            "Sell Upper Percent", "sell_upper_pcnt", "Upper trade margin to sell", default_value=None, arg_name="sellupperpcnt"
+        )
+        config_option_row_float(
+            "Sell Lower Percent", "sell_lower_pcnt", "Lower trade margin to sell", default_value=None, arg_name="selllowerpcnt"
+        )
+        config_option_row_float(
+            "No Sell Max", "nosellmaxpcnt", "Do not sell while trade margin is below this level", default_value=None, arg_name="nosellmaxpcnt"
+        )
+        config_option_row_float(
+            "No Sell Min", "nosellminpcnt", "Do not sell while trade margin is above this level", break_below=True, default_value=None, arg_name="nosellminpcnt"
+        )
+
         config_option_row_bool("Prevent Loss", "preventloss", "Force a sell before margin is negative", store_invert=False, default_value=False, arg_name="preventloss")
         config_option_row_float(
             "Prevent Loss Trigger", "preventlosstrigger", "Margin that will trigger the prevent loss", default_value=1.0, arg_name="preventlosstrigger"
@@ -2477,7 +2424,8 @@ class PyCryptoBot(BotConfig):
 
         config_option_row_bool("Sell At Resistance", "sellatresistance", "Sell if the price hits a resistance level", store_invert=False, default_value=False, arg_name="sellatresistance")
         config_option_row_bool("Sell At Fibonacci Low", "disablefailsafefibonaccilow", "Sell if the price hits a fibonacci lower level", store_invert=True, default_value=False, arg_name="sellatfibonaccilow")
-        config_option_row_bool("Sell Candlestick Reversal", "disableprofitbankreversal", "Sell at candlestick strong reversal pattern", store_invert=True, default_value=False, arg_name="profitbankreversal")
+        config_option_row_bool("Sell Candlestick Reversal", "disableprofitbankreversal", "Sell at candlestick strong reversal pattern", break_below=True, store_invert=True, default_value=False, arg_name="profitbankreversal")
+
         config_option_row_float("Trailing Stop Loss (TSL)", "trailing_stop_loss", "Percentage below the trade margin high to sell", default_value=0.0, arg_name="trailingstoploss")
         config_option_row_float("Trailing Stop Loss Trigger", "trailing_stop_loss_trigger", "Trade margin percentage to enable the trailing stop loss", default_value=0.0, arg_name="trailingstoplosstrigger")
         config_option_row_float("Trailing Sell Percent", "trailingsellpcnt", "Percentage of decrease to wait before selling", default_value=0.0, arg_name="trailingsellpcnt")
