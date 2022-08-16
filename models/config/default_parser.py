@@ -671,6 +671,8 @@ def default_config_parse(app, config):
 
         return True
 
+    config_option_int(option_name="adjusttotalperiods", option_default=300, store_name="adjusttotalperiods", value_min=200, value_max=500)
+
     config_option_float(option_name="sellupperpcnt", option_default=None, store_name="sell_upper_pcnt", value_min=0, value_max=100)
     config_option_float(option_name="selllowerpcnt", option_default=None, store_name="sell_lower_pcnt", value_min=-100, value_max=0)
     config_option_float(option_name="nosellmaxpcnt", option_default=None, store_name="nosellmaxpcnt", value_min=0, value_max=100)
@@ -690,7 +692,7 @@ def default_config_parse(app, config):
     config_option_float(option_name="trailingstoplosstrigger", option_default=0.0, store_name="trailing_stop_loss_trigger", value_min=0, value_max=100)
     config_option_float(option_name="trailingsellpcnt", option_default=0.0, store_name="trailingsellpcnt", value_min=-100, value_max=0)
     config_option_bool(option_name="trailingimmediatesell", option_default=False, store_name="trailingimmediatesell", store_invert=False)
-    config_option_float(option_name="trailingsellimmediatepcnt", option_default=0.0, store_name="trailingsellimmediatepcnt", value_min=-100, value_max=100)
+    config_option_float(option_name="trailingsellimmediatepcnt", option_default=0.0, store_name="trailingsellimmediatepcnt", value_min=-100, value_max=0)
     config_option_float(option_name="trailingsellbailoutpcnt", option_default=0.0, store_name="trailingsellbailoutpcnt", value_min=-100, value_max=100)
 
     config_option_bool(option_name="dynamictsl", option_default=False, store_name="dynamic_tsl", store_invert=False)
@@ -698,9 +700,16 @@ def default_config_parse(app, config):
     config_option_float(option_name="tsltriggermultiplier", option_default=1.1, store_name="tsl_trigger_multiplier", value_min=0, value_max=100)
     config_option_float(option_name="tslmaxpcnt", option_default=-5.0, store_name="tsl_max_pcnt", value_min=-100, value_max=0)
 
+    config_option_float(option_name="buyminsize", option_default=0.0, store_name="buyminsize")
+    config_option_float(option_name="buymaxsize", option_default=0.0, store_name="buymaxsize")
+    config_option_bool(option_name="buylastsellsize", option_default=False, store_name="buylastsellsize", store_invert=False)
+    config_option_bool(option_name="marketmultibuycheck", option_default=False, store_name="marketmultibuycheck", store_invert=False)
     config_option_bool(option_name="buynearhigh", option_default=True, store_name="disablebuynearhigh", store_invert=True)
     config_option_float(option_name="buynearhighpcnt", option_default=3.0, store_name="nobuynearhighpcnt", value_min=0, value_max=100)
-    config_option_int(option_name="adjusttotalperiods", option_default=300, store_name="adjusttotalperiods", value_min=200, value_max=500)
+
+    config_option_float(option_name="trailingbuypcnt", option_default=0.0, store_name="trailingbuypcnt", value_min=0, value_max=100)
+    config_option_bool(option_name="trailingimmediatebuy", option_default=False, store_name="trailingimmediatebuy", store_invert=False)
+    config_option_float(option_name="trailingbuyimmediatepcnt", option_default=0.0, store_name="trailingbuyimmediatepcnt", value_min=0, value_max=100)
 
     config_option_bool(option_name="selltriggeroverride", option_default=False, store_name="selltriggeroverride", store_invert=False)
 

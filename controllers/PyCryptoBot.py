@@ -884,9 +884,7 @@ class PyCryptoBot(BotConfig):
                             "cyan",
                         ),
                         RichText.styled_label_text("Near-High", "white", f"{df_near_high}%", "cyan"),  # price near high
-                        RichText.styled_label_text(
-                            "Range", "white", f"{range_start} <-> {range_end}", "cyan"
-                        ) if (terminal.width > 120) else None,
+                        RichText.styled_label_text("Range", "white", f"{range_start} <-> {range_end}", "cyan") if (terminal.width > 120) else None,
                         RichText.margin_text(margin_text, self.state.last_action),
                         RichText.delta_text(
                             self.price,
@@ -2213,120 +2211,6 @@ class PyCryptoBot(BotConfig):
                 style="grey62",
             )
 
-        table.add_row("", "", "")
-
-        if self.buyminsize:
-            table.add_row(
-                "Buy Min Size",
-                str(self.buyminsize),
-                "Minimum buy order size in quote currency",
-                "--buyminsize",
-            )
-        else:
-            table.add_row(
-                "Buy Min Size",
-                str(self.buyminsize),
-                "Minimum buy order size in quote currency",
-                "--buyminsize",
-                style="grey62",
-            )
-
-        if self.buymaxsize is not None:
-            table.add_row(
-                "Buy Max Size",
-                str(self.buymaxsize),
-                "Maximum buy order size in quote currency",
-                "--buymaxsize",
-            )
-        else:
-            table.add_row(
-                "Buy Max Size",
-                str(self.buymaxsize),
-                "Maximum buy order size in quote currency",
-                "--buymaxsize",
-                style="grey62",
-            )
-
-        if self.buylastsellsize is True:
-            table.add_row(
-                "Buy Last Sell Size",
-                str(self.buylastsellsize),
-                "Next buy order will match last sell order",
-                "--buylastsellsize",
-            )
-        else:
-            table.add_row(
-                "Buy Last Sell Size",
-                str(self.buylastsellsize),
-                "Next buy order will match last sell order",
-                "--buylastsellsize",
-                style="grey62",
-            )
-
-        if self.trailingbuypcnt:
-            table.add_row(
-                "Trailing Buy Percent",
-                str(self.trailingbuypcnt),
-                "Please refer to the detailed explanation in the README.md",
-                "--trailingbuypcnt",
-            )
-        else:
-            table.add_row(
-                "Trailing Buy Percent",
-                str(self.trailingbuypcnt),
-                "Please refer to the detailed explanation in the README.md",
-                "--trailingbuypcnt",
-                style="grey62",
-            )
-
-        if self.trailingimmediatebuy is True:
-            table.add_row(
-                "Immediate Trailing Buy",
-                str(self.trailingimmediatebuy),
-                "Please refer to the detailed explanation in the README.md",
-                "--trailingimmediatebuy",
-            )
-        else:
-            table.add_row(
-                "Immediate Trailing Buy",
-                str(self.trailingimmediatebuy),
-                "Please refer to the detailed explanation in the README.md",
-                "--trailingimmediatebuy",
-                style="grey62",
-            )
-
-        if self.trailingbuyimmediatepcnt is not None:
-            table.add_row(
-                "Immediate Trailing Buy Percent",
-                str(self.trailingbuyimmediatepcnt),
-                "Please refer to the detailed explanation in the README.md",
-                "--trailingbuyimmediatepcnt",
-            )
-        else:
-            table.add_row(
-                "Immediate Trailing Buy Percent",
-                str(self.trailingbuyimmediatepcnt),
-                "Please refer to the detailed explanation in the README.md",
-                "--trailingbuyimmediatepcnt",
-                style="grey62",
-            )
-
-        if self.marketmultibuycheck is True:
-            table.add_row(
-                "Multiple Buy Check",
-                str(self.marketmultibuycheck),
-                "Please refer to the detailed explanation in the README.md",
-                "--marketmultibuycheck",
-            )
-        else:
-            table.add_row(
-                "Multiple Buy Check",
-                str(self.marketmultibuycheck),
-                "Please refer to the detailed explanation in the README.md",
-                "--marketmultibuycheck",
-                style="grey62",
-            )
-
         def config_option_row_int(
             item: str = None, store_name: str = None, description: str = None, break_below: bool = False, default_value: int = 0, arg_name: str = None
         ) -> bool:
@@ -2398,12 +2282,12 @@ class PyCryptoBot(BotConfig):
 
         table.add_row("", "", "")
 
-        config_option_row_float(
-            "Sell Upper Percent", "sell_upper_pcnt", "Upper trade margin to sell", default_value=None, arg_name="sellupperpcnt"
+        config_option_row_int(
+            "Adjust Total Periods", "adjusttotalperiods", "Adjust data points in historical trading data", break_below=True, default_value=300
         )
-        config_option_row_float(
-            "Sell Lower Percent", "sell_lower_pcnt", "Lower trade margin to sell", default_value=None, arg_name="selllowerpcnt"
-        )
+
+        config_option_row_float("Sell Upper Percent", "sell_upper_pcnt", "Upper trade margin to sell", default_value=None, arg_name="sellupperpcnt")
+        config_option_row_float("Sell Lower Percent", "sell_lower_pcnt", "Lower trade margin to sell", default_value=None, arg_name="selllowerpcnt")
         config_option_row_float(
             "No Sell Max", "nosellmaxpcnt", "Do not sell while trade margin is below this level", default_value=None, arg_name="nosellmaxpcnt"
         )
@@ -2411,33 +2295,147 @@ class PyCryptoBot(BotConfig):
             "No Sell Min", "nosellminpcnt", "Do not sell while trade margin is above this level", break_below=True, default_value=None, arg_name="nosellminpcnt"
         )
 
-        config_option_row_bool("Prevent Loss", "preventloss", "Force a sell before margin is negative", store_invert=False, default_value=False, arg_name="preventloss")
+        config_option_row_bool(
+            "Prevent Loss", "preventloss", "Force a sell before margin is negative", store_invert=False, default_value=False, arg_name="preventloss"
+        )
         config_option_row_float(
             "Prevent Loss Trigger", "preventlosstrigger", "Margin that will trigger the prevent loss", default_value=1.0, arg_name="preventlosstrigger"
         )
         config_option_row_float(
-            "Prevent Loss Margin", "preventlossmargin", "Margin that will cause an immediate sell to prevent loss", default_value=0.1, arg_name="preventlossmargin"
+            "Prevent Loss Margin",
+            "preventlossmargin",
+            "Margin that will cause an immediate sell to prevent loss",
+            default_value=0.1,
+            arg_name="preventlossmargin",
         )
-        config_option_row_bool("Sell At Loss", "sellatloss", "Allow a sell if the profit margin is negative", break_below=True, store_invert=False, default_value=True, arg_name="sellatloss")
+        config_option_row_bool(
+            "Sell At Loss",
+            "sellatloss",
+            "Allow a sell if the profit margin is negative",
+            break_below=True,
+            store_invert=False,
+            default_value=True,
+            arg_name="sellatloss",
+        )
 
-        config_option_row_bool("Buy Bull Only", "disablebullonly", "Only trade in a bull market SMA50 > SMA200", break_below=True, store_invert=True, default_value=False, arg_name="bullonly")
+        config_option_row_bool(
+            "Buy Bull Only",
+            "disablebullonly",
+            "Only trade in a bull market SMA50 > SMA200",
+            break_below=True,
+            store_invert=True,
+            default_value=False,
+            arg_name="bullonly",
+        )
 
-        config_option_row_bool("Sell At Resistance", "sellatresistance", "Sell if the price hits a resistance level", store_invert=False, default_value=False, arg_name="sellatresistance")
-        config_option_row_bool("Sell At Fibonacci Low", "disablefailsafefibonaccilow", "Sell if the price hits a fibonacci lower level", store_invert=True, default_value=False, arg_name="sellatfibonaccilow")
-        config_option_row_bool("Sell Candlestick Reversal", "disableprofitbankreversal", "Sell at candlestick strong reversal pattern", break_below=True, store_invert=True, default_value=False, arg_name="profitbankreversal")
+        config_option_row_bool(
+            "Sell At Resistance",
+            "sellatresistance",
+            "Sell if the price hits a resistance level",
+            store_invert=False,
+            default_value=False,
+            arg_name="sellatresistance",
+        )
+        config_option_row_bool(
+            "Sell At Fibonacci Low",
+            "disablefailsafefibonaccilow",
+            "Sell if the price hits a fibonacci lower level",
+            store_invert=True,
+            default_value=False,
+            arg_name="sellatfibonaccilow",
+        )
+        config_option_row_bool(
+            "Sell Candlestick Reversal",
+            "disableprofitbankreversal",
+            "Sell at candlestick strong reversal pattern",
+            break_below=True,
+            store_invert=True,
+            default_value=False,
+            arg_name="profitbankreversal",
+        )
 
-        config_option_row_float("Trailing Stop Loss (TSL)", "trailing_stop_loss", "Percentage below the trade margin high to sell", default_value=0.0, arg_name="trailingstoploss")
-        config_option_row_float("Trailing Stop Loss Trigger", "trailing_stop_loss_trigger", "Trade margin percentage to enable the trailing stop loss", default_value=0.0, arg_name="trailingstoplosstrigger")
-        config_option_row_float("Trailing Sell Percent", "trailingsellpcnt", "Percentage of decrease to wait before selling", default_value=0.0, arg_name="trailingsellpcnt")
-        config_option_row_bool("Immediate Trailing Sell", "trailingimmediatesell", "Immediate sell if trailing sell percent is reached", store_invert=False, default_value=False, arg_name="trailingimmediatesell")
-        config_option_row_float("Immediate Trailing Sell Percent", "trailingsellimmediatepcnt", "Percentage of decrease used with a strong sell signal", default_value=0.0, arg_name="trailingsellimmediatepcnt")
-        config_option_row_float("Trailing Sell Bailout Percent", "trailingsellbailoutpcnt", "Percentage of decrease to bailout, sell immediately", break_below=True, default_value=0.0, arg_name="trailingsellbailoutpcnt")
+        config_option_row_float(
+            "Trailing Stop Loss (TSL)", "trailing_stop_loss", "Percentage below the trade margin high to sell", default_value=0.0, arg_name="trailingstoploss"
+        )
+        config_option_row_float(
+            "Trailing Stop Loss Trigger",
+            "trailing_stop_loss_trigger",
+            "Trade margin percentage to enable the trailing stop loss",
+            default_value=0.0,
+            arg_name="trailingstoplosstrigger",
+        )
+        config_option_row_float(
+            "Trailing Sell Percent", "trailingsellpcnt", "Percentage of decrease to wait before selling", default_value=0.0, arg_name="trailingsellpcnt"
+        )
+        config_option_row_bool(
+            "Immediate Trailing Sell",
+            "trailingimmediatesell",
+            "Immediate sell if trailing sell percent is reached",
+            store_invert=False,
+            default_value=False,
+            arg_name="trailingimmediatesell",
+        )
+        config_option_row_float(
+            "Immediate Trailing Sell Percent",
+            "trailingsellimmediatepcnt",
+            "Percentage of decrease used with a strong sell signal",
+            default_value=0.0,
+            arg_name="trailingsellimmediatepcnt",
+        )
+        config_option_row_float(
+            "Trailing Sell Bailout Percent",
+            "trailingsellbailoutpcnt",
+            "Percentage of decrease to bailout, sell immediately",
+            break_below=True,
+            default_value=0.0,
+            arg_name="trailingsellbailoutpcnt",
+        )
 
-        config_option_row_bool("Dynamic Trailing Stop Loss (TSL)", "dynamic_tsl", "Please refer to the detailed explanation in the README.md", store_invert=False, default_value=False, arg_name="dynamictsl")
-        config_option_row_float("TSL Multiplier", "tsl_multiplier", "Please refer to the detailed explanation in the README.md", default_value=1.1, arg_name="tslmultiplier")
-        config_option_row_float("TSL Trigger Multiplier", "tsl_trigger_multiplier", "Please refer to the detailed explanation in the README.md", default_value=1.1, arg_name="tsltriggermultiplier")
-        config_option_row_float("TSL Max Percent", "tsl_max_pcnt", "Please refer to the detailed explanation in the README.md", break_below=True, default_value=-5.0, arg_name="tslmaxpcnt")
+        config_option_row_bool(
+            "Dynamic Trailing Stop Loss (TSL)",
+            "dynamic_tsl",
+            "Dynamic Trailing Stop Loss (TSL)",
+            store_invert=False,
+            default_value=False,
+            arg_name="dynamictsl",
+        )
+        config_option_row_float(
+            "TSL Multiplier", "tsl_multiplier", "Please refer to the detailed explanation in the README.md", default_value=1.1, arg_name="tslmultiplier"
+        )
+        config_option_row_float(
+            "TSL Trigger Multiplier",
+            "tsl_trigger_multiplier",
+            "Please refer to the detailed explanation in the README.md",
+            default_value=1.1,
+            arg_name="tsltriggermultiplier",
+        )
+        config_option_row_float(
+            "TSL Max Percent",
+            "tsl_max_pcnt",
+            "Please refer to the detailed explanation in the README.md",
+            break_below=True,
+            default_value=-5.0,
+            arg_name="tslmaxpcnt",
+        )
 
+        config_option_row_float("Buy Min Size", "buyminsize", "Minimum buy order size in quote currency", default_value=0.0, arg_name="buyminsize")
+        config_option_row_float("Buy Max Size", "buymaxsize", "Maximum buy order size in quote currency", default_value=0.0, arg_name="buymaxsize")
+        config_option_row_bool(
+            "Buy Last Sell Size",
+            "buylastsellsize",
+            "Next buy order will match last sell order",
+            store_invert=False,
+            default_value=False,
+            arg_name="buylastsellsize",
+        )
+        config_option_row_bool(
+            "Multiple Buy Check",
+            "marketmultibuycheck",
+            "Additional check for market multiple buys",
+            store_invert=False,
+            default_value=False,
+            arg_name="marketmultibuycheck",
+        )
         config_option_row_bool(
             "Allow Buy Near High",
             "disablebuynearhigh",
@@ -2447,10 +2445,31 @@ class PyCryptoBot(BotConfig):
             arg_name="buynearhigh",
         )
         config_option_row_float(
-            "No Buy Near High Percent", "nobuynearhighpcnt", "Percentage from the range high to not buy", default_value=3.0, arg_name="buynearhighpcnt"
+            "No Buy Near High Percent", "nobuynearhighpcnt", "Percentage from the range high to not buy", break_below=True, default_value=3.0, arg_name="buynearhighpcnt"
         )
-        config_option_row_int(
-            "Adjust Total Periods", "adjusttotalperiods", "Adjust data points in historical trading data", break_below=True, default_value=300
+
+        config_option_row_float(
+            "Trailing Buy Percent",
+            "trailingbuypcnt",
+            "Percentage of increase to wait before buying",
+            default_value=0.0,
+            arg_name="trailingbuypcnt",
+        )
+        config_option_row_bool(
+            "Immediate Trailing Buy",
+            "trailingimmediatebuy",
+            "Immediate buy if trailing buy percent is reached",
+            store_invert=False,
+            default_value=False,
+            arg_name="trailingimmediatebuy",
+        )
+        config_option_row_float(
+            "Immediate Trailing Buy Percent",
+            "trailingbuyimmediatepcnt",
+            "Percent of increase to trigger immediate buy",
+            break_below=True,
+            default_value=0.0,
+            arg_name="trailingbuyimmediatepcnt",
         )
 
         config_option_row_bool("Override Sell Trigger", "selltriggeroverride", "Override sell trigger if strong buy", break_below=True, default_value=False)
