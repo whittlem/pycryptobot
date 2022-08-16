@@ -681,6 +681,11 @@ def default_config_parse(app, config):
     config_option_bool(option_name="bullonly", option_default=False, store_name="disablebullonly", store_invert=True)
     config_option_bool(option_name="profitbankreversal", option_default=False, store_name="disableprofitbankreversal", store_invert=True)
 
+    config_option_bool(option_name="dynamictsl", option_default=False, store_name="dynamic_tsl", store_invert=False)
+    config_option_float(option_name="tslmultiplier", option_default=1.1, store_name="tsl_multiplier", value_min=0, value_max=100)
+    config_option_float(option_name="tsltriggermultiplier", option_default=1.1, store_name="tsl_trigger_multiplier", value_min=0, value_max=100)
+    config_option_float(option_name="tslmaxpcnt", option_default=-5.0, store_name="tsl_max_pcnt", value_min=-100, value_max=0)
+
     config_option_bool(option_name="buynearhigh", option_default=True, store_name="disablebuynearhigh", store_invert=True)
     config_option_float(option_name="buynearhighpcnt", option_default=3.0, store_name="nobuynearhighpcnt", value_min=0, value_max=100)
     config_option_int(option_name="adjusttotalperiods", option_default=300, store_name="adjusttotalperiods", value_min=200, value_max=500)

@@ -843,6 +843,8 @@ class PyCryptoBot(BotConfig):
                 else:
                     margin_text = ""
 
+                terminal = os.get_terminal_size()
+
                 args = [
                     arg
                     for arg in [
@@ -882,9 +884,9 @@ class PyCryptoBot(BotConfig):
                             "cyan",
                         ),
                         RichText.styled_label_text("Near-High", "white", f"{df_near_high}%", "cyan"),  # price near high
-                        # RichText.styled_label_text(
-                        #     "Range", "white", f"{range_start} <-> {range_end}", "cyan"
-                        # ),
+                        RichText.styled_label_text(
+                            "Range", "white", f"{range_start} <-> {range_end}", "cyan"
+                        ) if (terminal.width > 120) else None,
                         RichText.margin_text(margin_text, self.state.last_action),
                         RichText.delta_text(
                             self.price,
@@ -1673,7 +1675,7 @@ class PyCryptoBot(BotConfig):
 
         if banner and not self.is_sim or (self.is_sim and not self.simresultonly):
             self._generate_banner()
-            # sys.exit()  # TODO: remove this
+            sys.exit()  # TODO: remove this
 
         self.app_started = True
         # run the first job immediately after starting
@@ -2489,72 +2491,6 @@ class PyCryptoBot(BotConfig):
                 style="grey62",
             )
 
-        table.add_row("", "", "")
-
-        if self.dynamic_tsl is not False:
-            table.add_row(
-                "Dynamic Trailing Stop Loss",
-                str(self.dynamic_tsl),
-                "Please refer to the detailed explanation in the README.md",
-                "--dynamictsl",
-            )
-        else:
-            table.add_row(
-                "Dynamic Trailing Stop Loss",
-                str(self.dynamic_tsl),
-                "Please refer to the detailed explanation in the README.md",
-                "--dynamictsl",
-                style="grey62",
-            )
-
-        if self.dynamic_tsl is True and self.tsl_multiplier > 0:
-            table.add_row(
-                "Trailing Stop Loss Multiplier",
-                str(self.tsl_multiplier),
-                "Please refer to the detailed explanation in the README.md",
-                "--tslmultiplier",
-            )
-        else:
-            table.add_row(
-                "Trailing Stop Loss Multiplier",
-                str(self.tsl_multiplier),
-                "Please refer to the detailed explanation in the README.md",
-                "--tslmultiplier",
-                style="grey62",
-            )
-
-        if self.dynamic_tsl is True and self.tsl_trigger_multiplier > 0:
-            table.add_row(
-                "Stop Loss Trigger Multiplier",
-                str(self.tsl_trigger_multiplier),
-                "Please refer to the detailed explanation in the README.md",
-                "--tsltriggermultiplier",
-            )
-        else:
-            table.add_row(
-                "Stop Loss Trigger Multiplier",
-                str(self.tsl_trigger_multiplier),
-                "Please refer to the detailed explanation in the README.md",
-                "--tsltriggermultiplier",
-                style="grey62",
-            )
-
-        if self.dynamic_tsl is True and self.tsl_max_pcnt > 0:
-            table.add_row(
-                "Stop Loss Trigger Multiplier",
-                str(self.tsl_max_pcnt),
-                "Please refer to the detailed explanation in the README.md",
-                "--tslmaxpcnt",
-            )
-        else:
-            table.add_row(
-                "Stop Loss Trigger Multiplier",
-                str(self.tsl_max_pcnt),
-                "Please refer to the detailed explanation in the README.md",
-                "--tslmaxpcnt",
-                style="grey62",
-            )
-
         def config_option_row_int(
             item: str = None, store_name: str = None, description: str = None, break_below: bool = False, default_value: int = 0, arg_name: str = None
         ) -> bool:
@@ -2639,7 +2575,11 @@ class PyCryptoBot(BotConfig):
 
         config_option_row_bool("Sell At Resistance", "sellatresistance", "Sell if the price hits a resistance level", store_invert=False, default_value=False, arg_name="sellatresistance")
         config_option_row_bool("Sell At Fibonacci Low", "disablefailsafefibonaccilow", "Sell if the price hits a fibonacci lower level", store_invert=True, default_value=False, arg_name="sellatfibonaccilow")
-        config_option_row_bool("Sell Candlestick Reversal", "disableprofitbankreversal", "Sell at candlestick strong reversal pattern", break_below=True, store_invert=True, default_value=False, arg_name="profitbankreversal")
+        config_option_row_bool("Sell Candlestick Reversal", "disableprofitbankreversal", "Sell at candlestick strong reversal pattern", store_invert=True, default_value=False, arg_name="profitbankreversal")
+        config_option_row_bool("Dynamic Trailing Stop Loss (TSL)", "dynamic_tsl", "Please refer to the detailed explanation in the README.md", store_invert=False, default_value=False, arg_name="dynamictsl")
+        config_option_row_float("TSL Multiplier", "tsl_multiplier", "Please refer to the detailed explanation in the README.md", default_value=1.1, arg_name="tslmultiplier")
+        config_option_row_float("TSL Trigger Multiplier", "tsl_trigger_multiplier", "Please refer to the detailed explanation in the README.md", default_value=1.1, arg_name="tsltriggermultiplier")
+        config_option_row_float("TSL Max Percent", "tsl_max_pcnt", "Please refer to the detailed explanation in the README.md", break_below=True, default_value=-5.0, arg_name="tslmaxpcnt")
 
         config_option_row_bool(
             "Allow Buy Near High",

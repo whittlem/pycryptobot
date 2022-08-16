@@ -465,26 +465,6 @@ class BotConfig:
             help="optionally set when the trailing stop loss should start",
         )
         parser.add_argument(
-            "--dynamictsl",
-            action="store_true",
-            help="enable dynamic trailing stoploss",
-        )
-        parser.add_argument(
-            "--tslmultiplier",
-            type=float,
-            help="multiplier for dynamic trailingstoploss",
-        )
-        parser.add_argument(
-            "--tsltriggermultiplier",
-            type=float,
-            help="multiplier for dynamic trailingstoploss",
-        )
-        parser.add_argument(
-            "--tslmaxpcnt",
-            type=float,
-            help="maximum dynamic trailingstoploss percent allowed",
-        )
-        parser.add_argument(
             "--sim", type=str, help="simulation modes: fast, fast-sample, slow-sample"
         )
         parser.add_argument(
@@ -726,6 +706,26 @@ class BotConfig:
             "--profitbankreversal",
             type=int,
             help="Sell at candlestick strong reversal pattern",
+        )
+        parser.add_argument(
+            "--dynamictsl",
+            type=int,
+            help="Dynamic Trailing Stop Loss (TSL)",
+        )
+        parser.add_argument(
+            "--tslmultiplier",
+            type=float,
+            help="TSL Multiplier",
+        )
+        parser.add_argument(
+            "--tsltriggermultiplier",
+            type=float,
+            help="TSL Trigger Multiplier",
+        )
+        parser.add_argument(
+            "--tslmaxpcnt",
+            type=float,
+            help="TSL Max Percent",
         )
 
         parser.add_argument(
