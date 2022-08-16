@@ -2393,104 +2393,6 @@ class PyCryptoBot(BotConfig):
                 style="grey62",
             )
 
-        table.add_row("", "", "")
-
-        if self.trailing_stop_loss is not None:
-            table.add_row(
-                "Trailing Stop Loss",
-                str(self.trailing_stop_loss),
-                "Percentage below the trade margin high to sell at",
-                "--trailing_stop_loss",
-            )
-        else:
-            table.add_row(
-                "Trailing Stop Loss",
-                str(self.trailing_stop_loss),
-                "Percentage below the trade margin high to sell at",
-                "--trailing_stop_loss",
-                style="grey62",
-            )
-
-        if self.trailing_stop_loss is not None and self.trailing_stop_loss_trigger != 0:
-            table.add_row(
-                "Trailing Stop Loss Trigger",
-                str(self.trailing_stop_loss_trigger),
-                "Trade margin percentage to enable the trailing stop loss",
-                "--trailingstoplosstrigger",
-            )
-        else:
-            table.add_row(
-                "Trailing Stop Loss Trigger",
-                str(self.trailing_stop_loss_trigger),
-                "Trade margin percentage to enable the trailing stop loss",
-                "--trailingstoplosstrigger",
-                style="grey62",
-            )
-
-        if self.trailingsellpcnt:
-            table.add_row(
-                "Trailing Sell Percent",
-                str(self.trailingsellpcnt),
-                "Please refer to the detailed explanation in the README.md",
-                "--trailingsellpcnt",
-            )
-        else:
-            table.add_row(
-                "Trailing Sell Percent",
-                str(self.trailingsellpcnt),
-                "Please refer to the detailed explanation in the README.md",
-                "--trailingsellpcnt",
-                style="grey62",
-            )
-
-        if self.trailingimmediatesell is True:
-            table.add_row(
-                "Immediate Trailing Sell",
-                str(self.trailingimmediatesell),
-                "Please refer to the detailed explanation in the README.md",
-                "--trailingimmediatesell",
-            )
-        else:
-            table.add_row(
-                "Immediate Trailing Sell",
-                str(self.trailingimmediatesell),
-                "Please refer to the detailed explanation in the README.md",
-                "--trailingimmediatesell",
-                style="grey62",
-            )
-
-        if self.trailingsellimmediatepcnt is not None:
-            table.add_row(
-                "Immediate Trailing Sell Percent",
-                str(self.trailingsellimmediatepcnt),
-                "Please refer to the detailed explanation in the README.md",
-                "--trailingsellimmediatepcnt",
-            )
-        else:
-            table.add_row(
-                "Immediate Trailing Sell Percent",
-                str(self.trailingsellimmediatepcnt),
-                "Please refer to the detailed explanation in the README.md",
-                "--trailingsellimmediatepcnt",
-                style="grey62",
-            )
-
-        if self.trailingsellbailoutpcnt is not None:
-            table.add_row(
-                "Trailing Sell Bailout Percent",
-                str(self.trailingsellbailoutpcnt),
-                "Please refer to the detailed explanation in the README.md",
-                "--trailingsellbailoutpcnt",
-            )
-        else:
-            table.add_row(
-                "Trailing Sell Bailout Percent",
-                str(self.trailingsellbailoutpcnt),
-                "Please refer to the detailed explanation in the README.md",
-                "--trailingsellbailoutpcnt",
-                style="grey62",
-            )
-
         def config_option_row_int(
             item: str = None, store_name: str = None, description: str = None, break_below: bool = False, default_value: int = 0, arg_name: str = None
         ) -> bool:
@@ -2576,6 +2478,13 @@ class PyCryptoBot(BotConfig):
         config_option_row_bool("Sell At Resistance", "sellatresistance", "Sell if the price hits a resistance level", store_invert=False, default_value=False, arg_name="sellatresistance")
         config_option_row_bool("Sell At Fibonacci Low", "disablefailsafefibonaccilow", "Sell if the price hits a fibonacci lower level", store_invert=True, default_value=False, arg_name="sellatfibonaccilow")
         config_option_row_bool("Sell Candlestick Reversal", "disableprofitbankreversal", "Sell at candlestick strong reversal pattern", store_invert=True, default_value=False, arg_name="profitbankreversal")
+        config_option_row_float("Trailing Stop Loss (TSL)", "trailing_stop_loss", "Percentage below the trade margin high to sell", default_value=0.0, arg_name="trailingstoploss")
+        config_option_row_float("Trailing Stop Loss Trigger", "trailing_stop_loss_trigger", "Trade margin percentage to enable the trailing stop loss", default_value=0.0, arg_name="trailingstoplosstrigger")
+        config_option_row_float("Trailing Sell Percent", "trailingsellpcnt", "Percentage of decrease to wait before selling", default_value=0.0, arg_name="trailingsellpcnt")
+        config_option_row_bool("Immediate Trailing Sell", "trailingimmediatesell", "Immediate sell if trailing sell percent is reached", store_invert=False, default_value=False, arg_name="trailingimmediatesell")
+        config_option_row_float("Immediate Trailing Sell Percent", "trailingsellimmediatepcnt", "Percentage of decrease used with a strong sell signal", default_value=0.0, arg_name="trailingsellimmediatepcnt")
+        config_option_row_float("Trailing Sell Bailout Percent", "trailingsellbailoutpcnt", "Percentage of decrease to bailout, sell immediately", break_below=True, default_value=0.0, arg_name="trailingsellbailoutpcnt")
+
         config_option_row_bool("Dynamic Trailing Stop Loss (TSL)", "dynamic_tsl", "Please refer to the detailed explanation in the README.md", store_invert=False, default_value=False, arg_name="dynamictsl")
         config_option_row_float("TSL Multiplier", "tsl_multiplier", "Please refer to the detailed explanation in the README.md", default_value=1.1, arg_name="tslmultiplier")
         config_option_row_float("TSL Trigger Multiplier", "tsl_trigger_multiplier", "Please refer to the detailed explanation in the README.md", default_value=1.1, arg_name="tsltriggermultiplier")

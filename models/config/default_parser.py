@@ -631,7 +631,7 @@ def default_config_parse(app, config):
             option_name = store_name  # prefer legacy config if it exists
 
         if option_name in config:
-            if isinstance(config[option_name], float):
+            if isinstance(config[option_name], int) or isinstance(config[option_name], float):
                 if value_min is not None and value_max is not None:
                     if config[option_name] >= value_min and config[option_name] <= value_max:
                         setattr(app, store_name, float(config[option_name]))
@@ -680,6 +680,12 @@ def default_config_parse(app, config):
     config_option_bool(option_name="sellatfibonaccilow", option_default=False, store_name="disablefailsafefibonaccilow", store_invert=True)
     config_option_bool(option_name="bullonly", option_default=False, store_name="disablebullonly", store_invert=True)
     config_option_bool(option_name="profitbankreversal", option_default=False, store_name="disableprofitbankreversal", store_invert=True)
+    config_option_float(option_name="trailingstoploss", option_default=0.0, store_name="trailing_stop_loss", value_min=-100, value_max=0)
+    config_option_float(option_name="trailingstoplosstrigger", option_default=0.0, store_name="trailing_stop_loss_trigger", value_min=0, value_max=100)
+    config_option_float(option_name="trailingsellpcnt", option_default=0.0, store_name="trailingsellpcnt", value_min=-100, value_max=0)
+    config_option_bool(option_name="trailingimmediatesell", option_default=False, store_name="trailingimmediatesell", store_invert=False)
+    config_option_float(option_name="trailingsellimmediatepcnt", option_default=0.0, store_name="trailingsellimmediatepcnt", value_min=-100, value_max=100)
+    config_option_float(option_name="trailingsellbailoutpcnt", option_default=0.0, store_name="trailingsellbailoutpcnt", value_min=-100, value_max=100)
 
     config_option_bool(option_name="dynamictsl", option_default=False, store_name="dynamic_tsl", store_invert=False)
     config_option_float(option_name="tslmultiplier", option_default=1.1, store_name="tsl_multiplier", value_min=0, value_max=100)

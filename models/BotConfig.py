@@ -46,8 +46,8 @@ class BotConfig:
         self.sell_lower_pcnt = None
         self.nosellminpcnt = None
         self.nosellmaxpcnt = None
-        self.trailing_stop_loss = None
-        self.trailing_stop_loss_trigger = 0
+        self.trailing_stop_loss = 0.0
+        self.trailing_stop_loss_trigger = 0.0
         self.dynamic_tsl = False
         self.tsl_multiplier = 1.1
         self.tsl_trigger_multiplier = 1.1
@@ -78,10 +78,10 @@ class BotConfig:
         self.trailingbuyimmediatepcnt = None
         self.marketmultibuycheck = False
 
-        self.trailingsellpcnt = 0
+        self.trailingsellpcnt = 0.0
         self.trailingimmediatesell = False
-        self.trailingsellimmediatepcnt = None
-        self.trailingsellbailoutpcnt = None
+        self.trailingsellimmediatepcnt = 0.0
+        self.trailingsellbailoutpcnt = 0.0
         self.selltriggeroverride = False
 
         self.sellatresistance = False
@@ -455,16 +455,6 @@ class BotConfig:
             help="optionally set maximum margin to not sell",
         )
         parser.add_argument(
-            "--trailingstoploss",
-            type=float,
-            help="optionally set a trailing stop percent loss below last buy high",
-        )
-        parser.add_argument(
-            "--trailingstoplosstrigger",
-            type=float,
-            help="optionally set when the trailing stop loss should start",
-        )
-        parser.add_argument(
             "--sim", type=str, help="simulation modes: fast, fast-sample, slow-sample"
         )
         parser.add_argument(
@@ -541,32 +531,6 @@ class BotConfig:
             "--marketmultibuycheck",
             action="store_true",
             help="additional check for market multiple buys",
-        )
-
-        parser.add_argument(
-            "--trailingsellpcnt",
-            type=float,
-            help="percent of decrease to wait before selling",
-        )
-        parser.add_argument(
-            "--trailingimmediatesell",
-            action="store_true",
-            help="immediate sell if trailingsellpcnt reached",
-        )
-        parser.add_argument(
-            "--trailingsellimmediatepcnt",
-            type=float,
-            help="percent of decrease used with STRONG sell signal",
-        )
-        parser.add_argument(
-            "--trailingsellbailoutpcnt",
-            type=float,
-            help="percent of decrease to bailout, sell immediately",
-        )
-        parser.add_argument(
-            "--selltriggeroverride",
-            action="store_true",
-            help="bypass is_sell_trigger if STRONG buy signals",
         )
 
         # optional options
@@ -707,6 +671,38 @@ class BotConfig:
             type=int,
             help="Sell at candlestick strong reversal pattern",
         )
+
+        parser.add_argument(
+            "--trailingstoploss",
+            type=float,
+            help="Percentage below the trade margin high to sell",
+        )
+        parser.add_argument(
+            "--trailingstoplosstrigger",
+            type=float,
+            help="Trade margin percentage to enable the trailing stop loss",
+        )
+        parser.add_argument(
+            "--trailingsellpcnt",
+            type=float,
+            help="Percentage of decrease to wait before selling",
+        )
+        parser.add_argument(
+            "--trailingimmediatesell",
+            action="store_true",
+            help="Immediate sell if trailing sell percent is reached",
+        )
+        parser.add_argument(
+            "--trailingsellimmediatepcnt",
+            type=float,
+            help="Percentage of decrease used with a strong sell signal",
+        )
+        parser.add_argument(
+            "--trailingsellbailoutpcnt",
+            type=float,
+            help="Percentage of decrease to bailout, sell immediately",
+        )
+
         parser.add_argument(
             "--dynamictsl",
             type=int,
