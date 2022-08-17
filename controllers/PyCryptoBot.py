@@ -2029,188 +2029,6 @@ class PyCryptoBot(BotConfig):
             else:
                 table.add_row("Bot Mode", "TEST", "Test trades using dummy funds :)", "--live")
 
-        table.add_row("", "", "")
-
-        if self.disabletelegram is False:
-            table.add_row(
-                "Telegram Notifications",
-                str(not self.disabletelegram),
-                "Disable Telegram notifications",
-                "--disabletelegram",
-            )
-        else:
-            table.add_row(
-                "Telegram Notifications",
-                str(not self.disabletelegram),
-                "Disable Telegram notifications",
-                "--disabletelegram",
-                style="grey62",
-            )
-
-        if self.disabletelegram is False and self.disable_telegram_error_msg is False:
-            table.add_row(
-                "Telegram Error Messages",
-                str(not self.disabletelegramerrormsgs),
-                "Disable Telegram error messages",
-                "--disabletelegramerrormsgs",
-            )
-        else:
-            table.add_row(
-                "Telegram Error Messages",
-                str(not self.disabletelegramerrormsgs),
-                "Disable Telegram error messages",
-                "--disabletelegramerrormsgs",
-                style="grey62",
-            )
-
-        table.add_row("", "", "")
-
-        if self.enable_pandas_ta is True:
-            table.add_row(
-                "Enable Pandas-ta",
-                str(self.enable_pandas_ta),
-                "Enable Pandas Technical Analysis",
-                "--enable_pandas_ta",
-            )
-        else:
-            table.add_row(
-                "Enable Pandas-ta",
-                str(self.enable_pandas_ta),
-                "Enable Pandas Technical Analysis",
-                "--enable_pandas_ta",
-                style="grey62",
-            )
-
-        if self.enable_custom_strategy is True:
-            table.add_row(
-                "Enable Custom Strategy",
-                str(self.enable_custom_strategy),
-                "Enable Custom Strategy",
-                "--enable_custom_strategy",
-            )
-        else:
-            table.add_row(
-                "Enable Custom Strategy",
-                str(self.enable_custom_strategy),
-                "Enable Custom Strategy",
-                "--enable_custom_strategy",
-                style="grey62",
-            )
-
-        table.add_row("", "", "")
-
-        if self.disablelog is False:
-            table.add_row(
-                "Enable Log",
-                str(not self.disablelog),
-                "Enable Log File",
-                "--disablelog",
-            )
-        else:
-            table.add_row(
-                "Enable Log",
-                str(not self.disablelog),
-                "Enable Log File",
-                "--disablelog",
-                style="grey62",
-            )
-
-        if self.disabletracker is False:
-            table.add_row(
-                "Enable Tracker",
-                str(not self.disabletracker),
-                "Enable Trade Reporting",
-                "--disabletracker",
-            )
-        else:
-            table.add_row(
-                "Enable Tracker",
-                str(not self.disabletracker),
-                "Enable Trade Reporting",
-                "--disabletracker",
-                style="grey62",
-            )
-
-        if self.autorestart is True:
-            table.add_row(
-                "Auto Restart Bot",
-                str(self.autorestart),
-                "Auto restart bot on failure",
-                "--autorestart",
-            )
-        else:
-            table.add_row(
-                "Auto Restart Bot",
-                str(self.autorestart),
-                "Auto restart bot on failure",
-                "--autorestart",
-                style="grey62",
-            )
-
-        if self.websocket is True:
-            table.add_row(
-                "Enable Websocket",
-                str(self.websocket),
-                "Enable websockets for data retrieval",
-                "--websocket",
-            )
-        else:
-            table.add_row(
-                "Enable Websocket",
-                str(self.websocket),
-                "Enable websockets for data retrieval",
-                "--websocket",
-                style="grey62",
-            )
-
-        if self.enableinsufficientfundslogging is True:
-            table.add_row(
-                "Insufficient Funds Log",
-                str(self.enableinsufficientfundslogging),
-                "Enable insufficient funds logging",
-                "--enableinsufficientfundslogging",
-            )
-        else:
-            table.add_row(
-                "Insufficient Funds Log",
-                str(self.enableinsufficientfundslogging),
-                "Enable insufficient funds logging",
-                "--enableinsufficientfundslogging",
-                style="grey62",
-            )
-
-        if self.logbuysellinjson is True:
-            table.add_row(
-                "JSON Log Trades",
-                str(self.logbuysellinjson),
-                "Log buy and sell orders in a JSON file",
-                "--logbuysellinjson",
-            )
-        else:
-            table.add_row(
-                "JSON Log Trades",
-                str(self.logbuysellinjson),
-                "Log buy and sell orders in a JSON file",
-                "--logbuysellinjson",
-                style="grey62",
-            )
-
-        if self.manual_trades_only is True:
-            table.add_row(
-                "Manual Trading Only",
-                str(self.manual_trades_only),
-                "Manual Trading Only (HODL)",
-                "--manual_trades_only",
-            )
-        else:
-            table.add_row(
-                "Manual Trading Only",
-                str(self.manual_trades_only),
-                "Manual Trading Only (HODL)",
-                "--manual_trades_only",
-                style="grey62",
-            )
-
         def config_option_row_int(
             item: str = None, store_name: str = None, description: str = None, break_below: bool = False, default_value: int = 0, arg_name: str = None
         ) -> bool:
@@ -2280,7 +2098,103 @@ class PyCryptoBot(BotConfig):
 
             return True
 
+        def config_option_row_str(
+            item: str = None, store_name: str = None, description: str = None, break_below: bool = False, default_value: str = "", arg_name: str = None
+        ) -> bool:
+            if item is None or store_name is None or description is None:
+                return False
+
+            if arg_name is None:
+                arg_name = store_name
+
+            if getattr(self, store_name) != default_value:
+                table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <num>")
+            else:
+                table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <num>", style="grey62")
+
+            if break_below is True:
+                table.add_row("", "", "")
+
+            return True
+
         table.add_row("", "", "")
+
+        config_option_row_bool(
+            "Telegram Notifications",
+            "disabletelegram",
+            "Enable Telegram notification messages",
+            store_invert=True,
+            default_value=False,
+            arg_name="telegram",
+        )
+        config_option_row_bool(
+            "Telegram Trades Only",
+            "telegramtradesonly",
+            "Telegram trades notifications only",
+            store_invert=False,
+            default_value=False,
+            arg_name="telegramtradesonlys",
+        )
+        config_option_row_bool(
+            "Telegram Error Messages",
+            "disabletelegramerrormsgs",
+            "Telegram error message notifications",
+            break_below=True,
+            store_invert=True,
+            default_value=False,
+            arg_name="telegramerrormsgs",
+        )
+
+        config_option_row_bool("Enable Log", "disablelog", "Enable console logging", store_invert=True, default_value=True, arg_name="log")
+        config_option_row_bool(
+            "Enable Tracker", "disabletracker", "Enable trade order logging", store_invert=True, default_value=False, arg_name="tradetracker"
+        )
+        config_option_row_bool(
+            "Auto Restart Bot", "autorestart", "Auto restart the bot in case of exception", store_invert=False, default_value=False, arg_name="autorestart"
+        )
+        config_option_row_bool(
+            "Enable Websocket", "websocket", "Enable websockets for data retrieval", store_invert=False, default_value=False, arg_name="websocket"
+        )
+        config_option_row_bool(
+            "Insufficient Funds Log",
+            "enableinsufficientfundslogging",
+            "Enable insufficient funds logging",
+            store_invert=False,
+            default_value=False,
+            arg_name="insufficientfundslogging",
+        )
+        config_option_row_bool(
+            "JSON Log Trade", "logbuysellinjson", "Log buy and sell orders in a JSON file", store_invert=False, default_value=False, arg_name="logbuysellinjson"
+        )
+        config_option_row_bool(
+            "Manual Trading Only",
+            "manual_trades_only",
+            "Manual Trading Only (HODL)",
+            break_below=False,
+            store_invert=False,
+            default_value=False,
+            arg_name="manualtradesonly",
+        )
+        config_option_row_bool(
+            "AI/ML Predictions",
+            "enableml",
+            "Enable AI / Machine Learning Predictions",
+            break_below=False,
+            store_invert=False,
+            default_value=False,
+            arg_name="predictions",
+        )
+        config_option_row_str(
+            "Start Method", "startmethod", "Bot start method ('standard', 'telegram')", break_below=False, default_value="standard", arg_name="startmethod"
+        )
+        config_option_row_float(
+            "Binance recvWindow",
+            "recv_window",
+            "Binance exchange API recvwindow, integer between 5000 and 60000",
+            break_below=True,
+            default_value=5000,
+            arg_name="recvwindow",
+        )
 
         config_option_row_int(
             "Adjust Total Periods", "adjusttotalperiods", "Adjust data points in historical trading data", break_below=True, default_value=300
@@ -2445,7 +2359,12 @@ class PyCryptoBot(BotConfig):
             arg_name="buynearhigh",
         )
         config_option_row_float(
-            "No Buy Near High Percent", "nobuynearhighpcnt", "Percentage from the range high to not buy", break_below=True, default_value=3.0, arg_name="buynearhighpcnt"
+            "No Buy Near High Percent",
+            "nobuynearhighpcnt",
+            "Percentage from the range high to not buy",
+            break_below=True,
+            default_value=3.0,
+            arg_name="buynearhighpcnt",
         )
 
         config_option_row_float(

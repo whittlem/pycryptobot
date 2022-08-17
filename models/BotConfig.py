@@ -354,9 +354,9 @@ class BotConfig:
 
     def _set_recv_window(self):
         recv_window = 5000
-        if self.cli_args["recvWindow"] and isinstance(self.cli_args["recvWindow"], int):
-            if 5000 <= int(self.cli_args["recvWindow"]) <= 60000:
-                recv_window = int(self.cli_args["recvWindow"])
+        if self.cli_args["recvwindow"] and isinstance(self.cli_args["recvwindow"], int):
+            if 5000 <= int(self.cli_args["recvwindow"]) <= 60000:
+                recv_window = int(self.cli_args["recvwindow"])
             else:
                 raise ValueError("recvWindow out of bounds! Should be between 5000 and 60000.")
         return recv_window
@@ -424,11 +424,6 @@ class BotConfig:
         parser.add_argument("--lastaction", type=str, help="optionally set the last action (BUY, SELL)")
 
         # optional options
-        parser.add_argument(
-            "--autorestart",
-            action="store_true",
-            help="Auto restart the bot in case of exception",
-        )
         parser.add_argument("--stats", action="store_true", help="display summary of completed trades")
         parser.add_argument("--statgroup", nargs="+", help="add multiple currency pairs to merge stats")
         parser.add_argument(
@@ -445,16 +440,6 @@ class BotConfig:
             "--simresultonly",
             action="store_true",
             help="show simulation result only",
-        )
-        parser.add_argument(
-            "--telegramtradesonly",
-            action="store_true",
-            help="Toggle Telegram trades only output",
-        )
-        parser.add_argument(
-            "--disabletelegramerrormsgs",
-            action="store_true",
-            help="Disable Telegram error message output",
         )
 
         # disable defaults
@@ -473,66 +458,28 @@ class BotConfig:
             action="store_true",
             help="disable profit bank on strong candlestick reversal",
         )
-        parser.add_argument("--disabletelegram", action="store_true", help="disable telegram messages")
-        parser.add_argument("--disablelog", action="store_true", help="disable pycryptobot.log")
-        parser.add_argument("--disabletracker", action="store_true", help="disable tracker.csv")
-        parser.add_argument(
-            "--recvWindow",
-            type=int,
-            help="binance exchange api recvWindow, integer between 5000 and 60000",
-        )
-        parser.add_argument(
-            "--enableml",
-            action="store_true",
-            help="Enable Machine Learning E.g. seasonal ARIMA model for predictions",
-        )
-        parser.add_argument("--enable_pandas_ta", action="store_true", help="Enable Pandas-ta")
-        parser.add_argument(
-            "--enable_custom_strategy",
-            action="store_true",
-            help="EnableCustom Strategy",
-        )
-        parser.add_argument("--websocket", action="store_true", help="Enable websocket")
-        parser.add_argument(
-            "--logbuysellinjson",
-            action="store_true",
-            help="Enable logging orders in json format",
-        )
-        parser.add_argument("--startmethod", type=str, help="Enable logging orders in json format")
-        parser.add_argument(
-            "--manual_trades_only",
-            action="store_true",
-            help="Manual Trades Only (HODL)",
-        )
 
         # TODO: arguments v2
 
-        parser.add_argument("--buymaxsize", type=float, help="Minimum buy order size in quote currency")
-        parser.add_argument("--buyminsize", type=float, help="Maximum buy order size in quote currency")
+        parser.add_argument("--telegram", type=int, help="Telegram notifications")
+        parser.add_argument("--telegramtradesonly", type=int, help="Telegram trades notifications only")
+        parser.add_argument("--telegramerrormsgs", type=int, help="Telegram error message notifications")
+
+        parser.add_argument("--log", type=int, help="Enable console logging")
+        parser.add_argument("--tradetracker", type=int, help="Enable trade order logging")
+        parser.add_argument("--autorestart", type=int, help="Auto restart the bot in case of exception")
+        parser.add_argument("--websocket", type=int, help="Enable websockets for data retrieval")
+        parser.add_argument("--insufficientfundslogging", type=int, help="Enable insufficient funds logging")
+        parser.add_argument("--logbuysellinjson", type=int, help="Log buy and sell orders in a JSON file")
+        parser.add_argument("--manualtradesonly", type=int, help="Manual Trading Only (HODL)")
+        parser.add_argument("--predictions", type=int, help="Enable AI / Machine Learning Predictions")
+        parser.add_argument("--startmethod", type=str, help="Bot start method ('standard', 'telegram')")
+        parser.add_argument("--recvwindow", type=int, help="Binance exchange API recvwindow, integer between 5000 and 60000")
+
         parser.add_argument(
-            "--buylastsellsize",
+            "--adjusttotalperiods",
             type=int,
-            help="Next buy order will match last sell order",
-        )
-        parser.add_argument(
-            "--trailingbuypcnt",
-            type=float,
-            help="Percentage of increase to wait before buying",
-        )
-        parser.add_argument(
-            "--trailingimmediatebuy",
-            action="store_true",
-            help="Immediate buy if trailing buy percent is reached",
-        )
-        parser.add_argument(
-            "--trailingbuyimmediatepcnt",
-            type=float,
-            help="Percent of increase to trigger immediate buy",
-        )
-        parser.add_argument(
-            "--marketmultibuycheck",
-            action="store_true",
-            help="Additional check for market multiple buys",
+            help="Adjust data points in historical trading data",
         )
 
         parser.add_argument(
@@ -647,6 +594,34 @@ class BotConfig:
             help="Please refer to the detailed explanation in the README.md",
         )
 
+        parser.add_argument("--buymaxsize", type=float, help="Minimum buy order size in quote currency")
+        parser.add_argument("--buyminsize", type=float, help="Maximum buy order size in quote currency")
+        parser.add_argument(
+            "--buylastsellsize",
+            type=int,
+            help="Next buy order will match last sell order",
+        )
+        parser.add_argument(
+            "--trailingbuypcnt",
+            type=float,
+            help="Percentage of increase to wait before buying",
+        )
+        parser.add_argument(
+            "--trailingimmediatebuy",
+            action="store_true",
+            help="Immediate buy if trailing buy percent is reached",
+        )
+        parser.add_argument(
+            "--trailingbuyimmediatepcnt",
+            type=float,
+            help="Percent of increase to trigger immediate buy",
+        )
+        parser.add_argument(
+            "--marketmultibuycheck",
+            action="store_true",
+            help="Additional check for market multiple buys",
+        )
+
         parser.add_argument(
             "--buynearhigh",
             type=int,
@@ -656,11 +631,6 @@ class BotConfig:
             "--buynearhighpcnt",
             type=float,
             help="Percentage from the range high to not buy",
-        )
-        parser.add_argument(
-            "--adjusttotalperiods",
-            type=int,
-            help="Adjust data points in historical trading data",
         )
 
         parser.add_argument(

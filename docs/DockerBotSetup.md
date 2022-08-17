@@ -402,7 +402,7 @@ config.json
             "graphs": 1,
             "filelog": 1,
             "logfile": "pycryptobot.log",
-            "recvWindow": 20000,
+            "recvwindow": 20000,
             "fileloglevel": "DEBUG",
             "consolelog": 1,
             "consoleloglevel": "DEBUG"

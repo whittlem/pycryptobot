@@ -377,67 +377,12 @@ def default_config_parse(app, config):
         else:
             raise TypeError("disabletelegramerrormsgs must be of type int")
 
-    if "disablelog" in config:
-        if isinstance(config["disablelog"], int):
-            if config["disablelog"] in [0, 1]:
-                app.disablelog = bool(config["disablelog"])
-        else:
-            raise TypeError("disablelog must be of type int")
-    else:
-        app.disablelog = 0  # default to False
-
-    if "disabletracker" in config:
-        if isinstance(config["disabletracker"], int):
-            if config["disabletracker"] in [0, 1]:
-                app.disabletracker = bool(config["disabletracker"])
-        else:
-            raise TypeError("disabletracker must be of type int")
-
-    if "enableml" in config:
-        if isinstance(config["enableml"], int):
-            if config["enableml"] in [0, 1]:
-                app.enableml = bool(config["enableml"])
-        else:
-            raise TypeError("enableml must be of type int")
-
-    if "websocket" in config:
-        if isinstance(config["websocket"], int):
-            if config["websocket"] in [0, 1]:
-                app.websocket = bool(config["websocket"])
-        else:
-            raise TypeError("websocket must be of type int")
-
-    if "enableinsufficientfundslogging" in config:
-        if isinstance(config["enableinsufficientfundslogging"], int):
-            if config["enableinsufficientfundslogging"] in [0, 1]:
-                app.enableinsufficientfundslogging = bool(config["enableinsufficientfundslogging"])
-        else:
-            raise TypeError("enableinsufficientfundslogging must be of type int")
-
     if "enable_telegram_bot_control" in config:
         if isinstance(config["enable_telegram_bot_control"], int):
             if config["enable_telegram_bot_control"] in [0, 1]:
                 app.enable_telegram_bot_control = bool(config["enable_telegram_bot_control"])
         else:
             raise TypeError("enable_telegram_bot_control must be of type int")
-
-    if "enableimmediatebuy" in config:
-        if isinstance(config["enableimmediatebuy"], int):
-            if config["enableimmediatebuy"] in [0, 1]:
-                app.enableimmediatebuy = bool(config["enableimmediatebuy"])
-        else:
-            raise TypeError("enableimmediatebuy must be of type int")
-
-    if "sellsmartswitch" in config:
-        if isinstance(config["sellsmartswitch"], int):
-            if config["sellsmartswitch"] in [0, 1]:
-                app.sell_smart_switch = config["sellsmartswitch"]
-                if app.sell_smart_switch == 1:
-                    app.sell_smart_switch = 1
-                else:
-                    app.sell_smart_switch = 0
-        else:
-            raise TypeError("sellsmartswitch must be of type int")
 
     # backward compatibility
     if "nosellatloss" in config:
@@ -670,6 +615,43 @@ def default_config_parse(app, config):
                 setattr(app, store_name, option_default)  # default
 
         return True
+
+    def config_option_str(
+        option_name: str = None, option_default: str = "", store_name: str = None, valid_options: list = []
+    ) -> bool:
+        if option_name is None or store_name is None:
+            return False
+
+        if store_name in config:
+            option_name = store_name  # prefer legacy config if it exists
+
+        if option_name in config:
+            if isinstance(config[option_name], str):
+                if config[option_name] in valid_options:
+                    setattr(app, store_name, config[option_name])
+                else:
+                    raise TypeError(f"{option_name} is not a valid option")
+            else:
+                raise TypeError(f"{option_name} must be a string")
+        else:
+            setattr(app, store_name, option_default)  # default
+
+        return True
+
+    config_option_bool(option_name="telegram", option_default=False, store_name="disabletelegram", store_invert=True)
+    config_option_bool(option_name="telegramtradesonly", option_default=False, store_name="telegramtradesonly", store_invert=False)
+    config_option_bool(option_name="telegramerrormsgs", option_default=False, store_name="disabletelegramerrormsgs", store_invert=True)
+
+    config_option_bool(option_name="log", option_default=True, store_name="disablelog", store_invert=True)
+    config_option_bool(option_name="tradetracker", option_default=False, store_name="disabletracker", store_invert=True)
+    config_option_bool(option_name="autorestart", option_default=False, store_name="autorestart", store_invert=False)
+    config_option_bool(option_name="websocket", option_default=False, store_name="websocket", store_invert=False)
+    config_option_bool(option_name="insufficientfundslogging", option_default=False, store_name="enableinsufficientfundslogging", store_invert=False)
+    config_option_bool(option_name="logbuysellinjson", option_default=False, store_name="logbuysellinjson", store_invert=False)
+    config_option_bool(option_name="manualtradesonly", option_default=False, store_name="manual_trades_only", store_invert=False)
+    config_option_bool(option_name="predictions", option_default=False, store_name="enableml", store_invert=False)
+    config_option_str(option_name="startmethod", option_default="standard", store_name="startmethod", valid_options=["standard", "telegram"])
+    config_option_int(option_name="recvwindow", option_default=5000, store_name="recv_window", value_min=5000, value_max=60000)
 
     config_option_int(option_name="adjusttotalperiods", option_default=300, store_name="adjusttotalperiods", value_min=200, value_max=500)
 

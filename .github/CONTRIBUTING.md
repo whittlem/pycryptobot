@@ -30,6 +30,25 @@ Issues should be used to report problems with the application, request a new fea
 
 If you find an Issue that addresses the problem you're having, please add your own reproduction information to the existing issue rather than creating a new one. Adding a [reaction](https://github.blog/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/) can also help be indicating to our maintainers that a particular problem is affecting more than just the reporter.
 
+### Discussions
+
+Please use the Discussion for Q&A
+
+### Coding Rules
+
+It is essential that the project code guidelines are followed. A PR that is not compliant will not be merged.
+
+1. Please use [black](https://github.com/psf/black) to format your code before opening a pull request (Alt+Shift+F in VSCode)
+2. Please make sure you comment your code, without spelling mistakes
+3. Please use descriptive variable names
+4. Please use snake case for function and variable names E.g. my_variable not myVariable
+5. Please create classes with a singular purpose
+6. Please avoid really large functions, break them up into smaller units.
+7. Please avoid code duplication, use functions and sub-functions
+8. Do not disable flake8/PEP8 warnings and errors without approval
+9. Run and make sure "pre-release-check.sh" is clear before raising a PR to beta
+10. Your PR needs to contain unit tests to be merged
+
 ### Pull Requests
 
 PRs to this application are always welcome and can be a quick way to get your fix or improvement slated for the next release. In general, PRs should:
@@ -54,10 +73,6 @@ In general, we follow the ["fork-and-pull" Git workflow](https://github.com/susa
 6. Increment the version number in the [README](../README.md). Try and follow [SemVer](https://semver.org/). If you're unsure, reach out to the contributors.
 7. Push changes to your fork
 8. Open a PR in this repository against the *beta* branch and follow the PR template so that we can efficiently review the changes.
-
-### Code Style Conventions
-
-Please use [black](https://github.com/psf/black) to format your code before opening a pull request.
 
 ## Getting Help
 

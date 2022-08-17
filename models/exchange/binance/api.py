@@ -92,7 +92,7 @@ class AuthAPI(AuthAPIBase):
         # order history
         self.order_history = order_history
 
-        # api recvWindow
+        # api recvwindow
         self.recv_window = recv_window
 
     def handle_init_error(self, err: str) -> None:
@@ -127,7 +127,7 @@ class AuthAPI(AuthAPIBase):
 
         # GET /api/v3/account
         try:
-            resp = self.auth_api("GET", "/api/v3/account", {"recvWindow": self.recv_window})
+            resp = self.auth_api("GET", "/api/v3/account", {"recvwindow": self.recv_window})
 
             # unexpected data, then return
             if len(resp) == 0 or "balances" not in resp:
@@ -243,7 +243,7 @@ class AuthAPI(AuthAPIBase):
             pass
 
         # GET /api/v3/account
-        resp = self.auth_api("GET", "/api/v3/account", {"recvWindow": self.recv_window})
+        resp = self.auth_api("GET", "/api/v3/account", {"recvwindow": self.recv_window})
 
         # unexpected data, then return
         if len(resp) == 0:
@@ -367,7 +367,7 @@ class AuthAPI(AuthAPIBase):
                     resp = self.auth_api(
                         "GET",
                         "/api/v3/allOrders",
-                        {"symbol": market, "recvWindow": self.recv_window},
+                        {"symbol": market, "recvwindow": self.recv_window},
                     )
 
                     # unexpected data, then return
@@ -399,7 +399,7 @@ class AuthAPI(AuthAPIBase):
                 resp = self.auth_api(
                     "GET",
                     "/api/v3/allOrders",
-                    {"symbol": market, "recvWindow": self.recv_window},
+                    {"symbol": market, "recvwindow": self.recv_window},
                 )
 
                 # unexpected data, then return
@@ -540,7 +540,7 @@ class AuthAPI(AuthAPIBase):
             resp = self.auth_api(
                 "GET",
                 "/sapi/v1/asset/tradeFee",
-                {"symbol": market, "recvWindow": self.recv_window},
+                {"symbol": market, "recvwindow": self.recv_window},
             )
 
             # unexpected data, then return
@@ -625,7 +625,7 @@ class AuthAPI(AuthAPIBase):
                 "side": "BUY",
                 "type": "MARKET",
                 "quantity": truncated,
-                "recvWindow": self.recv_window,
+                "recvwindow": self.recv_window,
             }
 
             # Logger.debug(order)
@@ -670,7 +670,7 @@ class AuthAPI(AuthAPIBase):
                 "side": "SELL",
                 "type": "MARKET",
                 "quantity": truncated,
-                "recvWindow": self.recv_window,
+                "recvwindow": self.recv_window,
             }
 
             # Logger.debug(order)
@@ -730,8 +730,8 @@ class AuthAPI(AuthAPIBase):
             else:
                 resp_message = ""
 
-            if resp.status_code == 400 and (resp_message == "Timestamp for this request is outside of the recvWindow."):
-                message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (hint: increase recvWindow with --recvWindow <5000-60000>)"
+            if resp.status_code == 400 and (resp_message == "Timestamp for this request is outside of the recvwindow."):
+                message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (hint: increase recvwindow with --recvwindow <5000-60000>)"
                 Logger.error(f"Error: {message}")
                 return {}
             elif resp.status_code == 400 and resp_message.__contains__("Invalid quantity"):

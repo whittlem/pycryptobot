@@ -441,7 +441,7 @@ Upgrade library dependencies (if required):
 - 'nosellminpcnt' to specify minimum margin to not sell
 - 'nosellmaxpcnt' to specify maximum margin to not sell
 - fixed Stats.py issue on smaller datasets
-- fixed recvWindow issue
+- fixed recvwindow issue
 - binance.us is now working
 
 ### Changed
@@ -465,7 +465,7 @@ Upgrade library dependencies (if required):
 ### Changed
 
 - Fixed custom logging bug
-- Add a try/catch to resolve "currency" key issue with recvWindow
+- Add a try/catch to resolve "currency" key issue with recvwindow
 - Removed previous failsafe check for "currency" in get_accounts
 
 ## [3.2.5] - 2021-08-09
@@ -478,7 +478,7 @@ Upgrade library dependencies (if required):
 
 ### Changed
 
-- Updated auth_api to return an empty JSON response on recvWindow
+- Updated auth_api to return an empty JSON response on recvwindow
 
 ## [3.2.3] - 2021-08-09
 
@@ -522,7 +522,7 @@ Upgrade library dependencies (if required):
 
 ### Changed
 
-- Fix recvWindow for binance
+- Fix recvwindow for binance
 
 ## [3.0.0] - 2021-08-03
 
