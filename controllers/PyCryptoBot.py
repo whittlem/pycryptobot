@@ -2108,9 +2108,9 @@ class PyCryptoBot(BotConfig):
                 arg_name = store_name
 
             if getattr(self, store_name) != default_value:
-                table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <num>")
+                table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <str>")
             else:
-                table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <num>", style="grey62")
+                table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <str>", style="grey62")
 
             if break_below is True:
                 table.add_row("", "", "")
@@ -2118,6 +2118,9 @@ class PyCryptoBot(BotConfig):
             return True
 
         table.add_row("", "", "")
+
+        config_option_row_str("Exchange", "exchange", "See README.md for valid options", default_value="coinbasepro", arg_name="exchange")
+        config_option_row_str("Granularity", "granularity", "See README.md for valid options", break_below=True, default_value="3600", arg_name="granularity")
 
         config_option_row_bool(
             "Telegram Notifications",

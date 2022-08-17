@@ -369,12 +369,7 @@ class BotConfig:
         parser.add_argument("--init", action="store_true", help="config.json configuration builder")
 
         # optional arguments
-        parser.add_argument("--exchange", type=str, help="'coinbasepro', 'binance', 'kucoin', 'dummy'")
-        parser.add_argument(
-            "--granularity",
-            type=str,
-            help="coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6h,1d), kucoin: (1min,3min,5min,15min,30min,1hour,6hour,1day)",
-        )
+
         parser.add_argument("--graphs", type=int, help="save graphs=1, do not save graphs=0")
         parser.add_argument("--live", type=int, help="live=1, test=0")
         parser.add_argument(
@@ -423,7 +418,6 @@ class BotConfig:
         parser.add_argument("--sellpercent", type=int, help="percentage of base currency to sell")
         parser.add_argument("--lastaction", type=str, help="optionally set the last action (BUY, SELL)")
 
-        # optional options
         parser.add_argument("--stats", action="store_true", help="display summary of completed trades")
         parser.add_argument("--statgroup", nargs="+", help="add multiple currency pairs to merge stats")
         parser.add_argument(
@@ -441,25 +435,16 @@ class BotConfig:
             action="store_true",
             help="show simulation result only",
         )
-
-        # disable defaults
         parser.add_argument(
             "--disablefailsafelowerpcnt",
             action="store_true",
             help="disable failsafe sell on 'selllowerpcnt'",
         )
-        parser.add_argument(
-            "--disableprofitbankupperpcnt",
-            action="store_true",
-            help="disable profit bank on 'sellupperpcnt'",
-        )
-        parser.add_argument(
-            "--disableprofitbankreversal",
-            action="store_true",
-            help="disable profit bank on strong candlestick reversal",
-        )
 
         # TODO: arguments v2
+
+        parser.add_argument("--exchange", type=str, help="'coinbasepro', 'binance', 'kucoin', 'dummy'")
+        parser.add_argument("--granularity", type=str, help="coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6h,1d), kucoin: (1min,3min,5min,15min,30min,1hour,6hour,1day)")
 
         parser.add_argument("--telegram", type=int, help="Telegram notifications")
         parser.add_argument("--telegramtradesonly", type=int, help="Telegram trades notifications only")

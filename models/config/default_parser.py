@@ -1,5 +1,5 @@
 import re
-import sys
+from enum import Enum
 from xmlrpc.client import Boolean
 
 from models.exchange.Granularity import Granularity
@@ -615,6 +615,8 @@ def default_config_parse(app, config):
                 setattr(app, store_name, option_default)  # default
 
         return True
+
+    import sys
 
     def config_option_str(
         option_name: str = None, option_default: str = "", store_name: str = None, valid_options: list = []
