@@ -844,6 +844,13 @@ class PyCryptoBot(BotConfig):
 
                 terminal = os.get_terminal_size()
 
+                if "width" in terminal:
+                    terminal_width = terminal.width
+                elif "columns" in terminal:
+                    terminal_width = terminal.columns
+                else:
+                    terminal_width = 160
+
                 args = [
                     arg
                     for arg in [
@@ -883,7 +890,7 @@ class PyCryptoBot(BotConfig):
                             "cyan",
                         ),
                         RichText.styled_label_text("Near-High", "white", f"{df_near_high}%", "cyan"),  # price near high
-                        RichText.styled_label_text("Range", "white", f"{range_start} <-> {range_end}", "cyan") if (terminal.width > 120) else None,
+                        RichText.styled_label_text("Range", "white", f"{range_start} <-> {range_end}", "cyan") if (terminal_width > 120) else None,
                         RichText.margin_text(margin_text, self.state.last_action),
                         RichText.delta_text(
                             self.price,
@@ -1672,7 +1679,7 @@ class PyCryptoBot(BotConfig):
 
         if banner and not self.is_sim or (self.is_sim and not self.simresultonly):
             self._generate_banner()
-            sys.exit()  # TODO: remove this
+            #  sys.exit()  # TODO: remove this
 
         self.app_started = True
         # run the first job immediately after starting
