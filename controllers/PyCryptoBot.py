@@ -84,7 +84,6 @@ class PyCryptoBot(BotConfig):
         self.s = sched.scheduler(time.time, time.sleep)
 
         self.price = 0
-        self.is_live = 0
         self.takerfee = 0.0
         self.makerfee = 0.0
         self.account = None
@@ -1994,41 +1993,6 @@ class PyCryptoBot(BotConfig):
                 Logger.error(f"Unable to save: {filename}", "critical")
 
     def _generate_banner(self) -> None:
-        table = Table(title=f"Python Crypto Bot {self.get_version_from_readme()}")
-
-        table.add_column("Item", justify="right", style="cyan", no_wrap=True)
-        table.add_column("Value", justify="left", style="green")
-        table.add_column("Description", justify="left", style="magenta")
-        table.add_column("Option", justify="left", style="white")
-
-        table.add_row("Start", str(datetime.now()), "Bot start time")
-
-        table.add_row("", "", "")
-
-        table.add_row(
-            "Exchange",
-            str(self.exchange.value),
-            "Crypto currency exchange",
-            "--exchange",
-        )
-        table.add_row("Market", self.market, "Market to trade on", "--market")
-        table.add_row(
-            "Granularity",
-            str(self.granularity).replace("Granularity.", ""),
-            "Granularity of the data",
-            "--granularity",
-        )
-
-        table.add_row("", "", "")
-
-        if self.is_live:
-            table.add_row("Bot Mode", "LIVE", "Live trades using your funds!", "--live")
-        else:
-            if self.is_sim:
-                table.add_row("Bot Mode", "SIMULATION", "Back testing using simulations", "--live")
-            else:
-                table.add_row("Bot Mode", "TEST", "Test trades using dummy funds :)", "--live")
-
         def config_option_row_int(
             item: str = None, store_name: str = None, description: str = None, break_below: bool = False, default_value: int = 0, arg_name: str = None
         ) -> bool:
@@ -2117,10 +2081,49 @@ class PyCryptoBot(BotConfig):
 
             return True
 
+        def config_option_row_enum(
+            item: str = None, store_name: str = None, description: str = None, break_below: bool = False, default_value: str = "", arg_name: str = None
+        ) -> bool:
+            if item is None or store_name is None or description is None:
+                return False
+
+            if arg_name is None:
+                arg_name = store_name
+
+            if str(getattr(self, store_name)).replace(f"{item}.", "").lower() != default_value:
+                table.add_row(item, str(getattr(self, store_name)).replace(f"{item}.", "").lower(), description, f"--{arg_name} <str>")
+            else:
+                table.add_row(item, str(getattr(self, store_name)).replace(f"{item}.", "").lower(), description, f"--{arg_name} <str>", style="grey62")
+
+            if break_below is True:
+                table.add_row("", "", "")
+
+            return True
+
+        table = Table(title=f"Python Crypto Bot {self.get_version_from_readme()}")
+
+        table.add_column("Item", justify="right", style="cyan", no_wrap=True)
+        table.add_column("Value", justify="left", style="green")
+        table.add_column("Description", justify="left", style="magenta")
+        table.add_column("Option", justify="left", style="white")
+
+        table.add_row("Start", str(datetime.now()), "Bot start time")
+
         table.add_row("", "", "")
 
-        config_option_row_str("Exchange", "exchange", "See README.md for valid options", default_value="coinbasepro", arg_name="exchange")
-        config_option_row_str("Granularity", "granularity", "See README.md for valid options", break_below=True, default_value="3600", arg_name="granularity")
+        if self.is_live:
+            table.add_row("Bot Mode", "LIVE", "Live trades using your funds!", "--live <1|0>")
+        else:
+            if self.is_sim:
+                table.add_row("Bot Mode", "SIMULATION", "Back testing using simulations", "--sim <fast|slow>")
+            else:
+                table.add_row("Bot Mode", "TEST", "Test trades using dummy funds :)", "--live <1|0>")
+
+        table.add_row("", "", "")
+
+        config_option_row_enum("Exchange", "exchange", "Crypto currency exchange", default_value=None, arg_name="exchange")
+        config_option_row_str("Market", "market", "coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc.", break_below=False, default_value=None, arg_name="market")
+        config_option_row_enum("Granularity", "granularity", "Granularity of the data", break_below=True, default_value="3600", arg_name="granularity")
 
         config_option_row_bool(
             "Telegram Notifications",

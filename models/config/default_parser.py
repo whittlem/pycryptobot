@@ -253,8 +253,8 @@ def default_config_parse(app, config):
     if "sellatloss" in config:
         if isinstance(config["sellatloss"], int):
             if config["sellatloss"] in [0, 1]:
-                app.sell_at_loss = config["sellatloss"]
-                if app.sell_at_loss == 0:
+                app.sellatloss = config["sellatloss"]
+                if app.sellatloss == 0:
                     app.sell_lower_pcnt = None
         else:
             raise TypeError("sellatloss must be of type int")
@@ -388,8 +388,8 @@ def default_config_parse(app, config):
     if "nosellatloss" in config:
         if isinstance(config["nosellatloss"], int):
             if config["nosellatloss"] in [0, 1]:
-                app.sell_at_loss = int(not config["nosellatloss"])
-                if app.sell_at_loss == 0:
+                app.sellatloss = int(not config["nosellatloss"])
+                if app.sellatloss == 0:
                     app.sell_lower_pcnt = None
                     app.trailing_stop_loss = None
         else:
@@ -639,6 +639,8 @@ def default_config_parse(app, config):
             setattr(app, store_name, option_default)  # default
 
         return True
+
+    config_option_int(option_name="live", option_default=0, store_name="is_live", value_min=0, value_max=1)
 
     config_option_bool(option_name="telegram", option_default=False, store_name="disabletelegram", store_invert=True)
     config_option_bool(option_name="telegramtradesonly", option_default=False, store_name="telegramtradesonly", store_invert=False)

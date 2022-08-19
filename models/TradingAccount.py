@@ -125,7 +125,7 @@ class TradingAccount:
                     self.app.api_secret,
                     self.app.api_passphrase,
                     self.app.api_url,
-                    use_cache=self.app.use_kucoin_cache,
+                    use_cache=self.app.usekucoincache,
                 )
                 # retrieve orders from live Kucoin account portfolio
                 self.orders = model.get_orders(market, action, status)
@@ -188,7 +188,7 @@ class TradingAccount:
                     self.app.api_secret,
                     self.app.api_passphrase,
                     self.app.api_url,
-                    use_cache=self.app.use_kucoin_cache,
+                    use_cache=self.app.usekucoincache,
                 )
                 trycnt, maxretry = (0, 5)
                 while trycnt <= maxretry:

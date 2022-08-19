@@ -863,7 +863,7 @@ def test_configjson_binance_sellatloss():
     app = PyCryptoBot(exchange='binance', filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
     assert self.exchange == 'binance'
-    assert self.sell_at_loss
+    assert self.sellatloss
 
     try:
         config['binance']['config']['sellatloss'] = 0
@@ -877,7 +877,7 @@ def test_configjson_binance_sellatloss():
     app = PyCryptoBot(exchange='binance', filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
     assert self.exchange == 'binance'
-    assert not self.sell_at_loss
+    assert not self.sellatloss
 
     if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
         os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')
@@ -904,7 +904,7 @@ def test_configjson_coinbasepro_sellatloss():
     app = PyCryptoBot(exchange='coinbasepro', filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
     assert self.exchange == 'coinbasepro'
-    assert self.sell_at_loss
+    assert self.sellatloss
 
     try:
         config['coinbasepro']['config']['sellatloss'] = 0
@@ -918,7 +918,7 @@ def test_configjson_coinbasepro_sellatloss():
     app = PyCryptoBot(exchange='coinbasepro',filename='tests/unit_tests/data/pycryptobot_pytest_config.json')
     assert type(app) is PyCryptoBot
     assert self.exchange == 'coinbasepro'
-    assert not self.sell_at_loss
+    assert not self.sellatloss
 
     if os.path.exists('tests/unit_tests/data/pycryptobot_pytest_config.json'):
         os.remove('tests/unit_tests/data/pycryptobot_pytest_config.json')

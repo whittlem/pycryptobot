@@ -18,7 +18,7 @@ class AppState:
                 app.api_key,
                 app.api_secret,
                 app.api_url,
-                recv_window=app.get_recv_window,
+                recv_window=app.recv_window,
             )
         elif app.exchange == Exchange.COINBASEPRO:
             self.api = CAuthAPI(
@@ -33,7 +33,7 @@ class AppState:
                 app.api_secret,
                 app.api_passphrase,
                 app.api_url,
-                use_cache=app.use_kucoin_cache,
+                use_cache=app.usekucoincache,
             )
         else:
             self.api = None

@@ -52,7 +52,7 @@ class BotConfig:
         self.tsl_multiplier = 1.1
         self.tsl_trigger_multiplier = 1.1
         self.tsl_max_pcnt = float(-5)
-        self.sell_at_loss = 1
+        self.sellatloss = 1
         self.smart_switch = 1
         self.sell_smart_switch = 0
         self.preventloss = False
@@ -162,7 +162,6 @@ class BotConfig:
         self.enable_atr72_pcnt = True
         self.enable_buy_next = True
         self.enable_volume = False
-        # print(self.startmethod)
 
         # set defaults
         (
@@ -214,7 +213,7 @@ class BotConfig:
             except Exception:
                 raise
 
-            # set exchange platform
+        # set exchange platform
         self.exchange = self._set_exchange(exchange)  # set defaults
         (
             self.api_url,
@@ -372,11 +371,7 @@ class BotConfig:
 
         parser.add_argument("--graphs", type=int, help="save graphs=1, do not save graphs=0")
         parser.add_argument("--live", type=int, help="live=1, test=0")
-        parser.add_argument(
-            "--market",
-            type=str,
-            help="coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc.",
-        )
+
         parser.add_argument("--sim", type=str, help="simulation modes: fast, fast-sample, slow-sample")
         parser.add_argument(
             "--simstart_date",
@@ -444,6 +439,7 @@ class BotConfig:
         # TODO: arguments v2
 
         parser.add_argument("--exchange", type=str, help="'coinbasepro', 'binance', 'kucoin', 'dummy'")
+        parser.add_argument("--market", type=str, help="coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc.")
         parser.add_argument("--granularity", type=str, help="coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6h,1d), kucoin: (1min,3min,5min,15min,30min,1hour,6hour,1day)")
 
         parser.add_argument("--telegram", type=int, help="Telegram notifications")

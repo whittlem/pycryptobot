@@ -280,7 +280,7 @@ class Strategy:
                 return True
 
         # check sellatloss and nosell bounds before continuing
-        if not self.app.sell_at_loss and margin <= 0:
+        if not self.app.sellatloss and margin <= 0:
             return False
         elif (
             (self.app.nosellminpcnt is not None) and (margin >= self.app.nosellminpcnt)
@@ -376,7 +376,7 @@ class Strategy:
                 f"self.app.disablefailsafelowerpcnt is False (actual: {self.app.disablefailsafelowerpcnt})"
             )
             Logger.debug(
-                f"and self.app.sell_at_loss is True (actual: {self.app.sell_at_loss})"
+                f"and self.app.sellatloss is True (actual: {self.app.sellatloss})"
             )
             Logger.debug(
                 f"and self.app.sell_lower_pcnt is not None (actual: {self.app.sell_lower_pcnt})"
@@ -385,14 +385,14 @@ class Strategy:
                 f"and margin ({margin}) < self.app.sell_lower_pcnt ({self.app.sell_lower_pcnt})"
             )
             Logger.debug(
-                f"(self.app.sell_at_loss is True (actual: {self.app.sell_at_loss}) or margin ({margin}) > 0)"
+                f"(self.app.sellatloss is True (actual: {self.app.sellatloss}) or margin ({margin}) > 0)"
             )
             Logger.debug("\n")
 
         # loss failsafe sell at sell_lower_pcnt
         if (
             self.app.disablefailsafelowerpcnt is False
-            and self.app.sell_at_loss
+            and self.app.sellatloss
             and self.app.sell_lower_pcnt is not None
             and margin < self.app.sell_lower_pcnt
         ):
@@ -425,7 +425,7 @@ class Strategy:
                 f"self.app.disablefailsafefibonaccilow is False (actual: {self.app.disablefailsafefibonaccilow})"
             )
             Logger.debug(
-                f"self.app.sell_at_loss is True (actual: {self.app.sell_at_loss})"
+                f"self.app.sellatloss is True (actual: {self.app.sellatloss})"
             )
             Logger.debug(
                 f"self.app.sell_lower_pcnt is None (actual: {self.app.sell_lower_pcnt})"
@@ -433,14 +433,14 @@ class Strategy:
             Logger.debug(f"self.state.fib_low {self.state.fib_low} > 0")
             Logger.debug(f"self.state.fib_low {self.state.fib_low} >= {float(price)}")
             Logger.debug(
-                f"(self.app.sell_at_loss is True (actual: {self.app.sell_at_loss}) or margin ({margin}) > 0)"
+                f"(self.app.sellatloss is True (actual: {self.app.sellatloss}) or margin ({margin}) > 0)"
             )
             Logger.debug("\n")
 
         # loss failsafe sell at fibonacci band
         if (
             self.app.disablefailsafefibonaccilow is False
-            and self.app.sell_at_loss
+            and self.app.sellatloss
             and self.app.sell_lower_pcnt is None
             and self.state.fib_low > 0
             and self.state.fib_low >= float(price)
@@ -466,7 +466,7 @@ class Strategy:
                 f"margin ({margin}) > self.app.trailing_stop_loss_trigger ({self.app.trailing_stop_loss_trigger})"
             )
             Logger.debug(
-                f"(self.app.sell_at_loss is True (actual: {self.app.sell_at_loss}) or margin ({margin}) > 0)"
+                f"(self.app.sellatloss is True (actual: {self.app.sellatloss}) or margin ({margin}) > 0)"
             )
             Logger.debug("\n")
 
@@ -482,7 +482,7 @@ class Strategy:
                 f"and margin ({margin}) > self.app.sell_upper_pcnt ({self.app.sell_upper_pcnt})"
             )
             Logger.debug(
-                f"(self.app.sell_at_loss is True (actual: {self.app.sell_at_loss}) or margin ({margin}) > 0)"
+                f"(self.app.sellatloss is True (actual: {self.app.sellatloss}) or margin ({margin}) > 0)"
             )
             Logger.debug("\n")
 
@@ -509,7 +509,7 @@ class Strategy:
             Logger.debug(f"and price ({price}) > 0")
             Logger.debug(f"and price ({price}) >= price_exit ({price_exit})")
             Logger.debug(
-                f"(self.app.sell_at_loss is True (actual: {self.app.sell_at_loss}) or margin ({margin}) > 0)"
+                f"(self.app.sellatloss is True (actual: {self.app.sellatloss}) or margin ({margin}) > 0)"
             )
             Logger.debug("\n")
 
@@ -519,12 +519,12 @@ class Strategy:
             and margin >= 2
             and price > 0
             and price >= price_exit
-            and (self.app.sell_at_loss or margin > 0)
+            and (self.app.sellatloss or margin > 0)
         ):
             log_text = "! Profit Bank Triggered (Selling At Resistance)"
             if not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly):
                 Logger.warning(log_text)
-            if not (not self.app.sell_at_loss and margin <= 0):
+            if not (not self.app.sellatloss and margin <= 0):
                 if not self.app.disabletelegram:
                     self.app.notifyTelegram(
                         f"{self.app.market} ({self.app.print_granularity()}) {log_text}"
@@ -571,13 +571,13 @@ class Strategy:
             Logger.debug("-- configuration specifies to not sell at a loss --")
             Logger.debug(f"self.state.action == 'SELL' (actual: {self.state.action})")
             Logger.debug(
-                f"and self.app.sell_at_loss is False (actual: {self.app.sell_at_loss})"
+                f"and self.app.sellatloss is False (actual: {self.app.sellatloss})"
             )
             Logger.debug(f"and margin ({margin}) <= 0")
             Logger.debug("\n")
 
         # configuration specifies to not sell at a loss
-        if self.state.action == "SELL" and not self.app.sell_at_loss and margin <= 0:
+        if self.state.action == "SELL" and not self.app.sellatloss and margin <= 0:
             if not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly):
                 log_text = "! Ignore Sell Signal (No Sell At Loss)"
                 Logger.warning(log_text)
