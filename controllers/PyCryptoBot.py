@@ -185,8 +185,8 @@ class PyCryptoBot(BotConfig):
         else:
             # runs once at the start of a simulation
             if self.app_started:
-                if self.simstart_date is not None:
-                    self.state.iterations = self.trading_data.index.get_loc(str(self.get_date_from_iso8601_str(self.simstart_date)))
+                if self.simstartdate is not None:
+                    self.state.iterations = self.trading_data.index.get_loc(str(self.get_date_from_iso8601_str(self.simstartdate)))
 
                 self.app_started = False
 
@@ -288,16 +288,16 @@ class PyCryptoBot(BotConfig):
             if self.sim_smartswitch:
                 self.df_last = self.get_interval(df, self.state.iterations)
                 if len(self.df_last.index.format()) > 0:
-                    if self.simstart_date is not None:
-                        start_date = self.get_date_from_iso8601_str(self.simstart_date)
+                    if self.simstartdate is not None:
+                        start_date = self.get_date_from_iso8601_str(self.simstartdate)
                     else:
                         start_date = self.get_date_from_iso8601_str(str(df.head(1).index.format()[0]))
 
-                    if self.simend_date is not None:
-                        if self.simend_date == "now":
+                    if self.simenddate is not None:
+                        if self.simenddate == "now":
                             end_date = self.get_date_from_iso8601_str(str(datetime.now()))
                         else:
-                            end_date = self.get_date_from_iso8601_str(self.simend_date)
+                            end_date = self.get_date_from_iso8601_str(self.simenddate)
                     else:
                         end_date = self.get_date_from_iso8601_str(str(df.tail(1).index.format()[0]))
 
@@ -1586,10 +1586,10 @@ class PyCryptoBot(BotConfig):
             # initialise and start application
             self.initialise()
 
-            if self.is_sim and self.simend_date:
+            if self.is_sim and self.simenddate:
                 try:
-                    # if simend_date is set, then remove trailing data points
-                    self.trading_data = self.trading_data[self.trading_data["date"] <= self.simend_date]
+                    # if simenddate is set, then remove trailing data points
+                    self.trading_data = self.trading_data[self.trading_data["date"] <= self.simenddate]
                 except Exception:
                     pass
 
@@ -1679,7 +1679,7 @@ class PyCryptoBot(BotConfig):
 
         if banner and not self.is_sim or (self.is_sim and not self.simresultonly):
             self._generate_banner()
-            #  sys.exit()  # TODO: remove this
+            sys.exit()  # TODO: remove this
 
         self.app_started = True
         # run the first job immediately after starting
@@ -1687,23 +1687,23 @@ class PyCryptoBot(BotConfig):
             if self.sim_speed in ["fast-sample", "slow-sample"]:
                 attempts = 0
 
-                if self.simstart_date is not None and self.simend_date is not None:
-                    start_date = self.get_date_from_iso8601_str(self.simstart_date)
+                if self.simstartdate is not None and self.simenddate is not None:
+                    start_date = self.get_date_from_iso8601_str(self.simstartdate)
 
-                    if self.simend_date == "now":
+                    if self.simenddate == "now":
                         end_date = self.get_date_from_iso8601_str(str(datetime.now()))
                     else:
-                        end_date = self.get_date_from_iso8601_str(self.simend_date)
+                        end_date = self.get_date_from_iso8601_str(self.simenddate)
 
-                elif self.simstart_date is not None and self.simend_date is None:
-                    start_date = self.get_date_from_iso8601_str(self.simstart_date)
+                elif self.simstartdate is not None and self.simenddate is None:
+                    start_date = self.get_date_from_iso8601_str(self.simstartdate)
                     end_date = start_date + timedelta(minutes=(self.granularity.to_integer / 60) * self.adjusttotalperiods)
 
-                elif self.simend_date is not None and self.simstart_date is None:
-                    if self.simend_date == "now":
+                elif self.simenddate is not None and self.simstartdate is None:
+                    if self.simenddate == "now":
                         end_date = self.get_date_from_iso8601_str(str(datetime.now()))
                     else:
-                        end_date = self.get_date_from_iso8601_str(self.simend_date)
+                        end_date = self.get_date_from_iso8601_str(self.simenddate)
 
                     start_date = end_date - timedelta(minutes=(self.granularity.to_integer / 60) * self.adjusttotalperiods)
 
@@ -1740,8 +1740,8 @@ class PyCryptoBot(BotConfig):
                     attempts += 1
 
                 if self.extra_candles_found:
-                    self.simstart_date = str(start_date)
-                    self.simend_date = str(end_date)
+                    self.simstartdate = str(start_date)
+                    self.simenddate = str(end_date)
 
                 self.extra_candles_found = True
 
@@ -1756,7 +1756,7 @@ class PyCryptoBot(BotConfig):
                     end_date = str(end_date.isoformat())
                     text_box.line("Sampling start", str(start_date))
                     text_box.line("Sampling end", str(end_date))
-                    if self.simstart_date is None and len(self.trading_data) < self.adjusttotalperiods:
+                    if self.simstartdate is None and len(self.trading_data) < self.adjusttotalperiods:
                         text_box.center(f"WARNING: Using less than {str(self.adjusttotalperiods)} intervals")
                         text_box.line("Interval size", str(len(self.trading_data)))
                     text_box.doubleLine()
@@ -2131,6 +2131,9 @@ class PyCryptoBot(BotConfig):
         config_option_row_enum("Exchange", "exchange", "Crypto currency exchange", default_value=None, arg_name="exchange")
         config_option_row_str("Market", "market", "coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc.", break_below=False, default_value=None, arg_name="market")
         config_option_row_enum("Granularity", "granularity", "Granularity of the data", break_below=True, default_value="3600", arg_name="granularity")
+
+        config_option_row_str("Sim Start Date", "simstartdate", "Start date for sample simulation e.g '2021-01-15'", break_below=False, default_value=None, arg_name="simstartdate")
+        config_option_row_str("Sim End Date", "simenddate", "End date for sample simulation e.g '2021-01-15' or 'now'", break_below=True, default_value=None, arg_name="simenddate")
 
         config_option_row_bool(
             "Telegram Notifications",
@@ -2567,7 +2570,7 @@ class PyCryptoBot(BotConfig):
                 if self.extra_candles_found is False:
                     _notify(f"{str(self.exchange.value)} is not returning data for the requested start date.")
                     _notify(f"Switching to earliest start date: {str(result_df_cache.head(1).index.format()[0])}.")
-                    self.simstart_date = str(result_df_cache.head(1).index.format()[0])
+                    self.simstartdate = str(result_df_cache.head(1).index.format()[0])
 
             return result_df_cache.copy()
 
@@ -2599,7 +2602,7 @@ class PyCryptoBot(BotConfig):
                         text_box.center(f"{str(self.exchange.value)}is not returning data for the requested start date.")
                         text_box.center(f"Switching to earliest start date: {str(self.ema1226_5m_cache.head(1).index.format()[0])}")
                         text_box.singleLine()
-                        self.simstart_date = str(self.ema1226_5m_cache.head(1).index.format()[0])
+                        self.simstartdate = str(self.ema1226_5m_cache.head(1).index.format()[0])
                 elif granularity == Granularity.FIFTEEN_MINUTES:
                     if (
                         self.get_date_from_iso8601_str(str(self.ema1226_15m_cache.index.format()[0])).isoformat()
@@ -2610,7 +2613,7 @@ class PyCryptoBot(BotConfig):
                         text_box.center(f"{str(self.exchange.value)}is not returning data for the requested start date.")
                         text_box.center(f"Switching to earliest start date: {str(self.ema1226_15m_cache.head(1).index.format()[0])}")
                         text_box.singleLine()
-                        self.simstart_date = str(self.ema1226_15m_cache.head(1).index.format()[0])
+                        self.simstartdate = str(self.ema1226_15m_cache.head(1).index.format()[0])
                 else:
                     if (
                         self.get_date_from_iso8601_str(str(self.ema1226_1h_cache.index.format()[0])).isoformat()
@@ -2621,7 +2624,7 @@ class PyCryptoBot(BotConfig):
                         text_box.center(f"{str(self.exchange.value)} is not returning data for the requested start date.")
                         text_box.center(f"Switching to earliest start date: {str(self.ema1226_1h_cache.head(1).index.format()[0])}")
                         text_box.singleLine()
-                        self.simstart_date = str(self.ema1226_1h_cache.head(1).index.format()[0])
+                        self.simstartdate = str(self.ema1226_1h_cache.head(1).index.format()[0])
 
             if granularity == Granularity.FIFTEEN_MINUTES:
                 return self.ema1226_15m_cache

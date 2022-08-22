@@ -369,7 +369,7 @@ Upgrade library dependencies (if required):
 
 - update to smartswitch sim processing speed.
 - update to sim summary to include total margin and profit/loss.
-- fixed timestamp bug when using simstart_date.
+- fixed timestamp bug when using simstartdate.
 - fixed graphs in sim mode.
 - remove limit for sims using specific granularity.
 - fix for profit and loss summary for simulations

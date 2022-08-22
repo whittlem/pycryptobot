@@ -492,10 +492,10 @@ In order to trade live you need to authenticate with the Coinbase Pro or Binance
 ## Trading Simulation
 
     --sim ['fast, fast-sample, slow-sample']   Sets simulation mode
-    --simstart_date                             Start date for sample simulation e.g '2021-01-15'
-    --simend_date                               End date for sample simulation or 'now'
+    --simstartdate                             Start date for sample simulation e.g '2021-01-15'
+    --simenddate                               End date for sample simulation or 'now'
 
-`simstart_date` takes priority over `simend_date` if both are given
+`simstartdate` takes priority over `simenddate` if both are given
 
 ### Simulation trades.csv
 

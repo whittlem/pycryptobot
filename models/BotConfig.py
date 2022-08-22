@@ -39,8 +39,8 @@ class BotConfig:
         self.is_verbose = 0
         self.save_graphs = 0
         self.is_sim = 0
-        self.simstart_date = None
-        self.simend_date = None
+        self.simstartdate = None
+        self.simenddate = None
         self.sim_speed = "fast"
         self.sell_upper_pcnt = None
         self.sell_lower_pcnt = None
@@ -370,19 +370,7 @@ class BotConfig:
         # optional arguments
 
         parser.add_argument("--graphs", type=int, help="save graphs=1, do not save graphs=0")
-        parser.add_argument("--live", type=int, help="live=1, test=0")
 
-        parser.add_argument("--sim", type=str, help="simulation modes: fast, fast-sample, slow-sample")
-        parser.add_argument(
-            "--simstart_date",
-            type=str,
-            help="start date for sample simulation e.g '2021-01-15'",
-        )
-        parser.add_argument(
-            "--simend_date",
-            type=str,
-            help="end date for sample simulation e.g '2021-01-15' or 'now'",
-        )
         parser.add_argument(
             "--smartswitch",
             type=int,
@@ -438,9 +426,23 @@ class BotConfig:
 
         # TODO: arguments v2
 
+        parser.add_argument("--live", type=int, help="live=1, test=0")
+
         parser.add_argument("--exchange", type=str, help="'coinbasepro', 'binance', 'kucoin', 'dummy'")
         parser.add_argument("--market", type=str, help="coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc.")
         parser.add_argument("--granularity", type=str, help="coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6h,1d), kucoin: (1min,3min,5min,15min,30min,1hour,6hour,1day)")
+
+        parser.add_argument("--sim", type=str, help="Simulation modes: fast, fast-sample, slow-sample")
+        parser.add_argument(
+            "--simstartdate",
+            type=str,
+            help="Start date for sample simulation e.g '2021-01-15'",
+        )
+        parser.add_argument(
+            "--simenddate",
+            type=str,
+            help="End date for sample simulation e.g '2021-01-15' or 'now'",
+        )
 
         parser.add_argument("--telegram", type=int, help="Telegram notifications")
         parser.add_argument("--telegramtradesonly", type=int, help="Telegram trades notifications only")
