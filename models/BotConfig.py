@@ -364,91 +364,38 @@ class BotConfig:
         # instantiate the arguments parser
         parser = argparse.ArgumentParser(description="Python Crypto Bot using the Coinbase Pro or Binanace API")
 
-        # config builder
         parser.add_argument("--init", action="store_true", help="config.json configuration builder")
 
-        # optional arguments
-
-        parser.add_argument("--graphs", type=int, help="save graphs=1, do not save graphs=0")
-
-        parser.add_argument(
-            "--smartswitch",
-            type=int,
-            help="optionally smart switch between 1 hour and 15 minute intervals",
-        )
-        parser.add_argument("--verbose", type=int, help="verbose output=1, minimal output=0")
-        parser.add_argument(
-            "--config",
-            type=str,
-            help="Use the config file at the given location. e.g 'myconfig.json'",
-        )
-        parser.add_argument(
-            "--api_key_file",
-            type=str,
-            help="Use the API key file at the given location. e.g 'myapi.key'",
-        )
-        parser.add_argument(
-            "--logfile",
-            type=str,
-            help="Use the log file at the given location. e.g 'mymarket.log'",
-        )
-        parser.add_argument(
-            "--tradesfile",
-            type=str,
-            help="Path to file to log trades done during simulation. eg './trades/BTCBUSD-trades.csv",
-        )
-        parser.add_argument("--buypercent", type=int, help="percentage of quote currency to buy")
-        parser.add_argument("--sellpercent", type=int, help="percentage of base currency to sell")
-        parser.add_argument("--lastaction", type=str, help="optionally set the last action (BUY, SELL)")
-
-        parser.add_argument("--stats", action="store_true", help="display summary of completed trades")
-        parser.add_argument("--statgroup", nargs="+", help="add multiple currency pairs to merge stats")
-        parser.add_argument(
-            "--statstart_date",
-            type=str,
-            help="trades before this date are ignored in stats function e.g 2021-01-15",
-        )
-        parser.add_argument(
-            "--statdetail",
-            action="store_true",
-            help="display detail of completed transactions for a given market",
-        )
-        parser.add_argument(
-            "--simresultonly",
-            action="store_true",
-            help="show simulation result only",
-        )
-        parser.add_argument(
-            "--disablefailsafelowerpcnt",
-            action="store_true",
-            help="disable failsafe sell on 'selllowerpcnt'",
-        )
-
-        # TODO: arguments v2
-
-        parser.add_argument("--live", type=int, help="live=1, test=0")
+        parser.add_argument("--live", type=int, help="Live order execution")
+        parser.add_argument("--verbose", type=int, help="Verbose terminal output")
+        parser.add_argument("--graphs", type=int, help="Save graph images of trades")
 
         parser.add_argument("--exchange", type=str, help="'coinbasepro', 'binance', 'kucoin', 'dummy'")
         parser.add_argument("--market", type=str, help="coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc.")
         parser.add_argument("--granularity", type=str, help="coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6h,1d), kucoin: (1min,3min,5min,15min,30min,1hour,6hour,1day)")
 
+        parser.add_argument("--config", type=str, help="Use the config file at the given location. e.g 'myconfig.json'")
+        parser.add_argument("--api_key_file", type=str, help="Use the API key file at the given location. e.g 'myapi.key'")
+        parser.add_argument("--logfile", type=str, help="Use the log file at the given location. e.g 'mymarket.log'")
+        parser.add_argument("--tradesfile", type=str, help="Path to file to log trades done during simulation. eg './trades/BTCBUSD-trades.csv")
+
         parser.add_argument("--sim", type=str, help="Simulation modes: fast, fast-sample, slow-sample")
-        parser.add_argument(
-            "--simstartdate",
-            type=str,
-            help="Start date for sample simulation e.g '2021-01-15'",
-        )
-        parser.add_argument(
-            "--simenddate",
-            type=str,
-            help="End date for sample simulation e.g '2021-01-15' or 'now'",
-        )
+        parser.add_argument("--simstartdate", type=str, help="Start date for sample simulation e.g '2021-01-15'")
+        parser.add_argument("--simenddate", type=str, help="End date for sample simulation e.g '2021-01-15' or 'now'")
+        parser.add_argument("--simresultonly", action="store_true", help="show simulation result only")
 
         parser.add_argument("--telegram", type=int, help="Telegram notifications")
+        parser.add_argument("--telegrambotcontrol", type=int, help="Control your bot(s) with Telegram")
         parser.add_argument("--telegramtradesonly", type=int, help="Telegram trades notifications only")
         parser.add_argument("--telegramerrormsgs", type=int, help="Telegram error message notifications")
 
+        parser.add_argument("--stats", action="store_true", help="display summary of completed trades")
+        parser.add_argument("--statgroup", nargs="+", help="add multiple currency pairs to merge stats")
+        parser.add_argument("--statstart_date", type=str, help="trades before this date are ignored in stats function e.g 2021-01-15")
+        parser.add_argument("--statdetail", action="store_true", help="display detail of completed transactions for a given market")
+
         parser.add_argument("--log", type=int, help="Enable console logging")
+        parser.add_argument("--smartswitch", type=int, help="Smart switch between 1 hour and 15 minute intervals")
         parser.add_argument("--tradetracker", type=int, help="Enable trade order logging")
         parser.add_argument("--autorestart", type=int, help="Auto restart the bot in case of exception")
         parser.add_argument("--websocket", type=int, help="Enable websockets for data retrieval")
@@ -458,169 +405,54 @@ class BotConfig:
         parser.add_argument("--predictions", type=int, help="Enable AI / Machine Learning Predictions")
         parser.add_argument("--startmethod", type=str, help="Bot start method ('standard', 'telegram')")
         parser.add_argument("--recvwindow", type=int, help="Binance exchange API recvwindow, integer between 5000 and 60000")
+        parser.add_argument("--lastaction", type=str, help="Manually set the last action performed by the bot (BUY, SELL)")
+        parser.add_argument("--kucoincache", type=int, help="Enable the Kucoin cache")
 
-        parser.add_argument(
-            "--adjusttotalperiods",
-            type=int,
-            help="Adjust data points in historical trading data",
-        )
+        parser.add_argument("--adjusttotalperiods", type=int, help="Adjust data points in historical trading data")
 
-        parser.add_argument(
-            "--sellupperpcnt",
-            type=float,
-            help="Upper trade margin to sell",
-        )
-        parser.add_argument(
-            "--selllowerpcnt",
-            type=float,
-            help="Lower trade margin to sell",
-        )
-        parser.add_argument(
-            "--nosellminpcnt",
-            type=float,
-            help="Do not sell while trade margin is below this level",
-        )
-        parser.add_argument(
-            "--nosellmaxpcnt",
-            type=float,
-            help="Do not sell while trade margin is above this level",
-        )
+        parser.add_argument("--buypercent", type=int, help="percentage of quote currency to buy")
+        parser.add_argument("--sellpercent", type=int, help="percentage of base currency to sell")
 
-        parser.add_argument(
-            "--preventloss",
-            type=int,
-            help="Sell before margin is negative",
-        )
-        parser.add_argument(
-            "--preventlosstrigger",
-            type=float,
-            help="Margin that will trigger the prevent loss",
-        )
-        parser.add_argument(
-            "--preventlossmargin",
-            type=float,
-            help="Margin that will cause an immediate sell to prevent loss",
-        )
+        parser.add_argument("--sellupperpcnt", type=float, help="Upper trade margin to sell")
+        parser.add_argument("--selllowerpcnt", type=float, help="Lower trade margin to sell")
+        parser.add_argument("--nosellminpcnt", type=float, help="Do not sell while trade margin is below this level")
+        parser.add_argument("--nosellmaxpcnt", type=float, help="Do not sell while trade margin is above this level")
+
+        parser.add_argument("--preventloss", type=int, help="Sell before margin is negative")
+        parser.add_argument("--preventlosstrigger", type=float, help="Margin that will trigger the prevent loss")
+        parser.add_argument("--preventlossmargin", type=float, help="Margin that will cause an immediate sell to prevent loss")
         parser.add_argument("--sellatloss", type=int, help="Allow a sell if the profit margin is negative")
 
-        parser.add_argument(
-            "--bullonly",
-            type=int,
-            help="Only trade in a bull market SMA50 > SMA200",
-        )
+        parser.add_argument("--bullonly", type=int, help="Only trade in a bull market SMA50 > SMA200")
 
-        parser.add_argument(
-            "--sellatresistance",
-            type=int,
-            help="Sell if the price hits a resistance level",
-        )
-        parser.add_argument(
-            "--sellatfibonaccilow",
-            type=int,
-            help="Sell if the price hits a fibonacci lower level",
-        )
-        parser.add_argument(
-            "--profitbankreversal",
-            type=int,
-            help="Sell at candlestick strong reversal pattern",
-        )
+        parser.add_argument("--sellatresistance", type=int, help="Sell if the price hits a resistance level")
+        parser.add_argument("--sellatfibonaccilow", type=int, help="Sell if the price hits a fibonacci lower level")
+        parser.add_argument("--profitbankreversal", type=int, help="Sell at candlestick strong reversal pattern")
 
-        parser.add_argument(
-            "--trailingstoploss",
-            type=float,
-            help="Percentage below the trade margin high to sell",
-        )
-        parser.add_argument(
-            "--trailingstoplosstrigger",
-            type=float,
-            help="Trade margin percentage to enable the trailing stop loss",
-        )
-        parser.add_argument(
-            "--trailingsellpcnt",
-            type=float,
-            help="Percentage of decrease to wait before selling",
-        )
-        parser.add_argument(
-            "--trailingimmediatesell",
-            action="store_true",
-            help="Immediate sell if trailing sell percent is reached",
-        )
-        parser.add_argument(
-            "--trailingsellimmediatepcnt",
-            type=float,
-            help="Percentage of decrease used with a strong sell signal",
-        )
-        parser.add_argument(
-            "--trailingsellbailoutpcnt",
-            type=float,
-            help="Percentage of decrease to bailout, sell immediately",
-        )
+        parser.add_argument("--trailingstoploss", type=float, help="Percentage below the trade margin high to sell")
+        parser.add_argument("--trailingstoplosstrigger", type=float, help="Trade margin percentage to enable the trailing stop loss")
+        parser.add_argument("--trailingsellpcnt", type=float, help="Percentage of decrease to wait before selling")
+        parser.add_argument("--trailingimmediatesell", action="store_true", help="Immediate sell if trailing sell percent is reached")
+        parser.add_argument("--trailingsellimmediatepcnt", type=float, help="Percentage of decrease used with a strong sell signal")
+        parser.add_argument("--trailingsellbailoutpcnt", type=float, help="Percentage of decrease to bailout, sell immediately")
 
-        parser.add_argument(
-            "--dynamictsl",
-            type=int,
-            help="Dynamic Trailing Stop Loss (TSL)",
-        )
-        parser.add_argument(
-            "--tslmultiplier",
-            type=float,
-            help="Please refer to the detailed explanation in the README.md",
-        )
-        parser.add_argument(
-            "--tsltriggermultiplier",
-            type=float,
-            help="Please refer to the detailed explanation in the README.md",
-        )
-        parser.add_argument(
-            "--tslmaxpcnt",
-            type=float,
-            help="Please refer to the detailed explanation in the README.md",
-        )
+        parser.add_argument("--dynamictsl", type=int, help="Dynamic Trailing Stop Loss (TSL)")
+        parser.add_argument("--tslmultiplier", type=float, help="Please refer to the detailed explanation in the README.md")
+        parser.add_argument("--tsltriggermultiplier", type=float, help="Please refer to the detailed explanation in the README.md")
+        parser.add_argument("--tslmaxpcnt", type=float, help="Please refer to the detailed explanation in the README.md")
 
         parser.add_argument("--buymaxsize", type=float, help="Minimum buy order size in quote currency")
         parser.add_argument("--buyminsize", type=float, help="Maximum buy order size in quote currency")
-        parser.add_argument(
-            "--buylastsellsize",
-            type=int,
-            help="Next buy order will match last sell order",
-        )
-        parser.add_argument(
-            "--trailingbuypcnt",
-            type=float,
-            help="Percentage of increase to wait before buying",
-        )
-        parser.add_argument(
-            "--trailingimmediatebuy",
-            action="store_true",
-            help="Immediate buy if trailing buy percent is reached",
-        )
-        parser.add_argument(
-            "--trailingbuyimmediatepcnt",
-            type=float,
-            help="Percent of increase to trigger immediate buy",
-        )
-        parser.add_argument(
-            "--marketmultibuycheck",
-            action="store_true",
-            help="Additional check for market multiple buys",
-        )
+        parser.add_argument("--buylastsellsize", type=int, help="Next buy order will match last sell order")
+        parser.add_argument("--trailingbuypcnt", type=float, help="Percentage of increase to wait before buying")
+        parser.add_argument("--trailingimmediatebuy", action="store_true", help="Immediate buy if trailing buy percent is reached")
+        parser.add_argument("--trailingbuyimmediatepcnt", type=float, help="Percent of increase to trigger immediate buy")
+        parser.add_argument("--marketmultibuycheck", action="store_true", help="Additional check for market multiple buys")
 
-        parser.add_argument(
-            "--buynearhigh",
-            type=int,
-            help="Prevent the bot from buying at a recent high",
-        )
-        parser.add_argument(
-            "--buynearhighpcnt",
-            type=float,
-            help="Percentage from the range high to not buy",
-        )
+        parser.add_argument("--buynearhigh", type=int, help="Prevent the bot from buying at a recent high")
+        parser.add_argument("--buynearhighpcnt", type=float, help="Percentage from the range high to not buy")
 
-        parser.add_argument(
-            "--selltriggeroverride <0|1>",
-            action="store_true",
-            help="Override sell trigger if strong buy",
-        )
+        parser.add_argument("--selltriggeroverride", action="store_true", help="Override sell trigger if strong buy")
 
         parser.add_argument("--ema1226", type=int, help="Enable EMA12/EMA26 crossovers")
         parser.add_argument("--macdsignal", type=int, help="Enable MACD/Signal crossovers")

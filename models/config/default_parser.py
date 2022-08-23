@@ -22,117 +22,12 @@ def is_currency_valid(currency):
 
 
 def default_config_parse(app, config):
-    if "live" in config:
-        if isinstance(config["live"], int):
-            if config["live"] in [0, 1]:
-                app.is_live = config["live"]
-        else:
-            raise TypeError("live must be of type int")
-
-    if "verbose" in config:
-        if isinstance(config["verbose"], int):
-            if config["verbose"] in [0, 1]:
-                app.is_verbose = config["verbose"]
-        else:
-            raise TypeError("verbose must be of type int")
-
-    if "graphs" in config:
-        if isinstance(config["graphs"], int):
-            if config["graphs"] in [0, 1]:
-                app.save_graphs = config["graphs"]
-        else:
-            raise TypeError("graphs must be of type int")
-
-    if "sim" in config:
-        if isinstance(config["sim"], str):
-            if config["sim"] in ["slow", "fast"]:
-                app.is_live = 0
-                app.is_sim = 1
-                app.sim_speed = config["sim"]
-
-            if config["sim"] in ["slow-sample", "fast-sample"]:
-                app.is_live = 0
-                app.is_sim = 1
-                app.sim_speed = config["sim"]
-                if "simstartdate" in config:
-                    app.simstartdate = config["simstartdate"]
-                if "simenddate" in config:
-                    app.simenddate = config["simenddate"]
-        else:
-            raise TypeError("sim must be of type str")
-
-    if "stats" in config:
-        if isinstance(config["stats"], int):
-            if bool(config["stats"]):
-                app.stats = True
-                if "statgroup" in config:
-                    app.statgroup = config["statgroup"]
-                if "statstartdate" in config:
-                    app.statstartdate = config["statstartdate"]
-                if "statdetail" in config:
-                    app.statdetail = config["statdetail"]
-        else:
-            raise TypeError("stats must be of type int")
-
-    if "simresultonly" in config:
-        if isinstance(config["simresultonly"], int):
-            if bool(config["simresultonly"]):
-                app.simresultonly = True
-        else:
-            raise TypeError("simresultonly must be of type int")
-
-    if "enable_telegram_bot_control" in config:
-        if isinstance(config["enable_telegram_bot_control"], int):
-            if config["enable_telegram_bot_control"] in [0, 1]:
-                app.enable_telegram_bot_control = bool(config["enable_telegram_bot_control"])
-        else:
-            raise TypeError("enable_telegram_bot_control must be of type int")
-
-    if "smartswitch" in config:
-        if isinstance(config["smartswitch"], int):
-            if config["smartswitch"] in [0, 1]:
-                app.smart_switch = config["smartswitch"]
-                if app.smart_switch == 1:
-                    app.smart_switch = 1
-                else:
-                    app.smart_switch = 0
-        else:
-            raise TypeError("smartswitch must be of type int")
-
-    if "buypercent" in config:
-        if isinstance(config["buypercent"], int):
-            if config["buypercent"] > 0 and config["buypercent"] <= 100:
-                app.buypercent = config["buypercent"]
-        else:
-            raise TypeError("buypercent must be of type int")
-
-    if "sellpercent" in config:
-        if isinstance(config["sellpercent"], int):
-            if config["sellpercent"] > 0 and config["sellpercent"] <= 100:
-                app.sellpercent = config["sellpercent"]
-        else:
-            raise TypeError("sellpercent must be of type int")
-
-    if "lastaction" in config:
-        if isinstance(config["lastaction"], str):
-            if config["lastaction"] in ["BUY", "SELL"]:
-                app.last_action = config["lastaction"]
-        else:
-            raise TypeError("lastaction must be of type str")
-
-    if "granularity" in config and config["granularity"] is not None:
-        app.smart_switch = 0
-        if isinstance(config["granularity"], str) and not config["granularity"].isnumeric() is True:
-            app.granularity = Granularity.convert_to_enum(config["granularity"])
-        else:
-            app.granularity = Granularity.convert_to_enum(int(config["granularity"]))
-
-    if "usekucoincache" in config:
-        if isinstance(config["usekucoincache"], int):
-            if bool(config["usekucoincache"]):
-                app.usekucoincache = True
-        else:
-            raise TypeError("usekucoincache must be of type int")
+    """
+    Requirements for bot options:
+    - Update _generate_banner() in controllers/PyCryptoBot.py
+    - Update the command line arguments below
+    - Update the config parser in models/config/default_parser.py
+    """
 
     def config_option_int(
         option_name: str = None, option_default: int = 0, store_name: str = None, value_min: int = None, value_max: int = None
@@ -212,7 +107,7 @@ def default_config_parse(app, config):
     import sys
 
     def config_option_str(
-        option_name: str = None, option_default: str = "", store_name: str = None, valid_options: list = []
+        option_name: str = None, option_default: str = "", store_name: str = None, valid_options: list = [], disable_variable=None
     ) -> bool:
         if option_name is None or store_name is None:
             return False
@@ -224,6 +119,9 @@ def default_config_parse(app, config):
             if isinstance(config[option_name], str):
                 if config[option_name] in valid_options:
                     setattr(app, store_name, config[option_name])
+
+                    if disable_variable is not None:
+                        setattr(app, disable_variable, 0)
                 else:
                     raise TypeError(f"{option_name} is not a valid option")
             else:
@@ -260,16 +158,38 @@ def default_config_parse(app, config):
 
         return True
 
-    config_option_int(option_name="live", option_default=0, store_name="is_live", value_min=0, value_max=1)
+    # bespoke options with non-standard logic
 
+    if "granularity" in config and config["granularity"] is not None:
+        app.smart_switch = 0
+        if isinstance(config["granularity"], str) and not config["granularity"].isnumeric() is True:
+            app.granularity = Granularity.convert_to_enum(config["granularity"])
+        else:
+            app.granularity = Granularity.convert_to_enum(int(config["granularity"]))
+
+    # standard options
+
+    config_option_int(option_name="live", option_default=0, store_name="is_live", value_min=0, value_max=1)
+    config_option_int(option_name="verbose", option_default=0, store_name="is_verbose ", value_min=0, value_max=1)
+    config_option_int(option_name="graphs", option_default=0, store_name="save_graphs ", value_min=0, value_max=1)
+
+    config_option_str(option_name="sim", option_default=0, store_name="is_sim", valid_options=["slow", "fast", "slow-sample", "fast-sample"], disable_variable="is_live")
     config_option_date(option_name="simstartdate", option_default=None, store_name="simstartdate", date_format="%Y-%m-%d", allow_now=False)
     config_option_date(option_name="simenddate", option_default=None, store_name="simenddate", date_format="%Y-%m-%d", allow_now=True)
+    config_option_bool(option_name="simresultonly", option_default=False, store_name="simresultonly", store_invert=False)
 
     config_option_bool(option_name="telegram", option_default=False, store_name="disabletelegram", store_invert=True)
+    config_option_bool(option_name="telegrambotcontrol", option_default=False, store_name="enable_telegram_bot_control", store_invert=False)
     config_option_bool(option_name="telegramtradesonly", option_default=False, store_name="telegramtradesonly", store_invert=False)
     config_option_bool(option_name="telegramerrormsgs", option_default=False, store_name="disabletelegramerrormsgs", store_invert=True)
 
+    config_option_bool(option_name="stats", option_default=False, store_name="stats", store_invert=False)
+    config_option_bool(option_name="statgroup", option_default=False, store_name="statgroup", store_invert=False)
+    config_option_date(option_name="statstartdate", option_default=None, store_name="statstartdate", date_format="%Y-%m-%d", allow_now=False)
+    config_option_bool(option_name="statdetail", option_default=False, store_name="statdetail", store_invert=False)
+
     config_option_bool(option_name="log", option_default=True, store_name="disablelog", store_invert=True)
+    config_option_bool(option_name="smartswitch", option_default=False, store_name="smart_switch", store_invert=False)
     config_option_bool(option_name="tradetracker", option_default=False, store_name="disabletracker", store_invert=True)
     config_option_bool(option_name="autorestart", option_default=False, store_name="autorestart", store_invert=False)
     config_option_bool(option_name="websocket", option_default=False, store_name="websocket", store_invert=False)
@@ -279,8 +199,13 @@ def default_config_parse(app, config):
     config_option_bool(option_name="predictions", option_default=False, store_name="enableml", store_invert=False)
     config_option_str(option_name="startmethod", option_default="standard", store_name="startmethod", valid_options=["standard", "telegram"])
     config_option_int(option_name="recvwindow", option_default=5000, store_name="recv_window", value_min=5000, value_max=60000)
+    config_option_str(option_name="lastaction", option_default=None, store_name="last_action", valid_options=["BUY", "SELL"])
+    config_option_bool(option_name="kucoincache", option_default=False, store_name="usekucoincache", store_invert=False)
 
     config_option_int(option_name="adjusttotalperiods", option_default=300, store_name="adjusttotalperiods", value_min=200, value_max=500)
+
+    config_option_float(option_name="buypercent", option_default=100, store_name="buypercent", value_min=0, value_max=100)
+    config_option_float(option_name="sellpercent", option_default=100, store_name="sellpercent", value_min=0, value_max=100)
 
     config_option_float(option_name="sellupperpcnt", option_default=None, store_name="sell_upper_pcnt", value_min=0, value_max=100)
     config_option_float(option_name="selllowerpcnt", option_default=None, store_name="sell_lower_pcnt", value_min=-100, value_max=0)

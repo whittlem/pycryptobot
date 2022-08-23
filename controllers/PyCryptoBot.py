@@ -2000,6 +2000,13 @@ class PyCryptoBot(BotConfig):
                 Logger.error(f"Unable to save: {filename}", "critical")
 
     def _generate_banner(self) -> None:
+        """
+        Requirements for bot options:
+        - Update _generate_banner() in controllers/PyCryptoBot.py
+        - Update the command line arguments below
+        - Update the config parser in models/config/default_parser.py
+        """
+
         def config_option_row_int(
             item: str = None, store_name: str = None, description: str = None, break_below: bool = False, default_value: int = 0, arg_name: str = None
         ) -> bool:
