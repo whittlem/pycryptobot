@@ -2140,7 +2140,16 @@ class PyCryptoBot(BotConfig):
         config_option_row_enum("Granularity", "granularity", "Granularity of the data", break_below=True, default_value="3600", arg_name="granularity")
 
         config_option_row_str("Sim Start Date", "simstartdate", "Start date for sample simulation e.g '2021-01-15'", break_below=False, default_value=None, arg_name="simstartdate")
-        config_option_row_str("Sim End Date", "simenddate", "End date for sample simulation e.g '2021-01-15' or 'now'", break_below=True, default_value=None, arg_name="simenddate")
+        config_option_row_str("Sim End Date", "simenddate", "End date for sample simulation e.g '2021-01-15' or 'now'", break_below=False, default_value=None, arg_name="simenddate")
+        config_option_row_bool(
+            "Sim Results Only",
+            "simresultonly",
+            "Simulation returns only the results",
+            break_below=True,
+            store_invert=False,
+            default_value=False,
+            arg_name="simresultonly",
+        )
 
         config_option_row_bool(
             "Telegram Notifications",
@@ -2209,6 +2218,24 @@ class PyCryptoBot(BotConfig):
         )
         config_option_row_str(
             "Start Method", "startmethod", "Bot start method ('standard', 'telegram')", break_below=False, default_value="standard", arg_name="startmethod"
+        )
+        config_option_row_bool(
+            "Verbose Terminal Output",
+            "is_verbose",
+            "Enable verbose terminal output",
+            break_below=False,
+            store_invert=False,
+            default_value=False,
+            arg_name="verbose",
+        )
+        config_option_row_bool(
+            "Save Trading Graphs",
+            "save_graphs",
+            "Save graph images of trades",
+            break_below=False,
+            store_invert=False,
+            default_value=False,
+            arg_name="graphs",
         )
         config_option_row_float(
             "Binance recvWindow",

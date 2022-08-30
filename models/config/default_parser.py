@@ -169,9 +169,9 @@ def default_config_parse(app, config):
 
     # standard options
 
-    config_option_int(option_name="live", option_default=0, store_name="is_live", value_min=0, value_max=1)
-    config_option_int(option_name="verbose", option_default=0, store_name="is_verbose ", value_min=0, value_max=1)
-    config_option_int(option_name="graphs", option_default=0, store_name="save_graphs ", value_min=0, value_max=1)
+    config_option_bool(option_name="live", option_default=False, store_name="is_live", store_invert=False)
+    config_option_bool(option_name="verbose", option_default=False, store_name="is_verbose", store_invert=False)
+    config_option_bool(option_name="graphs", option_default=False, store_name="save_graphs", store_invert=False)
 
     config_option_str(option_name="sim", option_default=0, store_name="is_sim", valid_options=["slow", "fast", "slow-sample", "fast-sample"], disable_variable="is_live")
     config_option_date(option_name="simstartdate", option_default=None, store_name="simstartdate", date_format="%Y-%m-%d", allow_now=False)
