@@ -423,7 +423,7 @@ Note: the trailingsell function will sell if the self.price is within 10% of the
     --stats                             Display order profit and loss (P&L) report
     --autorestart                       Automatically restart the bot on error
     --sellatresistance                  Sells if the self.price reaches either resistance or Fibonacci band
-    --enable_telegram_bot_control          Enable bot control via Telegram
+    --telegrambotcontrol          Enable bot control via Telegram
     --sellsmartswitch                   Enables smart switching to 5 minute granularity after a buy is placed
     --enableinsufficientfundslogging    Stop insufficient fund errors from stopping the bot, instead log and continue
     --manual_trades_only                Enable Manual Trading Only for pairs you want to HODL and you don't want to trade automatically

@@ -743,7 +743,7 @@ class PyCryptoBot(BotConfig):
                 if self.state.action == "BUY":
                     immediate_action = True
 
-            if not self.is_sim and self.enable_telegram_bot_control:
+            if not self.is_sim and self.telegrambotcontrol:
                 manual_buy_sell = self.telegram_bot.check_manual_buy_sell()
                 if not manual_buy_sell == "WAIT":
                     self.state.action = manual_buy_sell
@@ -1679,7 +1679,6 @@ class PyCryptoBot(BotConfig):
 
         if banner and not self.is_sim or (self.is_sim and not self.simresultonly):
             self._generate_banner()
-            sys.exit()  # TODO: remove this
 
         self.app_started = True
         # run the first job immediately after starting
@@ -2171,11 +2170,25 @@ class PyCryptoBot(BotConfig):
             "Telegram Error Messages",
             "disabletelegramerrormsgs",
             "Telegram error message notifications",
-            break_below=True,
+            break_below=False,
             store_invert=True,
             default_value=False,
             arg_name="telegramerrormsgs",
         )
+        config_option_row_bool(
+            "Telegram Bot Control",
+            "telegrambotcontrol",
+            "Control your bot(s) with Telegram",
+            break_below=True,
+            store_invert=False,
+            default_value=False,
+            arg_name="telegrambotcontrol",
+        )
+
+        config_option_row_str("Config File", "config_file", "Use the config file at the given location", break_below=False, default_value="config.json", arg_name="configfile")
+        # config_option_row_str("API Key File", "api_key_file", "Use the API key file at the given location", break_below=False, default_value=None, arg_name="apikeyfile")
+        config_option_row_str("Log File", "logfile", "Use the log file at the given location", break_below=False, default_value="pycryptobot.log", arg_name="logfile")
+        config_option_row_str("Trades File", "tradesfile", "Use the simulation log trades at the given location", break_below=True, default_value="trades.csv", arg_name="tradesfile")
 
         config_option_row_bool("Enable Log", "disablelog", "Enable console logging", store_invert=True, default_value=True, arg_name="log")
         config_option_row_bool(

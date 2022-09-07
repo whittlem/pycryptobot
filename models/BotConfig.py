@@ -115,7 +115,7 @@ class BotConfig:
 
         self.enableinsufficientfundslogging = False
         self.insufficientfunds = False
-        self.enable_telegram_bot_control = False
+        self.telegrambotcontrol = False
         self.enableimmediatebuy = False
 
         self.telegramtradesonly = False

@@ -473,7 +473,7 @@ layout = (
                                                         },
                                                         {
                                                             "label": "Enable Telegram Control",
-                                                            "value": "enable_telegram_bot_control",
+                                                            "value": "telegrambotcontrol",
                                                         },
                                                         {
                                                             "label": "Websockets",

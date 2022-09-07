@@ -5,7 +5,7 @@ Once that is complete and working the following steps will get the Telegram Bot 
 
 1, install requirements (python3 -m pip install -r requirements.txt -U), if this is a new install/setup then you have probably already done this so can be skipped
 
-2, add "enable_telegram_bot_control" : 1 to config file
+2, add "telegrambotcontrol" : 1 to config file
 
 3, add "user_id":  "xxxxxx" to telegram section of config (this is your telegram userid message @myidbot if unsure)
 

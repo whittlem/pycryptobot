@@ -388,7 +388,7 @@ config.json
         "config": {
             "base_currency": "BTC",
             "quote_currency": "BUSD",
-            "enable_telegram_bot_control": 1,
+            "telegrambotcontrol": 1,
             "live": 1,
             "disablebullonly": 1,
             "sellupperpcnt": 5,

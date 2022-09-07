@@ -179,7 +179,7 @@ def default_config_parse(app, config):
     config_option_bool(option_name="simresultonly", option_default=False, store_name="simresultonly", store_invert=False)
 
     config_option_bool(option_name="telegram", option_default=False, store_name="disabletelegram", store_invert=True)
-    config_option_bool(option_name="telegrambotcontrol", option_default=False, store_name="enable_telegram_bot_control", store_invert=False)
+    config_option_bool(option_name="telegrambotcontrol", option_default=False, store_name="telegrambotcontrol", store_invert=False)
     config_option_bool(option_name="telegramtradesonly", option_default=False, store_name="telegramtradesonly", store_invert=False)
     config_option_bool(option_name="telegramerrormsgs", option_default=False, store_name="disabletelegramerrormsgs", store_invert=True)
 
