@@ -9,6 +9,6 @@ app = PyCryptoBot()
 df = app.get_historical_data(app.market, app.granularity, None)
 
 model = TechnicalAnalysis(df)
-model.add_atr(14)
+model.add_elder_ray_index()
 df = model.get_df()
 print(df)

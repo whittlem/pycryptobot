@@ -1980,6 +1980,8 @@ class PyCryptoBot(BotConfig):
         else:
             print("")  # blank line above table
             self.console_term.print(table)
+            if self.disablelog is False:
+                self.console_log.print(table)
             print("")  # blank line below table
 
         return simulation

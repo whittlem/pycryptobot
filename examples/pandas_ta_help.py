@@ -11,7 +11,9 @@ app = PyCryptoBot()
 df = app.get_historical_data(app.market, app.granularity, None)
 
 # help(ta)
-# help(ta.sma)
+help(ta.eri)
+
+sys.exit()
 
 # List Indicators
 df.ta.indicators()

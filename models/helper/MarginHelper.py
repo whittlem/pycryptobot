@@ -1,5 +1,6 @@
 """Financial margin functions"""
 
+from stat import UF_APPEND
 from models.helper.LogHelper import Logger
 
 
@@ -17,12 +18,15 @@ def calculate_margin(
     Calculate the margin for a given trade.
     """
 
+    debug = False
+
     PRECISION = 8
 
-    Logger.debug(f"buy_size: {buy_size}")  # buy_size is quote currency (before fees)
-    Logger.debug(f"buy_filled: {buy_filled}")  # buy_filled is base currency (after fees)
-    Logger.debug(f"buy_price: {buy_price}")  # buy_price is quote currency
-    Logger.debug(f"buy_fee: {buy_fee}")  # buy_fee is quote currency
+    if debug:
+        Logger.debug(f"buy_size: {buy_size}")  # buy_size is quote currency (before fees)
+        Logger.debug(f"buy_filled: {buy_filled}")  # buy_filled is base currency (after fees)
+        Logger.debug(f"buy_price: {buy_price}")  # buy_price is quote currency
+        Logger.debug(f"buy_fee: {buy_fee}")  # buy_fee is quote currency
 
     # sell_size is quote currency (before fees) - self.price * buy_filled
     sell_size = round((sell_percent / 100) * (sell_price * buy_filled), PRECISION)
@@ -45,11 +49,12 @@ def calculate_margin(
     # calculate margin
     margin = round((profit / buy_size) * 100, PRECISION)  # TODO: division by zero check
 
-    Logger.debug(f"sell_size: {sell_size}")  # sell_size is quote currency (before fees)
-    Logger.debug(f"sell_filled: {sell_filled}")  # sell_filled is quote currency (after fees)
-    Logger.debug(f"sell_price: {sell_price}")  # sell_price is quote currency
-    Logger.debug(f"sell_fee: {sell_fee}")  # sell_fee is quote currency
-    Logger.debug(f"profit: {profit}")
-    Logger.debug(f"margin: {margin}")
+    if debug:
+        Logger.debug(f"sell_size: {sell_size}")  # sell_size is quote currency (before fees)
+        Logger.debug(f"sell_filled: {sell_filled}")  # sell_filled is quote currency (after fees)
+        Logger.debug(f"sell_price: {sell_price}")  # sell_price is quote currency
+        Logger.debug(f"sell_fee: {sell_fee}")  # sell_fee is quote currency
+        Logger.debug(f"profit: {profit}")
+        Logger.debug(f"margin: {margin}")
 
     return margin, profit, sell_fee
