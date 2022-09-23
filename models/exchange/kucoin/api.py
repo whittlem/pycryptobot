@@ -1548,7 +1548,9 @@ class WebSocketClient(WebSocket):
                                 ]
                             ],
                         )
-                    self.candles = self.candles.append(df_new_candle)
+                    df_new_candle.index = df_new_candle["date"]
+                    self.candles = pd.concat([self.candles, df_new_candle])
+                    df_new_candle = None
                 else:
                     candle = self.candles[((self.candles["date"] == df["candle"].values[0]) & (self.candles["market"] == df["market"].values[0]))]
 

@@ -2,7 +2,11 @@ import os
 import sys
 import time
 import signal
-from models.exchange.binance import WebSocketClient as BWebSocketClient
+
+sys.path.insert(0, ".")
+
+from models.exchange.binance import WebSocketClient as BWebSocketClient  # noqa: E402
+from models.exchange.Granularity import Granularity  # noqa: E402
 
 
 def cls():
@@ -16,7 +20,7 @@ def signal_handler(signum, frame):
 
 
 try:
-    websocket = BWebSocketClient(["BTCUSDT"], "1m")
+    websocket = BWebSocketClient(["BTCUSDT"], Granularity.ONE_MINUTE)
     websocket.start()
     message_count = 0
     while True:
@@ -26,9 +30,17 @@ try:
                 print(f"Start time: {websocket.getStartTime()}")
                 print(f"Time elapsed: {websocket.time_elapsed} seconds")
                 print("\nMessageCount =", "%i \n" % websocket.message_count)
+
+                print("Ticker:")
                 print(websocket.tickers)
+                print("")
+
+                print("Candles:")
+                print(websocket.candles)
+                print("")
+
                 message_count = websocket.message_count
-                time.sleep(5)  # output every 5 seconds, websocket is realtime
+                time.sleep(1)  # output every 5 seconds, websocket is realtime
 
 # catches a keyboard break of app, exits gracefully
 except KeyboardInterrupt:

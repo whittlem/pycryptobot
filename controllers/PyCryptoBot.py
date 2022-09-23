@@ -1561,19 +1561,22 @@ class PyCryptoBot(BotConfig):
             if self.exchange == Exchange.COINBASEPRO:
                 message += "Coinbase Pro bot"
                 if self.websocket and not self.is_sim:
-                    print("Opening websocket to Coinbase Pro...")
+                    RichText.notify("Opening websocket to Coinbase Pro", self, "normal")
+                    print("")
                     self.websocket_connection = CWebSocketClient([self.market], self.granularity)
                     self.websocket_connection.start()
             elif self.exchange == Exchange.BINANCE:
                 message += "Binance bot"
                 if self.websocket and not self.is_sim:
-                    print("Opening websocket to Binance...")
+                    RichText.notify("Opening websocket to Binance", self, "normal")
+                    print("")
                     self.websocket_connection = BWebSocketClient([self.market], self.granularity)
                     self.websocket_connection.start()
             elif self.exchange == Exchange.KUCOIN:
                 message += "Kucoin bot"
                 if self.websocket and not self.is_sim:
-                    print("Opening websocket to Kucoin...")
+                    RichText.notify("Opening websocket to Kucoin", self, "normal")
+                    print("")
                     self.websocket_connection = KWebSocketClient([self.market], self.granularity)
                     self.websocket_connection.start()
 

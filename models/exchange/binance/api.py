@@ -1284,7 +1284,7 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                     columns=["date", "market", "price"],
                     data=[
                         [
-                            self.convert_time(msg["E"]),
+                            self.convert_time(msg["E"]) - timedelta(hours=1),
                             msg["s"],
                             msg["c"],
                         ]
@@ -1326,7 +1326,7 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                         ],
                         data=[
                             [
-                                self.convert_time(k["t"]),  # - timedelta(hours=1),
+                                self.convert_time(k["t"]) - timedelta(hours=1),
                                 msg["s"],
                                 k["i"],
                                 float(k["l"]),
@@ -1358,10 +1358,15 @@ class WebSocketClient(WebSocket, AuthAPIBase):
                             )
 
                     if k["i"] == self.granularity.to_short and k["x"] is True:
+                        try:
+                            self.candles.drop(index=str(self.tickers[self.tickers["market"] == msg["s"]].candle[0]), inplace=True)
+                        except KeyError:
+                            pass
+
                         # check if the current candle exists
                         candle_exists = ((self.candles["date"] == df["date"].values[0]) & (self.candles["market"] == df["market"].values[0])).any()
                         if not candle_exists:
-                            self.candles = pd.concat([self.candles, df])  # self.candles.append(df)
+                            self.candles = pd.concat([self.candles, df])
 
                         tsidx = pd.DatetimeIndex(pd.to_datetime(self.candles["date"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z"))
                         self.candles.set_index(tsidx, inplace=True)

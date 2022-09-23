@@ -5,7 +5,7 @@ import signal
 
 sys.path.insert(0, ".")
 
-from models.exchange.coinbase_pro import WebSocketClient as CWebSocketClient  # noqa: E402
+from models.exchange.kucoin import WebSocketClient as KWebSocketClient  # noqa: E402
 from models.exchange.Granularity import Granularity  # noqa: E402
 
 
@@ -20,7 +20,7 @@ def signal_handler(signum, frame):
 
 
 try:
-    websocket = CWebSocketClient(["BTC-USD"], Granularity.ONE_MINUTE)
+    websocket = KWebSocketClient(["BTC-USD"], Granularity.ONE_MINUTE)
     websocket.start()
     message_count = 0
     while True:
