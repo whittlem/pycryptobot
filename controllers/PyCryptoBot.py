@@ -186,7 +186,11 @@ class PyCryptoBot(BotConfig):
             # runs once at the start of a simulation
             if self.app_started:
                 if self.simstartdate is not None:
-                    self.state.iterations = self.trading_data.index.get_loc(str(self.get_date_from_iso8601_str(self.simstartdate)))
+                    try:
+                        self.state.iterations = self.trading_data.index.get_loc(str(self.get_date_from_iso8601_str(self.simstartdate)))
+                    except KeyError:
+                        RichText.notify("Simulation data is invalid, unable to locate interval using date key.", self, "error")
+                        sys.exit(0)
 
                 self.app_started = False
 
@@ -1136,7 +1140,6 @@ class PyCryptoBot(BotConfig):
                                     index=[0]
                                 ),
                             ],
-                            # ignore_index=True,
                         )
 
                         self.state.in_open_trade = True
@@ -1401,7 +1404,7 @@ class PyCryptoBot(BotConfig):
                                         "DF_High": df[df["date"] <= current_sim_date]["close"].max(),
                                         "DF_Low": df[df["date"] <= current_sim_date]["close"].min(),
                                     },
-                                    index=[0],
+                                    index=[0]
                                 ),
                             ],
                         )
@@ -1768,10 +1771,17 @@ class PyCryptoBot(BotConfig):
                 end_date = start_date
                 start_date = pd.Series(start_date).dt.round(freq="H")[0]
                 end_date = pd.Series(end_date).dt.round(freq="H")[0]
-                start_date -= timedelta(minutes=(self.granularity.to_integer / 60) * self.adjusttotalperiods)
 
-                if end_date.isoformat() > datetime.now().isoformat():
-                    end_date = datetime.now()
+                if self.is_sim and self.simstartdate:
+                    start_date = self.simstartdate
+                else:
+                    start_date -= timedelta(minutes=(self.granularity.to_integer / 60) * self.adjusttotalperiods)
+
+                if self.is_sim and self.simenddate:
+                    end_date = self.simenddate
+                else:
+                    if end_date.isoformat() > datetime.now().isoformat():
+                        end_date = datetime.now()
 
                 if self.smart_switch == 1:
                     self.trading_data = self.get_smart_switch_historical_data_chained(
