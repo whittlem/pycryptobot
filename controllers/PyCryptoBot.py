@@ -1133,10 +1133,10 @@ class PyCryptoBot(BotConfig):
                                         "DF_High": df[df["date"] <= current_sim_date]["close"].max(),
                                         "DF_Low": df[df["date"] <= current_sim_date]["close"].min(),
                                     },
-                                    index={0},
+                                    index=[0]
                                 ),
                             ],
-                            ignore_index=True,
+                            # ignore_index=True,
                         )
 
                         self.state.in_open_trade = True
@@ -1401,10 +1401,9 @@ class PyCryptoBot(BotConfig):
                                         "DF_High": df[df["date"] <= current_sim_date]["close"].max(),
                                         "DF_Low": df[df["date"] <= current_sim_date]["close"].min(),
                                     },
-                                    index={0},
+                                    index=[0],
                                 ),
                             ],
-                            ignore_index=True,
                         )
 
                         self.state.in_open_trade = False
