@@ -259,6 +259,10 @@ class AuthAPI(AuthAPIBase):
         else:
             maker_fee_rate = 0.001
             taker_fee_rate = 0.001
+        
+        if market in ["BTCAUD", "BTCBIDR", "BTCBRL", "BTCBUSD", "BTCEUR", "BTCGBP", "BTCRUB", "BTCTRY", "BTCTUSD", "BTCUAH", "BTCUSDC", "BTCUSDP", "BTCUSDT", "BUSDUSDT", "PAXBUSD", "SUSDUSDT", "USTBUSD", "USTUSDT"]:
+            maker_fee_rate = 0
+            taker_fee_rate = 0
 
         return pd.DataFrame(
             [
