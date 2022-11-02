@@ -36,7 +36,7 @@ def test_instantiate_authapi_with_api_key_error():
 def test_instantiate_authapi_with_api_secret_error():
     global app
     api_key = app.getAPIKey()
-    api_secret = "Ivalid"
+    api_secret = "Invalid"
     api_passphrase = app.getAPIPassphrase()
 
     with pytest.raises(SystemExit) as execinfo:
