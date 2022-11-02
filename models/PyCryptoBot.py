@@ -1048,7 +1048,7 @@ class PyCryptoBot(BotConfig):
                 self.getAPIURL(),
                 recv_window=self.recv_window,
             )
-            self.takerfee = api.getTakerFee()
+            self.takerfee = api.getTakerFee(self.getMarket())
             return self.takerfee
         elif self.exchange == Exchange.KUCOIN:
             api = KAuthAPI(
@@ -1079,7 +1079,7 @@ class PyCryptoBot(BotConfig):
                 self.getAPIURL(),
                 recv_window=self.recv_window,
             )
-            return api.getMakerFee()
+            return api.getMakerFee(self.getMarket())
         elif self.exchange == Exchange.KUCOIN:
             api = KAuthAPI(
                 self.getAPIKey(),
