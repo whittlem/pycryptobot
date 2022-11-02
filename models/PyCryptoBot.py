@@ -1027,7 +1027,7 @@ class PyCryptoBot(BotConfig):
         if self.isSimulation() is True and self.exchange == Exchange.COINBASEPRO:
             return 0.005  # default lowest fee tier
         elif self.isSimulation() is True and self.exchange == Exchange.BINANCE:
-            return 0.001  # default lowest fee tier
+            return 0  # default lowest fee tier
         elif self.isSimulation() is True and self.exchange == Exchange.KUCOIN:
             return 0.0015  # default lowest fee tier
         elif self.takerfee > -1:
