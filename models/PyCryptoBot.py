@@ -52,7 +52,7 @@ class PyCryptoBot(BotConfig):
             filename=self.config_file, exchange=self.exchange
         )
 
-    takerfee = 0.0
+    takerfee = -1
 
     extraCandlesFound = False
 
@@ -1030,7 +1030,7 @@ class PyCryptoBot(BotConfig):
             return 0.001  # default lowest fee tier
         elif self.isSimulation() is True and self.exchange == Exchange.KUCOIN:
             return 0.0015  # default lowest fee tier
-        elif self.takerfee > 0.0:
+        elif self.takerfee > -1:
             return self.takerfee
         elif self.exchange == Exchange.COINBASEPRO:
             api = CBAuthAPI(
