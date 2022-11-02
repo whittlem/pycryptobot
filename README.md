@@ -547,7 +547,7 @@ Binance only (new format)
             "api_key_file" : "binance.key",
             "config" : {
                 "base_currency" : "BTC",
-                "quote_currency" : "ZAR",
+                "quote_currency" : "GBP",
                 "granularity" : "1h",
                 "live" : 0,
                 "verbose" : 0
@@ -575,7 +575,7 @@ Coinbase Pro, Binance and Kucoin (new format)
             "api_key_file" : "binance.key",
             "config" : {
                 "base_currency" : "BTC",
-                "quote_currency" : "ZAR",
+                "quote_currency" : "GBP",
                 "granularity" : "1h",
                 "live" : 0,
                 "verbose" : 0
