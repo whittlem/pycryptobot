@@ -1796,7 +1796,7 @@ class PyCryptoBot(BotConfig):
                         self.market,
                         self.granularity,
                         self.get_date_from_iso8601_str(str(start_date)).isoformat(),
-                        end_date.isoformat(),
+                        self.get_date_from_iso8601_str(str(end_date)).isoformat(),
                     )
 
     def _simulation_summary(self) -> dict:
