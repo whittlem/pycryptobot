@@ -105,7 +105,7 @@ class TradingAccount:
                     self.app.api_key,
                     self.app.api_secret,
                     self.app.api_url,
-                    recv_window=self.app.get_recv_window,
+                    recv_window=self.app.recv_window,
                 )
                 # retrieve orders from live Binance account portfolio
                 self.orders = model.get_orders(market, action, status)
@@ -289,7 +289,7 @@ class TradingAccount:
                     self.app.api_key,
                     self.app.api_secret,
                     self.app.api_url,
-                    recv_window=self.app.get_recv_window,
+                    recv_window=self.app.recv_window,
                 )
                 df = model.get_account()
                 if isinstance(df, pd.DataFrame):
