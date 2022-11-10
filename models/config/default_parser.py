@@ -3,6 +3,7 @@ from enum import Enum
 from datetime import datetime
 from xmlrpc.client import Boolean
 
+from models.exchange.ExchangesEnum import Exchange
 from models.exchange.Granularity import Granularity
 
 
@@ -159,6 +160,27 @@ def default_config_parse(app, config):
         return True
 
     # bespoke options with non-standard logic
+
+    if "market" in config and config["market"] is not None:
+        if app.exchange == Exchange.BINANCE:
+            p = re.compile(r"^[0-9A-Z]{4,25}$")
+            if p.match(config["market"]):
+                app.market = config["market"]
+            else:
+                # default market for Binance
+                app.market = "BTCGBP"
+        else:
+            if app.exchange != Exchange.COINBASEPRO and app.exchange != Exchange.KUCOIN:
+                # default if no exchange set
+                app.exchange = Exchange.COINBASEPRO
+
+            # binance and kucoin
+            p = re.compile(r"^[0-9A-Z]{1,20}\-[1-9A-Z]{2,5}$")
+            if p.match(config["market"]):
+                app.market = config["market"]
+            else:
+                # default for coinbase pro and binance
+                app.market = "BTC-GBP"
 
     if "granularity" in config and config["granularity"] is not None:
         app.smart_switch = 0
