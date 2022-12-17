@@ -67,7 +67,7 @@ def test_instantiate_authapi_with_api_key_error():
 
 def test_instantiate_authapi_with_api_secret_error():
     global app
-    api_secret = "Ivalid"
+    api_secret = "Invalid"
 
     with pytest.raises(SystemExit) as execinfo:
         AuthAPI(app.api_key, api_secret)
