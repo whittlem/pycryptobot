@@ -5,9 +5,9 @@ name: Unit Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, beta ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, beta ]
 
 jobs:
   build:
@@ -23,7 +23,7 @@ jobs:
     - name: Find typos with codespell
       uses: codespell-project/actions-codespell@master
       with:
-        ignore_words_list: hist
+        ignore_words_list: hist,ZAR
         skip: "*.json,./tests/unit_tests/responses"
     - uses: actions/cache@v2
       with:
