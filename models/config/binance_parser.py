@@ -161,7 +161,7 @@ def parser(app, binance_config, args={}):
         app.market, app.base_currency, app.quote_currency = parse_market(config["market"])
 
     if app.base_currency != "" and app.quote_currency != "":
-        market = app.base_currency + app.quote_currency  # noqa: F841
+        app.market = app.base_currency + app.quote_currency  # noqa: F841
 
     if "use_sell_fee" in config:
-        use_sell_fee = config["use_sell_fee"]  # noqa: F841
+        app.use_sell_fee = config["use_sell_fee"]  # noqa: F841
