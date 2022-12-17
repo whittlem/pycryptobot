@@ -5,9 +5,9 @@ name: Unit Tests
 
 on:
   push:
-    branches: [ main, beta ]
+    branches: [ beta ]
   pull_request:
-    branches: [ main, beta ]
+    branches: [ beta ]
 
 jobs:
   build:
