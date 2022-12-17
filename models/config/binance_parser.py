@@ -77,8 +77,8 @@ def parser(app, binance_config, args={}):
             fh.close()
 
             if os.path.isfile("config.json") and os.path.isfile("binance.key"):
-                binance_config["api_key_file"] = binance_config.pop("api_key")
-                binance_config["api_key_file"] = "binance.key"
+                binance_config["app.api_key_file"] = binance_config.pop("api_key")
+                binance_config["app.api_key_file"] = "binance.key"
                 del binance_config["api_secret"]
 
                 # read 'binance' element from config.json
@@ -94,21 +94,21 @@ def parser(app, binance_config, args={}):
             else:
                 print("migration failed (io error)\n")
 
-        api_key_file = None
-        if "api_key_file" in args and args["api_key_file"] is not None:
-            api_key_file = args["api_key_file"]
-        elif "api_key_file" in binance_config:
-            api_key_file = binance_config["api_key_file"]
+        app.api_key_file = None
+        if "app.api_key_file" in args and args["app.api_key_file"] is not None:
+            app.api_key_file = args["app.api_key_file"]
+        elif "app.api_key_file" in binance_config:
+            app.api_key_file = binance_config["app.api_key_file"]
 
-        if api_key_file is not None:
+        if app.api_key_file is not None:
             try:
-                with open(api_key_file, "r") as f:
+                with open(app.api_key_file, "r") as f:
                     key = f.readline().strip()
                     secret = f.readline().strip()
                 binance_config["api_key"] = key
                 binance_config["api_secret"] = secret
             except Exception:
-                raise RuntimeError(f"Unable to read {api_key_file}")
+                raise RuntimeError(f"Unable to read {app.api_key_file}")
 
         if "api_key" in binance_config and "api_secret" in binance_config and "api_url" in binance_config:
             # validates the api key is syntactically correct
@@ -116,14 +116,14 @@ def parser(app, binance_config, args={}):
             if not p.match(binance_config["api_key"]):
                 raise TypeError("Binance API key is invalid")
 
-            api_key = binance_config["api_key"]  # noqa: F841
+            app.api_key = binance_config["api_key"]  # noqa: F841
 
             # validates the api secret is syntactically correct
             p = re.compile(r"^[A-z0-9]{64,64}$")
             if not p.match(binance_config["api_secret"]):
                 raise TypeError("Binance API secret is invalid")
 
-            api_secret = binance_config["api_secret"]  # noqa: F841
+            app.api_secret = binance_config["api_secret"]  # noqa: F841
 
             valid_urls = [
                 "https://api.binance.com/",
@@ -137,9 +137,9 @@ def parser(app, binance_config, args={}):
             if binance_config["api_url"] not in valid_urls:
                 raise ValueError("Binance API URL is invalid")
 
-            api_url = binance_config["api_url"]  # noqa: F841
-            base_currency = "BTC"
-            quote_currency = "GBP"
+            app.api_url = binance_config["api_url"]  # noqa: F841
+            app.base_currency = "BTC"
+            app.quote_currency = "GBP"
     else:
         binance_config = {}
 
@@ -150,19 +150,18 @@ def parser(app, binance_config, args={}):
     if "base_currency" in config and config["base_currency"] is not None:
         if not is_currency_valid(config["base_currency"]):
             raise TypeError("Base currency is invalid.")
-        base_currency = config["base_currency"]
+        app.base_currency = config["base_currency"]
 
     if "quote_currency" in config and config["quote_currency"] is not None:
         if not is_currency_valid(config["quote_currency"]):
             raise TypeError("Quote currency is invalid.")
-        quote_currency = config["quote_currency"]
+        app.quote_currency = config["quote_currency"]
 
     if "market" in config and config["market"] is not None:
-        market, base_currency, quote_currency = parse_market(config["market"])
+        app.market, app.base_currency, app.quote_currency = parse_market(config["market"])
 
-    if base_currency is not None and quote_currency is not None:
-        if base_currency != "" and quote_currency != "":
-            market = base_currency + quote_currency  # noqa: F841
+    if app.base_currency != "" and app.quote_currency != "":
+        market = app.base_currency + app.quote_currency  # noqa: F841
 
     if "use_sell_fee" in config:
         use_sell_fee = config["use_sell_fee"]  # noqa: F841
