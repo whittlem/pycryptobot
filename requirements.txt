@@ -21,3 +21,4 @@ dash-daq
 dash-bootstrap-components
 codespell
 rich
+regex
