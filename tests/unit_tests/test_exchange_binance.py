@@ -8,7 +8,7 @@ import pandas
 sys.path.append(".")
 # pylint: disable=import-error
 from models.exchange.ExchangesEnum import Exchange
-from models.PyCryptoBot import PyCryptoBot
+from controllers.PyCryptoBot import PyCryptoBot
 from models.exchange.binance import AuthAPI, PublicAPI
 
 app = PyCryptoBot(exchange=Exchange.BINANCE)
@@ -17,7 +17,7 @@ app = PyCryptoBot(exchange=Exchange.BINANCE)
 @responses.activate
 def test_api_v3_account1():
     #global app
-    api = AuthAPI(app.api_key, self.api_secret)
+    api = AuthAPI(app.api_key, app.api_secret)
 
     with open("tests/unit_tests/responses/account1.json") as fh:
         responses.add(
@@ -52,7 +52,7 @@ def test_api_v3_account1():
 
 def test_instantiate_authapi_without_error():
     global app
-    exchange = AuthAPI(app.api_key, self.api_secret)
+    exchange = AuthAPI(app.api_key, app.api_secret)
     assert type(exchange) is AuthAPI
 
 
@@ -61,7 +61,7 @@ def test_instantiate_authapi_with_api_key_error():
     api_key = "Invalid"
 
     with pytest.raises(SystemExit) as execinfo:
-        AuthAPI(api_key, self.api_secret)
+        AuthAPI(api_key, app.api_secret)
     assert str(execinfo.value) == "Binance API key is invalid"
 
 
@@ -79,7 +79,7 @@ def test_instantiate_authapi_with_api_url_error():
     api_url = "https://foo.com"
 
     with pytest.raises(ValueError) as execinfo:
-        AuthAPI(app.api_key, self.api_secret, api_url)
+        AuthAPI(app.api_key, app.api_secret, api_url)
     assert str(execinfo.value) == "Binance API URL is invalid"
 
 
@@ -92,7 +92,7 @@ def test_instantiate_publicapi_without_error():
 @responses.activate  # mocker response required
 def test_get_fees_with_market():
     global app
-    exchange = AuthAPI(app.api_key, self.api_secret)
+    exchange = AuthAPI(app.api_key, app.api_secret)
     assert type(exchange) is AuthAPI
 
     df = exchange.get_fees()
@@ -109,7 +109,7 @@ def test_get_fees_with_market():
 @responses.activate  # mocker response required
 def test_get_taker_fee_with_market():
     global app
-    exchange = AuthAPI(app.api_key, self.api_secret)
+    exchange = AuthAPI(app.api_key, app.api_secret)
     assert type(exchange) is AuthAPI
 
     fee = exchange.get_taker_fee()
@@ -121,7 +121,7 @@ def test_get_taker_fee_with_market():
 @responses.activate  # mocker response required
 def test_get_maker_fee_with_market():
     global app
-    exchange = AuthAPI(app.api_key, self.api_secret)
+    exchange = AuthAPI(app.api_key, app.api_secret)
     assert type(exchange) is AuthAPI
 
     fee = exchange.get_maker_fee()
@@ -133,7 +133,7 @@ def test_get_maker_fee_with_market():
 @responses.activate  # mocker response required
 def test_get_orders():
     global app
-    exchange = AuthAPI(app.api_key, self.api_secret)
+    exchange = AuthAPI(app.api_key, app.api_secret)
     assert type(exchange) is AuthAPI
 
     df = exchange.get_orders()
