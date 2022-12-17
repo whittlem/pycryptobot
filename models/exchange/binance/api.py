@@ -256,6 +256,30 @@ class AuthAPI(AuthAPIBase):
             maker_fee_rate = 0.001
             taker_fee_rate = 0.001
 
+        # https://www.binance.com/en/support/announcement/binance-launches-zero-fee-bitcoin-trading-10435147c55d4a40b64fcbf43cb46329
+        if market in [
+            "BTCAUD",
+            "BTCBIDR",
+            "BTCBRL",
+            "BTCBUSD",
+            "BTCEUR",
+            "BTCGBP",
+            "BTCRUB",
+            "BTCTRY",
+            "BTCTUSD",
+            "BTCUAH",
+            "BTCUSDC",
+            "BTCUSDP",
+            "BTCUSDT",
+            "BUSDUSDT",
+            "PAXBUSD",
+            "SUSDUSDT",
+            "USTBUSD",
+            "USTUSDT",
+        ]:
+            maker_fee_rate = 0
+            taker_fee_rate = 0
+
         return pd.DataFrame(
             [
                 {

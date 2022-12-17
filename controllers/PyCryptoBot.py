@@ -84,7 +84,7 @@ class PyCryptoBot(BotConfig):
         self.s = sched.scheduler(time.time, time.sleep)
 
         self.price = 0
-        self.takerfee = 0.0
+        self.takerfee = -1.0
         self.makerfee = 0.0
         self.account = None
         self.state = None
@@ -3050,10 +3050,10 @@ class PyCryptoBot(BotConfig):
         if self.is_sim and self.exchange == Exchange.COINBASEPRO:
             return 0.005  # default lowest fee tier
         elif self.is_sim and self.exchange == Exchange.BINANCE:
-            return 0.001  # default lowest fee tier
+            return 0.0  # default lowest fee tier
         elif self.is_sim and self.exchange == Exchange.KUCOIN:
             return 0.0015  # default lowest fee tier
-        elif self.takerfee > 0.0:
+        elif self.takerfee > -1.0:
             return self.takerfee
         elif self.exchange == Exchange.COINBASEPRO:
             api = CBAuthAPI(
@@ -3071,7 +3071,7 @@ class PyCryptoBot(BotConfig):
                 self.api_url,
                 recv_window=self.recv_window,
             )
-            self.takerfee = api.get_taker_fee()
+            self.takerfee = api.get_taker_fee(self.get_market())
             return self.takerfee
         elif self.exchange == Exchange.KUCOIN:
             api = KAuthAPI(
@@ -3102,7 +3102,7 @@ class PyCryptoBot(BotConfig):
                 self.api_url,
                 recv_window=self.recv_window,
             )
-            return api.get_maker_fee()
+            return api.get_maker_fee(self.get_market())
         elif self.exchange == Exchange.KUCOIN:
             api = KAuthAPI(
                 self.api_key,
