@@ -34,8 +34,8 @@ def parser(app, coinbase_config, args={}):
             fh.close()
 
             if os.path.isfile("config.json") and os.path.isfile("coinbasepro.key"):
-                coinbase_config["api_key_file"] = coinbase_config.pop("api_key")
-                coinbase_config["api_key_file"] = "coinbasepro.key"
+                coinbase_config["app.api_key_file"] = coinbase_config.pop("api_key")
+                coinbase_config["app.api_key_file"] = "coinbasepro.key"
                 del coinbase_config["api_secret"]
                 del coinbase_config["api_passphrase"]
 
@@ -50,15 +50,15 @@ def parser(app, coinbase_config, args={}):
                 fh.write(json.dumps(config_json, indent=4))
                 fh.close()
 
-        api_key_file = None
-        if "api_key_file" in args and args["api_key_file"] is not None:
-            api_key_file = args["api_key_file"]
-        elif "api_key_file" in coinbase_config:
-            api_key_file = coinbase_config["api_key_file"]
+        app.api_key_file = None
+        if "app.api_key_file" in args and args["app.api_key_file"] is not None:
+            app.api_key_file = args["app.api_key_file"]
+        elif "app.api_key_file" in coinbase_config:
+            app.api_key_file = coinbase_config["app.api_key_file"]
 
-        if api_key_file is not None:
+        if app.api_key_file is not None:
             try:
-                with open(api_key_file, "r") as f:
+                with open(app.api_key_file, "r") as f:
                     key = f.readline().strip()
                     secret = f.readline().strip()
                     password = f.readline().strip()
@@ -66,7 +66,7 @@ def parser(app, coinbase_config, args={}):
                 coinbase_config["api_secret"] = secret
                 coinbase_config["api_passphrase"] = password
             except Exception:
-                raise RuntimeError(f"Unable to read {api_key_file}")
+                raise RuntimeError(f"Unable to read {app.api_key_file}")
 
         if "api_key" in coinbase_config and "api_secret" in coinbase_config and "api_passphrase" in coinbase_config and "api_url" in coinbase_config:
 
