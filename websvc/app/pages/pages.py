@@ -96,7 +96,7 @@ class Pages:
             html = ""
 
             api = BPublicAPI()
-            resp = api.markets24HrStats()
+            resp = api.get_markets_24hr_stats()
             for market in resp:
                 if market["lastPrice"] > market["openPrice"]:
                     html += f"""
@@ -171,7 +171,7 @@ class Pages:
             html = ""
 
             api = CPublicAPI()
-            resp = api.markets24HrStats()
+            resp = api.get_markets_24hr_stats()
             for market in resp:
                 stats_30day_volume = 0
                 if "stats_30day" in resp[market]:
@@ -342,33 +342,6 @@ class Pages:
             rsi14_6h_class = "table-success"
             rsi14_6h_desc = "Oversold (Buy)"
 
-        stochrsi14_15m_class = "table-normal"
-        stochrsi14_15m_desc = "Uneventful"
-        if df_6h_last["stochrsi14"].values[0] > 0.8:
-            stochrsi14_6h_class = "table-danger"
-            stochrsi14_6h_desc = "Overbought (Sell)"
-        elif df_6h_last["stochrsi14"].values[0] < 0.2:
-            stochrsi14_6h_class = "table-success"
-            stochrsi14_6h_desc = "Oversold (Buy)"
-
-        stochrsi14_1h_class = "table-normal"
-        stochrsi14_1h_desc = "Uneventful"
-        if df_1h_last["stochrsi14"].values[0] > 0.8:
-            stochrsi14_1h_class = "table-danger"
-            stochrsi14_1h_desc = "Overbought (Sell)"
-        elif df_1h_last["stochrsi14"].values[0] < 0.2:
-            stochrsi14_1h_class = "table-success"
-            stochrsi14_1h_desc = "Oversold (Buy)"
-
-        stochrsi14_6h_class = "table-normal"
-        stochrsi14_6h_desc = "Uneventful"
-        if df_6h_last["stochrsi14"].values[0] > 0.8:
-            stochrsi14_6h_class = "table-danger"
-            stochrsi14_6h_desc = "Overbought (Sell)"
-        elif df_6h_last["stochrsi14"].values[0] < 0.2:
-            stochrsi14_6h_class = "table-success"
-            stochrsi14_6h_desc = "Oversold (Buy)"
-
         williamsr14_15m_class = "table-normal"
         williamsr14_15m_desc = "Uneventful"
         if df_15m_last["williamsr14"].values[0] > -20:
@@ -491,7 +464,7 @@ class Pages:
                 arima_pred_rows = arima_pred.iloc[1::2]
 
             html = ""
-            for index, pred in arima_pred_rows.iteritems():
+            for index, pred in arima_pred_rows.items():
                 html += f"""
                 <tbody>
                     <tr class={'table-success' if pred >= ticker[1] else 'table-danger'}>
@@ -677,51 +650,6 @@ class Pages:
                             <tr class="{rsi14_6h_class}">
                                 <td>{'%.08f' % round(df_6h_last['rsi14'].values[0], 8)}</td>
                                 <td>{rsi14_6h_desc}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-sm">
-                    <table class="table table-sm table-light table-hover table-striped">
-                        <thead>
-                            <th scope="col" style="width: 50%">StochRSI14</th>
-                            <th scope="col" style="width: 50%">Status</th>
-                        </thead>
-                        <tbody>
-                            <tr class="{stochrsi14_15m_class}">
-                                <td>{'%.08f' % round(df_15m_last['stochrsi14'].values[0], 8)}</td>
-                                <td>{stochrsi14_15m_desc}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="col-sm">
-                    <table class="table table-sm table-light table-hover table-striped">
-                        <thead>
-                            <th scope="col" style="width: 50%">StochRSI14</th>
-                            <th scope="col" style="width: 50%">Status</th>
-                        </thead>
-                        <tbody>
-                            <tr class="{stochrsi14_1h_class}">
-                                <td>{'%.08f' % round(df_1h_last['stochrsi14'].values[0], 8)}</td>
-                                <td>{stochrsi14_1h_desc}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="col-sm">
-                    <table class="table table-sm table-light table-hover table-striped">
-                        <thead>
-                            <th scope="col" style="width: 50%">StochRSI14</th>
-                            <th scope="col" style="width: 50%">Status</th>
-                        </thead>
-                        <tbody>
-                            <tr class="{stochrsi14_6h_class}">
-                                <td>{'%.08f' % round(df_6h_last['stochrsi14'].values[0], 8)}</td>
-                                <td>{stochrsi14_6h_desc}</td>
                             </tr>
                         </tbody>
                     </table>

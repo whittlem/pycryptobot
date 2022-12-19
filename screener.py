@@ -121,7 +121,7 @@ def get_markets(app, quote_currency):
     markets = []
     quote_currency = quote_currency.upper()
     api = app.public_api
-    resp = api.markets24HrStats()
+    resp = api.get_markets_24hr_stats()
     if app.exchange == CryptoExchange.BINANCE:
         for row in resp:
             if row["symbol"].endswith(quote_currency):

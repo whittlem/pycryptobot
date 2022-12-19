@@ -1,4 +1,3 @@
-import sys
 from flask import Flask, send_from_directory
 from models.exchange.Granularity import Granularity
 from websvc.app.pages import Pages

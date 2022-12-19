@@ -1448,7 +1448,7 @@ class PyCryptoBot(BotConfig):
                 self.notify_telegram(indicatorvalues)
 
             # summary at the end of the simulation
-            if not self.is_live and self.state.iterations == len(df):
+            if self.is_sim and self.state.iterations == len(df):
                 self._simulation_summary()
                 self._simulation_save_orders()
 

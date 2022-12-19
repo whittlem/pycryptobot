@@ -74,7 +74,7 @@ for exchange in config:
         print("Processing, please wait...")
 
         ROW = 1
-        for market, data in df_markets.T.iteritems():
+        for market, data in df_markets.T.items():
             print(f"[{ROW}/{len(df_markets)}] {market} {round((ROW/len(df_markets))*100, 2)}%")
             try:
                 if int(data["volume"]) > 0:

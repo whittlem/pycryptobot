@@ -694,11 +694,13 @@ class PublicAPI(AuthAPIBase):
             raise TypeError("Coinbase Pro market required.")
 
         # validates granularity is an integer
-        if not isinstance(granularity.to_integer, int):
+        if isinstance(granularity, Granularity) and not isinstance(granularity.to_integer, int):
             raise TypeError("Granularity integer required.")
 
         # validates the granularity is supported by Coinbase Pro
-        if granularity.to_integer not in SUPPORTED_GRANULARITY:
+        if isinstance(granularity, Granularity) and (granularity.to_integer not in SUPPORTED_GRANULARITY):
+            raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
+        elif isinstance(granularity, int) and (granularity not in SUPPORTED_GRANULARITY):
             raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
 
         # validates the ISO 8601 start date is a string (if provided)
@@ -723,17 +725,32 @@ class PublicAPI(AuthAPIBase):
             trycnt += 1
             try:
                 if iso8601start != "" and iso8601end == "":
-                    resp = self.auth_api(
-                        "GET",
-                        f"products/{market}/candles?granularity={granularity.to_integer}&start={iso8601start}",
-                    )
+                    if isinstance(granularity, Granularity):
+                        resp = self.auth_api(
+                            "GET",
+                            f"products/{market}/candles?granularity={granularity.to_integer}&start={iso8601start}",
+                        )
+                    else:
+                        resp = self.auth_api(
+                            "GET",
+                            f"products/{market}/candles?granularity={granularity}&start={iso8601start}",
+                        )
                 elif iso8601start != "" and iso8601end != "":
-                    resp = self.auth_api(
-                        "GET",
-                        f"products/{market}/candles?granularity={granularity.to_integer}&start={iso8601start}&end={iso8601end}",
-                    )
+                    if isinstance(granularity, Granularity):
+                        resp = self.auth_api(
+                            "GET",
+                            f"products/{market}/candles?granularity={granularity.to_integer}&start={iso8601start}&end={iso8601end}",
+                        )
+                    else:
+                        resp = self.auth_api(
+                            "GET",
+                            f"products/{market}/candles?granularity={granularity}&start={iso8601start}&end={iso8601end}",
+                        )
                 else:
-                    resp = self.auth_api("GET", f"products/{market}/candles?granularity={granularity.to_integer}")
+                    if isinstance(granularity, Granularity):
+                        resp = self.auth_api("GET", f"products/{market}/candles?granularity={granularity.to_integer}")
+                    else:
+                        resp = self.auth_api("GET", f"products/{market}/candles?granularity={granularity}")
 
                 if len(resp) > 0:
                     # convert the API response into a Pandas DataFrame
@@ -742,7 +759,10 @@ class PublicAPI(AuthAPIBase):
                     df = df.iloc[::-1].reset_index()
 
                     try:
-                        freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity.to_integer)]
+                        if isinstance(granularity, Granularity):
+                            freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity.to_integer)]
+                        else:
+                            freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity)]
                     except Exception:
                         freq = "D"
 
@@ -765,7 +785,10 @@ class PublicAPI(AuthAPIBase):
                         df["date"] = tsidx
 
                     df["market"] = market
-                    df["granularity"] = granularity.to_integer
+                    if isinstance(granularity, Granularity):
+                        df["granularity"] = granularity.to_integer
+                    else:
+                        df["granularity"] = granularity
 
                     # re-order columns
                     df = df[

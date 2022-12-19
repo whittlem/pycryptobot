@@ -54,4 +54,4 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", http_port))
 
     # pyright: reportUndefinedVariable=false
-    self.run(host=http_host, port=port, debug=args.debug)  # noqa: F821
+    app.run(host=http_host, port=port, debug=args.debug)  # noqa: F821

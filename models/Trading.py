@@ -22,6 +22,7 @@ from datetime import datetime, timedelta
 from statsmodels.tsa.statespace.sarimax import SARIMAX, SARIMAXResultsWrapper
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
 from models.helper.LogHelper import Logger
+from views.PyCryptoBot import RichText
 
 warnings.simplefilter("ignore", ConvergenceWarning)
 
@@ -932,11 +933,11 @@ class TechnicalAnalysis:
             if len(df) > 0:
                 df_last = df.tail(1)
                 if float(df_last[0]) < price:
-                    Logger.info(f" Support level of {str(df_last[0])} formed at {str(df_last.index[0])}")
+                    RichText.notify(f"Support level of {str(df_last[0])} formed at {str(df_last.index[0])}", None, "normal")
                 elif float(df_last[0]) > price:
-                    Logger.info(f" Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}")
+                    RichText.notify(f"Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}", None, "normal")
                 else:
-                    Logger.info(f" Support/Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}")
+                    RichText.notify(f"Support/Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}", None, "normal")
 
     def get_resistance(self, price: float = 0) -> float:
         if isinstance(price, int) or isinstance(price, float):
