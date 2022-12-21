@@ -1191,18 +1191,18 @@ class TechnicalAnalysis:
         # add the support levels to the DataFrame
         return Series(levels_ts)
 
-    def print_support_resistance_levels(self, price: float = 0) -> None:
+    def print_support_resistance_levels(self, price: float = 0, app: object = None) -> None:
         if isinstance(self.price, int) or isinstance(self.price, float):
             df = self.get_support_resistance_levels()
 
             if len(df) > 0:
                 df_last = df.tail(1)
                 if float(df_last[0]) < price:
-                    RichText.notify(f"Support level of {str(df_last[0])} formed at {str(df_last.index[0])}", None, "normal")
+                    RichText.notify(f"Support level of {str(df_last[0])} formed at {str(df_last.index[0])}", app, "normal")
                 elif float(df_last[0]) > price:
-                    RichText.notify(f"Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}", None, "normal")
+                    RichText.notify(f"Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}", app, "normal")
                 else:
-                    RichText.notify(f"Support/Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}", None, "normal")
+                    RichText.notify(f"Support/Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}", app, "normal")
 
     def get_resistance(self, price: float = 0) -> float:
         if isinstance(self.price, int) or isinstance(self.price, float):
