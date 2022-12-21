@@ -1100,7 +1100,7 @@ class PyCryptoBot(BotConfig):
 
                             if not self.is_sim:
                                 _notify(f"Fibonacci Retracement Levels: {str(bands)}")
-                                _technical_analysis.print_support_resistance_levels(float(self.price))
+                                _technical_analysis.print_support_resistance_levels(float(self.price), self)
 
                             if len(bands) >= 1 and len(bands) <= 2:
                                 if len(bands) == 1:
@@ -1137,7 +1137,7 @@ class PyCryptoBot(BotConfig):
                                         "DF_High": df[df["date"] <= current_sim_date]["close"].max(),
                                         "DF_Low": df[df["date"] <= current_sim_date]["close"].min(),
                                     },
-                                    index=[0]
+                                    index=[0],
                                 ),
                             ],
                         )
@@ -1404,7 +1404,7 @@ class PyCryptoBot(BotConfig):
                                         "DF_High": df[df["date"] <= current_sim_date]["close"].max(),
                                         "DF_Low": df[df["date"] <= current_sim_date]["close"].min(),
                                     },
-                                    index=[0]
+                                    index=[0],
                                 ),
                             ],
                         )
@@ -2149,11 +2149,27 @@ class PyCryptoBot(BotConfig):
         table.add_row("", "", "")
 
         config_option_row_enum("Exchange", "exchange", "Crypto currency exchange", default_value=None, arg_name="exchange")
-        config_option_row_str("Market", "market", "coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc.", break_below=False, default_value=None, arg_name="market")
+        config_option_row_str(
+            "Market", "market", "coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc.", break_below=False, default_value=None, arg_name="market"
+        )
         config_option_row_enum("Granularity", "granularity", "Granularity of the data", break_below=True, default_value="3600", arg_name="granularity")
 
-        config_option_row_str("Sim Start Date", "simstartdate", "Start date for sample simulation e.g '2021-01-15'", break_below=False, default_value=None, arg_name="simstartdate")
-        config_option_row_str("Sim End Date", "simenddate", "End date for sample simulation e.g '2021-01-15' or 'now'", break_below=False, default_value=None, arg_name="simenddate")
+        config_option_row_str(
+            "Sim Start Date",
+            "simstartdate",
+            "Start date for sample simulation e.g '2021-01-15'",
+            break_below=False,
+            default_value=None,
+            arg_name="simstartdate",
+        )
+        config_option_row_str(
+            "Sim End Date",
+            "simenddate",
+            "End date for sample simulation e.g '2021-01-15' or 'now'",
+            break_below=False,
+            default_value=None,
+            arg_name="simenddate",
+        )
         config_option_row_bool(
             "Sim Results Only",
             "simresultonly",
@@ -2199,10 +2215,21 @@ class PyCryptoBot(BotConfig):
             arg_name="telegrambotcontrol",
         )
 
-        config_option_row_str("Config File", "config_file", "Use the config file at the given location", break_below=False, default_value="config.json", arg_name="configfile")
+        config_option_row_str(
+            "Config File", "config_file", "Use the config file at the given location", break_below=False, default_value="config.json", arg_name="configfile"
+        )
         # config_option_row_str("API Key File", "api_key_file", "Use the API key file at the given location", break_below=False, default_value=None, arg_name="apikeyfile")
-        config_option_row_str("Log File", "logfile", "Use the log file at the given location", break_below=False, default_value="pycryptobot.log", arg_name="logfile")
-        config_option_row_str("Trades File", "tradesfile", "Use the simulation log trades at the given location", break_below=True, default_value="trades.csv", arg_name="tradesfile")
+        config_option_row_str(
+            "Log File", "logfile", "Use the log file at the given location", break_below=False, default_value="pycryptobot.log", arg_name="logfile"
+        )
+        config_option_row_str(
+            "Trades File",
+            "tradesfile",
+            "Use the simulation log trades at the given location",
+            break_below=True,
+            default_value="trades.csv",
+            arg_name="tradesfile",
+        )
 
         config_option_row_bool("Enable Log", "disablelog", "Enable console logging", store_invert=True, default_value=True, arg_name="log")
         config_option_row_bool(

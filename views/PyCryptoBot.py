@@ -7,6 +7,9 @@ from datetime import datetime
 class RichText:
     @staticmethod
     def notify(notification: str = "", app: object = None, level: str = "normal") -> None:
+        if app is None:
+            raise TypeError("app is None")
+
         if notification == "":
             return
 
