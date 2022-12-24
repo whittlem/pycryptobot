@@ -2,24 +2,16 @@ name: WebSvc Container
 
 on:
   push:
-    # Publish `main` as Docker `latest` image.
     branches:
       - main
-      # - beta 
-      # - '*docker*'
-
-    # Publish `v1.2.3` tags as releases.
     tags:
-      - '**' # All tags kick off a new container build Save history ad 5.0.x etc
-
-  # Run tests for any PRs.
+      - '**'
   pull_request:
-
-  # Manual runs
   workflow_dispatch:
 
 env:
   IMAGE_NAME: pycryptobot-websvc
+  DOCKER_FILE: Dockerfile-websvc
   DOCKER_BUILDKIT: 1
   PLATFORM: linux/arm/v6,linux/arm/v7,linux/arm64,linux/amd64
 
@@ -52,7 +44,7 @@ jobs:
       - name: Log into registry
         run: echo "${{ secrets.PACKAGE_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       
-      - name: Create Tags 
+      - name: Create tags 
         id: tags
         run: |
           IMAGE_ID=ghcr.io/${{ github.repository }}/$IMAGE_NAME
@@ -63,9 +55,9 @@ jobs:
           # Use Docker `latest` tag convention
           [ "$VERSION" == "main" ] && VERSION=latest
           echo IMAGE_ID=$IMAGE_ID
+          echo "IMAGE_ID=$IMAGE_ID" >> $GITHUB_OUTPUT
           echo VERSION=$VERSION
-          echo "::set-output name=IMAGE_ID::$IMAGE_ID"
-          echo "::set-output name=VERSION::$VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
       - name: Generate Docker Metadata
         id: meta
         uses: docker/metadata-action@v3
@@ -79,7 +71,7 @@ jobs:
           context: .
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
-          file: Dockerfile-websvc
+          file: ${{ env.DOCKER_FILE }}
           platforms: ${{ env.PLATFORM }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
