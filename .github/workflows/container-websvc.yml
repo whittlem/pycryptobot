@@ -45,11 +45,13 @@ jobs:
         run: |
           IMAGE_ID=ghcr.io/${{ github.repository }}/$IMAGE_NAME
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-          echo "::set-output name=IMAGE_ID::$IMAGE_ID"
+          # echo "::set-output name=IMAGE_ID::$IMAGE_ID"
+          echo "IMAGE_ID=$IMAGE_ID" >> $GITHUB_OUTPUT
 
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
           [ "$VERSION" == "main" ] && VERSION=latest
-          echo "::set-output name=VERSION::$VERSION"
+          # echo "::set-output name=VERSION::$VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           
       - name: Generate Docker metadata
         id: meta
