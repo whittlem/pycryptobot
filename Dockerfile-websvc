@@ -16,7 +16,7 @@ RUN pip config --user set global.extra-index-url https://www.piwheels.org/simple
 COPY requirements.txt .
 
 RUN python -m pip install --no-cache-dir -U pip && \
-    python3 -m pip install --no-cache-dir -r requirements.txt
+    python3 -m pip install --no-cache-dir -r requirements-docker.txt
 
 COPY . /app
 
