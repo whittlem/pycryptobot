@@ -483,7 +483,7 @@ class Pages:
             <h4 class="text-center">{exchange_name} - {market}</h4>
 
             <h6 class="text-center">Last update: {ticker[0]}</h6>
-            <h6 class="text-center">Closing self.price: {'%.08f' % ticker[1]}</h6>
+            <h6 class="text-center">Closing price: {'%.08f' % ticker[1]}</h6>
 
             <br />
             <h5 class="text-center">Moving Averages</h5>
