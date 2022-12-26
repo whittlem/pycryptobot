@@ -13,10 +13,10 @@ ENV PATH="/app/bin:$PATH"
 
 RUN pip config --user set global.extra-index-url https://www.piwheels.org/simple
 
-COPY requirements.txt .
+COPY requirements-docker.txt .
 
 RUN python -m pip install --no-cache-dir -U pip && \
-    python3 -m pip install --no-cache-dir -r requirements.txt
+    python3 -m pip install --no-cache-dir -r requirements-docker.txt
 
 COPY . /app
 
@@ -29,7 +29,7 @@ LABEL org.opencontainers.image.source https://github.com/${REPO}
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install --no-install-recommends -y \
     libatlas3-base libfreetype6 libjpeg62-turbo \
-    libopenjp2-7 libtiff5 libxcb1 && \
+    libopenjp2-7 libtiff5 libxcb1 gfortran python3-scipy && \
     rm -rf /var/lib/apt/lists/* && \
     groupadd -g 1000 pycryptobot && \
     useradd -r -u 1000 -g pycryptobot pycryptobot && \
