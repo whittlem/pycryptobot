@@ -5,7 +5,7 @@ on:
     # Publish `main` as Docker `latest` image.
     branches:
       - main
-      # - beta 
+      # - beta
       # - '*docker*'
 
     # Publish `v1.2.3` tags as releases.
@@ -14,12 +14,13 @@ on:
 
   # Run tests for any PRs.
   pull_request:
-  
+
   # Manual runs
   workflow_dispatch:
 
 env:
   IMAGE_NAME: pycryptobot
+  DOCKER_FILE: Dockerfile-websvc
   DOCKER_BUILDKIT: 1
   PLATFORM: linux/arm/v6,linux/arm/v7,linux/arm64,linux/amd64
 
@@ -48,11 +49,11 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
-      
+
       - name: Log into registry
         run: echo "${{ secrets.PACKAGE_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-      
-      - name: Create Tags 
+
+      - name: Create Tags
         id: tags
         run: |
           IMAGE_ID=ghcr.io/${{ github.repository }}/$IMAGE_NAME
@@ -84,7 +85,7 @@ jobs:
           context: .
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
-          file: Dockerfile
+          file: ${{ env.DOCKER_FILE }}
           platforms: ${{ env.PLATFORM }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -102,7 +103,7 @@ jobs:
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-      
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -114,7 +115,7 @@ jobs:
           scan-type: "image"
           vuln-type: "os,library"
           severity: "MEDIUM,HIGH,CRITICAL"
-          
+
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v1
         with:

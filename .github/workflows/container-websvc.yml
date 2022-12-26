@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: pycryptobot-websvc
+  IMAGE_NAME: websvc
   DOCKER_FILE: Dockerfile-websvc
   DOCKER_BUILDKIT: 1
   PLATFORM: linux/arm/v6,linux/arm/v7,linux/arm64,linux/amd64
@@ -40,11 +40,11 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
-      
+
       - name: Log into registry
         run: echo "${{ secrets.PACKAGE_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-      
-      - name: Create tags 
+
+      - name: Create tags
         id: tags
         run: |
           IMAGE_ID=ghcr.io/${{ github.repository }}/$IMAGE_NAME
@@ -89,7 +89,7 @@ jobs:
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-      
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -101,7 +101,7 @@ jobs:
           scan-type: "image"
           vuln-type: "os,library"
           severity: "MEDIUM,HIGH,CRITICAL"
-          
+
       - name: Upload Trivy scan results to GitHub security tab
         uses: github/codeql-action/upload-sarif@v1
         with:
