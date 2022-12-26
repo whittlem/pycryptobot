@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: pycryptobot-websvc
+  IMAGE_NAME: websvc
   DOCKER_FILE: Dockerfile-websvc
   DOCKER_BUILDKIT: 1
   PLATFORM: linux/arm/v6,linux/arm/v7,linux/arm64,linux/amd64
