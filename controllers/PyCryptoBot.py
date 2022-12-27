@@ -1061,13 +1061,17 @@ class PyCryptoBot(BotConfig):
                     # if not live
                     else:
                         if self.state.last_buy_size == 0 and self.state.last_buy_filled == 0:
-                            # Sim mode can now use buymaxsize as the amount used for a buy
-                            if self.buymaxsize is not None:
+                            # sim mode can now use buymaxsize as the amount used for a buy
+                            if self.buymaxsize > 0:
                                 self.state.last_buy_size = self.buymaxsize
                                 self.state.first_buy_size = self.buymaxsize
+                            else:
+                                # TODO: calculate correct buy amount based on quote currency balance
+                                self.state.last_buy_size = 1
+                                self.state.first_buy_size = 1
                         # add option for buy last sell size
                         elif (
-                            self.buymaxsize is not None
+                            self.buymaxsize > 0
                             and self.buylastsellsize
                             and self.state.last_sell_size > self.state.minimum_order_quote(quote=self.state.last_sell_size, balancechk=True)
                         ):
@@ -1089,7 +1093,7 @@ class PyCryptoBot(BotConfig):
                                 + "\n - TEST BUY at "
                                 + str(self.price)
                                 + "\n - Buy Size: "
-                                + str(_truncate(self.state.last_buy_size, 4))
+                                + str(_truncate(self.state.last_buy_size, 4))  # TODO: why is this 0?
                             )
 
                         if not self.is_verbose:
@@ -1320,6 +1324,8 @@ class PyCryptoBot(BotConfig):
 
                     # if not live
                     else:
+                        # TODO
+
                         margin, profit, sell_fee = calculate_margin(
                             buy_size=self.state.last_buy_size,
                             buy_filled=self.state.last_buy_filled,
@@ -2991,6 +2997,10 @@ class PyCryptoBot(BotConfig):
     def get_last_buy(self) -> dict:
         """Retrieves the last exchange buy order and returns a dictionary"""
 
+        if not self.is_live:
+            # not live, return None
+            return None
+
         try:
             if self.exchange == Exchange.COINBASEPRO:
                 api = CBAuthAPI(
@@ -3074,11 +3084,11 @@ class PyCryptoBot(BotConfig):
             return None
 
     def get_taker_fee(self):
-        if self.is_sim and self.exchange == Exchange.COINBASEPRO:
+        if not self.is_live and self.exchange == Exchange.COINBASEPRO:
             return 0.005  # default lowest fee tier
-        elif self.is_sim and self.exchange == Exchange.BINANCE:
+        elif not self.is_live and self.exchange == Exchange.BINANCE:
             return 0.0  # default lowest fee tier
-        elif self.is_sim and self.exchange == Exchange.KUCOIN:
+        elif not self.is_live and self.exchange == Exchange.KUCOIN:
             return 0.0015  # default lowest fee tier
         elif self.takerfee > -1.0:
             return self.takerfee
@@ -3114,7 +3124,16 @@ class PyCryptoBot(BotConfig):
             return 0.005
 
     def get_maker_fee(self):
-        if self.exchange == Exchange.COINBASEPRO:
+        if not self.is_live and self.exchange == Exchange.COINBASEPRO:
+            print("WENT IN HERE - GOOD - REMOVE THIS")
+            return 0.005  # default lowest fee tier
+        elif not self.is_live and self.exchange == Exchange.BINANCE:
+            return 0.0  # default lowest fee tier
+        elif not self.is_live and self.exchange == Exchange.KUCOIN:
+            return 0.0015  # default lowest fee tier
+        elif self.makerfee > -1.0:
+            return self.makerfee
+        elif self.exchange == Exchange.COINBASEPRO:
             api = CBAuthAPI(
                 self.api_key,
                 self.api_secret,

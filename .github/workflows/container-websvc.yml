@@ -3,7 +3,7 @@ name: WebSvc Container
 on:
   push:
     branches:
-      - beta # update to main later
+      - main
     tags:
       - '**'
   pull_request:

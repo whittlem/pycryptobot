@@ -308,6 +308,8 @@ class AuthAPI(AuthAPIBase):
     def get_taker_fee(self, market: str = "") -> float:
         """Retrieves the taker fee"""
 
+        print("SHOULD NOT HAVE GONE IN HERE!")
+
         if len(market) is not None:
             fees = self.get_fees(market)
         else:
