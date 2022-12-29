@@ -21,3 +21,5 @@ dash-bootstrap-components
 codespell
 rich
 regex
+flask_socketio
+pygtail
