@@ -702,6 +702,7 @@ class PyCryptoBot(BotConfig):
                     sell_percent=self.get_sell_percent(),
                     sell_price=self.price,
                     sell_taker_fee=self.get_taker_fee(),
+                    app=self
                 )
 
                 # handle immediate sell actions
@@ -1320,7 +1321,7 @@ class PyCryptoBot(BotConfig):
 
                     # if not live
                     else:
-                        # TODO
+                        # TODO - improve and confirm logic to simulate sell
 
                         margin, profit, sell_fee = calculate_margin(
                             buy_size=self.state.last_buy_size,
@@ -1330,6 +1331,7 @@ class PyCryptoBot(BotConfig):
                             sell_percent=self.get_sell_percent(),
                             sell_price=self.price,
                             sell_taker_fee=self.get_taker_fee(),
+                            app=self
                         )
 
                         if self.state.last_buy_size > 0:

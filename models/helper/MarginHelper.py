@@ -19,7 +19,7 @@ def calculate_margin(
     Calculate the margin for a given trade.
     """
 
-    debug = True
+    debug = False  # TODO: move to config
 
     PRECISION = 8
 
