@@ -30,7 +30,7 @@ print(df)
 """
 
 """
-api = AuthAPI(api_key, api_secret, api_passphrase, url)
+api = AuthAPI(api_key, api_secret, api_passphrase, ur, app=app)
 
 df = api.get_accounts()
 print("get_accounts:")

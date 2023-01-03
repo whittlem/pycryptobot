@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta
 from models.AppState import AppState
 from utils.PyCryptoBot import truncate as _truncate
-from models.helper.LogHelper import Logger
+from views.PyCryptoBot import RichText
 from models.TradingAccount import TradingAccount
 from models.exchange.Granularity import Granularity
 
@@ -23,7 +23,7 @@ class Strategy_CS:
             # pyright: reportMissingImports=false
             from models.Trading_myPta import TechnicalAnalysis
         else:
-            from models.Trading_Pta import TechnicalAnalysis
+            from models.Trading import TechnicalAnalysis
         self.TA = TechnicalAnalysis
 
     def tradeSignals(self, data, df, current_sim_date, websocket):
@@ -417,7 +417,7 @@ class Strategy_CS:
                 f" Close: {data['close'][0]} Low: {data['low'][0]}"
                 f" williamsr {_truncate(data['williamsr20'][0],2)}"
             )
-            Logger.info(indicatorvalues)
+            RichText.notify(indicatorvalues, self.app, "info")
         else:
             indicatorvalues = ""
 

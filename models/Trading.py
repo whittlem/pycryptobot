@@ -21,14 +21,13 @@ from pandas import concat, DataFrame, Series
 from datetime import datetime, timedelta
 from statsmodels.tsa.statespace.sarimax import SARIMAX, SARIMAXResultsWrapper
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
-from models.helper.LogHelper import Logger
 from views.PyCryptoBot import RichText
 
 warnings.simplefilter("ignore", ConvergenceWarning)
 
 
 class TechnicalAnalysis:
-    def __init__(self, data=DataFrame(), total_periods: int = 300) -> None:
+    def __init__(self, data=DataFrame(), total_periods: int = 300, app: object = None) -> None:
         """Technical Analysis object model
 
         Parameters
@@ -58,6 +57,9 @@ class TechnicalAnalysis:
         if not data["close"].dtype == "float64" and not data["close"].dtype == "int64":
             raise AttributeError("Pandas DataFrame 'close' column not int64 or float64.")
 
+        # app
+        self.app = app
+
         self.df = data
         self.levels = []
         self.total_periods = total_periods
@@ -84,9 +86,12 @@ class TechnicalAnalysis:
         self.add_ema(8)
         self.add_ema(12)
         self.add_ema(26)
+
         self.add_golden_cross()
         self.add_death_cross()
+
         self.add_fibonacci_bollinger_bands()
+        self.add_support_resistance_levels(20)
 
         self.add_rsi(14)
         self.add_stochrsi(14)
@@ -915,6 +920,19 @@ class TechnicalAnalysis:
             (self.df["elder_ray_bear"] < self.df["elder_ray_bear"].shift(1))
         )
 
+    def add_support_resistance_levels(self, window: int = 20) -> DataFrame:
+        # Calculate the rolling mean of the closing price using a window size of 20
+        self.df["rolling_mean"] = self.df["close"].rolling(window=window).mean()
+
+        # Calculate the rolling standard deviation of the closing price using a window size of 20
+        self.df["rolling_std"] = self.df["close"].rolling(window=window).std()
+
+        # Set the support level to the rolling mean minus two times the rolling standard deviation
+        self.df["support"] = self.df["rolling_mean"] - 2 * self.df["rolling_std"]
+
+        # Set the resistance level to the rolling mean plus two times the rolling standard deviation
+        self.df["resistance"] = self.df["rolling_mean"] + 2 * self.df["rolling_std"]
+
     def get_support_resistance_levels(self) -> Series:
         """Calculate the Support and Resistance Levels"""
 
@@ -926,18 +944,26 @@ class TechnicalAnalysis:
         # add the support levels to the DataFrame
         return Series(levels_ts, dtype="float64")
 
-    def print_support_resistance_levels(self, price: float = 0, app: object = None) -> None:
+    def print_support_resistance_levels_v1(self, price: float = 0) -> None:
         if isinstance(price, int) or isinstance(price, float):
             df = self.get_support_resistance_levels()
 
             if len(df) > 0:
                 df_last = df.tail(1)
                 if float(df_last[0]) < price:
-                    RichText.notify(f"Support level of {str(df_last[0])} formed at {str(df_last.index[0])}", app, "normal")
+                    RichText.notify(f"Support level of {str(df_last[0])} formed at {str(df_last.index[0])}", self.app, "normal")
                 elif float(df_last[0]) > price:
-                    RichText.notify(f"Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}", app, "normal")
+                    RichText.notify(f"Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}", self.app, "normal")
                 else:
-                    RichText.notify(f"Support/Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}", app, "normal")
+                    RichText.notify(f"Support/Resistance level of {str(df_last[0])} formed at {str(df_last.index[0])}", self.app, "normal")
+
+    def print_support_resistance_levels_v2(self, price: float = 0) -> None:
+        if isinstance(price, int) or isinstance(price, float):
+            if "support" not in self.df.columns and "resistance" not in self.df.columns:
+                self.add_support_resistance_levels()
+
+            support, resistance = self.df[["support", "resistance"]].tail(1).values[0]
+            RichText.notify(f"Support level is {str(round(support, 4))} and Resistance level is {str(round(resistance, 4))}", self.app, "normal")
 
     def get_resistance(self, price: float = 0) -> float:
         if isinstance(price, int) or isinstance(price, float):
@@ -1225,7 +1251,7 @@ class TechnicalAnalysis:
         try:
             self.df.to_csv(filename)
         except OSError:
-            Logger.critical(f"Unable to save: {filename}")
+            RichText.notify(f"Unable to save: {filename}", self.app, "critical")
 
     def _calculate_support_resistence_levels(self):
         """Support and Resistance levels. (private function)"""

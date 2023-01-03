@@ -6,8 +6,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 sys.path.append('.')
 # pylint: disable=import-error
 from models.exchange.binance import AuthAPI, PublicAPI
-from models.helper.LogHelper import Logger
-Logger.configure()
 
 
 # there is no dynamic way of retrieving a valid order market

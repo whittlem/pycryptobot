@@ -31,7 +31,6 @@ from models.TradingAccount import TradingAccount
 from models.Stats import Stats
 from models.AppState import AppState
 from models.helper.TextBoxHelper import TextBox
-from models.helper.LogHelper import Logger
 from models.Strategy import Strategy
 from views.TradingGraphs import TradingGraphs
 from views.PyCryptoBot import RichText
@@ -166,11 +165,11 @@ class PyCryptoBot(BotConfig):
                 if self.websocket:
                     self.websocket_connection.close()
                     if self.exchange == Exchange.BINANCE:
-                        self.websocket_connection = BWebSocketClient([self.market], self.granularity)
+                        self.websocket_connection = BWebSocketClient([self.market], self.granularity, app=self)
                     elif self.exchange == Exchange.COINBASEPRO:
-                        self.websocket_connection = CWebSocketClient([self.market], self.granularity)
+                        self.websocket_connection = CWebSocketClient([self.market], self.granularity, app=self)
                     elif self.exchange == Exchange.KUCOIN:
-                        self.websocket_connection = KWebSocketClient([self.market], self.granularity)
+                        self.websocket_connection = KWebSocketClient([self.market], self.granularity, app=self)
                     self.websocket_connection.start()
 
                 list(map(self.s.cancel, self.s.queue))
@@ -342,7 +341,7 @@ class PyCryptoBot(BotConfig):
                         self.state.iterations = 1
 
                     trading_dataCopy = trading_data.copy()
-                    _technical_analysis = TechnicalAnalysis(trading_dataCopy, self.adjusttotalperiods)
+                    _technical_analysis = TechnicalAnalysis(trading_dataCopy, self.adjusttotalperiods, app=self)
 
                     # if 'bool(self.df_last["morning_star"].values[0])' not in df:
                     _technical_analysis.add_all()
@@ -353,7 +352,7 @@ class PyCryptoBot(BotConfig):
 
             elif self.smart_switch == 1 and _technical_analysis is None:
                 trading_dataCopy = trading_data.copy()
-                _technical_analysis = TechnicalAnalysis(trading_dataCopy, self.adjusttotalperiods)
+                _technical_analysis = TechnicalAnalysis(trading_dataCopy, self.adjusttotalperiods, app=self)
 
                 if "morning_star" not in df:
                     _technical_analysis.add_all()
@@ -361,7 +360,7 @@ class PyCryptoBot(BotConfig):
                 df = _technical_analysis.get_df()
 
         else:
-            _technical_analysis = TechnicalAnalysis(self.trading_data, len(self.trading_data))
+            _technical_analysis = TechnicalAnalysis(self.trading_data, len(self.trading_data), app=self)
             _technical_analysis.add_all()
             df = _technical_analysis.get_df()
 
@@ -574,10 +573,8 @@ class PyCryptoBot(BotConfig):
                     self.state.action = None
                     self.telegram_bot.remove_open_order()
 
-                    Logger.warning(
-                        f"{self.market} ({self.print_granularity()}) - {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}\n"
-                        f"Catching SELL that occurred previously. Updating signal information."
-                    )
+                    RichText.notify(f"{self.market} ({self.print_granularity()}) - {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}", self, "warning")
+                    RichText.notify("Catching SELL that occurred previously. Updating signal information.", self, "warning")
 
                     if not self.telegramtradesonly:
                         self.notify_telegram(
@@ -624,7 +621,7 @@ class PyCryptoBot(BotConfig):
                         goldencross = self.is_1h_sma50200_bull(current_sim_date)
 
             except KeyError as err:
-                Logger.error(err)
+                RichText.notify(err, self, "error")
                 sys.exit()
 
             # Log data for Telegram Bot
@@ -658,7 +655,7 @@ class PyCryptoBot(BotConfig):
             # To allow for calculations to be done on the sim date being processed
             if self.is_sim:
                 trading_dataCopy = self.trading_data[self.trading_data["date"] <= current_sim_date].tail(self.adjusttotalperiods).copy()
-                _technical_analysis = TechnicalAnalysis(trading_dataCopy, self.adjusttotalperiods)
+                _technical_analysis = TechnicalAnalysis(trading_dataCopy, self.adjusttotalperiods, app=self)
 
             if self.state.last_buy_size > 0 and self.state.last_buy_price > 0 and self.price > 0 and self.state.last_action == "BUY":
                 # update last buy high
@@ -754,7 +751,6 @@ class PyCryptoBot(BotConfig):
                     immediate_action = True
 
             # polling is every 5 minutes (even for hourly intervals), but only process once per interval
-            # Logger.debug("DateCheck: " + str(immediate_action) + ' ' + str(self.state.last_df_index) + ' ' + str(current_df_index))
             if immediate_action is True or self.state.last_df_index != current_df_index:
                 precision = 4
 
@@ -1104,7 +1100,7 @@ class PyCryptoBot(BotConfig):
 
                             if not self.is_sim:
                                 _notify(f"Fibonacci Retracement Levels: {str(bands)}")
-                                _technical_analysis.print_support_resistance_levels(float(self.price), self)
+                                _technical_analysis.print_support_resistance_levels_v2()
 
                             if len(bands) >= 1 and len(bands) <= 2:
                                 if len(bands) == 1:
@@ -1154,7 +1150,7 @@ class PyCryptoBot(BotConfig):
                         if self.adjusttotalperiods < 200:
                             _notify("Trading Graphs can only be generated when dataframe has more than 200 periods.")
                         else:
-                            tradinggraphs = TradingGraphs(_technical_analysis)
+                            tradinggraphs = TradingGraphs(_technical_analysis, self)
                             ts = datetime.now().timestamp()
                             filename = f"{self.market}_{self.print_granularity()}_buy_{str(ts)}.png"
                             # This allows graphs to be used in sim mode using the correct DF
@@ -1436,7 +1432,7 @@ class PyCryptoBot(BotConfig):
                         self.state.action = "DONE"
 
                     if self.save_graphs:
-                        tradinggraphs = TradingGraphs(_technical_analysis)
+                        tradinggraphs = TradingGraphs(_technical_analysis, self)
                         ts = datetime.now().timestamp()
                         filename = f"{self.market}_{self.print_granularity()}_sell_{str(ts)}.png"
                         # This allows graphs to be used in sim mode using the correct DF
@@ -1463,13 +1459,9 @@ class PyCryptoBot(BotConfig):
 
             if self.state.last_buy_size > 0 and self.state.last_buy_price > 0 and self.price > 0 and self.state.last_action == "BUY":
                 # show profit and margin if already bought
-                Logger.info(
-                    f"{now} | {self.market} {bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)} {trailing_action_logtext} | Margin: {str(margin)} | Profit: {str(profit)}"
-                )
+                RichText.notify(f"{now} | {self.market} {bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)} {trailing_action_logtext} | Margin: {str(margin)} | Profit: {str(profit)}", self, "info")
             else:
-                Logger.info(
-                    f'{now} | {self.market} {bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH'
-                )
+                RichText.notify(f'{now} | {self.market} {bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH', self, "info")
                 self.telegram_bot.add_info(
                     f'{now} | {self.market} {bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH',
                     round(self.price, 4),
@@ -1571,21 +1563,21 @@ class PyCryptoBot(BotConfig):
                 if self.websocket and not self.is_sim:
                     RichText.notify("Opening websocket to Coinbase Pro", self, "normal")
                     print("")
-                    self.websocket_connection = CWebSocketClient([self.market], self.granularity)
+                    self.websocket_connection = CWebSocketClient([self.market], self.granularity, app=self)
                     self.websocket_connection.start()
             elif self.exchange == Exchange.BINANCE:
                 message += "Binance bot"
                 if self.websocket and not self.is_sim:
                     RichText.notify("Opening websocket to Binance", self, "normal")
                     print("")
-                    self.websocket_connection = BWebSocketClient([self.market], self.granularity)
+                    self.websocket_connection = BWebSocketClient([self.market], self.granularity, app=self)
                     self.websocket_connection.start()
             elif self.exchange == Exchange.KUCOIN:
                 message += "Kucoin bot"
                 if self.websocket and not self.is_sim:
                     RichText.notify("Opening websocket to Kucoin", self, "normal")
                     print("")
-                    self.websocket_connection = KWebSocketClient([self.market], self.granularity)
+                    self.websocket_connection = KWebSocketClient([self.market], self.granularit, app=self)
                     self.websocket_connection.start()
 
             smartswitchstatus = "enabled" if self.smart_switch else "disabled"
@@ -1614,7 +1606,7 @@ class PyCryptoBot(BotConfig):
                 if self.autorestart:
                     # Wait 30 second and try to relaunch application
                     time.sleep(30)
-                    Logger.critical(f"Restarting application after exception: {repr(e)}")
+                    RichText.notify(f"Restarting application after exception: {repr(e)}", self, "critical")
 
                     if not self.disabletelegram:
                         self.notify_telegram(f"Auto restarting bot for {self.market} after exception: {repr(e)}")
@@ -1632,10 +1624,11 @@ class PyCryptoBot(BotConfig):
         except (KeyboardInterrupt, SystemExit):
             if self.websocket and not self.is_sim:
                 signal.signal(signal.SIGINT, signal_handler)  # disable ctrl/cmd+c
-                Logger.warning(f"{str(datetime.now())} bot is closing via keyboard interrupt,")
-                Logger.warning("Please wait while threads complete gracefully....")
+
+                RichText.notify(f"{str(datetime.now())} bot is closing via keyboard interrupt", self, "warning")
+                RichText.notify("Please wait while threads complete gracefully....", self, "warning")
             else:
-                Logger.warning(f"{str(datetime.now())} bot is closed via keyboard interrupt...")
+                RichText.notify(f"{str(datetime.now())} bot is closed via keyboard interrupt...", self, "warning")
             try:
                 try:
                     self.telegram_bot.remove_active_bot()
@@ -1658,7 +1651,7 @@ class PyCryptoBot(BotConfig):
                     self.telegram_bot.remove_active_bot()
                 except Exception:
                     pass
-            Logger.critical(repr(e))
+            RichText.notify(repr(e), self, "critical")
             # pylint: disable=protected-access
             os._exit(0)
             # raise
@@ -1994,7 +1987,7 @@ class PyCryptoBot(BotConfig):
                 self.telegram_bot.remove_active_bot()
 
         if self.simresultonly:
-            Logger.info(json.dumps(simulation, sort_keys=True, indent=4))
+            RichText.notify(json.dumps(simulation, sort_keys=True, indent=4), self, "info")
         else:
             print("")  # blank line above table
             self.console_term.print(table)
@@ -2016,7 +2009,7 @@ class PyCryptoBot(BotConfig):
                         os.makedirs("csv")
                 self.trade_tracker.to_csv(os.path.join(os.curdir, "csv", filename))
             except OSError:
-                Logger.error(f"Unable to save: {filename}", "critical")
+                RichText.notify(f"Unable to save: {filename}", "critical", self, "error")
 
     def _generate_banner(self) -> None:
         """
@@ -2133,7 +2126,7 @@ class PyCryptoBot(BotConfig):
 
             return True
 
-        table = Table(title=f"Python Crypto Bot {self.get_version_from_readme()}")
+        table = Table(title=f"Python Crypto Bot {self.get_version_from_readme(self)}")
 
         table.add_column("Item", justify="right", style="cyan", no_wrap=True)
         table.add_column("Value", justify="left", style="green")
@@ -2761,10 +2754,10 @@ class PyCryptoBot(BotConfig):
         iso8601end="",
     ):
         if self.exchange == Exchange.BINANCE:
-            api = BPublicAPI(api_url=self.api_url)
+            api = BPublicAPI(api_url=self.api_url, app=self)
 
         elif self.exchange == Exchange.KUCOIN:  # returns data from coinbase if not specified
-            api = KPublicAPI(api_url=self.api_url)
+            api = KPublicAPI(api_url=self.api_url, app=self)
 
             # Kucoin only returns 100 rows if start not specified, make sure we get the right amount
             if not self.is_sim and iso8601start == "":
@@ -2772,7 +2765,7 @@ class PyCryptoBot(BotConfig):
                 iso8601start = str(start.isoformat()).split(".")[0]
 
         else:  # returns data from coinbase if not specified
-            api = CBPublicAPI()
+            api = CBPublicAPI(app=self)
 
         if iso8601start != "" and iso8601end == "" and self.exchange != Exchange.BINANCE:
             return api.get_historical_data(
@@ -2794,24 +2787,24 @@ class PyCryptoBot(BotConfig):
 
     def get_ticker(self, market, websocket):
         if self.exchange == Exchange.BINANCE:
-            api = BPublicAPI(api_url=self.api_url)
+            api = BPublicAPI(api_url=self.api_url, app=self)
             return api.get_ticker(market, websocket)
 
         elif self.exchange == Exchange.KUCOIN:
-            api = KPublicAPI(api_url=self.api_url)
+            api = KPublicAPI(api_url=self.api_ur, app=self)
             return api.get_ticker(market, websocket)
         else:  # returns data from coinbase if not specified
-            api = CBPublicAPI()
+            api = CBPublicAPI(app=self)
             return api.get_ticker(market, websocket)
 
     def get_time(self):
         if self.exchange == Exchange.COINBASEPRO:
-            return CBPublicAPI().get_time()
+            return CBPublicAPI(app=self).get_time()
         elif self.exchange == Exchange.KUCOIN:
-            return KPublicAPI().get_time()
+            return KPublicAPI(app=self).get_time()
         elif self.exchange == Exchange.BINANCE:
             try:
-                return BPublicAPI().get_time()
+                return BPublicAPI(app=self).get_time()
             except ReadTimeoutError:
                 return ""
         else:
@@ -2838,7 +2831,7 @@ class PyCryptoBot(BotConfig):
             else:
                 return False
 
-            ta = TechnicalAnalysis(df_data)
+            ta = TechnicalAnalysis(df_data, app=self)
 
             if "ema12" not in df_data:
                 ta.add_ema(12)
@@ -2863,7 +2856,7 @@ class PyCryptoBot(BotConfig):
             else:
                 return False
 
-            ta = TechnicalAnalysis(df_data)
+            ta = TechnicalAnalysis(df_data, app=self)
 
             if "ema12" not in df_data:
                 ta.add_ema(12)
@@ -2892,7 +2885,7 @@ class PyCryptoBot(BotConfig):
             else:
                 return False
 
-            ta = TechnicalAnalysis(df_data)
+            ta = TechnicalAnalysis(df_data, app=self)
 
             if "sma50" not in df_data:
                 ta.add_sma(50)
@@ -3008,6 +3001,7 @@ class PyCryptoBot(BotConfig):
                     self.api_secret,
                     self.api_passphrase,
                     self.api_url,
+                    app=self
                 )
                 orders = api.get_orders(self.market, "", "done")
 
@@ -3034,6 +3028,7 @@ class PyCryptoBot(BotConfig):
                     self.api_passphrase,
                     self.api_url,
                     use_cache=self.usekucoincache,
+                    app=self
                 )
                 orders = api.get_orders(self.market, "", "done")
 
@@ -3059,6 +3054,7 @@ class PyCryptoBot(BotConfig):
                     self.api_secret,
                     self.api_url,
                     recv_window=self.recv_window,
+                    app=self
                 )
                 orders = api.get_orders(self.market)
 
@@ -3098,6 +3094,7 @@ class PyCryptoBot(BotConfig):
                 self.api_secret,
                 self.api_passphrase,
                 self.api_url,
+                app=self
             )
             self.takerfee = api.get_taker_fee()
             return self.takerfee
@@ -3107,6 +3104,7 @@ class PyCryptoBot(BotConfig):
                 self.api_secret,
                 self.api_url,
                 recv_window=self.recv_window,
+                app=self
             )
             self.takerfee = api.get_taker_fee(self.get_market())
             return self.takerfee
@@ -3117,6 +3115,7 @@ class PyCryptoBot(BotConfig):
                 self.api_passphrase,
                 self.api_url,
                 use_cache=self.usekucoincache,
+                app=self
             )
             self.takerfee = api.get_taker_fee()
             return self.takerfee
@@ -3139,6 +3138,7 @@ class PyCryptoBot(BotConfig):
                 self.api_secret,
                 self.api_passphrase,
                 self.api_url,
+                app=self
             )
             return api.get_maker_fee()
         elif self.exchange == Exchange.BINANCE:
@@ -3147,6 +3147,7 @@ class PyCryptoBot(BotConfig):
                 self.api_secret,
                 self.api_url,
                 recv_window=self.recv_window,
+                app=self
             )
             return api.get_maker_fee(self.get_market())
         elif self.exchange == Exchange.KUCOIN:
@@ -3156,6 +3157,7 @@ class PyCryptoBot(BotConfig):
                 self.api_passphrase,
                 self.api_url,
                 use_cache=self.usekucoincache,
+                app=self
             )
             return api.get_maker_fee()
         else:

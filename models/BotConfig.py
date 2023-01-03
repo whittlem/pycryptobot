@@ -19,7 +19,7 @@ from models.config import (
 )
 from models.exchange.Granularity import Granularity
 from models.exchange.ExchangesEnum import Exchange
-from models.helper.LogHelper import Logger
+from views.PyCryptoBot import RichText
 
 
 class BotConfig:
@@ -174,14 +174,6 @@ class BotConfig:
 
         self.read_config(kwargs["exchange"])
 
-        Logger.configure(
-            filelog=self.filelog,
-            logfile=self.logfile,
-            fileloglevel=self.fileloglevel,
-            consolelog=self.consolelog,
-            consoleloglevel=self.consoleloglevel,
-        )
-
     # read and set config from file
     def read_config(self, exchange):
         if os.path.isfile(self.config_file):
@@ -326,7 +318,7 @@ class BotConfig:
             conf[exchange.value]["market"],
         )
 
-    def get_version_from_readme(self) -> str:
+    def get_version_from_readme(self, app: object = None) -> str:
         regex = r"^# Python Crypto Bot (v\d{1,3}\.\d{1,3}\.\d{1,3})"
         version = "v0.0.0"
         try:
@@ -335,7 +327,7 @@ class BotConfig:
                     match = re.search(regex, line)
                     try:
                         if match is None:
-                            Logger.error("Could not find version in README.md")
+                            RichText.notify("Could not find version in README.md", app, "error")
                             sys.exit()
 
                         version = match.group(1)
@@ -344,7 +336,7 @@ class BotConfig:
                         continue
 
             if version == "v0.0.0":
-                Logger.error("Could not find version in README.md")
+                RichText.notify("Could not find version in README.md", app, "error")
                 sys.exit()
 
             return version

@@ -109,6 +109,7 @@ class TradingAccount:
                     self.app.api_secret,
                     self.app.api_url,
                     recv_window=self.app.recv_window,
+                    app=self.app
                 )
                 # retrieve orders from live Binance account portfolio
                 self.orders = model.get_orders(market, action, status)
@@ -129,6 +130,7 @@ class TradingAccount:
                     self.app.api_passphrase,
                     self.app.api_url,
                     use_cache=self.app.usekucoincache,
+                    app=self.app
                 )
                 # retrieve orders from live Kucoin account portfolio
                 self.orders = model.get_orders(market, action, status)
@@ -147,6 +149,7 @@ class TradingAccount:
                     self.app.api_secret,
                     self.app.api_passphrase,
                     self.app.api_url,
+                    app=self.app
                 )
                 # retrieve orders from live Coinbase Pro account portfolio
                 self.orders = model.get_orders(market, action, status)
@@ -192,6 +195,7 @@ class TradingAccount:
                     self.app.api_passphrase,
                     self.app.api_url,
                     use_cache=self.app.usekucoincache,
+                    app=self.app
                 )
                 trycnt, maxretry = (0, 5)
                 while trycnt <= maxretry:
@@ -293,6 +297,7 @@ class TradingAccount:
                     self.app.api_secret,
                     self.app.api_url,
                     recv_window=self.app.recv_window,
+                    app=self.app
                 )
                 df = model.get_account()
                 if isinstance(df, pd.DataFrame):
@@ -395,6 +400,7 @@ class TradingAccount:
                     self.app.api_secret,
                     self.app.api_passphrase,
                     self.app.api_url,
+                    app=self.app
                 )
                 trycnt, maxretry = (0, 5)
                 while trycnt <= maxretry:

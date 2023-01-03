@@ -13,12 +13,27 @@ class RichText:
         if notification == "":
             return
 
-        if level == "warning":
-            color = "dark_orange"
-        elif level == "error":
-            color = "red1"
+        if level not in ["emergency", "alert", "critical", "error", "warning", "notice", "info", "debug", "normal"]:
+            raise ValueError(f"RichText log level, '{level}' is not valid!")
+
+        if level == "emergency":
+            color = "bright_red blink"
+        elif level == "alert":
+            color = "bright_red"
         elif level == "critical":
-            color = "red1 blink"
+            color = "red3 blink"
+        elif level == "error":
+            color = "red3"
+        elif level == "warning":
+            color = "dark_orange"
+        elif level == "notice":
+            color = "magenta"
+        elif level == "info":
+            color = "white"
+        elif level == "debug":
+            color = "blue1"
+        if level == "normal":
+            color = "orange_red1"
         else:
             color = "violet"
 

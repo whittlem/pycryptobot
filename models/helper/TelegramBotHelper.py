@@ -5,7 +5,7 @@ from time import sleep
 from datetime import datetime
 
 from pandas.core.frame import DataFrame
-from models.helper.LogHelper import Logger
+from views.PyCryptoBot import RichText
 
 
 class TelegramBotHelper:
@@ -101,15 +101,15 @@ class TelegramBotHelper:
                     self.data = json.load(json_file)
                 read_ok = True
             except FileNotFoundError:
-                Logger.warning("File Not Found:  Recreating File..")
+                RichText.notify("File Not Found:  Recreating File..", self.app, "warning")
                 self.create_bot_data()
             except JSONDecodeError:
                 if len(self.data) > 0:
-                    Logger.warning("JSON Decode Error: Recreating File..")
+                    RichText.notify("JSON Decode Error: Recreating File..", self.app, "warning")
                     if name == "":
                         self._write_data()
                 else:
-                    Logger.warning("JSON Decode Error: Removing File..")
+                    RichText.notify("JSON Decode Error: Removing File..", self.app, "warning")
                     if name == "":
                         self.remove_active_bot()
         return read_ok
@@ -125,7 +125,7 @@ class TelegramBotHelper:
                 json.dump(self.data, outfile, indent=4)
             return True
         except JSONDecodeError as err:
-            Logger.critical(str(err))
+            RichText.notify(str(err), self.app, "critical")
             return False
 
     def add_margin(

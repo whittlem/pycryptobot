@@ -16,7 +16,7 @@ import pandas as pd
 from numpy import floor
 from datetime import datetime, timezone
 from requests import Request
-from models.helper.LogHelper import Logger
+from views.PyCryptoBot import RichText
 from threading import Thread
 from websocket import create_connection, WebSocketConnectionClosedException
 from models.exchange.Granularity import Granularity
@@ -58,15 +58,7 @@ class AuthAPIBase:
 
 
 class AuthAPI(AuthAPIBase):
-    def __init__(
-        self,
-        api_key="",
-        api_secret="",
-        api_passphrase="",
-        api_url="",
-        cache_path="cache",
-        use_cache=False,
-    ) -> None:
+    def __init__(self, api_key="", api_secret="", api_passphrase="", api_url="", cache_path="cache", use_cache=False, app: object = None) -> None:
         """kucoin API object model
 
         Parameters
@@ -114,6 +106,9 @@ class AuthAPI(AuthAPIBase):
         if not p.match(api_passphrase):
             self.handle_init_error("Kucoin API passphrase is invalid")
 
+        # app
+        self.app = app
+
         self._api_key = api_key
         self._api_secret = api_secret
         self._api_passphrase = api_passphrase
@@ -141,7 +136,8 @@ class AuthAPI(AuthAPIBase):
         elif self.die_on_api_error:
             raise SystemExit(err)
         else:
-            Logger.error(f"Initialization Error: {err}")
+            if self.app:
+                RichText.notify(f"Initialization Error: {err}", self.app, "error")
 
     def __call__(self, request) -> Request:
         """Signs the request"""
@@ -225,7 +221,8 @@ class AuthAPI(AuthAPIBase):
             fees = self.get_fees()
 
         if len(fees) == 0 or "makerFeeRate" not in fees:
-            Logger.error(f"error: 'makerFeeRate' not in fees (using {DEFAULT_MAKER_FEE_RATE} as a fallback)")
+            if self.app:
+                RichText.notify(f"error: 'makerFeeRate' not in fees (using {DEFAULT_MAKER_FEE_RATE} as a fallback)", self.app, "error")
             return DEFAULT_MAKER_FEE_RATE
 
         return float(fees["makerFeeRate"].to_string(index=False).strip())
@@ -239,7 +236,8 @@ class AuthAPI(AuthAPIBase):
             fees = self.get_fees()
 
         if len(fees) == 0 or "takerFeeRate" not in fees:
-            Logger.error(f"error: 'takerFeeRate' not in fees (using {DEFAULT_TAKER_FEE_RATE} as a fallback)")
+            if self.app:
+                RichText.notify(f"error: 'takerFeeRate' not in fees (using {DEFAULT_TAKER_FEE_RATE} as a fallback)", self.app, "error")
             return DEFAULT_TAKER_FEE_RATE
 
         return float(fees["takerFeeRate"].to_string(index=False).strip())
@@ -483,7 +481,8 @@ class AuthAPI(AuthAPIBase):
 
         # validates quote_quantity is either an integer or float
         if not isinstance(quote_quantity, int) and not isinstance(quote_quantity, float):
-            Logger.critical("Please report this to Michael Whittle: " + str(quote_quantity) + " " + str(type(quote_quantity)))
+            if self.app:
+                RichText.notify("Please report this to Michael Whittle: " + str(quote_quantity) + " " + str(type(quote_quantity)), self.app, "critical")
             raise TypeError("The funding amount is not numeric.")
 
         # funding amount needs to be greater than 10
@@ -500,8 +499,6 @@ class AuthAPI(AuthAPIBase):
             "side": "buy",
             "funds": self.market_quote_increment(market, quote_quantity),
         }
-
-        # Logger.debug(order)
 
         # connect to authenticated Kucoin api
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
@@ -529,8 +526,6 @@ class AuthAPI(AuthAPIBase):
             "size": self.market_base_Increment(market, base_quantity),
         }
 
-        # Logger.debug(order)
-
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
         return model.auth_api("POST", "api/v1/orders", order)
 
@@ -553,8 +548,6 @@ class AuthAPI(AuthAPIBase):
             "size": self.market_base_Increment(market, base_quantity),
             "price": future_price,
         }
-
-        # Logger.debug(order)
 
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
         return model.auth_api("POST", "orders", order)
@@ -804,7 +797,6 @@ class AuthAPI(AuthAPIBase):
                 trycnt += 1
                 resp.raise_for_status()
 
-                # Logger.debug(resp.json())
                 if resp.status_code == 200 and len(resp.json()) > 0:
                     mjson = resp.json()
                     if isinstance(mjson, list):
@@ -898,7 +890,8 @@ class AuthAPI(AuthAPIBase):
 
             if trycnt >= maxretry:
                 if reason in ("ConnectionError", "HTTPError") and trycnt <= connretry:
-                    Logger.error(f"{reason}:  URI: {uri} trying again.  Attempt: {trycnt}")
+                    if self.app:
+                        RichText.notify(f"{reason}:  URI: {uri} trying again.  Attempt: {trycnt}", self.app, "error")
                     if trycnt > 5:
                         time.sleep(30)
                 else:
@@ -920,18 +913,20 @@ class AuthAPI(AuthAPIBase):
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
-                Logger.debug(err)
+                if self.app:
+                    RichText.notify(err, self.app, "debug")
                 return pd.DataFrame()
         else:
             if self.die_on_api_error:
                 raise SystemExit(f"{reason}: {self._api_url}")
             else:
-                Logger.error(f"{reason}: {self._api_url}")
+                if self.app:
+                    RichText.notify(f"{reason}: {self._api_url}", self.app, "error")
                 return pd.DataFrame()
 
 
 class PublicAPI(AuthAPIBase):
-    def __init__(self, api_url: str = "https://api.kucoin.com") -> None:
+    def __init__(self, api_url: str = "https://api.kucoin.com", app: object = None) -> None:
         # options
         self.debug = False
         self.die_on_api_error = False
@@ -947,6 +942,9 @@ class PublicAPI(AuthAPIBase):
         # validate Kucoin API
         if api_url not in valid_urls:
             raise ValueError("Kucoin API URL is invalid")
+
+        # app
+        self.app = app
 
         if api_url[-1] != "/":
             api_url = api_url + "/"
@@ -1115,7 +1113,8 @@ class PublicAPI(AuthAPIBase):
             except ValueError as err:
                 trycnt += 1
                 if trycnt >= maxretry:
-                    Logger.warning(f"Kucoin API Error for Get Ticker - attempted {trycnt} times - Error: {err}")
+                    if self.app:
+                        RichText.notify(f"Kucoin API Error for Get Ticker - attempted {trycnt} times - Error: {err}", self.app, "warning")
                     return (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), 0.0)
                 time.sleep(15)
 
@@ -1189,7 +1188,8 @@ class PublicAPI(AuthAPIBase):
 
             if trycnt >= maxretry:
                 if reason in ("ConnectionError", "HTTPError") and trycnt <= connretry:
-                    Logger.error(f"{reason}:  URI: {uri} trying again.  Attempt: {trycnt}")
+                    if self.app:
+                        RichText.notify(f"{reason}:  URI: {uri} trying again.  Attempt: {trycnt}", self.app, "error")
                     if trycnt > 5:
                         time.sleep(30)
                 else:
@@ -1211,13 +1211,15 @@ class PublicAPI(AuthAPIBase):
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
-                Logger.debug(err)
+                if self.app:
+                    RichText.notify(err, self.app, "debug")
                 return {}
         else:
             if self.die_on_api_error:
                 raise SystemExit(f"{reason}: {self._api_url}")
             else:
-                Logger.error(f"{reason}: {self._api_url}")
+                if self.app:
+                    RichText.notify(f"{reason}: {self._api_url}", self.app, "error")
                 return {}
 
 
@@ -1229,6 +1231,7 @@ class WebSocket(AuthAPIBase):
         granularity: Granularity = Granularity.ONE_HOUR,
         api_url="https://api.kucoin.com",
         ws_url="wss://ws-api.kucoin.com",
+        app: object = None,
     ) -> None:
         # options
         self.debug = False
@@ -1254,8 +1257,8 @@ class WebSocket(AuthAPIBase):
         if ws_url not in valid_ws_urls:
             raise ValueError("Kucoin WebSocket URL is invalid")
 
-        # if ws_url[-1] != "/":
-        #     ws_url = ws_url + "/"
+        # app
+        self.app = app
 
         self._ws_url = ws_url
         self._api_url = api_url
@@ -1334,17 +1337,21 @@ class WebSocket(AuthAPIBase):
         self.thread.join()
 
     def on_open(self):
-        Logger.info("-- Websocket Subscribed! --")
+        if self.app:
+            RichText.notify("-- Websocket Subscribed! --", self.app, "info")
 
     def on_close(self):
-        Logger.info("-- Websocket Closed --")
+        if self.app:
+            RichText.notify("-- Websocket Closed --", self.app, "info")
 
     def on_message(self, msg):
-        Logger.info(msg)
+        if self.app:
+            RichText.notify(msg, self.app, "info")
 
     def on_error(self, e, data=None):
-        Logger.error(e)
-        Logger.error("{} - data: {}".format(e, data))
+        if self.app:
+            RichText.notify(e, self.app, "error")
+            RichText.notify("{} - data: {}".format(e, data), self.app, "error")
 
         self.stop = True
         try:
@@ -1370,6 +1377,7 @@ class WebSocketClient(WebSocket):
         granularity: Granularity = Granularity.ONE_HOUR,
         api_url="https://api.kucoin.com/",
         ws_url: str = "wss://ws-api.kucoin.com",
+        app: object = None,
     ) -> None:
         if len(markets) == 0:
             raise ValueError("A list of one or more markets is required.")
@@ -1409,8 +1417,8 @@ class WebSocketClient(WebSocket):
         if ws_url not in valid_ws_urls:
             raise ValueError("Kucoin WebSocket URL is invalid")
 
-        # if ws_url[-1] != "/":
-        #     ws_url = ws_url + "/"
+        # app
+        self.app = app
 
         self._ws_url = ws_url
 

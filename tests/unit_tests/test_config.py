@@ -10,5 +10,5 @@ app = PyCryptoBot()
 
 def test_get_version_from_readme():
     global app
-    version = app.get_version_from_readme()
+    version = app.get_version_from_readme(app)
     assert version != 'v0.0.0'

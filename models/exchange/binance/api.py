@@ -18,7 +18,7 @@ from requests import Session
 from websocket import create_connection, WebSocketConnectionClosedException
 
 from models.exchange.Granularity import Granularity
-from models.helper.LogHelper import Logger
+from views.PyCryptoBot import RichText
 
 DEFAULT_MAKER_FEE_RATE = 0.0015  # added 0.0005 to allow for self.price movements
 DEFAULT_TAKER_FEE_RATE = 0.0015  # added 0.0005 to allow for self.price movements
@@ -48,6 +48,7 @@ class AuthAPI(AuthAPIBase):
         api_url: str = "https://api.binance.com",
         order_history: list = [],
         recv_window: int = 5000,
+        app: object = None,
     ) -> None:
         """Binance API object model
 
@@ -84,6 +85,9 @@ class AuthAPI(AuthAPIBase):
         p = re.compile(r"^[A-z0-9]{64,64}$")
         if not p.match(api_secret):
             self.handle_init_error("Binance API secret is invalid")
+
+        # app
+        self.app = app
 
         self._api_key = api_key
         self._api_secret = api_secret
@@ -300,7 +304,8 @@ class AuthAPI(AuthAPIBase):
             fees = self.get_fees()
 
         if len(fees) == 0 or "maker_fee_rate" not in fees:
-            Logger.error(f"error: 'maker_fee_rate' not in fees (using {DEFAULT_MAKER_FEE_RATE} as a fallback)")
+            if self.app:
+                RichText.notify(f"error: 'maker_fee_rate' not in fees (using {DEFAULT_MAKER_FEE_RATE} as a fallback)", self.app, "error")
             return DEFAULT_MAKER_FEE_RATE
 
         return float(fees["maker_fee_rate"].to_string(index=False).strip())
@@ -316,7 +321,8 @@ class AuthAPI(AuthAPIBase):
             fees = self.get_fees()
 
         if len(fees) == 0 or "taker_fee_rate" not in fees:
-            Logger.error(f"error: 'taker_fee_rate' not in fees (using {DEFAULT_TAKER_FEE_RATE} as a fallback)")
+            if self.app:
+                RichText.notify(f"error: 'taker_fee_rate' not in fees (using {DEFAULT_TAKER_FEE_RATE} as a fallback)", self.app, "error")
             return DEFAULT_TAKER_FEE_RATE
 
         return float(fees["taker_fee_rate"].to_string(index=False).strip())
@@ -525,7 +531,8 @@ class AuthAPI(AuthAPIBase):
             resp = self.auth_api("GET", "/api/v3/time")
             return self.convert_time(int(resp["serverTime"])) - timedelta(hours=1)
         except Exception as e:
-            Logger.error(f"Error: {e}")
+            if self.app:
+                RichText.notify(f"Error: {e}", self.app, "error")
             return None
 
     def getMarketInfoFilters(self, market: str) -> pd.DataFrame:
@@ -654,8 +661,6 @@ class AuthAPI(AuthAPIBase):
                 "recvwindow": self.recv_window,
             }
 
-            # Logger.debug(order)
-
             # POST /api/v3/order/test
             if test is True:
                 resp = self.auth_api("POST", "/api/v3/order/test", order)
@@ -665,7 +670,8 @@ class AuthAPI(AuthAPIBase):
             return resp
         except Exception as err:
             ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-            Logger.error(f"{ts} Binance  market_buy {str(err)}")
+            if self.app:
+                RichText.notify(f"{ts} Binance  market_buy {str(err)}", self.app, "error")
             return []
 
     def market_sell(self, market: str = "", base_quantity: float = 0, test: bool = False, use_fees: bool = True) -> list:
@@ -699,8 +705,6 @@ class AuthAPI(AuthAPIBase):
                 "recvwindow": self.recv_window,
             }
 
-            # Logger.debug(order)
-
             # POST /api/v3/order/test
             if test is True:
                 resp = self.auth_api("POST", "/api/v3/order/test", order)
@@ -710,7 +714,8 @@ class AuthAPI(AuthAPIBase):
             return resp
         except Exception as err:
             ts = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-            Logger.error(f"{ts} Binance  market_sell {str(err)}")
+            if self.app:
+                RichText.notify(f"{ts} Binance  market_sell {str(err)}", self.app, "error")
             return []
 
     def auth_api(self, method: str, uri: str, payload: str = {}) -> dict:
@@ -758,15 +763,18 @@ class AuthAPI(AuthAPIBase):
 
             if resp.status_code == 400 and (resp_message == "Timestamp for this request is outside of the recvwindow."):
                 message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (hint: increase recvwindow with --recvwindow <5000-60000>)"
-                Logger.error(f"Error: {message}")
+                if self.app:
+                    RichText.notify(f"Error: {message}", self.app, "error")
                 return {}
             elif resp.status_code == 400 and resp_message.__contains__("Invalid quantity"):
                 message = f"{method} Invalid order quantity (hint: (binance only) try using use_sell_fee: 0)"
-                Logger.error(f"{message}")
+                if self.app:
+                    RichText.notify(f"{message}", self.app, "error")
                 return {}
             elif resp.status_code == 429 and (resp_message.startswith("Too much request weight used")):
                 message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (sleeping for 5 seconds to prevent being banned)"
-                Logger.error(f"Error: {message}")
+                if self.app:
+                    RichText.notify(f"Error: {message}", self.app, "error")
                 time.sleep(5)
                 return {}
             elif resp.status_code != 200:
@@ -774,7 +782,8 @@ class AuthAPI(AuthAPIBase):
                 if self.die_on_api_error:
                     raise Exception(message)
                 else:
-                    Logger.error(f"Error: {message}")
+                    if self.app:
+                        RichText.notify(f"Error: {message}", self.app, "error")
                     return {}
 
             resp.raise_for_status()
@@ -799,18 +808,20 @@ class AuthAPI(AuthAPIBase):
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
-                Logger.error(err)
+                if self.app:
+                    RichText.notify(err, self.app, "error")
                 return {}
         else:
             if self.die_on_api_error:
                 raise SystemExit(f"{reason}: {self._api_url}")
             else:
-                Logger.info(f"{reason}: {self._api_url}")
+                if self.app:
+                    RichText.notify(f"{reason}: {self._api_url}", self.app, "info")
                 return {}
 
 
 class PublicAPI(AuthAPIBase):
-    def __init__(self, api_url="https://api.binance.com") -> None:
+    def __init__(self, api_url="https://api.binance.com", app: object = None) -> None:
         """Binance API object model
 
         Parameters
@@ -833,6 +844,9 @@ class PublicAPI(AuthAPIBase):
         if api_url not in valid_urls:
             raise ValueError("Binance API URL is invalid")
 
+        # app
+        self.app = app
+
         self._api_url = api_url
 
     def get_time(self) -> datetime:
@@ -843,7 +857,8 @@ class PublicAPI(AuthAPIBase):
             resp = self.auth_api("GET", "/api/v3/time")
             return self.convert_time(int(resp["serverTime"])) - timedelta(hours=1)
         except Exception as e:
-            Logger.error(f"Error: {e}")
+            if self.app:
+                RichText.notify(f"Error: {e}", self.app, "error")
             return None
 
     def get_markets_24hr_stats(self) -> pd.DataFrame():
@@ -1050,7 +1065,8 @@ class PublicAPI(AuthAPIBase):
                 if self.die_on_api_error:
                     raise Exception(message)
                 else:
-                    Logger.error(f"Error: {message}")
+                    if self.app:
+                        RichText.notify(f"Error: {message}", self.app, "error")
                     return {}
 
             resp.raise_for_status()
@@ -1075,23 +1091,21 @@ class PublicAPI(AuthAPIBase):
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
-                Logger.error(err)
+                if self.app:
+                    RichText.notify(err, self.app, "error")
                 return {}
         else:
             if self.die_on_api_error:
                 raise SystemExit(f"{reason}: {self._api_url}")
             else:
-                Logger.info(f"{reason}: {self._api_url}")
+                if self.app:
+                    RichText.notify(f"{reason}: {self._api_url}", self.app, "info")
                 return {}
 
 
 class WebSocket(AuthAPIBase):
     def __init__(
-        self,
-        market=None,
-        granularity: Granularity = None,
-        api_url="https://api.binance.com",
-        ws_url: str = "wss://stream.binance.com:9443",
+        self, market=None, granularity: Granularity = None, api_url="https://api.binance.com", ws_url: str = "wss://stream.binance.com:9443", app: object = None
     ) -> None:
         # options
         self.debug = False
@@ -1120,6 +1134,9 @@ class WebSocket(AuthAPIBase):
 
         if ws_url[-1] != "/":
             ws_url = ws_url + "/"
+
+        # app
+        self.app = app
 
         self._ws_url = ws_url
         self._api_url = api_url
@@ -1210,17 +1227,21 @@ class WebSocket(AuthAPIBase):
         self.thread.join()
 
     def on_open(self):
-        Logger.info("-- Websocket Subscribed! --")
+        if self.app:
+            RichText.notify("-- Websocket Subscribed! --", self.app, "info")
 
     def on_close(self):
-        Logger.info("-- Websocket Closed --")
+        if self.app:
+            RichText.notify("-- Websocket Closed --", self.app, "info")
 
     def on_message(self, msg):
-        Logger.info(msg)
+        if self.app:
+            RichText.notify(msg, self.app, "info")
 
     def on_error(self, e, data=None):
-        Logger.error(e)
-        Logger.error("{} - data: {}".format(e, data))
+        if self.app:
+            RichText.notify(e, self.app, "error")
+            RichText.notify("{} - data: {}".format(e, data), self.app, "error")
 
         self.stop = True
         try:
@@ -1246,6 +1267,7 @@ class WebSocketClient(WebSocket, AuthAPIBase):
         granularity: Granularity = Granularity.ONE_HOUR,
         api_url="https://api.binance.com",
         ws_url: str = "wss://stream.binance.com:9443",
+        app: object = None,
     ) -> None:
         if len(markets) == 0:
             raise ValueError("A list of one or more markets is required.")
@@ -1285,6 +1307,9 @@ class WebSocketClient(WebSocket, AuthAPIBase):
 
         if ws_url[-1] != "/":
             ws_url = ws_url + "/"
+
+        # app
+        self.app = app
 
         self._ws_url = ws_url
         self.markets = markets

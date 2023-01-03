@@ -78,7 +78,7 @@ for exchange in config:
             print(f"[{ROW}/{len(df_markets)}] {market} {round((ROW/len(df_markets))*100, 2)}%")
             try:
                 if int(data["volume"]) > 0:
-                    ta = TechnicalAnalysis(api.get_historical_data(market, GRANULARITY, None))
+                    ta = TechnicalAnalysis(api.get_historical_data(market, GRANULARITY, None), app=app)
                     ta.add_ema(12)
                     ta.add_ema(26)
                     ta.add_atr(72)

@@ -8,7 +8,7 @@ from models.exchange.ExchangesEnum import Exchange
 from models.exchange.binance import AuthAPI as BAuthAPI
 from models.exchange.coinbase_pro import AuthAPI as CAuthAPI
 from models.exchange.kucoin import AuthAPI as KAuthAPI
-from models.helper.LogHelper import Logger
+from views.PyCryptoBot import RichText
 
 
 class AppState:
@@ -19,6 +19,7 @@ class AppState:
                 app.api_secret,
                 app.api_url,
                 recv_window=app.recv_window,
+                app=app
             )
         elif app.exchange == Exchange.COINBASEPRO:
             self.api = CAuthAPI(
@@ -26,6 +27,7 @@ class AppState:
                 app.api_secret,
                 app.api_passphrase,
                 app.api_url,
+                app=app
             )
         elif app.exchange == Exchange.KUCOIN:
             self.api = KAuthAPI(
@@ -34,6 +36,7 @@ class AppState:
                 app.api_passphrase,
                 app.api_url,
                 use_cache=app.usekucoincache,
+                app=app
             )
         else:
             self.api = None
@@ -135,9 +138,7 @@ class AppState:
         elif base < base_min:
             if self.app.enableinsufficientfundslogging:
                 self.app.insufficientfunds = True
-                Logger.warning(
-                    f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})"
-                )
+                RichText.notify(f"Insufficient Base Funds! (Actual: {base}, Minimum: {base_min})", self.app, "warning")
                 return
 
             sys.tracebacklimit = 0
@@ -162,9 +163,7 @@ class AppState:
                     if self.app.enableinsufficientfundslogging:
                         self.app.insufficientfunds = True
 
-                        Logger.warning(
-                            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})"
-                        )
+                        RichText.notify(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Insufficient Quote Funds! (Actual: {quote}, Minimum: {quote_min})", self.app, "warning")
                         return
 
                     sys.tracebacklimit = 0
@@ -218,9 +217,7 @@ class AppState:
         elif (quote / price) < base_min:
             if self.app.enableinsufficientfundslogging:
                 self.app.insufficientfunds = True
-                Logger.warning(
-                    f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})'
-                )
+                RichText.notify(f'Insufficient Quote Funds! (Actual: {"{:.8f}".format((quote / price))}, Minimum: {base_min})', self.app, "warning")
                 return
 
             sys.tracebacklimit = 0
@@ -292,9 +289,7 @@ class AppState:
             if base == 0.0 and quote == 0.0:
                 if self.app.enableinsufficientfundslogging:
                     self.app.insufficientfunds = True
-                    Logger.warning(
-                        f"Insufficient Funds! ({self.app.base_currency}={str(base)}, {self.app.quote_currency}={str(base)})"
-                    )
+                    RichText.notify(f"Insufficient Funds! ({self.app.base_currency}={str(base)}, {self.app.quote_currency}={str(base)})", self.app, "warning")
                     self.last_action = "WAIT"
                     return
 
@@ -316,9 +311,7 @@ class AppState:
                 and self.minimum_order_quote(quote, balancechk=True)
             ):
                 self.last_action = "BUY"
-                Logger.warning(
-                    f"Market - {self.app.market} did not return order info, but looks like there was a already a buy. Set last action to buy"
-                )
+                RichText.notify(f"Market - {self.app.market} did not return order info, but looks like there was a already a buy. Set last action to buy", self.app, "warning")
             elif order_pairs_normalised[0] < order_pairs_normalised[1]:
                 self.minimum_order_quote(quote)
                 self.last_action = "SELL"

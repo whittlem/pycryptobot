@@ -2,8 +2,6 @@ import sys
 
 sys.path.append('.')
 from models.helper.MarginHelper import calculate_margin
-from models.helper.LogHelper import Logger
-Logger.configure()
 
 
 def test_margin_binance():
@@ -43,7 +41,7 @@ def test_margin_coinbase_pro():
     sell_taker_fee = 0.0035
     sell_filled = 273.50838192 # round((sell_size - round(sell_size * sell_taker_fee, 8)), 8)
     sell_fee = 0.0
-    
+
     expected_sell_fee = 0.96064158 # round(sell_size * sell_taker_fee, 8)
     expected_profit = -35.26697608 # round(sell_filled - buy_size, 8)
     expected_margin = -11.42156431 # round((expected_profit / buy_size) * 100, 8)
@@ -106,13 +104,13 @@ def test_calculate_negative_margin_on_binance_when_coin_price_over_1_2():
 
 def test_calculate_negative_margin_on_binance_when_coin_price_under_1():
     # this test is using CHZ-USDT as market
-    
+
     buy_filled = 177.2
     buy_price = 0.4968600000000001
     buy_size = 88.043592 # round(buy_filled * buy_price, 8)
     buy_fee = 0.1772 # buy_filled(buy_size * 0.001, 8)
     sell_percent = 100
-    sell_price = 0.43913 
+    sell_price = 0.43913
     sell_size = 77.813836 # round((sell_percent / 100) * (sell_price * buy_filled), 8)
     sell_taker_fee = 0.001
     sell_filled = 77.73602216  # round((sell_size - round(sell_size * sell_taker_fee, 8)), 8)
@@ -129,10 +127,10 @@ def test_calculate_negative_margin_on_binance_when_coin_price_under_1():
     assert round(actual_profit, 8) == round(expected_profit, 8)
     assert round(actual_sell_fee, 8) == round(expected_sell_fee, 8)
 
-    
+
 def test_binance_microtrading_1():
     # this test is using CHZ-USDT as market
-    
+
     buy_filled = 99.9
     buy_price = 10.0
     buy_size = 1000 # round(buy_filled * buy_price, 8)
@@ -157,7 +155,7 @@ def test_binance_microtrading_1():
 
 def test_binance_microtrading_2():
     # this test is using CHZ-USDT as market
-    
+
     buy_filled = 99.9
     buy_price = 10.0
     buy_size = 1000 # round(buy_filled * buy_price, 8)
@@ -183,7 +181,7 @@ def test_binance_microtrading_2():
 
 def test_binance_microtrading_3():
     # this test is using CHZ-USDT as market
-    
+
     buy_filled = 99.9
     buy_price = 10.0
     buy_size = 1000 # round(buy_filled * buy_price, 8)
@@ -209,7 +207,7 @@ def test_binance_microtrading_3():
 
 def test_binance_microtrading_zero_margin():
     # this test is using CHZ-USDT as market
-    
+
     buy_filled = 99.9
     buy_price = 10.0
     buy_size = 1000 # round(buy_filled * buy_price, 8)
@@ -234,7 +232,7 @@ def test_binance_microtrading_zero_margin():
 
 def test_binance_microtrading_BNB_max_fee_test():
     # this test is using CHZ-USDT as market
-    
+
     buy_size = 1000 # round(buy_filled * buy_price, 8)
     buy_fee = 0.75 # round(buy_size * 0.00075, 8)
     buy_price = 10.0
@@ -259,7 +257,7 @@ def test_binance_microtrading_BNB_max_fee_test():
 
 def test_binance_microtrading_USDTRY_01():
     # this test is using CHZ-USDT as market
-    
+
     buy_size = 9021.17796 # round(buy_filled * buy_price, 8)
     buy_fee = 9.02117796 # round(buy_size * 0.001, 8)
     buy_price = 8.628
@@ -280,4 +278,4 @@ def test_binance_microtrading_USDTRY_01():
 
     assert round(actual_margin, 8) == round(expected_margin, 8)
     assert round(actual_profit, 8) == round(expected_profit, 8)
-    assert round(actual_sell_fee, 8) == round(expected_sell_fee, 8)    
+    assert round(actual_sell_fee, 8) == round(expected_sell_fee, 8)

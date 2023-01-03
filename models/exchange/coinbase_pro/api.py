@@ -15,8 +15,8 @@ from requests.auth import AuthBase
 from requests import Request
 from threading import Thread
 from websocket import create_connection, WebSocketConnectionClosedException
-from models.helper.LogHelper import Logger
 from models.exchange.Granularity import Granularity
+from views.PyCryptoBot import RichText
 
 MARGIN_ADJUSTMENT = 0.0025
 DEFAULT_MAKER_FEE_RATE = 0.005
@@ -49,13 +49,7 @@ class AuthAPIBase:
 
 
 class AuthAPI(AuthAPIBase):
-    def __init__(
-        self,
-        api_key="",
-        api_secret="",
-        api_passphrase="",
-        api_url="https://api.pro.coinbase.com",
-    ) -> None:
+    def __init__(self, api_key="", api_secret="", api_passphrase="", api_url="https://api.pro.coinbase.com", app: object = None) -> None:
         """Coinbase Pro API object model
 
         Parameters
@@ -102,6 +96,9 @@ class AuthAPI(AuthAPIBase):
         p = re.compile(r"^[A-z0-9#$%=@!{},`~&*()<>?.:;_|^/+\[\]]{8,32}$")
         if not p.match(api_passphrase):
             self.handle_init_error("Coinbase Pro API passphrase is invalid")
+
+        # app
+        self.app = app
 
         self._api_key = api_key
         self._api_secret = api_secret
@@ -198,7 +195,8 @@ class AuthAPI(AuthAPIBase):
             fees = self.get_fees()
 
         if len(fees) == 0 or "maker_fee_rate" not in fees:
-            Logger.error(f"error: 'maker_fee_rate' not in fees (using {DEFAULT_MAKER_FEE_RATE} as a fallback)")
+            if self.app:
+                RichText.notify(f"error: 'maker_fee_rate' not in fees (using {DEFAULT_MAKER_FEE_RATE} as a fallback)", self.app, "error")
             return DEFAULT_MAKER_FEE_RATE
 
         return float(fees["maker_fee_rate"].to_string(index=False).strip())
@@ -212,7 +210,8 @@ class AuthAPI(AuthAPIBase):
             fees = self.get_fees()
 
         if len(fees) == 0 or "taker_fee_rate" not in fees:
-            Logger.error(f"error: 'taker_fee_rate' not in fees (using {DEFAULT_TAKER_FEE_RATE} as a fallback)")
+            if self.app:
+                RichText.notify(f"error: 'taker_fee_rate' not in fees (using {DEFAULT_TAKER_FEE_RATE} as a fallback)", self.app, "error")
             return DEFAULT_TAKER_FEE_RATE
 
         return float(fees["taker_fee_rate"].to_string(index=False).strip())
@@ -428,10 +427,12 @@ class AuthAPI(AuthAPIBase):
                 epoch = int(resp["epoch"])
                 return datetime.fromtimestamp(epoch)
             else:
-                Logger.error(resp)
+                if self.app:
+                    RichText.notify(resp, self.app, "error")
                 return None
         except Exception as e:
-            Logger.error(f"Error: {e}")
+            if self.app:
+                RichText.notify(f"Error: {e}", self.app, "error")
             return None
 
     def market_buy(self, market: str = "", quote_quantity: float = 0) -> pd.DataFrame:
@@ -443,12 +444,14 @@ class AuthAPI(AuthAPIBase):
 
         # validates quote_quantity is either an integer or float
         if not isinstance(quote_quantity, int) and not isinstance(quote_quantity, float):
-            Logger.critical("Please report this to Michael Whittle: " + str(quote_quantity) + " " + str(type(quote_quantity)))
+            if self.app:
+                RichText.notify("Please report this to Michael Whittle: " + str(quote_quantity) + " " + str(type(quote_quantity)), self.app, "critical")
             raise TypeError("The funding amount is not numeric.")
 
         # funding amount needs to be greater than 10
         if quote_quantity < MINIMUM_TRADE_AMOUNT:
-            Logger.warning(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).")
+            if self.app:
+                RichText.notify(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).", self.app, "warning")
             return pd.DataFrame()
             # raise ValueError(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).")
 
@@ -460,7 +463,8 @@ class AuthAPI(AuthAPIBase):
                 "funds": self.market_quote_increment(market, quote_quantity),
             }
 
-            Logger.debug(order)
+            if self.app:
+                RichText.notify(order, self.app.debug)
 
             # connect to authenticated coinbase pro api
             model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
@@ -488,7 +492,8 @@ class AuthAPI(AuthAPIBase):
                 "size": self.market_base_Increment(market, base_quantity),
             }
 
-            Logger.debug(order)
+            if self.app:
+                RichText.notify(order, self.app, "debug")
 
             model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
             return model.auth_api("POST", "orders", order)
@@ -517,7 +522,8 @@ class AuthAPI(AuthAPIBase):
                 "price": future_price,
             }
 
-            Logger.debug(order)
+            if self.app:
+                RichText.notify(order, self.app, "debug")
 
             model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
             return model.auth_api("POST", "orders", order)
@@ -637,7 +643,8 @@ class AuthAPI(AuthAPIBase):
 
             if trycnt >= maxretry:
                 if reason in ("ConnectionError", "HTTPError") and trycnt <= connretry:
-                    Logger.error(f"{reason}:  URI: {uri} trying again.  Attempt: {trycnt}")
+                    if self.app:
+                        RichText.notify(f"{reason}:  URI: {uri} trying again.  Attempt: {trycnt}", self.app, "error")
                     if trycnt > 5:
                         time.sleep(30)
                 else:
@@ -647,7 +654,8 @@ class AuthAPI(AuthAPIBase):
                         reason = "Unknown Error"
                     return self.handle_api_error(msg, reason)
             else:
-                Logger.error(f"{reason}:  URI: {uri} trying again.  Attempt: {trycnt}")
+                if self.app:
+                    RichText.notify(f"{reason}:  URI: {uri} trying again.  Attempt: {trycnt}", self.app, "error")
                 time.sleep(15)
         else:
             return self.handle_api_error(
@@ -661,22 +669,27 @@ class AuthAPI(AuthAPIBase):
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
-                Logger.error(err)
+                if self.app:
+                    RichText.notify(err, self.app, "error")
                 return pd.DataFrame()
         else:
             if self.die_on_api_error:
                 raise SystemExit(f"{reason}: {self._api_url}")
             else:
-                Logger.info(f"{reason}: {self._api_url}")
+                if self.app:
+                    RichText.notify(f"{reason}: {self._api_url}", self.app, "info")
                 return pd.DataFrame()
 
 
 class PublicAPI(AuthAPIBase):
-    def __init__(self) -> None:
+    def __init__(self, app: object = None) -> None:
         # options
         self.debug = False
         self.die_on_api_error = False
         self._api_url = "https://api.pro.coinbase.com/"
+
+        # app
+        self.app = app
 
     def get_historical_data(
         self,
@@ -816,12 +829,14 @@ class PublicAPI(AuthAPIBase):
                     return df
                 else:
                     if trycnt >= (maxretry):
-                        Logger.warning(f"CoinbasePro API Error for Historical Data - attempted {trycnt} times")
+                        if self.app:
+                            RichText.notify(f"CoinbasePro API Error for Historical Data - attempted {trycnt} times", self.app, "warning")
                     time.sleep(15)
 
             except Exception:
                 if trycnt >= (maxretry):
-                    Logger.warning(f"CoinbasePro API Error for Historical Data - attempted {trycnt} times")
+                    if self.app:
+                        RichText.notify(f"CoinbasePro API Error for Historical Data - attempted {trycnt} times", self.app, "warning")
                 time.sleep(15)
 
     def get_ticker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
@@ -859,7 +874,8 @@ class PublicAPI(AuthAPIBase):
             except Exception:
                 trycnt += 1
                 if trycnt >= maxretry:
-                    Logger.warning(f"CoinbasePro Ticker Error - attempted {trycnt} times.")
+                    if self.app:
+                        RichText.notify(f"CoinbasePro Ticker Error - attempted {trycnt} times.", self.app, "warning")
                     return (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), 0.0)
                 time.sleep(15)
 
@@ -872,11 +888,13 @@ class PublicAPI(AuthAPIBase):
                 epoch = int(resp["epoch"])
                 return datetime.fromtimestamp(epoch)
             else:
-                Logger.error("resp does not contain the epoch key for some reason!")  # remove this later
-                Logger.error(resp)
+                if self.app:
+                    RichText.notify("resp does not contain the epoch key for some reason!", self.app, "error")  # remove this later
+                    RichText.notify(resp, self.app, "error")
                 return None
         except Exception as e:
-            Logger.error(f"Error: {e}")
+            if self.app:
+                RichText.notify(f"Error: {e}", self.app, "error")
             return None
 
     def get_markets_24hr_stats(self) -> pd.DataFrame():
@@ -934,7 +952,8 @@ class PublicAPI(AuthAPIBase):
 
             if trycnt >= maxretry:
                 if reason in ("ConnectionError", "HTTPError") and trycnt <= connretry:
-                    Logger.error(f"{reason}:  URI: {uri} trying again.  Attempt: {trycnt}")
+                    if self.app:
+                        RichText.notify(f"{reason}:  URI: {uri} trying again.  Attempt: {trycnt}", self.app, "error")
                     if trycnt > 5:
                         time.sleep(30)
                 else:
@@ -958,13 +977,15 @@ class PublicAPI(AuthAPIBase):
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
-                Logger.error(err)
+                if self.app:
+                    RichText.notify(err, self.app, "error")
                 return {}
         else:
             if self.die_on_api_error:
                 raise SystemExit(f"{reason}: {self._api_url}")
             else:
-                Logger.info(f"{reason}: {self._api_url}")
+                if self.app:
+                    RichText.notify(f"{reason}: {self._api_url}", self.app, "info")
                 return {}
 
 
@@ -976,6 +997,7 @@ class WebSocket(AuthAPIBase):
         granularity: Granularity = Granularity.ONE_HOUR,
         api_url="https://api.pro.coinbase.com",
         ws_url="wss://ws-feed.pro.coinbase.com",
+        app: object = None,
     ) -> None:
         # options
         self.debug = False
@@ -1005,6 +1027,9 @@ class WebSocket(AuthAPIBase):
 
         if ws_url[-1] != "/":
             ws_url = ws_url + "/"
+
+        # app
+        self.app = app
 
         self._ws_url = ws_url
         self._api_url = api_url
@@ -1090,17 +1115,21 @@ class WebSocket(AuthAPIBase):
         self.thread.join()
 
     def on_open(self):
-        Logger.info("-- Websocket Subscribed! --")
+        if self.app:
+            RichText.notify("-- Websocket Subscribed! --", self.app, "info")
 
     def on_close(self):
-        Logger.info("-- Websocket Closed --")
+        if self.app:
+            RichText.notify("-- Websocket Closed --", self.app, "info")
 
     def on_message(self, msg):
-        Logger.info(msg)
+        if self.app:
+            RichText.notify(msg, self.app, "info")
 
     def on_error(self, e, data=None):
-        Logger.error(e)
-        Logger.error("{} - data: {}".format(e, data))
+        if self.app:
+            RichText.notify(e, self.app, "error")
+            RichText.notify("{} - data: {}".format(e, data), self.app, "error")
 
         self.stop = True
         try:
@@ -1127,6 +1156,7 @@ class WebSocketClient(WebSocket):
         granularity: Granularity = Granularity.ONE_HOUR,
         api_url="https://api.pro.coinbase.com/",
         ws_url: str = "wss://ws-feed.pro.coinbase.com",
+        app: object = None,
     ) -> None:
         if len(markets) == 0:
             raise ValueError("A list of one or more markets is required.")
@@ -1169,6 +1199,9 @@ class WebSocketClient(WebSocket):
 
         if ws_url[-1] != "/":
             ws_url = ws_url + "/"
+
+        # app
+        self.app = app
 
         self._ws_url = ws_url
 

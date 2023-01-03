@@ -3,7 +3,7 @@ from time import sleep
 from datetime import datetime, timedelta
 from models.TradingAccount import TradingAccount
 from models.exchange.ExchangesEnum import Exchange
-from models.helper.LogHelper import Logger
+from views.PyCryptoBot import RichText
 
 
 class Stats:
@@ -31,7 +31,7 @@ class Stats:
         # pylint: disable=unused-variable
         for index, row in self.orders.iterrows():
             time = row["created_at"].to_pydatetime()
-            # Logger.debug(row)
+
             if row["action"] == "buy":
                 if self.app.exchange == Exchange.COINBASEPRO:
                     amount = row["filled"] * row["price"] + row["fees"]
@@ -91,19 +91,19 @@ class Stats:
         for pair in self.order_pairs:
             try:  # return 0 if unexpected exception
                 pair["delta"] = float(pair["sell"]["size"]) - float(pair["buy"]["size"])
-                Logger.debug(float(pair["sell"]["size"]))
+                RichText.notify(float(pair["sell"]["size"]), self.app, "debug")
             except Exception as err:
-                Logger.debug(err)
-                Logger.warning("unexpected error calculating delta, returning 0")
-                Logger.debug(pair)
+                RichText.notify(err, self.app, "debug")
+                RichText.notify("unexpected error calculating delta, returning 0", self.app, "warning")
+                RichText.notify(pair, self.app, "debug")
                 pair["delta"] = 0
 
             try:  # return 0 if unexpected exception
                 pair["gain"] = (float(pair["delta"]) / float(pair["buy"]["size"])) * 100
             except Exception as err:
-                Logger.debug(err)
-                Logger.warning("unexpected error calculating gain, returning 0")
-                Logger.debug(pair)
+                RichText.notify(err, self.app, "debug")
+                RichText.notify("unexpected error calculating gain, returning 0", self.app, "warning")
+                RichText.notify(pair, self.app, "debug")
                 pair["gain"] = 0
 
         # get day/week/month/all time totals
@@ -142,7 +142,7 @@ class Stats:
             for header in headers:
                 border += "-" * (len(header) - 1) + "+"
             border = border[:-2] + "+"
-            Logger.info(border + "\n" + "".join([x for x in headers]) + "\n" + border)
+            RichText.notify(border + "\n" + "".join([x for x in headers]) + "\n" + border, self.app, "info")
             for i, pair in enumerate(self.order_pairs):
                 if start:
                     if pair["sell"]["time"].date() < start:
@@ -169,10 +169,9 @@ class Stats:
                 else:
                     d_gain = "| " + "{:.2f}".format(pair["gain"]) + " %"
                 d_gain = d_gain + " " * (len(headers[6]) - len(d_gain) - 1) + "|"
-                Logger.info(
-                    f"{d_num}{d_market}{d_date}{d_buy_size}{d_sell_size}{d_delta}{d_gain}"
-                )
-            Logger.info(border)
+                RichText.notify(f"{d_num}{d_market}{d_date}{d_buy_size}{d_sell_size}{d_delta}{d_gain}", self.app, "info")
+
+            RichText.notify(border, self.app, "info")
             sys.exit()
 
         for pair in self.order_pairs:
@@ -278,25 +277,25 @@ class Stats:
         else:
             header = self.app.market
 
-        Logger.info(f"------------- TODAY : {header} --------------")
-        Logger.info(trades + " " * (width - len(trades)) + str(len(today_per)))
-        Logger.info(gains + " " * (width - len(gains)) + today_percent)
-        Logger.info(aver + " " * (width - len(aver)) + str(today_delta))
-        Logger.info(success + " " * (width - len(success)) + today_sum)
-        Logger.info(f"\n-------------- WEEK : {header} --------------")
-        Logger.info(trades + " " * (width - len(trades)) + str(len(week_per)))
-        Logger.info(gains + " " * (width - len(gains)) + week_percent)
-        Logger.info(aver + " " * (width - len(aver)) + str(week_delta))
-        Logger.info(success + " " * (width - len(success)) + week_sum)
-        Logger.info(f"\n------------- MONTH : {header} --------------")
-        Logger.info(trades + " " * (width - len(trades)) + str(len(month_per)))
-        Logger.info(gains + " " * (width - len(gains)) + month_percent)
-        Logger.info(aver + " " * (width - len(aver)) + str(month_delta))
-        Logger.info(success + " " * (width - len(success)) + month_sum)
-        Logger.info(f"\n------------ ALL TIME : {header} ------------")
-        Logger.info(trades + " " * (width - len(trades)) + str(len(all_time_per)))
-        Logger.info(gains + " " * (width - len(gains)) + all_time_percent)
-        Logger.info(aver + " " * (width - len(aver)) + str(all_time_delta))
-        Logger.info(success + " " * (width - len(success)) + all_time_sum)
+        RichText.notify(f"------------- TODAY : {header} --------------", self.app, "info")
+        RichText.notify(trades + " " * (width - len(trades)) + str(len(today_per)), self.app, "info")
+        RichText.notify(gains + " " * (width - len(gains)) + today_percent, self.app, "info")
+        RichText.notify(aver + " " * (width - len(aver)) + str(today_delta), self.app, "info")
+        RichText.notify(success + " " * (width - len(success)) + today_sum, self.app, "info")
+        RichText.notify(f"\n-------------- WEEK : {header} --------------", self.app, "info")
+        RichText.notify(trades + " " * (width - len(trades)) + str(len(week_per)), self.app, "info")
+        RichText.notify(gains + " " * (width - len(gains)) + week_percent, self.app, "info")
+        RichText.notify(aver + " " * (width - len(aver)) + str(week_delta), self.app, "info")
+        RichText.notify(success + " " * (width - len(success)) + week_sum, self.app, "info")
+        RichText.notify(f"\n------------- MONTH : {header} --------------", self.app, "info")
+        RichText.notify(trades + " " * (width - len(trades)) + str(len(month_per)), self.app, "info")
+        RichText.notify(gains + " " * (width - len(gains)) + month_percent, self.app, "info")
+        RichText.notify(aver + " " * (width - len(aver)) + str(month_delta), self.app, "info")
+        RichText.notify(success + " " * (width - len(success)) + month_sum, self.app, "info")
+        RichText.notify(f"\n------------ ALL TIME : {header} ------------", self.app, "info")
+        RichText.notify(trades + " " * (width - len(trades)) + str(len(all_time_per)), self.app, "info")
+        RichText.notify(gains + " " * (width - len(gains)) + all_time_percent, self.app, "info")
+        RichText.notify(aver + " " * (width - len(aver)) + str(all_time_delta), self.app, "info")
+        RichText.notify(success + " " * (width - len(success)) + all_time_sum, self.app, "info")
 
         sys.exit()
