@@ -105,8 +105,8 @@ class TechnicalAnalysis:
         if self.total_periods >= 200:
             self.add_sma_buy_signals()
         self.add_macd_buy_signals()
-
         self.add_adx_buy_signals()
+        self.add_bbands_buy_signals()
 
         self.add_candle_astral_buy()
         self.add_candle_astral_sell()
@@ -1055,6 +1055,33 @@ class TechnicalAnalysis:
                             low = b
 
         return ""
+
+    def add_bbands_buy_signals(self) -> None:
+        """Adds the Bollinger Bands buy and sell signals to the DataFrame"""
+
+        if not isinstance(self.df, DataFrame):
+            raise TypeError("Pandas DataFrame required.")
+
+        if "close" not in self.df.columns:
+            raise AttributeError("Pandas DataFrame 'close' column required.")
+
+        if not self.df["close"].dtype == "float64" and not self.df["close"].dtype == "int64":
+            raise AttributeError("Pandas DataFrame 'close' column not int64 or float64.")
+
+        if "bb23_upper" not in self.df.columns:
+            self.add_bollinger_bands(20)
+
+        # true if Close is above the Bollinger Upper band
+        self.df["closegtbb20_upper"] = self.df.close > self.df.bb20_upper
+        # true if the current frame is where Close crosses over above
+        self.df["closegtbb20_upperco"] = self.df.closegtbb20_upper.ne(self.df.closegtbb20_upper.shift())
+        self.df.loc[self.df["closegtbb20_upper"] == False, "closegtbb20_upperco"] = False  # noqa: E712
+
+        # true if Close is below the Bollinger Lower band
+        self.df["closeltbb20_lower"] = self.df.close < self.df.bb20_lower
+        # true if the current frame is where Close crosses over below
+        self.df["closeltbb20_lowerco"] = self.df.closeltbb20_lower.ne(self.df.closeltbb20_lower.shift())
+        self.df.loc[self.df["closeltbb20_lower"] == False, "closeltbb20_lowerco"] = False  # noqa: E712
 
     def add_ema_buy_signals(self) -> None:
         """Adds the EMA12/EMA26 buy and sell signals to the DataFrame"""

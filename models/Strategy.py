@@ -142,6 +142,10 @@ class Strategy:
                 bool(self._df_last["eri_buy"].values[0]) is True
                 or self.app.disablebuyelderray
             )
+            (
+                bool(self._df_last["closegtbb20_upperco"].values[0]) is True
+                or self.app.disablebuybbands
+            )
             and self.state.last_action != "BUY"
         ):  # required for all strategies
 
@@ -168,6 +172,10 @@ class Strategy:
             and (
                 bool(self._df_last["eri_buy"].values[0]) is True
                 or self.app.disablebuyelderray
+            )
+            (
+                bool(self._df_last["closeltbb20_lowerco"].values[0]) is True
+                or self.app.disablebuybbands
             )
             and self.state.last_action != "BUY"
         ):  # required for all strategies

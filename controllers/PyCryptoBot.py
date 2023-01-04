@@ -612,6 +612,8 @@ class PyCryptoBot(BotConfig):
                 obv_pc = float(self.df_last["obv_pc"].values[0])
                 elder_ray_buy = bool(self.df_last["eri_buy"].values[0])
                 elder_ray_sell = bool(self.df_last["eri_sell"].values[0])
+                closegtbb20_upperco = bool(self.df_last["closegtbb20_upperco"].values[0])
+                closeltbb20_lowerco = bool(self.df_last["closeltbb20_lowerco"].values[0])
 
                 # if simulation, set goldencross based on actual sim date
                 if self.is_sim:
@@ -882,6 +884,15 @@ class PyCryptoBot(BotConfig):
                             self.disablebuyobv,
                         ),
                         RichText.elder_ray(elder_ray_buy, elder_ray_sell, self.disablebuyelderray),
+
+                        RichText.number_comparison(
+                            "BBU:",
+                            round(self.df_last["close"].values[0], 2),
+                            round(self.df_last["bb20_upper"].values[0], 2),
+                            closegtbb20_upperco or closeltbb20_lowerco,
+                            self.disablebuybbands,
+                        ),
+
                         RichText.action_text(self.state.action),
                         RichText.last_action_text(self.state.last_action),
                         RichText.styled_label_text(
@@ -2504,8 +2515,9 @@ class PyCryptoBot(BotConfig):
         )
         config_option_row_bool("On-Balance Volume (OBV)", "disablebuyobv", "On-Balance Volume (OBV)", store_invert=True, default_value=False, arg_name="obv")
         config_option_row_bool(
-            "Use Elder-Ray", "disablebuyelderray", "Elder-Ray Index (Elder-Ray)", break_below=True, store_invert=True, default_value=False, arg_name="elderray"
+            "Use Elder-Ray", "disablebuyelderray", "Elder-Ray Index (Elder-Ray)", store_invert=True, default_value=False, arg_name="elderray"
         )
+        config_option_row_bool("Use Bollinger Bands", "disablebuybbands", "Bollinger Bands (BB)", break_below=True, store_invert=True, default_value=False, arg_name="bbands")
 
         self.console_term.print(table)
         if self.disablelog is False:

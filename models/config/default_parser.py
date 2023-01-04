@@ -273,3 +273,4 @@ def default_config_parse(app, config):
     config_option_bool(option_name="macdsignal", option_default=True, store_name="disablebuymacd", store_invert=True)
     config_option_bool(option_name="obv", option_default=False, store_name="disablebuyobv", store_invert=True)
     config_option_bool(option_name="elderray", option_default=False, store_name="disablebuyelderray", store_invert=True)
+    config_option_bool(option_name="bbands", option_default=False, store_name="disablebuybbands", store_invert=True)
