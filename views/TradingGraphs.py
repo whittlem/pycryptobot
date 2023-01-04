@@ -41,6 +41,37 @@ class TradingGraphs:
         # set graph format
         plt.style.use("seaborn")
 
+    def render_bollinger_bands(self, saveFile="", saveOnly=False):
+        """Render the Bollinger Bands graph
+
+        Parameters
+        ----------
+        saveFile : str, optional
+            Save the figure
+        saveOnly : bool
+            Save the figure without displaying it
+        """
+
+        plt.subplot(111)
+        plt.plot(self.df.close, label="Price", color="black")
+        plt.plot(self.df.bb20_upper, label="Upper Band", color="green")
+        plt.plot(self.df.bb20_mid, label="Moving Average", color="blue")
+        plt.plot(self.df.bb20_lower, label="Lower Band", color="red")
+        plt.ylabel("Price")
+
+        plt.xticks(rotation=90)
+        plt.tight_layout()
+        plt.legend()
+
+        try:
+            if saveFile != "":
+                plt.savefig(saveFile)
+        except OSError:
+            raise SystemExit(f"Unable to save: {saveFile}")
+
+        if saveOnly is False:
+            plt.show()
+
     def render_buy_sell_signal_ema226(self, saveFile="", saveOnly=False):
         """Render the EMA12 and EMA26 buy and sell signals
 

@@ -16,5 +16,8 @@ model = TechnicalAnalysis(df, app=app)
 # model.add_support_resistance_levels()
 # print(model.get_df())
 
-model.add_support_resistance_levels()
-model.print_support_resistance_levels_v2()
+# model.add_support_resistance_levels()
+# model.print_support_resistance_levels_v2()
+
+model.add_bollinger_bands(20)
+print(model.get_df())

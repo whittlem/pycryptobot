@@ -310,6 +310,7 @@ class BotConfig:
                 "market": "BTC-GBP",
             },
         }
+
         return (
             conf[exchange.value]["api_url"],
             conf[exchange.value]["api_key"],

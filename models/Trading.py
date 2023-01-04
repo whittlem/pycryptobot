@@ -90,6 +90,7 @@ class TechnicalAnalysis:
         self.add_golden_cross()
         self.add_death_cross()
 
+        self.add_bollinger_bands(20)
         self.add_fibonacci_bollinger_bands()
         self.add_support_resistance_levels(20)
 
@@ -551,6 +552,23 @@ class TechnicalAnalysis:
             raise Exception("Data range too small.")
 
         return self.df.close.ewm(span=period, adjust=False).mean()
+
+    def add_bollinger_bands(self, period: int = 20, std: int = 2) -> None:
+        """Adds the Exponential Moving Average (EMA) the DateFrame"""
+
+        if not isinstance(period, int):
+            raise TypeError("Period parameter is not perioderic.")
+
+        if period > self.total_periods or period < 5 or period > 200:
+            raise ValueError("Period is out of range")
+
+        if len(self.df) < period:
+            raise Exception("Data range too small.")
+
+        df_tmp = ta.bbands(length=period, std=std, mamode="sma", close=self.df.close, fillna=self.df.close)
+        self.df["bb" + str(period) + "_upper"] = df_tmp[f"BBU_{period}_{std}.0"]
+        self.df["bb" + str(period) + "_mid"] = df_tmp[f"BBM_{period}_{std}.0"]
+        self.df["bb" + str(period) + "_lower"] = df_tmp[f"BBL_{period}_{std}.0"]
 
     def add_ema(self, period: int) -> None:
         """Adds the Exponential Moving Average (EMA) the DateFrame"""

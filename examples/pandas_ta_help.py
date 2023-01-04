@@ -11,7 +11,11 @@ app = PyCryptoBot()
 df = app.get_historical_data(app.market, app.granularity, None)
 
 # help(ta)
-help(ta.eri)
+# help(ta.eri)
+# help(ta.bbands)
+
+bbands20 = df.ta.bbands(length=20, std=2, mamode="sma", fillna=df.close)
+print(bbands20)
 
 sys.exit()
 
