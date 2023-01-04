@@ -70,10 +70,7 @@ class Strategy:
         if (
             self.state.last_action == "SELL"
             and self.app.disablebuynearhigh is True
-            and (
-                price
-                > (self._df["close"].max() * (1 - self.app.nobuynearhighpcnt / 100))
-            )
+            and (price > (self._df["close"].max() * (1 - self.app.nobuynearhighpcnt / 100)))
         ):
             if not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly):
                 log_text = (
@@ -95,10 +92,7 @@ class Strategy:
             return False
 
         # if Bull Only is set and no goldencross, return False
-        if (
-            self.app.disablebullonly is False
-            and bool(self._df_last["goldencross"].values[0]) is False
-        ):
+        if self.app.disablebullonly is False and bool(self._df_last["goldencross"].values[0]) is False:
             return False
 
         # Custom Strategy options
@@ -110,8 +104,8 @@ class Strategy:
                 return False
 
         # if standard EMA and MACD are disabled, do not run below tests
-        if self.app.disablebuyema and self.app.disablebuymacd:
-            log_text = f"{str(now)} | {self.app.market} | {self.app.print_granularity()} | EMA, MACD indicators are disabled"
+        if self.app.disablebuyema and self.app.disablebuymacd and self.app.disablebuyobv and self.app.disablebuyelderray and self.app.disablebuybbands_s1 and self.app.disablebuybbands_s2:
+            log_text = "No strategy? EMA, MACD, OBV, ER, and BB indicators are all disabled!"
             RichText.notify(log_text, self.app, "warning")
 
             return False
@@ -125,30 +119,14 @@ class Strategy:
 
         # criteria for a buy signal 1
         if (
-            (
-                bool(self._df_last["ema12gtema26co"].values[0]) is True
-                or self.app.disablebuyema
-            )
-            and (
-                bool(self._df_last["macdgtsignal"].values[0]) is True
-                or self.app.disablebuymacd
-            )
-            and (
-                float(self._df_last["obv_pc"].values[0])
-                > -5  # TODO: why is this hard coded?
-                or self.app.disablebuyobv
-            )
-            and (
-                bool(self._df_last["eri_buy"].values[0]) is True
-                or self.app.disablebuyelderray
-            )
-            (
-                bool(self._df_last["closegtbb20_upperco"].values[0]) is True
-                or self.app.disablebuybbands
-            )
+            (bool(self._df_last["ema12gtema26co"].values[0]) is True or self.app.disablebuyema)
+            and (bool(self._df_last["macdgtsignal"].values[0]) is True or self.app.disablebuymacd)
+            and (float(self._df_last["obv_pc"].values[0]) > -5 or self.app.disablebuyobv)  # TODO: why is this hard coded?
+            and (bool(self._df_last["eri_buy"].values[0]) is True or self.app.disablebuyelderray)
+            and (bool(self._df_last["closegtbb20_upperco"].values[0]) is True or self.app.disablebuybbands_s1)
+            and (bool(self._df_last["closegtbb20_lowerco"].values[0]) is True or self.app.disablebuybbands_s2)
             and self.state.last_action != "BUY"
         ):  # required for all strategies
-
             if debug:
                 RichText.notify("*** Buy Signal ***", self.app, "debug")
                 for indicator in required_indicators:
@@ -158,25 +136,12 @@ class Strategy:
             return True
 
         # criteria for buy signal 2 (optionally add additional buy signals)
+        """
         elif (
-            (
-                bool(self._df_last["ema12gtema26co"].values[0]) is True
-                or self.app.disablebuyema
-            )
+            (bool(self._df_last["ema12gtema26co"].values[0]) is True or self.app.disablebuyema)
             and bool(self._df_last["macdgtsignalco"].values[0]) is True
-            and (
-                float(self._df_last["obv_pc"].values[0])
-                > -5  # TODO: why is this hard coded?
-                or self.app.disablebuyobv
-            )
-            and (
-                bool(self._df_last["eri_buy"].values[0]) is True
-                or self.app.disablebuyelderray
-            )
-            (
-                bool(self._df_last["closeltbb20_lowerco"].values[0]) is True
-                or self.app.disablebuybbands
-            )
+            and (float(self._df_last["obv_pc"].values[0]) > -5 or self.app.disablebuyobv)  # TODO: why is this hard coded?
+            and (bool(self._df_last["eri_buy"].values[0]) is True or self.app.disablebuyelderray)
             and self.state.last_action != "BUY"
         ):  # required for all strategies
 
@@ -187,6 +152,7 @@ class Strategy:
                 RichText.notify(f"last_action: {self.state.last_action}", self.app, "debug")
 
             return True
+        """
 
         return False
 
@@ -202,11 +168,10 @@ class Strategy:
                 # If Custom Strategy active, don't process standard signals, return False
                 return False
 
-        # if standard EMA and MACD are disabled, do not run below tests
-        if self.app.disablebuyema and self.app.disablebuymacd:
+        if self.app.disablebuyema and self.app.disablebuymacd and self.app.disablebuyobv and self.app.disablebuyelderray and self.app.disablebuybbands_s1 and self.app.disablebuybbands_s2:
             # if custom trade signals is enabled, don't alert, just return False
             if self.CS_ready is False:
-                RichText.notify("EMA, MACD indicators are needed for standard signals and they are disabled.", self.app, "warning")
+                RichText.notify("No strategy? EMA, MACD, OBV, ER, and BB indicators are all disabled!", self.app, "warning")
 
             return False
 
@@ -218,9 +183,10 @@ class Strategy:
                 raise AttributeError(f"'{indicator}' not in Pandas dataframe")
 
         # criteria for a sell signal 1
-        if bool(self._df_last["ema12ltema26co"].values[0]) is True and (
-            bool(self._df_last["macdltsignal"].values[0]) is True
-            or self.app.disablebuymacd
+        if (
+            bool(self._df_last["ema12ltema26co"].values[0]) is True and (bool(self._df_last["macdltsignal"].values[0]) is True or self.app.disablebuymacd)
+            and (bool(self._df_last["closeltbb20_lowerco"].values[0]) is True or self.app.disablebuybbands_s1)
+            and (bool(self._df_last["closeltbb20_upperco"].values[0]) is True or self.app.disablebuybbands_s2)
         ):
             if debug:
                 RichText.notify("*** Sell Signal ***", self.app, "debug")
@@ -248,47 +214,41 @@ class Strategy:
         debug = False
 
         # if ALL CUSTOM signals are still buy and strength is strong don't trigger a sell yet
-        if (  # Custom Strategy loaded
-            self.CS_ready
-            and self.app.selltriggeroverride is True
-            and self.CS.buy_pts >= self.CS.sell_override_pts
-        ):
+        if self.CS_ready and self.app.selltriggeroverride is True and self.CS.buy_pts >= self.CS.sell_override_pts:  # Custom Strategy loaded
             return False
 
         # preventloss - attempt selling before margin drops below 0%
         if self.app.preventloss:
-            if (
-                self.state.prevent_loss is False
-                and margin > self.app.preventlosstrigger
-            ):
+            if self.state.prevent_loss is False and margin > self.app.preventlosstrigger:
                 self.state.prevent_loss = True
-                RichText.notify(f"Reached prevent loss trigger of {self.app.preventlosstrigger}%.  Watch margin ({self.app.preventlossmargin}%) to prevent loss.", self.app, "warning")
+                RichText.notify(
+                    f"Reached prevent loss trigger of {self.app.preventlosstrigger}%.  Watch margin ({self.app.preventlossmargin}%) to prevent loss.",
+                    self.app,
+                    "warning",
+                )
             elif (
                 self.state.prevent_loss is True and margin <= self.app.preventlossmargin
             ) or (  # trigger of 0 disables trigger check and only checks margin set point
-                self.app.preventlosstrigger == 0
-                and margin <= self.app.preventlossmargin
+                self.app.preventlosstrigger == 0 and margin <= self.app.preventlossmargin
             ):
                 RichText.notify("Time to sell before losing funds! Prevent Loss Activated!", self.app, "warning")
                 if not self.app.disabletelegram:
-                    self.app.notifyTelegram(
-                        f"{self.app.market} - time to sell before losing funds! Prevent Loss Activated!"
-                    )
+                    self.app.notifyTelegram(f"{self.app.market} - time to sell before losing funds! Prevent Loss Activated!")
                 return True
 
         # check sellatloss and nosell bounds before continuing
         if not self.app.sellatloss and margin <= 0:
             return False
-        elif (
-            (self.app.nosellminpcnt is not None) and (margin >= self.app.nosellminpcnt)
-        ) and (
+        elif ((self.app.nosellminpcnt is not None) and (margin >= self.app.nosellminpcnt)) and (
             (self.app.nosellmaxpcnt is not None) and (margin <= self.app.nosellmaxpcnt)
         ):
             return False
 
         if debug:
             RichText.notify(f"Trailing Stop Loss Enabled {self.app.trailing_stop_loss}", self.app, "debug")
-            RichText.notify(f"Change Percentage {change_pcnt_high} < Stop Loss Percent {self.state.tsl_pcnt} = {change_pcnt_high < self.state.tsl_pcnt}", self.app, "debug")
+            RichText.notify(
+                f"Change Percentage {change_pcnt_high} < Stop Loss Percent {self.state.tsl_pcnt} = {change_pcnt_high < self.state.tsl_pcnt}", self.app, "debug"
+            )
             RichText.notify(f"Margin {margin} > Stop Loss Trigger  {self.state.tsl_trigger} = {margin > self.state.tsl_trigger}", self.app, debug)
 
         if self.state.tsl_pcnt is not None:
@@ -296,8 +256,7 @@ class Strategy:
             if self.app.dynamic_tsl:
                 if (
                     self.app.tsl_trigger_multiplier is not None
-                    and margin
-                    > round(self.state.tsl_trigger * self.app.tsl_trigger_multiplier)
+                    and margin > round(self.state.tsl_trigger * self.app.tsl_trigger_multiplier)
                     and self.state.tsl_max is False
                 ):
                     # price increased, so check margin and reset trailingsellpcnt
@@ -305,19 +264,11 @@ class Strategy:
 
                 if self.state.tsl_triggered is False:
                     # check margin and set the trailingsellpcnt dynamically if enabled
-                    if self.app.tsl_trigger_multiplier is not None and margin > round(
-                        self.state.tsl_trigger * self.app.tsl_trigger_multiplier
-                    ):
+                    if self.app.tsl_trigger_multiplier is not None and margin > round(self.state.tsl_trigger * self.app.tsl_trigger_multiplier):
                         self.state.tsl_triggered = True
-                        self.state.tsl_trigger = round(
-                            self.state.tsl_trigger * self.app.tsl_trigger_multiplier
-                        )
-                        self.state.tsl_pcnt = float(
-                            round(self.state.tsl_pcnt * self.app.tsl_multiplier, 1)
-                        )
-                        if (
-                            self.state.tsl_pcnt <= self.app.tsl_max_pcnt
-                        ):  # has tsl reached it's max setting
+                        self.state.tsl_trigger = round(self.state.tsl_trigger * self.app.tsl_trigger_multiplier)
+                        self.state.tsl_pcnt = float(round(self.state.tsl_pcnt * self.app.tsl_multiplier, 1))
+                        if self.state.tsl_pcnt <= self.app.tsl_max_pcnt:  # has tsl reached it's max setting
                             self.state.tsl_max = True
                     # tsl is triggered if margin is high enough
                     elif margin > self.state.tsl_trigger:
@@ -331,35 +282,24 @@ class Strategy:
 
             if debug:
                 debugtext = f"TSL Triggered: {self.state.tsl_triggered} TSL Pcnt: {self.state.tsl_pcnt}% TSL Trigger: {self.state.tsl_trigger}%"
+                debugtext += f" TSL Next Trigger: {round(self.state.tsl_trigger * self.app.tsl_trigger_multiplier)}%\n" if self.app.dynamic_tsl else "\n"
                 debugtext += (
-                    f" TSL Next Trigger: {round(self.state.tsl_trigger * self.app.tsl_trigger_multiplier)}%\n"
-                    if self.app.dynamic_tsl
-                    else "\n"
+                    f"Change Percentage {change_pcnt_high} < Stop Loss Percent {self.app.trailing_stop_loss} = {change_pcnt_high < self.app.trailing_stop_loss}"
                 )
-                debugtext += f"Change Percentage {change_pcnt_high} < Stop Loss Percent {self.app.trailing_stop_loss} = {change_pcnt_high < self.app.trailing_stop_loss}"
                 debugtext += f"Margin {margin} > Stop Loss Trigger  {self.app.trailing_stop_loss_trigger} = {margin > self.app.trailing_stop_loss_trigger}"
                 RichText.notify(debugtext, self.app, "debug")
 
                 # Telgram debug output
                 if not self.app.disabletelegram:
-                    self.app.notifyTelegram(
-                        f"{self.app.market} ({self.app.print_granularity()})\n{debugtext}"
-                    )
+                    self.app.notifyTelegram(f"{self.app.market} ({self.app.print_granularity()})\n{debugtext}")
 
-            if (
-                self.state.tsl_triggered is True
-                and change_pcnt_high < self.state.tsl_pcnt
-            ):
+            if self.state.tsl_triggered is True and change_pcnt_high < self.state.tsl_pcnt:
                 log_text = f"Trailing Stop Loss Triggered (Margin: {_truncate(margin,2)}% Stoploss: {str(self.state.tsl_pcnt)}%)"
-                if not self.app.is_sim or (
-                    self.app.is_sim and not self.app.simresultonly
-                ):
+                if not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly):
                     RichText.notify(log_text, self.app, "warning")
 
                 if not self.app.disabletelegram:
-                    self.app.notifyTelegram(
-                        f"{self.app.market} ({self.app.print_granularity()}) {log_text}"
-                    )
+                    self.app.notifyTelegram(f"{self.app.market} ({self.app.print_granularity()}) {log_text}")
 
                 return True
 
@@ -372,20 +312,11 @@ class Strategy:
             RichText.notify(f"(self.app.sellatloss is True (actual: {self.app.sellatloss}) or margin ({margin}) > 0)", self.app, "debug")
 
         # loss failsafe sell at sell_lower_pcnt
-        if (
-            self.app.disablefailsafelowerpcnt is False
-            and self.app.sellatloss
-            and self.app.sell_lower_pcnt is not None
-            and margin < self.app.sell_lower_pcnt
-        ):
-            log_text = (
-                "Loss Failsafe Triggered (< " + str(self.app.sell_lower_pcnt) + "%)"
-            )
+        if self.app.disablefailsafelowerpcnt is False and self.app.sellatloss and self.app.sell_lower_pcnt is not None and margin < self.app.sell_lower_pcnt:
+            log_text = "Loss Failsafe Triggered (< " + str(self.app.sell_lower_pcnt) + "%)"
             RichText.notify(log_text, self.app, "warning")
             if not self.app.disabletelegram:
-                self.app.notifyTelegram(
-                    f"{self.app.market} ({self.app.print_granularity()}) {log_text}"
-                )
+                self.app.notifyTelegram(f"{self.app.market} ({self.app.print_granularity()}) {log_text}")
             return True
 
         if debug:
@@ -413,13 +344,9 @@ class Strategy:
             and self.state.fib_low > 0
             and self.state.fib_low >= float(price)
         ):
-            log_text = (
-                f"Loss Failsafe Triggered (Fibonacci Band: {str(self.state.fib_low)})"
-            )
+            log_text = f"Loss Failsafe Triggered (Fibonacci Band: {str(self.state.fib_low)})"
             RichText.notify(log_text, self.app, "warning")
-            self.app.notifyTelegram(
-                f"{self.app.market} ({self.app.print_granularity()}) {log_text}"
-            )
+            self.app.notifyTelegram(f"{self.app.market} ({self.app.print_granularity()}) {log_text}")
             return True
 
         if debug:
@@ -437,18 +364,12 @@ class Strategy:
             RichText.notify(f"(self.app.sellatloss is True (actual: {self.app.sellatloss}) or margin ({margin}) > 0)", self.app, "debug")
 
         # profit bank at sell_upper_pcnt
-        if (
-            self.app.disableprofitbankupperpcnt is False
-            and self.app.sell_upper_pcnt is not None
-            and margin > self.app.sell_upper_pcnt
-        ):
+        if self.app.disableprofitbankupperpcnt is False and self.app.sell_upper_pcnt is not None and margin > self.app.sell_upper_pcnt:
             log_text = f"Profit Bank Triggered (> {str(self.app.sell_upper_pcnt)}%)"
             if not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly):
                 RichText.notify(log_text, self.app, "warning")
             if not self.app.disabletelegram:
-                self.app.notifyTelegram(
-                    f"{self.app.market} ({self.app.print_granularity()}) {log_text}"
-                )
+                self.app.notifyTelegram(f"{self.app.market} ({self.app.print_granularity()}) {log_text}")
             return True
 
         if debug:
@@ -459,21 +380,13 @@ class Strategy:
             RichText.notify(f"(self.app.sellatloss is True (actual: {self.app.sellatloss}) or margin ({margin}) > 0)", self.app, "debug")
 
         # profit bank when strong reversal detected
-        if (
-            self.app.sellatresistance is True
-            and margin >= 2
-            and price > 0
-            and price >= price_exit
-            and (self.app.sellatloss or margin > 0)
-        ):
+        if self.app.sellatresistance is True and margin >= 2 and price > 0 and price >= price_exit and (self.app.sellatloss or margin > 0):
             log_text = "Profit Bank Triggered (Selling At Resistance)"
             if not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly):
                 RichText.notify(log_text, self.app, "warning")
             if not (not self.app.sellatloss and margin <= 0):
                 if not self.app.disabletelegram:
-                    self.app.notifyTelegram(
-                        f"{self.app.market} ({self.app.print_granularity()}) {log_text}"
-                    )
+                    self.app.notifyTelegram(f"{self.app.market} ({self.app.print_granularity()}) {log_text}")
             return True
 
         return False
@@ -500,11 +413,7 @@ class Strategy:
             RichText.notify(f"and goldencross is False (actual: {goldencross})", self.app, "debug")
 
         # if bear market and bull only return true to abort buy
-        if (
-            self.state.action == "BUY"
-            and not self.app.disablebullonly
-            and not goldencross
-        ):
+        if self.state.action == "BUY" and not self.app.disablebullonly and not goldencross:
             log_text = "Ignore Buy Signal (Bear Buy In Bull Only)"
             RichText.notify(log_text, self.app, "warning")
             return True
@@ -525,20 +434,22 @@ class Strategy:
         if debug and self.state.action == "SELL":
             RichText.notify("-- configuration specifies not to sell within min and max margin percent bounds --", self.app, "debug")
             RichText.notify(f"self.state.action == 'SELL' (actual: {self.state.action})", self.app, "debug")
-            RichText.notify(f"(self.app.nosellminpcnt is not None (actual: {self.app.nosellminpcnt})) and (margin ({margin}) >= self.app.nosellminpcnt ({self.app.nosellminpcnt}))", self.app, "debug")
-            RichText.notify(f"(self.app.nosellmaxpcnt is not None (actual: {self.app.nosellmaxpcnt})) and (margin ({margin}) <= self.app.nosellmaxpcnt ({self.app.nosellmaxpcnt}))", self.app, "debug")
+            RichText.notify(
+                f"(self.app.nosellminpcnt is not None (actual: {self.app.nosellminpcnt})) and (margin ({margin}) >= self.app.nosellminpcnt ({self.app.nosellminpcnt}))",
+                self.app,
+                "debug",
+            )
+            RichText.notify(
+                f"(self.app.nosellmaxpcnt is not None (actual: {self.app.nosellmaxpcnt})) and (margin ({margin}) <= self.app.nosellmaxpcnt ({self.app.nosellmaxpcnt}))",
+                self.app,
+                "debug",
+            )
 
         # configuration specifies not to sell within min and max margin percent bounds
         if (
             self.state.action == "SELL"
-            and (
-                (self.app.nosellminpcnt is not None)
-                and (margin >= self.app.nosellminpcnt)
-            )
-            and (
-                (self.app.nosellmaxpcnt is not None)
-                and (margin <= self.app.nosellmaxpcnt)
-            )
+            and ((self.app.nosellminpcnt is not None) and (margin >= self.app.nosellminpcnt))
+            and ((self.app.nosellmaxpcnt is not None) and (margin <= self.app.nosellmaxpcnt))
         ):
             if not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly):
                 RichText.notify("Ignore Sell Signal (Within No-Sell Bounds)", self.app, "warning")
@@ -550,15 +461,11 @@ class Strategy:
         self.state = state
         # If buy signal, save the price and check if it decreases before buying.
         immediate_action = False
-        trailingbuypcnt = (
-            self.app.trailingbuypcnt
-        )  # get pcnt from config, if not, use 0%
+        trailingbuypcnt = self.app.trailingbuypcnt  # get pcnt from config, if not, use 0%
         if self.state.trailing_buy is True and self.state.waiting_buy_price > 0:
             pricechange = float(
                 _truncate(
-                    (self.state.waiting_buy_price - price)
-                    / self.state.waiting_buy_price
-                    * -100,
+                    (self.state.waiting_buy_price - price) / self.state.waiting_buy_price * -100,
                     2,
                 )
             )
@@ -575,10 +482,7 @@ class Strategy:
             waitpcnttext += "Price decreased - resetting wait price. "
         elif (
             self.app.trailingbuyimmediatepcnt is not None
-            and (
-                self.state.trailing_buy_immediate is True
-                or self.app.trailingimmediatebuy is True
-            )
+            and (self.state.trailing_buy_immediate is True or self.app.trailingimmediatebuy is True)
             and pricechange > self.app.trailingbuyimmediatepcnt
         ):  # If price increases by more than trailingbuyimmediatepcnt, do an immediate buy
             self.state.action = "BUY"
@@ -590,20 +494,14 @@ class Strategy:
         elif pricechange < (trailingbuypcnt * 0.9):
             self.state.action = "WAIT"
             trailing_action_logtext = f" - Wait Chg: {str(pricechange)}%"
-            trailing_action_logtext += (
-                f"/{trailingbuypcnt}%" if trailingbuypcnt > 0 else ""
-            )
+            trailing_action_logtext += f"/{trailingbuypcnt}%" if trailingbuypcnt > 0 else ""
             waitpcnttext += f"Waiting to buy until price of {self.state.waiting_buy_price} increases {trailingbuypcnt}% (+/- 10%) - change {str(pricechange)}%"
         else:
             self.state.action = "BUY"
-            trailing_action_logtext = (
-                f" - Buy Chg: {str(pricechange)}%/{trailingbuypcnt}%"
-            )
+            trailing_action_logtext = f" - Buy Chg: {str(pricechange)}%/{trailingbuypcnt}%"
             waitpcnttext += f"Ready to buy at close. Price of {self.state.waiting_buy_price}, change of {str(pricechange)}%, is greater than setting of {trailingbuypcnt}%  (+/- 10%)"
 
-        if self.app.is_verbose and (
-            not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly)
-        ):
+        if self.app.is_verbose and (not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly)):
             RichText.notify(waitpcnttext, self.app, "info")
 
         return (
@@ -628,15 +526,10 @@ class Strategy:
         self.state = state
         # If sell signal, save the price and check if it increases before selling.
         immediate_action = False
-        if (
-            self.state.trailing_sell is True
-            and self.state.waiting_sell_price is not None
-        ):
+        if self.state.trailing_sell is True and self.state.waiting_sell_price is not None:
             pricechange = float(
                 _truncate(
-                    (self.state.waiting_sell_price - price)
-                    / self.state.waiting_sell_price
-                    * -100,
+                    (self.state.waiting_sell_price - price) / self.state.waiting_sell_price * -100,
                     2,
                 )
             )
@@ -652,10 +545,7 @@ class Strategy:
             trailing_action_logtext = f" - Wait Chg: Inc {str(pricechange)}%"
             waitpcnttext += "Price increased - resetting wait price."
         # bailout setting.  If price drops x%, sell immediately.
-        elif (
-            self.app.trailingsellbailoutpcnt is not None
-            and pricechange < self.app.trailingsellbailoutpcnt
-        ):
+        elif self.app.trailingsellbailoutpcnt is not None and pricechange < self.app.trailingsellbailoutpcnt:
             self.state.action = "SELL"
             immediate_action = True
             trailing_action_logtext = f" - Bailout Immediately - Chg: {str(pricechange)}%/{self.app.trailingsellbailoutpcnt}%"
@@ -664,10 +554,7 @@ class Strategy:
         # When all indicators signal strong sell and price decreases more than "self.app.trailingsellimmediatepcnt", immediate sell
         elif (  # This resets after a sell occurs
             self.app.trailingsellimmediatepcnt is not None
-            and (
-                self.state.trailing_sell_immediate is True
-                or self.app.trailingimmediatesell is True
-            )
+            and (self.state.trailing_sell_immediate is True or self.app.trailingimmediatesell is True)
             and pricechange < self.app.trailingsellimmediatepcnt
         ):
             self.state.action = "SELL"
@@ -682,25 +569,23 @@ class Strategy:
                 trailing_action_logtext = f" - Wait Chg: {str(pricechange)}%"
                 waitpcnttext += f"Waiting to sell until {self.state.waiting_sell_price} stops increasing - change {str(pricechange)}%"
             else:
-                trailing_action_logtext = (
-                    f" - Wait Chg: {str(pricechange)}%/{self.app.trailingsellpcnt}%"
-                )
+                trailing_action_logtext = f" - Wait Chg: {str(pricechange)}%/{self.app.trailingsellpcnt}%"
                 waitpcnttext += f"Waiting to sell until price of {self.state.waiting_sell_price} decreases {self.app.trailingsellpcnt}% (+/- 10%) - change {str(pricechange)}%"
         else:
             self.state.action = "SELL"
-            trailing_action_logtext = (
-                f" - Sell Chg: {str(pricechange)}%/{self.app.trailingsellpcnt}%"
-            )
+            trailing_action_logtext = f" - Sell Chg: {str(pricechange)}%/{self.app.trailingsellpcnt}%"
             waitpcnttext += f"Sell at Close. Price of {self.state.waiting_sell_price}, change of {str(pricechange)}%, is lower than setting of {str(self.app.trailingsellpcnt)}% (+/- 10%)"
 
-        if self.app.is_verbose and (
-            not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly)
-        ):
+        if self.app.is_verbose and (not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly)):
             RichText.notify(waitpcnttext, self.info, "info")
 
         if debug:
             RichText.notify(waitpcnttext, self.app, "debug")
-            RichText.notify(f"Trailing Sell Triggered: {self.state.trailing_sell}  Wait Price: {self.state.waiting_sell_price} Current Price: {price} Price Chg: {_truncate(pricechange,2)} Immed Sell Pcnt: -{str(self.app.trailingsellimmediatepcnt)}%", self.app, "debug")
+            RichText.notify(
+                f"Trailing Sell Triggered: {self.state.trailing_sell}  Wait Price: {self.state.waiting_sell_price} Current Price: {price} Price Chg: {_truncate(pricechange,2)} Immed Sell Pcnt: -{str(self.app.trailingsellimmediatepcnt)}%",
+                self.app,
+                "debug",
+            )
 
         return (
             self.state.action,
@@ -716,18 +601,14 @@ class Strategy:
             # use try/except since this is a customizable file
             try:
                 # indicatorvalues displays indicators in log and telegram if debug is True in CS.tradeSignals
-                indicatorvalues = self.CS.tradeSignals(
-                    self._df_last, self._df, current_sim_date, websocket
-                )
+                indicatorvalues = self.CS.tradeSignals(self._df_last, self._df, current_sim_date, websocket)
             except Exception as err:
                 self.CS_ready = False
                 RichText.notify(f"Custom Strategy Error: {err}", self.app, "warning")
         else:  # strategy not enabled or an error occurred.
             indicatorvalues = ""
 
-        if self.state.last_action != "BUY" and self.is_buy_signal(
-            self.state, price, current_sim_date
-        ):
+        if self.state.last_action != "BUY" and self.is_buy_signal(self.state, price, current_sim_date):
             return "BUY", indicatorvalues
         elif self.state.last_action not in ["", "SELL"] and self.is_sell_signal():
             return "SELL", indicatorvalues

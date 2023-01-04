@@ -890,7 +890,15 @@ class PyCryptoBot(BotConfig):
                             round(self.df_last["close"].values[0], 2),
                             round(self.df_last["bb20_upper"].values[0], 2),
                             closegtbb20_upperco or closeltbb20_lowerco,
-                            self.disablebuybbands,
+                            self.disablebuybbands_s1,
+                        ),
+
+                        RichText.number_comparison(
+                            "BBL:",
+                            round(self.df_last["bb20_lower"].values[0], 2),
+                            round(self.df_last["close"].values[0], 2),
+                            closegtbb20_upperco or closeltbb20_lowerco,
+                            self.disablebuybbands_s1,
                         ),
 
                         RichText.action_text(self.state.action),
@@ -2517,7 +2525,8 @@ class PyCryptoBot(BotConfig):
         config_option_row_bool(
             "Use Elder-Ray", "disablebuyelderray", "Elder-Ray Index (Elder-Ray)", store_invert=True, default_value=False, arg_name="elderray"
         )
-        config_option_row_bool("Use Bollinger Bands", "disablebuybbands", "Bollinger Bands (BB)", break_below=True, store_invert=True, default_value=False, arg_name="bbands")
+        config_option_row_bool("Use Bollinger Bands", "disablebuybbands_s1", "Bollinger Bands - Strategy 1", store_invert=True, default_value=False, arg_name="bbands_s1")
+        config_option_row_bool("Use Bollinger Bands", "disablebuybbands_s2", "Bollinger Bands - Strategy 2", break_below=True, store_invert=True, default_value=False, arg_name="bbands_s2")
 
         self.console_term.print(table)
         if self.disablelog is False:

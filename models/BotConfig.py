@@ -99,7 +99,8 @@ class BotConfig:
         self.disablebuyema = False
         self.disablebuyobv = True
         self.disablebuyelderray = True
-        self.disablebuybbands = True
+        self.disablebuybbands_s1 = True
+        self.disablebuybbands_s2 = True
         self.disablefailsafefibonaccilow = False
         self.disablefailsafelowerpcnt = False
         self.disableprofitbankupperpcnt = False
@@ -452,7 +453,8 @@ class BotConfig:
         parser.add_argument("--macdsignal", type=int, help="Enable MACD/Signal crossovers")
         parser.add_argument("--obv", type=int, help="Enable On-Balance Volume (OBV)")
         parser.add_argument("--elderray", type=int, help="Enable Elder-Ray Indices")
-        parser.add_argument("--bbands", type=int, help="Enable Bollinger Bands crossovers")
+        parser.add_argument("--bbands_s1", type=int, help="Enable Bollinger Bands - Strategy 1")
+        parser.add_argument("--bbands_s2", type=int, help="Enable Bollinger Bands - Strategy 2")
 
         # pylint: disable=unused-variable
         args, unknown = parser.parse_known_args()

@@ -296,7 +296,11 @@ class TechnicalAnalysis:
         )
 
     def add_candle_abandoned_baby(self) -> None:
-        self.df["abandoned_baby"] = self.candle_abandoned_baby()
+        # fixes defragged dataframe
+        df_tmp = self.df.copy()
+        df_tmp["abandoned_baby"] = self.candle_abandoned_baby()
+        self.df = df_tmp
+        df_tmp = None
 
     def candle_morning_doji_star(self) -> Series:
         """** Candlestick Detected: Morning Doji Star ("Reliable - Reversal - Bullish Pattern - Up")"""
@@ -1068,20 +1072,32 @@ class TechnicalAnalysis:
         if not self.df["close"].dtype == "float64" and not self.df["close"].dtype == "int64":
             raise AttributeError("Pandas DataFrame 'close' column not int64 or float64.")
 
-        if "bb23_upper" not in self.df.columns:
+        if "bb20_upper" not in self.df.columns:
             self.add_bollinger_bands(20)
 
-        # true if Close is above the Bollinger Upper band
+        # true if close is above the upper band
         self.df["closegtbb20_upper"] = self.df.close > self.df.bb20_upper
-        # true if the current frame is where Close crosses over above
+        # true if the current frame is where close crosses over above
         self.df["closegtbb20_upperco"] = self.df.closegtbb20_upper.ne(self.df.closegtbb20_upper.shift())
         self.df.loc[self.df["closegtbb20_upper"] == False, "closegtbb20_upperco"] = False  # noqa: E712
 
-        # true if Close is below the Bollinger Lower band
+        # true if close is below the upper band but above the middle band
+        self.df["closeltbb20_upper"] = (self.df.close < self.df.bb20_upper) & (self.df.close > self.df.bb20_mid)
+        # true if the current frame is where close crosses over below
+        self.df["closeltbb20_upperco"] = self.df.closeltbb20_upper.ne(self.df.closeltbb20_upper.shift())
+        self.df.loc[self.df["closeltbb20_upper"] == False, "closeltbb20_upperco"] = False  # noqa: E712
+
+        # true if close is below the lower band
         self.df["closeltbb20_lower"] = self.df.close < self.df.bb20_lower
-        # true if the current frame is where Close crosses over below
+        # true if the current frame is where close crosses over below
         self.df["closeltbb20_lowerco"] = self.df.closeltbb20_lower.ne(self.df.closeltbb20_lower.shift())
         self.df.loc[self.df["closeltbb20_lower"] == False, "closeltbb20_lowerco"] = False  # noqa: E712
+
+        # true if close is below the lower band
+        self.df["closegtbb20_lower"] = (self.df.close > self.df.bb20_lower) & (self.df.close < self.df.bb20_mid)
+        # true if the current frame is where close crosses over below
+        self.df["closegtbb20_lowerco"] = self.df.closegtbb20_lower.ne(self.df.closegtbb20_lower.shift())
+        self.df.loc[self.df["closegtbb20_lower"] == False, "closegtbb20_lowerco"] = False  # noqa: E712
 
     def add_ema_buy_signals(self) -> None:
         """Adds the EMA12/EMA26 buy and sell signals to the DataFrame"""
