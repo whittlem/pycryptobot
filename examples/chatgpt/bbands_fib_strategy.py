@@ -57,6 +57,7 @@ plt.ylabel("Price")
 plt.xticks(rotation=90)
 plt.tight_layout()
 plt.show()
+# plt.savefig("bbands_fib_strategy.png")
 
 
 # Implement the trading strategy
