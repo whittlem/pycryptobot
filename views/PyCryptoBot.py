@@ -42,7 +42,7 @@ class RichText:
             RichText.styled_text("Bot1", "magenta"),
             RichText.styled_text(datetime.today().strftime("%Y-%m-%d %H:%M:%S"), "white"),
             RichText.styled_text(app.market, "yellow"),
-            RichText.styled_text(str(app.granularity.to_integer), "yellow"),
+            RichText.styled_text(app.print_granularity(), "yellow"),
             RichText.styled_text(notification, color),
         )
         console_term = Console()

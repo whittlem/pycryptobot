@@ -77,12 +77,7 @@ class Strategy:
         ):
             if not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly):
                 log_text = (
-                    str(now)
-                    + " | "
-                    + self.app.market
-                    + " | "
-                    + self.app.print_granularity()
-                    + " | Ignoring Buy Signal (price "
+                    "Ignoring Buy Signal (price "
                     + str(price)
                     + " within "
                     + str(self.app.nobuynearhighpcnt)
@@ -96,7 +91,7 @@ class Strategy:
 
         # initial funds check
         if self.app.enableinsufficientfundslogging and self.app.insufficientfunds:
-            RichText.notify(f"{str(now)} | Insufficient funds, ignoring buy signal.", self.app, "warning")
+            RichText.notify("Insufficient funds, ignoring buy signal.", self.app, "warning")
             return False
 
         # if Bull Only is set and no goldencross, return False
@@ -203,9 +198,7 @@ class Strategy:
         if self.app.disablebuyema and self.app.disablebuymacd:
             # if custom trade signals is enabled, don't alert, just return False
             if self.CS_ready is False:
-                log_text = f"{str(datetime.now())} | {self.app.market} | {self.app.print_granularity()} | "
-                log_text += " EMA, MACD indicators are needed for standard signals and they are disabled."
-                RichText.notify(log_text, self.app, "warning")
+                RichText.notify("EMA, MACD indicators are needed for standard signals and they are disabled.", self.app, "warning")
 
             return False
 
@@ -261,14 +254,14 @@ class Strategy:
                 and margin > self.app.preventlosstrigger
             ):
                 self.state.prevent_loss = True
-                RichText.notify(f"{self.app.market} - reached prevent loss trigger of {self.app.preventlosstrigger}%.  Watch margin ({self.app.preventlossmargin}%) to prevent loss.", self.app, "warning")
+                RichText.notify(f"Reached prevent loss trigger of {self.app.preventlosstrigger}%.  Watch margin ({self.app.preventlossmargin}%) to prevent loss.", self.app, "warning")
             elif (
                 self.state.prevent_loss is True and margin <= self.app.preventlossmargin
             ) or (  # trigger of 0 disables trigger check and only checks margin set point
                 self.app.preventlosstrigger == 0
                 and margin <= self.app.preventlossmargin
             ):
-                RichText.notify(f"{self.app.market} - time to sell before losing funds! Prevent Loss Activated!", self.app, "warning")
+                RichText.notify("Time to sell before losing funds! Prevent Loss Activated!", self.app, "warning")
                 if not self.app.disabletelegram:
                     self.app.notifyTelegram(
                         f"{self.app.market} - time to sell before losing funds! Prevent Loss Activated!"
@@ -349,7 +342,7 @@ class Strategy:
                 self.state.tsl_triggered is True
                 and change_pcnt_high < self.state.tsl_pcnt
             ):
-                log_text = f"! Trailing Stop Loss Triggered (Margin: {_truncate(margin,2)}% Stoploss: {str(self.state.tsl_pcnt)}%)"
+                log_text = f"Trailing Stop Loss Triggered (Margin: {_truncate(margin,2)}% Stoploss: {str(self.state.tsl_pcnt)}%)"
                 if not self.app.is_sim or (
                     self.app.is_sim and not self.app.simresultonly
                 ):
@@ -378,7 +371,7 @@ class Strategy:
             and margin < self.app.sell_lower_pcnt
         ):
             log_text = (
-                "! Loss Failsafe Triggered (< " + str(self.app.sell_lower_pcnt) + "%)"
+                "Loss Failsafe Triggered (< " + str(self.app.sell_lower_pcnt) + "%)"
             )
             RichText.notify(log_text, self.app, "warning")
             if not self.app.disabletelegram:
@@ -388,14 +381,14 @@ class Strategy:
             return True
 
         if debug:
-            RichText.notify("\n*** isSellTrigger ***\n", self.app, "debug")
+            RichText.notify("*** isSellTrigger ***", self.app, "debug")
             RichText.notify("-- ignoring sell signal --", self.app, "debug")
             RichText.notify(f"self.app.nosellminpcnt is None (nosellminpcnt: {self.app.nosellminpcnt})", self.app, "debug")
             RichText.notify(f"margin >= self.app.nosellminpcnt (margin: {margin})", self.app, "debug")
             RichText.notify(f"margin <= self.app.nosellmaxpcnt (nosellmaxpcnt: {self.app.nosellmaxpcnt})", self.app, "debug")
 
         if debug:
-            RichText.notify("\n*** isSellTrigger ***\n", self.app, "debug")
+            RichText.notify("*** isSellTrigger ***", self.app, "debug")
             RichText.notify("-- loss failsafe sell at fibonacci band --", self.app, "debug")
             RichText.notify(f"self.app.disablefailsafefibonaccilow is False (actual: {self.app.disablefailsafefibonaccilow})", self.app, "debug")
             RichText.notify(f"self.app.sellatloss is True (actual: {self.app.sellatloss})", self.app, "debug")
@@ -413,7 +406,7 @@ class Strategy:
             and self.state.fib_low >= float(price)
         ):
             log_text = (
-                f"! Loss Failsafe Triggered (Fibonacci Band: {str(self.state.fib_low)})"
+                f"Loss Failsafe Triggered (Fibonacci Band: {str(self.state.fib_low)})"
             )
             RichText.notify(log_text, self.app, "warning")
             self.app.notifyTelegram(
@@ -441,7 +434,7 @@ class Strategy:
             and self.app.sell_upper_pcnt is not None
             and margin > self.app.sell_upper_pcnt
         ):
-            log_text = f"! Profit Bank Triggered (> {str(self.app.sell_upper_pcnt)}%)"
+            log_text = f"Profit Bank Triggered (> {str(self.app.sell_upper_pcnt)}%)"
             if not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly):
                 RichText.notify(log_text, self.app, "warning")
             if not self.app.disabletelegram:
@@ -465,7 +458,7 @@ class Strategy:
             and price >= price_exit
             and (self.app.sellatloss or margin > 0)
         ):
-            log_text = "! Profit Bank Triggered (Selling At Resistance)"
+            log_text = "Profit Bank Triggered (Selling At Resistance)"
             if not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly):
                 RichText.notify(log_text, self.app, "warning")
             if not (not self.app.sellatloss and margin <= 0):
@@ -504,7 +497,7 @@ class Strategy:
             and not self.app.disablebullonly
             and not goldencross
         ):
-            log_text = "! Ignore Buy Signal (Bear Buy In Bull Only)"
+            log_text = "Ignore Buy Signal (Bear Buy In Bull Only)"
             RichText.notify(log_text, self.app, "warning")
             return True
 
@@ -517,7 +510,7 @@ class Strategy:
         # configuration specifies to not sell at a loss
         if self.state.action == "SELL" and not self.app.sellatloss and margin <= 0:
             if not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly):
-                log_text = "! Ignore Sell Signal (No Sell At Loss)"
+                log_text = "Ignore Sell Signal (No Sell At Loss)"
                 RichText.notify(log_text, self.app, "warning")
             return True
 
@@ -540,7 +533,7 @@ class Strategy:
             )
         ):
             if not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly):
-                RichText.notify("! Ignore Sell Signal (Within No-Sell Bounds)", self.app, "warning")
+                RichText.notify("Ignore Sell Signal (Within No-Sell Bounds)", self.app, "warning")
             return True
 
         return False
