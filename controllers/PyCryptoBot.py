@@ -514,8 +514,6 @@ class PyCryptoBot(BotConfig):
                     )
 
         if len(self.df_last) > 0:
-            now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-
             # last_action polling if live
             if self.is_live:
                 last_action_current = self.state.last_action
@@ -607,7 +605,6 @@ class PyCryptoBot(BotConfig):
                 macdgtsignal = bool(self.df_last["macdgtsignal"].values[0])
                 macdgtsignalco = bool(self.df_last["macdgtsignalco"].values[0])
                 ema12ltema26co = bool(self.df_last["ema12ltema26co"].values[0])
-                macdltsignal = bool(self.df_last["macdltsignal"].values[0])
                 macdltsignalco = bool(self.df_last["macdltsignalco"].values[0])
                 obv_pc = float(self.df_last["obv_pc"].values[0])
                 elder_ray_buy = bool(self.df_last["eri_buy"].values[0])
@@ -704,19 +701,16 @@ class PyCryptoBot(BotConfig):
                     sell_percent=self.get_sell_percent(),
                     sell_price=self.price,
                     sell_taker_fee=self.get_taker_fee(),
-                    app=self
+                    app=self,
                 )
 
                 # handle immediate sell actions
                 if self.manual_trades_only is False and strategy.is_sell_trigger(
-                    self,
                     self.state,
                     self.price,
                     _technical_analysis.get_trade_exit(self.price),
                     margin,
-                    change_pcnt_high,
-                    obv_pc,
-                    macdltsignal,
+                    change_pcnt_high
                 ):
                     self.state.action = "SELL"
                     immediate_action = True
@@ -781,6 +775,8 @@ class PyCryptoBot(BotConfig):
                         self.console_log.print(self.table_console)
                     self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)  # clear table
 
+                """
+                # removed as it added unnecessary complexity and load
                 if not self.is_sim or (self.is_sim and not self.simresultonly):
                     if bool(self.df_last["three_white_soldiers"].values[0]) is True:
                         _candlestick("Candlestick Detected: Three White Soldiers ('Strong - Reversal - Bullish Pattern - Up')")
@@ -790,6 +786,7 @@ class PyCryptoBot(BotConfig):
                         _candlestick("Candlestick Detected: Morning Star ('Strong - Reversal - Bullish Pattern - Up')")
                     if bool(self.df_last["evening_star"].values[0]) is True:
                         _candlestick("Candlestick Detected: Evening Star ('Strong - Reversal - Bearish Pattern - Down')")
+                """
 
                 def _notify(notification: str = "", level: str = "normal") -> None:
                     if notification == "":
@@ -884,7 +881,6 @@ class PyCryptoBot(BotConfig):
                             self.disablebuyobv,
                         ),
                         RichText.elder_ray(elder_ray_buy, elder_ray_sell, self.disablebuyelderray),
-
                         RichText.number_comparison(
                             "BBU:",
                             round(self.df_last["close"].values[0], 2),
@@ -892,7 +888,6 @@ class PyCryptoBot(BotConfig):
                             closegtbb20_upperco or closeltbb20_lowerco,
                             self.disablebuybbands_s1,
                         ),
-
                         RichText.number_comparison(
                             "BBL:",
                             round(self.df_last["bb20_lower"].values[0], 2),
@@ -900,7 +895,6 @@ class PyCryptoBot(BotConfig):
                             closegtbb20_upperco or closeltbb20_lowerco,
                             self.disablebuybbands_s1,
                         ),
-
                         RichText.action_text(self.state.action),
                         RichText.last_action_text(self.state.last_action),
                         RichText.styled_label_text(
@@ -1350,7 +1344,7 @@ class PyCryptoBot(BotConfig):
                             sell_percent=self.get_sell_percent(),
                             sell_price=self.price,
                             sell_taker_fee=self.get_taker_fee(),
-                            app=self
+                            app=self,
                         )
 
                         if self.state.last_buy_size > 0:
@@ -1475,28 +1469,23 @@ class PyCryptoBot(BotConfig):
                 self._simulation_summary()
                 self._simulation_save_orders()
 
-        
-        bullbeartext = "BULL" if goldencross else "BEAR"
-
-        if self.state.last_buy_size > 0 and self.state.last_buy_price > 0 and self.price > 0 and self.state.last_action == "BUY":
-                # show profit and margin if already bought
-            RichText.notify(f"{now} | {self.market} {bullbeartext} | {self.print_granularity()} | Current price: {str(self.price)} {trailing_action_logtext} | Margin: {str(margin)} | Profit: {str(profit)}", self, "info")
-        else:
-            RichText.notify(f'{now} | {self.market} {bullbeartext} | {self.print_granularity()} | Current price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH', self, "info")
+        if self.state.last_buy_size <= 0 and self.state.last_buy_price <= 0 and self.price <= 0 and self.state.last_action != "BUY":
             self.telegram_bot.add_info(
-                f'{now} | {self.market} {bullbeartext} | {self.print_granularity()} | Current price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH',
+                f'Current price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH',
                 round(self.price, 4),
                 str(round(df["close"].max(), 4)),
                 str(
                     round(
-                    ((self.price - df["close"].max()) / df["close"].max()) * 100, 2,)
+                        ((self.price - df["close"].max()) / df["close"].max()) * 100,
+                        2,
                     )
+                )
                 + "%",
                 self.state.action,
             )
 
         if self.state.last_action == "BUY" and self.state.in_open_trade and last_api_call_datetime.seconds > 60:
-                # update margin for telegram bot
+            # update margin for telegram bot
             self.telegram_bot.add_margin(
                 str(_truncate(margin, 4) + "%") if self.state.in_open_trade is True else " ",
                 str(_truncate(profit, 2)) if self.state.in_open_trade is True else " ",
@@ -2523,8 +2512,18 @@ class PyCryptoBot(BotConfig):
         config_option_row_bool(
             "Use Elder-Ray", "disablebuyelderray", "Elder-Ray Index (Elder-Ray)", store_invert=True, default_value=False, arg_name="elderray"
         )
-        config_option_row_bool("Use Bollinger Bands", "disablebuybbands_s1", "Bollinger Bands - Strategy 1", store_invert=True, default_value=False, arg_name="bbands_s1")
-        config_option_row_bool("Use Bollinger Bands", "disablebuybbands_s2", "Bollinger Bands - Strategy 2", break_below=True, store_invert=True, default_value=False, arg_name="bbands_s2")
+        config_option_row_bool(
+            "Use Bollinger Bands", "disablebuybbands_s1", "Bollinger Bands - Strategy 1", store_invert=True, default_value=False, arg_name="bbands_s1"
+        )
+        config_option_row_bool(
+            "Use Bollinger Bands",
+            "disablebuybbands_s2",
+            "Bollinger Bands - Strategy 2",
+            break_below=True,
+            store_invert=True,
+            default_value=False,
+            arg_name="bbands_s2",
+        )
 
         self.console_term.print(table)
         if self.disablelog is False:
@@ -3017,13 +3016,7 @@ class PyCryptoBot(BotConfig):
 
         try:
             if self.exchange == Exchange.COINBASEPRO:
-                api = CBAuthAPI(
-                    self.api_key,
-                    self.api_secret,
-                    self.api_passphrase,
-                    self.api_url,
-                    app=self
-                )
+                api = CBAuthAPI(self.api_key, self.api_secret, self.api_passphrase, self.api_url, app=self)
                 orders = api.get_orders(self.market, "", "done")
 
                 if len(orders) == 0:
@@ -3043,14 +3036,7 @@ class PyCryptoBot(BotConfig):
                     "date": str(pd.DatetimeIndex(pd.to_datetime(last_order["created_at"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z"))[0]),
                 }
             elif self.exchange == Exchange.KUCOIN:
-                api = KAuthAPI(
-                    self.api_key,
-                    self.api_secret,
-                    self.api_passphrase,
-                    self.api_url,
-                    use_cache=self.usekucoincache,
-                    app=self
-                )
+                api = KAuthAPI(self.api_key, self.api_secret, self.api_passphrase, self.api_url, use_cache=self.usekucoincache, app=self)
                 orders = api.get_orders(self.market, "", "done")
 
                 if len(orders) == 0:
@@ -3070,13 +3056,7 @@ class PyCryptoBot(BotConfig):
                     "date": str(pd.DatetimeIndex(pd.to_datetime(last_order["created_at"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z"))[0]),
                 }
             elif self.exchange == Exchange.BINANCE:
-                api = BAuthAPI(
-                    self.api_key,
-                    self.api_secret,
-                    self.api_url,
-                    recv_window=self.recv_window,
-                    app=self
-                )
+                api = BAuthAPI(self.api_key, self.api_secret, self.api_url, recv_window=self.recv_window, app=self)
                 orders = api.get_orders(self.market)
 
                 if len(orders) == 0:
@@ -3110,34 +3090,15 @@ class PyCryptoBot(BotConfig):
         elif self.takerfee > -1.0:
             return self.takerfee
         elif self.exchange == Exchange.COINBASEPRO:
-            api = CBAuthAPI(
-                self.api_key,
-                self.api_secret,
-                self.api_passphrase,
-                self.api_url,
-                app=self
-            )
+            api = CBAuthAPI(self.api_key, self.api_secret, self.api_passphrase, self.api_url, app=self)
             self.takerfee = api.get_taker_fee()
             return self.takerfee
         elif self.exchange == Exchange.BINANCE:
-            api = BAuthAPI(
-                self.api_key,
-                self.api_secret,
-                self.api_url,
-                recv_window=self.recv_window,
-                app=self
-            )
+            api = BAuthAPI(self.api_key, self.api_secret, self.api_url, recv_window=self.recv_window, app=self)
             self.takerfee = api.get_taker_fee(self.get_market())
             return self.takerfee
         elif self.exchange == Exchange.KUCOIN:
-            api = KAuthAPI(
-                self.api_key,
-                self.api_secret,
-                self.api_passphrase,
-                self.api_url,
-                use_cache=self.usekucoincache,
-                app=self
-            )
+            api = KAuthAPI(self.api_key, self.api_secret, self.api_passphrase, self.api_url, use_cache=self.usekucoincache, app=self)
             self.takerfee = api.get_taker_fee()
             return self.takerfee
         else:
@@ -3154,32 +3115,13 @@ class PyCryptoBot(BotConfig):
         elif self.makerfee > -1.0:
             return self.makerfee
         elif self.exchange == Exchange.COINBASEPRO:
-            api = CBAuthAPI(
-                self.api_key,
-                self.api_secret,
-                self.api_passphrase,
-                self.api_url,
-                app=self
-            )
+            api = CBAuthAPI(self.api_key, self.api_secret, self.api_passphrase, self.api_url, app=self)
             return api.get_maker_fee()
         elif self.exchange == Exchange.BINANCE:
-            api = BAuthAPI(
-                self.api_key,
-                self.api_secret,
-                self.api_url,
-                recv_window=self.recv_window,
-                app=self
-            )
+            api = BAuthAPI(self.api_key, self.api_secret, self.api_url, recv_window=self.recv_window, app=self)
             return api.get_maker_fee(self.get_market())
         elif self.exchange == Exchange.KUCOIN:
-            api = KAuthAPI(
-                self.api_key,
-                self.api_secret,
-                self.api_passphrase,
-                self.api_url,
-                use_cache=self.usekucoincache,
-                app=self
-            )
+            api = KAuthAPI(self.api_key, self.api_secret, self.api_passphrase, self.api_url, use_cache=self.usekucoincache, app=self)
             return api.get_maker_fee()
         else:
             return 0.005

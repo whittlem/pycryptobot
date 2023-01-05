@@ -56,12 +56,7 @@ class Strategy:
         else:
             self._df_last = self.app.get_interval(df)
 
-    def is_buy_signal(
-        self,
-        state,
-        price,
-        now: datetime = datetime.today().strftime("%Y-%m-%d %H:%M:%S"),
-    ) -> bool:
+    def is_buy_signal(self, state, price) -> bool:
         self.state = state
         # set to true for verbose debugging
         debug = False
@@ -104,14 +99,31 @@ class Strategy:
                 return False
 
         # if standard EMA and MACD are disabled, do not run below tests
-        if self.app.disablebuyema and self.app.disablebuymacd and self.app.disablebuyobv and self.app.disablebuyelderray and self.app.disablebuybbands_s1 and self.app.disablebuybbands_s2:
+        if (
+            self.app.disablebuyema
+            and self.app.disablebuymacd
+            and self.app.disablebuyobv
+            and self.app.disablebuyelderray
+            and self.app.disablebuybbands_s1
+            and self.app.disablebuybbands_s2
+        ):
             log_text = "No strategy? EMA, MACD, OBV, ER, and BB indicators are all disabled!"
             RichText.notify(log_text, self.app, "warning")
 
             return False
 
-        # required technical indicators for buy signal strategy
-        required_indicators = ["ema12gtema26co", "macdgtsignal"]
+        # required technical indicators or candle sticks for standard sell signal strategy
+        required_indicators = []
+        if self.app.disablebuyema is False:
+            required_indicators.append("ema12ltema26co")
+        if self.app.disablebuymacd is False:
+            required_indicators.append("macdltsignal")
+        if self.app.disablebuybbands_s1 is False or self.app.disablebuybbands_s2 is False:
+            required_indicators.append("closegtbb20_upperco")
+
+        if len(required_indicators) == 0:
+            RichText.notify("No strategy? EMA, MACD, and BB indicators are all disabled!", self.app, "warning")
+            return False
 
         for indicator in required_indicators:
             if indicator not in self._df_last:
@@ -124,7 +136,7 @@ class Strategy:
             and (float(self._df_last["obv_pc"].values[0]) > -5 or self.app.disablebuyobv)  # TODO: why is this hard coded?
             and (bool(self._df_last["eri_buy"].values[0]) is True or self.app.disablebuyelderray)
             and (bool(self._df_last["closegtbb20_upperco"].values[0]) is True or self.app.disablebuybbands_s1)
-            and (bool(self._df_last["closegtbb20_lowerco"].values[0]) is True or self.app.disablebuybbands_s2)
+            and (bool(self._df_last["closegtbb20_upperco"].values[0]) is True or self.app.disablebuybbands_s2)
             and self.state.last_action != "BUY"
         ):  # required for all strategies
             if debug:
@@ -136,12 +148,8 @@ class Strategy:
             return True
 
         # criteria for buy signal 2 (optionally add additional buy signals)
-        """
         elif (
-            (bool(self._df_last["ema12gtema26co"].values[0]) is True or self.app.disablebuyema)
-            and bool(self._df_last["macdgtsignalco"].values[0]) is True
-            and (float(self._df_last["obv_pc"].values[0]) > -5 or self.app.disablebuyobv)  # TODO: why is this hard coded?
-            and (bool(self._df_last["eri_buy"].values[0]) is True or self.app.disablebuyelderray)
+            (bool(self._df_last["closegtbb20_upperco"].values[0]) is True or self.app.disablebuybbands_s2)
             and self.state.last_action != "BUY"
         ):  # required for all strategies
 
@@ -152,7 +160,6 @@ class Strategy:
                 RichText.notify(f"last_action: {self.state.last_action}", self.app, "debug")
 
             return True
-        """
 
         return False
 
@@ -168,7 +175,14 @@ class Strategy:
                 # If Custom Strategy active, don't process standard signals, return False
                 return False
 
-        if self.app.disablebuyema and self.app.disablebuymacd and self.app.disablebuyobv and self.app.disablebuyelderray and self.app.disablebuybbands_s1 and self.app.disablebuybbands_s2:
+        if (
+            self.app.disablebuyema
+            and self.app.disablebuymacd
+            and self.app.disablebuyobv
+            and self.app.disablebuyelderray
+            and self.app.disablebuybbands_s1
+            and self.app.disablebuybbands_s2
+        ):
             # if custom trade signals is enabled, don't alert, just return False
             if self.CS_ready is False:
                 RichText.notify("No strategy? EMA, MACD, OBV, ER, and BB indicators are all disabled!", self.app, "warning")
@@ -176,7 +190,19 @@ class Strategy:
             return False
 
         # required technical indicators or candle sticks for standard sell signal strategy
-        required_indicators = ["ema12ltema26co", "macdltsignal"]
+        required_indicators = []
+        if self.app.disablebuyema is False:
+            required_indicators.append("ema12ltema26co")
+        if self.app.disablebuymacd is False:
+            required_indicators.append("macdltsignal")
+        if self.app.disablebuybbands_s1 is False:
+            required_indicators.append("closeltbb20_lowerco")
+        if self.app.disablebuybbands_s2 is False:
+            required_indicators.append("closeltbb20_midco")
+
+        if len(required_indicators) == 0:
+            RichText.notify("No strategy? EMA, MACD, and BB indicators are all disabled!", self.app, "warning")
+            return False
 
         for indicator in required_indicators:
             if indicator not in self._df_last:
@@ -184,9 +210,10 @@ class Strategy:
 
         # criteria for a sell signal 1
         if (
-            bool(self._df_last["ema12ltema26co"].values[0]) is True and (bool(self._df_last["macdltsignal"].values[0]) is True or self.app.disablebuymacd)
+            (bool(self._df_last["ema12ltema26co"].values[0]) is True or self.app.disablebuyema)
+            and (bool(self._df_last["macdltsignal"].values[0]) is True or self.app.disablebuymacd)
             and (bool(self._df_last["closeltbb20_lowerco"].values[0]) is True or self.app.disablebuybbands_s1)
-            and (bool(self._df_last["closeltbb20_upperco"].values[0]) is True or self.app.disablebuybbands_s2)
+            and (bool(self._df_last["closeltbb20_midco"].values[0]) is True or self.app.disablebuybbands_s2)
         ):
             if debug:
                 RichText.notify("*** Sell Signal ***", self.app, "debug")
@@ -198,17 +225,7 @@ class Strategy:
 
         return False
 
-    def is_sell_trigger(
-        self,
-        app,
-        state,
-        price: float = 0.0,
-        price_exit: float = 0.0,
-        margin: float = 0.0,
-        change_pcnt_high: float = 0.0,
-        obv_pc: float = 0.0,
-        macdltsignal: bool = False,
-    ) -> bool:
+    def is_sell_trigger(self, state, price: float = 0.0, price_exit: float = 0.0, margin: float = 0.0, change_pcnt_high: float = 0.0) -> bool:
         self.state = state
         # set to true for verbose debugging
         debug = False
@@ -608,7 +625,7 @@ class Strategy:
         else:  # strategy not enabled or an error occurred.
             indicatorvalues = ""
 
-        if self.state.last_action != "BUY" and self.is_buy_signal(self.state, price, current_sim_date):
+        if self.state.last_action != "BUY" and self.is_buy_signal(self.state, price):
             return "BUY", indicatorvalues
         elif self.state.last_action not in ["", "SELL"] and self.is_sell_signal():
             return "SELL", indicatorvalues

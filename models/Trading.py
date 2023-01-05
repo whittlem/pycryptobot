@@ -108,29 +108,52 @@ class TechnicalAnalysis:
         self.add_adx_buy_signals()
         self.add_bbands_buy_signals()
 
-        self.add_candle_astral_buy()
-        self.add_candle_astral_sell()
-        self.add_candle_hammer()
-        self.add_candle_inverted_hammer()
-        self.add_candle_shooting_star()
-        self.add_candle_hanging_man()
-        self.add_candle_three_white_soldiers()
-        self.add_candle_three_black_crows()
-        self.add_candle_doji()
-        self.add_candle_three_line_strike()
-        self.add_candle_two_black_gapping()
-        self.add_candle_morning_star()
-        self.add_candle_evening_star()
-        self.add_candle_abandoned_baby()
-        self.add_candle_morning_doji_star()
-        self.add_candle_evening_doji_star()
-
     """Candlestick References
     https://commodity.com/technical-analysis
     https://www.investopedia.com
     https://github.com/SpiralDevelopment/candlestick-patterns
     https://www.incrediblecharts.com/candlestick_patterns/candlestick-patterns-strongest.php
     """
+
+    def add_candles(self) -> None:
+        frames = [
+            self.candle_astral_buy(),
+            self.candle_astral_sell(),
+            self.candle_hammer(),
+            self.candle_inverted_hammer(),
+            self.candle_shooting_star(),
+            self.candle_hanging_man(),
+            self.candle_three_white_soldiers(),
+            self.candle_three_black_crows(),
+            self.candle_doji(),
+            self.candle_three_line_strike(),
+            self.candle_two_black_gapping(),
+            self.candle_morning_star(),
+            self.candle_evening_star(),
+            self.candle_abandoned_baby(),
+            self.candle_morning_doji_star(),
+            self.candle_evening_doji_star(),
+        ]
+        df_candles = concat(frames, axis=1)
+        df_candles.columns = [
+            "astral_buy",
+            "astral_sell",
+            "hammer",
+            "inverted_hammer",
+            "shooting_star",
+            "hanging_man",
+            "three_white_soldiers",
+            "three_black_crows",
+            "doji",
+            "three_line_strike",
+            "two_black_gapping",
+            "morning_star",
+            "evening_star",
+            "abandoned_baby",
+            "morning_doji_star",
+            "evening_doji_star",
+        ]
+        self.df = concat([self.df, df_candles], axis=1)
 
     def candle_hammer(self) -> Series:
         """* Candlestick Detected: Hammer ("Weak - Reversal - Bullish Signal - Up"""
@@ -141,9 +164,6 @@ class TechnicalAnalysis:
             & (((self.df["open"] - self.df["low"]) / (0.001 + self.df["high"] - self.df["low"])) > 0.6)
         )
 
-    def add_candle_hammer(self) -> None:
-        self.df["hammer"] = self.candle_hammer()
-
     def candle_shooting_star(self) -> Series:
         """* Candlestick Detected: Shooting Star ("Weak - Reversal - Bearish Pattern - Down")"""
 
@@ -152,9 +172,6 @@ class TechnicalAnalysis:
             & (self.df["high"] - maximum(self.df["open"], self.df["close"]) >= (abs(self.df["open"] - self.df["close"]) * 3))
             & ((minimum(self.df["close"], self.df["open"]) - self.df["low"]) <= abs(self.df["open"] - self.df["close"]))
         )
-
-    def add_candle_shooting_star(self) -> None:
-        self.df["shooting_star"] = self.candle_shooting_star()
 
     def candle_hanging_man(self) -> Series:
         """* Candlestick Detected: Hanging Man ("Weak - Continuation - Bearish Pattern - Down")"""
@@ -167,9 +184,6 @@ class TechnicalAnalysis:
             & (self.df["high"].shift(2) < self.df["open"])
         )
 
-    def add_candle_hanging_man(self) -> None:
-        self.df["hanging_man"] = self.candle_hanging_man()
-
     def candle_inverted_hammer(self) -> Series:
         """* Candlestick Detected: Inverted Hammer ("Weak - Continuation - Bullish Pattern - Up")"""
 
@@ -178,9 +192,6 @@ class TechnicalAnalysis:
             & ((self.df["high"] - self.df["close"]) / (0.001 + self.df["high"] - self.df["low"]) > 0.6)
             & ((self.df["high"] - self.df["open"]) / (0.001 + self.df["high"] - self.df["low"]) > 0.6)
         )
-
-    def add_candle_inverted_hammer(self) -> None:
-        self.df["inverted_hammer"] = self.candle_inverted_hammer()
 
     def candle_three_white_soldiers(self) -> Series:
         """*** Candlestick Detected: Three White Soldiers ("Strong - Reversal - Bullish Pattern - Up")"""
@@ -197,9 +208,6 @@ class TechnicalAnalysis:
             )
         )
 
-    def add_candle_three_white_soldiers(self) -> None:
-        self.df["three_white_soldiers"] = self.candle_three_white_soldiers()
-
     def candle_three_black_crows(self) -> Series:
         """* Candlestick Detected: Three Black Crows ("Strong - Reversal - Bearish Pattern - Down")"""
 
@@ -215,9 +223,6 @@ class TechnicalAnalysis:
             )
         )
 
-    def add_candle_three_black_crows(self) -> None:
-        self.df["three_black_crows"] = self.candle_three_black_crows()
-
     def candle_doji(self) -> Series:
         """! Candlestick Detected: Doji ("Indecision")"""
 
@@ -227,10 +232,7 @@ class TechnicalAnalysis:
             & ((minimum(self.df["close"], self.df["open"]) - self.df["low"]) > (3 * abs(self.df["close"] - self.df["open"])))
         )
 
-    def add_candle_doji(self) -> None:
-        self.df["doji"] = self.candle_doji()
-
-    def candleThreeLineStrike(self) -> Series:
+    def candle_three_line_strike(self) -> Series:
         """** Candlestick Detected: Three Line Strike ("Reliable - Reversal - Bullish Pattern - Up")"""
 
         return (
@@ -249,10 +251,7 @@ class TechnicalAnalysis:
             & ((self.df["open"] < self.df["low"].shift(1)) & (self.df["close"] > self.df["high"].shift(3)))
         )
 
-    def add_candle_three_line_strike(self) -> None:
-        self.df["three_line_strike"] = self.candleThreeLineStrike()
-
-    def candleTwoBlackGapping(self) -> Series:
+    def candle_two_black_gapping(self) -> Series:
         """*** Candlestick Detected: Two Black Gapping ("Reliable - Reversal - Bearish Pattern - Down")"""
 
         return (
@@ -262,9 +261,6 @@ class TechnicalAnalysis:
             & (self.df["high"].shift(1) < self.df["low"].shift(2))
         )
 
-    def add_candle_two_black_gapping(self) -> None:
-        self.df["two_black_gapping"] = self.candleTwoBlackGapping()
-
     def candle_morning_star(self) -> Series:
         """*** Candlestick Detected: Morning Star ("Strong - Reversal - Bullish Pattern - Up")"""
 
@@ -272,18 +268,12 @@ class TechnicalAnalysis:
             (maximum(self.df["open"].shift(1), self.df["close"].shift(1)) < self.df["close"].shift(2)) & (self.df["close"].shift(2) < self.df["open"].shift(2))
         ) & ((self.df["close"] > self.df["open"]) & (self.df["open"] > maximum(self.df["open"].shift(1), self.df["close"].shift(1))))
 
-    def add_candle_morning_star(self) -> None:
-        self.df["morning_star"] = self.candle_morning_star()
-
     def candle_evening_star(self) -> ndarray:
         """*** Candlestick Detected: Evening Star ("Strong - Reversal - Bearish Pattern - Down")"""
 
         return (
             (minimum(self.df["open"].shift(1), self.df["close"].shift(1)) > self.df["close"].shift(2)) & (self.df["close"].shift(2) > self.df["open"].shift(2))
         ) & ((self.df["close"] < self.df["open"]) & (self.df["open"] < minimum(self.df["open"].shift(1), self.df["close"].shift(1))))
-
-    def add_candle_evening_star(self) -> None:
-        self.df["evening_star"] = self.candle_evening_star()
 
     def candle_abandoned_baby(self):
         """** Candlestick Detected: Abandoned Baby ("Reliable - Reversal - Bullish Pattern - Up")"""
@@ -294,13 +284,6 @@ class TechnicalAnalysis:
             & (self.df["open"].shift(2) > self.df["close"].shift(2))
             & (self.df["high"].shift(1) < self.df["low"].shift(2))
         )
-
-    def add_candle_abandoned_baby(self) -> None:
-        # fixes defragged dataframe
-        df_tmp = self.df.copy()
-        df_tmp["abandoned_baby"] = self.candle_abandoned_baby()
-        self.df = df_tmp
-        df_tmp = None
 
     def candle_morning_doji_star(self) -> Series:
         """** Candlestick Detected: Morning Doji Star ("Reliable - Reversal - Bullish Pattern - Up")"""
@@ -330,9 +313,6 @@ class TechnicalAnalysis:
             3 * abs(self.df["close"].shift(1) - self.df["open"].shift(1))
         )
 
-    def add_candle_morning_doji_star(self) -> None:
-        self.df["morning_doji_star"] = self.candle_morning_doji_star()
-
     def candle_evening_doji_star(self) -> Series:
         """** Candlestick Detected: Evening Doji Star ("Reliable - Reversal - Bearish Pattern - Down")"""
 
@@ -361,9 +341,6 @@ class TechnicalAnalysis:
             3 * abs(self.df["close"].shift(1) - self.df["open"].shift(1))
         )
 
-    def add_candle_evening_doji_star(self) -> None:
-        self.df["evening_doji_star"] = self.candle_evening_doji_star()
-
     def candle_astral_buy(self) -> Series:
         """*** Candlestick Detected: Astral Buy (Fibonacci 3, 5, 8)"""
 
@@ -386,9 +363,6 @@ class TechnicalAnalysis:
             & (self.df["low"].shift(7) < self.df["low"].shift(12))
         )
 
-    def add_candle_astral_buy(self) -> None:
-        self.df["astral_buy"] = self.candle_astral_buy()
-
     def candle_astral_sell(self) -> Series:
         """*** Candlestick Detected: Astral Sell (Fibonacci 3, 5, 8)"""
 
@@ -410,9 +384,6 @@ class TechnicalAnalysis:
             & (self.df["close"].shift(7) > self.df["close"].shift(10))
             & (self.df["high"].shift(7) > self.df["high"].shift(12))
         )
-
-    def add_candle_astral_sell(self) -> None:
-        self.df["astral_sell"] = self.candle_astral_sell()
 
     def add_adx_buy_signals(self, interval: int = 14) -> None:
         """Adds Average Directional Index (ADX) buy and sell signals to the DataFrame"""
@@ -1081,11 +1052,11 @@ class TechnicalAnalysis:
         self.df["closegtbb20_upperco"] = self.df.closegtbb20_upper.ne(self.df.closegtbb20_upper.shift())
         self.df.loc[self.df["closegtbb20_upper"] == False, "closegtbb20_upperco"] = False  # noqa: E712
 
-        # true if close is below the upper band but above the middle band
-        self.df["closeltbb20_upper"] = (self.df.close < self.df.bb20_upper) & (self.df.close > self.df.bb20_mid)
+        # true if close is below the middle band
+        self.df["closeltbb20_mid"] = self.df.close < self.df.bb20_mid
         # true if the current frame is where close crosses over below
-        self.df["closeltbb20_upperco"] = self.df.closeltbb20_upper.ne(self.df.closeltbb20_upper.shift())
-        self.df.loc[self.df["closeltbb20_upper"] == False, "closeltbb20_upperco"] = False  # noqa: E712
+        self.df["closeltbb20_midco"] = self.df.closeltbb20_mid.ne(self.df.closeltbb20_mid.shift())
+        self.df.loc[self.df["closeltbb20_mid"] == False, "closeltbb20_midco"] = False  # noqa: E712
 
         # true if close is below the lower band
         self.df["closeltbb20_lower"] = self.df.close < self.df.bb20_lower
@@ -1093,11 +1064,11 @@ class TechnicalAnalysis:
         self.df["closeltbb20_lowerco"] = self.df.closeltbb20_lower.ne(self.df.closeltbb20_lower.shift())
         self.df.loc[self.df["closeltbb20_lower"] == False, "closeltbb20_lowerco"] = False  # noqa: E712
 
-        # true if close is below the lower band
-        self.df["closegtbb20_lower"] = (self.df.close > self.df.bb20_lower) & (self.df.close < self.df.bb20_mid)
+        # true if close is below the middle band
+        self.df["closegtbb20_mid"] = self.df.close > self.df.bb20_mid
         # true if the current frame is where close crosses over below
-        self.df["closegtbb20_lowerco"] = self.df.closegtbb20_lower.ne(self.df.closegtbb20_lower.shift())
-        self.df.loc[self.df["closegtbb20_lower"] == False, "closegtbb20_lowerco"] = False  # noqa: E712
+        self.df["closegtbb20_midco"] = self.df.closegtbb20_mid.ne(self.df.closegtbb20_mid.shift())
+        self.df.loc[self.df["closegtbb20_mid"] == False, "closegtbb20_midco"] = False  # noqa: E712
 
     def add_ema_buy_signals(self) -> None:
         """Adds the EMA12/EMA26 buy and sell signals to the DataFrame"""
