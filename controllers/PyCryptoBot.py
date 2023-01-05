@@ -1475,44 +1475,42 @@ class PyCryptoBot(BotConfig):
                 self._simulation_summary()
                 self._simulation_save_orders()
 
-        else:
-            bullbeartext = "BULL" if goldencross else "BEAR"
+        
+        bullbeartext = "BULL" if goldencross else "BEAR"
 
-            if self.state.last_buy_size > 0 and self.state.last_buy_price > 0 and self.price > 0 and self.state.last_action == "BUY":
+        if self.state.last_buy_size > 0 and self.state.last_buy_price > 0 and self.price > 0 and self.state.last_action == "BUY":
                 # show profit and margin if already bought
-                RichText.notify(f"{now} | {self.market} {bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)} {trailing_action_logtext} | Margin: {str(margin)} | Profit: {str(profit)}", self, "info")
-            else:
-                RichText.notify(f'{now} | {self.market} {bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH', self, "info")
-                self.telegram_bot.add_info(
-                    f'{now} | {self.market} {bullbeartext} | {self.print_granularity()} | Current self.price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH',
-                    round(self.price, 4),
-                    str(round(df["close"].max(), 4)),
-                    str(
-                        round(
-                            ((self.price - df["close"].max()) / df["close"].max()) * 100,
-                            2,
-                        )
+            RichText.notify(f"{now} | {self.market} {bullbeartext} | {self.print_granularity()} | Current price: {str(self.price)} {trailing_action_logtext} | Margin: {str(margin)} | Profit: {str(profit)}", self, "info")
+        else:
+            RichText.notify(f'{now} | {self.market} {bullbeartext} | {self.print_granularity()} | Current price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH', self, "info")
+            self.telegram_bot.add_info(
+                f'{now} | {self.market} {bullbeartext} | {self.print_granularity()} | Current price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH',
+                round(self.price, 4),
+                str(round(df["close"].max(), 4)),
+                str(
+                    round(
+                    ((self.price - df["close"].max()) / df["close"].max()) * 100, 2,)
                     )
-                    + "%",
-                    self.state.action,
-                )
+                + "%",
+                self.state.action,
+            )
 
-            if self.state.last_action == "BUY" and self.state.in_open_trade and last_api_call_datetime.seconds > 60:
+        if self.state.last_action == "BUY" and self.state.in_open_trade and last_api_call_datetime.seconds > 60:
                 # update margin for telegram bot
-                self.telegram_bot.add_margin(
-                    str(_truncate(margin, 4) + "%") if self.state.in_open_trade is True else " ",
-                    str(_truncate(profit, 2)) if self.state.in_open_trade is True else " ",
-                    self.price,
-                    change_pcnt_high,
-                    self.state.action,
-                )
+            self.telegram_bot.add_margin(
+                str(_truncate(margin, 4) + "%") if self.state.in_open_trade is True else " ",
+                str(_truncate(profit, 2)) if self.state.in_open_trade is True else " ",
+                self.price,
+                change_pcnt_high,
+                self.state.action,
+            )
 
-            # Update the watchdog_ping
-            self.telegram_bot.update_watch_dog_ping()
+        # Update the watchdog_ping
+        self.telegram_bot.update_watch_dog_ping()
 
-            # decrement ignored iteration
-            if self.is_sim and self.smart_switch:
-                self.state.iterations = self.state.iterations - 1
+        # decrement ignored iteration
+        if self.is_sim and self.smart_switch:
+            self.state.iterations = self.state.iterations - 1
 
         # if live but not websockets
         if not self.disabletracker and self.is_live and not self.websocket_connection:
