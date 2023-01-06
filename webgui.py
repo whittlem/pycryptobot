@@ -1,4 +1,5 @@
 """ Web Gui Dashboard page """
+
 import json
 import os
 from datetime import datetime, timedelta
@@ -128,7 +129,7 @@ dashboard_layout = html.Div(
                                 },
                                 {
                                     "name": "Price",
-                                    "id": "Current Price",
+                                    "id": "Current self.price",
                                     "type": "numeric",
                                 },
                                 dict(
@@ -166,7 +167,7 @@ dashboard_layout = html.Div(
                                 {"if": {"column_id": "Trading Pair"}, "width": "180px"},
                                 {"if": {"column_id": "Action"}, "width": "130px"},
                                 {
-                                    "if": {"column_id": "Current Price"},
+                                    "if": {"column_id": "Current self.price"},
                                     "width": "160px",
                                 },
                                 {"if": {"column_id": "Margin"}, "width": "160px"},
@@ -415,9 +416,7 @@ def display_page(pathname):
 
 
 # Bot instance uptime tracking
-
-
-def getDateFromISO8601Str(date: str):  # pylint: disable=invalid-name
+def get_date_from_iso8601_str(date: str):  # pylint: disable=invalid-name
     """Bot instance uptime tracking"""
     now = str(datetime.now())
     # If date passed from datetime.now() remove milliseconds
@@ -459,7 +458,7 @@ def update_table(n):
             "Trading Pair",
             "Exchange",
             "Action",
-            "Current Price",
+            "Current self.price",
             "From DF High",
             "DF High",
             "Margin",
@@ -475,9 +474,9 @@ def update_table(n):
     )
     for pair in pairs_list:
         if (
-            not "data.json" in pair
+            "data.json" not in pair
             and not pair.__contains__("output.json")
-            and not "settings.json" in pair
+            and "settings.json" not in pair
         ):
             try:
                 with open(
@@ -488,7 +487,7 @@ def update_table(n):
                 ) as f:
                     json_data = pd.json_normalize(json.loads(f.read()))
                     json_data["pair"] = pair
-                    uptime = getDateFromISO8601Str(json_data["botcontrol.started"][0])
+                    uptime = get_date_from_iso8601_str(json_data["botcontrol.started"][0])
                     if (
                         isinstance(json_data["margin"][0], str)
                         and "%" in json_data["margin"][0]
@@ -521,7 +520,7 @@ def update_table(n):
                             "Action": json_data["signal"],
                             # if "margin" in json_data and json_data["margin"][0] == " "
                             # else "BUY",
-                            "Current Price": json_data["price"],
+                            "Current self.price": json_data["price"],
                             "Margin": json_data["margin"]
                             if "margin" in json_data and json_data["margin"][0] != " "
                             else "NaN",
@@ -689,8 +688,6 @@ def update_graphs1(rows, derived_virtual_selected_rows):
 
 
 # Active Margins Gauge
-
-
 @callback(
     Output("margin-current", "value"),
     Input("table-paging-and-sorting", "derived_virtual_data"),
@@ -707,8 +704,6 @@ def gauge1(rows, derived_virtual_selected_rows):
 
 
 # 7 Day Total Margins Gauge
-
-
 @callback(
     Output("margin-7Dtotal", "value"),
     Input("table-paging-and-sorting", "derived_virtual_data"),
@@ -790,5 +785,7 @@ clientside_callback(
 
 if __name__ == "__main__":
     # comment this line out if you want to run on just local machine @ 127.0.0.1:8050
-    app.run_server(host="0.0.0.0", port="8051")
-    app.run_server(debug=True)
+
+    # pyright: reportUndefinedVariable=false
+    self.run_server(host="0.0.0.0", port="8051")  # noqa
+    self.run_server(debug=True)  # noqa

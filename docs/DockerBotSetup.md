@@ -106,7 +106,7 @@ If you have a git patch file this is where you can apply it using this command r
 ![Apply Patch](images/applying_patch.png)
 
 ```
-test % 
+test %
 test % git clone --branch beta https://github.com/whittlem/pycryptobot
 Cloning into 'pycryptobot'...
 remote: Enumerating objects: 5905, done.
@@ -121,12 +121,12 @@ test % cd pycryptobot
 pycryptobot % git apply beta_brrrrr.patch --check
 
 pycryptobot % git apply beta_brrrrr.patch --ignore-whitespace --stat
- telegram_bot.py                 |    7 +++++--
+ self.telegram_bot.py                 |    7 +++++--
  scanner.json                    |   16 ++++++++++-----
  scanner.py                      |   41 ++++++++++++++++++++++++++++++---------
  .gitignore                      |    3 ++-
  scanner.py                      |    4 ++--
- telegram_bot.py                 |    9 ++++++---
+ self.telegram_bot.py                 |    9 ++++++---
  scanner.py                      |    8 ++++----
  models/config/binance_parser.py |    2 +-
  8 files changed, 62 insertions(+), 28 deletions(-)
@@ -158,7 +158,7 @@ If you wish to run the docker container on a different device it is recommended 
 
 `docker build --file Dockerfile . --tag mattwa/pycryptobot:beta`
 
-You can then push the image to docker hub if you wish, this will push the image to your docker hub account.
+You can then push the image to docker hub if you wish, this will push the image to your docker hub self.account.
 
 `docker push mattwa/pycryptobot:beta`
 
@@ -198,15 +198,15 @@ Your scanner is now alive and ready to play.
 
 # One Step Build and Deploy (Advanced)
 
-This is a one step build and deploy on the same device that you have cloned the repository on.  This is good for those who are testing new builds or want to be on the latest beta and want the ability to update in one step. 
+This is a one step build and deploy on the same device that you have cloned the repository on.  This is good for those who are testing new builds or want to be on the latest beta and want the ability to update in one step.
 
-Note that this comes with some dangers as we will be "baking" building in our own personal configuration into the docker container. This is not normal docker procedure as it comes with the risk that if the container is pushed to a public repository then you may expose your APIkeys to the world. 
+Note that this comes with some dangers as we will be "baking" building in our own personal configuration into the docker container. This is not normal docker procedure as it comes with the risk that if the container is pushed to a public repository then you may expose your APIkeys to the world.
 
-This risk is mitigated by not tagging the image with a name eg calling it pycryptobot only rather than docker_username/pycryptobot and secondly we don't run the docker push command. 
+This risk is mitigated by not tagging the image with a name eg calling it pycryptobot only rather than docker_username/pycryptobot and secondly we don't run the docker push command.
 
-## Pull 
+## Pull
 
-Pull the latest version of your preferred branch. 
+Pull the latest version of your preferred branch.
 
 `git clone --branch beta https://github.com/whittlem/pycryptobot`
 
@@ -214,17 +214,17 @@ Make any changes and [Patch as required](#patch-as-required)
 
 ## Configure
 
-Update the configurations in the pycryptobot folder, you can still folder map them using the volumes if you wish to keep your configuration separate to the pycryptobot git folder. 
+Update the configurations in the pycryptobot folder, you can still folder map them using the volumes if you wish to keep your configuration separate to the pycryptobot git folder.
 
-Update the docker-compose.yml file inside of the pycryptobot folder, update your volume mappings as required and add this line to the services section as shown below. 
+Update the docker-compose.yml file inside of the pycryptobot folder, update your volume mappings as required and add this line to the services section as shown below.
 
 `entrypoint: ["python3", "-u", "telegram_bot.py"]`
 
-Adding this line in will override the default entrypoint and start the telegram bot, omitting this line will use the default entrypoint and will only trade the coin specified in the config.json file. 
+Adding this line in will override the default entrypoint and start the telegram bot, omitting this line will use the default entrypoint and will only trade the coin specified in the config.json file.
 
-## Deploy 
+## Deploy
 
-Run this command from within the pycryptobot git folder and it will build the latest version of the container from the files you have locally on your device and then start the container immediately. 
+Run this command from within the pycryptobot git folder and it will build the latest version of the container from the files you have locally on your device and then start the container immediately.
 
 `docker-compose up -d --build`
 
@@ -254,13 +254,13 @@ services:
 
 ## Update Container
 
-To update to the latest version of your current branch perform the following steps. 
+To update to the latest version of your current branch perform the following steps.
 
 Pull the latest files from github.
 
 `git pull`
 
-Rebuild and run your container. 
+Rebuild and run your container.
 
 `docker-compose up -d --build`
 
@@ -269,23 +269,23 @@ Rebuild and run your container.
 
 _You might need to fuzz with qemu stuff_
 
-Complete the [Building a container with the Beta Branch](#building-a-container-with-the-beta-branch) section to [Patch as required](#patch-as-required) and then pickup the guide below with the build process. 
+Complete the [Building a container with the Beta Branch](#building-a-container-with-the-beta-branch) section to [Patch as required](#patch-as-required) and then pickup the guide below with the build process.
 
 ## Setup Docker Buildx
 
-First we need to build the create the build instance by running the following command. I have named this raspberrypi but you can name this builder anything you wish. I have also added the basic ARM versions for the Raspberry pi in the below command. You may add in any additional architectures you may require. 
+First we need to build the create the build instance by running the following command. I have named this raspberrypi but you can name this builder anything you wish. I have also added the basic ARM versions for the Raspberry pi in the below command. You may add in any additional architectures you may require.
 
-You should only need to perform this step once. 
+You should only need to perform this step once.
 
 `docker buildx create --name raspberrypi --platform linux/armhf,linux/aarch64,linux/amd64`
 
-## Tell buildx to use your new image builder 
+## Tell buildx to use your new image builder
 
-This command selects your image builder instance by name and enabled it. 
+This command selects your image builder instance by name and enabled it.
 
 `docker buildx use raspberrypi`
 
-The final step is to run the build command this will build for all architecture's specified in the command line by the --platform flag. Once the images have built successfully the buildx builder will push the images to docker hub with the tags specified. 
+The final step is to run the build command this will build for all architecture's specified in the command line by the --platform flag. Once the images have built successfully the buildx builder will push the images to docker hub with the tags specified.
 
 NOTE that the arm64 build (aarch64) takes a very long time as it needs to compile dependencies for the Raspberry Pi 4
 
@@ -333,15 +333,15 @@ Run all containers in the docker-compose.yml file
 
 `docker-compose up -d`
 
-Builds image and deploys it in one step. 
+Builds image and deploys it in one step.
 
 `docker-compose up -d --build`
 
-Force recreation of the container even if the image has not updated 
+Force recreation of the container even if the image has not updated
 
 `docker-compose up -d --force-recreate`
 
-Pull an updated version of the image from the registry 
+Pull an updated version of the image from the registry
 
 `docker-compose pull`
 
@@ -388,7 +388,7 @@ config.json
         "config": {
             "base_currency": "BTC",
             "quote_currency": "BUSD",
-            "enabletelegrambotcontrol": 1,
+            "telegrambotcontrol": 1,
             "live": 1,
             "disablebullonly": 1,
             "sellupperpcnt": 5,
@@ -402,7 +402,7 @@ config.json
             "graphs": 1,
             "filelog": 1,
             "logfile": "pycryptobot.log",
-            "recvWindow": 20000,
+            "recvwindow": 20000,
             "fileloglevel": "DEBUG",
             "consolelog": 1,
             "consoleloglevel": "DEBUG"
@@ -427,7 +427,7 @@ config.json
 
 ```
 
-# References 
+# References
 
 - [Scanning the market](https://playful-curio-e62.notion.site/Scanning-the-market-fd9b58b059dd4cf8addb167af7f36311)
 - [Compose file version 3 reference](https://docs.docker.com/compose/compose-file/compose-file-v3/)

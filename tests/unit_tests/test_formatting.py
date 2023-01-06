@@ -4,7 +4,7 @@ import pytest
 
 sys.path.append('.')
 # pylint: disable=import-error
-from models.PyCryptoBot import truncate
+from utils.PyCryptoBot import truncate as _truncate
 
 @pytest.mark.parametrize(('f', 'n', 'expected'), [
     (1.234567,    4, '1.2345'),
@@ -18,7 +18,7 @@ from models.PyCryptoBot import truncate
 ])
 
 def test_truncate(f, n, expected):
-    assert truncate(f, n) == expected
+    assert _truncate(f, n) == expected
 
     # make sure nothing breaks compatibility with partial()
-    assert functools.partial(truncate, n=n)(f) == expected
+    assert functools.partial(_truncate, n=n)(f) == expected

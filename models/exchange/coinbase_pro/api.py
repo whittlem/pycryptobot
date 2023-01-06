@@ -15,8 +15,8 @@ from requests.auth import AuthBase
 from requests import Request
 from threading import Thread
 from websocket import create_connection, WebSocketConnectionClosedException
-from models.helper.LogHelper import Logger
 from models.exchange.Granularity import Granularity
+from views.PyCryptoBot import RichText
 
 MARGIN_ADJUSTMENT = 0.0025
 DEFAULT_MAKER_FEE_RATE = 0.005
@@ -30,7 +30,7 @@ DEFAULT_MARKET = "BTC-GBP"
 
 
 class AuthAPIBase:
-    def _isMarketValid(self, market: str) -> bool:
+    def _is_market_valid(self, market: str) -> bool:
         p = re.compile(r"^[0-9A-Z]{1,20}\-[1-9A-Z]{2,5}$")
         if p.match(market):
             return True
@@ -47,14 +47,9 @@ class AuthAPIBase:
     #             granularity
     #         ]
 
+
 class AuthAPI(AuthAPIBase):
-    def __init__(
-        self,
-        api_key="",
-        api_secret="",
-        api_passphrase="",
-        api_url="https://api.pro.coinbase.com",
-    ) -> None:
+    def __init__(self, api_key="", api_secret="", api_passphrase="", api_url="https://api.pro.coinbase.com", app: object = None) -> None:
         """Coinbase Pro API object model
 
         Parameters
@@ -102,6 +97,9 @@ class AuthAPI(AuthAPIBase):
         if not p.match(api_passphrase):
             self.handle_init_error("Coinbase Pro API passphrase is invalid")
 
+        # app
+        self.app = app
+
         self._api_key = api_key
         self._api_secret = api_secret
         self._api_passphrase = api_passphrase
@@ -137,13 +135,13 @@ class AuthAPI(AuthAPIBase):
 
         return request
 
-    def getAccounts(self) -> pd.DataFrame:
+    def get_accounts(self) -> pd.DataFrame:
         """Retrieves your list of accounts"""
 
         # GET /api/v3/account
         try:
-            df = self.authAPI("GET", "accounts")
-        except:
+            df = self.auth_api("GET", "accounts")
+        except Exception:
             return pd.DataFrame()
 
         if len(df) == 0:
@@ -156,24 +154,24 @@ class AuthAPI(AuthAPIBase):
         df = df.reset_index()
         return df
 
-    def getAccount(self, account: str) -> pd.DataFrame:
+    def get_account(self, account: str) -> pd.DataFrame:
         """Retrieves a specific account"""
 
         # validates the account is syntactically correct
         p = re.compile(r"^[a-f0-9\-]{36,36}$")
-        if not p.match(account):
+        if not p.match(self.account):
             self.handle_init_error("Coinbase Pro account is invalid")
 
         try:
-            return self.authAPI("GET", f"accounts/{account}")
-        except:
+            return self.auth_api("GET", f"accounts/{account}")
+        except Exception:
             return pd.DataFrame()
 
-    def getFees(self, market: str = "") -> pd.DataFrame:
+    def get_fees(self, market: str = "") -> pd.DataFrame:
         """Retrieves market fees"""
 
         try:
-            df = self.authAPI("GET", "fees")
+            df = self.auth_api("GET", "fees")
 
             if len(df) == 0:
                 return pd.DataFrame()
@@ -185,77 +183,73 @@ class AuthAPI(AuthAPIBase):
 
             return df
 
-        except:
+        except Exception:
             return pd.DataFrame()
 
-    def getMakerFee(self, market: str = "") -> float:
+    def get_maker_fee(self, market: str = "") -> float:
         """Retrieves maker fee"""
 
         if len(market):
-            fees = self.getFees(market)
+            fees = self.get_fees(market)
         else:
-            fees = self.getFees()
+            fees = self.get_fees()
 
         if len(fees) == 0 or "maker_fee_rate" not in fees:
-            Logger.error(
-                f"error: 'maker_fee_rate' not in fees (using {DEFAULT_MAKER_FEE_RATE} as a fallback)"
-            )
+            if self.app:
+                RichText.notify(f"error: 'maker_fee_rate' not in fees (using {DEFAULT_MAKER_FEE_RATE} as a fallback)", self.app, "error")
             return DEFAULT_MAKER_FEE_RATE
 
         return float(fees["maker_fee_rate"].to_string(index=False).strip())
 
-    def getTakerFee(self, market: str = "") -> float:
+    def get_taker_fee(self, market: str = "") -> float:
         """Retrieves taker fee"""
 
-        if len(market) != None:
-            fees = self.getFees(market)
+        if len(market) is not None:
+            fees = self.get_fees(market)
         else:
-            fees = self.getFees()
+            fees = self.get_fees()
 
         if len(fees) == 0 or "taker_fee_rate" not in fees:
-            Logger.error(
-                f"error: 'taker_fee_rate' not in fees (using {DEFAULT_TAKER_FEE_RATE} as a fallback)"
-            )
+            if self.app:
+                RichText.notify(f"error: 'taker_fee_rate' not in fees (using {DEFAULT_TAKER_FEE_RATE} as a fallback)", self.app, "error")
             return DEFAULT_TAKER_FEE_RATE
 
         return float(fees["taker_fee_rate"].to_string(index=False).strip())
 
-    def getUSDVolume(self) -> float:
+    def get_usd_volume(self) -> float:
         """Retrieves USD volume"""
 
         try:
-            fees = self.getFees()
+            fees = self.get_fees()
             if "usd_volume" in fees:
                 return float(fees["usd_volume"].to_string(index=False).strip())
             else:
                 return 0
-        except:
+        except Exception:
             return 0
 
-    def getOrders(
-        self, market: str = "", action: str = "", status: str = "all"
-    ) -> pd.DataFrame:
+    def get_orders(self, market: str = "", action: str = "", status: str = "all") -> pd.DataFrame:
         """Retrieves your list of orders with optional filtering"""
 
         # if market provided
         if market != "":
             # validates the market is syntactically correct
-            if not self._isMarketValid(market):
+            if not self._is_market_valid(market):
                 raise ValueError("Coinbase Pro market is invalid.")
 
         # if action provided
         if action != "":
             # validates action is either a buy or sell
-            if not action in ["buy", "sell"]:
+            if action not in ["buy", "sell"]:
                 raise ValueError("Invalid order action.")
 
         # validates status is either open, pending, done, active, or all
-        if not status in ["open", "pending", "done", "active", "all"]:
+        if status not in ["open", "pending", "done", "active", "all"]:
             raise ValueError("Invalid order status.")
 
         try:
             # GET /orders?status
-            resp = self.authAPI("GET", f"orders?status={status}")
+            resp = self.auth_api("GET", f"orders?status={status}")
             if len(resp) > 0:
                 if status == "open":
                     df = resp.copy()[
@@ -269,9 +263,7 @@ class AuthAPI(AuthAPIBase):
                             "status",
                         ]
                     ]
-                    df["value"] = float(df["price"]) * float(df["size"]) - (
-                        float(df["price"]) * MARGIN_ADJUSTMENT
-                    )
+                    df["value"] = float(df["price"]) * float(df["size"]) - (float(df["price"]) * MARGIN_ADJUSTMENT)
                 else:
                     if "specified_funds" in resp:
                         df = resp.copy()[
@@ -318,13 +310,10 @@ class AuthAPI(AuthAPIBase):
             df_tmp["fill_fees"] = df_tmp["fill_fees"].astype(float)
             df = df_tmp
 
-            # calculates the price at the time of purchase
+            # calculates the self.price at the time of purchase
             if status != "open":
                 df["price"] = df.copy().apply(
-                    lambda row: (float(row.executed_value) * 100)
-                    / (float(row.filled_size) * 100)
-                    if float(row.filled_size) > 0
-                    else 0,
+                    lambda row: (float(row.executed_value) * 100) / (float(row.filled_size) * 100) if float(row.filled_size) > 0 else 0,
                     axis=1,
                 )
                 # df.loc[df['filled_size'] > 0, 'price'] = (df['executed_value'] * 100) / (df['filled_size'] * 100)
@@ -399,9 +388,7 @@ class AuthAPI(AuthAPIBase):
                 df = df_tmp
 
             # convert dataframe to a time series
-            tsidx = pd.DatetimeIndex(
-                pd.to_datetime(df["created_at"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z")
-            )
+            tsidx = pd.DatetimeIndex(pd.to_datetime(df["created_at"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z"))
             df.set_index(tsidx, inplace=True)
             df = df.drop(columns=["created_at"])
 
@@ -428,46 +415,43 @@ class AuthAPI(AuthAPIBase):
 
             return df
 
-        except:
+        except Exception:
             return pd.DataFrame()
 
-    def getTime(self) -> datetime:
+    def get_time(self) -> datetime:
         """Retrieves the exchange time"""
 
         try:
-            resp = self.authAPI("GET", "time")
+            resp = self.auth_api("GET", "time")
             if "epoch" in resp:
                 epoch = int(resp["epoch"])
                 return datetime.fromtimestamp(epoch)
             else:
-                Logger.error(resp)
+                if self.app:
+                    RichText.notify(resp, self.app, "error")
                 return None
         except Exception as e:
-            Logger.error(f"Error: {e}")
+            if self.app:
+                RichText.notify(f"Error: {e}", self.app, "error")
             return None
 
-    def marketBuy(self, market: str = "", quote_quantity: float = 0) -> pd.DataFrame:
+    def market_buy(self, market: str = "", quote_quantity: float = 0) -> pd.DataFrame:
         """Executes a market buy providing a funding amount"""
 
         # validates the market is syntactically correct
-        if not self._isMarketValid(market):
+        if not self._is_market_valid(market):
             raise ValueError("Coinbase Pro market is invalid.")
 
         # validates quote_quantity is either an integer or float
-        if not isinstance(quote_quantity, int) and not isinstance(
-            quote_quantity, float
-        ):
-            Logger.critical(
-                "Please report this to Michael Whittle: "
-                + str(quote_quantity)
-                + " "
-                + str(type(quote_quantity))
-            )
+        if not isinstance(quote_quantity, int) and not isinstance(quote_quantity, float):
+            if self.app:
+                RichText.notify("Please report this to Michael Whittle: " + str(quote_quantity) + " " + str(type(quote_quantity)), self.app, "critical")
             raise TypeError("The funding amount is not numeric.")
 
         # funding amount needs to be greater than 10
         if quote_quantity < MINIMUM_TRADE_AMOUNT:
-            Logger.warning(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).")
+            if self.app:
+                RichText.notify(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).", self.app, "warning")
             return pd.DataFrame()
             # raise ValueError(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).")
 
@@ -476,26 +460,25 @@ class AuthAPI(AuthAPIBase):
                 "product_id": market,
                 "type": "market",
                 "side": "buy",
-                "funds": self.marketQuoteIncrement(market, quote_quantity),
+                "funds": self.market_quote_increment(market, quote_quantity),
             }
 
-            Logger.debug(order)
+            if self.app:
+                RichText.notify(order, self.app.debug)
 
             # connect to authenticated coinbase pro api
-            model = AuthAPI(
-                self._api_key, self._api_secret, self._api_passphrase, self._api_url
-            )
+            model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
 
             # place order and return result
-            return model.authAPI("POST", "orders", order)
+            return model.auth_api("POST", "orders", order)
 
-        except:
+        except Exception:
             return pd.DataFrame()
 
-    def marketSell(self, market: str = "", base_quantity: float = 0) -> pd.DataFrame:
+    def market_sell(self, market: str = "", base_quantity: float = 0) -> pd.DataFrame:
         """Executes a market sell providing a crypto amount"""
 
-        if not self._isMarketValid(market):
+        if not self._is_market_valid(market):
             raise ValueError("Coinbase Pro market is invalid.")
 
         if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
@@ -506,71 +489,65 @@ class AuthAPI(AuthAPIBase):
                 "product_id": market,
                 "type": "market",
                 "side": "sell",
-                "size": self.marketBaseIncrement(market, base_quantity),
+                "size": self.market_base_Increment(market, base_quantity),
             }
 
-            Logger.debug(order)
+            if self.app:
+                RichText.notify(order, self.app, "debug")
 
-            model = AuthAPI(
-                self._api_key, self._api_secret, self._api_passphrase, self._api_url
-            )
-            return model.authAPI("POST", "orders", order)
+            model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
+            return model.auth_api("POST", "orders", order)
 
-        except:
+        except Exception:
             return pd.DataFrame()
 
-    def limitSell(
-        self, market: str = "", base_quantity: float = 0, future_price: float = 0
-    ) -> pd.DataFrame:
+    def limit_sell(self, market: str = "", base_quantity: float = 0, future_price: float = 0) -> pd.DataFrame:
         """Initiates a limit sell order"""
 
-        if not self._isMarketValid(market):
+        if not self._is_market_valid(market):
             raise ValueError("Coinbase Pro market is invalid.")
 
         if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
             raise TypeError("The crypto amount is not numeric.")
 
         if not isinstance(future_price, int) and not isinstance(future_price, float):
-            raise TypeError("The future crypto price is not numeric.")
+            raise TypeError("The future crypto self.price is not numeric.")
 
         try:
             order = {
                 "product_id": market,
                 "type": "limit",
                 "side": "sell",
-                "size": self.marketBaseIncrement(market, base_quantity),
+                "size": self.market_base_Increment(market, base_quantity),
                 "price": future_price,
             }
 
-            Logger.debug(order)
+            if self.app:
+                RichText.notify(order, self.app, "debug")
 
-            model = AuthAPI(
-                self._api_key, self._api_secret, self._api_passphrase, self._api_url
-            )
-            return model.authAPI("POST", "orders", order)
+            model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
+            return model.auth_api("POST", "orders", order)
 
-        except:
+        except Exception:
             return pd.DataFrame()
 
-    def cancelOrders(self, market: str = "") -> pd.DataFrame:
+    def cancel_orders(self, market: str = "") -> pd.DataFrame:
         """Cancels an order"""
 
-        if not self._isMarketValid(market):
+        if not self._is_market_valid(market):
             raise ValueError("Coinbase Pro market is invalid.")
 
         try:
-            model = AuthAPI(
-                self._api_key, self._api_secret, self._api_passphrase, self._api_url
-            )
-            return model.authAPI("DELETE", "orders")
+            model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
+            return model.auth_api("DELETE", "orders")
 
-        except:
+        except Exception:
             return pd.DataFrame()
 
-    def marketBaseIncrement(self, market, amount) -> float:
+    def market_base_Increment(self, market, amount) -> float:
         """Retrieves the market base increment"""
 
-        product = self.authAPI("GET", f"products/{market}")
+        product = self.auth_api("GET", f"products/{market}")
 
         if "base_increment" not in product:
             return amount
@@ -582,12 +559,12 @@ class AuthAPI(AuthAPIBase):
         else:
             nb_digits = 0
 
-        return floor(amount * 10 ** nb_digits) / 10 ** nb_digits
+        return floor(amount * 10**nb_digits) / 10**nb_digits
 
-    def marketQuoteIncrement(self, market, amount) -> float:
+    def market_quote_increment(self, market, amount) -> float:
         """Retrieves the market quote increment"""
 
-        product = self.authAPI("GET", f"products/{market}")
+        product = self.auth_api("GET", f"products/{market}")
 
         if "quote_increment" not in product:
             return amount
@@ -599,75 +576,91 @@ class AuthAPI(AuthAPIBase):
         else:
             nb_digits = 0
 
-        return floor(amount * 10 ** nb_digits) / 10 ** nb_digits
+        return floor(amount * 10**nb_digits) / 10**nb_digits
 
-    def authAPI(self, method: str, uri: str, payload: str = "") -> pd.DataFrame:
+    def auth_api(self, method: str, uri: str, payload: str = "") -> pd.DataFrame:
         """Initiates a REST API call"""
 
         if not isinstance(method, str):
             raise TypeError("Method is not a string.")
 
-        if not method in ["DELETE", "GET", "POST"]:
+        if method not in ["DELETE", "GET", "POST"]:
             raise TypeError("Method not DELETE, GET or POST.")
 
         if not isinstance(uri, str):
             raise TypeError("URI is not a string.")
 
-        try:
-            if method == "DELETE":
-                resp = requests.delete(self._api_url + uri, auth=self)
-            elif method == "GET":
-                resp = requests.get(self._api_url + uri, auth=self)
-            elif method == "POST":
-                resp = requests.post(self._api_url + uri, json=payload, auth=self)
+        reason, msg = (None, None)
+        trycnt, maxretry, connretry = (1, 5, 10)
+        while trycnt <= connretry:
+            try:
+                if method == "DELETE":
+                    resp = requests.delete(self._api_url + uri, auth=self)
+                elif method == "GET":
+                    resp = requests.get(self._api_url + uri, auth=self)
+                elif method == "POST":
+                    resp = requests.post(self._api_url + uri, json=payload, auth=self)
 
-            if "msg" in resp.json():
-                resp_message = resp.json()["msg"]
-            elif "message" in resp.json():
-                resp_message = resp.json()["message"]
-            else:
-                resp_message = ""
+                trycnt += 1
+                resp.raise_for_status()
 
-            if resp.status_code == 401 and (
-                resp_message == "request timestamp expired"
-            ):
-                message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (hint: check your system time is using NTP)"
-                Logger.error(f"Error: {message}")
-                return {}
-            elif resp.status_code != 200:
-                if self.die_on_api_error or resp.status_code == 401:
-                    # disable traceback
-                    sys.tracebacklimit = 0
-
-                    raise Exception(
-                        f"{method.upper()} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
-                    )
+                if resp.status_code == 200:
+                    if isinstance(resp.json(), list):
+                        df = pd.DataFrame.from_dict(resp.json())
+                        return df
+                    else:
+                        df = pd.DataFrame(resp.json(), index=[0])
+                        return df
                 else:
-                    Logger.error(
-                        f"error: {method.upper()} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
-                    )
-                    return pd.DataFrame()
+                    if "msg" in resp.json():
+                        resp_message = resp.json()["msg"]
+                    elif "message" in resp.json():
+                        resp_message = resp.json()["message"]
+                    else:
+                        resp_message = ""
 
-            resp.raise_for_status()
+                    if resp.status_code == 401 and (resp_message == "request timestamp expired"):
+                        msg = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (hint: check your system time is using NTP)"
+                    else:
+                        msg = f"CoinbasePro auth_api Error: {method.upper()} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
 
-            if isinstance(resp.json(), list):
-                df = pd.DataFrame.from_dict(resp.json())
-                return df
+                    reason = "Invalid Response"
+
+            except requests.ConnectionError as err:
+                reason, msg = ("ConnectionError", err)
+
+            except requests.exceptions.HTTPError as err:
+                reason, msg = ("HTTPError", err)
+
+            except requests.Timeout as err:
+                reason, msg = ("TimeoutError", err)
+
+            except json.decoder.JSONDecodeError as err:
+                reason, msg = ("JSONDecodeError", err)
+
+            except Exception as err:
+                reason, msg = ("GeneralException", err)
+
+            if trycnt >= maxretry:
+                if reason in ("ConnectionError", "HTTPError") and trycnt <= connretry:
+                    if self.app:
+                        RichText.notify(f"{reason}:  URI: {uri} trying again.  Attempt: {trycnt}", self.app, "error")
+                    if trycnt > 5:
+                        time.sleep(30)
+                else:
+                    if msg is None:
+                        msg = f"Unknown CoinbasePro Private API Error: call to {uri} attempted {trycnt} times, resulted in error"
+                    if reason is None:
+                        reason = "Unknown Error"
+                    return self.handle_api_error(msg, reason)
             else:
-                df = pd.DataFrame(resp.json(), index=[0])
-                return df
-
-        except requests.ConnectionError as err:
-            return self.handle_api_error(err, "ConnectionError")
-
-        except requests.exceptions.HTTPError as err:
-            return self.handle_api_error(err, "HTTPError")
-
-        except requests.Timeout as err:
-            return self.handle_api_error(err, "Timeout")
-
-        except json.decoder.JSONDecodeError as err:
-            return self.handle_api_error(err, "JSONDecodeError")
+                if self.app:
+                    RichText.notify(f"{reason}:  URI: {uri} trying again.  Attempt: {trycnt}", self.app, "error")
+                time.sleep(15)
+        else:
+            return self.handle_api_error(
+                f"CoinbasePro API Error: call to {uri} attempted {trycnt} times without valid response", "CoinbasePro Private API Error"
+            )
 
     def handle_api_error(self, err: str, reason: str) -> pd.DataFrame:
         """Handle API errors"""
@@ -676,24 +669,29 @@ class AuthAPI(AuthAPIBase):
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
-                Logger.error(err)
+                if self.app:
+                    RichText.notify(err, self.app, "error")
                 return pd.DataFrame()
         else:
             if self.die_on_api_error:
                 raise SystemExit(f"{reason}: {self._api_url}")
             else:
-                Logger.info(f"{reason}: {self._api_url}")
+                if self.app:
+                    RichText.notify(f"{reason}: {self._api_url}", self.app, "info")
                 return pd.DataFrame()
 
 
 class PublicAPI(AuthAPIBase):
-    def __init__(self) -> None:
+    def __init__(self, app: object = None) -> None:
         # options
         self.debug = False
         self.die_on_api_error = False
         self._api_url = "https://api.pro.coinbase.com/"
 
-    def getHistoricalData(
+        # app
+        self.app = app
+
+    def get_historical_data(
         self,
         market: str = DEFAULT_MARKET,
         # granularity: int = MAX_GRANULARITY,
@@ -705,18 +703,18 @@ class PublicAPI(AuthAPIBase):
         """Retrieves historical market data"""
 
         # validates the market is syntactically correct
-        if not self._isMarketValid(market):
+        if not self._is_market_valid(market):
             raise TypeError("Coinbase Pro market required.")
 
         # validates granularity is an integer
-        if not isinstance(granularity.to_integer, int):
+        if isinstance(granularity, Granularity) and not isinstance(granularity.to_integer, int):
             raise TypeError("Granularity integer required.")
 
         # validates the granularity is supported by Coinbase Pro
-        if not granularity.to_integer in SUPPORTED_GRANULARITY:
-            raise TypeError(
-                "Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY))
-            )
+        if isinstance(granularity, Granularity) and (granularity.to_integer not in SUPPORTED_GRANULARITY):
+            raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
+        elif isinstance(granularity, int) and (granularity not in SUPPORTED_GRANULARITY):
+            raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
 
         # validates the ISO 8601 start date is a string (if provided)
         if not isinstance(iso8601start, str):
@@ -726,213 +724,251 @@ class PublicAPI(AuthAPIBase):
         if not isinstance(iso8601end, str):
             raise TypeError("ISO8601 end integer as string required.")
 
-        using_websocket = False
         if websocket is not None:
             if websocket.candles is not None:
                 try:
-                    df = websocket.candles.loc[websocket.candles["market"] == market]
-                    using_websocket = True
-                except:
+                    return websocket.candles.loc[websocket.candles["market"] == market]
+                except Exception:
                     pass
 
-        if websocket is None or (websocket is not None and using_websocket is False):
-            if iso8601start != "" and iso8601end == "":
-                resp = self.authAPI(
-                    "GET",
-                    f"products/{market}/candles?granularity={granularity.to_integer}&start={iso8601start}",
-                )
-            elif iso8601start != "" and iso8601end != "":
-                resp = self.authAPI(
-                    "GET",
-                    f"products/{market}/candles?granularity={granularity.to_integer}&start={iso8601start}&end={iso8601end}",
-                )
-            else:
-                resp = self.authAPI(
-                    "GET", f"products/{market}/candles?granularity={granularity.to_integer}"
-                )
-
-            # convert the API response into a Pandas DataFrame
-            df = pd.DataFrame(
-                resp, columns=["epoch", "low", "high", "open", "close", "volume"]
-            )
-            # reverse the order of the response with earliest last
-            df = df.iloc[::-1].reset_index()
-
+        # if not using websocket
+        resp = {}
+        trycnt, maxretry = (0, 5)
+        while trycnt < maxretry:
+            trycnt += 1
             try:
-                freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity.to_integer)]
-            except:
-                freq = "D"
+                if iso8601start != "" and iso8601end == "":
+                    if isinstance(granularity, Granularity):
+                        resp = self.auth_api(
+                            "GET",
+                            f"products/{market}/candles?granularity={granularity.to_integer}&start={iso8601start}",
+                        )
+                    else:
+                        resp = self.auth_api(
+                            "GET",
+                            f"products/{market}/candles?granularity={granularity}&start={iso8601start}",
+                        )
+                elif iso8601start != "" and iso8601end != "":
+                    if isinstance(granularity, Granularity):
+                        resp = self.auth_api(
+                            "GET",
+                            f"products/{market}/candles?granularity={granularity.to_integer}&start={iso8601start}&end={iso8601end}",
+                        )
+                    else:
+                        resp = self.auth_api(
+                            "GET",
+                            f"products/{market}/candles?granularity={granularity}&start={iso8601start}&end={iso8601end}",
+                        )
+                else:
+                    if isinstance(granularity, Granularity):
+                        resp = self.auth_api("GET", f"products/{market}/candles?granularity={granularity.to_integer}")
+                    else:
+                        resp = self.auth_api("GET", f"products/{market}/candles?granularity={granularity}")
 
-            # convert the DataFrame into a time series with the date as the index/key
-            try:
-                tsidx = pd.DatetimeIndex(
-                    pd.to_datetime(df["epoch"], unit="s"),
-                    dtype="datetime64[ns]",
-                    freq=freq,
-                )
-                df.set_index(tsidx, inplace=True)
-                df = df.drop(columns=["epoch", "index"])
-                df.index.names = ["ts"]
-                df["date"] = tsidx
-            except ValueError:
-                tsidx = pd.DatetimeIndex(
-                    pd.to_datetime(df["epoch"], unit="s"), dtype="datetime64[ns]"
-                )
-                df.set_index(tsidx, inplace=True)
-                df = df.drop(columns=["epoch", "index"])
-                df.index.names = ["ts"]
-                df["date"] = tsidx
+                if len(resp) > 0:
+                    # convert the API response into a Pandas DataFrame
+                    df = pd.DataFrame(resp, columns=["epoch", "low", "high", "open", "close", "volume"])
+                    # reverse the order of the response with earliest last
+                    df = df.iloc[::-1].reset_index()
 
-            df["market"] = market
-            df["granularity"] = granularity.to_integer
+                    try:
+                        if isinstance(granularity, Granularity):
+                            freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity.to_integer)]
+                        else:
+                            freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity)]
+                    except Exception:
+                        freq = "D"
 
-            # re-order columns
-            df = df[
-                [
-                    "date",
-                    "market",
-                    "granularity",
-                    "low",
-                    "high",
-                    "open",
-                    "close",
-                    "volume",
-                ]
-            ]
+                    # convert the DataFrame into a time series with the date as the index/key
+                    try:
+                        tsidx = pd.DatetimeIndex(
+                            pd.to_datetime(df["epoch"], unit="s"),
+                            dtype="datetime64[ns]",
+                            freq=freq,
+                        )
+                        df.set_index(tsidx, inplace=True)
+                        df = df.drop(columns=["epoch", "index"])
+                        df.index.names = ["ts"]
+                        df["date"] = tsidx
+                    except ValueError:
+                        tsidx = pd.DatetimeIndex(pd.to_datetime(df["epoch"], unit="s"), dtype="datetime64[ns]")
+                        df.set_index(tsidx, inplace=True)
+                        df = df.drop(columns=["epoch", "index"])
+                        df.index.names = ["ts"]
+                        df["date"] = tsidx
 
-            df["low"] = df["low"].astype(float)
-            df["high"] = df["high"].astype(float)
-            df["open"] = df["open"].astype(float)
-            df["close"] = df["close"].astype(float)
-            df["volume"] = df["volume"].astype(float)
+                    df["market"] = market
+                    if isinstance(granularity, Granularity):
+                        df["granularity"] = granularity.to_integer
+                    else:
+                        df["granularity"] = granularity
 
-            # reset pandas dataframe index
-            df.reset_index()
+                    # re-order columns
+                    df = df[
+                        [
+                            "date",
+                            "market",
+                            "granularity",
+                            "low",
+                            "high",
+                            "open",
+                            "close",
+                            "volume",
+                        ]
+                    ]
 
-        return df
+                    df["low"] = df["low"].astype(float)
+                    df["high"] = df["high"].astype(float)
+                    df["open"] = df["open"].astype(float)
+                    df["close"] = df["close"].astype(float)
+                    df["volume"] = df["volume"].astype(float)
 
-    def getTicker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
+                    # reset pandas dataframe index
+                    df.reset_index()
+
+                    return df
+                else:
+                    if trycnt >= (maxretry):
+                        if self.app:
+                            RichText.notify(f"CoinbasePro API Error for Historical Data - attempted {trycnt} times", self.app, "warning")
+                    time.sleep(15)
+
+            except Exception:
+                if trycnt >= (maxretry):
+                    if self.app:
+                        RichText.notify(f"CoinbasePro API Error for Historical Data - attempted {trycnt} times", self.app, "warning")
+                time.sleep(15)
+
+    def get_ticker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
         """Retrieves the market ticker"""
 
         # validates the market is syntactically correct
-        if not self._isMarketValid(market):
+        if not self._is_market_valid(market):
             raise TypeError("Coinbase Pro market required.")
-
-        now = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
         if websocket is not None and websocket.tickers is not None:
             try:
                 row = websocket.tickers.loc[websocket.tickers["market"] == market]
+                ticker_date = datetime.strptime(re.sub(r".0*$", "", str(row["date"].values[0])), "%Y-%m-%dT%H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
+                ticker_price = float(row["price"].values[0])
+
+                if ticker_date is None:
+                    ticker_date = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+                return (ticker_date, ticker_price)
+
+            except Exception:
+                pass
+
+        resp = {}
+        trycnt, maxretry = (1, 5)
+        while trycnt <= maxretry:
+
+            try:
+                resp = self.auth_api("GET", f"products/{market}/ticker")
+
                 return (
-                    datetime.strptime(
-                        re.sub(r".0*$", "", str(row["date"].values[0])),
-                        "%Y-%m-%dT%H:%M:%S",
-                    ).strftime("%Y-%m-%d %H:%M:%S"),
-                    float(row["price"].values[0]),
+                    datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+                    float(resp["price"]),
                 )
+            except Exception:
+                trycnt += 1
+                if trycnt >= maxretry:
+                    if self.app:
+                        RichText.notify(f"CoinbasePro Ticker Error - attempted {trycnt} times.", self.app, "warning")
+                    return (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), 0.0)
+                time.sleep(15)
 
-            except:
-                return (now, 0.0)
-
-        resp = self.authAPI("GET", f"products/{market}/ticker")
-
-        if "time" in resp and "price" in resp:
-
-            """Check if milliseconds (%f) are more then 6 digits. If so truncate for datetime which doesn't support more"""
-            if len(resp["time"].split('.')[1]) > 7: resp["time"]=resp["time"][:26] + 'Z'
-
-            return (
-                datetime.strptime(resp["time"], "%Y-%m-%dT%H:%M:%S.%fZ").strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                ),
-                float(resp["price"]),
-            )
-
-        return (now, 0.0)
-
-    def getTime(self) -> datetime:
+    def get_time(self) -> datetime:
         """Retrieves the exchange time"""
 
         try:
-            resp = self.authAPI("GET", "time")
+            resp = self.auth_api("GET", "time")
             if "epoch" in resp:
                 epoch = int(resp["epoch"])
                 return datetime.fromtimestamp(epoch)
             else:
-                Logger.error(
-                    "resp does not contain the epoch key for some reason!"
-                )  # remove this later
-                Logger.error(resp)
+                if self.app:
+                    RichText.notify("resp does not contain the epoch key for some reason!", self.app, "error")  # remove this later
+                    RichText.notify(resp, self.app, "error")
                 return None
         except Exception as e:
-            Logger.error(f"Error: {e}")
+            if self.app:
+                RichText.notify(f"Error: {e}", self.app, "error")
             return None
 
-    def getMarkets24HrStats(self) -> pd.DataFrame():
+    def get_markets_24hr_stats(self) -> pd.DataFrame():
         """Retrieves exchange markets 24hr stats"""
 
         try:
-            return self.authAPI("GET", "products/stats")
-        except:
+            return self.auth_api("GET", "products/stats")
+        except Exception:
             return pd.DataFrame()
 
-    def authAPI(self, method: str, uri: str, payload: str = "") -> dict:
+    def auth_api(self, method: str, uri: str, payload: str = "") -> dict:
         """Initiates a REST API call"""
 
         if not isinstance(method, str):
             raise TypeError("Method is not a string.")
 
-        if not method in ["GET", "POST"]:
+        if method not in ["GET", "POST"]:
             raise TypeError("Method not GET or POST.")
 
         if not isinstance(uri, str):
             raise TypeError("URI is not a string.")
 
-        try:
-            if method == "GET":
-                resp = requests.get(self._api_url + uri)
-            elif method == "POST":
-                resp = requests.post(self._api_url + uri, json=payload)
-
-            trycnt, maxretry = (1, 5)
-            while trycnt <= maxretry:
-                if resp.status_code != 200:
-                    resp_message = resp.json()["message"]
-                    message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
-                    if self.die_on_api_error:
-                        raise Exception(message)
-                    else:
-                        Logger.error(
-                            f"Coinbase Pro API request error - retry attempt {trycnt}: {message}"
-                        )
-                    time.sleep(15)
-                    trycnt += 1
-                else:
-                    break
-
+        reason, msg = (None, None)
+        trycnt, maxretry, connretry = (1, 5, 10)
+        while trycnt <= connretry:
+            try:
                 if method == "GET":
                     resp = requests.get(self._api_url + uri)
                 elif method == "POST":
                     resp = requests.post(self._api_url + uri, json=payload)
 
-            resp.raise_for_status()
-            return resp.json()
+                trycnt += 1
+                resp.raise_for_status()
 
-        except requests.ConnectionError as err:
-            Logger.error("requests.ConnectionError")  # remove this later
-            return self.handle_api_error(err, "ConnectionError")
+                if resp.status_code == 200 and len(resp.json()) > 0:
+                    return resp.json()
+                else:
+                    msg = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp.json()['message']}"
+                    reason = "Invalid Response"
 
-        except requests.exceptions.HTTPError as err:
-            Logger.error("requests.exceptions.HTTPError")  # remove this later
-            return self.handle_api_error(err, "HTTPError")
+            except requests.ConnectionError as err:
+                reason, msg = ("ConnectionError", err)
 
-        except requests.Timeout as err:
-            Logger.error("requests.Timeout")  # remove this later
-            return self.handle_api_error(err, "Timeout")
+            except requests.exceptions.HTTPError as err:
+                reason, msg = ("HTTPError", err)
 
-        except json.decoder.JSONDecodeError as err:
-            Logger.error("json.decoder.JSONDecodeError")  # remove this later
-            return self.handle_api_error(err, "JSONDecodeError")
+            except requests.Timeout as err:
+                reason, msg = ("TimeoutError", err)
+
+            except json.decoder.JSONDecodeError as err:
+                reason, msg = ("JSONDecodeError", err)
+
+            except Exception as err:
+                reason, msg = ("GeneralException", err)
+
+            if trycnt >= maxretry:
+                if reason in ("ConnectionError", "HTTPError") and trycnt <= connretry:
+                    if self.app:
+                        RichText.notify(f"{reason}:  URI: {uri} trying again.  Attempt: {trycnt}", self.app, "error")
+                    if trycnt > 5:
+                        time.sleep(30)
+                else:
+                    if msg is None:
+                        msg = f"Unknown CoinbasePro Public API Error: call to {uri} attempted {trycnt} times, resulted in error"
+                    if reason is None:
+                        reason = "Unknown Error"
+                    return self.handle_api_error(msg, reason)
+            else:
+                time.sleep(15)
+
+        else:
+            return self.handle_api_error(
+                f"CoinbasePro API Error: call to {uri} attempted {trycnt} times without valid response", "CoinbasePro Public API Error"
+            )
 
     def handle_api_error(self, err: str, reason: str) -> dict:
         """Handle API errors"""
@@ -941,13 +977,15 @@ class PublicAPI(AuthAPIBase):
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
-                Logger.error(err)
+                if self.app:
+                    RichText.notify(err, self.app, "error")
                 return {}
         else:
             if self.die_on_api_error:
                 raise SystemExit(f"{reason}: {self._api_url}")
             else:
-                Logger.info(f"{reason}: {self._api_url}")
+                if self.app:
+                    RichText.notify(f"{reason}: {self._api_url}", self.app, "info")
                 return {}
 
 
@@ -959,6 +997,7 @@ class WebSocket(AuthAPIBase):
         granularity: Granularity = Granularity.ONE_HOUR,
         api_url="https://api.pro.coinbase.com",
         ws_url="wss://ws-feed.pro.coinbase.com",
+        app: object = None,
     ) -> None:
         # options
         self.debug = False
@@ -988,6 +1027,9 @@ class WebSocket(AuthAPIBase):
 
         if ws_url[-1] != "/":
             ws_url = ws_url + "/"
+
+        # app
+        self.app = app
 
         self._ws_url = ws_url
         self._api_url = api_url
@@ -1035,7 +1077,7 @@ class WebSocket(AuthAPIBase):
         self.start_time = datetime.now()
 
     def _keepalive(self, interval=30):
-        if (self.ws is not None) and (hasattr(self.ws,"connected")):
+        if (self.ws is not None) and (hasattr(self.ws, "connected")):
             while self.ws.connected:
                 self.ws.ping("keepalive")
                 time.sleep(interval)
@@ -1073,17 +1115,21 @@ class WebSocket(AuthAPIBase):
         self.thread.join()
 
     def on_open(self):
-        Logger.info("-- Websocket Subscribed! --")
+        if self.app:
+            RichText.notify("-- Websocket Subscribed! --", self.app, "info")
 
     def on_close(self):
-        Logger.info("-- Websocket Closed --")
+        if self.app:
+            RichText.notify("-- Websocket Closed --", self.app, "info")
 
     def on_message(self, msg):
-        Logger.info(msg)
+        if self.app:
+            RichText.notify(msg, self.app, "info")
 
     def on_error(self, e, data=None):
-        Logger.error(e)
-        Logger.error("{} - data: {}".format(e, data))
+        if self.app:
+            RichText.notify(e, self.app, "error")
+            RichText.notify("{} - data: {}".format(e, data), self.app, "error")
 
         self.stop = True
         try:
@@ -1092,13 +1138,13 @@ class WebSocket(AuthAPIBase):
             self.candles = None
             self.start_time = None
             self.time_elapsed = 0
-        except:
+        except Exception:
             pass
 
     def getStartTime(self) -> datetime:
         return self.start_time
 
-    def getTimeElapsed(self) -> int:
+    def get_timeElapsed(self) -> int:
         return self.time_elapsed
 
 
@@ -1110,13 +1156,14 @@ class WebSocketClient(WebSocket):
         granularity: Granularity = Granularity.ONE_HOUR,
         api_url="https://api.pro.coinbase.com/",
         ws_url: str = "wss://ws-feed.pro.coinbase.com",
+        app: object = None,
     ) -> None:
         if len(markets) == 0:
             raise ValueError("A list of one or more markets is required.")
 
         for market in markets:
             # validates the market is syntactically correct
-            if not self._isMarketValid(market):
+            if not self._is_market_valid(market):
                 raise ValueError("Coinbase Pro market is invalid.")
 
         # validates granularity is an integer
@@ -1124,10 +1171,8 @@ class WebSocketClient(WebSocket):
             raise TypeError("Granularity integer required.")
 
         # validates the granularity is supported by Coinbase Pro
-        if not granularity.to_integer in SUPPORTED_GRANULARITY:
-            raise TypeError(
-                "Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY))
-            )
+        if granularity.to_integer not in SUPPORTED_GRANULARITY:
+            raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
 
         valid_urls = [
             "https://api.pro.coinbase.com",
@@ -1155,6 +1200,9 @@ class WebSocketClient(WebSocket):
         if ws_url[-1] != "/":
             ws_url = ws_url + "/"
 
+        # app
+        self.app = app
+
         self._ws_url = ws_url
 
         self.markets = markets
@@ -1169,9 +1217,7 @@ class WebSocketClient(WebSocket):
 
     def on_message(self, msg):
         if self.start_time is not None:
-            self.time_elapsed = round(
-                (datetime.now() - self.start_time).total_seconds()
-            )
+            self.time_elapsed = round((datetime.now() - self.start_time).total_seconds())
 
         if "time" in msg and "product_id" in msg and "price" in msg:
             # create dataframe from websocket message
@@ -1179,9 +1225,7 @@ class WebSocketClient(WebSocket):
                 columns=["date", "market", "price"],
                 data=[
                     [
-                        datetime.strptime(
-                            msg["time"], "%Y-%m-%dT%H:%M:%S.%fZ"
-                        ).strftime("%Y-%m-%d %H:%M:%S"),
+                        datetime.strptime(msg["time"], "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%Y-%m-%d %H:%M:%S"),
                         msg["product_id"],
                         msg["price"],
                     ]
@@ -1197,9 +1241,7 @@ class WebSocketClient(WebSocket):
 
             # candles dataframe is empty
             if self.candles is None:
-                resp = PublicAPI().getHistoricalData(
-                    df["market"].values[0], self.granularity
-                )
+                resp = PublicAPI().get_historical_data(df["market"].values[0], self.granularity)
                 if len(resp) > 0:
                     self.candles = resp
                 else:
@@ -1231,23 +1273,11 @@ class WebSocketClient(WebSocket):
             # candles dataframe contains some data
             else:
                 # check if the current candle exists
-                candle_exists = (
-                    (self.candles["date"] == df["candle"].values[0])
-                    & (self.candles["market"] == df["market"].values[0])
-                ).any()
+                candle_exists = ((self.candles["date"] == df["candle"].values[0]) & (self.candles["market"] == df["market"].values[0])).any()
                 if not candle_exists:
                     # populate historical data via api if it does not exist
-                    if (
-                        len(
-                            self.candles[
-                                self.candles["market"] == df["market"].values[0]
-                            ]
-                        )
-                        == 0
-                    ):
-                        resp = PublicAPI().getHistoricalData(
-                            df["market"].values[0], self.granularity
-                        )
+                    if len(self.candles[self.candles["market"] == df["market"].values[0]]) == 0:
+                        resp = PublicAPI().get_historical_data(df["market"].values[0], self.granularity)
                         if len(resp) > 0:
                             df_new_candle = resp
                         else:
@@ -1302,59 +1332,41 @@ class WebSocketClient(WebSocket):
                                 ]
                             ],
                         )
-                    self.candles = self.candles.append(df_new_candle)
+
+                    try:
+                        df_new_candle.index = df_new_candle["date"]
+                        self.candles = pd.concat([self.candles, df_new_candle])
+                        df_new_candle = None
+                    except Exception as err:
+                        print(err)
+                        pass
                 else:
-                    candle = self.candles[
-                        (
-                            (self.candles["date"] == df["candle"].values[0])
-                            & (self.candles["market"] == df["market"].values[0])
-                        )
-                    ]
+                    candle = self.candles[((self.candles["date"] == df["candle"].values[0]) & (self.candles["market"] == df["market"].values[0]))]
 
                     # set high on high
                     if float(df["price"].values[0]) > float(candle.high.values[0]):
-                        self.candles.at[candle.index.values[0], "high"] = df[
-                            "price"
-                        ].values[0]
+                        self.candles.at[candle.index.values[0], "high"] = df["price"].values[0]
 
-                    self.candles.at[candle.index.values[0], "close"] = df[
-                        "price"
-                    ].values[0]
+                    self.candles.at[candle.index.values[0], "close"] = df["price"].values[0]
 
                     # set low on low
                     if float(df["price"].values[0]) < float(candle.low.values[0]):
-                        self.candles.at[candle.index.values[0], "low"] = df[
-                            "price"
-                        ].values[0]
+                        self.candles.at[candle.index.values[0], "low"] = df["price"].values[0]
 
                     # increment candle base volume
-                    self.candles.at[candle.index.values[0], "volume"] = float(
-                        candle["volume"].values[0]
-                    ) + float(msg["size"])
+                    self.candles.at[candle.index.values[0], "volume"] = float(candle["volume"].values[0]) + float(msg["size"])
 
             # insert first entry
             if self.tickers is None and len(df) > 0:
                 self.tickers = df
             # append future entries without duplicates
             elif self.tickers is not None and len(df) > 0:
-                self.tickers = (
-                    pd.concat([self.tickers, df])
-                    .drop_duplicates(subset="market", keep="last")
-                    .reset_index(drop=True)
-                )
+                self.tickers = pd.concat([self.tickers, df]).drop_duplicates(subset="market", keep="last").reset_index(drop=True)
 
             # convert dataframes to a time series
-            tsidx = pd.DatetimeIndex(
-                pd.to_datetime(self.tickers["date"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z")
-            )
+            tsidx = pd.DatetimeIndex(pd.to_datetime(self.tickers["date"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z"))
             self.tickers.set_index(tsidx, inplace=True)
             self.tickers.index.name = "ts"
-
-            tsidx = pd.DatetimeIndex(
-                pd.to_datetime(self.candles["date"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z")
-            )
-            self.candles.set_index(tsidx, inplace=True)
-            self.candles.index.name = "ts"
 
             # set correct column types
             self.candles["open"] = self.candles["open"].astype("float64")

@@ -52,4 +52,6 @@ if __name__ == "__main__":
         Timer(1, open_browser).start()
 
     port = int(os.environ.get("PORT", http_port))
-    app.run(host=http_host, port=port, debug=args.debug)
+
+    # pyright: reportUndefinedVariable=false
+    app.run(host=http_host, port=port, debug=args.debug)  # noqa: F821

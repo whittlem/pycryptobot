@@ -59,7 +59,7 @@ def test_instantiate_publicapi_without_error():
 
 def test_config_json_exists_and_valid():
     file = _get_config_file()
-    assert os.path.exists(file) == True
+    assert os.path.exists(file) is True
     with open(file) as config_file:
         config = json.load(config_file)
         if 'api_key' in config and 'api_secret' in config and 'api_pass' in config and 'api_url' in config:
@@ -112,8 +112,8 @@ def test_get_account(mocker):
     exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
 
-    mocker.patch("models.exchange.binance.getAccount", return_value=client_response)
-    df = exchange.getAccount()
+    mocker.patch("models.exchange.binance.get_account", return_value=client_response)
+    df = exchange.get_account()
     assert type(df) is pandas.core.frame.DataFrame
 
     actual = df.columns.to_list()
@@ -145,7 +145,7 @@ def test_get_fees_with_market(mocker):
     assert type(exchange) is AuthAPI
 
     mocker.patch("models.exchange.binance.Client.get_trade_fee", return_value=client_response)
-    df = exchange.getFees(MOCK_MARKET)
+    df = exchange.get_fees(MOCK_MARKET)
     assert type(df) is pandas.core.frame.DataFrame
 
     assert len(df) == 1
@@ -179,7 +179,7 @@ def test_get_taker_fee_with_market(mocker):
     assert type(exchange) is AuthAPI
 
     mocker.patch("models.exchange.binance.Client.get_trade_fee", return_value=client_response)
-    fee = exchange.getTakerFee(MOCK_MARKET)
+    fee = exchange.get_taker_fee(MOCK_MARKET)
     assert type(fee) is float
     assert fee == 0.001
 
@@ -207,7 +207,7 @@ def test_get_maker_fee_with_market(mocker):
     assert type(exchange) is AuthAPI
 
     mocker.patch("models.exchange.binance.Client.get_trade_fee", return_value=client_response)
-    fee = exchange.getMakerFee(MOCK_MARKET)
+    fee = exchange.get_maker_fee(MOCK_MARKET)
     assert type(fee) is float
     assert fee == 0.001
 
@@ -257,7 +257,7 @@ def test_get_orders(mocker):
     exchange = AuthAPI(api_key, api_secret, api_url)
     assert type(exchange) is AuthAPI
     mocker.patch("models.exchange.binance.Client.get_all_orders", return_value=client_response)
-    df = exchange.getOrders(MOCK_MARKET)
+    df = exchange.get_orders(MOCK_MARKET)
 
     assert len(df) > 0
 

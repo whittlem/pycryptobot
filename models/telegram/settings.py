@@ -55,7 +55,7 @@ class SettingsEditor:
                 encoding="utf8",
             ) as outfile:
                 json.dump(self.helper.settings, outfile, indent=4)
-        except: #pylint: disable=try-except-raise
+        except Exception:
             return
 
     def get_notifications(self, update):

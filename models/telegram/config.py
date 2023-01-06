@@ -130,7 +130,7 @@ class ConfigEditor:
                 if callback_json["c"] == callbacktags.SCREENER:
                     exchange = "screener"
                     callback = callback_json["e"]
-            except: # pylint: disable=bare-except
+            except Exception:
                 exchange = callback
 
         buttons = []
@@ -246,7 +246,7 @@ class ConfigEditor:
             context, new_message=False
         )
 
-    def get_scanner_options(self, update: Update, context: CallbackContext): #pylint: disable=missing-function-docstring
+    def get_scanner_options(self, update: Update, context: CallbackContext):
         buttons = []
         config_properties = self.helper.config["scanner"]
         for prop in config_properties:
@@ -356,7 +356,7 @@ class ConfigEditor:
         self.helper.write_config()
         self.helper.send_telegram_message(update, "<b>Config File Updated</b>", new_message=False)
 
-    def get_granularity(self, update, exchange, context): #pylint: disable=missing-function-docstring
+    def get_granularity(self, update, exchange, context):
         cb_exchange = self.exchange_convert(exchange_str=exchange)
         buttons = []
         for gran in Granularity:
@@ -367,12 +367,12 @@ class ConfigEditor:
             )
             gran_convert = gran.to_integer if exchange == "coinbasepro" else gran.to_short if exchange == "kucoin" else gran.to_medium
             light_icon = (
-                "\U0001F534" if config_value != str(gran_convert) else "\U0001F7E2") #U0001F7E2
+                "\U0001F534" if config_value != str(gran_convert) else "\U0001F7E2")  # U0001F7E2
 
             buttons.append(
                 InlineKeyboardButton(
                     f"{light_icon} {gran.name}",
-                    callback_data=self.helper.create_callback_data(callbacktags.GRANULARITY[0], cb_exchange, gran.name) #f"{cb_exchange}_granularity_({gran.name})",
+                    callback_data=self.helper.create_callback_data(callbacktags.GRANULARITY[0], cb_exchange, gran.name)  # f"{cb_exchange}_granularity_({gran.name})",
                 )
             )
 
@@ -390,13 +390,13 @@ class ConfigEditor:
             [
                 InlineKeyboardButton(
                     f"{light_icon} Smart Switch",
-                    callback_data=self.helper.create_callback_data(callbacktags.GRANULARITY[0], cb_exchange, "smartswitch") #f"{exchange}_granularity_(smartswitch)",
+                    callback_data=self.helper.create_callback_data(callbacktags.GRANULARITY[0], cb_exchange, "smartswitch")  # f"{exchange}_granularity_(smartswitch)",
                 )
             ]
         )
 
         keyboard.append(
-            [InlineKeyboardButton("\U0001F4BE Save", callback_data=self.helper.create_callback_data(callbacktags.SAVECONFIG[0]))] # "save_config")]
+            [InlineKeyboardButton("\U0001F4BE Save", callback_data=self.helper.create_callback_data(callbacktags.SAVECONFIG[0]))]  # "save_config")]
         )
         keyboard.append(
             [
@@ -415,6 +415,5 @@ class ConfigEditor:
 
 
 #     def conversation_handler(self, update, context):
-#
 #         self.helper.send_telegram_message(update, self.helper.config["binance"]["granularity"], context=context)
 #         # return VALUE_ENTRY

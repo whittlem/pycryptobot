@@ -4,14 +4,12 @@ from datetime import datetime
 sys.path.append('.')
 # pylint: disable=import-error
 from models.exchange.coinbase_pro import AuthAPI, PublicAPI
-from models.helper.LogHelper import Logger
-Logger.configure()
 
 DEFAULT_ORDER_MARKET = 'BTC-GBP'
 
-def getValidOrderMarket() -> str:
+def get_valid_order_market() -> str:
     filename = 'config.json'
-    assert os.path.exists(filename) == True
+    assert os.path.exists(filename) is True
     with open(filename) as config_file:
         config = json.load(config_file)
 
@@ -36,7 +34,7 @@ def getValidOrderMarket() -> str:
 
         time.sleep(0.5)
         exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
-        df = exchange.getOrders()
+        df = exchange.get_orders()
         if len(df) == 0:
             return DEFAULT_ORDER_MARKET
 
@@ -93,7 +91,7 @@ def test_instantiate_publicapi_without_error():
 
 def test_config_json_exists_and_valid():
     filename = 'config.json'
-    assert os.path.exists(filename) == True
+    assert os.path.exists(filename) is True
     with open(filename) as config_file:
         config = json.load(config_file)
 
@@ -115,7 +113,7 @@ def test_config_json_exists_and_valid():
             AuthAPI(api_key, api_secret, api_passphrase, api_url)
     pass
 
-def test_getAccounts():
+def test_get_accounts():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -130,7 +128,7 @@ def test_getAccounts():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -140,7 +138,7 @@ def test_getAccounts():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getAccounts()
+    df = exchange.get_accounts()
     assert type(df) is pandas.core.frame.DataFrame
 
     actual = df.columns.to_list()
@@ -163,7 +161,7 @@ def test_getAccount():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -173,14 +171,14 @@ def test_getAccount():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getAccounts()
+    df = exchange.get_accounts()
 
     assert len(df) > 0
 
     account = df[['id']].head(1).values[0][0]
     assert len(account) > 0
 
-    df = exchange.getAccount(account)
+    df = exchange.get_account(account)
     assert type(df) is pandas.core.frame.DataFrame
 
     assert len(df) == 1
@@ -190,7 +188,7 @@ def test_getAccount():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getFeesWithoutMarket():
+def test_get_fees_without_market():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -205,7 +203,7 @@ def test_getFeesWithoutMarket():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -215,7 +213,7 @@ def test_getFeesWithoutMarket():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getFees()
+    df = exchange.get_fees()
     assert type(df) is pandas.core.frame.DataFrame
 
     assert len(df) == 1
@@ -225,7 +223,7 @@ def test_getFeesWithoutMarket():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getFeesWithMarket():
+def test_get_fees_with_market():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -240,7 +238,7 @@ def test_getFeesWithMarket():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -250,7 +248,7 @@ def test_getFeesWithMarket():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getFees(getValidOrderMarket())
+    df = exchange.get_fees(get_valid_order_market())
     assert type(df) is pandas.core.frame.DataFrame
 
     assert len(df) == 1
@@ -260,7 +258,7 @@ def test_getFeesWithMarket():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getTakerFeeWithoutMarket():
+def test_get_taker_fee_without_market():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -275,7 +273,7 @@ def test_getTakerFeeWithoutMarket():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -285,11 +283,11 @@ def test_getTakerFeeWithoutMarket():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getTakerFee()
+    fee = exchange.get_taker_fee()
     assert type(fee) is float
     assert fee > 0
 
-def test_getTakerFeeWithMarket():
+def test_get_taker_fee_with_market():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -304,7 +302,7 @@ def test_getTakerFeeWithMarket():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -314,11 +312,11 @@ def test_getTakerFeeWithMarket():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getTakerFee(getValidOrderMarket())
+    fee = exchange.get_taker_fee(get_valid_order_market())
     assert type(fee) is float
     assert fee > 0
 
-def test_getMakerFeeWithoutMarket():
+def test_get_maker_fee_without_market():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -333,7 +331,7 @@ def test_getMakerFeeWithoutMarket():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -343,11 +341,11 @@ def test_getMakerFeeWithoutMarket():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getMakerFee()
+    fee = exchange.get_maker_fee()
     assert type(fee) is float
     assert fee > 0
 
-def test_getMakerFeeWithMarket():
+def test_get_maker_fee_with_market():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -362,7 +360,7 @@ def test_getMakerFeeWithMarket():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -372,11 +370,11 @@ def test_getMakerFeeWithMarket():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getMakerFee(getValidOrderMarket())
+    fee = exchange.get_maker_fee(get_valid_order_market())
     assert type(fee) is float
     assert fee > 0
 
-def test_getUSDVolume():
+def test_get_usd_volume():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -391,7 +389,7 @@ def test_getUSDVolume():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -401,11 +399,11 @@ def test_getUSDVolume():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getUSDVolume()
+    fee = exchange.get_usd_volume()
     assert type(fee) is float
     assert fee > 0
 
-def test_getOrders():
+def test_get_orders():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -420,7 +418,7 @@ def test_getOrders():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -430,7 +428,7 @@ def test_getOrders():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders()
+    df = exchange.get_orders()
 
     assert len(df) > 0
 
@@ -439,7 +437,7 @@ def test_getOrders():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getOrdersInvalidMarket():
+def test_get_ordersInvalidMarket():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -454,7 +452,7 @@ def test_getOrdersInvalidMarket():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -465,10 +463,10 @@ def test_getOrdersInvalidMarket():
     assert type(exchange) is AuthAPI
 
     with pytest.raises(ValueError) as execinfo:
-        exchange.getOrders(market='ERROR')
+        exchange.get_orders(market='ERROR')
     assert str(execinfo.value) == 'Coinbase Pro market is invalid.'
 
-def test_getOrdersValidMarket():
+def test_get_orders_valid_market():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -483,7 +481,7 @@ def test_getOrdersValidMarket():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -493,7 +491,7 @@ def test_getOrdersValidMarket():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders(market=getValidOrderMarket())
+    df = exchange.get_orders(market=get_valid_order_market())
 
     assert len(df) > 0
 
@@ -502,7 +500,7 @@ def test_getOrdersValidMarket():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getOrdersInvalidAction():
+def test_get_orders_invalid_action():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -517,7 +515,7 @@ def test_getOrdersInvalidAction():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -528,10 +526,10 @@ def test_getOrdersInvalidAction():
     assert type(exchange) is AuthAPI
 
     with pytest.raises(ValueError) as execinfo:
-        exchange.getOrders(action='ERROR')
+        exchange.get_orders(action='ERROR')
     assert str(execinfo.value) == 'Invalid order action.'
 
-def test_getOrdersValidActionBuy():
+def test_get_orders_valid_action_buy():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -546,7 +544,7 @@ def test_getOrdersValidActionBuy():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -556,7 +554,7 @@ def test_getOrdersValidActionBuy():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders(action='buy')
+    df = exchange.get_orders(action='buy')
 
     assert len(df) >= 0
 
@@ -565,7 +563,7 @@ def test_getOrdersValidActionBuy():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getOrdersValidActionSell():
+def test_get_orders_valid_action_sell():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -580,7 +578,7 @@ def test_getOrdersValidActionSell():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -590,7 +588,7 @@ def test_getOrdersValidActionSell():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders(action='sell')
+    df = exchange.get_orders(action='sell')
 
     assert len(df) >= 0
 
@@ -599,7 +597,7 @@ def test_getOrdersValidActionSell():
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getOrdersInvalidStatus():
+def test_get_orders_invalid_status():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -614,7 +612,7 @@ def test_getOrdersInvalidStatus():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -625,10 +623,10 @@ def test_getOrdersInvalidStatus():
     assert type(exchange) is AuthAPI
 
     with pytest.raises(ValueError) as execinfo:
-        exchange.getOrders(status='ERROR')
+        exchange.get_orders(status='ERROR')
     assert str(execinfo.value) == 'Invalid order status.'
 
-def test_getOrdersValidStatusAll():
+def test_get_orders_valid_status_all():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -643,7 +641,7 @@ def test_getOrdersValidStatusAll():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -653,7 +651,7 @@ def test_getOrdersValidStatusAll():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders(status='all')
+    df = exchange.get_orders(status='all')
 
     if len(df) == 0:
         pass
@@ -663,7 +661,7 @@ def test_getOrdersValidStatusAll():
         assert len(actual) == len(expected)
         assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getOrdersValidStatusOpen():
+def test_get_orders_valid_status_open():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -678,7 +676,7 @@ def test_getOrdersValidStatusOpen():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -688,7 +686,7 @@ def test_getOrdersValidStatusOpen():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders(status='open')
+    df = exchange.get_orders(status='open')
 
     if len(df) == 0:
         pass
@@ -698,7 +696,7 @@ def test_getOrdersValidStatusOpen():
         assert len(actual) == len(expected)
         assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getOrdersValidStatusPending():
+def test_get_orders_valid_status_pending():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -713,7 +711,7 @@ def test_getOrdersValidStatusPending():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -723,7 +721,7 @@ def test_getOrdersValidStatusPending():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders(status='pending')
+    df = exchange.get_orders(status='pending')
 
     if len(df) == 0:
         pass
@@ -733,7 +731,7 @@ def test_getOrdersValidStatusPending():
         assert len(actual) == len(expected)
         assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getOrdersValidStatusDone():
+def test_get_orders_valid_status_done():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -748,7 +746,7 @@ def test_getOrdersValidStatusDone():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -758,7 +756,7 @@ def test_getOrdersValidStatusDone():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders(status='done')
+    df = exchange.get_orders(status='done')
 
     if len(df) == 0:
         pass
@@ -768,7 +766,7 @@ def test_getOrdersValidStatusDone():
         assert len(actual) == len(expected)
         assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getOrdersValidStatusActive():
+def test_get_orders_valid_status_active():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -783,7 +781,7 @@ def test_getOrdersValidStatusActive():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -793,7 +791,7 @@ def test_getOrdersValidStatusActive():
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders(status='active')
+    df = exchange.get_orders(status='active')
 
     if len(df) == 0:
         pass
@@ -803,7 +801,7 @@ def test_getOrdersValidStatusActive():
         assert len(actual) == len(expected)
         assert all([a == b for a, b in zip(actual, expected)])
 
-def test_getTime():
+def test_get_time():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -818,7 +816,7 @@ def test_getTime():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -827,11 +825,11 @@ def test_getTime():
 
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
-    
-    resp = exchange.getTime()
+
+    resp = exchange.get_time()
     assert type(resp) is datetime
 
-def test_marketBuyInvalidMarket():
+def test_market_buy_invalid_market():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -846,7 +844,7 @@ def test_marketBuyInvalidMarket():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -857,10 +855,10 @@ def test_marketBuyInvalidMarket():
     assert type(exchange) is AuthAPI
 
     with pytest.raises(ValueError) as execinfo:
-        exchange.marketBuy('ERROR', -1)
-    assert str(execinfo.value) == 'Coinbase Pro market is invalid.'  
+        exchange.market_buy('ERROR', -1)
+    assert str(execinfo.value) == 'Coinbase Pro market is invalid.'
 
-def test_marketBuyInvalidAmount():
+def test_market_buy_invalid_amount():
     filename = 'config.json'
 
     with open(filename) as config_file:
@@ -875,7 +873,7 @@ def test_marketBuyInvalidAmount():
             api_secret = config['api_secret']
             api_passphrase = config['api_pass']
             api_url = config['api_url']
-            
+
         elif 'api_key' in config['coinbasepro'] and 'api_secret' in config['coinbasepro'] and 'api_passphrase' in config['coinbasepro'] and 'api_url' in config['coinbasepro']:
             api_key = config['coinbasepro']['api_key']
             api_secret = config['coinbasepro']['api_secret']
@@ -886,5 +884,5 @@ def test_marketBuyInvalidAmount():
     assert type(exchange) is AuthAPI
 
     with pytest.raises(ValueError) as execinfo:
-        exchange.marketBuy('XXX-YYY', 0)
-    assert str(execinfo.value) == 'Trade amount is too small (>= 10).'  
+        exchange.market_buy('XXX-YYY', 0)
+    assert str(execinfo.value) == 'Trade amount is too small (>= 10).'

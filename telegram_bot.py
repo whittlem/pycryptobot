@@ -494,7 +494,7 @@ class TelegramBot(TelegramBotBase):
                 try:
                     self.helper.read_data()
                     if "markets" in self.helper.data:
-                        if not self.pair in self.helper.data["markets"]:
+                        if self.pair not in self.helper.data["markets"]:
                             self.helper.data["markets"].update(
                                 {
                                     self.pair: {
@@ -611,7 +611,7 @@ class TelegramBot(TelegramBotBase):
                     sleep(30)
                 self.updater.start_polling()
                 return
-        except:  # pylint: disable=bare-except
+        except Exception:
             pass
 
     def done(self, update, context):
@@ -623,17 +623,17 @@ class TelegramBot(TelegramBotBase):
         try:
             urllib.request.urlopen("https://api.telegram.org")
             return True
-        except:  # pylint: disable=bare-except
+        except Exception:
             print("No internet connection")
             return False
 
-    def ExceptionExchange(self, update, context):
+    def exception_exchange(self, update, context):
         """start new bot ask which exchange"""
         self._question_which_exchange(update, context)
 
         return EXCEPT_EXCHANGE
 
-    def ExceptionPair(self, update, context):
+    def exception_pair(self, update, context):
         if not self._check_if_allowed(
             context._user_id_and_data[0], update
         ):  # pylint: disable=protected-access
@@ -645,14 +645,14 @@ class TelegramBot(TelegramBotBase):
 
         return EXCEPT_MARKET
 
-    def ExceptionAdd(self, update, context):
+    def exception_add(self, update, context):
         """start bot - save if required ask if want to start"""
         if not self._check_if_allowed(
             context._user_id_and_data[0], update
         ):  # pylint: disable=protected-access
             return None
 
-        self.helper.logger.info("called ExceptionAdd")
+        self.helper.logger.info("called exception_add")
 
         self._answer_which_pair(update, context)
 
@@ -661,7 +661,7 @@ class TelegramBot(TelegramBotBase):
         if "scannerexceptions" not in self.helper.data:
             self.helper.data.update({"scannerexceptions": {}})
 
-        if not self.pair in self.helper.data["scannerexceptions"]:
+        if self.pair not in self.helper.data["scannerexceptions"]:
             write_ok, try_count = False, 0
             while not write_ok and try_count <= 5:
                 try_count += 1
@@ -685,7 +685,7 @@ class TelegramBot(TelegramBotBase):
 
         return ConversationHandler.END
 
-    def ExceptionRemove(self, update, context):
+    def exception_remove(self, update, context):
         if not self._check_if_allowed(
             context._user_id_and_data[0], update
         ):  # pylint: disable=protected-access
@@ -714,8 +714,7 @@ class TelegramBot(TelegramBotBase):
 
     def scanning(self, update, context):
         """calling /startscanner from Telegram command list"""
-        if not self._check_if_allowed(
-            context._user_id_and_data[0], update):  # pylint: disable=protected-access
+        if not self._check_if_allowed(context._user_id_and_data[0], update):
             return
 
         self.handler.get_scanner_options(None)
@@ -773,7 +772,7 @@ class TelegramBot(TelegramBotBase):
                     update, "Pausing before next set", context=context
                 )
 
-    def getBotList(self, update, context):
+    def get_bot_list(self, update, context):
         if not self._check_if_allowed(
             context._user_id_and_data[0], update
         ):  # pylint: disable=protected-access
@@ -803,8 +802,7 @@ class TelegramBot(TelegramBotBase):
                 update, "<b>No bots found.</b>", context=context
             )
 
-    def Request(self, update, context):
-
+    def request(self, update, context):
         userid = context._user_id_and_data[0]  # pylint: disable=protected-access
 
         if self._check_if_allowed(userid, update):
@@ -834,27 +832,27 @@ def main():
     )
     dp.add_handler(CommandHandler("cleandata", botconfig.cleandata, Filters.text))
     dp.add_handler(
-        CommandHandler("removeexception", botconfig.ExceptionRemove, Filters.text)
+        CommandHandler("removeexception", botconfig.exception_remove, Filters.text)
     )
 
-    dp.add_handler(CommandHandler("ex", botconfig.getBotList))
+    dp.add_handler(CommandHandler("ex", botconfig.get_bot_list))
     dp.add_handler(CommandHandler("statsgroup", botconfig.statstwo))
     # Response to Question handler
     dp.add_handler(CallbackQueryHandler(botconfig.handler.get_response))
 
-    dp.add_handler(CommandHandler("controlPanel", botconfig.Request))
+    dp.add_handler(CommandHandler("controlPanel", botconfig.request))
 
     conversation_exception = ConversationHandler(
-        entry_points=[CommandHandler("addexception", botconfig.ExceptionExchange)],
+        entry_points=[CommandHandler("addexception", botconfig.exception_exchange)],
         states={
             EXCEPT_EXCHANGE: [
                 MessageHandler(
-                    Filters.text, botconfig.ExceptionPair, pass_user_data=True
+                    Filters.text, botconfig.exception_pair, pass_user_data=True
                 )
             ],
             EXCEPT_MARKET: [
                 MessageHandler(
-                    Filters.text, botconfig.ExceptionAdd, pass_user_data=True
+                    Filters.text, botconfig.exception_add, pass_user_data=True
                 )
             ],
         },

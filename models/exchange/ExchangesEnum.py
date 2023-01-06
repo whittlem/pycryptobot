@@ -6,4 +6,3 @@ class Exchange(Enum):
     BINANCE = "binance"
     KUCOIN = "kucoin"
     DUMMY = "dummy"
-

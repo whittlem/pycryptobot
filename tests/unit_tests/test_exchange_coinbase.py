@@ -8,16 +8,16 @@ import pandas
 sys.path.append('.')
 # pylint: disable=import-error
 from models.exchange.ExchangesEnum import Exchange
-from models.PyCryptoBot import PyCryptoBot
+from controllers.PyCryptoBot import PyCryptoBot
 from models.exchange.coinbase_pro import AuthAPI, PublicAPI
 
 app = PyCryptoBot(exchange= Exchange.COINBASEPRO)
 
 def test_instantiate_authapi_without_error():
     global app
-    api_key = app.getAPIKey()
-    api_secret = app.getAPISecret()
-    api_passphrase = app.getAPIPassphrase()
+    api_key = app.api_key
+    api_secret = app.api_secret
+    api_passphrase = app.api_passphrase
     exchange = AuthAPI(api_key, api_secret, api_passphrase)
     assert type(exchange) is AuthAPI
 
@@ -25,8 +25,8 @@ def test_instantiate_authapi_without_error():
 def test_instantiate_authapi_with_api_key_error():
     global app
     api_key = "Invalid"
-    api_secret = app.getAPISecret()
-    api_passphrase = app.getAPIPassphrase()
+    api_secret = app.api_secret
+    api_passphrase = app.api_passphrase
 
     with pytest.raises(SystemExit) as execinfo:
         AuthAPI(api_key, api_secret)
@@ -35,9 +35,9 @@ def test_instantiate_authapi_with_api_key_error():
 
 def test_instantiate_authapi_with_api_secret_error():
     global app
-    api_key = app.getAPIKey()
-    api_secret = "Ivalid"
-    api_passphrase = app.getAPIPassphrase()
+    api_key = app.api_key
+    api_secret = "Invalid"
+    api_passphrase = app.api_passphrase
 
     with pytest.raises(SystemExit) as execinfo:
         AuthAPI(api_key, api_secret, api_passphrase)
@@ -45,9 +45,9 @@ def test_instantiate_authapi_with_api_secret_error():
 
 
 def test_instantiate_authapi_with_api_url_error():
-    api_key = app.getAPIKey()
-    api_secret = app.getAPISecret()
-    api_passphrase = app.getAPIPassphrase()
+    api_key = app.api_key
+    api_secret = app.api_secret
+    api_passphrase = app.api_passphrase
     api_url = "https://foo.com"
 
     with pytest.raises(ValueError) as execinfo:
@@ -62,27 +62,27 @@ def test_instantiate_publicapi_without_error():
 
 
 def test_get_taker_fee_with_market():
-    api_key = app.getAPIKey()
-    api_secret = app.getAPISecret()
-    api_passphrase = app.getAPIPassphrase()
+    api_key = app.api_key
+    api_secret = app.api_secret
+    api_passphrase = app.api_passphrase
     api_url = "https://public.sandbox.pro.coinbase.com"
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getTakerFee()
+    fee = exchange.get_taker_fee()
     assert type(fee) is float
     assert fee == 0.005
 
 
 def test_get_maker_fee_with_market():
-    api_key = app.getAPIKey()
-    api_secret = app.getAPISecret()
-    api_passphrase = app.getAPIPassphrase()
+    api_key = app.api_key
+    api_secret = app.api_secret
+    api_passphrase = app.api_passphrase
     api_url = "https://public.sandbox.pro.coinbase.com"
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getMakerFee()
+    fee = exchange.get_maker_fee()
     assert type(fee) is float
     assert fee == 0.005
 
@@ -93,15 +93,15 @@ def test_get_maker_fee_with_market():
 @responses.activate
 def test_api_v3_account1():
     global app
-    api_key = app.getAPIKey()
-    api_secret = app.getAPISecret()
-    api_passphrase = app.getAPIPassphrase()
+    api_key = app.api_key
+    api_secret = app.api_secret
+    api_passphrase = app.api_passphrase
     api_url = "https://public.sandbox.pro.coinbase.com"
     api = AuthAPI(api_key, api_secret, api_passphrase, api_url)
 
     with open('tests/unit_tests/responses/account1.json') as fh:
         responses.add(responses.GET, f'{api_url}/account', json=json.load(fh), status=200)
-        df = api.getAccounts()
+        df = api.get_accounts()
         fh.close()
 
         assert len(df) > 1
@@ -118,14 +118,14 @@ def test_api_v3_account1():
 
 @pytest.mark.skip
 def test_get_orders():
-    api_key = app.getAPIKey()
-    api_secret = app.getAPISecret()
-    api_passphrase = app.getAPIPassphrase()
+    api_key = app.api_key
+    api_secret = app.api_secret
+    api_passphrase = app.api_passphrase
     api_url = "https://public.sandbox.pro.coinbase.com"
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders()
+    df = exchange.get_orders()
     assert type(df) is pandas.core.frame.DataFrame
     assert len(df) > 0
     actual = df.columns.to_list()
@@ -136,13 +136,13 @@ def test_get_orders():
 
 @pytest.mark.skip
 def test_get_fees_with_market():
-    api_key = app.getAPIKey()
-    api_secret = app.getAPISecret()
-    api_passphrase = app.getAPIPassphrase()
+    api_key = app.api_key
+    api_secret = app.api_secret
+    api_passphrase = app.api_passphrase
     api_url = "https://public.sandbox.pro.coinbase.com"
     exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
     assert type(exchange) is AuthAPI
-    df = exchange.getFees()
+    df = exchange.get_fees()
     assert type(df) is pandas.core.frame.DataFrame
     assert len(df) == 1
     actual = df.columns.to_list()

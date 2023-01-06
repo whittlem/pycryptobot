@@ -2,7 +2,8 @@ import os
 import sys
 import time
 import signal
-from models.exchange.coinbase_pro import WebSocketClient as CWebSocketClient
+
+from models.exchange.binance import WebSocketClient as BWebSocketClient
 
 
 def cls():
@@ -16,15 +17,17 @@ def handler(signum, frame):
 
 
 try:
-    websocket = CWebSocketClient(["ADA-GBP"], 60)
+    websocket = BWebSocketClient(
+        [
+            "BTCUSDT",
+        ],
+        "1m",
+    )
     websocket.start()
     message_count = 0
     while True:
         if websocket:
-            if (
-                message_count != websocket.message_count
-                and websocket.tickers is not None
-            ):
+            if message_count != websocket.message_count and websocket.tickers is not None:
                 cls()
                 print("\nMessageCount =", "%i \n" % websocket.message_count)
                 print(websocket.candles)

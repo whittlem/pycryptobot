@@ -2,7 +2,11 @@ import os
 import sys
 import time
 import signal
-from models.exchange.coinbase_pro import WebSocketClient as CWebSocketClient
+
+sys.path.insert(0, ".")
+
+from models.exchange.kucoin import WebSocketClient as KWebSocketClient  # noqa: E402
+from models.exchange.Granularity import Granularity  # noqa: E402
 
 
 def cls():
@@ -16,22 +20,27 @@ def signal_handler(signum, frame):
 
 
 try:
-    websocket = CWebSocketClient(["ADA-GBP"], 60)
+    websocket = KWebSocketClient(["BTC-USD"], Granularity.ONE_MINUTE)
     websocket.start()
     message_count = 0
     while True:
         if websocket:
-            if (
-                message_count != websocket.message_count
-                and websocket.tickers is not None
-            ):
+            if message_count != websocket.message_count and websocket.tickers is not None:
                 cls()
-                print (f"Start time: {websocket.getStartTime()}")
-                print (f"Time elapsed: {websocket.getTimeElapsed()} seconds")
+                print(f"Start time: {websocket.getStartTime()}")
+                print(f"Time elapsed: {websocket.time_elapsed} seconds")
                 print("\nMessageCount =", "%i \n" % websocket.message_count)
+
+                print("Ticker:")
                 print(websocket.tickers)
+                print("")
+
+                print("Candles:")
+                print(websocket.candles)
+                print("")
+
                 message_count = websocket.message_count
-                time.sleep(5)  # output every 5 seconds, websocket is realtime
+                time.sleep(1)  # output every 1 second, websocket is realtime
 
 # catches a keyboard break of app, exits gracefully
 except KeyboardInterrupt:

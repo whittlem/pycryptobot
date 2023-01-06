@@ -19,39 +19,26 @@ from telegram.ext.callbackcontext import CallbackContext
 if not os.path.exists(os.path.join(os.curdir, "telegram_logs")):
     os.mkdir(os.path.join(os.curdir, "telegram_logs"))
 
-# logging.basicConfig(
-#     filename=os.path.join(
-#         os.curdir,
-#         "telegram_logs",
-#         f"telegrambot {datetime.now().strftime('%Y-%m-%d')}.log",
-#     ),
-#     filemode="w",
-#     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-#     level=logging.INFO,
-# )
-
-# logger = logging.getLogger(__name__)
-
 
 class TelegramHelper:
     """Telegram Bot Helper"""
 
-    def __init__(self, configfile = 'config.json', logfileprefix = 'telegrambot', test_run: bool = False) -> None:
+    def __init__(self, configfile="config.json", logfileprefix="telegrambot", test_run: bool = False) -> None:
         self.data = {}
         self.config_file = configfile
         self.screener = {}
         self.settings = {}
 
         logging.basicConfig(
-        filename=os.path.join(
-            os.curdir,
-            "telegram_logs",
-            f"{logfileprefix} {datetime.now().strftime('%Y-%m-%d')}.log",
-        ),
-        filemode="w",
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        level=logging.INFO,
-    )
+            filename=os.path.join(
+                os.curdir,
+                "telegram_logs",
+                f"{logfileprefix} {datetime.now().strftime('%Y-%m-%d')}.log",
+            ),
+            filemode="w",
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            level=logging.INFO,
+        )
 
         # self.logger = None
         self.logger = logging.getLogger("telegram.helper")
@@ -65,9 +52,7 @@ class TelegramHelper:
         if len(self.logger.handlers) == 0:
             self.logger.setLevel(self.get_level(self.logger_level))
             # set a format which is simpler for console use
-            consoleHandlerFormatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
+            consoleHandlerFormatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
             # define a Handler which writes sys.stdout
             consoleHandler = logging.StreamHandler()
             # Set log level
@@ -84,7 +69,7 @@ class TelegramHelper:
 
     def get_uptime(self):
         """Get uptime"""
-        date = self.data['botcontrol']['started']
+        date = self.data["botcontrol"]["started"]
         now = str(datetime.now())
         # If date passed from datetime.now() remove milliseconds
         if date.find(".") != -1:
@@ -150,67 +135,22 @@ class TelegramHelper:
         self.autostart = False
 
         if "scanner" in self.config:
-            self.atr72pcnt = (
-                self.config["scanner"]["atr72_pcnt"]
-                if "atr72_pcnt" in self.config["scanner"]
-                else 2.0
-            )
-            self.enableleverage = (
-                bool(self.config["scanner"]["enableleverage"])
-                if "enableleverage" in self.config["scanner"]
-                else False
-            )
-            self.use_default_scanner = (
-                bool(self.config["scanner"]["use_default_scanner"])
-                if "use_default_scanner" in self.config["scanner"]
-                else True
-            )
-            self.maxbotcount = (
-                self.config["scanner"]["maxbotcount"]
-                if "maxbotcount" in self.config["scanner"]
-                else 0
-            )
-            self.exchange_bot_count = (
-                self.config["scanner"]["exchange_bot_count"]
-                if "exchange_bot_count" in self.config["scanner"]
-                else 0
-            )
-            self.terminal_start_process = (
-                self.config["scanner"]["terminal_start_process"]
-                if "terminal_start_process" in self.config["scanner"]
-                else ""
-            )
-            self.autoscandelay = (
-                self.config["scanner"]["autoscandelay"]
-                if "autoscandelay" in self.config["scanner"]
-                else 0
-            )
-            self.enable_buy_next = (
-                bool(self.config["scanner"]["enable_buy_next"])
-                if "enable_buy_next" in self.config["scanner"]
-                else True
-            )
-            self.autostart = (
-                bool(self.config["scanner"]["autostart"])
-                if "autostart" in self.config["scanner"]
-                else False
-            )
+            self.atr72pcnt = self.config["scanner"]["atr72_pcnt"] if "atr72_pcnt" in self.config["scanner"] else 2.0
+            self.enableleverage = bool(self.config["scanner"]["enableleverage"]) if "enableleverage" in self.config["scanner"] else False
+            self.use_default_scanner = bool(self.config["scanner"]["use_default_scanner"]) if "use_default_scanner" in self.config["scanner"] else True
+            self.maxbotcount = self.config["scanner"]["maxbotcount"] if "maxbotcount" in self.config["scanner"] else 0
+            self.exchange_bot_count = self.config["scanner"]["exchange_bot_count"] if "exchange_bot_count" in self.config["scanner"] else 0
+            self.terminal_start_process = self.config["scanner"]["terminal_start_process"] if "terminal_start_process" in self.config["scanner"] else ""
+            self.autoscandelay = self.config["scanner"]["autoscandelay"] if "autoscandelay" in self.config["scanner"] else 0
+            self.enable_buy_next = bool(self.config["scanner"]["enable_buy_next"]) if "enable_buy_next" in self.config["scanner"] else True
+            self.autostart = bool(self.config["scanner"]["autostart"]) if "autostart" in self.config["scanner"] else False
 
         self.datafolder = os.curdir
         self.logger_level = "INFO"
 
         if "telegram" in self.config:
-            self.datafolder = (
-                self.config["telegram"]["datafolder"]
-                if "datafolder" in self.config["telegram"]
-                else os.curdir
-            )
-            self.logger_level = (
-                self.config["telegram"]["logger_level"]
-                if "logger_level" in self.config["telegram"]
-                else "INFO"
-            )
-            
+            self.datafolder = self.config["telegram"]["datafolder"] if "datafolder" in self.config["telegram"] else os.curdir
+            self.logger_level = self.config["telegram"]["logger_level"] if "logger_level" in self.config["telegram"] else "INFO"
 
     def send_telegram_message(
         self,
@@ -223,14 +163,13 @@ class TelegramHelper:
         """Send telegram messages"""
         if context is None:
             context = telegram.CallbackQuery(
-            id=2,
-            from_user=self.config["telegram"]["user_id"],
-            bot=Updater(self.config["telegram"]["token"],
-            use_context=True).bot,
-            chat_instance="",
-        )
+                id=2,
+                from_user=self.config["telegram"]["user_id"],
+                bot=Updater(self.config["telegram"]["token"], use_context=True).bot,
+                chat_instance="",
+            )
 
-        if new_message or update == None:
+        if new_message or update is None:
             context.bot.send_message(
                 chat_id=self.config["telegram"]["user_id"],
                 text=reply,
@@ -291,9 +230,7 @@ class TelegramHelper:
         """Read config file"""
         self.logger.debug("METHOD(read_config)")
         try:
-            with open(
-                os.path.join(self.config_file), "r", encoding="utf8"
-            ) as json_file:
+            with open(os.path.join(self.config_file), "r", encoding="utf8") as json_file:
                 self.config = json.load(json_file)
         except FileNotFoundError:
             return
@@ -311,7 +248,7 @@ class TelegramHelper:
             ) as outfile:
                 json.dump(self.config, outfile, indent=4)
             return True
-        except:  # pylint: disable=bare-except
+        except Exception:
             return False
 
     def read_screener_config(self, test_run: bool = False):
@@ -335,7 +272,7 @@ class TelegramHelper:
                 encoding="utf8",
             ) as outfile:
                 json.dump(self.screener, outfile, indent=4)
-        except:  # pylint: disable=bare-except
+        except Exception:
             return
 
     def get_all_bot_list(self) -> List[str]:
@@ -345,12 +282,7 @@ class TelegramHelper:
 
         i = len(jsonfiles) - 1
         while i >= 0:
-            if (
-                jsonfiles[i] == "data.json"
-                or jsonfiles[i].__contains__("output.json")
-                or jsonfiles[i].__contains__(".csv")
-                or jsonfiles[i] == "settings.json"
-            ):
+            if jsonfiles[i] == "data.json" or jsonfiles[i].__contains__("output.json") or jsonfiles[i].__contains__(".csv") or jsonfiles[i] == "settings.json":
                 jsonfiles.pop(i)
             else:
                 read_ok = self.read_data(jsonfiles[i])
@@ -358,9 +290,7 @@ class TelegramHelper:
                     jsonfiles.pop(i)
             i -= 1
         jsonfiles.sort()
-        return [
-            x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles
-        ]
+        return [x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles]
 
     def get_active_bot_list(self, state: str = "active") -> List[str]:
         """Return contents of telegram_data folder"""
@@ -379,15 +309,11 @@ class TelegramHelper:
                     jsonfiles.pop(i)
             i -= 1
         jsonfiles.sort()
-        return [
-            x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles
-        ]
+        return [x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles]
 
     def get_active_bot_list_with_open_orders(self, state: str = "active") -> List[str]:
         """Return contents of telegram_data folder active bots with an open order"""
-        self.logger.debug(
-            "METHOD(get_active_bot_list_with_open_orders) - DATA(%s)", state
-        )
+        self.logger.debug("METHOD(get_active_bot_list_with_open_orders) - DATA(%s)", state)
         jsonfiles = self.get_all_bot_list()
 
         i = len(jsonfiles) - 1
@@ -402,9 +328,7 @@ class TelegramHelper:
                     jsonfiles.pop(i)
             i -= 1
         jsonfiles.sort()
-        return [
-            x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles
-        ]
+        return [x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles]
 
     def get_hung_bot_list(self, state: str = "active") -> List[str]:
         """Return contents of telegram_data folder - working out which are hung bots"""
@@ -420,26 +344,20 @@ class TelegramHelper:
                 continue
             elif "botcontrol" in self.data:
                 if "watchdog_ping" in self.data["botcontrol"]:
-                    last_ping = datetime.strptime(
-                        self.data["botcontrol"]["watchdog_ping"], "%Y-%m-%dT%H:%M:%S.%f"
-                    )
+                    last_ping = datetime.strptime(self.data["botcontrol"]["watchdog_ping"], "%Y-%m-%dT%H:%M:%S.%f")
                     current_dt = datetime.now()
                     ping_delta = int((current_dt - last_ping).total_seconds())
                     if self.data["botcontrol"]["status"] == state and ping_delta < 600:
                         jsonfiles.pop(i)
                 else:
-                    start_time = datetime.strptime(
-                        self.data["botcontrol"]["started"], "%Y-%m-%dT%H:%M:%S.%f"
-                    )
+                    start_time = datetime.strptime(self.data["botcontrol"]["started"], "%Y-%m-%dT%H:%M:%S.%f")
                     current_dt = datetime.now()
                     start_delta = int((current_dt - start_time).total_seconds())
                     if self.data["botcontrol"]["status"] == state and start_delta < 300:
                         jsonfiles.pop(i)
             i -= 1
         jsonfiles.sort()
-        return [
-            x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles
-        ]
+        return [x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles]
 
     def get_manual_started_bot_list(self, startMethod: str = "telegram") -> List[str]:
         """Return contents of telegram_data folder"""
@@ -458,9 +376,7 @@ class TelegramHelper:
                     jsonfiles.pop(i)
             i -= 1
         jsonfiles.sort()
-        return [
-            x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles
-        ]
+        return [x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles]
 
     def get_exchange_bot_ruuning_count(self, exchange):
         """Return contents of telegram_data folder"""
@@ -480,17 +396,13 @@ class TelegramHelper:
             i -= 1
         # jsonfiles.sort()
         # jsonfiles.count()
-        self.logger.debug(
-            "METHOD(get_exchange_bot_ruuning_count) - RETURN(%s)", len(jsonfiles)
-        )
+        self.logger.debug("METHOD(get_exchange_bot_ruuning_count) - RETURN(%s)", len(jsonfiles))
         return len(jsonfiles)
 
     def is_bot_running(self, pair) -> bool:
         """Check is bot running (pair.json file exists)"""
         self.logger.debug("METHOD(is_bot_running) - DATA(%s)", pair)
-        if os.path.isfile(
-            os.path.join(self.datafolder, "telegram_data", f"{pair}.json")
-        ):
+        if os.path.isfile(os.path.join(self.datafolder, "telegram_data", f"{pair}.json")):
             return True
 
         return False
@@ -522,9 +434,7 @@ class TelegramHelper:
             return False
 
         if return_output is True:
-            return subprocess.getoutput(
-                f"python3 pycryptobot.py --exchange {exchange} --market {pair} {overrides}"
-            )
+            return subprocess.getoutput(f"python3 pycryptobot.py --exchange {exchange} --market {pair} {overrides}")
 
         command = "python3 pycryptobot.py"
         command = f"{command} --startmethod {startmethod}"
@@ -544,8 +454,7 @@ class TelegramHelper:
             if self.terminal_start_process != "":
                 command = f"{self.terminal_start_process.replace('{pair}', pair)} {command}"
             subprocess.Popen(
-                f"{command} --logfile './logs/{exchange}-{pair}-{datetime.now().date()}.log' "
-                f"{overrides}",
+                f"{command} --logfile './logs/{exchange}-{pair}-{datetime.now().date()}.log' " f"{overrides}",
                 shell=True,
             )
 
@@ -576,13 +485,11 @@ class TelegramHelper:
             elif "margin" in self.data and self.data["margin"] == " ":
                 return self.update_bot_control(pair, state)
 
-    def create_callback_data(
-        self, callback_tag, exchange: str = "", parameter: str = ""
-    ):
+    def create_callback_data(self, callback_tag, exchange: str = "", parameter: str = ""):
         return json.dumps({"c": callback_tag, "e": exchange, "p": parameter})
 
     def clean_data_folder(self):
-        """ check market files in data folder """
+        """check market files in data folder"""
         self.logger.debug("cleandata started")
         jsonfiles = self.get_active_bot_list()
         for i in range(len(jsonfiles), 0, -1):
@@ -592,44 +499,16 @@ class TelegramHelper:
 
             self.read_data(jfile)
 
-            last_modified = datetime.now() - datetime.fromtimestamp(
-                os.path.getmtime(
-                    os.path.join(
-                        self.datafolder, "telegram_data", f"{jfile}.json"
-                    )
-                )
-            )
+            last_modified = datetime.now() - datetime.fromtimestamp(os.path.getmtime(os.path.join(self.datafolder, "telegram_data", f"{jfile}.json")))
             if "margin" not in self.data:
                 self.logger.info("deleting %s", jfile)
-                os.remove(
-                    os.path.join(
-                        self.datafolder, "telegram_data", f"{jfile}.json"
-                    )
-                )
+                os.remove(os.path.join(self.datafolder, "telegram_data", f"{jfile}.json"))
                 continue
-            if (
-                self.data["botcontrol"]["status"] == "active"
-                and last_modified.seconds > 120
-                and (last_modified.seconds != 86399 and last_modified.days != -1)
-            ):
+            if self.data["botcontrol"]["status"] == "active" and last_modified.seconds > 120 and (last_modified.seconds != 86399 and last_modified.days != -1):
                 self.logger.info("deleting %s %s", jfile, str(last_modified))
-                os.remove(
-                    os.path.join(
-                        self.datafolder, "telegram_data", f"{jfile}.json"
-                    )
-                )
+                os.remove(os.path.join(self.datafolder, "telegram_data", f"{jfile}.json"))
                 continue
-            elif (
-                self.data["botcontrol"]["status"] == "exit"
-                and last_modified.seconds > 120
-                and last_modified.seconds != 86399
-            ):
-                self.logger.info(
-                    "deleting %s %s", jfile, str(last_modified.seconds)
-                )
-                os.remove(
-                    os.path.join(
-                        self.datafolder, "telegram_data", f"{jfile}.json"
-                    )
-                )
+            elif self.data["botcontrol"]["status"] == "exit" and last_modified.seconds > 120 and last_modified.seconds != 86399:
+                self.logger.info("deleting %s %s", jfile, str(last_modified.seconds))
+                os.remove(os.path.join(self.datafolder, "telegram_data", f"{jfile}.json"))
         self.logger.debug("cleandata complete")

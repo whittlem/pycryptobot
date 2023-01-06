@@ -11,6 +11,7 @@ from time import sleep
 from models.telegram.helper import TelegramHelper
 from models.telegram.settings import SettingsEditor
 
+
 class TelegramActions:
     """Telegram Bot Action Class"""
 
@@ -68,9 +69,7 @@ class TelegramActions:
     def start_open_orders(self, update, context):
         """Start bots for open trades (data.json)"""
         self.helper.logger.info("called start_open_orders")
-        self.helper.send_telegram_message(
-            update, "<b>Starting markets with open trades..</b>", context=context, new_message=False
-        )
+        self.helper.send_telegram_message(update, "<b>Starting markets with open trades..</b>", context=context, new_message=False)
         self.helper.read_data()
         for market in self.helper.data["opentrades"]:
             if not self.helper.is_bot_running(market):
@@ -81,13 +80,11 @@ class TelegramActions:
                     "telegram-open",
                 )
             sleep(10)
-        self.helper.send_telegram_message(
-            update, "<i>Markets have been started</i>", context=context
-        )
+        self.helper.send_telegram_message(update, "<i>Markets have been started</i>", context=context)
         sleep(1)
         self.get_bot_info(None, None)
 
-    def sell_response(self, update, context, market_override = ""):
+    def sell_response(self, update, context, market_override=""):
         """create the manual sell order"""
         if market_override != "":
             read_ok = self.helper.read_data(market_override)
@@ -96,9 +93,9 @@ class TelegramActions:
                 self.helper.write_data(market_override)
                 self.helper.send_telegram_message(
                     update,
-                    f"Selling: {market_override.replace('.json','')}"
-                    "\n<i>Please wait for sale notification...</i>",
-                    context=context, new_message=False,
+                    f"Selling: {market_override.replace('.json','')}" "\n<i>Please wait for sale notification...</i>",
+                    context=context,
+                    new_message=False,
                 )
             return
 
@@ -106,9 +103,7 @@ class TelegramActions:
         self.helper.logger.info("called sell_response - %s", query.data)
 
         if query.data.__contains__("all"):
-            self.helper.send_telegram_message(
-                update, "<b><i>Initiating sell orders..</i></b>", context=context, new_message=False
-            )
+            self.helper.send_telegram_message(update, "<b><i>Initiating sell orders..</i></b>", context=context, new_message=False)
             tg_message = ""
             for market in self.helper.get_active_bot_list("active"):
                 if not self.helper.read_data(market):
@@ -131,12 +126,12 @@ class TelegramActions:
                 self.helper.write_data(query.data.replace("confirm_sell_", ""))
                 self.helper.send_telegram_message(
                     update,
-                    f"Selling: {query.data.replace('confirm_sell_', '').replace('.json','')}"
-                    "\n<i>Please wait for sale notification...</i>",
-                    context=context, new_message=False
+                    f"Selling: {query.data.replace('confirm_sell_', '').replace('.json','')}" "\n<i>Please wait for sale notification...</i>",
+                    context=context,
+                    new_message=False,
                 )
 
-    def buy_response(self, update, context, market_override = ""):
+    def buy_response(self, update, context, market_override=""):
         """create the manual buy order"""
 
         if market_override != "":
@@ -146,9 +141,9 @@ class TelegramActions:
                 self.helper.write_data(market_override)
                 self.helper.send_telegram_message(
                     update,
-                    f"Buying: {market_override.replace('.json','')}"
-                    "\n<i>Please wait for buy notification...</i>",
-                    context=context, new_message=False,
+                    f"Buying: {market_override.replace('.json','')}" "\n<i>Please wait for buy notification...</i>",
+                    context=context,
+                    new_message=False,
                 )
             return
 
@@ -156,9 +151,7 @@ class TelegramActions:
         self.helper.logger.info("called buy_response - %s", query.data)
 
         if query.data == "all":
-            self.helper.send_telegram_message(
-                update, "<b><i>Initiating buy orders..</i></b>", context=context, new_message=False
-            )
+            self.helper.send_telegram_message(update, "<b><i>Initiating buy orders..</i></b>", context=context, new_message=False)
             tg_message = ""
             for market in self.helper.get_active_bot_list("active"):
                 if not self.helper.read_data(market):
@@ -181,9 +174,9 @@ class TelegramActions:
                 self.helper.write_data(query.data.replace("confirm_buy_", ""))
                 self.helper.send_telegram_message(
                     update,
-                    f"Buying: {query.data.replace('confirm_buy_', '').replace('.json','')}"
-                    "\n<i>Please wait for buy notification...</i>",
-                    context=context, new_message=False,
+                    f"Buying: {query.data.replace('confirm_buy_', '').replace('.json','')}" "\n<i>Please wait for buy notification...</i>",
+                    context=context,
+                    new_message=False,
                 )
 
     def show_config_response(self, update):
@@ -198,9 +191,7 @@ class TelegramActions:
         else:
             pbot = self.helper.config[query.data]["config"]
 
-        self.helper.send_telegram_message(
-            update, query.data + "\n" + json.dumps(pbot, indent=4), new_message=False
-        )
+        self.helper.send_telegram_message(update, query.data + "\n" + json.dumps(pbot, indent=4), new_message=False)
 
     def get_bot_info(self, update=None, context=None):
         """Get running bot information"""
@@ -212,24 +203,13 @@ class TelegramActions:
             if not self.helper.read_data(file):
                 continue
 
-            output = (
-                output + f"\U0001F4C8 <b>{file} ({self.helper.data['exchange']})</b> "
-            )
+            output = output + f"\U0001F4C8 <b>{file} ({self.helper.data['exchange']})</b> "
 
-            last_modified = datetime.now() - datetime.fromtimestamp(
-                os.path.getmtime(
-                    os.path.join(
-                        self.helper.datafolder, "telegram_data", f"{file}.json"
-                    )
-                )
-            )
+            last_modified = datetime.now() - datetime.fromtimestamp(os.path.getmtime(os.path.join(self.helper.datafolder, "telegram_data", f"{file}.json")))
             icon = "\U0001F6D1"  # red dot
             if last_modified.seconds > 90 and last_modified.seconds != 86399:
                 output = f"{output} {icon} <b>Status</b>: <i>defaulted</i>"
-            elif (
-                "botcontrol" in self.helper.data
-                and "status" in self.helper.data["botcontrol"]
-            ):
+            elif "botcontrol" in self.helper.data and "status" in self.helper.data["botcontrol"]:
                 if self.helper.data["botcontrol"]["status"] == "active":
                     icon = "\U00002705"  # green tick
                 if self.helper.data["botcontrol"]["status"] == "paused":
@@ -243,9 +223,7 @@ class TelegramActions:
 
             if count == 1:
                 # if update is not None or context is not None:
-                self.helper.send_telegram_message(
-                    update, output, context=context, new_message=False
-                )
+                self.helper.send_telegram_message(update, output, context=context, new_message=False)
             else:
                 # if update is not None:
                 self.helper.send_telegram_message(update, f"{output}")
@@ -259,15 +237,17 @@ class TelegramActions:
                 new_message=False,
             )
         else:
-            self.helper.send_telegram_message(
-                update, f"<b>Bot Count ({count})</b>", context=context
-            )
+            self.helper.send_telegram_message(update, f"<b>Bot Count ({count})</b>", context=context)
 
         return f"Bot Count ({count})"
 
     def get_margins(self, update, option):
         """Get margins"""
-        self.helper.send_telegram_message(update, f"<i>Getting current {'margins' if option == 'orders' else 'active pairs' if option == 'pairs' else 'margins and active pairs'}..</i>", new_message=False)
+        self.helper.send_telegram_message(
+            update,
+            f"<i>Getting current {'margins' if option == 'orders' else 'active pairs' if option == 'pairs' else 'margins and active pairs'}..</i>",
+            new_message=False,
+        )
         closed_output = []
         open_output = []
         closed_count = 0
@@ -281,9 +261,7 @@ class TelegramActions:
             if "margin" in self.helper.data:
                 if "margin" in self.helper.data and self.helper.data["margin"] == " ":
                     closed_output_text = closed_output_text + f"<b>{market}</b>"
-                    closed_output_text = (
-                        closed_output_text + f"\n<i>{self.helper.data['message']}</i>\n"
-                    )
+                    closed_output_text = closed_output_text + f"\n<i>{self.helper.data['message']}</i>\n"
                     closed_output.append(closed_output_text)
                     closed_count += 1
                 elif len(self.helper.data) > 2:
@@ -296,18 +274,14 @@ class TelegramActions:
                 self.helper.send_telegram_message(update, output)
                 sleep(0.5)
         elif option in ("orders", "all") and open_count == 0:
-            self.helper.send_telegram_message(
-                update, "<b>No open orders found.</b>"
-            )
+            self.helper.send_telegram_message(update, "<b>No open orders found.</b>")
 
         if option in ("pairs", "all") and closed_count > 0:
             for output in closed_output:
                 self.helper.send_telegram_message(update, output)
                 sleep(1)
         elif option in ("pairs", "all") and closed_count == 0:
-            self.helper.send_telegram_message(
-                update, "<b>No active pairs found.</b>"
-            )
+            self.helper.send_telegram_message(update, "<b>No active pairs found.</b>")
 
     def start_market_scan(
         self,
@@ -316,7 +290,7 @@ class TelegramActions:
         use_default_scanner: bool = True,
         scanmarkets: bool = True,
         startbots: bool = True,
-    )-> bool:
+    ) -> bool:
         """Start market scanner/screener"""
         # Check whether using the scanner or the screener - use correct config file etc
         if use_default_scanner is True:
@@ -344,11 +318,7 @@ class TelegramActions:
         # If a bulk load file for the exchange exists - start up all the bulk bots for this
         for ex in config:
             for quote in config[ex]["quote_currency"]:
-                if os.path.exists(
-                    os.path.join(
-                        self.helper.datafolder, "telegram_data", f"{ex}_bulkstart.csv"
-                    )
-                ):
+                if os.path.exists(os.path.join(self.helper.datafolder, "telegram_data", f"{ex}_bulkstart.csv")):
                     self.helper.send_telegram_message(
                         update,
                         f"<i>Found bulk load CSV file for {ex}... Loading pairs</i>",
@@ -366,20 +336,14 @@ class TelegramActions:
                         ) as csv_obj:
                             csv_file = csv.DictReader(csv_obj)
                             for row in csv_file:
-                                if (
-                                    "market" in row
-                                    and row["market"] is not None
-                                    and quote in row["market"]
-                                ):
+                                if "market" in row and row["market"] is not None and quote in row["market"]:
                                     # Start the process disregarding bot limits for the moment
                                     self.helper.send_telegram_message(
                                         update,
                                         f"Bulk Starting {row['market']} on {ex}...",
                                         context=context,
                                     )
-                                    self.helper.start_process(
-                                        row["market"], ex, "", "scanner"
-                                    )
+                                    self.helper.start_process(row["market"], ex, "", "scanner")
                                     sleep(7)
                     except IOError:
                         pass
@@ -395,22 +359,16 @@ class TelegramActions:
                 self.helper.logger.info("Starting Market Scan")
                 subprocess.getoutput(f"python3 {scanner_script_file}")
             except Exception as err:
-                self.helper.send_telegram_message(
-                    update, "<b>scanning failed.</b>", context=context
-                )
+                self.helper.send_telegram_message(update, "<b>scanning failed.</b>", context=context)
                 self.helper.logger.error(err)
                 raise
 
             if bool(self.helper.settings["notifications"]["enable_screener"]):
-                self.helper.send_telegram_message(
-                    update, "<b>Scan Complete.</b>", context=context
-                )
+                self.helper.send_telegram_message(update, "<b>Scan Complete.</b>", context=context)
 
         # Watchdog process - check for hung bots and force restart them
         if bool(self.helper.settings["notifications"]["enable_screener"]):
-            self.helper.send_telegram_message(
-                update, "<i>Fido checking for hung bots..</i>", context=context
-            )
+            self.helper.send_telegram_message(update, "<i>Fido checking for hung bots..</i>", context=context)
 
         self.helper.logger.debug("Fido checking for hung bots..")
 
@@ -418,9 +376,7 @@ class TelegramActions:
             ex = self.helper.get_running_bot_exchange(file)
             self.helper.stop_running_bot(file, "exit", True)
             sleep(3)
-            os.remove(
-                os.path.join(self.helper.datafolder, "telegram_data", f"{file}.json")
-            )
+            os.remove(os.path.join(self.helper.datafolder, "telegram_data", f"{file}.json"))
             sleep(1)
 
             if bool(self.helper.settings["notifications"]["enable_screener"]):
@@ -436,9 +392,7 @@ class TelegramActions:
 
         if not startbots:
             if bool(self.helper.settings["notifications"]["enable_screener"]):
-                self.helper.send_telegram_message(
-                    update, "<b>Operation Complete (0 started)</b>", context=context
-                )
+                self.helper.send_telegram_message(update, "<b>Operation Complete (0 started)</b>", context=context)
             return True
 
         # Check to see if the bot would be restarted anyways from the scanner
@@ -460,17 +414,12 @@ class TelegramActions:
                         data = json.load(json_file)
                     for row in data:
                         if data[row]["atr72_pcnt"] is not None:
-                            if (
-                                data[row]["atr72_pcnt"]
-                                >= self.helper.config["scanner"]["atr72_pcnt"]
-                            ):
+                            if data[row]["atr72_pcnt"] >= self.helper.config["scanner"]["atr72_pcnt"]:
                                 scanned_bots.append(row)
-                except:  # pylint: disable=bare-except
+                except Exception:
                     pass
         if bool(self.helper.settings["notifications"]["enable_screener"]):
-            self.helper.send_telegram_message(
-                update, "<i>stopping bots..</i>", context=context
-            )
+            self.helper.send_telegram_message(update, "<i>stopping bots..</i>", context=context)
 
         self.helper.logger.debug("stopping bots")
         active_bots_list = self.helper.get_active_bot_list()
@@ -480,12 +429,7 @@ class TelegramActions:
         market_exceptions = self.helper.data["scannerexceptions"]
 
         for file in active_bots_list:
-            if (
-                (file not in scanned_bots)
-                and (file not in open_order_bot_list)
-                and (file not in manual_started_bots)
-                and (file not in market_exceptions)
-            ):
+            if (file not in scanned_bots) and (file not in open_order_bot_list) and (file not in manual_started_bots) and (file not in market_exceptions):
                 self.helper.stop_running_bot(file, "exit")
                 sleep(3)
             else:
@@ -504,17 +448,12 @@ class TelegramActions:
 
         self.helper.read_data()
         for ex in config:
-            if (
-                maxbotcount > 0
-                and (total_bots_started + active_at_start) >= maxbotcount
-            ):
+            if maxbotcount > 0 and (total_bots_started + active_at_start) >= maxbotcount:
                 break
-            exchange_bots_started = self.helper.get_exchange_bot_ruuning_count(ex)
+            exchange_bots_started = self.helper.exchange_bot_ruuning_count(ex)
             for quote in config[ex]["quote_currency"]:
                 if bool(self.helper.settings["notifications"]["enable_screener"]):
-                    self.helper.send_telegram_message(
-                        update, f"Starting {ex} ({quote}) bots...", context=context
-                    )
+                    self.helper.send_telegram_message(update, f"Starting {ex} ({quote}) bots...", context=context)
 
                 self.helper.logger.info("starting %s - (%s) bots", ex, quote)
                 if not os.path.isfile(
@@ -542,15 +481,9 @@ class TelegramActions:
                 msg_cnt = 1
 
                 for row in data:
-                    if (
-                        maxbotcount > 0
-                        and (total_bots_started + active_at_start) >= maxbotcount
-                    ):
+                    if maxbotcount > 0 and (total_bots_started + active_at_start) >= maxbotcount:
                         break
-                    if (
-                        bots_per_exchange > 0
-                        and exchange_bots_started >= bots_per_exchange
-                    ):
+                    if bots_per_exchange > 0 and exchange_bots_started >= bots_per_exchange:
                         exchange_bots_started = 0
                         break
                     if self.helper.enableleverage is False and (
@@ -560,36 +493,22 @@ class TelegramActions:
                         or str(row).__contains__(f"3S-{quote}")
                     ):
                         if msg_cnt == 1:
-                            if bool(
-                                self.helper.settings["notifications"]["enable_screener"]
-                            ):
+                            if bool(self.helper.settings["notifications"]["enable_screener"]):
                                 self.helper.send_telegram_message(
                                     update,
-                                    f"Ignoring {row} {ex} ({quote}) "
-                                    "Leverage Pairs (enableleverage is disabled)...",
+                                    f"Ignoring {row} {ex} ({quote}) " "Leverage Pairs (enableleverage is disabled)...",
                                     context=context,
                                 )
                             msg_cnt += 1
-                            self.helper.logger.debug(
-                                f"Ignoring ({row}) Leverage Pairs (enableleverage is disabled)..."
-                            )
+                            self.helper.logger.debug(f"Ignoring ({row}) Leverage Pairs (enableleverage is disabled)...")
                         continue
 
                     if row in market_exceptions:
-                        outputmsg = (
-                            outputmsg
-                            + f"*** {row} found on scanner exception list ***\n"
-                        )
+                        outputmsg = outputmsg + f"*** {row} found on scanner exception list ***\n"
                     else:
                         if data[row]["atr72_pcnt"] is not None:
-                            if (
-                                data[row]["atr72_pcnt"]
-                                >= self.helper.config["scanner"]["atr72_pcnt"]
-                            ):
-                                if (
-                                    self.helper.config["scanner"]["enable_buy_next"]
-                                    and data[row]["buy_next"]
-                                ):
+                            if data[row]["atr72_pcnt"] >= self.helper.config["scanner"]["atr72_pcnt"]:
+                                if self.helper.config["scanner"]["enable_buy_next"] and data[row]["buy_next"]:
                                     outputmsg = (
                                         outputmsg + f"<i><b>{row}</b>  //--//  "
                                         f"<b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%  //--//"
@@ -597,31 +516,20 @@ class TelegramActions:
                                     )
                                     if self.helper.is_bot_running(row):
                                         exchange_bots_started += 1
-                                    if self.helper.start_process(
-                                        row, ex, "", "scanner"
-                                    ):
+                                    if self.helper.start_process(row, ex, "", "scanner"):
                                         total_bots_started += 1
                                         exchange_bots_started += 1
-                                elif not self.helper.config["scanner"][
-                                    "enable_buy_next"
-                                ]:
-                                    outputmsg = (
-                                        outputmsg + f"<i><b>{row}</b>  //--//  "
-                                        f"<b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%</i>\n"
-                                    )
+                                elif not self.helper.config["scanner"]["enable_buy_next"]:
+                                    outputmsg = outputmsg + f"<i><b>{row}</b>  //--//  " f"<b>atr72_pcnt:</b> {data[row]['atr72_pcnt']}%</i>\n"
                                     if self.helper.is_bot_running(row):
                                         exchange_bots_started += 1
-                                    if self.helper.start_process(
-                                        row, ex, "", "scanner"
-                                    ):
+                                    if self.helper.start_process(row, ex, "", "scanner"):
                                         total_bots_started += 1
                                         exchange_bots_started += 1
                                 sleep(6)
 
                 if bool(self.helper.settings["notifications"]["enable_screener"]):
-                    self.helper.send_telegram_message(
-                        update, outputmsg, context=context
-                    )
+                    self.helper.send_telegram_message(update, outputmsg, context=context)
 
         self.helper.send_telegram_message(
             update,
@@ -661,9 +569,7 @@ class TelegramActions:
         while not write_ok and try_count <= 5:
             try_count += 1
             self.helper.read_data()
-            self.helper.data["scannerexceptions"].pop(
-                str(query.data).replace("delexcep_", "")
-            )
+            self.helper.data["scannerexceptions"].pop(str(query.data).replace("delexcep_", ""))
 
             write_ok = self.helper.write_data()
             if not write_ok:
@@ -689,29 +595,16 @@ class TelegramActions:
             negative_counter = 0
 
             if days == 99:
-                self.helper.send_telegram_message(
-                    update, "<i>Getting all trades summary..</i>", new_message=False
-                )
+                self.helper.send_telegram_message(update, "<i>Getting all trades summary..</i>", new_message=False)
             else:
-                self.helper.send_telegram_message(
-                    update, f"<i>Getting summary of trades for last {days} day(s)..</i>", new_message=False
-                )
+                self.helper.send_telegram_message(update, f"<i>Getting summary of trades for last {days} day(s)..</i>", new_message=False)
 
             for trade_datetime in self.helper.data["trades"]:
-                if (
-                    datetime.strptime(trade_datetime, "%Y-%m-%d %H:%M:%S").isoformat()
-                    < now.isoformat()
-                ):
+                if datetime.strptime(trade_datetime, "%Y-%m-%d %H:%M:%S").isoformat() < now.isoformat():
                     continue
                 if days > 0:
                     trade_counter += 1
-                    margin = float(
-                        self.helper.data["trades"][trade_datetime]["margin"][
-                            : self.helper.data["trades"][trade_datetime]["margin"].find(
-                                "%"
-                            )
-                        ]
-                    )
+                    margin = float(self.helper.data["trades"][trade_datetime]["margin"][: self.helper.data["trades"][trade_datetime]["margin"].find("%")])
                     margin_calculation += margin
                     if margin > 0.0:
                         positive_counter += 1
@@ -725,10 +618,7 @@ class TelegramActions:
                 else:
                     trade_count += 1
                     output = ""
-                    output = (
-                        output
-                        + f"<b>{self.helper.data['trades'][trade_datetime]['pair']}</b>\n{trade_datetime}"
-                    )
+                    output = output + f"<b>{self.helper.data['trades'][trade_datetime]['pair']}</b>\n{trade_datetime}"
                     output = (
                         output
                         + f"\n<i>Sold at: {self.helper.data['trades'][trade_datetime]['price']}   Margin: {self.helper.data['trades'][trade_datetime]['margin']}</i>\n"
@@ -743,9 +633,7 @@ class TelegramActions:
                             sleep(0.5)
 
             if trade_count == 0 and trade_counter == 0:
-                self.helper.send_telegram_message(
-                    update, "<b>No closed trades found</b>", new_message=False
-                )
+                self.helper.send_telegram_message(update, "<b>No closed trades found</b>", new_message=False)
                 return "No closed trades found"
 
             if days > 0:

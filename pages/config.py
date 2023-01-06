@@ -473,7 +473,7 @@ layout = (
                                                         },
                                                         {
                                                             "label": "Enable Telegram Control",
-                                                            "value": "enabletelegrambotcontrol",
+                                                            "value": "telegrambotcontrol",
                                                         },
                                                         {
                                                             "label": "Websockets",
@@ -628,7 +628,7 @@ def save_changes_buysize(
     Input("switches-sellatloss", "value"),
     State("exchange-selector", "value"),
 )
-def sell_at_loss_switch(value, exchange):
+def sellatloss_switch(value, exchange):
     """enable/disable buy size amount"""
     tg_wrapper.helper.config[exchange]["config"].update({"sellatloss": 0})
     if "sellatloss" in value:
@@ -740,7 +740,7 @@ def exchange_selector(value):
     Output("sell-at-loss-margin", "value"),
     Input("exchange-selector", "value"),
 )
-def sell_at_loss(value):
+def sellatloss(value):
     result = 0
     margin = 0
     if value is not None:

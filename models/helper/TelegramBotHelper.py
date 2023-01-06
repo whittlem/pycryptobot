@@ -5,46 +5,36 @@ from time import sleep
 from datetime import datetime
 
 from pandas.core.frame import DataFrame
-from models.PyCryptoBot import PyCryptoBot
-from models.helper.LogHelper import Logger
+from views.PyCryptoBot import RichText
 
 
 class TelegramBotHelper:
-    """ Telegram Bot data helper """
-    def __init__(self, app: PyCryptoBot, scanner: bool = False) -> None:
+    """Telegram Bot data helper"""
+
+    def __init__(self, app, scanner: bool = False) -> None:
         self.app = app
-        self.market = app.getMarket()
-        self.exchange = app.getExchange()
+        self.market = app.market
+        self.exchange = app.exchange
         self.botfolder = "telegram_data"
-        self.botpath = os.path.join(
-            self.app.telegramdatafolder, self.botfolder, self.market
-        )
+        self.botpath = os.path.join(self.app.telegramdatafolder, self.botfolder, self.market)
         self.filename = self.market + ".json"
 
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl() and not scanner:
+        if not self.app.is_sim and self.app.telegrambotcontrol and not scanner:
             if not os.path.exists(self.botfolder):
                 os.makedirs(self.botfolder)
 
             self.data = {}
 
-            if not os.path.exists(
-                os.path.join(self.app.telegramdatafolder, "telegram_data")
-            ):
+            if not os.path.exists(os.path.join(self.app.telegramdatafolder, "telegram_data")):
                 os.mkdir(os.path.join(self.app.telegramdatafolder, "telegram_data"))
 
-            if os.path.isfile(
-                os.path.join(
-                    self.app.telegramdatafolder, "telegram_data", self.filename
-                )
-            ):
+            if os.path.isfile(os.path.join(self.app.telegramdatafolder, "telegram_data", self.filename)):
                 if not self._read_data():
                     self.create_bot_data()
             else:
                 self.create_bot_data()
 
-            if os.path.isfile(
-                os.path.join(self.app.telegramdatafolder, "telegram_data", "data.json")
-            ):
+            if os.path.isfile(os.path.join(self.app.telegramdatafolder, "telegram_data", "data.json")):
 
                 write_ok, try_count = False, 0
                 while not write_ok and try_count <= 5:
@@ -64,30 +54,35 @@ class TelegramBotHelper:
                 write_ok, try_count = False, 0
                 while not write_ok and try_count <= 5:
                     try_count += 1
-                    ds = {"trades": {}, "markets": {}, "scannerexceptions": {}, "opentrades": {}}
+                    ds = {
+                        "trades": {},
+                        "markets": {},
+                        "scannerexceptions": {},
+                        "opentrades": {},
+                    }
                     self.data = ds
                     write_ok = self._write_data("data.json")
 
     def create_bot_data(self):
-        """ Create pair.json file """
+        """Create pair.json file"""
         ds = {
-                "botcontrol": {
-                    "status": "active",
-                    "manualsell": False,
-                    "manualbuy": False,
-                    "started": datetime.now().isoformat(),
-                    "startmethod" : self.app.startmethod,
-                },
-                "preventlosstriggered" : False,
-                "exchange" : self.exchange.value,
-                "margin": "",
-                "delta": "",
-                "price": 0.0,
-                "df_high": " ",
-                "from_df_high": " ",
-                "trailingstoplosstriggered" : False,
-                "change_pcnt_high" : 0.0
-            }
+            "botcontrol": {
+                "status": "active",
+                "manualsell": False,
+                "manualbuy": False,
+                "started": datetime.now().isoformat(),
+                "startmethod": self.app.startmethod,
+            },
+            "preventlosstriggered": False,
+            "exchange": self.exchange.value,
+            "margin": "",
+            "delta": "",
+            "price": 0.0,
+            "df_high": " ",
+            "from_df_high": " ",
+            "trailingstoplosstriggered": False,
+            "change_pcnt_high": 0.0,
+        }
         self.data = ds
         self._write_data()
 
@@ -106,17 +101,17 @@ class TelegramBotHelper:
                     self.data = json.load(json_file)
                 read_ok = True
             except FileNotFoundError:
-                Logger.warning("File Not Found:  Recreating File..")
+                RichText.notify("File Not Found:  Recreating File..", self.app, "warning")
                 self.create_bot_data()
             except JSONDecodeError:
                 if len(self.data) > 0:
-                    Logger.warning("JSON Decode Error: Recreating File..")
+                    RichText.notify("JSON Decode Error: Recreating File..", self.app, "warning")
                     if name == "":
                         self._write_data()
                 else:
-                    Logger.warning("JSON Decode Error: Removing File..")
+                    RichText.notify("JSON Decode Error: Removing File..", self.app, "warning")
                     if name == "":
-                        self.removeactivebot()
+                        self.remove_active_bot()
         return read_ok
 
     def _write_data(self, name: str = "") -> bool:
@@ -130,11 +125,18 @@ class TelegramBotHelper:
                 json.dump(self.data, outfile, indent=4)
             return True
         except JSONDecodeError as err:
-            Logger.critical(str(err))
+            RichText.notify(str(err), self.app, "critical")
             return False
 
-    def addmargin(self, margin: str = "", delta: str = "", price: str = "", change_pcnt_high: float = 0.0, signal = "WAIT"):
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
+    def add_margin(
+        self,
+        margin: str = "",
+        delta: str = "",
+        price: str = "",
+        change_pcnt_high: float = 0.0,
+        signal="WAIT",
+    ):
+        if not self.app.is_sim and self.app.telegrambotcontrol:
             if self._read_data():
                 addmarket = {
                     "exchange": self.exchange.value,
@@ -144,32 +146,41 @@ class TelegramBotHelper:
                     "price": price,
                     "df_high": " ",
                     "from_df_high": " ",
-                    "trailingstoplosstriggered" : float(margin.replace("%", "")) > self.app.trailingStopLossTrigger() if "trailingstoplosstriggered" in self.data and self.data['trailingstoplosstriggered'] == False else True,
-                    "change_pcnt_high" : change_pcnt_high if "trailingstoplosstriggered" in self.data and self.data['trailingstoplosstriggered'] == True else 0.0,
-                    # "change_pcnt_low" : change_pcnt_high if "preventlosstriggered" in self.data and self.data['preventlosstriggered'] == True else 0.0
+                    "trailingstoplosstriggered": float(margin.replace("%", "")) > self.app.trailing_stop_loss_trigger
+                    if "trailingstoplosstriggered" in self.data and self.data["trailingstoplosstriggered"] is False
+                    else True,
+                    "change_pcnt_high": change_pcnt_high
+                    if "trailingstoplosstriggered" in self.data and self.data["trailingstoplosstriggered"] is True
+                    else 0.0,
                 }
-                
-                if self.app.preventLoss():
-                    self.data.update({"preventlosstriggered" : float(margin.replace("%", "")) > self.app.preventLossTrigger() if "preventlosstriggered" in self.data and self.data['preventlosstriggered'] == False else True})
+
+                if self.app.preventloss:
+                    self.data.update(
+                        {
+                            "preventlosstriggered": float(margin.replace("%", "")) > self.app.preventlosstrigger
+                            if "preventlosstriggered" in self.data and self.data["preventlosstriggered"] is False
+                            else True
+                        }
+                    )
 
                 self.data.update(addmarket)
                 self._write_data()
 
-    def updatewatchdogping(self):
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
+    def update_watch_dog_ping(self):
+        if not self.app.is_sim and self.app.telegrambotcontrol:
             if self._read_data() and "botcontrol" in self.data:
-                self.data["botcontrol"]["watchdog_ping"] =  datetime.now().isoformat()
+                self.data["botcontrol"]["watchdog_ping"] = datetime.now().isoformat()
                 self._write_data()
-    
-    def addinfo(
+
+    def add_info(
         self,
         message: str = "",
         price: str = "",
         df_high: str = "",
         from_df_high: str = "",
-        signal ="WAIT"
+        signal="WAIT",
     ) -> None:
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
+        if not self.app.is_sim and self.app.telegrambotcontrol:
             if self._read_data():
                 addmarket = {
                     "signal": signal,
@@ -184,42 +195,36 @@ class TelegramBotHelper:
                 self.data.update(addmarket)
                 self._write_data()
 
-    def addindicators(self, indicator, state) -> None:
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
+    def add_indicators(self, indicator, state) -> None:
+        if not self.app.is_sim and self.app.telegrambotcontrol:
             if self._read_data():
-                if not "indicators" in self.data:
+                if "indicators" not in self.data:
                     self.data.update({"indicators": {}})
 
                 self.data["indicators"].update({indicator: state})
                 self._write_data()
 
-    def deletemargin(self):
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
+    def delete_margin(self):
+        if not self.app.is_sim and self.app.telegrambotcontrol:
             try:
-                os.remove(
-                    os.path.join(
-                        self.app.telegramdatafolder, "telegram_data", self.filename
-                    )
-                )
+                os.remove(os.path.join(self.app.telegramdatafolder, "telegram_data", self.filename))
             except FileNotFoundError:
                 pass
 
-    def closetrade(self, ts, price, margin):
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
+    def close_trade(self, ts, price, margin):
+        if not self.app.is_sim and self.app.telegrambotcontrol:
             write_ok, try_count = False, 0
             while not write_ok and try_count <= 5:
                 try_count += 1
                 self._read_data("data.json")
-                self.data["trades"].update(
-                    {ts: {"pair": self.market, "price": price, "margin": margin}}
-                )
+                self.data["trades"].update({ts: {"pair": self.market, "price": price, "margin": margin}})
                 write_ok = self._write_data("data.json")
                 if not write_ok:
                     sleep(1)
                     continue
                 self.remove_open_order()
 
-    def checkmanualbuysell(self) -> str:
+    def check_manual_buy_sell(self) -> str:
         result = "WAIT"
 
         if self._read_data() and "botcontrol" in self.data:
@@ -237,32 +242,34 @@ class TelegramBotHelper:
 
         return result
 
-    def checkbotcontrolstatus(self) -> str:
+    def check_bot_control_status(self) -> str:
         result = "active"
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
+        if not self.app.is_sim and self.app.telegrambotcontrol:
             if self._read_data() and "botcontrol" in self.data:
                 result = self.data["botcontrol"]["status"]
 
         return result
 
-    def updatebotstatus(self, status) -> None:
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
+    def update_bot_status(self, status) -> None:
+        if not self.app.is_sim and self.app.telegrambotcontrol:
             if self._read_data() and "botcontrol" in self.data:
                 if not self.data["botcontrol"]["status"] == status:
                     self.data["botcontrol"]["status"] = status
                     self._write_data()
 
-    def removeactivebot(self) -> None:
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
-            self.deletemargin()
+    def remove_active_bot(self) -> None:
+        if not self.app.is_sim and self.app.telegrambotcontrol:
+            self.delete_margin()
 
     def save_scanner_output(self, exchange, quote, output: DataFrame) -> None:
         try:
             os.remove(
-                    os.path.join(
-                        self.app.telegramdatafolder, "telegram_data", f"{exchange}_{quote}_output.json"
-                    )
+                os.path.join(  # TODO: path -> ntpath for Windows, posixpath for Linux, macpath for Mac OSX
+                    self.app.telegramdatafolder,
+                    "telegram_data",
+                    f"{exchange}_{quote}_output.json",
                 )
+            )
         except FileNotFoundError:
             pass
 
@@ -290,7 +297,7 @@ class TelegramBotHelper:
         )
 
     def add_open_order(self):
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
+        if not self.app.is_sim and self.app.telegrambotcontrol:
             write_ok, try_count = False, 0
             while not write_ok and try_count <= 5:
                 try_count += 1
@@ -298,13 +305,13 @@ class TelegramBotHelper:
                 if self.market in self.data["opentrades"]:
                     if self.exchange != self.data["opentrades"][self.market]:
                         return
-                self.data["opentrades"].update({self.market : {"exchange": self.exchange.value}})
+                self.data["opentrades"].update({self.market: {"exchange": self.exchange.value}})
                 write_ok = self._write_data("data.json")
                 if not write_ok:
                     sleep(1)
 
     def remove_open_order(self):
-        if not self.app.isSimulation() and self.app.enableTelegramBotControl():
+        if not self.app.is_sim and self.app.telegrambotcontrol:
             write_ok, try_count = False, 0
             while not write_ok and try_count <= 5:
                 try_count += 1
@@ -317,4 +324,3 @@ class TelegramBotHelper:
                 write_ok = self._write_data("data.json")
                 if not write_ok:
                     sleep(1)
-

@@ -2,7 +2,11 @@ import os
 import sys
 import time
 import signal
-from models.exchange.binance import WebSocketClient as BWebSocketClient
+
+sys.path.insert(0, ".")
+
+from models.exchange.kucoin import WebSocketClient as KWebSocketClient  # noqa: E402
+from models.exchange.Granularity import Granularity  # noqa: E402
 
 
 def cls():
@@ -16,12 +20,7 @@ def handler(signum, frame):
 
 
 try:
-    websocket = BWebSocketClient(
-        [
-            "BTCUSDT",
-        ],
-        "1m",
-    )
+    websocket = KWebSocketClient(["NHCT-USDT"], Granularity.FIVE_MINUTES)
     websocket.start()
     message_count = 0
     while True:
@@ -33,6 +32,7 @@ try:
                 cls()
                 print("\nMessageCount =", "%i \n" % websocket.message_count)
                 print(websocket.candles)
+                print(websocket.tickers)
                 message_count = websocket.message_count
                 time.sleep(5)  # output every 5 seconds, websocket is realtime
 

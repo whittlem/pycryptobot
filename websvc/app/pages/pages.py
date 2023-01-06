@@ -2,7 +2,7 @@ import re
 import sys
 import datetime
 
-sys.path.append(".")
+# sys.path.append(".")
 # pylint: disable=import-error
 from models.Trading import TechnicalAnalysis
 from models.exchange.binance import PublicAPI as BPublicAPI
@@ -42,14 +42,14 @@ def footer() -> str:
     """
 
 
-def isBinanceMarketValid(market: str) -> bool:
+def is_binance_market_valid(market: str) -> bool:
     p = re.compile(r"^[A-Z0-9]{5,12}$")
     if p.match(market):
         return True
     return False
 
 
-def isCoinbaseMarketValid(market: str) -> bool:
+def is_coinbase_market_valid(market: str) -> bool:
     p = re.compile(r"^[0-9A-Z]{1,20}\-[1-9A-Z]{2,5}$")
     if p.match(market):
         return True
@@ -96,7 +96,7 @@ class Pages:
             html = ""
 
             api = BPublicAPI()
-            resp = api.getMarkets24HrStats()
+            resp = api.get_markets_24hr_stats()
             for market in resp:
                 if market["lastPrice"] > market["openPrice"]:
                     html += f"""
@@ -171,7 +171,7 @@ class Pages:
             html = ""
 
             api = CPublicAPI()
-            resp = api.getMarkets24HrStats()
+            resp = api.get_markets_24hr_stats()
             for market in resp:
                 stats_30day_volume = 0
                 if "stats_30day" in resp[market]:
@@ -264,8 +264,8 @@ class Pages:
 
     @staticmethod
     def technical_analysis(exchange: str, market: str, g1, g2, g3) -> str:
-        if exchange == 'binance':
-            if not isBinanceMarketValid(market):
+        if exchange == "binance":
+            if not is_binance_market_valid(market):
                 return f"""
                 {header()}
                 <h4>Invalid Market!</h4>
@@ -275,8 +275,8 @@ class Pages:
                 </div>
                 {footer()}
                 """
-        elif exchange == 'coinbasepro':
-            if not isCoinbaseMarketValid(market):
+        elif exchange == "coinbasepro":
+            if not is_coinbase_market_valid(market):
                 return f"""
                 {header()}
                 <h4>Invalid Market!</h4>
@@ -289,160 +289,169 @@ class Pages:
         else:
             return "Invalid Exchange!"
 
-        if exchange == 'binance':
+        if exchange == "binance":
             api = BPublicAPI()
-        if exchange == 'coinbasepro':
+        if exchange == "coinbasepro":
             api = CPublicAPI()
-        ticker = api.getTicker(market)
+        ticker = api.get_ticker(market)
 
-        ta = TechnicalAnalysis(api.getHistoricalData(market, g1, None))
-        ta.addAll()
-        df_15m = ta.getDataFrame()
+        ta = TechnicalAnalysis(api.get_historical_data(market, g1, None))
+        ta.add_all()
+        df_15m = ta.get_df()
         df_15m_last = df_15m.tail(1)
 
-        ta = TechnicalAnalysis(api.getHistoricalData(market, g2, None))
-        ta.addAll()
-        df_1h = ta.getDataFrame()
+        ta = TechnicalAnalysis(api.get_historical_data(market, g2, None))
+        ta.add_all()
+        df_1h = ta.get_df()
         df_1h_last = df_1h.tail(1)
 
-        ta = TechnicalAnalysis(api.getHistoricalData(market, g3, None))
-        ta.addAll()
-        df_6h = ta.getDataFrame()
+        ta = TechnicalAnalysis(api.get_historical_data(market, g3, None))
+        ta.add_all()
+        df_6h = ta.get_df()
         df_6h_last = df_6h.tail(1)
 
-        if exchange == 'binance':
-            exchange_name = 'Binance'
-        elif exchange == 'coinbasepro':
-            exchange_name = 'Coinbase Pro'
+        if exchange == "binance":
+            exchange_name = "Binance"
+        elif exchange == "coinbasepro":
+            exchange_name = "Coinbase Pro"
 
-        rsi14_15m_class = 'table-normal'
-        rsi14_15m_desc = 'Uneventful'
-        if df_15m_last['rsi14'].values[0] > 70:
-            rsi14_15m_class = 'table-danger'
-            rsi14_15m_desc = 'Overbought (Sell)'
-        elif df_15m_last['rsi14'].values[0] < 30:
-            rsi14_15m_class = 'table-success'
-            rsi14_15m_desc = 'Oversold (Buy)'
+        rsi14_15m_class = "table-normal"
+        rsi14_15m_desc = "Uneventful"
+        if df_15m_last["rsi14"].values[0] > 70:
+            rsi14_15m_class = "table-danger"
+            rsi14_15m_desc = "Overbought (Sell)"
+        elif df_15m_last["rsi14"].values[0] < 30:
+            rsi14_15m_class = "table-success"
+            rsi14_15m_desc = "Oversold (Buy)"
 
-        rsi14_1h_class = 'table-normal'
-        rsi14_1h_desc = 'Uneventful'
-        if df_1h_last['rsi14'].values[0] > 70:
-            rsi14_1h_class = 'table-danger'
-            rsi14_1h_desc = 'Overbought (Sell)'
-        elif df_1h_last['rsi14'].values[0] < 30:
-            rsi14_1h_class = 'table-success'
-            rsi14_1h_desc = 'Oversold (Buy)'
+        rsi14_1h_class = "table-normal"
+        rsi14_1h_desc = "Uneventful"
+        if df_1h_last["rsi14"].values[0] > 70:
+            rsi14_1h_class = "table-danger"
+            rsi14_1h_desc = "Overbought (Sell)"
+        elif df_1h_last["rsi14"].values[0] < 30:
+            rsi14_1h_class = "table-success"
+            rsi14_1h_desc = "Oversold (Buy)"
 
-        rsi14_6h_class = 'table-normal'
-        rsi14_6h_desc = 'Uneventful'
-        if df_6h_last['rsi14'].values[0] > 70:
-            rsi14_6h_class = 'table-danger'
-            rsi14_6h_desc = 'Overbought (Sell)'
-        elif df_6h_last['rsi14'].values[0] < 30:
-            rsi14_6h_class = 'table-success'
-            rsi14_6h_desc = 'Oversold (Buy)'
+        rsi14_6h_class = "table-normal"
+        rsi14_6h_desc = "Uneventful"
+        if df_6h_last["rsi14"].values[0] > 70:
+            rsi14_6h_class = "table-danger"
+            rsi14_6h_desc = "Overbought (Sell)"
+        elif df_6h_last["rsi14"].values[0] < 30:
+            rsi14_6h_class = "table-success"
+            rsi14_6h_desc = "Oversold (Buy)"
 
-        stochrsi14_15m_class = 'table-normal'
-        stochrsi14_15m_desc = 'Uneventful'
-        if df_6h_last['stochrsi14'].values[0] > 0.8:
-            stochrsi14_6h_class = 'table-danger'
-            stochrsi14_6h_desc = 'Overbought (Sell)'
-        elif df_6h_last['stochrsi14'].values[0] < 0.2:
-            stochrsi14_6h_class = 'table-success'
-            stochrsi14_6h_desc = 'Oversold (Buy)'
+        williamsr14_15m_class = "table-normal"
+        williamsr14_15m_desc = "Uneventful"
+        if df_15m_last["williamsr14"].values[0] > -20:
+            williamsr14_15m_class = "table-danger"
+            williamsr14_15m_desc = "Overbought (Sell)"
+        elif df_15m_last["williamsr14"].values[0] < -80:
+            williamsr14_15m_class = "table-success"
+            williamsr14_15m_desc = "Oversold (Buy)"
 
-        stochrsi14_1h_class = 'table-normal'
-        stochrsi14_1h_desc = 'Uneventful'
-        if df_1h_last['stochrsi14'].values[0] > 0.8:
-            stochrsi14_1h_class = 'table-danger'
-            stochrsi14_1h_desc = 'Overbought (Sell)'
-        elif df_1h_last['stochrsi14'].values[0] < 0.2:
-            stochrsi14_1h_class = 'table-success'
-            stochrsi14_1h_desc = 'Oversold (Buy)'
+        williamsr14_1h_class = "table-normal"
+        williamsr14_1h_desc = "Uneventful"
+        if df_1h_last["williamsr14"].values[0] > -20:
+            williamsr14_1h_class = "table-danger"
+            williamsr14_1h_desc = "Overbought (Sell)"
+        elif df_1h_last["williamsr14"].values[0] < -80:
+            williamsr14_1h_class = "table-success"
+            williamsr14_1h_desc = "Oversold (Buy)"
 
-        stochrsi14_6h_class = 'table-normal'
-        stochrsi14_6h_desc = 'Uneventful'
-        if df_6h_last['stochrsi14'].values[0] > 0.8:
-            stochrsi14_6h_class = 'table-danger'
-            stochrsi14_6h_desc = 'Overbought (Sell)'
-        elif df_6h_last['stochrsi14'].values[0] < 0.2:
-            stochrsi14_6h_class = 'table-success'
-            stochrsi14_6h_desc = 'Oversold (Buy)'
+        williamsr14_6h_class = "table-normal"
+        williamsr14_6h_desc = "Uneventful"
+        if df_6h_last["williamsr14"].values[0] > -20:
+            williamsr14_6h_class = "table-danger"
+            williamsr14_6h_desc = "Overbought (Sell)"
+        elif df_6h_last["williamsr14"].values[0] < -80:
+            williamsr14_6h_class = "table-success"
+            williamsr14_6h_desc = "Oversold (Buy)"
 
-        williamsr14_15m_class = 'table-normal'
-        williamsr14_15m_desc = 'Uneventful'
-        if df_15m_last['williamsr14'].values[0] > -20:
-            williamsr14_15m_class = 'table-danger'
-            williamsr14_15m_desc = 'Overbought (Sell)'
-        elif df_15m_last['williamsr14'].values[0] < -80:
-            williamsr14_15m_class = 'table-success'
-            williamsr14_15m_desc = 'Oversold (Buy)'
+        adx14_15m_class = "table-normal"
+        adx14_15m_desc = "Normal Trend"
+        if (
+            df_15m_last["adx14"].values[0] > 25
+            and df_15m_last["ema12"].values[0] >= df_15m_last["ema26"].values[0]
+        ):
+            adx14_15m_class = "table-success"
+            adx14_15m_desc = "Strong Trend Up"
+        elif (
+            df_15m_last["adx14"].values[0] > 25
+            and df_15m_last["ema12"].values[0] < df_15m_last["ema26"].values[0]
+        ):
+            adx14_15m_class = "table-danger"
+            adx14_15m_desc = "Strong Trend Down"
+        elif (
+            df_15m_last["adx14"].values[0] < 20
+            and df_15m_last["ema12"].values[0] >= df_15m_last["ema26"].values[0]
+        ):
+            adx14_15m_class = "table-success"
+            adx14_15m_desc = "Weak Trend Up"
+        elif (
+            df_15m_last["adx14"].values[0] < 20
+            and df_15m_last["ema12"].values[0] < df_15m_last["ema26"].values[0]
+        ):
+            adx14_15m_class = "table-danger"
+            adx14_15m_desc = "Weak Trend Up"
 
-        williamsr14_1h_class = 'table-normal'
-        williamsr14_1h_desc = 'Uneventful'
-        if df_1h_last['williamsr14'].values[0] > -20:
-            williamsr14_1h_class = 'table-danger'
-            williamsr14_1h_desc = 'Overbought (Sell)'
-        elif df_1h_last['williamsr14'].values[0] < -80:
-            williamsr14_1h_class = 'table-success'
-            williamsr14_1h_desc = 'Oversold (Buy)'
+        adx14_1h_class = "table-normal"
+        adx14_1h_desc = "Normal Trend"
+        if (
+            df_1h_last["adx14"].values[0] > 25
+            and df_1h_last["ema12"].values[0] >= df_1h_last["ema26"].values[0]
+        ):
+            adx14_1h_class = "table-success"
+            adx14_1h_desc = "Strong Trend Up"
+        elif (
+            df_1h_last["adx14"].values[0] > 25
+            and df_1h_last["ema12"].values[0] < df_1h_last["ema26"].values[0]
+        ):
+            adx14_1h_class = "table-danger"
+            adx14_1h_desc = "Strong Trend Down"
+        elif (
+            df_1h_last["adx14"].values[0] < 20
+            and df_1h_last["ema12"].values[0] >= df_1h_last["ema26"].values[0]
+        ):
+            adx14_1h_class = "table-success"
+            adx14_1h_desc = "Weak Trend Up"
+        elif (
+            df_1h_last["adx14"].values[0] < 20
+            and df_1h_last["ema12"].values[0] < df_1h_last["ema26"].values[0]
+        ):
+            adx14_1h_class = "table-danger"
+            adx14_1h_desc = "Weak Trend Up"
 
-        williamsr14_6h_class = 'table-normal'
-        williamsr14_6h_desc = 'Uneventful'
-        if df_6h_last['williamsr14'].values[0] > -20:
-            williamsr14_6h_class = 'table-danger'
-            williamsr14_6h_desc = 'Overbought (Sell)'
-        elif df_6h_last['williamsr14'].values[0] < -80:
-            williamsr14_6h_class = 'table-success'
-            williamsr14_6h_desc = 'Oversold (Buy)'
-
-        adx14_15m_class = 'table-normal'
-        adx14_15m_desc = 'Normal Trend'
-        if df_15m_last['adx14'].values[0] > 25 and df_15m_last['ema12'].values[0] >= df_15m_last['ema26'].values[0]:
-            adx14_15m_class = 'table-success'
-            adx14_15m_desc = 'Strong Trend Up'
-        elif df_15m_last['adx14'].values[0] > 25 and df_15m_last['ema12'].values[0] < df_15m_last['ema26'].values[0]:
-            adx14_15m_class = 'table-danger'
-            adx14_15m_desc = 'Strong Trend Down'
-        elif df_15m_last['adx14'].values[0] < 20 and df_15m_last['ema12'].values[0] >= df_15m_last['ema26'].values[0]:
-            adx14_15m_class = 'table-success'
-            adx14_15m_desc = 'Weak Trend Up'
-        elif df_15m_last['adx14'].values[0] < 20 and df_15m_last['ema12'].values[0] < df_15m_last['ema26'].values[0]:
-            adx14_15m_class = 'table-danger'
-            adx14_15m_desc = 'Weak Trend Up'
-
-        adx14_1h_class = 'table-normal'
-        adx14_1h_desc = 'Normal Trend'
-        if df_1h_last['adx14'].values[0] > 25 and df_1h_last['ema12'].values[0] >= df_1h_last['ema26'].values[0]:
-            adx14_1h_class = 'table-success'
-            adx14_1h_desc = 'Strong Trend Up'
-        elif df_1h_last['adx14'].values[0] > 25 and df_1h_last['ema12'].values[0] < df_1h_last['ema26'].values[0]:
-            adx14_1h_class = 'table-danger'
-            adx14_1h_desc = 'Strong Trend Down'
-        elif df_1h_last['adx14'].values[0] < 20 and df_1h_last['ema12'].values[0] >= df_1h_last['ema26'].values[0]:
-            adx14_1h_class = 'table-success'
-            adx14_1h_desc = 'Weak Trend Up'
-        elif df_1h_last['adx14'].values[0] < 20 and df_1h_last['ema12'].values[0] < df_1h_last['ema26'].values[0]:
-            adx14_1h_class = 'table-danger'
-            adx14_1h_desc = 'Weak Trend Up'
-
-        adx14_6h_class = 'table-normal'
-        adx14_6h_desc = 'Normal Trend'
-        if df_6h_last['adx14'].values[0] > 25 and df_6h_last['ema12'].values[0] >= df_6h_last['ema26'].values[0]:
-            adx14_6h_class = 'table-success'
-            adx14_6h_desc = 'Strong Trend Up'
-        elif df_6h_last['adx14'].values[0] > 25 and df_6h_last['ema12'].values[0] < df_6h_last['ema26'].values[0]:
-            adx14_6h_class = 'table-danger'
-            adx14_6h_desc = 'Strong Trend Down'
-        elif df_6h_last['adx14'].values[0] < 20 and df_6h_last['ema12'].values[0] >= df_6h_last['ema26'].values[0]:
-            adx14_6h_class = 'table-success'
-            adx14_6h_desc = 'Weak Trend Up'
-        elif df_6h_last['adx14'].values[0] < 20 and df_6h_last['ema12'].values[0] < df_6h_last['ema26'].values[0]:
-            adx14_6h_class = 'table-danger'
-            adx14_6h_desc = 'Weak Trend Up'
+        adx14_6h_class = "table-normal"
+        adx14_6h_desc = "Normal Trend"
+        if (
+            df_6h_last["adx14"].values[0] > 25
+            and df_6h_last["ema12"].values[0] >= df_6h_last["ema26"].values[0]
+        ):
+            adx14_6h_class = "table-success"
+            adx14_6h_desc = "Strong Trend Up"
+        elif (
+            df_6h_last["adx14"].values[0] > 25
+            and df_6h_last["ema12"].values[0] < df_6h_last["ema26"].values[0]
+        ):
+            adx14_6h_class = "table-danger"
+            adx14_6h_desc = "Strong Trend Down"
+        elif (
+            df_6h_last["adx14"].values[0] < 20
+            and df_6h_last["ema12"].values[0] >= df_6h_last["ema26"].values[0]
+        ):
+            adx14_6h_class = "table-success"
+            adx14_6h_desc = "Weak Trend Up"
+        elif (
+            df_6h_last["adx14"].values[0] < 20
+            and df_6h_last["ema12"].values[0] < df_6h_last["ema26"].values[0]
+        ):
+            adx14_6h_class = "table-danger"
+            adx14_6h_desc = "Weak Trend Up"
 
         def arima_predictions(even_rows: bool = True):
-            results_ARIMA = ta.seasonalARIMAModel()
+            results_ARIMA = ta.seasonal_arima_model()
             start_date = df_1h.last_valid_index()
             end_date = start_date + datetime.timedelta(days=3)
             arima_pred = results_ARIMA.predict(
@@ -455,7 +464,7 @@ class Pages:
                 arima_pred_rows = arima_pred.iloc[1::2]
 
             html = ""
-            for index, pred in arima_pred_rows.iteritems():
+            for index, pred in arima_pred_rows.items():
                 html += f"""
                 <tbody>
                     <tr class={'table-success' if pred >= ticker[1] else 'table-danger'}>
@@ -641,51 +650,6 @@ class Pages:
                             <tr class="{rsi14_6h_class}">
                                 <td>{'%.08f' % round(df_6h_last['rsi14'].values[0], 8)}</td>
                                 <td>{rsi14_6h_desc}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-sm">
-                    <table class="table table-sm table-light table-hover table-striped">
-                        <thead>
-                            <th scope="col" style="width: 50%">StochRSI14</th>
-                            <th scope="col" style="width: 50%">Status</th>
-                        </thead>
-                        <tbody>
-                            <tr class="{stochrsi14_15m_class}">
-                                <td>{'%.08f' % round(df_15m_last['stochrsi14'].values[0], 8)}</td>
-                                <td>{stochrsi14_15m_desc}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="col-sm">
-                    <table class="table table-sm table-light table-hover table-striped">
-                        <thead>
-                            <th scope="col" style="width: 50%">StochRSI14</th>
-                            <th scope="col" style="width: 50%">Status</th>
-                        </thead>
-                        <tbody>
-                            <tr class="{stochrsi14_1h_class}">
-                                <td>{'%.08f' % round(df_1h_last['stochrsi14'].values[0], 8)}</td>
-                                <td>{stochrsi14_1h_desc}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="col-sm">
-                    <table class="table table-sm table-light table-hover table-striped">
-                        <thead>
-                            <th scope="col" style="width: 50%">StochRSI14</th>
-                            <th scope="col" style="width: 50%">Status</th>
-                        </thead>
-                        <tbody>
-                            <tr class="{stochrsi14_6h_class}">
-                                <td>{'%.08f' % round(df_6h_last['stochrsi14'].values[0], 8)}</td>
-                                <td>{stochrsi14_6h_desc}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1014,4 +978,4 @@ class Pages:
         </div>
 
         {footer()}
-        """
+        """   # noqa: W292

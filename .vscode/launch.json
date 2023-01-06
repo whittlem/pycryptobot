@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "pycryptobot.py",
+            "console": "integratedTerminal",
+            "args": [ "--exchange", "coinbasepro", "--telegram", "0", "--sim", "fast" ],
+        }
+    ]
+}

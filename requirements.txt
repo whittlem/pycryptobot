@@ -1,5 +1,6 @@
 urllib3>=1.26.5
 pandas
+pandas-ta
 numpy
 requests==2.25.0
 statsmodels
@@ -18,3 +19,6 @@ bottleneck
 dash
 dash-daq
 dash-bootstrap-components
+codespell
+rich
+regex

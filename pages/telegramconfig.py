@@ -1,6 +1,7 @@
 from dash import html
 import dash_bootstrap_components as dbc
 from models.telegram import Wrapper
+
 # from models.exchange import Granularity
 
 tg_wrapper = Wrapper("config.json", "webgui")
@@ -22,7 +23,8 @@ layout = html.Div(
                         html.Div(
                             [
                                 dbc.Label("Telegram Token"),
-                                dbc.Input(value=tg_token,
+                                dbc.Input(
+                                    value=tg_token,
                                     id="input",
                                     placeholder="Enter Token ... ",
                                     type="password",
@@ -36,7 +38,8 @@ layout = html.Div(
                         html.Div(
                             [
                                 dbc.Label("Telegram User Id"),
-                                dbc.Input(value=tg_userid,
+                                dbc.Input(
+                                    value=tg_userid,
                                     id="input",
                                     placeholder="Enter Id ... ",
                                     type="password",
@@ -48,7 +51,8 @@ layout = html.Div(
                         html.Div(
                             [
                                 dbc.Label("Telegram Group Id"),
-                                dbc.Input(value=tg_clientid,
+                                dbc.Input(
+                                    value=tg_clientid,
                                     id="input",
                                     placeholder="Optional ... ",
                                     type="password",

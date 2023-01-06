@@ -4,11 +4,11 @@ import pytest
 
 sys.path.append('.')
 # pylint: disable=import-error
-from models.PyCryptoBot import PyCryptoBot
+from controllers.PyCryptoBot import PyCryptoBot
 
 app = PyCryptoBot()
 
 def test_get_version_from_readme():
     global app
-    version = app.getVersionFromREADME()
+    version = app.get_version_from_readme(app)
     assert version != 'v0.0.0'

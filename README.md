@@ -1,7 +1,6 @@
+# Python Crypto Bot v7.0.0 (pycryptobot)
+
 [![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg) [![Tests](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)
-
-
-# Python Crypto Bot v6.3.1 (pycryptobot)
 
 ## Join our chat on Telegram
 
@@ -378,8 +377,11 @@ Special buy cases:
 * "nobuynearhighpcnt" to specify the percentage from high that the bot should not buy if "disablebuynearhigh" is not specified.
 * "buymaxsize" specifies a fixed max amount of the quote currency to buy with.
 * "buylastsellsize" when enabled, bot will buy the same size as the last sell size for the current market.
-* "trailingbuypcnt" specifies the percentage for the price to increase before placing buy order after receiving buy signal
-* "trailingimmediatebuy" will trigger an immediate buy if "trailingbuypcnt" is reached.  Use caution, may not advisable on all markets. Default is to wait until candle close to process buy like a standard buy signal.
+* "trailingbuypcnt" specifies the percentage for the self.price to increase before placing buy order after receiving buy signal. Eg: 0.5   (must be positive integer)
+Note: the trailingbuy function will buy if the self.price is within 10% of the trailingbuypcnt setting.
+* "trailingbuyimmediatepcnt" is a separate setting for percentage of self.price increase that can be used with "trailingimmediatebuy" or with the new Custom Strategies. (see separate explanation)
+     Eg: 1.5   (must be positive integer)
+* "trailingimmediatebuy" (0 to disable, 1 to enable, disabled by default) will trigger an immediate buy if "trailingbuyimmediatepcnt" is reached.  Use caution, may not advisable on all markets. Without "trailingimmediatebuy", default is to wait until candle close to process buy like a standard buy signal. (As of v6.3.0, "trailingbuyimmediatepcnt" is required for an immediate buy.)
 * "marketmultibuycheck" when enabled, bot will perform an additional check on base and quote balance to prevent multiple buys.
         It has been determined that some market pairs have problem API responses which can create a multiple buy issue.
         Please Note:  "marketmultibuycheck" will conflict with configurations that use "sellpercent".
@@ -393,26 +395,38 @@ Special sell cases:
 
 * "nosellminpcnt" specifies the lower margin limit to not sell above
 * "nosellmaxpcnt" specifies the upper margin limit to not sell below
-* If "sellatloss" is on, bot will sell if price drops below the lower Fibonacci band
+* If "sellatloss" is on, bot will sell if self.price drops below the lower Fibonacci band
 * If "sellatloss" is on and "selllowerpcnt" is specified the bot will sell at the specified amount E.g. -2 for -2% margin
 * If "sellatloss" is on and "trailingstoploss" is specified the bot will sell at the specified amount below the buy high
 * If "sellupperpcnt" is specified the bot will sell at the specified amount E.g. 10 for 10% margin (Depending on the conditions I lock in profit at 3%)
-* If the margin exceeds 3% and the price reaches a Fibonacci band it will sell to lock in profit
+* If the margin exceeds 3% and the self.price reaches a Fibonacci band it will sell to lock in profit
 * If the margin exceeds 3% but a strong reversal is detected with negative OBV and MACD < Signal it will sell
 * "sellatloss" set to 0 prevents selling at a loss
 * "preventloss" set to 1 to force a sell before margin is negative (losing money on active trade).  Default trigger point is 1%.  If nosellmaxpcnt is set it will be used as the default, unless preventlosstrigger is set to set a custom trigger point.
 * "preventlosstrigger" is the margin set point that will trigger/allow the preventloss function to start watching the margin and will sell when margin reaches 0.1% or lower unless preventlossmargin is set.
-  NOTE: to disable preventlosstrigger and use preventlossmargin only, set the trigger to 0.
+    NOTE: to disable preventlosstrigger and use preventlossmargin only, set the trigger to 0.
 * "preventlossmargin" is the margin set point that will cause an immediate sell to prevent a loss.  If this is not set, a default of 0.1% will be used.  "preventlossmargin" can be used by itself or in conjunction with "preventlosstrigger".
+* "trailingsellpcnt" specifies the percentage for the self.price to decrease before placing sell order after receiving sell signal.  Eg: -0.5   (must be negative integer)
+Note: the trailingsell function will sell if the self.price is within 10% of the trailingsellpcnt setting.
+* "trailingsellimmediatepcnt" is a separate setting for percentage of self.price decrease that can be used with "trailingimmediatesell" or with the new Custom Strategies. (see separate explanation)   Eg: -1.5   (must be negative integer)
+* "trailingimmediatesell" (0 to disable, 1 to enable, disabled by default) will trigger an immediate sell if "trailingsellimmediatepcnt" is reached.  Use caution, may not advisable on all markets. Without "trailingimmediatesell", default is to wait until candle close to process sell like a standard sell signal.
+* "trailingsellbailoutpcnt" is a setting that is used with trailing sell and works like "trailingimmediatesell" or like "selllowerpcnt".  This is the percentage of decrease when you absolutely want to sell right away or "bailout" of the trade.  Regardless of other trailing sell settings or anything in Custom Strategies, this is the set point that if the self.price is dropping like a rock, you want to "bailout" NOW because you definitely don't want to wait until candle close or you're going to lose funds.   Eg: -3.0   (must be negative integer)
+* "dynamictsl" (Dynamic Trailing Stop Loss) when enabled, with the additional required settings, works like the default trailingstoploss, but dynamically increases both the trigger margin and the stoploss percentage. Set to 1 to enabled and it's disabled by default.  To use the original, static trailingstoploss, just use "trailingstoploss" and "trailingstoplosstrigger"
+* "tslmultiplier" this is a positive integer (eg. 1.5) that is multiplied by "trailingstoploss" when "trailingstoplosstrigger" is reached to set the next "trailingstoploss" level.
+* "tsltriggermultiplier" is a positive integer (eg. 1.5) that is multiplied by "trailingstoplosstrigger" when the previous trigger settings is reach to set the next "trailingstoplosstrigger" level.
+    NOTE: both "trailingstoploss" and "trailingstoplosstrigger" settings are still required WITH "dynamictsl" as well as "tslmultipler", "tsltriggermultiplier" and "tslmaxpcnt" are also required.
+* "adjusttotalperiods" is an integer > 26 and < 300 used to adjust the total periods (candles) in the current dataframe for the current market used in technical analysis.  This setting came about because Kucoin made changes to their API that is currently only returning 100 periods (candles) for responses.  Hopefully this problem will be resolved, but adjusting the total periods can be useful when trying to trade new crypto pairs that don't have a full 300 periods of data yet.
+    *** Note:  if adjusting to less than 300 periods, Trading Graphs, SMA Buy Signals and "disablebullonly" will NOT work correctly as well as some of the other indicators.  Only use this setting if absolutely necessary or you know what you are doing.  Pycryptobot is designed to analyze 300 candles for each market.
 
 ## Optional Options
 
     --stats                             Display order profit and loss (P&L) report
     --autorestart                       Automatically restart the bot on error
-    --sellatresistance                  Sells if the price reaches either resistance or Fibonacci band
-    --enabletelegrambotcontrol          Enable bot control via Telegram
-    --sellsmartswitch                 Enables smart switching to 5 minute granularity after a buy is placed
+    --sellatresistance                  Sells if the self.price reaches either resistance or Fibonacci band
+    --telegrambotcontrol          Enable bot control via Telegram
+    --sellsmartswitch                   Enables smart switching to 5 minute granularity after a buy is placed
     --enableinsufficientfundslogging    Stop insufficient fund errors from stopping the bot, instead log and continue
+    --manual_trades_only                Enable Manual Trading Only for pairs you want to HODL and you don't want to trade automatically
 
 ## Disabling Default Functionality
 
@@ -440,7 +454,7 @@ The "sellatloss" option disabled has it's advantages and disadvantages. It does 
 ## "Prevent Loss" explained
 
 The "preventloss" option and it's corresponding settings add more options to control losses or minimize losses on trades.  "preventloss" does not depend on "sellatloss" to work.  The idea of Prevent Loss is to allow you to still use all the other sell criteria and the no sell zones as you would like, but still sell prior to the margin dropping below 0%.  Note: there are still transaction fees from the exchange, this has no effect on fees.  You could increase preventlossmargin to account for fees if you would like.
-If "preventloss" is set to 1 and enabled, it will watch for the "preventlosstrigger" margin percentage to be reached. If "preventloss" is enabled and "preventlosstrigger" is NOT in you configuration the default "preventlosstrigger" is 1%.  Once the trigger percentage is reached, preventloss will monitor the margin until it falls to the "preventlossmargin" set point.  If "preventlossmargin" is not in your configuration, it has a default setting of 0.1% to make the best attempt to trigger a sell before the margin drops below 0%.  On very fast falling prices, the margin could fall below 0% before the transaction is processed by the exchange.  Set at a level that you are comfortable with so the margin falls in the range you would like.
+If "preventloss" is set to 1 and enabled, it will watch for the "preventlosstrigger" margin percentage to be reached. If "preventloss" is enabled and "preventlosstrigger" is NOT in you configuration the default "preventlosstrigger" is 1%.  Once the trigger percentage is reached, preventloss will monitor the margin until it falls to the "preventlossmargin" set point.  If "preventlossmargin" is not in your configuration, it has a default setting of 0.1% to make the best attempt to trigger a sell before the margin drops below 0%.  On very fast falling self.prices, the margin could fall below 0% before the transaction is processed by the exchange.  Set at a level that you are comfortable with so the margin falls in the range you would like.
 
 "preventloss" and "preventlossmargin" can be used without "preventlosstrigger" if you choose.  Set "preventlosstrigger" to 0 in your config to disable it and sell any time the margin drops below the "preventlosmargin" set point.  It is assumed that most users won't want this option which is why you have to disable "preventlosstrigger" for it to function in this manner.
 
@@ -448,10 +462,28 @@ Prevent Loss is not a required option.  It allows a little more control over you
 
 ## Trailing Buy Percent Explained
 
-When the bot issues a standard buy signal via all normal methods, it waits until the next candle close to buy.  Many times after a buy signal is given, the price for the pair in question will still fall.  Trailing buy will, by default,  check to make sure the price is moving in a positive/upward direction before it buys.  If the price goes lower after the buy signal is given, trailing buy will watch the price changes and will prevent a buy if the price is dropping until it starts to increase again.  This will actually make the bot buy at the lowest price monitored after the buy signal was received.  The default is 0% of increase, so it will only prevent buying from the buy signal until next candle close if the price is decreasing.  At close, if the price is still falling, it will delay the buy again until next close.  This essentially takes an extra step to help stop you from possibly losing profit immediately after a buy, especially when using MACD signals only.
+When the bot issues a standard buy signal via all normal methods, it waits until the next candle close to buy.  Many times after a buy signal is given, the self.price for the pair in question will still fall.  Trailing buy will, by default,  check to make sure the self.price is moving in a positive/upward direction before it buys.  If the self.price goes lower after the buy signal is given, trailing buy will watch the self.price changes and will prevent a buy if the self.price is dropping until it starts to increase again.  This will actually make the bot buy at the lowest self.price monitored after the buy signal was received.  The default is 0% of increase, so it will only prevent buying from the buy signal until next candle close if the self.price is decreasing.  At close, if the self.price is still falling, it will delay the buy again until next close.  This essentially takes an extra step to help stop you from possibly losing profit immediately after a buy, especially when using MACD signals only.
 "trailingbuypcnt" can be set at any percentage above 0.  Run some simualutions or use live: 0 to test the results of various percentage set points.  During testing, 1% had pretty good results, but all trade settings will vary based on market and pair being traded.  It is always recommended that you run tests before trading live with real funds.
 
-"trailingimmediatebuy" is another setting that can be used in conjunction with "trailingbuypcnt".  If "trailingimmediatebuy" is enabled (set to 1), "trailingbuypcnt" will buy immediately upon the set point being reached, instead of waiting until candle close.  Again, run tests to determine the best settings. 
+"trailingimmediatebuy" is another setting that can be used in conjunction with "trailingbuypcnt".  If "trailingimmediatebuy" is enabled (set to 1), "trailingbuypcnt" will buy immediately upon the set point being reached, instead of waiting until candle close.  Again, run tests to determine the best settings.
+
+## Trailing Sell Percent Explained
+
+Trailing Sell is essentially the opposite of Trailing Buy.  It works when a sell signal is received and watches the self.price to make sure it's actually decreasing before selling.  Indicators can trigger a sell signal, but the self.price might only drop -0.25% and then start to rise again.  Rather than selling right away (candle close), the self.price point is recorded at time the sell signal is received and monitored for decrease.  When the self.price drops to the "trailingsellpcnt" set point, the trailing sell is triggered and the bot will sell at candle close.  If the self.price increases above the set point, it is reset and starts tracking from there.  This will make sure you get as much profit as possible before selling.  If you watch charts and signals, you should be able to see the benefit to this setting over time.
+
+Additionally "trailingimmediatesell" and "trailingsellimmediatepcnt" are more options that can be used with trailing sell.  Set "trailingsellimmediatepcnt" below "trailingsellpcnt" as an extra level of loss protection.  When the bot issues a sell signal, sometimes the self.price drops slowly, but many time the self.prices drops quickly and this will make sure the sell happens before candle close if the self.price is dropping rapidly.  "trailingimmediatesell" enables this feature and uses "trailingsellimmediatepcnt" as the set point.
+
+Trailing Sell has one additional option, "trailingsellbailoutpcnt". This was added mostly for use with Custom Strategies because "trailingsellimmediatepcnt" is used differently with Custom Strategies, but can be used by itself, instead of requiring both "trailingimmediatesell" settings.  It works the same as "trailingimmediatesell", but only requires a negative percentage to be set with "trailingsellbailoutpcnt".  Think of this as a failsafe.  If by chance you had a buy and your bot is using 1 hour granularity and you get a sell signal just a few minutes after the top of the hour.  The bot will have to wait for candle close at the top of the next hour before it sells.  What if the self.price drops 25% within that hour?  Ouch!  That's a big loss.  Everyone has a different opinion of the set points, but it's not recommended to set this too close to 0.  A setting of -1.5 to -3 would probably be good.
+
+## Dynamic Trailing Stoploss Explained
+
+The default, static trailing stoploss works as follows:  when the margin of the current trade reaches the trailing stoploss trigger set point, the trigger is set and the bot watches for the margin to drop as much as the trailing stoploss setting.  If trigger setting is 5% and trailing stoploss setting is -1.5% and the margin reaches or passes 5%, the trigger is activated.  Now when the margin decreases -1.5% from the trigger point an immediate sell occurs.
+
+With Dynamic Trailing Stoploss, both the trigger and the stoploss settings dynamically increase as the margin continues to increase.  Many times the more the margin increases (symbol self.price increases), you may see bigger drops or dips in the chart as the self.price continues to climb.  By dynamically adjusting, as your margin gets bigger, most people are willing to accept a little bit bigger loss from the top before selling.  Because everyone has different opinions on what is a reasonable loss, that's why the multipliers are two different settings.
+
+Set the "trailingstoploss" and "trailingstoplosstrigger" starting points. (eg. -1 and 3)  Then enabled "dynamictsl" with a 1.  Add "tslmultiplier" (eg. 1.5) and "tsltriggermultipler" (eg. 1.5) and additionally, add "tslmaxpcnt" (eg. -5).
+
+Your bot does buy, the margin passes the initial trigger of 3%, the trigger is now active and if the self.price decreases -1% from the triggered or next highest margin, the bot will perform an immediate sell.  If the margin continues to increase and passes the initial trigger multiplied by "tsltriggermultiplier", the "trailingstoplosstrigger" is increased and "trailingstoploss" is  increased by "tslmultiplier".  Trigger:  3 X 1.5 = 4.5   Stoploss: -1 X 1.5 = -1.5   If the margin continues to increase and passes the next trigger, the process happens again.  There is a limit though, which is what "tslmaxpcnt" is for.  When the result of multiplying "trailingstoploss" by the multiplier is greater than or equal to "tslmaxpcnt", the increases stop and the last trigger and stoploss setting stay set until a sell occurs.
 
 ## Live Trading
 
@@ -613,7 +645,7 @@ For telegram, add a piece to the config.json as follows:
 
     "telegram" : {
         "token" : "<token>",
-        "user_Id" : "<user id>" 
+        "user_Id" : "<user id>"
         "client_id" : "<client id>"
     }
 
@@ -704,9 +736,9 @@ To keep track of the bots performance over time you can run the stats module. e.
 
 This will analyse all the completed buy/sell trade pairs to give stats on todays trades, the trades over the last 7 days, the trades over the last 30 days, and all-time trades.
 
-An optional flag of --statstartdate can be given to ignore all trades that happened before a specified date. The date must be of the format: yyyy-mm-dd. e.g.
+An optional flag of --statstart_date can be given to ignore all trades that happened before a specified date. The date must be of the format: yyyy-mm-dd. e.g.
 
-    python3 pycryptobot.py --stats --statstartdate 2021-6-01
+    python3 pycryptobot.py --stats --statstart_date 2021-6-01
 
 To get the stats from all your bots, another optional flag of --statgroup can be used. This takes a list of markets and merges the results into one output. e.g.
 
@@ -723,7 +755,7 @@ or via the config.json file e.g.
 Note: --statgroup only accepts a group of markets if the quote currency (in this example GBP) is the same.
 
 If you want more detail than the simple summary, add the optional flag --statdetail. This will print a more detailed list of the transactions.
---statdetail can work in conjunction with --statstartdate and --statgroup.
+--statdetail can work in conjunction with --statstart_date and --statgroup.
 
 ## Upgrading the bots
 
@@ -740,3 +772,92 @@ I've actually included this in the examples in how to start the bot that will do
 If you get stuck with anything email me or raise an issue in the repo and I'll help you sort it out. Raising an issue is probably better as the question and response may help others.
 
 Enjoy and happy trading! :)
+
+
+
+#### Advanced pycryptobot options ####
+As of version 6.3.0, the option to use custom strategies has been added as well as using the pandas-ta library from Kevin Johnson (twopirllc).  https://github.com/twopirllc/pandas-ta
+TA-Lib from John Benediktsson (mrjbq7) https://github.com/mrjbq7/ta-lib is also an option to be used in conjunction with pandas-ta.
+
+This is an separate, advanced section of this file because any editing requires SOME basic Python knowledge to make edits and more Python and pandas dataframe knowledge to make more complicated edits.
+
+New files:
+* models/Trading_Pta.py is a new version of the original Trading.py file that has been edited to use the pandas-ta library, if pandas-ta is installed and enabled in the config.json file.
+* models/Strategy_CS.py is an addition to the original Strategy.py file and is used specifically for new indicators added in Trading_Pta.py and has a new, weighted buy/sell signal system.
+* requirement-advanced.txt is an additional requirements text file that is used to install the pandas-ta library.  It works just like the original requirements.txt file for other Python modules, but is separated for those who do not want to use pandas-ta and the custom strategy files.  This file can be used in the future for optional modules for advanced features as well.
+* pandas_ta_help.py is a separate Python script for getting help with pandas-ta features and functions.  Rather than explaining how to use the pandas-ta help here, please refer to:  https://github.com/twopirllc/pandas-ta#help
+* config.json.advance.sample is a sample config with the required settings to use custom strategies as well as some of the other recent features of pycryptobot.
+
+Optional files:
+* models/Trading_myPta.py - to customize any of the indicators in Trading_Pta.py or add new ones, make a copy of Trading_Pta.py and rename it to Trading_myPta.py.
+* models/Strategy_myCS.py - to change weighted points settings, customize signal requirements or add new one, make a copy of Strategy_CS.py and rename it to Strategy_myCS.py.
+    These files are both detected automatically, if they exist, and will prevent any customization from being overwritten by future git updates.  Neither is a requirement and making a copy of one by itself will work fine.  Both the original and the new custom "my" versions can exist together.  If a version exists with "my" in the filename, that will be loaded first.  If the "my" version does not exist, the original will be used instead.  If both versions exist and you choose to use the original/default, either move or rename the "my" version to prevent it from being loaded.
+Note:  For the above custom files, please note the addition of "my" to the files names.
+
+Optional TA-Lib installation.  Per the pandas-ta documentation, if TA-Lib is installed, the formulas from TA-Lib will be used in place of the pandas-ta formulas.  Pycryptobot has been programmed to do the same.  After reading the pandas-ta documentation, if you would like to use TA-Lib, just install the library.  Pycryptobot will check if it's installed and if it is, enable it automatically.  If you would like to disable it later, use the myPta file and set the use_talib variable to False.
+
+
+To use pandas-ta and custom strategies, you will need 2 options added to your config.json file:
+
+* "enable_pandas_ta": 1     will enable pandas-ta and Trading_Pta.py.  This can be used without custom strategies and will use the original, default trading signal settings as described above in this file.
+* "enable_custom_strategies": 1     will enable custom strategies with Strategy_CS.py.  The default Strategy_CS.py requires pandas-ta to be enabled as many of the additional indicators and signals are not in the original Trading.py file.
+
+
+Initial setup:  (It is assumed that you have already gotten the basic installation and configuration completed as described above.)
+
+* Install pandas-ta library with:  python3 -m pip install -r requirements-advanced.txt
+* Optionally install TA-Lib per the documentation for the library found on github.
+* Add above settings to config.json file per preference.
+* Launch pycryptobot.py as you would for the standard configuration.
+
+To make edits to anything in the new trading or strategy files, make copies and name them as described above.
+
+Weighted point system found near the top of Strategy_CS.py in the tradeSignals function:
+
+    Custom strategies use a weight points system to trigger buys and sells.  Each indicator is set to add 1 or 2 points based on standard or strong signal strength.  When the total points matches the settings listed, the respective trade will be signaled and then trailingbuy or trailingsell will kick in as on any other trade.
+
+    The below are the defaults as currently set in Strategy_CS.py
+
+        # max possible points - this is used if selltriggeroverride setting is True, this value is used (see optional settings below)
+        self.max_pts = 11
+        # total points required to buy
+        self.pts_to_buy = 8 # more points requires more signals to activate, less risk
+        # total points to trigger immediate buy if trailingbuyimmediatepcnt is configured, else ignored
+        self.immed_buy_pts = 10
+        # use adjusted buy pts? Subtract any sell_pts from buy_pts before signaling a buy
+        # Set to True or False, default is false if not added
+        self.use_adjusted_buy_pts = True
+
+        # total points required to sell
+        self.pts_to_sell = 3 # requiring fewer pts results in quicker sell signal
+        # total points to trigger immediate sell if trailingsellimmediatepcnt is configured, else ignored
+        self.immed_sell_pts = 6
+
+        # Required signals.
+        # Specify how many have to be triggered
+        # Buys - currently 2 of ADX, OBV or MACDLeader - add self.pts_sig_required_buy += 1 to section for each signal
+        self.sig_required_buy = 2
+        # Sells - currently 2 of OBV, MACDLeader or EMA/WMA - add self.pts_sig_required_sell += 1 to section for each signal
+        self.sig_required_sell = 2 # set to 0 for default
+
+    Each indicator has this line for buy pts:
+        self.buy_pts += 1
+    and for strong (if it has a strong value):
+        self.buy_pts += 2
+
+    And for selling, sell pts:
+        self.sell_pts += 1
+    strong sell (if exists):
+        self.sell_pts += 2
+
+    If wanting to disable a particular indicator, you can either comment out the points lines for that indicator or change the value to 0.  If you don't want a strong level for an indicator, do the same for the += 2 line.
+
+Most of the points system should be self explanatory based on the descriptions above.  Required signals is an additional option over and above just the standard points.
+If you want to make sure a specific signal or multiple signals are definitely active for either the buy or sell, add the required line as listed above to that signal.  As you can see, the default added required pts for both buy and sell to 3 indicators, but only requires 2 for each one.  The defaults are a result of much testing, but you may have different results and choose different settings for everything.
+The idea is that you can customize almost anything you want, based on your own trading strategies.
+
+Optional config settings:
+
+* "selltriggeroverride": 1      if enabled AND all buys signals are active AND all buy signals are STRONG, any of the built in immediate sell triggers (preventloss, trailing stoploss, etc.) will be bypassed temporarily.  See max possible pts above.  As soon as total points are below the max setting, sell triggers will be active again.  This is designed to prevent selling on a small dip in self.price, which is somewhat normal when the self.price is still climbing and all indicators are active.
+
+**Please note:  the trading indicators being used in Strategy_CS.py are NOT using all the traditional methods of generating buy and sell signals.  The idea of custom strategies is to allow users to ability to customize trade indciators in many ways and use some different views of looking at indicators.  After comparing with many charts (mostly on TradingView) some additional patterns were frequent and implemented to hopefully help prevent buying too early or selling too late.  Not every person using this software will agree with the settings being used which is why all of it is 100% customizable.  Strategy files can now be shared with other users as well.  If you don't have the technical ability to customize the code in these files, it doesn't take much reading to get a basic idea of what is needed for minor revisions.  Please put in some effort to understand the market charts and how the various indicators are designed to work before making comments or asking someone else to make customizations for you.  The pycryptobot community is filled with helpful people that are more than will to discuss trading ideas and help others use this trading bot. Please feel free to start a new discussion in our Telegram channels.

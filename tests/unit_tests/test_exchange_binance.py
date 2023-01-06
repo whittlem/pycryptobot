@@ -8,7 +8,7 @@ import pandas
 sys.path.append(".")
 # pylint: disable=import-error
 from models.exchange.ExchangesEnum import Exchange
-from models.PyCryptoBot import PyCryptoBot
+from controllers.PyCryptoBot import PyCryptoBot
 from models.exchange.binance import AuthAPI, PublicAPI
 
 app = PyCryptoBot(exchange=Exchange.BINANCE)
@@ -26,7 +26,7 @@ def test_api_v3_account1():
             json=json.load(fh),
             status=200,
         )
-        df = api.getAccounts()
+        df = api.get_accounts()
         fh.close()
 
         assert len(df) > 1
@@ -67,7 +67,7 @@ def test_instantiate_authapi_with_api_key_error():
 
 def test_instantiate_authapi_with_api_secret_error():
     global app
-    api_secret = "Ivalid"
+    api_secret = "Invalid"
 
     with pytest.raises(SystemExit) as execinfo:
         AuthAPI(app.api_key, api_secret)
@@ -95,7 +95,7 @@ def test_get_fees_with_market():
     exchange = AuthAPI(app.api_key, app.api_secret)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getFees()
+    df = exchange.get_fees()
     assert type(df) is pandas.core.frame.DataFrame
     assert len(df) == 1
 
@@ -112,7 +112,7 @@ def test_get_taker_fee_with_market():
     exchange = AuthAPI(app.api_key, app.api_secret)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getTakerFee()
+    fee = exchange.get_taker_fee()
     assert type(fee) is float
     assert fee == 0.0015
 
@@ -124,7 +124,7 @@ def test_get_maker_fee_with_market():
     exchange = AuthAPI(app.api_key, app.api_secret)
     assert type(exchange) is AuthAPI
 
-    fee = exchange.getMakerFee()
+    fee = exchange.get_maker_fee()
     assert type(fee) is float
     assert fee == 0.0015
 
@@ -136,7 +136,7 @@ def test_get_orders():
     exchange = AuthAPI(app.api_key, app.api_secret)
     assert type(exchange) is AuthAPI
 
-    df = exchange.getOrders()
+    df = exchange.get_orders()
     assert type(df) is pandas.core.frame.DataFrame
     assert len(df) > 0
 

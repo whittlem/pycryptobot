@@ -4,16 +4,14 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-import datetime, re, sys
+from datetime import datetime, timedelta
 
 from models.Trading import TechnicalAnalysis
-from models.helper.LogHelper import Logger
-
-sys.path.append(".")
+from views.PyCryptoBot import RichText
 
 
 class TradingGraphs:
-    def __init__(self, technical_analysis):
+    def __init__(self, technical_analysis, app: object = None):
         """Trading Graphs object model
 
         Parameters
@@ -29,18 +27,52 @@ class TradingGraphs:
         # only one figure can be open at a time, close all open figures
         plt.close("all")
 
+        # app
+        self.app = app
+
         self.technical_analysis = technical_analysis
 
         # stores the pandas dataframe from technical_analysis object
-        self.df = technical_analysis.getDataFrame()
+        self.df = technical_analysis.get_df()
 
         # stores the support and resistance levels from technical_analysis object
-        self.levels = technical_analysis.getSupportResistanceLevels()
+        self.levels = technical_analysis.get_support_resistance_levels()
 
         # set graph format
         plt.style.use("seaborn")
 
-    def renderBuySellSignalEMA1226(self, saveFile="", saveOnly=False):
+    def render_bollinger_bands(self, saveFile="", saveOnly=False):
+        """Render the Bollinger Bands graph
+
+        Parameters
+        ----------
+        saveFile : str, optional
+            Save the figure
+        saveOnly : bool
+            Save the figure without displaying it
+        """
+
+        plt.subplot(111)
+        plt.plot(self.df.close, label="Price", color="black")
+        plt.plot(self.df.bb20_upper, label="Upper Band", color="green")
+        plt.plot(self.df.bb20_mid, label="Moving Average", color="blue")
+        plt.plot(self.df.bb20_lower, label="Lower Band", color="red")
+        plt.ylabel("Price")
+
+        plt.xticks(rotation=90)
+        plt.tight_layout()
+        plt.legend()
+
+        try:
+            if saveFile != "":
+                plt.savefig(saveFile)
+        except OSError:
+            raise SystemExit(f"Unable to save: {saveFile}")
+
+        if saveOnly is False:
+            plt.show()
+
+    def render_buy_sell_signal_ema226(self, saveFile="", saveOnly=False):
         """Render the EMA12 and EMA26 buy and sell signals
 
         Parameters
@@ -79,7 +111,7 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderBuySellSignalEMA1226MACD(self, saveFile="", saveOnly=False):
+    def render_buy_sell_signal_ema226_macd(self, saveFile="", saveOnly=False):
         """Render the EMA12, EMA26 and MACD buy and sell signals
 
         Parameters
@@ -90,11 +122,7 @@ class TradingGraphs:
             Save the figure without displaying it
         """
 
-        buysignals = (
-            (self.df.ema12gtema26co is True)
-            & (self.df.macdgtsignal is True)
-            & (self.df.goldencross is True)
-        )
+        buysignals = (self.df.ema12gtema26co is True) & (self.df.macdgtsignal is True) & (self.df.goldencross is True)
         sellsignals = (self.df.ema12ltema26co is True) & (self.df.macdltsignal is True)
         df_signals = self.df[(buysignals) | (sellsignals)]
 
@@ -107,18 +135,10 @@ class TradingGraphs:
         action = ""
         last_action = ""
         for idx, row in df_signals.iterrows():
-            if (
-                row["ema12gtema26co"] is True
-                and row["macdgtsignal"] is True
-                and last_action != "buy"
-            ):
+            if row["ema12gtema26co"] is True and row["macdgtsignal"] is True and last_action != "buy":
                 action = "buy"
                 plt.axvline(x=idx, color="green")
-            elif (
-                row["ema12ltema26"] is True
-                and row["macdltsignal"] is True
-                and action == "buy"
-            ):
+            elif row["ema12ltema26"] is True and row["macdltsignal"] is True and action == "buy":
                 action = "sell"
                 plt.axvline(x=idx, color="red")
 
@@ -145,7 +165,7 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderFibonacciBollingerBands(self, period=50, saveFile="", saveOnly=False):
+    def render_fibonacci_bollinger_bands(self, period=50, saveFile="", saveOnly=False):
         """Render FibonacciBollingerBands"""
 
         if not isinstance(period, int):
@@ -189,8 +209,8 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderPriceEMA12EMA26(self, saveFile="", saveOnly=False):
-        """Render the price, EMA12 and EMA26
+    def render_price_ema12_ema26(self, saveFile="", saveOnly=False):
+        """Render the self.price, EMA12 and EMA26
 
         Parameters
         ----------
@@ -218,8 +238,8 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderEMAandMACD(self, period=30, saveFile="", saveOnly=False):
-        """Render the price, EMA12, EMA26 and MACD
+    def render_ema_and_macd(self, period=30, saveFile="", saveOnly=False):
+        """Render the self.price, EMA12, EMA26 and MACD
 
         Parameters
         ----------
@@ -282,7 +302,7 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderSeasonalARIMAModel(self, saveFile="", saveOnly=False):
+    def render_seasonal_arima_model(self, saveFile="", saveOnly=False):
         """Render the seasonal ARIMA model
 
         Parameters
@@ -293,7 +313,7 @@ class TradingGraphs:
             Save the figure without displaying it
         """
 
-        fittedValues = self.technical_analysis.seasonalARIMAModelFittedValues()
+        fittedValues = self.technical_analysis.seasonal_arima_model_fitted_values()
 
         plt.plot(self.df["close"], label="original")
         plt.plot(fittedValues, color="red", label="fitted")
@@ -312,8 +332,8 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderSMAandMACD(self, saveFile="", saveOnly=False):
-        """Render the price, SMA20, SMA50, and SMA200
+    def render_sma_and_macd(self, saveFile="", saveOnly=False):
+        """Render the self.price, SMA20, SMA50, and SMA200
 
         Parameters
         ----------
@@ -349,7 +369,7 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def renderSeasonalARIMAModelPrediction(self, days=30, saveOnly=False):
+    def render_arima_model_prediction(self, days=30, saveOnly=False):
         """Render the seasonal ARIMA model prediction
 
         Parameters
@@ -361,7 +381,7 @@ class TradingGraphs:
         """
 
         # get dataframe from technical analysis object
-        df = self.technical_analysis.getDataFrame()
+        df = self.technical_analysis.get_df()
 
         if not isinstance(days, int):
             raise TypeError("Prediction days is not numeric.")
@@ -373,18 +393,14 @@ class TradingGraphs:
         market = df.iloc[0].market
         granularity = df.iloc[0].granularity
 
-        results_ARIMA = self.technical_analysis.seasonalARIMAModel()
+        results_ARIMA = self.technical_analysis.seasonal_arima_model()
 
         df = pd.DataFrame(self.df["close"])
         start_date = df.last_valid_index()
-        end_date = start_date + datetime.timedelta(days=days)
-        pred = results_ARIMA.predict(
-            start=str(start_date), end=str(end_date), dynamic=True
-        )
+        end_date = start_date + timedelta(days=days)
+        pred = results_ARIMA.predict(start=str(start_date), end=str(end_date), dynamic=True)
 
-        fig, axes = plt.subplots(
-            ncols=1, figsize=(12, 6)
-        )  # pylint: disable=unused-variable
+        fig, axes = plt.subplots(ncols=1, figsize=(12, 6))  # pylint: disable=unused-variable
         fig.autofmt_xdate()
         ax1 = plt.subplot(111)
         ax1.set_title("Seasonal ARIMA Model Prediction")
@@ -393,15 +409,13 @@ class TradingGraphs:
 
         pred_length = len(pred)
         # the evenly spaced plot indices
-        indices = np.arange(pred_length)  # pylint: disable=unused-variable
+        # indices = np.arange(pred_length)  # TODO: why is this here?
 
         def format_date(x, pos=None):  # pylint: disable=unused-argument
             thisind = np.clip(int(x + 0.5), 0, pred_length - 1)
             return date[thisind].strftime("%Y-%m-%d %H:%M:%S")
 
-        fig, ax = plt.subplots(
-            ncols=1, figsize=(12, 6)
-        )  # pylint: disable=unused-variable
+        fig, ax = plt.subplots(ncols=1, figsize=(12, 6))  # pylint: disable=unused-variable
         fig.autofmt_xdate()
 
         ax = plt.subplot(111)
@@ -413,23 +427,17 @@ class TradingGraphs:
         plt.tight_layout()
 
         try:
-            Logger.info(
-                f"creating: graphs/SAM_{market}_{str(granularity)}.png"
-            )
-            plt.savefig(
-                f"graphs/SAM_{market}_{str(granularity)}.png", dpi=300
-            )
+            RichText.notify(f"creating: graphs/SAM_{market}_{str(granularity)}.png", self.app, "info")
+            plt.savefig(f"graphs/SAM_{market}_{str(granularity)}.png", dpi=300)
         except OSError:
-            raise SystemExit(
-                f"Unable to save: graphs/SAM_{market}_{str(granularity)}.png"
-            )
+            raise SystemExit(f"Unable to save: graphs/SAM_{market}_{str(granularity)}.png")
 
         if saveOnly is False:
             plt.show()
 
-    def renderCandlestickAstralPattern(self, period=30, saveOnly=False):
+    def render_candle_stick_astral_pattern(self, period=30, saveOnly=False):
         # get dataframe from technical analysis object
-        df = self.technical_analysis.getDataFrame()
+        df = self.technical_analysis.get_df()
 
         if not isinstance(period, int):
             raise TypeError("Period parameter is not perioderic.")
@@ -443,30 +451,22 @@ class TradingGraphs:
 
         df_subset = df.iloc[-period::]
 
-        fig, axes = plt.subplots(
-            ncols=1, figsize=(12, 6)
-        )  # pylint: disable=unused-variable
+        fig, axes = plt.subplots(ncols=1, figsize=(12, 6))  # pylint: disable=unused-variable
         fig.autofmt_xdate()
         ax1 = plt.subplot(111)
         ax1.set_title("Astral Candlestick Pattern")
         plt.plot(df_subset["close"], label="price", color="black")
         plt.plot(df_subset["ema12"], label="ema12", color="orange")
         plt.plot(df_subset["ema26"], label="ema26", color="purple")
-        plt.tick_params(
-            axis="x", which="both", bottom=False, top=False, labelbottom=False
-        )
+        plt.tick_params(axis="x", which="both", bottom=False, top=False, labelbottom=False)
 
-        df_candlestick = self.df[self.df["astral_buy"] is True]
-        df_candlestick_in_range = df_candlestick[
-            df_candlestick.index >= np.min(df_subset.index)
-        ]
+        df_candlestick = self.df[self.df["astral_buy"] == True]  # noqa: E712
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(idx, df_candlestick_in_range.loc[idx]["close"], "g^", markersize=8)
 
-        df_candlestick = self.df[self.df["astral_sell"] is True]
-        df_candlestick_in_range = df_candlestick[
-            df_candlestick.index >= np.min(df_subset.index)
-        ]
+        df_candlestick = self.df[self.df["astral_sell"] == True]  # noqa: E712
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(idx, df_candlestick_in_range.loc[idx]["close"], "rv", markersize=8)
 
@@ -477,23 +477,17 @@ class TradingGraphs:
         plt.legend()
 
         try:
-            Logger.info(
-                f"creating: graphs/CAP_{market}_{str(granularity)}.png"
-            )
-            plt.savefig(
-                f"graphs/CAP_{market}_{str(granularity)}.png", dpi=300
-            )
+            RichText.notify(f"creating: graphs/CAP_{market}_{str(granularity)}.png", self.app, "info")
+            plt.savefig(f"graphs/CAP_{market}_{str(granularity)}.png", dpi=300)
         except OSError:
-            raise SystemExit(
-                f"Unable to save: graphs/CAP_{market}_{str(granularity)}.png"
-            )
+            raise SystemExit(f"Unable to save: graphs/CAP_{market}_{str(granularity)}.png")
 
         if saveOnly is False:
             plt.show()
 
-    def renderCandlesticks(self, period=30, saveOnly=False):
+    def render_candle_sticks(self, period=30, saveOnly=False):
         # get dataframe from technical analysis object
-        df = self.technical_analysis.getDataFrame()
+        df = self.technical_analysis.get_df()
 
         if not isinstance(period, int):
             raise TypeError("Period parameter is not perioderic.")
@@ -507,23 +501,17 @@ class TradingGraphs:
 
         df_subset = df.iloc[-period::]
 
-        fig, axes = plt.subplots(
-            ncols=1, figsize=(12, 6)
-        )  # pylint: disable=unused-variable
+        fig, axes = plt.subplots(ncols=1, figsize=(12, 6))  # pylint: disable=unused-variable
         fig.autofmt_xdate()
         ax1 = plt.subplot(111)
         ax1.set_title("Candlestick Patterns")
         plt.plot(df_subset["close"], label="price", color="black")
         plt.plot(df_subset["ema12"], label="ema12", color="orange")
         plt.plot(df_subset["ema26"], label="ema26", color="purple")
-        plt.tick_params(
-            axis="x", which="both", bottom=False, top=False, labelbottom=False
-        )
+        plt.tick_params(axis="x", which="both", bottom=False, top=False, labelbottom=False)
 
-        df_candlestick = self.df[self.df["three_white_soldiers"] is True]
-        df_candlestick_in_range = df_candlestick[
-            df_candlestick.index >= np.min(df_subset.index)
-        ]
+        df_candlestick = self.df[self.df["three_white_soldiers"] == True]  # noqa: E712
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(
                 idx,
@@ -533,10 +521,8 @@ class TradingGraphs:
                 label="Three White Soldiers",
             )
 
-        df_candlestick = self.df[self.df["three_black_crows"] is True]
-        df_candlestick_in_range = df_candlestick[
-            df_candlestick.index >= np.min(df_subset.index)
-        ]
+        df_candlestick = self.df[self.df["three_black_crows"] == True]  # noqa: E712
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(
                 idx,
@@ -546,10 +532,8 @@ class TradingGraphs:
                 label="Three Black Crows",
             )
 
-        df_candlestick = self.df[self.df["inverted_hammer"] is True]
-        df_candlestick_in_range = df_candlestick[
-            df_candlestick.index >= np.min(df_subset.index)
-        ]
+        df_candlestick = self.df[self.df["inverted_hammer"] == True]  # noqa: E712
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(
                 idx,
@@ -559,10 +543,8 @@ class TradingGraphs:
                 label="Inverted Hammer",
             )
 
-        df_candlestick = self.df[self.df["hammer"] is True]
-        df_candlestick_in_range = df_candlestick[
-            df_candlestick.index >= np.min(df_subset.index)
-        ]
+        df_candlestick = self.df[self.df["hammer"] == True]  # noqa: E712
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(
                 idx,
@@ -572,10 +554,8 @@ class TradingGraphs:
                 label="Hammer",
             )
 
-        df_candlestick = self.df[self.df["hanging_man"] is True]
-        df_candlestick_in_range = df_candlestick[
-            df_candlestick.index >= np.min(df_subset.index)
-        ]
+        df_candlestick = self.df[self.df["hanging_man"] == True]  # noqa: E712
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(
                 idx,
@@ -585,10 +565,8 @@ class TradingGraphs:
                 label="Hanging Man",
             )
 
-        df_candlestick = self.df[self.df["shooting_star"] is True]
-        df_candlestick_in_range = df_candlestick[
-            df_candlestick.index >= np.min(df_subset.index)
-        ]
+        df_candlestick = self.df[self.df["shooting_star"] == True]  # noqa: E712
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(
                 idx,
@@ -598,10 +576,8 @@ class TradingGraphs:
                 label="Shooting Star",
             )
 
-        df_candlestick = self.df[self.df["doji"] is True]
-        df_candlestick_in_range = df_candlestick[
-            df_candlestick.index >= np.min(df_subset.index)
-        ]
+        df_candlestick = self.df[self.df["doji"] == True]  # noqa: E712
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(
                 idx,
@@ -611,10 +587,8 @@ class TradingGraphs:
                 label="Doji",
             )
 
-        df_candlestick = self.df[self.df["three_line_strike"] is True]
-        df_candlestick_in_range = df_candlestick[
-            df_candlestick.index >= np.min(df_subset.index)
-        ]
+        df_candlestick = self.df[self.df["three_line_strike"] == True]  # noqa: E712
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(
                 idx,
@@ -624,10 +598,8 @@ class TradingGraphs:
                 label="Three Line Strike",
             )
 
-        df_candlestick = self.df[self.df["two_black_gapping"] is True]
-        df_candlestick_in_range = df_candlestick[
-            df_candlestick.index >= np.min(df_subset.index)
-        ]
+        df_candlestick = self.df[self.df["two_black_gapping"] == True]  # noqa: E712
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(
                 idx,
@@ -637,10 +609,8 @@ class TradingGraphs:
                 label="Two Black Gapping",
             )
 
-        df_candlestick = self.df[self.df["morning_star"] is True]
-        df_candlestick_in_range = df_candlestick[
-            df_candlestick.index >= np.min(df_subset.index)
-        ]
+        df_candlestick = self.df[self.df["morning_star"] == True]  # noqa: E712
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(
                 idx,
@@ -650,10 +620,8 @@ class TradingGraphs:
                 label="Morning Star",
             )
 
-        df_candlestick = self.df[self.df["evening_star"] is True]
-        df_candlestick_in_range = df_candlestick[
-            df_candlestick.index >= np.min(df_subset.index)
-        ]
+        df_candlestick = self.df[self.df["evening_star"] == True]  # noqa: E712
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(
                 idx,
@@ -663,10 +631,8 @@ class TradingGraphs:
                 label="Evening Star",
             )
 
-        df_candlestick = self.df[self.df["morning_doji_star"] is True]
-        df_candlestick_in_range = df_candlestick[
-            df_candlestick.index >= np.min(df_subset.index)
-        ]
+        df_candlestick = self.df[self.df["morning_doji_star"] == True]  # noqa: E712
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(
                 idx,
@@ -676,10 +642,8 @@ class TradingGraphs:
                 label="Morning Doji Star",
             )
 
-        df_candlestick = self.df[self.df["evening_doji_star"] is True]
-        df_candlestick_in_range = df_candlestick[
-            df_candlestick.index >= np.min(df_subset.index)
-        ]
+        df_candlestick = self.df[self.df["evening_doji_star"] == True]  # noqa: E712
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(
                 idx,
@@ -689,10 +653,8 @@ class TradingGraphs:
                 label="Evening Doji Star",
             )
 
-        df_candlestick = self.df[self.df["abandoned_baby"] is True]
-        df_candlestick_in_range = df_candlestick[
-            df_candlestick.index >= np.min(df_subset.index)
-        ]
+        df_candlestick = self.df[self.df["abandoned_baby"] == True]  # noqa: E712
+        df_candlestick_in_range = df_candlestick[df_candlestick.index >= np.min(df_subset.index)]
         for idx in df_candlestick_in_range.index.tolist():
             plt.plot(
                 idx,
@@ -709,21 +671,15 @@ class TradingGraphs:
         plt.legend()
 
         try:
-            Logger.info(
-                f"creating: graphs/CSP_{market}_{str(granularity)}.png"
-            )
-            plt.savefig(
-                f"graphs/CSP_{market}_{str(granularity)}.png", dpi=300
-            )
+            RichText.notify(f"creating: graphs/CSP_{market}_{str(granularity)}.png", self.app, "info")
+            plt.savefig(f"graphs/CSP_{market}_{str(granularity)}.png", dpi=300)
         except OSError:
-            raise SystemExit(
-                f"Unable to save: graphs/CSP_{market}_{str(granularity)}.png"
-            )
+            raise SystemExit(f"Unable to save: graphs/CSP_{market}_{str(granularity)}.png")
 
         if saveOnly is False:
             plt.show()
 
-    def renderFibonacciRetracement(self, saveOnly=False):
+    def render_fibonacci_retracement(self, saveOnly=False):
         """Render Fibonacci Retracement Levels
 
         Parameters
@@ -733,34 +689,32 @@ class TradingGraphs:
         """
 
         # get dataframe from technical analysis object
-        df = self.technical_analysis.getDataFrame()
+        df = self.technical_analysis.get_df()
 
         # extract market and granularity from trading dataframe
         market = df.iloc[0].market
         granularity = df.iloc[0].granularity
 
-        # closing price min and max values
-        price_min = df.close.min()
-        price_max = df.close.max()
+        # closing self.price min and max values
+        self.price_min = df.close.min()
+        self.price_max = df.close.max()
 
         # fibonacci retracement levels
-        diff = price_max - price_min
-        level1 = price_max - 0.236 * diff
-        level2 = price_max - 0.382 * diff
-        level3 = price_max - 0.618 * diff
+        diff = self.price_max - self.price_min
+        level1 = self.price_max - 0.236 * diff
+        level2 = self.price_max - 0.382 * diff
+        level3 = self.price_max - 0.618 * diff
 
-        fig, ax = plt.subplots(
-            ncols=1, figsize=(12, 6)
-        )  # pylint: disable=unused-variable
+        fig, ax = plt.subplots(ncols=1, figsize=(12, 6))  # pylint: disable=unused-variable
         fig.autofmt_xdate()
 
         ax = plt.subplot(111)
         ax.plot(df.close, label="price", color="black")
         ax.set_title("Fibonacci Retracement Levels")
-        ax.axhspan(level1, price_min, alpha=0.4, color="lightsalmon", label="0.618")
+        ax.axhspan(level1, self.price_min, alpha=0.4, color="lightsalmon", label="0.618")
         ax.axhspan(level3, level2, alpha=0.5, color="palegreen", label="0.382")
         ax.axhspan(level2, level1, alpha=0.5, color="palegoldenrod", label="0.236")
-        ax.axhspan(price_max, level3, alpha=0.5, color="powderblue", label="0")
+        ax.axhspan(self.price_max, level3, alpha=0.5, color="powderblue", label="0")
 
         plt.xlabel(market + " - " + str(granularity))
         plt.ylabel("Price")
@@ -769,21 +723,15 @@ class TradingGraphs:
         plt.legend()
 
         try:
-            Logger.info(
-                f"creating: graphs/FRL_{market}_{str(granularity)}.png"
-            )
-            plt.savefig(
-                f"graphs/FRL_{market}_{str(granularity)}.png", dpi=300
-            )
+            RichText.notify(f"creating: graphs/FRL_{market}_{str(granularity)}.png", self.app, "info")
+            plt.savefig(f"graphs/FRL_{market}_{str(granularity)}.png", dpi=300)
         except OSError:
-            raise SystemExit(
-                f"Unable to save: graphs/FRL_{market}_{str(granularity)}.png"
-            )
+            raise SystemExit(f"Unable to save: graphs/FRL_{market}_{str(granularity)}.png")
 
         if saveOnly is False:
             plt.show()
 
-    def renderSupportResistance(self, saveOnly=False):
+    def render_support_resistance(self, saveOnly=False):
         """Render Support and Resistance Levels
 
         Parameters
@@ -793,15 +741,13 @@ class TradingGraphs:
         """
 
         # get dataframe from technical analysis object
-        df = self.technical_analysis.getDataFrame()
+        df = self.technical_analysis.get_df()
 
         # extract market and granularity from trading dataframe
         market = df.iloc[0].market
         granularity = df.iloc[0].granularity
 
-        fig, ax = plt.subplots(
-            ncols=1, figsize=(12, 6)
-        )  # pylint: disable=unused-variable
+        fig, ax = plt.subplots(ncols=1, figsize=(12, 6))  # pylint: disable=unused-variable
         fig.autofmt_xdate()
 
         ax = plt.subplot(111)
@@ -860,21 +806,15 @@ class TradingGraphs:
         plt.legend()
 
         try:
-            Logger.info(
-                f"creating: graphs/SRL_{market}_{str(granularity)}.png"
-            )
-            plt.savefig(
-                f"graphs/SRL_{market}_{str(granularity)}.png", dpi=300
-            )
+            RichText.notify(f"creating: graphs/SRL_{market}_{str(granularity)}.png", self.app, "info")
+            plt.savefig(f"graphs/SRL_{market}_{str(granularity)}.png", dpi=300)
         except OSError:
-            raise SystemExit(
-                f"Unable to save: graphs/SRL_{market}_{str(granularity)}.png"
-            )
+            raise SystemExit(f"Unable to save: graphs/SRL_{market}_{str(granularity)}.png")
 
         if saveOnly is False:
             plt.show()
 
-    def renderPercentageChangeHistogram(self, show_desc=True):
+    def render_percentage_change_histogram(self, show_desc=True):
         """Render Percentage Change Histogram
 
         Parameters
@@ -884,15 +824,13 @@ class TradingGraphs:
         """
 
         # get dataframe from technical analysis object
-        df = self.technical_analysis.getDataFrame()
+        df = self.technical_analysis.get_df()
 
         # extract market and granularity from trading dataframe
         market = df.iloc[0].market
         granularity = df.iloc[0].granularity
 
-        fig, ax = plt.subplots(
-            ncols=1, figsize=(12, 6)
-        )  # pylint: disable=unused-variable
+        fig, ax = plt.subplots(ncols=1, figsize=(12, 6))  # pylint: disable=unused-variable
         fig.autofmt_xdate()
 
         ax = plt.subplot(111)
@@ -907,9 +845,9 @@ class TradingGraphs:
         plt.show()
 
         if show_desc is True:
-            Logger.info(df["close_pc"].describe())
+            RichText.notify(df["close_pc"].describe(), self.app, "info")
 
-    def renderPercentageChangeScatterMatrix(self):
+    def render_percentage_change_scatter_matrix(self):
         """Render Percentage Change Scatter Matrix
 
         Parameters
@@ -919,7 +857,7 @@ class TradingGraphs:
         """
 
         # get dataframe from technical analysis object
-        df = self.technical_analysis.getDataFrame()
+        df = self.technical_analysis.get_df()
 
         pd.plotting.scatter_matrix(
             df[["close", "close_pc", "close_cpc"]],
@@ -930,7 +868,7 @@ class TradingGraphs:
         plt.tight_layout()
         plt.show()
 
-    def renderCumulativeReturn(self):
+    def render_cumulative_return(self):
         """Render Percentage Change Histogram
 
         Parameters
@@ -940,15 +878,13 @@ class TradingGraphs:
         """
 
         # get dataframe from technical analysis object
-        df = self.technical_analysis.getDataFrame()
+        df = self.technical_analysis.get_df()
 
         # extract market and granularity from trading dataframe
         market = df.iloc[0].market
         granularity = df.iloc[0].granularity
 
-        fig, ax = plt.subplots(
-            ncols=1, figsize=(12, 6)
-        )  # pylint: disable=unused-variable
+        fig, ax = plt.subplots(ncols=1, figsize=(12, 6))  # pylint: disable=unused-variable
         fig.autofmt_xdate()
 
         ax = plt.subplot(111)
