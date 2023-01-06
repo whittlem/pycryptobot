@@ -117,7 +117,8 @@ class AppState:
                 raise Exception(f"Market not found! ({self.app.market})")
 
             base = float(base)
-            base_min = float(product["base_min_size"])
+#            base_min = float(product["base_min_size"])
+            base_min = float(0)
 
         elif self.app.exchange == Exchange.KUCOIN:
             resp = self.api.auth_api("GET", "api/v1/symbols")
@@ -188,7 +189,8 @@ class AppState:
             price = float(ticker["price"])
 
             quote = float(quote)
-            base_min = float(product["base_min_size"])
+#            base_min = float(product["base_min_size"])
+            base_min = float(0)
 
         elif self.app.exchange == Exchange.KUCOIN:
             resp = self.api.auth_api("GET", "api/v1/symbols")

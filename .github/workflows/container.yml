@@ -9,6 +9,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+  # Manual runs
+  workflow_dispatch:
+
 env:
   IMAGE_NAME: pycryptobot
   DOCKER_FILE: Dockerfile-websvc
