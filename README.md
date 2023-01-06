@@ -1,4 +1,4 @@
-# Python Crypto Bot v7.0.0 (pycryptobot)
+# Python Crypto Bot v7.0.1 (pycryptobot)
 
 [![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg) [![Tests](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)
 
@@ -14,7 +14,7 @@ Please beware of scammers impersonating the admins. Stay safe!
 4. Telegram admins will never message you first.
 5. Chat in the main channel rather than privately.
 
-## Ask your questions and get support in the discusions
+## Ask your questions and get support in the discussions
 
 <https://github.com/whittlem/pycryptobot/discussions>
 
