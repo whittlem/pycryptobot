@@ -11,7 +11,7 @@ on:
 
 env:
   IMAGE_NAME: pycryptobot
-  DOCKER_FILE: Dockerfile-websvc
+  DOCKER_FILE: Dockerfile
   DOCKER_BUILDKIT: 1
   PLATFORM: linux/arm/v6,linux/arm/v7,linux/arm64,linux/amd64
 
