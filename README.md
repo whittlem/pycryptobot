@@ -14,7 +14,7 @@ Please beware of scammers impersonating the admins. Stay safe!
 4. Telegram admins will never message you first.
 5. Chat in the main channel rather than privately.
 
-## Ask your questions and get support in the discusions
+## Ask your questions and get support in the discussions
 
 <https://github.com/whittlem/pycryptobot/discussions>
 
