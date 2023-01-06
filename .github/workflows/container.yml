@@ -3,13 +3,10 @@ name: Container
 on:
   push:
     branches:
-      - main
+      - master
     tags:
       - '**'
   pull_request:
-  workflow_dispatch:
-
-  # Manual runs
   workflow_dispatch:
 
 env:
