@@ -1,13 +1,11 @@
 name: Container
 
 on:
-  push:
+  release:
     branches:
       - main
     tags:
       - '**'
-  pull_request:
-  workflow_dispatch:
 
 env:
   IMAGE_NAME: pycryptobot
