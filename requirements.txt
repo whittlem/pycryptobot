@@ -3,8 +3,7 @@ pandas
 pandas-ta
 numpy
 requests==2.25.0
-scipy=1.8.1
-statsmodels
+statsmodels=0.12.2
 matplotlib==3.3.3
 mock==4.0.3
 pytest==6.2.2
