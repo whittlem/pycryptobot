@@ -4,10 +4,9 @@ on:
   push:
     branches:
       - main
-    tags-ignore:        
-      - main
     tags:
       - 7.*
+      - v7.*
 
 env:
   IMAGE_NAME: pycryptobot
