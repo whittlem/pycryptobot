@@ -13,10 +13,10 @@ ENV PATH="/app/bin:$PATH"
 
 RUN pip config --user set global.extra-index-url https://www.piwheels.org/simple
 
-COPY requirements-docker.txt .
+COPY requirements.txt .
 
 RUN python -m pip install --no-cache-dir -U pip && \
-    python3 -m pip install --no-cache-dir -r requirements-docker.txt
+    python3 -m pip install --no-cache-dir -r requirements.txt
 
 COPY . /app
 
