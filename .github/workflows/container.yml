@@ -4,7 +4,8 @@ on:
   push:
     branches:
       - main
-    ref: refs/tags/*
+    tags-ignore:        
+      - main
 
 env:
   IMAGE_NAME: pycryptobot
