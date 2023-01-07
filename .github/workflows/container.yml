@@ -1,12 +1,8 @@
 name: Container
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - 7.*
-      - v7.*
+  release:
+    types: [published]
 
 env:
   IMAGE_NAME: pycryptobot
