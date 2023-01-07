@@ -2,7 +2,8 @@ FROM python:3.9-slim-bullseye AS compile-image
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install --no-install-recommends -y \
-    build-essential gfortran && \
+    build-essential gfortran python3-scipy python3-statsmodels \
+    python3-statsmodels-lib && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
