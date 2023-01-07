@@ -6,6 +6,8 @@ on:
       - main
     tags-ignore:        
       - main
+    tags:
+      - 7.*
 
 env:
   IMAGE_NAME: pycryptobot
