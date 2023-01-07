@@ -1,8 +1,15 @@
 name: Container
 
+# on:
+#   release:
+#     types: [published]
+
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
+    tags:
+      - '**'
 
 env:
   IMAGE_NAME: pycryptobot
