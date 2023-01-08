@@ -219,7 +219,7 @@ def default_config_parse(app, config):
     config_option_bool(option_name="logbuysellinjson", option_default=False, store_name="logbuysellinjson", store_invert=False)
     config_option_bool(option_name="manualtradesonly", option_default=False, store_name="manual_trades_only", store_invert=False)
     config_option_bool(option_name="predictions", option_default=False, store_name="enableml", store_invert=False)
-    config_option_str(option_name="startmethod", option_default="standard", store_name="startmethod", valid_options=["standard", "telegram"])
+    config_option_str(option_name="startmethod", option_default="standard", store_name="startmethod", valid_options=["scanner", "standard", "telegram"])
     config_option_int(option_name="recvwindow", option_default=5000, store_name="recv_window", value_min=5000, value_max=60000)
     config_option_str(option_name="lastaction", option_default=None, store_name="last_action", valid_options=["BUY", "SELL"])
     config_option_bool(option_name="kucoincache", option_default=False, store_name="usekucoincache", store_invert=False)

@@ -42,7 +42,6 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
-
       - name: Log into registry
         run: echo "${{ secrets.PACKAGE_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
@@ -50,21 +49,16 @@ jobs:
         id: tags
         run: |
           IMAGE_ID=ghcr.io/${{ github.repository }}/$IMAGE_NAME
-
           # Change all uppercase to lowercase
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-
           # Strip git ref prefix from version
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-
           # Use Docker `latest` tag convention
           [ "$VERSION" == "main" ] && VERSION=latest
-
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
           echo "::set-output name=IMAGE_ID::$IMAGE_ID"
           echo "::set-output name=VERSION::$VERSION"
-
       - name: Generate Docker Metadata
         id: meta
         uses: docker/metadata-action@v3
@@ -88,7 +82,6 @@ jobs:
         run: |
           # Inspect Image
           docker buildx imagetools inspect ${{ steps.tags.outputs.IMAGE_ID }}:${{ steps.tags.outputs.VERSION }}
-
       # Temp fix stops cache growing too big
       # https://github.com/docker/build-push-action/issues/252
       # https://github.com/moby/buildkit/issues/1896
@@ -96,7 +89,6 @@ jobs:
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
