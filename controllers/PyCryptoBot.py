@@ -2161,6 +2161,16 @@ class PyCryptoBot(BotConfig):
         )
         config_option_row_enum("Granularity", "granularity", "Granularity of the data", break_below=True, default_value="3600", arg_name="granularity")
 
+        config_option_row_bool(
+            "Enable Debugging",
+            "debug",
+            "Enable debug level logging",
+            break_below=True,
+            store_invert=False,
+            default_value=False,
+            arg_name="debug",
+        )
+
         config_option_row_str(
             "Sim Start Date",
             "simstartdate",

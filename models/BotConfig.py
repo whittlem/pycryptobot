@@ -30,6 +30,8 @@ class BotConfig:
             ConfigBuilder().init()
             sys.exit()
 
+        self.debug = False
+
         self.configbuilder = False
 
         self.granularity = Granularity.ONE_HOUR
@@ -364,6 +366,7 @@ class BotConfig:
         parser.add_argument("--live", type=int, help="Live order execution")
         parser.add_argument("--verbose", type=int, help="Verbose terminal output")
         parser.add_argument("--graphs", type=int, help="Save graph images of trades")
+        parser.add_argument("--debug", type=int, help="Enable debug level logging")
 
         parser.add_argument("--exchange", type=str, help="'coinbasepro', 'binance', 'kucoin', 'dummy'")
         parser.add_argument("--market", type=str, help="coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc.")

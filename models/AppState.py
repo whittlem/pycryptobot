@@ -100,10 +100,10 @@ class AppState:
         self.waiting_sell_price = 0
         self.closed_candle_row = -1
 
-    def minimum_order_base(self, base, balancechk: bool = False):
+    def minimum_order_base(self, base: float = 0.0, balancechk: bool = False):
         self.app.insufficientfunds = False
         if self.app.exchange == Exchange.BINANCE:
-            df = self.api.getMarketInfoFilters(self.app.market)
+            df = self.api.get_market_info_filters(self.app.market)
             if len(df) > 0:
                 base_min = float(
                     df[df["filterType"] == "LOT_SIZE"][["minQty"]].values[0][0]
@@ -117,7 +117,7 @@ class AppState:
                 raise Exception(f"Market not found! ({self.app.market})")
 
             base = float(base)
-#            base_min = float(product["base_min_size"])
+            # base_min = float(product["base_min_size"])
             base_min = float(0)
 
         elif self.app.exchange == Exchange.KUCOIN:
@@ -149,10 +149,10 @@ class AppState:
         else:
             return
 
-    def minimum_order_quote(self, quote, balancechk: bool = False):
+    def minimum_order_quote(self, quote: float = 0.0, balancechk: bool = False):
         self.app.insufficientfunds = False
         if self.app.exchange == Exchange.BINANCE:
-            df = self.api.getMarketInfoFilters(self.app.market)
+            df = self.api.get_market_info_filters(self.app.market)
 
             if len(df) > 0:
                 quote_min = float(

@@ -191,6 +191,8 @@ def default_config_parse(app, config):
 
     # standard options
 
+    config_option_bool(option_name="debug", option_default=False, store_name="debug", store_invert=False)
+
     config_option_bool(option_name="live", option_default=False, store_name="is_live", store_invert=False)
     config_option_bool(option_name="verbose", option_default=False, store_name="is_verbose", store_invert=False)
     config_option_bool(option_name="graphs", option_default=False, store_name="save_graphs", store_invert=False)

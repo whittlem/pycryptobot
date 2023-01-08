@@ -31,8 +31,8 @@ class RichText:
         elif level == "info":
             color = "white"
         elif level == "debug":
-            color = "blue1"
-        if level == "normal":
+            color = "dark_orange"
+        elif level == "normal":
             color = "orange_red1"
         else:
             color = "violet"

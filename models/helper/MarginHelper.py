@@ -19,11 +19,9 @@ def calculate_margin(
     Calculate the margin for a given trade.
     """
 
-    debug = False  # TODO: move to config
-
     PRECISION = 8
 
-    if debug:
+    if app is not None and app.debug:
         RichText.notify(f"buy_size: {buy_size}", app, "debug")  # buy_size is quote currency (before fees)
         RichText.notify(f"buy_filled: {buy_filled}", app, "debug")  # buy_filled is base currency (after fees)
         RichText.notify(f"buy_price: {buy_price}", app, "debug")  # buy_price is quote currency
@@ -50,7 +48,7 @@ def calculate_margin(
     # calculate margin
     margin = round((profit / buy_size) * 100, PRECISION)  # TODO: division by zero check
 
-    if debug:
+    if app is not None and app.debug:
         RichText.notify(f"sell_size: {sell_size}", app, "debug")  # sell_size is quote currency (before fees)
         RichText.notify(f"sell_filled: {sell_filled}", app, "debug")  # sell_filled is quote currency (after fees)
         RichText.notify(f"sell_price: {sell_price}", app, "debug")  # sell_price is quote currency

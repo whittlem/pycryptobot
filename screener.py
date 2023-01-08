@@ -144,8 +144,6 @@ def process_screener_data(app, markets, quote_currency, exchange_name):
     """
     Hit TradingView up for the goods so we don't waste unnecessary time/compute resources (brandon's top picks)
     """
-    # Do you want it to spit out all the debug stuff?
-    debug = False
 
     ta_screener_list = [f"{re.sub('PRO', '', app.exchange.name, re.IGNORECASE)}:{re.sub('-', '', market)}" for market in markets]
 
@@ -168,7 +166,7 @@ def process_screener_data(app, markets, quote_currency, exchange_name):
     formatted_ta = []
     for ta in screener_analysis:
         try:
-            if debug:
+            if app.debug:
                 print(f"Checking {ta.symbol} on {exchange_name}\n")
             recommend = Decimal(ta.indicators.get("Recommend.All"))
             volatility = Decimal(
@@ -216,31 +214,31 @@ def process_screener_data(app, markets, quote_currency, exchange_name):
             elif rating == "STRONG_BUY":
                 score += 5
             if (adx >= app.adx_threshold) and (adx_posi_di > adx_neg_di) and (adx_posi_di > adx):
-                if debug:
+                if app.debug:
                     print(f"ADX({adx}) >= {app.adx_threshold}")
                 score += 1
             if volume >= app.volume_threshold:
-                if debug:
+                if app.debug:
                     print(f"Volume({volume}) >= {app.volume_threshold}")
                 score += 1
             if abs(macd) > abs(macd_signal):
-                if debug:
+                if app.debug:
                     print(f"MACD({macd}) above signal({macd_signal})")
                 score += 1
             if volatility >= app.volatility_threshold:
-                if debug:
+                if app.debug:
                     print(f"Volatility({volatility} is above {app.volatility_threshold}")
                 score += 1
             if volatility < app.minimum_volatility:
-                if debug:
+                if app.debug:
                     print(f"{ta.symbol} ({volatility}) is below min volatility of {app.minimum_volatility}")
                 score -= 100
             if volume < app.minimum_volume:
-                if debug:
+                if app.debug:
                     print(f"{ta.symbol} ({volume}) is below min volume of {app.volume}")
                 score -= 100
             if close < app.minimum_quote_price:
-                if debug:
+                if app.debug:
                     print(f"{ta.symbol} ({close}) is below min quote self.price of {app.minimum_quote_price}")
                 score -= 100
             if 30 >= rsi > 20:
