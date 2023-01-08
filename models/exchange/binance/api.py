@@ -658,7 +658,7 @@ class AuthAPI(AuthAPIBase):
                 "side": "BUY",
                 "type": "MARKET",
                 "quantity": truncated,
-                "recvwindow": self.recv_window,
+                "recvWindow": self.recv_window,
             }
 
             # POST /api/v3/order/test
@@ -702,7 +702,7 @@ class AuthAPI(AuthAPIBase):
                 "side": "SELL",
                 "type": "MARKET",
                 "quantity": truncated,
-                "recvwindow": self.recv_window,
+                "recvWindow": self.recv_window,
             }
 
             # POST /api/v3/order/test
