@@ -2,8 +2,10 @@ FROM python:3.9-slim-bullseye AS compile-image
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install --no-install-recommends -y \
-    build-essential gfortran cmake libopenblas-base libopenblas-dev libatlas-base-dev \
-    python3-statsmodels-lib && \
+    build-essential gfortran cmake gcc cython3 \
+    python3-numpy python3-setuptools python3-dev \
+    libblas-dev libopenblas-dev libatlas-base-dev libopenblas-base \
+    python3-statsmodels-lib python3-scipy && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
