@@ -84,17 +84,17 @@ class AuthAPI(AuthAPIBase):
         # validates the api key is syntactically correct
         p = re.compile(r"^[a-f0-9]{32}$")
         if not p.match(api_key):
-            self.handle_init_error("Coinbase Pro API key is invalid")
+            self.handle_init_error("Coinbase Pro API key is invalid", app=app)
 
         # validates the api secret is syntactically correct
         p = re.compile(r"^[A-z0-9+\/]+==$")
         if not p.match(api_secret):
-            self.handle_init_error("Coinbase Pro API secret is invalid")
+            self.handle_init_error("Coinbase Pro API secret is invalid", app=app)
 
         # validates the api passphrase is syntactically correct
         p = re.compile(r"^[A-z0-9#$%=@!{},`~&*()<>?.:;_|^/+\[\]]{8,32}$")
         if not p.match(api_passphrase):
-            self.handle_init_error("Coinbase Pro API passphrase is invalid")
+            self.handle_init_error("Coinbase Pro API passphrase is invalid", app=app)
 
         # app
         self.app = app
@@ -104,10 +104,10 @@ class AuthAPI(AuthAPIBase):
         self._api_passphrase = api_passphrase
         self._api_url = api_url
 
-    def handle_init_error(self, err: str) -> None:
+    def handle_init_error(self, err: str, app: object = None) -> None:
         """Handle initialisation error"""
 
-        if self.app is not None and self.app.debug:
+        if app is not None and app.debug is True:
             raise TypeError(err)
         else:
             raise SystemExit(err)
@@ -159,7 +159,7 @@ class AuthAPI(AuthAPIBase):
         # validates the account is syntactically correct
         p = re.compile(r"^[a-f0-9\-]{36,36}$")
         if not p.match(self.account):
-            self.handle_init_error("Coinbase Pro account is invalid")
+            self.handle_init_error("Coinbase Pro account is invalid", app=self.app)
 
         try:
             return self.auth_api("GET", f"accounts/{account}")
@@ -462,7 +462,7 @@ class AuthAPI(AuthAPIBase):
                 "funds": self.market_quote_increment(market, quote_quantity),
             }
 
-            if self.app is not None and self.app.debug:
+            if self.app is not None and self.app.debug is True:
                 RichText.notify(order, self.app, "debug")
 
             # connect to authenticated coinbase pro api
@@ -661,10 +661,10 @@ class AuthAPI(AuthAPIBase):
                 f"CoinbasePro API Error: call to {uri} attempted {trycnt} times without valid response", "CoinbasePro Private API Error"
             )
 
-    def handle_api_error(self, err: str, reason: str) -> pd.DataFrame:
+    def handle_api_error(self, err: str, reason: str, app: object = None) -> pd.DataFrame:
         """Handle API errors"""
 
-        if self.app is not None and self.app.debug:
+        if app is not None and app.debug is True:
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
@@ -968,10 +968,10 @@ class PublicAPI(AuthAPIBase):
                 f"CoinbasePro API Error: call to {uri} attempted {trycnt} times without valid response", "CoinbasePro Public API Error"
             )
 
-    def handle_api_error(self, err: str, reason: str) -> dict:
+    def handle_api_error(self, err: str, reason: str, app: object = None) -> dict:
         """Handle API errors"""
 
-        if self.app is not None and self.app.debug:
+        if app is not None and app.debug is True:
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:

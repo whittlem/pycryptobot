@@ -78,12 +78,12 @@ class AuthAPI(AuthAPIBase):
         # validates the api key is syntactically correct
         p = re.compile(r"^[A-z0-9]{64,64}$")
         if not p.match(api_key):
-            self.handle_init_error("Binance API key is invalid")
+            self.handle_init_error("Binance API key is invalid", app=app)
 
         # validates the api secret is syntactically correct
         p = re.compile(r"^[A-z0-9]{64,64}$")
         if not p.match(api_secret):
-            self.handle_init_error("Binance API secret is invalid")
+            self.handle_init_error("Binance API secret is invalid", app=app)
 
         # app
         self.app = app
@@ -98,8 +98,8 @@ class AuthAPI(AuthAPIBase):
         # api recvwindow
         self.recv_window = recv_window
 
-    def handle_init_error(self, err: str) -> None:
-        if self.app is not None and self.app.debug:
+    def handle_init_error(self, err: str, app: object = None) -> None:
+        if app is not None and app.debug is True:
             raise TypeError(err)
         else:
             raise SystemExit(err)
@@ -798,10 +798,10 @@ class AuthAPI(AuthAPIBase):
         except json.decoder.JSONDecodeError as err:
             return self.handle_api_error(err, "JSONDecodeError")
 
-    def handle_api_error(self, err: str, reason: str) -> dict:
+    def handle_api_error(self, err: str, reason: str, app: object = None) -> dict:
         """Handler for API errors"""
 
-        if self.app is not None and self.app.debug:
+        if app is not None and app.debug is True:
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
@@ -1103,10 +1103,10 @@ class PublicAPI(AuthAPIBase):
         except json.decoder.JSONDecodeError as err:
             return self.handle_api_error(err, "JSONDecodeError")
 
-    def handle_api_error(self, err: str, reason: str) -> dict:
+    def handle_api_error(self, err: str, reason: str, app: object = None) -> dict:
         """Handler for API errors"""
 
-        if self.app is not None and self.app.debug:
+        if app is not None and app.debug is True:
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
