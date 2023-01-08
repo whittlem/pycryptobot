@@ -95,10 +95,10 @@ def parser(app, binance_config, args={}):
                 print("migration failed (io error)\n")
 
         app.api_key_file = None
-        if "app.api_key_file" in args and args["app.api_key_file"] is not None:
-            app.api_key_file = args["app.api_key_file"]
-        elif "app.api_key_file" in binance_config:
-            app.api_key_file = binance_config["app.api_key_file"]
+        if 'api_key_file' in args and args['api_key_file'] is not None:
+            app.api_key_file = args['api_key_file']
+        elif 'api_key_file' in binance_config:
+            app.api_key_file = binance_config['api_key_file']
 
         if app.api_key_file is not None:
             try:
