@@ -93,17 +93,17 @@ class AuthAPI(AuthAPIBase):
         # validates the api key is syntactically correct
         p = re.compile(r"^[a-f0-9]{24,24}$")
         if not p.match(api_key):
-            self.handle_init_error("Kucoin API key is invalid")
+            self.handle_init_error("Kucoin API key is invalid", app=app)
 
         # validates the api secret is syntactically correct
         p = re.compile(r"^[A-z0-9-]{36,36}$")
         if not p.match(api_secret):
-            self.handle_init_error("Kucoin API secret is invalid")
+            self.handle_init_error("Kucoin API secret is invalid", app=app)
 
         # validates the api passphase is syntactically correct
         p = re.compile(r"^[A-z0-9#$%=@!{},`~&*()<>?.:;_|^/+\[\]]{8,32}$")
         if not p.match(api_passphrase):
-            self.handle_init_error("Kucoin API passphrase is invalid")
+            self.handle_init_error("Kucoin API passphrase is invalid", app=app)
 
         # app
         self.app = app
@@ -127,10 +127,10 @@ class AuthAPI(AuthAPIBase):
         # use pagination if cache is enabled
         self.usepagination = use_cache
 
-    def handle_init_error(self, err: str) -> None:
+    def handle_init_error(self, err: str, app: object = None) -> None:
         """Handle initialisation error"""
 
-        if self.app is not None and self.app.debug:
+        if app is not None and app.debug is True:
             raise TypeError(err)
         elif self.die_on_api_error:
             raise SystemExit(err)
@@ -195,7 +195,7 @@ class AuthAPI(AuthAPIBase):
         # validates the account is syntactically correct
         p = re.compile(r"^[a-f0-9\-]{24,24}$")
         if not p.match(self.account):
-            self.handle_init_error("Kucoin account is invalid")
+            self.handle_init_error("Kucoin account is invalid", app=self.app)
 
         return self.auth_api("GET", f"api/v1/accounts/{account}")
 
@@ -905,10 +905,10 @@ class AuthAPI(AuthAPIBase):
         else:
             return self.handle_api_error(f"Kucoin API Error: call to {uri} attempted {trycnt} times without valid response", "Kucoin Private API Error")
 
-    def handle_api_error(self, err: str, reason: str) -> pd.DataFrame:
+    def handle_api_error(self, err: str, reason: str, app: object = None) -> pd.DataFrame:
         """Handle API errors"""
 
-        if self.app is not None and self.app.debug:
+        if app is not None and app.debug is True:
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
@@ -1202,10 +1202,10 @@ class PublicAPI(AuthAPIBase):
         else:
             return self.handle_api_error(f"Kucoin API Error: call to {uri} attempted {trycnt} times without valid response", "Kucoin Public API Error")
 
-    def handle_api_error(self, err: str, reason: str) -> dict:
+    def handle_api_error(self, err: str, reason: str, app: object = None) -> dict:
         """Handle API errors"""
 
-        if self.app is not None and self.app.debug:
+        if app is not None and app.debug is True:
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
