@@ -131,7 +131,7 @@ class AuthAPI(AuthAPIBase):
 
         # GET /api/v3/account
         try:
-            resp = self.auth_api("GET", "/api/v3/account", {"recvwindow": self.recv_window})
+            resp = self.auth_api("GET", "/api/v3/account", {"recvWindow": self.recv_window})
 
             # unexpected data, then return
             if len(resp) == 0 or "balances" not in resp:
@@ -247,7 +247,7 @@ class AuthAPI(AuthAPIBase):
             pass
 
         # GET /api/v3/account
-        resp = self.auth_api("GET", "/api/v3/account", {"recvwindow": self.recv_window})
+        resp = self.auth_api("GET", "/api/v3/account", {"recvWindow": self.recv_window})
 
         # unexpected data, then return
         if len(resp) == 0:
@@ -399,7 +399,7 @@ class AuthAPI(AuthAPIBase):
                     resp = self.auth_api(
                         "GET",
                         "/api/v3/allOrders",
-                        {"symbol": market, "recvwindow": self.recv_window},
+                        {"symbol": market, "recvWindow": self.recv_window},
                     )
 
                     # unexpected data, then return
@@ -431,7 +431,7 @@ class AuthAPI(AuthAPIBase):
                 resp = self.auth_api(
                     "GET",
                     "/api/v3/allOrders",
-                    {"symbol": market, "recvwindow": self.recv_window},
+                    {"symbol": market, "recvWindow": self.recv_window},
                 )
 
                 # unexpected data, then return
@@ -573,7 +573,7 @@ class AuthAPI(AuthAPIBase):
             resp = self.auth_api(
                 "GET",
                 "/sapi/v1/asset/tradeFee",
-                {"symbol": market, "recvwindow": self.recv_window},
+                {"symbol": market, "recvWindow": self.recv_window},
             )
 
             # unexpected data, then return
