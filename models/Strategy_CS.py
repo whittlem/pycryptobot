@@ -39,9 +39,6 @@ class Strategy_CS:
         # buy indicators - using non-traditional settings
         # *** currently requires pandas-ta module and optional talib
 
-        # will output indicator values in log and after a trade in telgram when True
-        debug = True
-
         # create additional DataFrames to analyze for indicators
         # first option is the short_granularity (5m, 15min, 1h, 6h, 1d, etc.)
         # granularity abbreviations can be found in ./models/exchange/Granularity.py
@@ -365,7 +362,7 @@ class Strategy_CS:
         if self.use_adjusted_sell_pts is True:
             self.sell_pts = self.sell_pts - self.buy_pts
 
-        if debug is True:
+        if self.app.debug is True:
             indicatorvalues = (
                 # Actions
                 f"{self.market_trend}\n"

@@ -63,7 +63,6 @@ class AuthAPI(AuthAPIBase):
         """
 
         # options
-        self.debug = False
         self.die_on_api_error = False
 
         valid_urls = [
@@ -100,7 +99,7 @@ class AuthAPI(AuthAPIBase):
         self.recv_window = recv_window
 
     def handle_init_error(self, err: str) -> None:
-        if self.debug:
+        if self.app is not None and self.app.debug:
             raise TypeError(err)
         else:
             raise SystemExit(err)
@@ -313,8 +312,6 @@ class AuthAPI(AuthAPIBase):
     def get_taker_fee(self, market: str = "") -> float:
         """Retrieves the taker fee"""
 
-        print("SHOULD NOT HAVE GONE IN HERE!")
-
         if len(market) is not None:
             fees = self.get_fees(market)
         else:
@@ -376,7 +373,7 @@ class AuthAPI(AuthAPIBase):
                     markets = self.order_history
             else:
                 full_scan = True
-                markets = self.markets()
+                markets = self.markets
 
         # if action provided
         if action != "":
@@ -535,7 +532,7 @@ class AuthAPI(AuthAPIBase):
                 RichText.notify(f"Error: {e}", self.app, "error")
             return None
 
-    def getMarketInfoFilters(self, market: str) -> pd.DataFrame:
+    def get_market_info_filters(self, market: str) -> pd.DataFrame:
         """Retrieves markets exchange info"""
 
         df = pd.DataFrame()
@@ -642,7 +639,7 @@ class AuthAPI(AuthAPIBase):
 
             base_quantity = np.divide(quote_quantity, current_price)
 
-            df_filters = self.marketInfoFilters(market)
+            df_filters = self.get_market_info_filters(market)
             step_size = float(df_filters.loc[df_filters["filterType"] == "LOT_SIZE"]["stepSize"])
             precision = int(round(-math.log(step_size, 10), 0))
 
@@ -658,7 +655,7 @@ class AuthAPI(AuthAPIBase):
                 "side": "BUY",
                 "type": "MARKET",
                 "quantity": truncated,
-                "recvwindow": self.recv_window,
+                "recvWindow": self.recv_window,
             }
 
             # POST /api/v3/order/test
@@ -685,7 +682,7 @@ class AuthAPI(AuthAPIBase):
             raise TypeError("The crypto amount is not numeric.")
 
         try:
-            df_filters = self.marketInfoFilters(market)
+            df_filters = self.get_market_info_filters(market)
             step_size = float(df_filters.loc[df_filters["filterType"] == "LOT_SIZE"]["stepSize"])
             precision = int(round(-math.log(step_size, 10), 0))
 
@@ -702,7 +699,7 @@ class AuthAPI(AuthAPIBase):
                 "side": "SELL",
                 "type": "MARKET",
                 "quantity": truncated,
-                "recvwindow": self.recv_window,
+                "recvWindow": self.recv_window,
             }
 
             # POST /api/v3/order/test
@@ -761,8 +758,8 @@ class AuthAPI(AuthAPIBase):
             else:
                 resp_message = ""
 
-            if resp.status_code == 400 and (resp_message == "Timestamp for this request is outside of the recvwindow."):
-                message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (hint: increase recvwindow with --recvwindow <5000-60000>)"
+            if resp.status_code == 400 and (resp_message == "Timestamp for this request is outside of the recvWindow."):
+                message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message} (hint: increase recvWindow with --recvwindow <5000-60000>)"
                 if self.app:
                     RichText.notify(f"Error: {message}", self.app, "error")
                 return {}
@@ -804,7 +801,7 @@ class AuthAPI(AuthAPIBase):
     def handle_api_error(self, err: str, reason: str) -> dict:
         """Handler for API errors"""
 
-        if self.debug:
+        if self.app is not None and self.app.debug:
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
@@ -831,7 +828,6 @@ class PublicAPI(AuthAPIBase):
         """
 
         # options
-        self.debug = False
         self.die_on_api_error = False
 
         valid_urls = [
@@ -946,23 +942,43 @@ class PublicAPI(AuthAPIBase):
                 startTime = int(datetime.timestamp(datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")) * 1000)
 
                 # GET /api/v3/klines
-                resp = self.auth_api(
-                    "GET",
-                    "/api/v3/klines",
-                    {
-                        "symbol": market,
-                        "interval": granularity.to_short,
-                        "startTime": startTime,
-                        "limit": 300,
-                    },
-                )
+                if isinstance(granularity, Granularity):
+                    resp = self.auth_api(
+                        "GET",
+                        "/api/v3/klines",
+                        {
+                            "symbol": market,
+                            "interval": granularity.to_short,
+                            "startTime": startTime,
+                            "limit": 300,
+                        },
+                    )
+                else:
+                    resp = self.auth_api(
+                        "GET",
+                        "/api/v3/klines",
+                        {
+                            "symbol": market,
+                            "interval": granularity,
+                            "startTime": startTime,
+                            "limit": 300,
+                        },
+                    )
+
             else:
                 # GET /api/v3/klines
-                resp = self.auth_api(
-                    "GET",
-                    "/api/v3/klines",
-                    {"symbol": market, "interval": granularity.to_short, "limit": 300},
-                )
+                if isinstance(granularity, Granularity):
+                    resp = self.auth_api(
+                        "GET",
+                        "/api/v3/klines",
+                        {"symbol": market, "interval": granularity.to_short, "limit": 300},
+                    )
+                else:
+                    resp = self.auth_api(
+                        "GET",
+                        "/api/v3/klines",
+                        {"symbol": market, "interval": granularity, "limit": 300},
+                    )
 
             # convert the API response into a Pandas DataFrame
             df = pd.DataFrame(
@@ -984,7 +1000,10 @@ class PublicAPI(AuthAPIBase):
             )
 
             df["market"] = market
-            df["granularity"] = granularity.to_short
+            if isinstance(granularity, Granularity):
+                df["granularity"] = granularity.to_short
+            else:
+                df["granularity"] = granularity
 
             # binance epoch is too long
             df["open_time"] = df["open_time"] + 1
@@ -1087,7 +1106,7 @@ class PublicAPI(AuthAPIBase):
     def handle_api_error(self, err: str, reason: str) -> dict:
         """Handler for API errors"""
 
-        if self.debug:
+        if self.app is not None and self.app.debug:
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
@@ -1107,9 +1126,6 @@ class WebSocket(AuthAPIBase):
     def __init__(
         self, market=None, granularity: Granularity = None, api_url="https://api.binance.com", ws_url: str = "wss://stream.binance.com:9443", app: object = None
     ) -> None:
-        # options
-        self.debug = False
-
         valid_urls = [
             "https://api.binance.com",
             "https://api.binance.us",

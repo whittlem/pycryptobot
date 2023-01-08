@@ -74,7 +74,6 @@ class AuthAPI(AuthAPIBase):
         """
 
         # options
-        self.debug = True
         self.die_on_api_error = False
 
         valid_urls = [
@@ -131,7 +130,7 @@ class AuthAPI(AuthAPIBase):
     def handle_init_error(self, err: str) -> None:
         """Handle initialisation error"""
 
-        if self.debug:
+        if self.app is not None and self.app.debug:
             raise TypeError(err)
         elif self.die_on_api_error:
             raise SystemExit(err)
@@ -909,7 +908,7 @@ class AuthAPI(AuthAPIBase):
     def handle_api_error(self, err: str, reason: str) -> pd.DataFrame:
         """Handle API errors"""
 
-        if self.debug:
+        if self.app is not None and self.app.debug:
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
@@ -928,7 +927,6 @@ class AuthAPI(AuthAPIBase):
 class PublicAPI(AuthAPIBase):
     def __init__(self, api_url: str = "https://api.kucoin.com", app: object = None) -> None:
         # options
-        self.debug = False
         self.die_on_api_error = False
         self._api_url = api_url
 
@@ -1207,7 +1205,7 @@ class PublicAPI(AuthAPIBase):
     def handle_api_error(self, err: str, reason: str) -> dict:
         """Handle API errors"""
 
-        if self.debug:
+        if self.app is not None and self.app.debug:
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
@@ -1233,9 +1231,6 @@ class WebSocket(AuthAPIBase):
         ws_url="wss://ws-api.kucoin.com",
         app: object = None,
     ) -> None:
-        # options
-        self.debug = False
-
         valid_urls = [
             "https://api.kucoin.com",
             "https://api.kucoin.com/",

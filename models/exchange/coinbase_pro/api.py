@@ -65,7 +65,6 @@ class AuthAPI(AuthAPIBase):
         """
 
         # options
-        self.debug = False
         self.die_on_api_error = False
 
         valid_urls = [
@@ -108,7 +107,7 @@ class AuthAPI(AuthAPIBase):
     def handle_init_error(self, err: str) -> None:
         """Handle initialisation error"""
 
-        if self.debug:
+        if self.app is not None and self.app.debug:
             raise TypeError(err)
         else:
             raise SystemExit(err)
@@ -463,8 +462,8 @@ class AuthAPI(AuthAPIBase):
                 "funds": self.market_quote_increment(market, quote_quantity),
             }
 
-            if self.app:
-                RichText.notify(order, self.app.debug)
+            if self.app is not None and self.app.debug:
+                RichText.notify(order, self.app, "debug")
 
             # connect to authenticated coinbase pro api
             model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
@@ -665,7 +664,7 @@ class AuthAPI(AuthAPIBase):
     def handle_api_error(self, err: str, reason: str) -> pd.DataFrame:
         """Handle API errors"""
 
-        if self.debug:
+        if self.app is not None and self.app.debug:
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
@@ -684,7 +683,6 @@ class AuthAPI(AuthAPIBase):
 class PublicAPI(AuthAPIBase):
     def __init__(self, app: object = None) -> None:
         # options
-        self.debug = False
         self.die_on_api_error = False
         self._api_url = "https://api.pro.coinbase.com/"
 
@@ -973,7 +971,7 @@ class PublicAPI(AuthAPIBase):
     def handle_api_error(self, err: str, reason: str) -> dict:
         """Handle API errors"""
 
-        if self.debug:
+        if self.app is not None and self.app.debug:
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
@@ -999,9 +997,6 @@ class WebSocket(AuthAPIBase):
         ws_url="wss://ws-feed.pro.coinbase.com",
         app: object = None,
     ) -> None:
-        # options
-        self.debug = False
-
         valid_urls = [
             "https://api.pro.coinbase.com",
             "https://api.pro.coinbase.com/",

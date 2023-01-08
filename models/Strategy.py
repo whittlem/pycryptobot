@@ -58,8 +58,6 @@ class Strategy:
 
     def is_buy_signal(self, state, price) -> bool:
         self.state = state
-        # set to true for verbose debugging
-        debug = False
 
         # buy signal exclusion (if disabled, do not buy within 3% of the dataframe close high)
         if (
@@ -139,7 +137,7 @@ class Strategy:
             and (bool(self._df_last["closegtbb20_upperco"].values[0]) is True or self.app.disablebuybbands_s2)
             and self.state.last_action != "BUY"
         ):  # required for all strategies
-            if debug:
+            if self.app.debug:
                 RichText.notify("*** Buy Signal ***", self.app, "debug")
                 for indicator in required_indicators:
                     RichText.notify(f"{indicator}: {self._df_last[indicator].values[0]}", self.app, "debug")
@@ -153,7 +151,7 @@ class Strategy:
             and self.state.last_action != "BUY"
         ):  # required for all strategies
 
-            if debug:
+            if self.app.debug:
                 RichText.notify("*** Buy Signal ***", self.app, "debug")
                 for indicator in required_indicators:
                     RichText.notify(f"{indicator}: {self._df_last[indicator].values[0]}", self.app, "debug")
@@ -164,9 +162,6 @@ class Strategy:
         return False
 
     def is_sell_signal(self) -> bool:
-        # set to true for verbose debugging
-        debug = False
-
         # additional sell signals - add additional functions and calls as necessary
         if self.CS_ready:
             if self.CS.sellSignal():
@@ -215,7 +210,7 @@ class Strategy:
             and (bool(self._df_last["closeltbb20_lowerco"].values[0]) is True or self.app.disablebuybbands_s1)
             and (bool(self._df_last["closeltbb20_midco"].values[0]) is True or self.app.disablebuybbands_s2)
         ):
-            if debug:
+            if self.app.debug:
                 RichText.notify("*** Sell Signal ***", self.app, "debug")
                 for indicator in required_indicators:
                     RichText.notify(f"{indicator}: {self._df_last[indicator].values[0]}", self.app, "debug")
@@ -227,8 +222,6 @@ class Strategy:
 
     def is_sell_trigger(self, state, price: float = 0.0, price_exit: float = 0.0, margin: float = 0.0, change_pcnt_high: float = 0.0) -> bool:
         self.state = state
-        # set to true for verbose debugging
-        debug = False
 
         # if ALL CUSTOM signals are still buy and strength is strong don't trigger a sell yet
         if self.CS_ready and self.app.selltriggeroverride is True and self.CS.buy_pts >= self.CS.sell_override_pts:  # Custom Strategy loaded
@@ -261,12 +254,12 @@ class Strategy:
         ):
             return False
 
-        if debug:
+        if self.app.debug:
             RichText.notify(f"Trailing Stop Loss Enabled {self.app.trailing_stop_loss}", self.app, "debug")
             RichText.notify(
                 f"Change Percentage {change_pcnt_high} < Stop Loss Percent {self.state.tsl_pcnt} = {change_pcnt_high < self.state.tsl_pcnt}", self.app, "debug"
             )
-            RichText.notify(f"Margin {margin} > Stop Loss Trigger  {self.state.tsl_trigger} = {margin > self.state.tsl_trigger}", self.app, debug)
+            RichText.notify(f"Margin {margin} > Stop Loss Trigger  {self.state.tsl_trigger} = {margin > self.state.tsl_trigger}", self.app, "debug")
 
         if self.state.tsl_pcnt is not None:
             # dynamic trailing_stop_loss
@@ -297,7 +290,7 @@ class Strategy:
                 if margin > self.state.tsl_trigger:
                     self.state.tsl_triggered = 1
 
-            if debug:
+            if self.app.debug:
                 debugtext = f"TSL Triggered: {self.state.tsl_triggered} TSL Pcnt: {self.state.tsl_pcnt}% TSL Trigger: {self.state.tsl_trigger}%"
                 debugtext += f" TSL Next Trigger: {round(self.state.tsl_trigger * self.app.tsl_trigger_multiplier)}%\n" if self.app.dynamic_tsl else "\n"
                 debugtext += (
@@ -320,7 +313,7 @@ class Strategy:
 
                 return True
 
-        if debug:
+        if self.app.debug:
             RichText.notify("-- loss failsafe sell at sell_lower_pcnt --", self.app, "debug")
             RichText.notify(f"self.app.disablefailsafelowerpcnt is False (actual: {self.app.disablefailsafelowerpcnt})", self.app, "debug")
             RichText.notify(f"and self.app.sellatloss is True (actual: {self.app.sellatloss})", self.app, "debug")
@@ -336,14 +329,14 @@ class Strategy:
                 self.app.notifyTelegram(f"{self.app.market} ({self.app.print_granularity()}) {log_text}")
             return True
 
-        if debug:
+        if self.app.debug:
             RichText.notify("*** isSellTrigger ***", self.app, "debug")
             RichText.notify("-- ignoring sell signal --", self.app, "debug")
             RichText.notify(f"self.app.nosellminpcnt is None (nosellminpcnt: {self.app.nosellminpcnt})", self.app, "debug")
             RichText.notify(f"margin >= self.app.nosellminpcnt (margin: {margin})", self.app, "debug")
             RichText.notify(f"margin <= self.app.nosellmaxpcnt (nosellmaxpcnt: {self.app.nosellmaxpcnt})", self.app, "debug")
 
-        if debug:
+        if self.app.debug:
             RichText.notify("*** isSellTrigger ***", self.app, "debug")
             RichText.notify("-- loss failsafe sell at fibonacci band --", self.app, "debug")
             RichText.notify(f"self.app.disablefailsafefibonaccilow is False (actual: {self.app.disablefailsafefibonaccilow})", self.app, "debug")
@@ -366,14 +359,14 @@ class Strategy:
             self.app.notifyTelegram(f"{self.app.market} ({self.app.print_granularity()}) {log_text}")
             return True
 
-        if debug:
+        if self.app.debug:
             RichText.notify("-- loss failsafe sell at trailing_stop_loss --", self.app, "debug")
             RichText.notify(f"self.app.trailing_stop_loss is not None (actual: {self.app.trailing_stop_loss})", self.app, "debug")
             RichText.notify(f"change_pcnt_high ({change_pcnt_high}) < self.app.trailing_stop_loss ({self.app.trailing_stop_loss})", self.app, "debug")
             RichText.notify(f"margin ({margin}) > self.app.trailing_stop_loss_trigger ({self.app.trailing_stop_loss_trigger})", self.app, "debug")
             RichText.notify(f"(self.app.sellatloss is True (actual: {self.app.sellatloss}) or margin ({margin}) > 0)", self.app, "debug")
 
-        if debug:
+        if self.app.debug:
             RichText.notify("-- profit bank at sell_upper_pcnt --", self.app, "debug")
             RichText.notify(f"self.app.disableprofitbankupperpcnt is False (actual: {self.app.disableprofitbankupperpcnt})", self.app, "debug")
             RichText.notify(f"and self.app.sell_upper_pcnt is not None (actual: {self.app.sell_upper_pcnt})", self.app, "debug")
@@ -389,7 +382,7 @@ class Strategy:
                 self.app.notifyTelegram(f"{self.app.market} ({self.app.print_granularity()}) {log_text}")
             return True
 
-        if debug:
+        if self.app.debug:
             RichText.notify("-- profit bank when strong reversal detected --", self.app, "debug")
             RichText.notify(f"self.app.sellatresistance is True (actual {self.app.sellatresistance})", self.app, "debug")
             RichText.notify(f"and price ({price}) > 0", self.app, "debug")
@@ -409,9 +402,6 @@ class Strategy:
         return False
 
     def is_wait_trigger(self, margin: float = 0.0, goldencross: bool = False):
-        # set to true for verbose debugging
-        debug = False
-
         # if prevent_loss is enabled and activated, don't WAIT
         if (
             self.state.prevent_loss is True and margin <= self.app.preventlossmargin
@@ -420,10 +410,10 @@ class Strategy:
         ):
             return False
 
-        if debug and self.state.action != "WAIT":
-            RichText.notify("\n*** isWaitTrigger ***\n", self.app, "debug")
+        if self.app.debug and self.state.action != "WAIT":
+            RichText.notify("*** isWaitTrigger ***", self.app, "debug")
 
-        if debug and self.state.action == "BUY":
+        if self.app.debug and self.state.action == "BUY":
             RichText.notify("-- if bear market and bull only return true to abort buy --", self.app, "debug")
             RichText.notify(f"self.state.action == 'BUY' (actual: {self.state.action})", self.app, "debug")
             RichText.notify(f"and self.app.disablebullonly is True (actual: {self.app.disablebullonly})", self.app, "debug")
@@ -435,7 +425,7 @@ class Strategy:
             RichText.notify(log_text, self.app, "warning")
             return True
 
-        if debug and self.state.action == "SELL":
+        if self.app.debug and self.state.action == "SELL":
             RichText.notify("-- configuration specifies to not sell at a loss --", self.app, "debug")
             RichText.notify(f"self.state.action == 'SELL' (actual: {self.state.action})", self.app, "debug")
             RichText.notify(f"and self.app.sellatloss is False (actual: {self.app.sellatloss})", self.app, "debug")
@@ -448,7 +438,7 @@ class Strategy:
                 RichText.notify(log_text, self.app, "warning")
             return True
 
-        if debug and self.state.action == "SELL":
+        if self.app.debug and self.state.action == "SELL":
             RichText.notify("-- configuration specifies not to sell within min and max margin percent bounds --", self.app, "debug")
             RichText.notify(f"self.state.action == 'SELL' (actual: {self.state.action})", self.app, "debug")
             RichText.notify(
@@ -529,8 +519,6 @@ class Strategy:
         )
 
     def check_trailing_sell(self, state, price):
-        debug = False
-
         # return early if trailing sell is not enabled
         if state.trailing_sell is False:
             return (
@@ -596,7 +584,7 @@ class Strategy:
         if self.app.is_verbose and (not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly)):
             RichText.notify(waitpcnttext, self.info, "info")
 
-        if debug:
+        if self.app.debug:
             RichText.notify(waitpcnttext, self.app, "debug")
             RichText.notify(
                 f"Trailing Sell Triggered: {self.state.trailing_sell}  Wait Price: {self.state.waiting_sell_price} Current Price: {price} Price Chg: {_truncate(pricechange,2)} Immed Sell Pcnt: -{str(self.app.trailingsellimmediatepcnt)}%",
