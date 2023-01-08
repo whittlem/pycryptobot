@@ -2,7 +2,8 @@ FROM python:3.9-slim-bullseye AS compile-image
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install --no-install-recommends -y \
-    build-essential && \
+    build-essential gfortran \
+    python3-statsmodels-lib && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -13,10 +14,10 @@ ENV PATH="/app/bin:$PATH"
 
 RUN pip config --user set global.extra-index-url https://www.piwheels.org/simple
 
-COPY requirements-docker.txt .
+COPY requirements.txt .
 
 RUN python -m pip install --no-cache-dir -U pip && \
-    python3 -m pip install --no-cache-dir -r requirements-docker.txt
+    python3 -m pip install --no-cache-dir -r requirements.txt
 
 COPY . /app
 
@@ -29,7 +30,7 @@ LABEL org.opencontainers.image.source https://github.com/${REPO}
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install --no-install-recommends -y \
     libatlas3-base libfreetype6 libjpeg62-turbo \
-    libopenjp2-7 libtiff5 libxcb1 gfortran python3-scipy && \
+    libopenjp2-7 libtiff5 libxcb1 && \
     rm -rf /var/lib/apt/lists/* && \
     groupadd -g 1000 pycryptobot && \
     useradd -r -u 1000 -g pycryptobot pycryptobot && \
