@@ -959,7 +959,7 @@ class PyCryptoBot(BotConfig):
                             pass
 
                         if not self.insufficientfunds and self.buyminsize < self.account.quote_balance_before:
-                            if not self.is_verbose:
+                            if not self.is_live:
                                 if not self.is_sim or (self.is_sim and not self.simresultonly):
                                     _notify(f"*** Executing SIMULATION Buy Order at {str(self.price)} ***", "info")
                             else:
@@ -1663,6 +1663,79 @@ class PyCryptoBot(BotConfig):
             # pylint: disable=protected-access
             os._exit(0)
             # raise
+
+    def market_buy(self, market, quote_currency, buy_percent=100):
+        if self.is_live is True:
+            if isinstance(buy_percent, int):
+                if buy_percent > 0 and buy_percent < 100:
+                    quote_currency = (buy_percent / 100) * quote_currency
+
+            if self.exchange == Exchange.COINBASEPRO:
+                api = CBAuthAPI(
+                    self.api_key,
+                    self.api_secret,
+                    self.api_passphrase,
+                    self.api_url,
+                    app=self
+                )
+                return api.market_buy(market, float(_truncate(quote_currency, 8)))
+            elif self.exchange == Exchange.KUCOIN:
+                api = KAuthAPI(
+                    self.api_key,
+                    self.api_secret,
+                    self.api_passphrase,
+                    self.api_url,
+                    use_cache=self.usekucoincache,
+                    app=self
+                )
+                return api.marketBuy(market, float(quote_currency))
+            elif self.exchange == Exchange.BINANCE:
+                api = BAuthAPI(
+                    self.api_key,
+                    self.api_secret,
+                    self.api_url,
+                    recv_window=self.recv_window,
+                    app=self
+                )
+                return api.market_buy(market, quote_currency)
+            else:
+                return None
+
+    def market_sell(self, market, base_currency, sell_percent=100):
+        if self.is_live is True:
+            if isinstance(sell_percent, int):
+                if sell_percent > 0 and sell_percent < 100:
+                    base_currency = (sell_percent / 100) * base_currency
+                if self.exchange == Exchange.COINBASEPRO:
+                    api = CBAuthAPI(
+                        self.api_key,
+                        self.api_secret,
+                        self.api_passphrase,
+                        self.api_url,
+                        app=self
+                    )
+                    return api.market_sell(market, base_currency)
+                elif self.exchange == Exchange.BINANCE:
+                    api = BAuthAPI(
+                        self.api_key,
+                        self.api_secret,
+                        self.api_url,
+                        recv_window=self.recv_window,
+                        app=self
+                    )
+                    return api.market_sell(market, base_currency, use_fees=self.use_sell_fee)
+                elif self.exchange == Exchange.KUCOIN:
+                    api = KAuthAPI(
+                        self.api_key,
+                        self.api_secret,
+                        self.api_passphrase,
+                        self.api_url,
+                        use_cache=self.usekucoincache,
+                        app=self
+                    )
+                    return api.market_sell(market, base_currency)
+            else:
+                return None
 
     def notify_telegram(self, msg: str) -> None:
         """

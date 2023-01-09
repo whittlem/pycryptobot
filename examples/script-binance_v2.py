@@ -158,8 +158,8 @@ df = api.get_orders("MATICUSDT")
 
 app = PyCryptoBot(exchange="binance")
 api = BAuthAPI(app.api_key, app.api_secret, app.api_url, app=app)
-resp = api.market_buy("MATICUSDT", 15.58064897, test=True)
-resp = api.market_buy("MATICUSDT", 15.58064897)
+# resp = api.market_buy("MATICUSDT", 15.58064897, test=True)
+# resp = api.market_buy("MATICUSDT", 15.58064897)
 # print (resp)
 
 app = PyCryptoBot(exchange="binance")
