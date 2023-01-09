@@ -485,7 +485,7 @@ class Strategy:
         if price < self.state.waiting_buy_price:
             self.state.waiting_buy_price = price
             self.state.action = "WAIT"
-            trailing_action_logtext = f" - Wait Chg: Dec {str(pricechange)}%"
+            trailing_action_logtext = f"Wait Chg: Dec {str(pricechange)}%"
             waitpcnttext += "Price decreased - resetting wait price. "
         elif (
             self.app.trailingbuyimmediatepcnt is not None
@@ -494,18 +494,18 @@ class Strategy:
         ):  # If price increases by more than trailingbuyimmediatepcnt, do an immediate buy
             self.state.action = "BUY"
             immediate_action = True
-            trailing_action_logtext = f" - Immediate Buy - Chg: {str(pricechange)}%/{self.app.trailingbuyimmediatepcnt}%"
+            trailing_action_logtext = f"Immediate Buy - Chg: {str(pricechange)}%/{self.app.trailingbuyimmediatepcnt}%"
             waitpcnttext += f"Ready for immediate buy. {self.state.waiting_buy_price} change of {str(pricechange)}% is above setting of {self.app.trailingbuyimmediatepcnt}%"
             self.app.notifyTelegram(waitpcnttext)
         # added 10% fluctuation to prevent holding another full candle for 0.025%
         elif pricechange < (trailingbuypcnt * 0.9):
             self.state.action = "WAIT"
-            trailing_action_logtext = f" - Wait Chg: {str(pricechange)}%"
+            trailing_action_logtext = f"Wait Chg: {str(pricechange)}%"
             trailing_action_logtext += f"/{trailingbuypcnt}%" if trailingbuypcnt > 0 else ""
             waitpcnttext += f"Waiting to buy until price of {self.state.waiting_buy_price} increases {trailingbuypcnt}% (+/- 10%) - change {str(pricechange)}%"
         else:
             self.state.action = "BUY"
-            trailing_action_logtext = f" - Buy Chg: {str(pricechange)}%/{trailingbuypcnt}%"
+            trailing_action_logtext = f"Buy Chg: {str(pricechange)}%/{trailingbuypcnt}%"
             waitpcnttext += f"Ready to buy at close. Price of {self.state.waiting_buy_price}, change of {str(pricechange)}%, is greater than setting of {trailingbuypcnt}%  (+/- 10%)"
 
         if self.app.is_verbose and (not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly)):
@@ -547,13 +547,13 @@ class Strategy:
         if price >= self.state.waiting_sell_price:
             self.state.waiting_sell_price = price
             self.state.action = "WAIT"
-            trailing_action_logtext = f" - Wait Chg: Inc {str(pricechange)}%"
+            trailing_action_logtext = f"Wait Chg: Inc {str(pricechange)}%"
             waitpcnttext += "Price increased - resetting wait price."
         # bailout setting.  If price drops x%, sell immediately.
         elif self.app.trailingsellbailoutpcnt is not None and pricechange < self.app.trailingsellbailoutpcnt:
             self.state.action = "SELL"
             immediate_action = True
-            trailing_action_logtext = f" - Bailout Immediately - Chg: {str(pricechange)}%/{self.app.trailingsellbailoutpcnt}%"
+            trailing_action_logtext = f"Bailout Immediately - Chg: {str(pricechange)}%/{self.app.trailingsellbailoutpcnt}%"
             waitpcnttext += f"Bailout Immediately. Price {self.state.waiting_sell_price}, change of {str(pricechange)}%, is lower than setting of {self.app.trailingsellbailoutpcnt}%"
             self.app.notifyTelegram(waitpcnttext)
         # When all indicators signal strong sell and price decreases more than "self.app.trailingsellimmediatepcnt", immediate sell
@@ -564,21 +564,21 @@ class Strategy:
         ):
             self.state.action = "SELL"
             immediate_action = True
-            trailing_action_logtext = f" - Immediate Sell - Chg: {str(pricechange)}%/{self.app.trailingsellimmediatepcnt}%"
+            trailing_action_logtext = f"Immediate Sell - Chg: {str(pricechange)}%/{self.app.trailingsellimmediatepcnt}%"
             waitpcnttext += f"Sell Immediately. Price {self.state.waiting_sell_price}, change of {str(pricechange)}%, is lower than setting of {self.app.trailingsellimmediatepcnt}%"
             self.app.notifyTelegram(waitpcnttext)
         # added 10% fluctuation to prevent holding another full candle for 0.025%
         elif pricechange > (self.app.trailingsellpcnt * 0.9):
             self.state.action = "WAIT"
             if self.app.trailingsellpcnt == 0:
-                trailing_action_logtext = f" - Wait Chg: {str(pricechange)}%"
+                trailing_action_logtext = f"Wait Chg: {str(pricechange)}%"
                 waitpcnttext += f"Waiting to sell until {self.state.waiting_sell_price} stops increasing - change {str(pricechange)}%"
             else:
-                trailing_action_logtext = f" - Wait Chg: {str(pricechange)}%/{self.app.trailingsellpcnt}%"
+                trailing_action_logtext = f"Wait Chg: {str(pricechange)}%/{self.app.trailingsellpcnt}%"
                 waitpcnttext += f"Waiting to sell until price of {self.state.waiting_sell_price} decreases {self.app.trailingsellpcnt}% (+/- 10%) - change {str(pricechange)}%"
         else:
             self.state.action = "SELL"
-            trailing_action_logtext = f" - Sell Chg: {str(pricechange)}%/{self.app.trailingsellpcnt}%"
+            trailing_action_logtext = f"Sell Chg: {str(pricechange)}%/{self.app.trailingsellpcnt}%"
             waitpcnttext += f"Sell at Close. Price of {self.state.waiting_sell_price}, change of {str(pricechange)}%, is lower than setting of {str(self.app.trailingsellpcnt)}% (+/- 10%)"
 
         if self.app.is_verbose and (not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly)):
