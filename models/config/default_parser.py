@@ -2,6 +2,7 @@ import re
 from enum import Enum
 from datetime import datetime
 from xmlrpc.client import Boolean
+from os import get_terminal_size
 
 from models.exchange.ExchangesEnum import Exchange
 from models.exchange.Granularity import Granularity
@@ -192,6 +193,10 @@ def default_config_parse(app, config):
     # standard options
 
     config_option_bool(option_name="debug", option_default=False, store_name="debug", store_invert=False)
+
+    config_option_bool(option_name="termcolor", option_default=True, store_name="term_color", store_invert=False)
+    config_option_int(option_name="termwidth", option_default=get_terminal_size().columns, store_name="term_width", value_min=60, value_max=420)
+    config_option_int(option_name="logwidth", option_default=180, store_name="log_width", value_min=60, value_max=420)
 
     config_option_bool(option_name="live", option_default=False, store_name="is_live", store_invert=False)
     config_option_bool(option_name="verbose", option_default=False, store_name="is_verbose", store_invert=False)

@@ -77,8 +77,8 @@ def parser(app, binance_config, args={}):
             fh.close()
 
             if os.path.isfile("config.json") and os.path.isfile("binance.key"):
-                binance_config["app.api_key_file"] = binance_config.pop("api_key")
-                binance_config["app.api_key_file"] = "binance.key"
+                binance_config["api_key_file"] = binance_config.pop("api_key")
+                binance_config["api_key_file"] = "binance.key"
                 del binance_config["api_secret"]
 
                 # read 'binance' element from config.json

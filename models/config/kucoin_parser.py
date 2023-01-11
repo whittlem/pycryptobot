@@ -35,8 +35,8 @@ def parser(app, kucoin_config, args={}):
             fh.close()
 
             if os.path.isfile("config.json") and os.path.isfile("kucoin.key"):
-                kucoin_config["app.api_key_file"] = kucoin_config.pop("api_key")
-                kucoin_config["app.api_key_file"] = "kucoin.key"
+                kucoin_config["api_key_file"] = kucoin_config.pop("api_key")
+                kucoin_config["api_key_file"] = "kucoin.key"
                 del kucoin_config["api_secret"]
                 del kucoin_config["api_passphrase"]
 
@@ -54,10 +54,10 @@ def parser(app, kucoin_config, args={}):
                 print("migration failed (io error)", "\n")
 
         app.api_key_file = None
-        if "app.api_key_file" in args and args["app.api_key_file"] is not None:
-            app.api_key_file = args["app.api_key_file"]
+        if "app.api_key_file" in args and args["api_key_file"] is not None:
+            app.api_key_file = args["api_key_file"]
         elif "app.api_key_file" in kucoin_config:
-            app.api_key_file = kucoin_config["app.api_key_file"]
+            app.api_key_file = kucoin_config["api_key_file"]
 
         if app.api_key_file is not None:
             try:
