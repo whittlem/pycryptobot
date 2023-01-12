@@ -35,7 +35,12 @@ class BotConfig:
         self.configbuilder = False
 
         self.term_color = True
-        self.term_width = os.get_terminal_size().columns
+
+        try:
+            self.term_width = os.get_terminal_size().columns
+        except OSError:
+            self.term_width = 180
+        
         self.log_width = 180
 
         self.granularity = Granularity.ONE_HOUR

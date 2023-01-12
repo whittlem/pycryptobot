@@ -192,10 +192,15 @@ def default_config_parse(app, config):
 
     # standard options
 
+    try:
+        term_width = get_terminal_size().columns
+    except OSError:
+        term_width = 180
+
     config_option_bool(option_name="debug", option_default=False, store_name="debug", store_invert=False)
 
     config_option_bool(option_name="termcolor", option_default=True, store_name="term_color", store_invert=False)
-    config_option_int(option_name="termwidth", option_default=get_terminal_size().columns, store_name="term_width", value_min=60, value_max=420)
+    config_option_int(option_name="termwidth", option_default=term_width, store_name="term_width", value_min=60, value_max=420)
     config_option_int(option_name="logwidth", option_default=180, store_name="log_width", value_min=60, value_max=420)
 
     config_option_bool(option_name="live", option_default=False, store_name="is_live", store_invert=False)
