@@ -34,6 +34,15 @@ class BotConfig:
 
         self.configbuilder = False
 
+        self.term_color = True
+
+        try:
+            self.term_width = os.get_terminal_size().columns
+        except OSError:
+            self.term_width = 180
+        
+        self.log_width = 180
+
         self.granularity = Granularity.ONE_HOUR
         self.base_currency = "BTC"
         self.quote_currency = "GBP"
@@ -362,6 +371,10 @@ class BotConfig:
         parser = argparse.ArgumentParser(description="Python Crypto Bot using the Coinbase Pro or Binanace API")
 
         parser.add_argument("--init", action="store_true", help="config.json configuration builder")
+
+        parser.add_argument("--termcolor", type=int, help="Enable terminal UI color")
+        parser.add_argument("--termwidth", type=int, help="Set terminal UI width ")
+        parser.add_argument("--logwidth", type=int, help="Set terminal log width")
 
         parser.add_argument("--live", type=int, help="Live order execution")
         parser.add_argument("--verbose", type=int, help="Verbose terminal output")

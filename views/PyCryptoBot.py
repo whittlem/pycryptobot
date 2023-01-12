@@ -1,3 +1,4 @@
+from os import get_terminal_size
 from rich.table import Text
 from rich.table import Table
 from rich.console import Console
@@ -45,7 +46,7 @@ class RichText:
             RichText.styled_text(app.print_granularity(), "yellow"),
             RichText.styled_text(notification, color),
         )
-        console_term = Console()
+        console_term = Console(no_color=(not app.term_color), width=app.term_width)
         console_term.print(table_console)
         if app.disablelog is False:
             app.console_log.print(table_console)

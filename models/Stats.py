@@ -15,14 +15,12 @@ class Stats:
 
     def get_data(self, market):
         # get completed live orders
-        self.app.setLive(1)
+        self.app.is_live = 1
         self.orders = self.account.get_orders(market, "", "done")
-        self.app.setMarket(market)
+        self.app.market = market
         if self.fiat_currency is not None:
             if self.app.quote_currency != self.fiat_currency:
-                raise ValueError(
-                    "all currency pairs in statgroup must use the same quote currency"
-                )
+                raise ValueError("all currency pairs in statgroup must use the same quote currency")
         else:
             self.fiat_currency = self.app.quote_currency
 
@@ -155,9 +153,7 @@ class Stats:
                 d_date = d_date + " " * (len(headers[2]) - len(d_date))
                 d_buy_size = "| " + symbol + " " + "{:.2f}".format(pair["buy"]["size"])
                 d_buy_size = d_buy_size + " " * (len(headers[3]) - len(d_buy_size))
-                d_sell_size = (
-                    "| " + symbol + " " + "{:.2f}".format(pair["sell"]["size"])
-                )
+                d_sell_size = "| " + symbol + " " + "{:.2f}".format(pair["sell"]["size"])
                 d_sell_size = d_sell_size + " " * (len(headers[4]) - len(d_sell_size))
                 if pair["delta"] > 0:
                     d_delta = "| " + symbol + " {:.2f}".format(pair["delta"])
@@ -197,74 +193,34 @@ class Stats:
         all_time_gain = [x["delta"] for x in totals["all_time"]]
 
         if len(today_per) > 0:
-            today_delta = [
-                (x["sell"]["time"] - x["buy"]["time"]).total_seconds()
-                for x in totals["today"]
-            ]
+            today_delta = [(x["sell"]["time"] - x["buy"]["time"]).total_seconds() for x in totals["today"]]
             today_delta = timedelta(seconds=int(sum(today_delta) / len(today_delta)))
         else:
             today_delta = "0:0:0"
         if len(week_per) > 0:
-            week_delta = [
-                (x["sell"]["time"] - x["buy"]["time"]).total_seconds()
-                for x in totals["week"]
-            ]
+            week_delta = [(x["sell"]["time"] - x["buy"]["time"]).total_seconds() for x in totals["week"]]
             week_delta = timedelta(seconds=int(sum(week_delta) / len(week_delta)))
         else:
             week_delta = "0:0:0"
         if len(month_per) > 0:
-            month_delta = [
-                (x["sell"]["time"] - x["buy"]["time"]).total_seconds()
-                for x in totals["month"]
-            ]
+            month_delta = [(x["sell"]["time"] - x["buy"]["time"]).total_seconds() for x in totals["month"]]
             month_delta = timedelta(seconds=int(sum(month_delta) / len(month_delta)))
         else:
             month_delta = "0:0:0"
         if len(all_time_per) > 0:
-            all_time_delta = [
-                (x["sell"]["time"] - x["buy"]["time"]).total_seconds()
-                for x in totals["all_time"]
-            ]
-            all_time_delta = timedelta(
-                seconds=int(sum(all_time_delta) / len(all_time_delta))
-            )
+            all_time_delta = [(x["sell"]["time"] - x["buy"]["time"]).total_seconds() for x in totals["all_time"]]
+            all_time_delta = timedelta(seconds=int(sum(all_time_delta) / len(all_time_delta)))
         else:
             all_time_delta = "0:0:0"
 
-        today_sum = (
-            symbol + " {:.2f}".format(round(sum(today_gain), 2))
-            if len(today_gain) > 0
-            else symbol + " 0.00"
-        )
-        week_sum = (
-            symbol + " {:.2f}".format(round(sum(week_gain), 2))
-            if len(week_gain) > 0
-            else symbol + " 0.00"
-        )
-        month_sum = (
-            symbol + " {:.2f}".format(round(sum(month_gain), 2))
-            if len(month_gain) > 0
-            else symbol + " 0.00"
-        )
-        all_time_sum = (
-            symbol + " {:.2f}".format(round(sum(all_time_gain), 2))
-            if len(all_time_gain) > 0
-            else symbol + " 0.00"
-        )
-        today_percent = (
-            str(round(sum(today_per), 4)) + "%" if len(today_per) > 0 else "0.0000%"
-        )
-        week_percent = (
-            str(round(sum(week_per), 4)) + "%" if len(week_per) > 0 else "0.0000%"
-        )
-        month_percent = (
-            str(round(sum(month_per), 4)) + "%" if len(month_per) > 0 else "0.0000%"
-        )
-        all_time_percent = (
-            str(round(sum(all_time_per), 4)) + "%"
-            if len(all_time_per) > 0
-            else "0.0000%"
-        )
+        today_sum = symbol + " {:.2f}".format(round(sum(today_gain), 2)) if len(today_gain) > 0 else symbol + " 0.00"
+        week_sum = symbol + " {:.2f}".format(round(sum(week_gain), 2)) if len(week_gain) > 0 else symbol + " 0.00"
+        month_sum = symbol + " {:.2f}".format(round(sum(month_gain), 2)) if len(month_gain) > 0 else symbol + " 0.00"
+        all_time_sum = symbol + " {:.2f}".format(round(sum(all_time_gain), 2)) if len(all_time_gain) > 0 else symbol + " 0.00"
+        today_percent = str(round(sum(today_per), 4)) + "%" if len(today_per) > 0 else "0.0000%"
+        week_percent = str(round(sum(week_per), 4)) + "%" if len(week_per) > 0 else "0.0000%"
+        month_percent = str(round(sum(month_per), 4)) + "%" if len(month_per) > 0 else "0.0000%"
+        all_time_percent = str(round(sum(all_time_per), 4)) + "%" if len(all_time_per) > 0 else "0.0000%"
 
         trades = "Number of Completed Trades:"
         gains = "Percentage Gains:"

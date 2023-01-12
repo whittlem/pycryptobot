@@ -75,8 +75,8 @@ class PyCryptoBot(BotConfig):
         self.exchange = exchange
         super(PyCryptoBot, self).__init__(filename=self.config_file, exchange=self.exchange)
 
-        self.console_term = Console()  # logs to the screen
-        self.console_log = Console(file=open(self.logfile, "w"))  # logs to file
+        self.console_term = Console(no_color=(not self.term_color), width=self.term_width)  # logs to the screen
+        self.console_log = Console(file=open(self.logfile, "w"), no_color=True, width=self.log_width)  # logs to file
 
         self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)
 
@@ -2215,8 +2215,22 @@ class PyCryptoBot(BotConfig):
         table.add_column("Option", justify="left", style="white")
 
         table.add_row("Start", str(datetime.now()), "Bot start time")
-
         table.add_row("", "", "")
+
+        config_option_row_bool(
+            "Enable Terminal Color",
+            "term_color",
+            "Enable terminal UI color",
+            store_invert=False,
+            default_value=True,
+            arg_name="termcolor",
+        )
+        config_option_row_int(
+            "Terminal UI Width", "term_width", "Set terminal UI width", default_value=os.get_terminal_size().columns, arg_name="termwidth"
+        )
+        config_option_row_int(
+            "Terminal Log Width", "log_width", "Set terminal log width", break_below=True, default_value=180, arg_name="logwidth"
+        )
 
         if self.is_live:
             table.add_row("Bot Mode", "LIVE", "Live trades using your funds!", "--live <1|0>")

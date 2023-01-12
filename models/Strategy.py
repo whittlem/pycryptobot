@@ -243,7 +243,7 @@ class Strategy:
             ):
                 RichText.notify("Time to sell before losing funds! Prevent Loss Activated!", self.app, "warning")
                 if not self.app.disabletelegram:
-                    self.app.notifyTelegram(f"{self.app.market} - time to sell before losing funds! Prevent Loss Activated!")
+                    self.app.notify_telegram(f"{self.app.market} - time to sell before losing funds! Prevent Loss Activated!")
                 return True
 
         # check sellatloss and nosell bounds before continuing
@@ -301,7 +301,7 @@ class Strategy:
 
                 # Telgram debug output
                 if not self.app.disabletelegram:
-                    self.app.notifyTelegram(f"{self.app.market} ({self.app.print_granularity()})\n{debugtext}")
+                    self.app.notify_telegram(f"{self.app.market} ({self.app.print_granularity()})\n{debugtext}")
 
             if self.state.tsl_triggered is True and change_pcnt_high < self.state.tsl_pcnt:
                 log_text = f"Trailing Stop Loss Triggered (Margin: {_truncate(margin,2)}% Stoploss: {str(self.state.tsl_pcnt)}%)"
@@ -309,7 +309,7 @@ class Strategy:
                     RichText.notify(log_text, self.app, "warning")
 
                 if not self.app.disabletelegram:
-                    self.app.notifyTelegram(f"{self.app.market} ({self.app.print_granularity()}) {log_text}")
+                    self.app.notify_telegram(f"{self.app.market} ({self.app.print_granularity()}) {log_text}")
 
                 return True
 
@@ -326,7 +326,7 @@ class Strategy:
             log_text = "Loss Failsafe Triggered (< " + str(self.app.sell_lower_pcnt) + "%)"
             RichText.notify(log_text, self.app, "warning")
             if not self.app.disabletelegram:
-                self.app.notifyTelegram(f"{self.app.market} ({self.app.print_granularity()}) {log_text}")
+                self.app.notify_telegram(f"{self.app.market} ({self.app.print_granularity()}) {log_text}")
             return True
 
         if self.app.debug:
@@ -356,7 +356,7 @@ class Strategy:
         ):
             log_text = f"Loss Failsafe Triggered (Fibonacci Band: {str(self.state.fib_low)})"
             RichText.notify(log_text, self.app, "warning")
-            self.app.notifyTelegram(f"{self.app.market} ({self.app.print_granularity()}) {log_text}")
+            self.app.notify_telegram(f"{self.app.market} ({self.app.print_granularity()}) {log_text}")
             return True
 
         if self.app.debug:
@@ -379,7 +379,7 @@ class Strategy:
             if not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly):
                 RichText.notify(log_text, self.app, "warning")
             if not self.app.disabletelegram:
-                self.app.notifyTelegram(f"{self.app.market} ({self.app.print_granularity()}) {log_text}")
+                self.app.notify_telegram(f"{self.app.market} ({self.app.print_granularity()}) {log_text}")
             return True
 
         if self.app.debug:
@@ -396,7 +396,7 @@ class Strategy:
                 RichText.notify(log_text, self.app, "warning")
             if not (not self.app.sellatloss and margin <= 0):
                 if not self.app.disabletelegram:
-                    self.app.notifyTelegram(f"{self.app.market} ({self.app.print_granularity()}) {log_text}")
+                    self.app.notify_telegram(f"{self.app.market} ({self.app.print_granularity()}) {log_text}")
             return True
 
         return False
@@ -496,7 +496,7 @@ class Strategy:
             immediate_action = True
             trailing_action_logtext = f"Immediate Buy - Chg: {str(pricechange)}%/{self.app.trailingbuyimmediatepcnt}%"
             waitpcnttext += f"Ready for immediate buy. {self.state.waiting_buy_price} change of {str(pricechange)}% is above setting of {self.app.trailingbuyimmediatepcnt}%"
-            self.app.notifyTelegram(waitpcnttext)
+            self.app.notify_telegram(waitpcnttext)
         # added 10% fluctuation to prevent holding another full candle for 0.025%
         elif pricechange < (trailingbuypcnt * 0.9):
             self.state.action = "WAIT"
@@ -555,7 +555,7 @@ class Strategy:
             immediate_action = True
             trailing_action_logtext = f"Bailout Immediately - Chg: {str(pricechange)}%/{self.app.trailingsellbailoutpcnt}%"
             waitpcnttext += f"Bailout Immediately. Price {self.state.waiting_sell_price}, change of {str(pricechange)}%, is lower than setting of {self.app.trailingsellbailoutpcnt}%"
-            self.app.notifyTelegram(waitpcnttext)
+            self.app.notify_telegram(waitpcnttext)
         # When all indicators signal strong sell and price decreases more than "self.app.trailingsellimmediatepcnt", immediate sell
         elif (  # This resets after a sell occurs
             self.app.trailingsellimmediatepcnt is not None
@@ -566,7 +566,7 @@ class Strategy:
             immediate_action = True
             trailing_action_logtext = f"Immediate Sell - Chg: {str(pricechange)}%/{self.app.trailingsellimmediatepcnt}%"
             waitpcnttext += f"Sell Immediately. Price {self.state.waiting_sell_price}, change of {str(pricechange)}%, is lower than setting of {self.app.trailingsellimmediatepcnt}%"
-            self.app.notifyTelegram(waitpcnttext)
+            self.app.notify_telegram(waitpcnttext)
         # added 10% fluctuation to prevent holding another full candle for 0.025%
         elif pricechange > (self.app.trailingsellpcnt * 0.9):
             self.state.action = "WAIT"

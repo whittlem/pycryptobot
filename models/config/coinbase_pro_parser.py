@@ -34,8 +34,8 @@ def parser(app, coinbase_config, args={}):
             fh.close()
 
             if os.path.isfile("config.json") and os.path.isfile("coinbasepro.key"):
-                coinbase_config["app.api_key_file"] = coinbase_config.pop("api_key")
-                coinbase_config["app.api_key_file"] = "coinbasepro.key"
+                coinbase_config["api_key_file"] = coinbase_config.pop("api_key")
+                coinbase_config["api_key_file"] = "coinbasepro.key"
                 del coinbase_config["api_secret"]
                 del coinbase_config["api_passphrase"]
 
@@ -51,10 +51,10 @@ def parser(app, coinbase_config, args={}):
                 fh.close()
 
         app.api_key_file = None
-        if "app.api_key_file" in args and args["app.api_key_file"] is not None:
-            app.api_key_file = args["app.api_key_file"]
+        if "app.api_key_file" in args and args["api_key_file"] is not None:
+            app.api_key_file = args["api_key_file"]
         elif "app.api_key_file" in coinbase_config:
-            app.api_key_file = coinbase_config["app.api_key_file"]
+            app.api_key_file = coinbase_config["api_key_file"]
 
         if app.api_key_file is not None:
             try:
