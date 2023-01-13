@@ -52,7 +52,7 @@ print(df)
 # df = api.markets()
 # print (df)
 
-# fee = api.getTradeFee('BTC-USDT')
+# fee = api.get_trade_fee('BTC-USDT')
 # print (fee)
 
 # df = api.get_orders('BTC-USDT')

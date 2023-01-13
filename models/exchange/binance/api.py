@@ -399,7 +399,7 @@ class AuthAPI(AuthAPIBase):
                         {"symbol": market, "recvWindow": self.recv_window},
                     )
 
-                    if resp.endswith("Invalid symbol."):
+                    if isinstance(resp, str) and resp.endswith("Invalid symbol."):
                         return "Invalid market."
 
                     # unexpected data, then return
@@ -564,7 +564,7 @@ class AuthAPI(AuthAPIBase):
         except Exception:
             return df
 
-    def getTradeFee(self, market: str) -> float:
+    def get_trade_fee(self, market: str) -> float:
         """Retrieves the trade fees"""
 
         # Binance US does not currently define "/sapi/v1/asset/tradeFee" in its API
@@ -646,11 +646,14 @@ class AuthAPI(AuthAPIBase):
             base_quantity = np.divide(quote_quantity, current_price)
 
             df_filters = self.get_market_info_filters(market)
+            if df_filters.empty:
+                return "Invalid market."
+
             step_size = float(df_filters.loc[df_filters["filterType"] == "LOT_SIZE"]["stepSize"])
             precision = int(round(-math.log(step_size, 10), 0))
 
             # remove fees
-            base_quantity = base_quantity - (base_quantity * self.getTradeFee(market))
+            base_quantity = base_quantity - (base_quantity * self.get_trade_fee(market))
 
             # execute market buy
             stepper = 10.0**precision
@@ -694,7 +697,7 @@ class AuthAPI(AuthAPIBase):
 
             # remove fees
             if use_fees:
-                base_quantity = base_quantity - (base_quantity * self.getTradeFee(market))
+                base_quantity = base_quantity - (base_quantity * self.get_trade_fee(market))
 
             # execute market sell
             stepper = 10.0**precision

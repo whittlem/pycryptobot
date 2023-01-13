@@ -551,7 +551,7 @@ class AuthAPI(AuthAPIBase):
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
         return model.auth_api("POST", "orders", order)
 
-    def getTradeFee(self, market: str) -> float:
+    def get_trade_fee(self, market: str) -> float:
         """Retrieves the trade fees"""
 
         # GET /sapi/v1/asset/tradeFee

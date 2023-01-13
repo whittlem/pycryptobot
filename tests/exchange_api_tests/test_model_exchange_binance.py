@@ -87,6 +87,24 @@ def test_get_account():
     assert all([a == b for a, b in zip(actual, expected)])
 
 
+def test_get_usd_volume():
+    app = PyCryptoBot(exchange="binance")
+
+    if not exists(app.api_key_file):
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not exist!')
+
+    key_file = open(app.api_key_file, "r")
+    file_api_keys = key_file.readlines()
+
+    if len(file_api_keys) != 2:
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not contain a valid api key and secret!')
+
+    api = AuthAPI(app.api_key, app.api_secret, app.api_url, app=app)
+    resp = api.get_usd_volume()
+    assert type(resp) is float
+    assert resp > 0
+
+
 def test_get_fees_without_market():
     app = PyCryptoBot(exchange="binance")
 
@@ -219,6 +237,31 @@ def test_get_orders():
 
     api = AuthAPI(app.api_key, app.api_secret, app.api_url, app=app)
     df = api.get_orders(VALID_ORDER_MARKET)
+    assert type(df) is pandas.core.frame.DataFrame
+    assert len(df) > 0
+
+    actual = df.columns.to_list()
+    expected = ["created_at", "market", "action", "type", "size", "filled", "fees", "price", "status"]
+    #  order is not important, but no duplicates
+    assert len(actual) == len(expected)
+    diff = set(actual) ^ set(expected)
+    assert not diff
+
+
+def test_get_order_history():
+    app = PyCryptoBot(exchange="binance")
+
+    if not exists(app.api_key_file):
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not exist!')
+
+    key_file = open(app.api_key_file, "r")
+    file_api_keys = key_file.readlines()
+
+    if len(file_api_keys) != 2:
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not contain a valid api key and secret!')
+
+    api = AuthAPI(app.api_key, app.api_secret, app.api_url, app=app)
+    df = api.get_orders(order_history=[VALID_ORDER_MARKET])
     assert type(df) is pandas.core.frame.DataFrame
     assert len(df) > 0
 
@@ -527,6 +570,28 @@ def test_get_time():
     assert type(resp) is datetime
 
 
+def test_get_ticker():
+    app = PyCryptoBot(exchange="binance")
+
+    if not exists(app.api_key_file):
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not exist!')
+
+    key_file = open(app.api_key_file, "r")
+    file_api_keys = key_file.readlines()
+
+    if len(file_api_keys) != 2:
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not contain a valid api key and secret!')
+
+    api = AuthAPI(app.api_key, app.api_secret, app.api_url, app=app)
+    assert type(api) is AuthAPI
+
+    resp = api.get_ticker()
+    assert type(resp) is tuple
+    assert len(resp) == 2
+    assert type(resp[0]) is str
+    assert type(resp[1]) is float
+
+
 def test_market_buy_invalid_market():
     app = PyCryptoBot(exchange="binance")
 
@@ -541,6 +606,6 @@ def test_market_buy_invalid_market():
 
     api = AuthAPI(app.api_key, app.api_secret, app.api_url, app=app)
 
-    with pytest.raises(ValueError) as execinfo:
-        api.market_buy("ERROR", 0.0001, test=True)
-    assert str(execinfo.value) == "Binance market is invalid."
+    resp = api.market_buy("ERROR", 0.0001, test=True)
+    assert type(resp) is str, "market_buy() should return a string with the error message"
+    assert resp == "Invalid market."
