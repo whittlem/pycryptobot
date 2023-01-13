@@ -12,8 +12,9 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 sys.path.append(".")
 # pylint: disable=import-error
-from models.exchange.binance import AuthAPI, PublicAPI
-from controllers.PyCryptoBot import PyCryptoBot  # noqa: E402
+from models.exchange.binance import AuthAPI
+from models.exchange.binance import PublicAPI
+from controllers.PyCryptoBot import PyCryptoBot
 
 # api key file for unit tests
 API_KEY_FILE = "binance.key"
@@ -582,8 +583,8 @@ def test_get_ticker():
     if len(file_api_keys) != 2:
         pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not contain a valid api key and secret!')
 
-    api = AuthAPI(app.api_key, app.api_secret, app.api_url, app=app)
-    assert type(api) is AuthAPI
+    api = PublicAPI(app=app)
+    assert type(api) is PublicAPI
 
     resp = api.get_ticker()
     assert type(resp) is tuple
@@ -609,3 +610,94 @@ def test_market_buy_invalid_market():
     resp = api.market_buy("ERROR", 0.0001, test=True)
     assert type(resp) is str, "market_buy() should return a string with the error message"
     assert resp == "Invalid market."
+
+
+def test_historical_data_market_granularity_only():
+    app = PyCryptoBot(exchange="binance")
+
+    if not exists(app.api_key_file):
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not exist!')
+
+    key_file = open(app.api_key_file, "r")
+    file_api_keys = key_file.readlines()
+
+    if len(file_api_keys) != 2:
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not contain a valid api key and secret!')
+
+    api = PublicAPI(app=app)
+    assert type(api) is PublicAPI
+
+    df = api.get_historical_data("BTCGBP", "1h")
+    assert type(df) is pandas.core.frame.DataFrame
+    assert len(df) == 300
+
+    actual = df.columns.to_list()
+    expected = ["date", "market", "granularity", "low", "high", "open", "close", "volume"]
+    #  order is not important, but no duplicate
+    assert len(actual) == len(expected)
+    diff = set(actual) ^ set(expected)
+    assert not diff
+
+def test_historical_data_invalid_market():
+    app = PyCryptoBot(exchange="binance")
+
+    if not exists(app.api_key_file):
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not exist!')
+
+    key_file = open(app.api_key_file, "r")
+    file_api_keys = key_file.readlines()
+
+    if len(file_api_keys) != 2:
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not contain a valid api key and secret!')
+
+    api = PublicAPI(app=app)
+    assert type(api) is PublicAPI
+
+    df = api.get_historical_data("ERROR", "1h")
+    assert type(df) is pandas.core.frame.DataFrame
+    assert len(df) == 0
+
+def test_historical_data_invalid_granularity():
+    app = PyCryptoBot(exchange="binance")
+
+    if not exists(app.api_key_file):
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not exist!')
+
+    key_file = open(app.api_key_file, "r")
+    file_api_keys = key_file.readlines()
+
+    if len(file_api_keys) != 2:
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not contain a valid api key and secret!')
+
+    api = PublicAPI(app=app)
+    assert type(api) is PublicAPI
+
+    df = api.get_historical_data("BTCGBP", "ERROR")
+    assert type(df) is pandas.core.frame.DataFrame
+    assert len(df) == 0
+
+def test_historical_data_market_granularity_date_range():
+    app = PyCryptoBot(exchange="binance")
+
+    if not exists(app.api_key_file):
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not exist!')
+
+    key_file = open(app.api_key_file, "r")
+    file_api_keys = key_file.readlines()
+
+    if len(file_api_keys) != 2:
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not contain a valid api key and secret!')
+
+    api = PublicAPI(app=app)
+    assert type(api) is PublicAPI
+
+    df = api.get_historical_data("BTCGBP", "1h", None, "2020-06-19T10:00:00", "2020-06-19T14:00:00")
+    assert type(df) is pandas.core.frame.DataFrame
+    assert len(df) == 5
+
+    actual = df.columns.to_list()
+    expected = ["date", "market", "granularity", "low", "high", "open", "close", "volume"]
+    #  order is not important, but no duplicate
+    assert len(actual) == len(expected)
+    diff = set(actual) ^ set(expected)
+    assert not diff

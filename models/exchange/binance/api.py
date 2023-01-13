@@ -951,6 +951,7 @@ class PublicAPI(AuthAPIBase):
                         "limit": 300,
                     },
                 )
+
             elif iso8601start != "" and iso8601end != "":
                 startTime = int(datetime.timestamp(datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")) * 1000)
 
