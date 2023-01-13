@@ -399,6 +399,9 @@ class AuthAPI(AuthAPIBase):
                         {"symbol": market, "recvWindow": self.recv_window},
                     )
 
+                    if resp.endswith("Invalid symbol."):
+                        return "Invalid market."
+
                     # unexpected data, then return
                     if len(resp) == 0:
                         return pd.DataFrame()
@@ -430,6 +433,9 @@ class AuthAPI(AuthAPIBase):
                     "/api/v3/allOrders",
                     {"symbol": market, "recvWindow": self.recv_window},
                 )
+
+                if isinstance(resp, str) and resp.endswith("Invalid symbol."):
+                    return "Invalid market."
 
                 # unexpected data, then return
                 if len(resp) == 0:
@@ -777,10 +783,11 @@ class AuthAPI(AuthAPIBase):
             elif resp.status_code != 200:
                 message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
                 if self.die_on_api_error:
-                    raise Exception(message)
+                    raise RuntimeError(message)
                 else:
                     if self.app:
                         RichText.notify(f"Error: {message}", self.app, "error")
+                        raise RuntimeError(message)
                     return {}
 
             resp.raise_for_status()
@@ -797,6 +804,9 @@ class AuthAPI(AuthAPIBase):
 
         except json.decoder.JSONDecodeError as err:
             return self.handle_api_error(err, "JSONDecodeError")
+
+        except Exception as err:
+            return str(err)
 
     def handle_api_error(self, err: str, reason: str, app: object = None) -> dict:
         """Handler for API errors"""
