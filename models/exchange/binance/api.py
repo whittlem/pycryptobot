@@ -99,6 +99,8 @@ class AuthAPI(AuthAPIBase):
         self.recv_window = recv_window
 
     def handle_init_error(self, err: str, app: object = None) -> None:
+        """Handle initialisation error"""
+
         if app is not None and app.debug is True:
             raise TypeError(err)
         else:

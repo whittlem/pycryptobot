@@ -58,7 +58,7 @@ class AuthAPIBase:
 
 
 class AuthAPI(AuthAPIBase):
-    def __init__(self, api_key="", api_secret="", api_passphrase="", api_url="", cache_path="cache", use_cache=False, app: object = None) -> None:
+    def __init__(self, api_key="", api_secret="", api_passphrase="", api_url="https://api.kucoin.com", cache_path="cache", use_cache=False, app: object = None) -> None:
         """kucoin API object model
 
         Parameters
@@ -132,11 +132,8 @@ class AuthAPI(AuthAPIBase):
 
         if app is not None and app.debug is True:
             raise TypeError(err)
-        elif self.die_on_api_error:
-            raise SystemExit(err)
         else:
-            if self.app:
-                RichText.notify(f"Initialization Error: {err}", self.app, "error")
+            raise SystemExit(err)
 
     def __call__(self, request) -> Request:
         """Signs the request"""
@@ -1203,21 +1200,21 @@ class PublicAPI(AuthAPIBase):
             return self.handle_api_error(f"Kucoin API Error: call to {uri} attempted {trycnt} times without valid response", "Kucoin Public API Error")
 
     def handle_api_error(self, err: str, reason: str, app: object = None) -> dict:
-        """Handle API errors"""
+        """Handler for API errors"""
 
         if app is not None and app.debug is True:
             if self.die_on_api_error:
                 raise SystemExit(err)
             else:
                 if self.app:
-                    RichText.notify(err, self.app, "debug")
+                    RichText.notify(err, self.app, "error")
                 return {}
         else:
             if self.die_on_api_error:
                 raise SystemExit(f"{reason}: {self._api_url}")
             else:
                 if self.app:
-                    RichText.notify(f"{reason}: {self._api_url}", self.app, "error")
+                    RichText.notify(f"{reason}: {self._api_url}", self.app, "info")
                 return {}
 
 
