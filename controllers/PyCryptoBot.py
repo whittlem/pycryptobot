@@ -591,7 +591,10 @@ class PyCryptoBot(BotConfig):
                         0,
                     )
 
-                    if self.enableexitaftersell and self.startmethod not in ("standard",):
+                    if self.enableexitaftersell and self.startmethod not in (
+                        "standard",
+                        "telegram",
+                    ):
                         sys.exit(0)
 
             if self.price < 0.000001:
@@ -2331,7 +2334,12 @@ class PyCryptoBot(BotConfig):
             arg_name="predictions",
         )
         config_option_row_str(
-            "Start Method", "startmethod", "Bot start method ('standard', 'telegram')", break_below=False, default_value="standard", arg_name="startmethod"
+            "Start Method",
+            "startmethod",
+            "Bot start method ('scanner', 'standard', 'telegram')",
+            break_below=False,
+            default_value="standard",
+            arg_name="startmethod",
         )
         config_option_row_bool(
             "Verbose Terminal Output",
@@ -2864,7 +2872,7 @@ class PyCryptoBot(BotConfig):
             return api.get_ticker(market, websocket)
 
         elif self.exchange == Exchange.KUCOIN:
-            api = KPublicAPI(api_url=self.api_ur, app=self)
+            api = KPublicAPI(api_url=self.api_url, app=self)
             return api.get_ticker(market, websocket)
         else:  # returns data from coinbase if not specified
             api = CBPublicAPI(app=self)

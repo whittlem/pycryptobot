@@ -414,7 +414,7 @@ class BotConfig:
         parser.add_argument("--logbuysellinjson", type=int, help="Log buy and sell orders in a JSON file")
         parser.add_argument("--manualtradesonly", type=int, help="Manual Trading Only (HODL)")
         parser.add_argument("--predictions", type=int, help="Enable AI / Machine Learning Predictions")
-        parser.add_argument("--startmethod", type=str, help="Bot start method ('standard', 'telegram')")
+        parser.add_argument("--startmethod", type=str, help="Bot start method ('scanner', 'standard', 'telegram')")
         parser.add_argument("--recvwindow", type=int, help="Binance exchange API recvwindow, integer between 5000 and 60000")
         parser.add_argument("--lastaction", type=str, help="Manually set the last action performed by the bot (BUY, SELL)")
         parser.add_argument("--kucoincache", type=int, help="Enable the Kucoin cache")
