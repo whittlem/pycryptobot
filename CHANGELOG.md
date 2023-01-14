@@ -8,6 +8,18 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [7.0.*] - 2023-01
+
+- version 7 is released as a major update
+- version 7.0.* will include hotfixes
+- ui is now using the rich library with colour
+- technical indicator code migrated to pandas-ta
+- additional technical analysis options
+- strategy code improved
+- many code improvements and bug fixes
+- docker build improved
+- additional unit tests
+
 ## [6.4.3] - 2022-06-12
 
 - fixed variable "err" referenced before assignment in Kucoin and CoinbasePro API files that was introduced in v6.4.2

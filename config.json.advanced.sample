@@ -1,6 +1,6 @@
 {
     "coinbasepro": {
-        "api_url": "https://api.pro.coinbase.com",
+        "api_url": "https://api.exchange.coinbase.com",
         "api_key_file": "coinbasepro.key",
         "config": {
             "base_currency" : "BTC",

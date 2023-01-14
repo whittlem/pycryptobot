@@ -49,7 +49,7 @@ class AuthAPIBase:
 
 
 class AuthAPI(AuthAPIBase):
-    def __init__(self, api_key="", api_secret="", api_passphrase="", api_url="https://api.pro.coinbase.com", app: object = None) -> None:
+    def __init__(self, api_key="", api_secret="", api_passphrase="", api_url="https://api.exchange.coinbase.com", app: object = None) -> None:
         """Coinbase Pro API object model
 
         Parameters
@@ -68,8 +68,8 @@ class AuthAPI(AuthAPIBase):
         self.die_on_api_error = False
 
         valid_urls = [
-            "https://api.pro.coinbase.com",
-            "https://api.pro.coinbase.com/",
+            "https://api.exchange.coinbase.com",
+            "https://api.exchange.coinbase.com/",
             "https://public.sandbox.pro.coinbase.com",
             "https://public.sandbox.pro.coinbase.com/",
         ]
@@ -596,6 +596,7 @@ class AuthAPI(AuthAPIBase):
                 if method == "DELETE":
                     resp = requests.delete(self._api_url + uri, auth=self)
                 elif method == "GET":
+                    print(self._api_url + uri)
                     resp = requests.get(self._api_url + uri, auth=self)
                 elif method == "POST":
                     resp = requests.post(self._api_url + uri, json=payload, auth=self)
@@ -684,7 +685,7 @@ class PublicAPI(AuthAPIBase):
     def __init__(self, app: object = None) -> None:
         # options
         self.die_on_api_error = False
-        self._api_url = "https://api.pro.coinbase.com/"
+        self._api_url = "https://api.exchange.coinbase.com/"
 
         # app
         self.app = app
@@ -993,13 +994,13 @@ class WebSocket(AuthAPIBase):
         markets=None,
         # granularity=None,
         granularity: Granularity = Granularity.ONE_HOUR,
-        api_url="https://api.pro.coinbase.com",
+        api_url="https://api.exchange.coinbase.com",
         ws_url="wss://ws-feed.pro.coinbase.com",
         app: object = None,
     ) -> None:
         valid_urls = [
-            "https://api.pro.coinbase.com",
-            "https://api.pro.coinbase.com/",
+            "https://api.exchange.coinbase.com",
+            "https://api.exchange.coinbase.com/",
             "https://public.sandbox.pro.coinbase.com",
             "https://public.sandbox.pro.coinbase.com/",
         ]
@@ -1149,7 +1150,7 @@ class WebSocketClient(WebSocket):
         markets: list = [DEFAULT_MARKET],
         # granularity: str = DEFAULT_GRANULARITY,
         granularity: Granularity = Granularity.ONE_HOUR,
-        api_url="https://api.pro.coinbase.com/",
+        api_url="https://api.exchange.coinbase.com/",
         ws_url: str = "wss://ws-feed.pro.coinbase.com",
         app: object = None,
     ) -> None:
@@ -1170,8 +1171,8 @@ class WebSocketClient(WebSocket):
             raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
 
         valid_urls = [
-            "https://api.pro.coinbase.com",
-            "https://api.pro.coinbase.com/",
+            "https://api.exchange.coinbase.com",
+            "https://api.exchange.coinbase.com/",
             "https://public.sandbox.pro.coinbase.com",
             "https://public.sandbox.pro.coinbase.com/",
         ]

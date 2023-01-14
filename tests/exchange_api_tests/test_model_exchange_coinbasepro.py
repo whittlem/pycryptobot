@@ -12,64 +12,64 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 sys.path.append(".")
 # pylint: disable=import-error
-from models.exchange.kucoin import AuthAPI
-from models.exchange.kucoin import PublicAPI
+from models.exchange.coinbase_pro import AuthAPI
+from models.exchange.coinbase_pro import PublicAPI
 from controllers.PyCryptoBot import PyCryptoBot
 
 # api key file for unit tests
-API_KEY_FILE = "kucoin.key"
+API_KEY_FILE = "coinbasepro.key"
 
 # there is no dynamic way of retrieving a valid order market
-VALID_ORDER_MARKET = "ADAUSDT"  # must contain at least one order
+VALID_ORDER_MARKET = "BTC-GBP"  # must contain at least one order
 
 
 def test_instantiate_authapi_without_error():
-    api_key = "000000000000000000000000"
-    api_secret = "000000000000000000000000000000000000"
-    api_passphrase = "00000000"
+    api_key = "00000000000000000000000000000000"
+    api_secret = "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000=="
+    api_passphrase = "00000000000"
     exchange = AuthAPI(api_key, api_secret, api_passphrase)
     assert type(exchange) is AuthAPI
 
 
 def test_instantiate_authapi_with_api_key_error():
     api_key = "ERROR"
-    api_secret = "000000000000000000000000000000000000"
-    api_passphrase = "00000000"
+    api_secret = "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000=="
+    api_passphrase = "00000000000"
 
     with pytest.raises(SystemExit) as execinfo:
         AuthAPI(api_key, api_secret, api_passphrase)
-    assert str(execinfo.value) == "Kucoin API key is invalid"
+    assert str(execinfo.value) == "Coinbase Pro API key is invalid"
 
 
 def test_instantiate_authapi_with_api_secret_error():
-    api_key = "000000000000000000000000"
+    api_key = "00000000000000000000000000000000"
     api_secret = "ERROR"
-    api_passphrase = "00000000"
+    api_passphrase = "00000000000"
 
     with pytest.raises(SystemExit) as execinfo:
         AuthAPI(api_key, api_secret, api_passphrase)
-    assert str(execinfo.value) == "Kucoin API secret is invalid"
+    assert str(execinfo.value) == "Coinbase Pro API secret is invalid"
 
 
 def test_instantiate_authapi_with_api_passphrase_error():
-    api_key = "000000000000000000000000"
-    api_secret = "000000000000000000000000000000000000"
+    api_key = "00000000000000000000000000000000"
+    api_secret = "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000=="
     api_passphrase = "ERROR"
 
     with pytest.raises(SystemExit) as execinfo:
         AuthAPI(api_key, api_secret, api_passphrase)
-    assert str(execinfo.value) == "Kucoin API passphrase is invalid"
+    assert str(execinfo.value) == "Coinbase Pro API passphrase is invalid"
 
 
 def test_instantiate_authapi_with_api_url_error():
-    api_key = "000000000000000000000000"
-    api_secret = "000000000000000000000000000000000000"
-    api_passphrase = "00000000"
+    api_key = "00000000000000000000000000000000"
+    api_secret = "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000=="
+    api_passphrase = "00000000000"
     api_url = "ERROR"
 
     with pytest.raises(ValueError) as execinfo:
         AuthAPI(api_key, api_secret, api_passphrase, api_url)
-    assert str(execinfo.value) == "Kucoin API URL is invalid"
+    assert str(execinfo.value) == "Coinbase Pro API URL is invalid"
 
 
 def test_instantiate_publicapi_without_error():
@@ -84,8 +84,8 @@ def test_config_json_exists_and_valid():
     with open(filename) as config_file:
         config = json.load(config_file)
 
-        if "kucoin" not in config:
-            pytest.skip("config.json does not contain kucoin")
+        if "coinbasepro" not in config:
+            pytest.skip("config.json does not contain coinbasepro")
 
         api_key = ""
         api_secret = ""
@@ -97,17 +97,17 @@ def test_config_json_exists_and_valid():
             api_passphrase = config["api_pass"]
             api_url = config["api_url"]
             AuthAPI(api_key, api_secret, api_passphrase, api_url)
-        elif "api_key" in config["kucoin"] and "api_secret" in config["kucoin"] and "api_passphrase" in config["kucoin"] and "api_url" in config["kucoin"]:
-            api_key = config["kucoin"]["api_key"]
-            api_secret = config["kucoin"]["api_secret"]
-            api_passphrase = config["kucoin"]["api_passphrase"]
-            api_url = config["kucoin"]["api_url"]
+        elif "api_key" in config["coinbasepro"] and "api_secret" in config["coinbasepro"] and "api_passphrase" in config["coinbasepro"] and "api_url" in config["coinbasepro"]:
+            api_key = config["coinbasepro"]["api_key"]
+            api_secret = config["coinbasepro"]["api_secret"]
+            api_passphrase = config["coinbasepro"]["api_passphrase"]
+            api_url = config["coinbasepro"]["api_url"]
             AuthAPI(api_key, api_secret, api_passphrase, api_url)
     pass
 
 
 def test_get_accounts():
-    app = PyCryptoBot(exchange="kucoin")
+    app = PyCryptoBot(exchange="coinbasepro")
 
     if not exists(app.api_key_file):
         pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not exist!')
@@ -121,9 +121,6 @@ def test_get_accounts():
     api = AuthAPI(app.api_key, app.api_secret, app.api_passphrase, app.api_url, app=app)
     df = api.get_accounts()
     assert type(df) is pandas.core.frame.DataFrame
-
-    if len(df) == 0:
-        pytest.skip("skipping test as no account data is available")
 
     actual = df.columns.to_list()
     expected = ["index", "id", "currency", "balance", "hold", "available", "profile_id", "trading_enabled"]

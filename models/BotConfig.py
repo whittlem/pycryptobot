@@ -40,7 +40,7 @@ class BotConfig:
             self.term_width = os.get_terminal_size().columns
         except OSError:
             self.term_width = 180
-        
+
         self.log_width = 180
 
         self.granularity = Granularity.ONE_HOUR
@@ -302,7 +302,7 @@ class BotConfig:
                 "market": "BTCGBP",
             },
             "coinbasepro": {
-                "api_url": "https://api.pro.coinbase.com",
+                "api_url": "https://api.exchange.coinbase.com",
                 "api_key": "00000000000000000000000000000000",
                 "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
                 "api_passphrase": "00000000000",
@@ -316,7 +316,7 @@ class BotConfig:
                 "market": "BTC-GBP",
             },
             "dummy": {
-                "api_url": "https://api.pro.coinbase.com",
+                "api_url": "https://api.exchange.coinbase.com",
                 "api_key": "00000000000000000000000000000000",
                 "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
                 "api_passphrase": "00000000000",

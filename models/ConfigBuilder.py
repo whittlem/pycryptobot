@@ -28,7 +28,7 @@ class ConfigBuilder:
         if choice == "1":
             self._c = 1
             config["coinbasepro"] = {}
-            config["coinbasepro"]["api_url"] = "https://api.pro.coinbase.com"
+            config["coinbasepro"]["api_url"] = "https://api.exchange.coinbase.com"
 
             choice = input(
                 "Do you have API keys for the Coinbase Pro exchange (1=yes, 2=no:default)? "
