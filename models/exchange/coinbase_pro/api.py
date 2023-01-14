@@ -596,7 +596,6 @@ class AuthAPI(AuthAPIBase):
                 if method == "DELETE":
                     resp = requests.delete(self._api_url + uri, auth=self)
                 elif method == "GET":
-                    print(self._api_url + uri)
                     resp = requests.get(self._api_url + uri, auth=self)
                 elif method == "POST":
                     resp = requests.post(self._api_url + uri, json=payload, auth=self)
