@@ -359,9 +359,9 @@ class TelegramHelper:
         jsonfiles.sort()
         return [x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles]
 
-    def get_manual_started_bot_list(self, startMethod: str = "telegram") -> List[str]:
+    def get_manual_started_bot_list(self, _startmethod: str = "telegram") -> List[str]:
         """Return contents of telegram_data folder"""
-        self.logger.debug("METHOD(get_manual_started_bot_list) - DATA(%s)", startMethod)
+        self.logger.debug("METHOD(get_manual_started_bot_list) - DATA(%s)", _startmethod)
         jsonfiles = self.get_all_bot_list()
 
         i = len(jsonfiles) - 1
@@ -372,7 +372,7 @@ class TelegramHelper:
                 i -= 1
                 continue
             if "botcontrol" in self.data:
-                if not self.data["botcontrol"]["startmethod"] == startMethod:
+                if not self.data["botcontrol"]["startmethod"] == _startmethod:
                     jsonfiles.pop(i)
             i -= 1
         jsonfiles.sort()

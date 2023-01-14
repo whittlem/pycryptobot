@@ -592,8 +592,7 @@ class PyCryptoBot(BotConfig):
                     )
 
                     if self.enableexitaftersell and self.startmethod not in (
-                        "standard",
-                        "telegram",
+                        "standard"
                     ):
                         sys.exit(0)
 
