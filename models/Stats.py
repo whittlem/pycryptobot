@@ -254,4 +254,5 @@ class Stats:
         RichText.notify(aver + " " * (width - len(aver)) + str(all_time_delta), self.app, "info")
         RichText.notify(success + " " * (width - len(success)) + all_time_sum, self.app, "info")
 
+        print("")
         sys.exit()

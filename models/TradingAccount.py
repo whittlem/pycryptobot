@@ -116,7 +116,7 @@ class TradingAccount:
                 return self.orders
             else:
                 # return dummy orders
-                if market == "":
+                if market == "" or len(self.orders) == 0:
                     return self.orders
                 else:
                     return self.orders[self.orders["market"] == market]
