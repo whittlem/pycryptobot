@@ -592,8 +592,7 @@ class PyCryptoBot(BotConfig):
                     )
 
                     if self.enableexitaftersell and self.startmethod not in (
-                        "standard",
-                        "telegram",
+                        "standard"
                     ):
                         sys.exit(0)
 
@@ -1631,11 +1630,10 @@ class PyCryptoBot(BotConfig):
         except (KeyboardInterrupt, SystemExit):
             if self.websocket and not self.is_sim:
                 signal.signal(signal.SIGINT, signal_handler)  # disable ctrl/cmd+c
-
-                RichText.notify(f"{str(datetime.now())} bot is closing via keyboard interrupt", self, "warning")
+                RichText.notify("Shutting down bot...", self, "warning")
                 RichText.notify("Please wait while threads complete gracefully....", self, "warning")
-            else:
-                RichText.notify(f"{str(datetime.now())} bot is closed via keyboard interrupt...", self, "warning")
+            # else:
+                # RichText.notify("Shutting down bot...", self, "warning")
             try:
                 try:
                     self.telegram_bot.remove_active_bot()
@@ -1674,7 +1672,7 @@ class PyCryptoBot(BotConfig):
                 return api.market_buy(market, float(_truncate(quote_currency, 8)))
             elif self.exchange == Exchange.KUCOIN:
                 api = KAuthAPI(self.api_key, self.api_secret, self.api_passphrase, self.api_url, use_cache=self.usekucoincache, app=self)
-                return api.marketBuy(market, float(quote_currency))
+                return api.market_buy(market, float(quote_currency))
             elif self.exchange == Exchange.BINANCE:
                 api = BAuthAPI(self.api_key, self.api_secret, self.api_url, recv_window=self.recv_window, app=self)
                 return api.market_buy(market, quote_currency)
@@ -2139,10 +2137,13 @@ class PyCryptoBot(BotConfig):
             if arg_name is None:
                 arg_name = store_name
 
-            if getattr(self, store_name) != default_value:
-                table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <str>")
-            else:
-                table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <str>", style="grey62")
+            try:
+                if getattr(self, store_name) != default_value:
+                    table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <str>")
+                else:
+                    table.add_row(item, str(getattr(self, store_name)), description, f"--{arg_name} <str>", style="grey62")
+            except AttributeError:
+                pass  # ignore
 
             if break_below is True:
                 table.add_row("", "", "")
