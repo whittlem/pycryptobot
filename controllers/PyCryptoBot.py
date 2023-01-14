@@ -706,11 +706,7 @@ class PyCryptoBot(BotConfig):
 
                 # handle immediate sell actions
                 if self.manual_trades_only is False and strategy.is_sell_trigger(
-                    self.state,
-                    self.price,
-                    _technical_analysis.get_trade_exit(self.price),
-                    margin,
-                    change_pcnt_high
+                    self.state, self.price, _technical_analysis.get_trade_exit(self.price), margin, change_pcnt_high
                 ):
                     self.state.action = "SELL"
                     immediate_action = True
@@ -1671,32 +1667,13 @@ class PyCryptoBot(BotConfig):
                     quote_currency = (buy_percent / 100) * quote_currency
 
             if self.exchange == Exchange.COINBASEPRO:
-                api = CBAuthAPI(
-                    self.api_key,
-                    self.api_secret,
-                    self.api_passphrase,
-                    self.api_url,
-                    app=self
-                )
+                api = CBAuthAPI(self.api_key, self.api_secret, self.api_passphrase, self.api_url, app=self)
                 return api.market_buy(market, float(_truncate(quote_currency, 8)))
             elif self.exchange == Exchange.KUCOIN:
-                api = KAuthAPI(
-                    self.api_key,
-                    self.api_secret,
-                    self.api_passphrase,
-                    self.api_url,
-                    use_cache=self.usekucoincache,
-                    app=self
-                )
+                api = KAuthAPI(self.api_key, self.api_secret, self.api_passphrase, self.api_url, use_cache=self.usekucoincache, app=self)
                 return api.marketBuy(market, float(quote_currency))
             elif self.exchange == Exchange.BINANCE:
-                api = BAuthAPI(
-                    self.api_key,
-                    self.api_secret,
-                    self.api_url,
-                    recv_window=self.recv_window,
-                    app=self
-                )
+                api = BAuthAPI(self.api_key, self.api_secret, self.api_url, recv_window=self.recv_window, app=self)
                 return api.market_buy(market, quote_currency)
             else:
                 return None
@@ -1707,32 +1684,13 @@ class PyCryptoBot(BotConfig):
                 if sell_percent > 0 and sell_percent < 100:
                     base_currency = (sell_percent / 100) * base_currency
                 if self.exchange == Exchange.COINBASEPRO:
-                    api = CBAuthAPI(
-                        self.api_key,
-                        self.api_secret,
-                        self.api_passphrase,
-                        self.api_url,
-                        app=self
-                    )
+                    api = CBAuthAPI(self.api_key, self.api_secret, self.api_passphrase, self.api_url, app=self)
                     return api.market_sell(market, base_currency)
                 elif self.exchange == Exchange.BINANCE:
-                    api = BAuthAPI(
-                        self.api_key,
-                        self.api_secret,
-                        self.api_url,
-                        recv_window=self.recv_window,
-                        app=self
-                    )
+                    api = BAuthAPI(self.api_key, self.api_secret, self.api_url, recv_window=self.recv_window, app=self)
                     return api.market_sell(market, base_currency, use_fees=self.use_sell_fee)
                 elif self.exchange == Exchange.KUCOIN:
-                    api = KAuthAPI(
-                        self.api_key,
-                        self.api_secret,
-                        self.api_passphrase,
-                        self.api_url,
-                        use_cache=self.usekucoincache,
-                        app=self
-                    )
+                    api = KAuthAPI(self.api_key, self.api_secret, self.api_passphrase, self.api_url, use_cache=self.usekucoincache, app=self)
                     return api.market_sell(market, base_currency)
             else:
                 return None
@@ -2225,12 +2183,8 @@ class PyCryptoBot(BotConfig):
             default_value=True,
             arg_name="termcolor",
         )
-        config_option_row_int(
-            "Terminal UI Width", "term_width", "Set terminal UI width", default_value=os.get_terminal_size().columns, arg_name="termwidth"
-        )
-        config_option_row_int(
-            "Terminal Log Width", "log_width", "Set terminal log width", break_below=True, default_value=180, arg_name="logwidth"
-        )
+        config_option_row_int("Terminal UI Width", "term_width", "Set terminal UI width", default_value=os.get_terminal_size().columns, arg_name="termwidth")
+        config_option_row_int("Terminal Log Width", "log_width", "Set terminal log width", break_below=True, default_value=180, arg_name="logwidth")
 
         if self.is_live:
             table.add_row("Bot Mode", "LIVE", "Live trades using your funds!", "--live <1|0>")
@@ -2322,7 +2276,9 @@ class PyCryptoBot(BotConfig):
         config_option_row_str(
             "Config File", "config_file", "Use the config file at the given location", break_below=False, default_value="config.json", arg_name="configfile"
         )
-        # config_option_row_str("API Key File", "api_key_file", "Use the API key file at the given location", break_below=False, default_value=None, arg_name="apikeyfile")
+        config_option_row_str(
+            "API Key File", "api_key_file", "Use the API key file at the given location", break_below=False, default_value=None, arg_name="api_key_file"
+        )
         config_option_row_str(
             "Log File", "logfile", "Use the log file at the given location", break_below=False, default_value="pycryptobot.log", arg_name="logfile"
         )

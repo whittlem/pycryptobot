@@ -132,7 +132,7 @@ df = api.get_market_info_filters("BTCGBP")
 
 app = PyCryptoBot(exchange="binance")
 api = BAuthAPI(app.api_key, app.api_secret, app.api_url, app=app)
-fee = api.getTradeFee("BTCGBP")
+fee = api.get_trade_fee("BTCGBP")
 # print (fee)
 
 app = PyCryptoBot(exchange="binance")

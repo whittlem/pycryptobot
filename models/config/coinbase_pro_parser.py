@@ -50,10 +50,10 @@ def parser(app, coinbase_config, args={}):
                 fh.write(json.dumps(config_json, indent=4))
                 fh.close()
 
-        app.api_key_file = None
-        if "app.api_key_file" in args and args["api_key_file"] is not None:
+        app.api_key_file = "coinbasepro.key"
+        if "api_key_file" in args and args["api_key_file"] is not None:
             app.api_key_file = args["api_key_file"]
-        elif "app.api_key_file" in coinbase_config:
+        elif "api_key_file" in coinbase_config:
             app.api_key_file = coinbase_config["api_key_file"]
 
         if app.api_key_file is not None:
@@ -92,8 +92,8 @@ def parser(app, coinbase_config, args={}):
             app.api_passphrase = coinbase_config["api_passphrase"]
 
             valid_urls = [
-                "https://api.pro.coinbase.com/",
-                "https://api.pro.coinbase.com",
+                "https://api.exchange.coinbase.com",
+                "https://api.exchange.coinbase.com/",
                 "https://public.sandbox.pro.coinbase.com",
                 "https://public.sandbox.pro.coinbase.com/",
             ]

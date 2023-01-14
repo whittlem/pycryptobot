@@ -99,6 +99,8 @@ class AuthAPI(AuthAPIBase):
         self.recv_window = recv_window
 
     def handle_init_error(self, err: str, app: object = None) -> None:
+        """Handle initialisation error"""
+
         if app is not None and app.debug is True:
             raise TypeError(err)
         else:
@@ -399,6 +401,9 @@ class AuthAPI(AuthAPIBase):
                         {"symbol": market, "recvWindow": self.recv_window},
                     )
 
+                    if isinstance(resp, str) and resp.endswith("Invalid symbol."):
+                        return "Invalid market."
+
                     # unexpected data, then return
                     if len(resp) == 0:
                         return pd.DataFrame()
@@ -430,6 +435,9 @@ class AuthAPI(AuthAPIBase):
                     "/api/v3/allOrders",
                     {"symbol": market, "recvWindow": self.recv_window},
                 )
+
+                if isinstance(resp, str) and resp.endswith("Invalid symbol."):
+                    return "Invalid market."
 
                 # unexpected data, then return
                 if len(resp) == 0:
@@ -558,7 +566,7 @@ class AuthAPI(AuthAPIBase):
         except Exception:
             return df
 
-    def getTradeFee(self, market: str) -> float:
+    def get_trade_fee(self, market: str) -> float:
         """Retrieves the trade fees"""
 
         # Binance US does not currently define "/sapi/v1/asset/tradeFee" in its API
@@ -640,11 +648,14 @@ class AuthAPI(AuthAPIBase):
             base_quantity = np.divide(quote_quantity, current_price)
 
             df_filters = self.get_market_info_filters(market)
+            if df_filters.empty:
+                return "Invalid market."
+
             step_size = float(df_filters.loc[df_filters["filterType"] == "LOT_SIZE"]["stepSize"])
             precision = int(round(-math.log(step_size, 10), 0))
 
             # remove fees
-            base_quantity = base_quantity - (base_quantity * self.getTradeFee(market))
+            base_quantity = base_quantity - (base_quantity * self.get_trade_fee(market))
 
             # execute market buy
             stepper = 10.0**precision
@@ -688,7 +699,7 @@ class AuthAPI(AuthAPIBase):
 
             # remove fees
             if use_fees:
-                base_quantity = base_quantity - (base_quantity * self.getTradeFee(market))
+                base_quantity = base_quantity - (base_quantity * self.get_trade_fee(market))
 
             # execute market sell
             stepper = 10.0**precision
@@ -777,10 +788,11 @@ class AuthAPI(AuthAPIBase):
             elif resp.status_code != 200:
                 message = f"{method} ({resp.status_code}) {self._api_url}{uri} - {resp_message}"
                 if self.die_on_api_error:
-                    raise Exception(message)
+                    raise RuntimeError(message)
                 else:
                     if self.app:
                         RichText.notify(f"Error: {message}", self.app, "error")
+                        raise RuntimeError(message)
                     return {}
 
             resp.raise_for_status()
@@ -797,6 +809,9 @@ class AuthAPI(AuthAPIBase):
 
         except json.decoder.JSONDecodeError as err:
             return self.handle_api_error(err, "JSONDecodeError")
+
+        except Exception as err:
+            return str(err)
 
     def handle_api_error(self, err: str, reason: str, app: object = None) -> dict:
         """Handler for API errors"""
@@ -938,6 +953,7 @@ class PublicAPI(AuthAPIBase):
                         "limit": 300,
                     },
                 )
+
             elif iso8601start != "" and iso8601end != "":
                 startTime = int(datetime.timestamp(datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")) * 1000)
 
