@@ -2296,6 +2296,7 @@ class PyCryptoBot(BotConfig):
         )
 
         config_option_row_bool("Enable Log", "disablelog", "Enable console logging", store_invert=True, default_value=True, arg_name="log")
+        config_option_row_bool("Enable Smart Switching", "smart_switch", "Enable switching between intervals", store_invert=False, default_value=False, arg_name="smartswitch")
         config_option_row_bool(
             "Enable Tracker", "disabletracker", "Enable trade order logging", store_invert=True, default_value=False, arg_name="tradetracker"
         )
