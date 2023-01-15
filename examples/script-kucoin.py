@@ -4,6 +4,7 @@ from datetime import datetime
 sys.path.insert(0, ".")
 
 from controllers.PyCryptoBot import PyCryptoBot  # noqa: E402
+from models.exchange.Granularity import Granularity  # noqa: E402
 from models.TradingAccount import TradingAccount  # noqa: E402
 from models.AppState import AppState  # noqa: E402
 from models.exchange.kucoin import AuthAPI as AuthAPI, PublicAPI as PublicAPI  # noqa: E402
@@ -20,7 +21,8 @@ api = PublicAPI("https://api.kucoin.com")
 # print(ticker)
 
 # TODO: fix this
-df = api.get_historical_data("ETH-USDT", "1hour", "", "")
+# df = api.get_historical_data("ETH-USDT", "15min", None, "", "")
+df = api.get_historical_data("MATIC-USDT", Granularity.FIFTEEN_MINUTES, None, "2023-01-13T19:00:00", "2023-01-15T21:00:00")
 print("get_historical_data: fast")
 print(df)
 
@@ -46,8 +48,8 @@ print(df)
 # df = api.get_taker_fee()
 # print(df)
 
-# df = api.get_orders('BTC-USDT', '', 'done')
-# print(df)
+df = api.get_orders("MATIC-USDT", "", "done")
+print(df)
 
 # df = api.markets()
 # print (df)

@@ -591,9 +591,7 @@ class PyCryptoBot(BotConfig):
                         0,
                     )
 
-                    if self.enableexitaftersell and self.startmethod not in (
-                        "standard"
-                    ):
+                    if self.enableexitaftersell and self.startmethod not in ("standard"):
                         sys.exit(0)
 
             if self.price < 0.000001:
@@ -822,7 +820,12 @@ class PyCryptoBot(BotConfig):
                 else:
                     df_high = df["close"].max()
                     df_low = df["close"].min()
-                    range_start = str(df.iloc[self.state.iterations - self.adjusttotalperiods, 0])  # noqa: F841
+                    if len(df) > self.adjusttotalperiods:
+                        range_start = str(df.iloc[self.state.iterations - self.adjusttotalperiods, 0])  # noqa: F841
+                    else:
+                        # RichText.notify(f"Trading dataframe length {len(df)} is greater than expected {self.adjusttotalperiods}", self, "warning")
+                        range_start = str(df.iloc[self.state.iterations - len(df), 0])  # noqa: F841
+
                     range_end = str(df.iloc[self.state.iterations - 1, 0])  # noqa: F841
 
                 df_swing = round(((df_high - df_low) / df_low) * 100, 2)
@@ -1611,8 +1614,9 @@ class PyCryptoBot(BotConfig):
             except (BaseException, Exception) as e:  # pylint: disable=broad-except
                 if self.autorestart:
                     # Wait 30 second and try to relaunch application
-                    time.sleep(30)
-                    RichText.notify(f"Restarting application after exception: {repr(e)}", self, "critical")
+                    seconds = 30
+                    RichText.notify(f"Restarting application in {seconds} seconds after exception: {repr(e)}", self, "critical")
+                    time.sleep(seconds)
 
                     if not self.disabletelegram:
                         self.notify_telegram(f"Auto restarting bot for {self.market} after exception: {repr(e)}")
@@ -1633,7 +1637,7 @@ class PyCryptoBot(BotConfig):
                 RichText.notify("Shutting down bot...", self, "warning")
                 RichText.notify("Please wait while threads complete gracefully....", self, "warning")
             # else:
-                # RichText.notify("Shutting down bot...", self, "warning")
+            # RichText.notify("Shutting down bot...", self, "warning")
             try:
                 try:
                     self.telegram_bot.remove_active_bot()
@@ -2296,7 +2300,9 @@ class PyCryptoBot(BotConfig):
         )
 
         config_option_row_bool("Enable Log", "disablelog", "Enable console logging", store_invert=True, default_value=True, arg_name="log")
-        config_option_row_bool("Enable Smart Switching", "smart_switch", "Enable switching between intervals", store_invert=False, default_value=False, arg_name="smartswitch")
+        config_option_row_bool(
+            "Enable Smart Switching", "smart_switch", "Enable switching between intervals", store_invert=False, default_value=False, arg_name="smartswitch"
+        )
         config_option_row_bool(
             "Enable Tracker", "disabletracker", "Enable trade order logging", store_invert=True, default_value=False, arg_name="tradetracker"
         )
