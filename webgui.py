@@ -784,8 +784,5 @@ clientside_callback(
 )
 
 if __name__ == "__main__":
-    # comment this line out if you want to run on just local machine @ 127.0.0.1:8050
-
-    # pyright: reportUndefinedVariable=false
-    self.run_server(host="0.0.0.0", port="8051")  # noqa
-    self.run_server(debug=True)  # noqa
+    app.run_server(host="0.0.0.0", port="8051")  # noqa
+    app.run_server(debug=True)  # noqa
