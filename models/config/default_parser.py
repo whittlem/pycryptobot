@@ -31,9 +31,7 @@ def default_config_parse(app, config):
     - Update the config parser in models/config/default_parser.py
     """
 
-    def config_option_int(
-        option_name: str = None, option_default: int = 0, store_name: str = None, value_min: int = None, value_max: int = None
-    ) -> bool:
+    def config_option_int(option_name: str = None, option_default: int = 0, store_name: str = None, value_min: int = None, value_max: int = None) -> bool:
         if option_name is None or store_name is None:
             return False
 
@@ -108,9 +106,7 @@ def default_config_parse(app, config):
 
     import sys
 
-    def config_option_str(
-        option_name: str = None, option_default: str = "", store_name: str = None, valid_options: list = [], disable_variable=None
-    ) -> bool:
+    def config_option_str(option_name: str = None, option_default: str = "", store_name: str = None, valid_options: list = [], disable_variable=None) -> bool:
         if option_name is None or store_name is None:
             return False
 
@@ -145,7 +141,7 @@ def default_config_parse(app, config):
         if option_name in config:
             if isinstance(config[option_name], str):
                 if allow_now is True and config[option_name] == "now":
-                    setattr(app, store_name, str(datetime.today().strftime('%Y-%m-%d')))
+                    setattr(app, store_name, str(datetime.today().strftime("%Y-%m-%d")))
                 else:
                     try:
                         datetime.strptime(config[option_name], date_format)
@@ -207,7 +203,9 @@ def default_config_parse(app, config):
     config_option_bool(option_name="verbose", option_default=False, store_name="is_verbose", store_invert=False)
     config_option_bool(option_name="graphs", option_default=False, store_name="save_graphs", store_invert=False)
 
-    config_option_str(option_name="sim", option_default=0, store_name="is_sim", valid_options=["slow", "fast", "slow-sample", "fast-sample"], disable_variable="is_live")
+    config_option_str(
+        option_name="sim", option_default=0, store_name="is_sim", valid_options=["slow", "fast", "slow-sample", "fast-sample"], disable_variable="is_live"
+    )
     config_option_date(option_name="simstartdate", option_default=None, store_name="simstartdate", date_format="%Y-%m-%d", allow_now=False)
     config_option_date(option_name="simenddate", option_default=None, store_name="simenddate", date_format="%Y-%m-%d", allow_now=True)
     config_option_bool(option_name="simresultonly", option_default=False, store_name="simresultonly", store_invert=False)

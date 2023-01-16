@@ -4,6 +4,7 @@ services:
   pycrypto:
       build:
         context: .
+      tty: true
       container_name: pycrypto
       volumes:
         - ./market/template/config.json:/app/config.json

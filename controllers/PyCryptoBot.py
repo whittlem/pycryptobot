@@ -843,15 +843,6 @@ class PyCryptoBot(BotConfig):
                 else:
                     margin_text = ""
 
-                terminal = os.get_terminal_size()
-
-                if "width" in terminal:
-                    terminal_width = terminal.width
-                elif "columns" in terminal:
-                    terminal_width = terminal.columns
-                else:
-                    terminal_width = 160
-
                 args = [
                     arg
                     for arg in [
@@ -905,7 +896,7 @@ class PyCryptoBot(BotConfig):
                             "cyan",
                         ),
                         RichText.styled_label_text("Near-High", "white", f"{df_near_high}%", "cyan"),  # price near high
-                        RichText.styled_label_text("Range", "white", f"{range_start} <-> {range_end}", "cyan") if (terminal_width > 120) else None,
+                        RichText.styled_label_text("Range", "white", f"{range_start} <-> {range_end}", "cyan") if (self.term_width > 120) else None,
                         RichText.margin_text(margin_text, self.state.last_action),
                         RichText.delta_text(
                             self.price,
@@ -2191,7 +2182,7 @@ class PyCryptoBot(BotConfig):
             default_value=True,
             arg_name="termcolor",
         )
-        config_option_row_int("Terminal UI Width", "term_width", "Set terminal UI width", default_value=os.get_terminal_size().columns, arg_name="termwidth")
+        config_option_row_int("Terminal UI Width", "term_width", "Set terminal UI width", default_value=self.term_width, arg_name="termwidth")
         config_option_row_int("Terminal Log Width", "log_width", "Set terminal log width", break_below=True, default_value=180, arg_name="logwidth")
 
         if self.is_live:

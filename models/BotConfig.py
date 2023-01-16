@@ -383,7 +383,11 @@ class BotConfig:
 
         parser.add_argument("--exchange", type=str, help="'coinbasepro', 'binance', 'kucoin', 'dummy'")
         parser.add_argument("--market", type=str, help="coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc.")
-        parser.add_argument("--granularity", type=str, help="coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6h,1d), kucoin: (1min,3min,5min,15min,30min,1hour,6hour,1day)")
+        parser.add_argument(
+            "--granularity",
+            type=str,
+            help="coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6h,1d), kucoin: (1min,3min,5min,15min,30min,1hour,6hour,1day)",
+        )
 
         parser.add_argument("--config", type=str, help="Use the config file at the given location. e.g 'myconfig.json'")
         parser.add_argument("--api_key_file", type=str, help="Use the API key file at the given location. e.g 'myapi.key'")
