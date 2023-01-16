@@ -1,4 +1,4 @@
-# Python Crypto Bot v7.0.27 (pycryptobot)
+# Python Crypto Bot v7.0.28 (pycryptobot)
 
 [![Docker](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/container.yml/badge.svg) [![Tests](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/whittlem/pycryptobot/actions/workflows/unit-tests.yml/badge.svg)
 
@@ -36,3 +36,6 @@ Follow my Medium publication for PyCryptoBot articles
 <https://trading-data-analysis.pro/pycryptobot/home>
 
 For information about installing, using, and getting the most out of the bot... please refer to the articles on Medium!
+
+Install and Setup of PyCryptoBot 7
+https://trading-data-analysis.pro/install-and-setup-of-pycryptobot-7-f1b2c832e795
