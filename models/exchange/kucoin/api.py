@@ -965,7 +965,9 @@ class PublicAPI(AuthAPIBase):
             raise TypeError("Granularity string required.")
 
         # validates the granularity is supported by Kucoin
-        if granularity.to_medium not in SUPPORTED_GRANULARITY:
+        if isinstance(granularity, Granularity) and (granularity.to_medium not in SUPPORTED_GRANULARITY):
+            raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
+        elif isinstance(granularity, str) and (granularity not in SUPPORTED_GRANULARITY):
             raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
 
         # validates the ISO 8601 start date is a string (if provided)
@@ -1000,7 +1002,6 @@ class PublicAPI(AuthAPIBase):
                     )
                 elif iso8601start != "" and iso8601end != "":
                     startTime = int(datetime.timestamp(datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")))
-
                     endTime = int(datetime.timestamp(datetime.strptime(iso8601end, "%Y-%m-%dT%H:%M:%S")))
                     resp = self.auth_api(
                         "GET",
@@ -1011,6 +1012,9 @@ class PublicAPI(AuthAPIBase):
                         "GET",
                         f"api/v1/market/candles?type={granularity.to_medium}&symbol={market}",
                     )
+
+                if "code" in resp and resp["code"] != "200000":
+                    raise ValueError(f"Kucoin API error: {resp['msg']} ({market})")
 
                 trycnt += 1
                 try:

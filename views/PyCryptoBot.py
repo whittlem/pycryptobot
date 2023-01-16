@@ -1,4 +1,3 @@
-from os import get_terminal_size
 from rich.table import Text
 from rich.table import Table
 from rich.console import Console
