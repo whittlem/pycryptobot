@@ -378,7 +378,7 @@ class TelegramHelper:
         jsonfiles.sort()
         return [x.replace(".json", "") if x.__contains__(".json") else x for x in jsonfiles]
 
-    def get_exchange_bot_ruuning_count(self, exchange):
+    def get_exchange_bot_runing_count(self, exchange):
         """Return contents of telegram_data folder"""
         self.logger.debug("METHOD(get_exchange_bot_ruuning_count) - DATA(%s)", exchange)
         jsonfiles = self.get_all_bot_list()
