@@ -450,7 +450,7 @@ class TelegramActions:
         for ex in config:
             if maxbotcount > 0 and (total_bots_started + active_at_start) >= maxbotcount:
                 break
-            exchange_bots_started = self.helper.exchange_bot_ruuning_count(ex)
+            exchange_bots_started = self.helper.get_exchange_bot_runing_count(ex)
             for quote in config[ex]["quote_currency"]:
                 if bool(self.helper.settings["notifications"]["enable_screener"]):
                     self.helper.send_telegram_message(update, f"Starting {ex} ({quote}) bots...", context=context)
