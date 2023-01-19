@@ -7,6 +7,7 @@ import sched
 import signal
 import functools
 import pandas as pd
+import numpy as np
 from regex import R
 from rich.console import Console
 from rich.table import Table

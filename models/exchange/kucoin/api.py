@@ -496,11 +496,8 @@ class AuthAPI(AuthAPIBase):
             "funds": self.market_quote_increment(market, quote_quantity),
         }
 
-        # connect to authenticated Kucoin api
-        model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
-
         # place order and return result
-        return model.auth_api("POST", "api/v1/orders", order)
+        return self.auth_api("POST", "api/v1/orders", order)
 
     def market_sell(self, market: str = "", base_quantity: float = 0) -> pd.DataFrame:
         """Executes a market sell providing a crypto amount"""
@@ -830,6 +827,10 @@ class AuthAPI(AuthAPIBase):
                         else:
                             df = pd.DataFrame(mjson, index=[0])
 
+                    if "code" in df.columns:
+                        if int(df["code"].values[0]) != 200000:
+                            raise RuntimeError(df['msg'].iloc[0])
+
                     # If a previous cache file exists - load it up into the df
                     if use_order_cache and exists(self._cache_filepath) and "v1/orders" in uri and method == "GET":
                         if exists(self._cache_lock_filepath):
@@ -881,6 +882,9 @@ class AuthAPI(AuthAPIBase):
             except json.decoder.JSONDecodeError as err:
                 reason, msg = ("JSONDecodeError", err)
 
+            except RuntimeError as err:
+                reason, msg = ("RuntimeError", err)
+
             except Exception as err:
                 reason, msg = ("GeneralException", err)
 
@@ -897,6 +901,8 @@ class AuthAPI(AuthAPIBase):
                         reason = "Unknown Error"
                     return self.handle_api_error(msg, reason)
             else:
+                if self.app:
+                    RichText.notify(f"{str(msg)} - trying again.  Attempt: {trycnt}", self.app, "error")
                 time.sleep(15)
 
         else:
