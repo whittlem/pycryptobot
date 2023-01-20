@@ -1096,7 +1096,7 @@ class PyCryptoBot(BotConfig):
                                 + "\n - TEST BUY at "
                                 + str(self.price)
                                 + "\n - Buy Size: "
-                                + str(_truncate(self.state.last_buy_size, 4))  # TODO: why is this 0?
+                                + str(_truncate(self.state.last_buy_size, 4))
                             )
 
                         if not self.is_verbose:
@@ -1462,10 +1462,7 @@ class PyCryptoBot(BotConfig):
                 self._simulation_summary()
                 self._simulation_save_orders()
 
-            bullbeartext = "BULL" if goldencross else "BEAR"
-
         if self.state.last_buy_size <= 0 and self.state.last_buy_price <= 0 and self.price <= 0 and self.state.last_action != "BUY":
-            RichText.notify(f'{datetime.now()} | {self.market} {bullbeartext} | {self.print_granularity()} | Current price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH', self, "info")
             self.telegram_bot.add_info(
                 f'Current price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH',
                 round(self.price, 4),
@@ -1481,7 +1478,6 @@ class PyCryptoBot(BotConfig):
             )
 
         if self.state.last_action == "BUY" and self.state.in_open_trade and last_api_call_datetime.seconds > 60:
-            RichText.notify(f"{datetime.now()} | {self.market} {bullbeartext} | {self.print_granularity()} | Current price: {str(self.price)} {trailing_action_logtext} | Margin: {str(margin)} | Profit: {str(profit)}", self, "info")
             # update margin for telegram bot
             self.telegram_bot.add_margin(
                 str(_truncate(margin, 4) + "%") if self.state.in_open_trade is True else " ",
