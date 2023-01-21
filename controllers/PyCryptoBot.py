@@ -2023,7 +2023,7 @@ class PyCryptoBot(BotConfig):
                 self.telegram_bot.remove_active_bot()
 
         if self.simresultonly:
-            RichText.notify(json.dumps(simulation, sort_keys=True, indent=4), self, "info")
+            print(json.dumps(simulation, sort_keys=True, indent=4))
         else:
             print("")  # blank line above table
             self.console_term.print(table)
