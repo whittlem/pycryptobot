@@ -136,8 +136,8 @@ class Stats:
                 "| Num  ",
                 "| Market     ",
                 "| Date of Sell ",
-                "| self.price bought ",
-                "| self.price sold  ",
+                "| Price bought ",
+                "| Price sold  ",
                 "| Delta     ",
                 "| Gain/Loss  |",
             ]
@@ -145,7 +145,7 @@ class Stats:
             for header in headers:
                 border += "-" * (len(header) - 1) + "+"
             border = border[:-2] + "+"
-            RichText.notify(border + "\n" + "".join([x for x in headers]) + "\n" + border, self.app, "info")
+            print(border + "\n" + "".join([x for x in headers]) + "\n" + border)
             for i, pair in enumerate(self.order_pairs):
                 if start:
                     if pair["sell"]["time"].date() < start:
@@ -170,9 +170,10 @@ class Stats:
                 else:
                     d_gain = "| " + "{:.2f}".format(pair["gain"]) + " %"
                 d_gain = d_gain + " " * (len(headers[6]) - len(d_gain) - 1) + "|"
-                RichText.notify(f"{d_num}{d_market}{d_date}{d_buy_size}{d_sell_size}{d_delta}{d_gain}", self.app, "info")
+                print(f"{d_num}{d_market}{d_date}{d_buy_size}{d_sell_size}{d_delta}{d_gain}")
 
-            RichText.notify(border, self.app, "info")
+            print(border)
+            print("")
             sys.exit()
 
         for pair in self.order_pairs:
@@ -238,26 +239,25 @@ class Stats:
         else:
             header = self.app.market
 
-        RichText.notify(f"------------- TODAY : {header} --------------", self.app, "info")
-        RichText.notify(trades + " " * (width - len(trades)) + str(len(today_per)), self.app, "info")
-        RichText.notify(gains + " " * (width - len(gains)) + today_percent, self.app, "info")
-        RichText.notify(aver + " " * (width - len(aver)) + str(today_delta), self.app, "info")
-        RichText.notify(success + " " * (width - len(success)) + today_sum, self.app, "info")
-        RichText.notify(f"\n-------------- WEEK : {header} --------------", self.app, "info")
-        RichText.notify(trades + " " * (width - len(trades)) + str(len(week_per)), self.app, "info")
-        RichText.notify(gains + " " * (width - len(gains)) + week_percent, self.app, "info")
-        RichText.notify(aver + " " * (width - len(aver)) + str(week_delta), self.app, "info")
-        RichText.notify(success + " " * (width - len(success)) + week_sum, self.app, "info")
-        RichText.notify(f"\n------------- MONTH : {header} --------------", self.app, "info")
-        RichText.notify(trades + " " * (width - len(trades)) + str(len(month_per)), self.app, "info")
-        RichText.notify(gains + " " * (width - len(gains)) + month_percent, self.app, "info")
-        RichText.notify(aver + " " * (width - len(aver)) + str(month_delta), self.app, "info")
-        RichText.notify(success + " " * (width - len(success)) + month_sum, self.app, "info")
-        RichText.notify(f"\n------------ ALL TIME : {header} ------------", self.app, "info")
-        RichText.notify(trades + " " * (width - len(trades)) + str(len(all_time_per)), self.app, "info")
-        RichText.notify(gains + " " * (width - len(gains)) + all_time_percent, self.app, "info")
-        RichText.notify(aver + " " * (width - len(aver)) + str(all_time_delta), self.app, "info")
-        RichText.notify(success + " " * (width - len(success)) + all_time_sum, self.app, "info")
-
+        print(f"------------- TODAY : {header} --------------")
+        print(trades + " " * (width - len(trades)) + str(len(today_per)))
+        print(gains + " " * (width - len(gains)) + today_percent)
+        print(aver + " " * (width - len(aver)) + str(today_delta))
+        print(success + " " * (width - len(success)) + today_sum)
+        print(f"\n-------------- WEEK : {header} --------------")
+        print(trades + " " * (width - len(trades)) + str(len(week_per)))
+        print(gains + " " * (width - len(gains)) + week_percent)
+        print(aver + " " * (width - len(aver)) + str(week_delta))
+        print(success + " " * (width - len(success)) + week_sum)
+        print(f"\n------------- MONTH : {header} --------------")
+        print(trades + " " * (width - len(trades)) + str(len(month_per)))
+        print(gains + " " * (width - len(gains)) + month_percent)
+        print(aver + " " * (width - len(aver)) + str(month_delta))
+        print(success + " " * (width - len(success)) + month_sum)
+        print(f"\n------------ ALL TIME : {header} ------------")
+        print(trades + " " * (width - len(trades)) + str(len(all_time_per)))
+        print(gains + " " * (width - len(gains)) + all_time_percent)
+        print(aver + " " * (width - len(aver)) + str(all_time_delta))
+        print(success + " " * (width - len(success)) + all_time_sum)
         print("")
         sys.exit()
