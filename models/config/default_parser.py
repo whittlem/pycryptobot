@@ -106,6 +106,23 @@ def default_config_parse(app, config):
 
     import sys
 
+    def config_option_list(option_name: str = None, option_default: str = "", store_name: str = None) -> bool:
+        if option_name is None or store_name is None:
+            return False
+
+        if store_name in config:
+            option_name = store_name  # prefer legacy config if it exists
+
+        if option_name in config:
+            if isinstance(config[option_name], list):
+                setattr(app, store_name, config[option_name])
+            else:
+                raise TypeError(f"{option_name} must be a list")
+        else:
+            setattr(app, store_name, option_default)  # default
+
+        return True
+
     def config_option_str(option_name: str = None, option_default: str = "", store_name: str = None, valid_options: list = [], disable_variable=None) -> bool:
         if option_name is None or store_name is None:
             return False
@@ -216,7 +233,7 @@ def default_config_parse(app, config):
     config_option_bool(option_name="telegramerrormsgs", option_default=False, store_name="disabletelegramerrormsgs", store_invert=True)
 
     config_option_bool(option_name="stats", option_default=False, store_name="stats", store_invert=False)
-    config_option_bool(option_name="statgroup", option_default=False, store_name="statgroup", store_invert=False)
+    config_option_list(option_name="statgroup", option_default="", store_name="statgroup")
     config_option_date(option_name="statstartdate", option_default=None, store_name="statstartdate", date_format="%Y-%m-%d", allow_now=False)
     config_option_bool(option_name="statdetail", option_default=False, store_name="statdetail", store_invert=False)
 
