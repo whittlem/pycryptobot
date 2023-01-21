@@ -114,11 +114,11 @@ class Stats:
         today = datetime.today().date()
         lastweek = today - timedelta(days=7)
         lastmonth = today - timedelta(days=30)
-        if self.app.statstart_date:
+        if self.app.statstartdate:
             try:
-                start = datetime.strptime(self.app.statstart_date, "%Y-%m-%d").date()
+                start = datetime.strptime(self.app.statstartdate, "%Y-%m-%d").date()
             except Exception:
-                raise ValueError("format of --statstart_date must be yyyy-mm-dd")
+                raise ValueError("format of --statstartdate must be yyyy-mm-dd")
         else:
             start = None
 
