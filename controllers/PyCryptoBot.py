@@ -1099,33 +1099,32 @@ class PyCryptoBot(BotConfig):
                                 + str(_truncate(self.state.last_buy_size, 4))
                             )
 
-                        if not self.is_verbose:
-                            if not self.is_sim or (self.is_sim and not self.simresultonly):
-                                _notify(f"*** Executing SIMULATION Buy Order at {str(self.price)} ***", "info")
+                        if not self.is_sim or (self.is_sim and not self.simresultonly):
+                            _notify(f"*** Executing SIMULATION Buy Order at {str(self.price)} ***", "info")
 
-                            bands = _technical_analysis.get_fibonacci_retracement_levels(float(self.price))
+                        bands = _technical_analysis.get_fibonacci_retracement_levels(float(self.price))
 
-                            if not self.is_sim:
-                                _notify(f"Fibonacci Retracement Levels: {str(bands)}")
-                                _technical_analysis.print_support_resistance_levels_v2()
+                        if not self.is_sim:
+                            _notify(f"Fibonacci Retracement Levels: {str(bands)}")
+                            _technical_analysis.print_support_resistance_levels_v2()
 
-                            if len(bands) >= 1 and len(bands) <= 2:
-                                if len(bands) == 1:
-                                    first_key = list(bands.keys())[0]
-                                    if first_key == "ratio1":
-                                        self.state.fib_low = 0
-                                        self.state.fib_high = bands[first_key]
-                                    if first_key == "ratio1_618":
-                                        self.state.fib_low = bands[first_key]
-                                        self.state.fib_high = bands[first_key] * 2
-                                    else:
-                                        self.state.fib_low = bands[first_key]
-
-                                elif len(bands) == 2:
-                                    first_key = list(bands.keys())[0]
-                                    second_key = list(bands.keys())[1]
+                        if len(bands) >= 1 and len(bands) <= 2:
+                            if len(bands) == 1:
+                                first_key = list(bands.keys())[0]
+                                if first_key == "ratio1":
+                                    self.state.fib_low = 0
+                                    self.state.fib_high = bands[first_key]
+                                if first_key == "ratio1_618":
                                     self.state.fib_low = bands[first_key]
-                                    self.state.fib_high = bands[second_key]
+                                    self.state.fib_high = bands[first_key] * 2
+                                else:
+                                    self.state.fib_low = bands[first_key]
+
+                            elif len(bands) == 2:
+                                first_key = list(bands.keys())[0]
+                                second_key = list(bands.keys())[1]
+                                self.state.fib_low = bands[first_key]
+                                self.state.fib_high = bands[second_key]
 
                         else:
                             _notify("*** Executing TEST Buy Order ***")
@@ -1170,35 +1169,7 @@ class PyCryptoBot(BotConfig):
                 elif self.state.action == "SELL":
                     # if live
                     if self.is_live:
-                        if self.is_verbose:
-
-                            bands = _technical_analysis.get_fibonacci_retracement_levels(float(self.price))
-
-                            if not self.is_sim or (self.is_sim and not self.simresultonly):
-                                _notify(f"Fibonacci Retracement Levels: {str(bands)}")
-
-                                if len(bands) >= 1 and len(bands) <= 2:
-                                    if len(bands) == 1:
-                                        first_key = list(bands.keys())[0]
-                                        if first_key == "ratio1":
-                                            self.state.fib_low = 0
-                                            self.state.fib_high = bands[first_key]
-                                        if first_key == "ratio1_618":
-                                            self.state.fib_low = bands[first_key]
-                                            self.state.fib_high = bands[first_key] * 2
-                                        else:
-                                            self.state.fib_low = bands[first_key]
-
-                                    elif len(bands) == 2:
-                                        first_key = list(bands.keys())[0]
-                                        second_key = list(bands.keys())[1]
-                                        self.state.fib_low = bands[first_key]
-                                        self.state.fib_high = bands[second_key]
-
-                            _notify("*** Executing LIVE Sell Order ***")
-
-                        else:
-                            _notify(f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {str(self.price)} | SELL")
+                        _notify(f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {str(self.price)} | SELL")
 
                         # check balances before and display
                         self.account.base_balance_before = 0
@@ -1382,17 +1353,16 @@ class PyCryptoBot(BotConfig):
                                 + ")"
                             )
 
-                        if not self.is_verbose:
-                            if self.price > 0:
-                                margin_text = truncate(margin) + "%"
-                            else:
-                                margin_text = "0%"
+                        if self.price > 0:
+                            margin_text = truncate(margin) + "%"
+                        else:
+                            margin_text = "0%"
 
-                            if not self.is_sim or (self.is_sim and not self.simresultonly):
-                                _notify(
-                                    f"*** Executing SIMULATION Sell Order at {str(self.price)} | Buy: {str(self.state.last_buy_price)} ({str(self.price - self.state.last_buy_price)}) | Profit: {str(profit)} on {_truncate(self.state.last_buy_size, precision)} | Fees: {str(round(sell_fee, precision))} | Margin: {margin_text} ***",
-                                    "info",
-                                )
+                        if not self.is_sim or (self.is_sim and not self.simresultonly):
+                            _notify(
+                                f"*** Executing SIMULATION Sell Order at {str(self.price)} | Buy: {str(self.state.last_buy_price)} ({str(self.price - self.state.last_buy_price)}) | Profit: {str(profit)} on {_truncate(self.state.last_buy_size, precision)} | Fees: {str(round(sell_fee, precision))} | Margin: {margin_text} ***",
+                                "info",
+                            )
 
                         else:
                             _notify("*** Executing TEST Sell Order ***")
@@ -2340,15 +2310,6 @@ class PyCryptoBot(BotConfig):
             break_below=False,
             default_value="standard",
             arg_name="startmethod",
-        )
-        config_option_row_bool(
-            "Verbose Terminal Output",
-            "is_verbose",
-            "Enable verbose terminal output",
-            break_below=False,
-            store_invert=False,
-            default_value=False,
-            arg_name="verbose",
         )
         config_option_row_bool(
             "Save Trading Graphs",

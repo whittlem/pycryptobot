@@ -217,7 +217,6 @@ def default_config_parse(app, config):
     config_option_int(option_name="logwidth", option_default=180, store_name="log_width", value_min=60, value_max=420)
 
     config_option_bool(option_name="live", option_default=False, store_name="is_live", store_invert=False)
-    config_option_bool(option_name="verbose", option_default=False, store_name="is_verbose", store_invert=False)
     config_option_bool(option_name="graphs", option_default=False, store_name="save_graphs", store_invert=False)
 
     config_option_str(

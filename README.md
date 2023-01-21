@@ -42,3 +42,6 @@ https://trading-data-analysis.pro/install-and-setup-of-pycryptobot-7-f1b2c832e79
 
 PyCryptoBot 7 Live Test Results
 https://trading-data-analysis.pro/pycryptobot-7-live-test-results-b56316e0995c
+
+PyCryptoBot 7 Configuration
+https://trading-data-analysis.pro/pycryptobot-7-configuration-e314931f94

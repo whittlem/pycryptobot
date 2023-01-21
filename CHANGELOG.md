@@ -385,7 +385,7 @@ Upgrade library dependencies (if required):
 - fixed graphs in sim mode.
 - remove limit for sims using specific granularity.
 - fix for profit and loss summary for simulations
-- added trade history in simulation summary in verbose mode will also export to CSV '({market}{daterange}_trades.csv)'
+- added trade history in simulation summary and will also export to CSV '({market}{daterange}_trades.csv)'
 - added trade history export to csv 'trades.csv'
 - added web portal ./websvc.py
 
