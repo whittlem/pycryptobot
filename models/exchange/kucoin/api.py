@@ -58,7 +58,9 @@ class AuthAPIBase:
 
 
 class AuthAPI(AuthAPIBase):
-    def __init__(self, api_key="", api_secret="", api_passphrase="", api_url="https://api.kucoin.com", cache_path="cache", use_cache=False, app: object = None) -> None:
+    def __init__(
+        self, api_key="", api_secret="", api_passphrase="", api_url="https://api.kucoin.com", cache_path="cache", use_cache=False, app: object = None
+    ) -> None:
         """kucoin API object model
 
         Parameters
@@ -829,7 +831,7 @@ class AuthAPI(AuthAPIBase):
 
                     if "code" in df.columns:
                         if int(df["code"].values[0]) != 200000:
-                            raise RuntimeError(df['msg'].iloc[0])
+                            raise RuntimeError(df["msg"].iloc[0])
 
                     # If a previous cache file exists - load it up into the df
                     if use_order_cache and exists(self._cache_filepath) and "v1/orders" in uri and method == "GET":

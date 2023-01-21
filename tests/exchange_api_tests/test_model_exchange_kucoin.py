@@ -126,6 +126,122 @@ def test_get_accounts():
         pytest.skip("skipping test as no account data is available")
 
     actual = df.columns.to_list()
-    expected = ["index", "id", "currency", "balance", "hold", "available", "profile_id", "trading_enabled"]
+    expected = ["index", "id", "currency", "type", "balance", "available", "holds"]
     assert len(actual) == len(expected)
     assert all([a == b for a, b in zip(actual, expected)])
+
+def test_get_fees_without_market():
+    app = PyCryptoBot(exchange="kucoin")
+
+    if not exists(app.api_key_file):
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not exist!')
+
+    key_file = open(app.api_key_file, "r")
+    file_api_keys = key_file.readlines()
+
+    if len(file_api_keys) != 3:
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not contain a valid api key and secret!')
+
+    api = AuthAPI(app.api_key, app.api_secret, app.api_passphrase, app.api_url, app=app)
+    df = api.get_fees()
+    assert type(df) is pandas.core.frame.DataFrame
+    assert len(df) == 1
+
+    actual = df.columns.to_list()
+    expected = ["takerFeeRate", "makerFeeRate", "market"]
+    assert len(actual) == len(expected)
+    assert all([a == b for a, b in zip(actual, expected)])
+
+
+def test_get_fees_with_market():
+    app = PyCryptoBot(exchange="kucoin")
+
+    if not exists(app.api_key_file):
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not exist!')
+
+    key_file = open(app.api_key_file, "r")
+    file_api_keys = key_file.readlines()
+
+    if len(file_api_keys) != 3:
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not contain a valid api key and secret!')
+
+    api = AuthAPI(app.api_key, app.api_secret, app.api_passphrase, app.api_url, app=app)
+    df = api.get_fees(VALID_ORDER_MARKET)
+    assert type(df) is pandas.core.frame.DataFrame
+    assert len(df) == 1
+
+    actual = df.columns.to_list()
+    expected = ["takerFeeRate", "makerFeeRate", "market"]
+    assert len(actual) == len(expected)
+    assert all([a == b for a, b in zip(actual, expected)])
+
+def test_get_taker_fee_without_market():
+    app = PyCryptoBot(exchange="kucoin")
+
+    if not exists(app.api_key_file):
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not exist!')
+
+    key_file = open(app.api_key_file, "r")
+    file_api_keys = key_file.readlines()
+
+    if len(file_api_keys) != 3:
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not contain a valid api key and secret!')
+
+    api = AuthAPI(app.api_key, app.api_secret, app.api_passphrase, app.api_url, app=app)
+    fee = api.get_taker_fee()
+    assert type(fee) is float
+    assert fee > 0
+
+
+def test_get_taker_fee_with_market():
+    app = PyCryptoBot(exchange="kucoin")
+
+    if not exists(app.api_key_file):
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not exist!')
+
+    key_file = open(app.api_key_file, "r")
+    file_api_keys = key_file.readlines()
+
+    if len(file_api_keys) != 3:
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not contain a valid api key and secret!')
+
+    api = AuthAPI(app.api_key, app.api_secret, app.api_passphrase, app.api_url, app=app)
+    fee = api.get_taker_fee(VALID_ORDER_MARKET)
+    assert type(fee) is float
+    assert fee > 0
+
+
+def test_get_maker_fee_without_market():
+    app = PyCryptoBot(exchange="kucoin")
+
+    if not exists(app.api_key_file):
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not exist!')
+
+    key_file = open(app.api_key_file, "r")
+    file_api_keys = key_file.readlines()
+
+    if len(file_api_keys) != 3:
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not contain a valid api key and secret!')
+
+    api = AuthAPI(app.api_key, app.api_secret, app.api_passphrase, app.api_url, app=app)
+    fee = api.get_maker_fee()
+    assert type(fee) is float
+    assert fee > 0
+
+
+def test_get_maker_fee_with_market():
+    app = PyCryptoBot(exchange="kucoin")
+
+    if not exists(app.api_key_file):
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not exist!')
+
+    key_file = open(app.api_key_file, "r")
+    file_api_keys = key_file.readlines()
+
+    if len(file_api_keys) != 3:
+        pytest.skip(f'api key file "{app.api_key_file}" for unit tests does not contain a valid api key and secret!')
+
+    api = AuthAPI(app.api_key, app.api_secret, app.api_passphrase, app.api_url, app=app)
+    fee = api.get_maker_fee(VALID_ORDER_MARKET)
+    assert type(fee) is float
+    assert fee > 0

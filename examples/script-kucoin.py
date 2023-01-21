@@ -29,21 +29,26 @@ from models.exchange.kucoin import AuthAPI, PublicAPI  # noqa: E402
 # print("get_historical_data: fast-sample")
 # print(df)
 
-# api = AuthAPI(api_key, api_secret, api_passphrase, ur, app=app)
-
+# app = PyCryptoBot(exchange="kucoin")
+# api = AuthAPI(app.api_key, app.api_secret, app.api_passphrase, app.api_url, app=app)
 # df = api.get_accounts()
-# print("get_accounts:")
 # print(df)
 
 # df = api.get_account('6113cf2c4270260006395aad')
 # print(df)
 
+# app = PyCryptoBot(exchange="kucoin")
+# api = AuthAPI(app.api_key, app.api_secret, app.api_passphrase, app.api_url, app=app)
 # df = api.get_fees()
 # print(df)
 
+# app = PyCryptoBot(exchange="kucoin")
+# api = AuthAPI(app.api_key, app.api_secret, app.api_passphrase, app.api_url, app=app)
 # df = api.get_maker_fee()
 # print(df)
 
+# app = PyCryptoBot(exchange="kucoin")
+# api = AuthAPI(app.api_key, app.api_secret, app.api_passphrase, app.api_url, app=app)
 # df = api.get_taker_fee()
 # print(df)
 
@@ -55,16 +60,18 @@ from models.exchange.kucoin import AuthAPI, PublicAPI  # noqa: E402
 # fee = api.get_trade_fee('BTC-USDT')
 # print (fee)
 
-app = PyCryptoBot(exchange="kucoin")
-api = AuthAPI(app.api_key, app.api_secret, app.api_passphrase, app.api_url, app=app)
+# app = PyCryptoBot(exchange="kucoin")
+# api = AuthAPI(app.api_key, app.api_secret, app.api_passphrase, app.api_url, app=app)
 # df = api.get_orders()
-df = api.get_orders("MATIC-USDT", "", "done")
-print(df)
+# df = api.get_orders("MATIC-USDT", "", "done")
+# print(df)
 
 # resp = api.market_sell('BTC-USDT', 0.0002)
 # print (resp)
 
-# resp = api.market_buy('BTC-USDT', 100)
+# app = PyCryptoBot(exchange="kucoin")
+# api = AuthAPI(app.api_key, app.api_secret, app.api_passphrase, app.api_url, app=app)
+# resp = api.market_buy("MATIC-USDT", 17.81358435 - (17.81358435 * 0.001))
 # print (resp)
 
 # resp = api.market_buy('XRP-USDT', 100)

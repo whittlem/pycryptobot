@@ -1668,7 +1668,7 @@ class PyCryptoBot(BotConfig):
                 return api.market_buy(market, float(_truncate(quote_currency, 8)))
             elif self.exchange == Exchange.KUCOIN:
                 api = KAuthAPI(self.api_key, self.api_secret, self.api_passphrase, self.api_url, use_cache=self.usekucoincache, app=self)
-                return api.market_buy(market, float(quote_currency))
+                return api.market_buy(market, (float(quote_currency) - (float(quote_currency) * api.get_maker_fee())))
             elif self.exchange == Exchange.BINANCE:
                 api = BAuthAPI(self.api_key, self.api_secret, self.api_url, recv_window=self.recv_window, app=self)
                 return api.market_buy(market, quote_currency)
