@@ -464,10 +464,6 @@ layout = (
                                                             "value": "autorestart",
                                                         },
                                                         {
-                                                            "label": "Verbose",
-                                                            "value": "verbose",
-                                                        },
-                                                        {
                                                             "label": "Disable Telegram Messages",
                                                             "value": "disabletelegram",
                                                         },

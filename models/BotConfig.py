@@ -47,7 +47,6 @@ class BotConfig:
         self.base_currency = "BTC"
         self.quote_currency = "GBP"
         self.is_live = 0
-        self.is_verbose = 0
         self.save_graphs = 0
         self.is_sim = 0
         self.simstartdate = None
@@ -99,7 +98,7 @@ class BotConfig:
         self.autorestart = False
         self.stats = False
         self.statgroup = None
-        self.statstart_date = None
+        self.statstartdate = None
         self.statdetail = False
         self.nobuynearhighpcnt = 3
         self.simresultonly = False
@@ -377,7 +376,6 @@ class BotConfig:
         parser.add_argument("--logwidth", type=int, help="Set terminal log width")
 
         parser.add_argument("--live", type=int, help="Live order execution")
-        parser.add_argument("--verbose", type=int, help="Verbose terminal output")
         parser.add_argument("--graphs", type=int, help="Save graph images of trades")
         parser.add_argument("--debug", type=int, help="Enable debug level logging")
 
@@ -406,7 +404,7 @@ class BotConfig:
 
         parser.add_argument("--stats", action="store_true", help="display summary of completed trades")
         parser.add_argument("--statgroup", nargs="+", help="add multiple currency pairs to merge stats")
-        parser.add_argument("--statstart_date", type=str, help="trades before this date are ignored in stats function e.g 2021-01-15")
+        parser.add_argument("--statstartdate", type=str, help="trades before this date are ignored in stats function e.g 2021-01-15")
         parser.add_argument("--statdetail", action="store_true", help="display detail of completed transactions for a given market")
 
         parser.add_argument("--log", type=int, help="Enable console logging")

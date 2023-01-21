@@ -508,8 +508,8 @@ class Strategy:
             trailing_action_logtext = f"Buy Chg: {str(pricechange)}%/{trailingbuypcnt}%"
             waitpcnttext += f"Ready to buy at close. Price of {self.state.waiting_buy_price}, change of {str(pricechange)}%, is greater than setting of {trailingbuypcnt}%  (+/- 10%)"
 
-        if self.app.is_verbose and (not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly)):
-            RichText.notify(waitpcnttext, self.app, "info")
+        if self.app.debug and (not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly)):
+            RichText.notify(waitpcnttext, self.app, "debug")
 
         return (
             self.state.action,
@@ -581,8 +581,8 @@ class Strategy:
             trailing_action_logtext = f"Sell Chg: {str(pricechange)}%/{self.app.trailingsellpcnt}%"
             waitpcnttext += f"Sell at Close. Price of {self.state.waiting_sell_price}, change of {str(pricechange)}%, is lower than setting of {str(self.app.trailingsellpcnt)}% (+/- 10%)"
 
-        if self.app.is_verbose and (not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly)):
-            RichText.notify(waitpcnttext, self.info, "info")
+        if self.app.debug and (not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly)):
+            RichText.notify(waitpcnttext, self.info, "debug")
 
         if self.app.debug:
             RichText.notify(waitpcnttext, self.app, "debug")
