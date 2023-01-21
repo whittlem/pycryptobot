@@ -465,11 +465,8 @@ class AuthAPI(AuthAPIBase):
             if self.app is not None and self.app.debug is True:
                 RichText.notify(order, self.app, "debug")
 
-            # connect to authenticated coinbase pro api
-            model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
-
             # place order and return result
-            return model.auth_api("POST", "orders", order)
+            return self.auth_api("POST", "orders", order)
 
         except Exception:
             return pd.DataFrame()
@@ -654,7 +651,7 @@ class AuthAPI(AuthAPIBase):
                     return self.handle_api_error(msg, reason)
             else:
                 if self.app:
-                    RichText.notify(f"{reason}:  URI: {uri} trying again.  Attempt: {trycnt}", self.app, "error")
+                    RichText.notify(f"{str(msg)} - trying again.  Attempt: {trycnt}", self.app, "error")
                 time.sleep(15)
         else:
             return self.handle_api_error(

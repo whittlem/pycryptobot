@@ -89,19 +89,24 @@ class Stats:
         for pair in self.order_pairs:
             try:  # return 0 if unexpected exception
                 pair["delta"] = float(pair["sell"]["size"]) - float(pair["buy"]["size"])
-                RichText.notify(float(pair["sell"]["size"]), self.app, "debug")
+                if self.app.debug:
+                    RichText.notify(str(pair["sell"]["size"]), self.app, "debug")
             except Exception as err:
-                RichText.notify(err, self.app, "debug")
+                if self.app.debug:
+                    RichText.notify(err, self.app, "debug")
                 RichText.notify("unexpected error calculating delta, returning 0", self.app, "warning")
-                RichText.notify(pair, self.app, "debug")
+                if self.app.debug:
+                    RichText.notify(pair, self.app, "debug")
                 pair["delta"] = 0
 
             try:  # return 0 if unexpected exception
                 pair["gain"] = (float(pair["delta"]) / float(pair["buy"]["size"])) * 100
             except Exception as err:
-                RichText.notify(err, self.app, "debug")
+                if self.app.debug:
+                    RichText.notify(err, self.app, "debug")
                 RichText.notify("unexpected error calculating gain, returning 0", self.app, "warning")
-                RichText.notify(pair, self.app, "debug")
+                if self.app.debug:
+                    RichText.notify(pair, self.app, "debug")
                 pair["gain"] = 0
 
         # get day/week/month/all time totals
