@@ -463,7 +463,7 @@ class AuthAPI(AuthAPIBase):
             }
 
             if self.app is not None and self.app.debug is True:
-                RichText.notify(order, self.app, "debug")
+                RichText.notify(str(order), self.app, "debug")
 
             # place order and return result
             return self.auth_api("POST", "orders", order)
@@ -488,8 +488,8 @@ class AuthAPI(AuthAPIBase):
                 "size": self.market_base_Increment(market, base_quantity),
             }
 
-            if self.app:
-                RichText.notify(order, self.app, "debug")
+            if self.app is not None and self.app.debug is True:
+                RichText.notify(str(order), self.app, "debug")
 
             model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
             return model.auth_api("POST", "orders", order)
@@ -518,8 +518,8 @@ class AuthAPI(AuthAPIBase):
                 "price": future_price,
             }
 
-            if self.app:
-                RichText.notify(order, self.app, "debug")
+            if self.app is not None and self.app.debug is True:
+                RichText.notify(str(order), self.app, "debug")
 
             model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
             return model.auth_api("POST", "orders", order)

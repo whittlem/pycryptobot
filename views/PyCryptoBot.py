@@ -6,7 +6,11 @@ from datetime import datetime
 
 class RichText:
     @staticmethod
-    def notify(notification: str = "", app: object = None, level: str = "normal") -> None:
+    def notify(_notification, app: object = None, level: str = "normal") -> None:
+        # if notification is not a string, convert it to a string
+        if isinstance(_notification, str):
+            notification = str(_notification)
+
         if app is None:
             raise TypeError("app is None")
 
