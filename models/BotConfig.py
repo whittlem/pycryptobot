@@ -122,7 +122,7 @@ class BotConfig:
         self.disabletracker = True
         self.enableml = False
         self.websocket = False
-        self.enableexitaftersell = False
+        self.exitaftersell = False
         self.use_sell_fee = True
 
         self.enableinsufficientfundslogging = False
@@ -248,7 +248,7 @@ class BotConfig:
                 self.telegram = True
 
             if "scanner" in self.config:
-                self.enableexitaftersell = self.config["scanner"]["enableexitaftersell"] if "enableexitaftersell" in self.config["scanner"] else False
+                self.exitaftersell = self.config["scanner"]["exitaftersell"] if "exitaftersell" in self.config["scanner"] else False
                 self.enable_buy_next = True if "enable_buy_now" not in self.config["scanner"] else self.config["scanner"]["enable_buy_now"]
                 self.enable_atr72_pcnt = True if "enable_atr72_pcnt" not in self.config["scanner"] else self.config["scanner"]["enable_atr72_pcnt"]
                 self.enable_volume = False if "enable_volume" not in self.config["scanner"] else self.config["scanner"]["enable_volume"]
@@ -420,6 +420,7 @@ class BotConfig:
         parser.add_argument("--recvwindow", type=int, help="Binance exchange API recvwindow, integer between 5000 and 60000")
         parser.add_argument("--lastaction", type=str, help="Manually set the last action performed by the bot (BUY, SELL)")
         parser.add_argument("--kucoincache", type=int, help="Enable the Kucoin cache")
+        parser.add_argument("--exitaftersell", type=int, help="Exit the bot after a sell order")
 
         parser.add_argument("--adjusttotalperiods", type=int, help="Adjust data points in historical trading data")
 
