@@ -417,7 +417,7 @@ config.json
     },
     "scanner": {
         "atr72_pcnt": 3.0,
-        "enableexitaftersell": 1,
+        "exitaftersell": 1,
         "enableleverage": 0,
         "maxbotcount": 10,
         "autoscandelay": 1,

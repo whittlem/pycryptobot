@@ -89,7 +89,7 @@
     },
 	"scanner" : {
 		"atr72_pcnt" : 1.0,
-		"enableexitaftersell" : 1,
+		"exitaftersell" : 1,
 		"enableleverage" : 0,
         "use_default_scanner" : 1,
 		"maxbotcount" : 5,

@@ -249,6 +249,7 @@ def default_config_parse(app, config):
     config_option_int(option_name="recvwindow", option_default=5000, store_name="recv_window", value_min=5000, value_max=60000)
     config_option_str(option_name="lastaction", option_default=None, store_name="last_action", valid_options=["BUY", "SELL"])
     config_option_bool(option_name="kucoincache", option_default=False, store_name="usekucoincache", store_invert=False)
+    config_option_bool(option_name="exitaftersell", option_default=False, store_name="exitaftersell", store_invert=False)
 
     config_option_int(option_name="adjusttotalperiods", option_default=300, store_name="adjusttotalperiods", value_min=200, value_max=500)
 
@@ -261,8 +262,8 @@ def default_config_parse(app, config):
     config_option_float(option_name="nosellminpcnt", option_default=None, store_name="nosellminpcnt", value_min=-100, value_max=0)
 
     config_option_bool(option_name="preventloss", option_default=False, store_name="preventloss", store_invert=False)
-    config_option_float(option_name="preventlosstrigger", option_default=1.0, store_name="nobuynearhighpcnt", value_min=0, value_max=100)
-    config_option_float(option_name="preventlossmargin", option_default=0.1, store_name="nobuynearhighpcnt", value_min=0, value_max=100)
+    config_option_float(option_name="preventlosstrigger", option_default=1.0, store_name="preventlosstrigger", value_min=0, value_max=100)
+    config_option_float(option_name="preventlossmargin", option_default=0.1, store_name="preventlossmargin", value_min=0, value_max=100)
     config_option_bool(option_name="sellatloss", option_default=True, store_name="sellatloss", store_invert=False)
 
     config_option_bool(option_name="sellatresistance", option_default=False, store_name="sellatresistance", store_invert=False)

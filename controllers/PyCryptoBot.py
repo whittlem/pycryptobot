@@ -592,7 +592,8 @@ class PyCryptoBot(BotConfig):
                         0,
                     )
 
-                    if self.enableexitaftersell and self.startmethod not in ("standard"):
+                    if self.exitaftersell:
+                        RichText.notify("Exit after sell! (\"exitaftersell\" is enabled)", self, "warning")
                         sys.exit(0)
 
             if self.price < 0.000001:
@@ -771,19 +772,6 @@ class PyCryptoBot(BotConfig):
                     if self.disablelog is False:
                         self.console_log.print(self.table_console)
                     self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)  # clear table
-
-                """
-                # removed as it added unnecessary complexity and load
-                if not self.is_sim or (self.is_sim and not self.simresultonly):
-                    if bool(self.df_last["three_white_soldiers"].values[0]) is True:
-                        _candlestick("Candlestick Detected: Three White Soldiers ('Strong - Reversal - Bullish Pattern - Up')")
-                    if bool(self.df_last["three_black_crows"].values[0]) is True:
-                        _candlestick("Candlestick Detected: Three Black Crows ('Strong - Reversal - Bearish Pattern - Down')")
-                    if bool(self.df_last["morning_star"].values[0]) is True:
-                        _candlestick("Candlestick Detected: Morning Star ('Strong - Reversal - Bullish Pattern - Up')")
-                    if bool(self.df_last["evening_star"].values[0]) is True:
-                        _candlestick("Candlestick Detected: Evening Star ('Strong - Reversal - Bearish Pattern - Down')")
-                """
 
                 def _notify(notification: str = "", level: str = "normal") -> None:
                     if notification == "":
@@ -1256,10 +1244,8 @@ class PyCryptoBot(BotConfig):
                                     margin_text,
                                 )
 
-                                if self.enableexitaftersell and self.startmethod not in (
-                                    "standard",
-                                    "telegram",
-                                ):
+                                if self.exitaftersell and self.startmethod not in ("telegram"):
+                                    RichText.notify("Exit after sell! (\"exitaftersell\" is enabled)", self, "warning")
                                     sys.exit(0)
 
                             else:
@@ -1418,6 +1404,10 @@ class PyCryptoBot(BotConfig):
                             tradinggraphs.render_ema_and_macd(len(trading_dataCopy), "graphs/" + filename, True)
                         else:
                             tradinggraphs.render_ema_and_macd(len(trading_data), "graphs/" + filename, True)
+
+                    if self.exitaftersell:
+                        RichText.notify("Exit after sell! (\"exitaftersell\" is enabled)", self, "warning")
+                        sys.exit(0)
 
             self.state.last_df_index = str(self.df_last.index.format()[0])
 
@@ -2324,9 +2314,18 @@ class PyCryptoBot(BotConfig):
             "Binance recvWindow",
             "recv_window",
             "Binance exchange API recvwindow, integer between 5000 and 60000",
-            break_below=True,
+            break_below=False,
             default_value=5000,
             arg_name="recvwindow",
+        )
+        config_option_row_bool(
+            "Exit After Sell",
+            "exitaftersell",
+            "Exit the bot after a sell order",
+            break_below=True,
+            store_invert=False,
+            default_value=False,
+            arg_name="exitaftersell",
         )
 
         config_option_row_int(
