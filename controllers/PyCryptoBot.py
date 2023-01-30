@@ -1115,9 +1115,6 @@ class PyCryptoBot(BotConfig):
                                 self.state.fib_low = bands[first_key]
                                 self.state.fib_high = bands[second_key]
 
-                        else:
-                            _notify("*** Executing TEST Buy Order ***")
-
                         self.trade_tracker = pd.concat(
                             [
                                 self.trade_tracker,
@@ -1350,9 +1347,6 @@ class PyCryptoBot(BotConfig):
                                 f"*** Executing SIMULATION Sell Order at {str(self.price)} | Buy: {str(self.state.last_buy_price)} ({str(self.price - self.state.last_buy_price)}) | Profit: {str(profit)} on {_truncate(self.state.last_buy_size, precision)} | Fees: {str(round(sell_fee, precision))} | Margin: {margin_text} ***",
                                 "info",
                             )
-
-                        else:
-                            _notify("*** Executing TEST Sell Order ***")
 
                         self.trade_tracker = pd.concat(
                             [
