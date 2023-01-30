@@ -1895,15 +1895,17 @@ class PyCryptoBot(BotConfig):
             )
 
         if self.state.sell_count > 0:
-            _last_trade_margin = _truncate(
-                (((self.state.last_sell_size - self.state.last_buy_size) / self.state.last_buy_size) * 100),
-                4,
+            _last_trade_margin = float(
+                _truncate(
+                    (((self.state.last_sell_size - self.state.last_buy_size) / self.state.last_buy_size) * 100),
+                    4,
+                )
             )
 
             if not self.simresultonly:
-                if float(_last_trade_margin) > 0:
+                if _last_trade_margin > 0:
                     table.add_row("Last Trade Margin", Text(f"{_last_trade_margin}%", style="bright_green"), style="white")
-                elif float(_last_trade_margin) < 0:
+                elif _last_trade_margin < 0:
                     table.add_row("Last Trade Margin", Text(f"{_last_trade_margin}%", style="bright_red"), style="white")
                 else:
                     table.add_row("Last Trade Margin", Text(f"{_last_trade_margin}%", style="orange1"), style="white")
