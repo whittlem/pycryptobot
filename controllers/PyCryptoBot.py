@@ -828,6 +828,7 @@ class PyCryptoBot(BotConfig):
 
                     if self.is_sim:
                         # save margin for summary if open trade
+                        self.state.open_trade_margin_float = margin
                         self.state.open_trade_margin = margin_text
                 else:
                     margin_text = ""
@@ -1966,6 +1967,7 @@ class PyCryptoBot(BotConfig):
                 simulation["data"]["all_trades"]["profit_loss"] = float(_truncate(self.state.profitlosstracker, 2))
                 simulation["data"]["all_trades"]["fees"] = float(_truncate(self.state.feetracker, 2))
                 simulation["data"]["all_trades"]["margin"] = float(_truncate(self.state.margintracker, 4))
+                simulation["data"]["all_trades"]["open_trade_margin"] = float(_truncate(self.state.open_trade_margin_float, 4))
 
             ## revised telegram Summary notification to give total margin in addition to last trade margin.
             if not self.disabletelegram:
