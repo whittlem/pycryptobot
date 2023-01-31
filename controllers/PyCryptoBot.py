@@ -828,6 +828,7 @@ class PyCryptoBot(BotConfig):
 
                     if self.is_sim:
                         # save margin for summary if open trade
+                        self.state.open_trade_margin_float = margin
                         self.state.open_trade_margin = margin_text
                 else:
                     margin_text = ""
@@ -1114,9 +1115,6 @@ class PyCryptoBot(BotConfig):
                                 self.state.fib_low = bands[first_key]
                                 self.state.fib_high = bands[second_key]
 
-                        else:
-                            _notify("*** Executing TEST Buy Order ***")
-
                         self.trade_tracker = pd.concat(
                             [
                                 self.trade_tracker,
@@ -1349,9 +1347,6 @@ class PyCryptoBot(BotConfig):
                                 f"*** Executing SIMULATION Sell Order at {str(self.price)} | Buy: {str(self.state.last_buy_price)} ({str(self.price - self.state.last_buy_price)}) | Profit: {str(profit)} on {_truncate(self.state.last_buy_size, precision)} | Fees: {str(round(sell_fee, precision))} | Margin: {margin_text} ***",
                                 "info",
                             )
-
-                        else:
-                            _notify("*** Executing TEST Sell Order ***")
 
                         self.trade_tracker = pd.concat(
                             [
@@ -1900,15 +1895,17 @@ class PyCryptoBot(BotConfig):
             )
 
         if self.state.sell_count > 0:
-            _last_trade_margin = _truncate(
-                (((self.state.last_sell_size - self.state.last_buy_size) / self.state.last_buy_size) * 100),
-                4,
+            _last_trade_margin = float(
+                _truncate(
+                    (((self.state.last_sell_size - self.state.last_buy_size) / self.state.last_buy_size) * 100),
+                    4,
+                )
             )
 
             if not self.simresultonly:
-                if float(_last_trade_margin) > 0:
+                if _last_trade_margin > 0:
                     table.add_row("Last Trade Margin", Text(f"{_last_trade_margin}%", style="bright_green"), style="white")
-                elif float(_last_trade_margin) < 0:
+                elif _last_trade_margin < 0:
                     table.add_row("Last Trade Margin", Text(f"{_last_trade_margin}%", style="bright_red"), style="white")
                 else:
                     table.add_row("Last Trade Margin", Text(f"{_last_trade_margin}%", style="orange1"), style="white")
@@ -1966,6 +1963,7 @@ class PyCryptoBot(BotConfig):
                 simulation["data"]["all_trades"]["profit_loss"] = float(_truncate(self.state.profitlosstracker, 2))
                 simulation["data"]["all_trades"]["fees"] = float(_truncate(self.state.feetracker, 2))
                 simulation["data"]["all_trades"]["margin"] = float(_truncate(self.state.margintracker, 4))
+                simulation["data"]["all_trades"]["open_trade_margin"] = float(_truncate(self.state.open_trade_margin_float, 4))
 
             ## revised telegram Summary notification to give total margin in addition to last trade margin.
             if not self.disabletelegram:

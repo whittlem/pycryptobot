@@ -63,6 +63,7 @@ class AppState:
 
         self.previous_buy_size = 0
         self.open_trade_margin = 0
+        self.open_trade_margin_float = 0
         self.in_open_trade = False
         self.last_df_index = ""
         self.sell_count = 0
