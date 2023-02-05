@@ -22,15 +22,17 @@
 
 1. What operating system are you running? E.g. Windows, Ubuntu Linux, OSX, etc.
 
-2. What version of Python are you running? "python --version"
+2. Are you running the bot from the Github repo or Docker?
 
-3. What version of the bot are you running? - on the first line of the README.md
+3. What version of Python are you running? "python --version"
 
-4. What is the exact command you are running? E.g. "python3 pycryptobot.py"
+4. What version of the bot are you running? - on the first line of the README.md
 
-5. Please provide the contents of your config.json?
+5. What is the exact command you are running? E.g. "python3 pycryptobot.py"
 
-6. How can I re-create your issue?
+6. Please provide the contents of your config.json?
+
+7. How can I re-create your issue?
 
 ***Important***
 
