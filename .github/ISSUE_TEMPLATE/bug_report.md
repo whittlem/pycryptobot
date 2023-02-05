@@ -1,38 +1,37 @@
----
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
+** Before you report a bug, please do the following **
 
----
+1. Make sure your bot is running the latest version
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+    git reset --hard
+    git clean -nf
+    git checkout main
+    git pull
+    
+2. Make sure your Python packages are up to date
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+    python3 -m pip install -r requirements.txt -U
+    
+3. Have you asked for help in the Telegram channel first? https://t.me/+S85K9oMQ8v82MmE0 
+    
+4. Only proceed if you are still experiencing the issue after points 1 to 3 above.
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+** In order to resolve your issue quickly, I need to be able to re-create it **
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+1. What operating system are you running? E.g. Windows, Ubuntu Linux, OSX, etc.
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+2. What version of Python are you running? "python --version"
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+3. What version of the bot are you running? - on the first line of the README.md
 
-**Additional context**
-Add any other context about the problem here.
+4. What is the exact command you are running? E.g. "python3 pycryptobot.py"
+
+5. Please provide the contents of your config.json?
+
+6. How can I re-create your issue?
+
+*** Important ***
+
+** Your request will be closed if it's not a bug **
+** Your request will be closed if you have not provided the information above **
+** Your request will be closed if you don't respond within 3 days ***
+** If your issue is resolved, please do let me know **
