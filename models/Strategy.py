@@ -421,8 +421,9 @@ class Strategy:
 
         # if bear market and bull only return true to abort buy
         if self.state.action == "BUY" and not self.app.disablebullonly and not goldencross:
-            log_text = "Ignore Buy Signal (Bear Buy In Bull Only)"
-            RichText.notify(log_text, self.app, "warning")
+            if not self.app.is_sim or (self.app.is_sim and not self.app.simresultonly):
+                log_text = "Ignore Buy Signal (Bear Buy In Bull Only)"
+                RichText.notify(log_text, self.app, "warning")
             return True
 
         if self.app.debug and self.state.action == "SELL":
