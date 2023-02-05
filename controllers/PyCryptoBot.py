@@ -3103,7 +3103,30 @@ class PyCryptoBot(BotConfig):
         if not self.is_live and self.exchange == Exchange.COINBASEPRO:
             return 0.005  # default lowest fee tier
         elif not self.is_live and self.exchange == Exchange.BINANCE:
-            return 0.0  # default lowest fee tier
+            # https://www.binance.com/en/support/announcement/binance-launches-zero-fee-bitcoin-trading-10435147c55d4a40b64fcbf43cb46329
+            if self.get_market() in [
+                "BTCAUD",
+                "BTCBIDR",
+                "BTCBRL",
+                "BTCBUSD",
+                "BTCEUR",
+                "BTCGBP",
+                "BTCRUB",
+                "BTCTRY",
+                "BTCTUSD",
+                "BTCUAH",
+                "BTCUSDC",
+                "BTCUSDP",
+                "BTCUSDT",
+                "BUSDUSDT",
+                "PAXBUSD",
+                "SUSDUSDT",
+                "USTBUSD",
+                "USTUSDT",
+            ]:
+                return 0.0  # no fees for those pairs
+            else:
+                return 0.001  # default lowest fee tier
         elif not self.is_live and self.exchange == Exchange.KUCOIN:
             return 0.0015  # default lowest fee tier
         elif self.takerfee > -1.0:
