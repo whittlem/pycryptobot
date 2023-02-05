@@ -3,8 +3,11 @@
 1. Make sure your bot is running the latest version
 
     git reset --hard
+    
     git clean -nf
+    
     git checkout main
+    
     git pull
     
 2. Make sure your Python packages are up to date
