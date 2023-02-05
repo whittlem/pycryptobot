@@ -434,7 +434,19 @@ class TelegramHelper:
             return False
 
         if return_output is True:
-            return subprocess.getoutput(f"python3 pycryptobot.py --exchange {exchange} --market {pair} {overrides}")
+            os.environ["PYTHONIOENCODING"] = "utf-8"
+            os.environ["PYTHONUNBUFFERED"] = "1"
+
+            # print("Current directory: ", os.getcwd())
+            # print("Environment: ", os.environ)
+
+            command = f"python3 pycryptobot.py --exchange {exchange} --market {pair} {overrides}"
+            resp = subprocess.getoutput(command)
+
+            if resp == "":
+                return f"No data returned for: {command}"
+
+            return resp
 
         command = "python3 pycryptobot.py"
         command = f"{command} --startmethod {startmethod}"

@@ -385,6 +385,7 @@ class TelegramBot(TelegramBotBase):
         output = self.helper.start_process(
             self.pair, self.exchange, "--stats --live 1", "telegram", True
         )
+
         self.helper.send_telegram_message(update, output, context=context)
 
         return ConversationHandler.END
