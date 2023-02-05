@@ -10,4 +10,3 @@ https://github.com/whittlem/pycryptobot/discussions
 - **PyCryptoBot 7 Configuration** - https://trading-data-analysis.pro/pycryptobot-7-configuration-e314931f94
 - **PyCryptoBot with Telegram** - https://trading-data-analysis.pro/pycryptobot-with-telegram-83eed5f230c2
 - **PyCryptoBot Telegram Bot** - https://trading-data-analysis.pro/pycryptobot-telegram-bot-d43e990748fa
-- 
