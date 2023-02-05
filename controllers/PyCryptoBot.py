@@ -3125,7 +3125,6 @@ class PyCryptoBot(BotConfig):
 
     def get_maker_fee(self):
         if not self.is_live and self.exchange == Exchange.COINBASEPRO:
-            print("WENT IN HERE - GOOD - REMOVE THIS")
             return 0.005  # default lowest fee tier
         elif not self.is_live and self.exchange == Exchange.BINANCE:
             return 0.0  # default lowest fee tier
