@@ -8,6 +8,7 @@ class RichText:
     @staticmethod
     def notify(_notification, app: object = None, level: str = "normal") -> None:
         # if notification is not a string, convert it to a string
+        notification = ""
         if isinstance(_notification, str):
             notification = str(_notification)
 

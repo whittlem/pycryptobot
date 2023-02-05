@@ -1270,8 +1270,8 @@ class WebSocket(AuthAPIBase):
         if self.app:
             RichText.notify(msg, self.app, "info")
 
-    def on_error(self, e, data=None):
-        if self.app:
+    def on_error(self, e: str = "", data=None):
+        if self.app and e != "":
             RichText.notify(e, self.app, "error")
             RichText.notify("{} - data: {}".format(e, data), self.app, "error")
 
