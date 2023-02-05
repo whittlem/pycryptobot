@@ -1,4 +1,4 @@
-** Before you report a bug, please do the following **
+**Before you report a bug, please do the following**
 
 1. Make sure your bot is running the latest version
 
@@ -15,7 +15,7 @@
     
 4. Only proceed if you are still experiencing the issue after points 1 to 3 above.
 
-** In order to resolve your issue quickly, I need to be able to re-create it **
+**In order to resolve your issue quickly, I need to be able to re-create it**
 
 1. What operating system are you running? E.g. Windows, Ubuntu Linux, OSX, etc.
 
@@ -29,9 +29,9 @@
 
 6. How can I re-create your issue?
 
-*** Important ***
+***Important***
 
-** Your request will be closed if it's not a bug **
-** Your request will be closed if you have not provided the information above **
-** Your request will be closed if you don't respond within 3 days ***
-** If your issue is resolved, please do let me know **
+**Your request will be closed if it's not a bug**
+**Your request will be closed if you have not provided the information above**
+**Your request will be closed if you don't respond within 3 days**
+**If your issue is resolved, please do let me know**
