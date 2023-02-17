@@ -2462,6 +2462,9 @@ class PyCryptoBot(BotConfig):
             arg_name="tslmaxpcnt",
         )
 
+        config_option_row_float("Buy Percent", "buypercent", "Buy order size in quote currency as a percentage", default_value=100.0, arg_name="buypercent")
+        config_option_row_float("Sell Percent", "sellpercent", "Sell order size in quote currency as a percentage", default_value=100.0, arg_name="sellpercent")
+
         config_option_row_float("Buy Min Size", "buyminsize", "Minimum buy order size in quote currency", default_value=0.0, arg_name="buyminsize")
         config_option_row_float("Buy Max Size", "buymaxsize", "Maximum buy order size in quote currency", default_value=0.0, arg_name="buymaxsize")
         config_option_row_bool(
