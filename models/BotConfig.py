@@ -12,6 +12,7 @@ from models.ConfigBuilder import ConfigBuilder
 from models.chat import Telegram
 from models.config import (
     binanceConfigParser,
+    coinbaseConfigParser,
     coinbaseProConfigParser,
     kucoinConfigParser,
     dummyConfigParser,
@@ -228,6 +229,9 @@ class BotConfig:
         ) = self._set_default_api_info(self.exchange)
 
         if self.config_provided:
+            if self.exchange == Exchange.COINBASE and self.exchange.value in self.config:
+                coinbaseConfigParser(self, self.config[self.exchange.value], self.cli_args)
+
             if self.exchange == Exchange.COINBASEPRO and self.exchange.value in self.config:
                 coinbaseProConfigParser(self, self.config[self.exchange.value], self.cli_args)
 
@@ -264,6 +268,8 @@ class BotConfig:
         else:
             if self.exchange == Exchange.BINANCE:
                 binanceConfigParser(self, None, self.cli_args)
+            elif self.exchange == Exchange.COINBASE:
+                coinbaseConfigParser(self, None, self.cli_args)
             elif self.exchange == Exchange.KUCOIN:
                 kucoinConfigParser(self, None, self.cli_args)
             else:
@@ -283,6 +289,8 @@ class BotConfig:
         if not exchange:
             if (Exchange.COINBASEPRO.value or "api_pass") in self.config:
                 exchange = Exchange.COINBASEPRO
+            elif Exchange.COINBASE.value in self.config:
+                exchange = Exchange.COINBASE
             elif Exchange.BINANCE.value in self.config:
                 exchange = Exchange.BINANCE
             elif Exchange.KUCOIN.value in self.config:
@@ -300,6 +308,13 @@ class BotConfig:
                 "api_passphrase": "",
                 "market": "BTCGBP",
             },
+            "coinbase": {
+                "api_url": "https://api.coinbase.com",
+                "api_key": "0000000000000000",
+                "api_secret": "00000000000000000000000000000000",
+                "api_passphrase": "",
+                "market": "BTC-GBP",
+            },
             "coinbasepro": {
                 "api_url": "https://api.exchange.coinbase.com",
                 "api_key": "00000000000000000000000000000000",
@@ -315,7 +330,7 @@ class BotConfig:
                 "market": "BTC-GBP",
             },
             "dummy": {
-                "api_url": "https://api.exchange.coinbase.com",
+                "api_url": "https://api.coinbase.com",
                 "api_key": "00000000000000000000000000000000",
                 "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
                 "api_passphrase": "00000000000",
@@ -379,12 +394,12 @@ class BotConfig:
         parser.add_argument("--graphs", type=int, help="Save graph images of trades")
         parser.add_argument("--debug", type=int, help="Enable debug level logging")
 
-        parser.add_argument("--exchange", type=str, help="'coinbasepro', 'binance', 'kucoin', 'dummy'")
-        parser.add_argument("--market", type=str, help="coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc.")
+        parser.add_argument("--exchange", type=str, help="'coinbase', 'coinbasepro', 'binance', 'kucoin', 'dummy'")
+        parser.add_argument("--market", type=str, help="coinbase, coinbasepro and kucoin: BTC-GBP, binance: BTCGBP etc.")
         parser.add_argument(
             "--granularity",
             type=str,
-            help="coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6h,1d), kucoin: (1min,3min,5min,15min,30min,1hour,6hour,1day)",
+            help="coinbase/coinbasepro: (60,300,900,3600,21600,86400), binance: (1m,5m,15m,1h,6h,1d), kucoin: (1min,3min,5min,15min,30min,1hour,6hour,1day)",
         )
 
         parser.add_argument("--config", type=str, help="Use the config file at the given location. e.g 'myconfig.json'")

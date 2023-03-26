@@ -179,12 +179,15 @@ class TelegramBot(TelegramBotBase):
             return ConversationHandler.END
 
         if (
-            update.message.text == "Coinbase Pro"
+            update.message.text == "Coinbase"
+            or update.message.text == "Coinbase Pro"
             or update.message.text == "Kucoin"
             or update.message.text == "Binance"
         ):
             self.exchange = update.message.text.lower()
-            if update.message.text == "Coinbase Pro":
+            if update.message.text == "Coinbase":
+                self.exchange = "coinbase"
+            elif update.message.text == "Coinbase Pro":
                 self.exchange = "coinbasepro"
         else:
             if self.exchange == "":
@@ -207,7 +210,7 @@ class TelegramBot(TelegramBotBase):
             )
             return ConversationHandler.END
 
-        if self.exchange in ("coinbasepro", "kucoin"):
+        if self.exchange in ("coinbase", "coinbasepro", "kucoin"):
             p = re.compile(r"^[0-9A-Z]{1,20}\-[1-9A-Z]{2,5}$")
             if not p.match(update.message.text):
                 self.helper.send_telegram_message(
@@ -321,9 +324,11 @@ class TelegramBot(TelegramBotBase):
             )
             return ConversationHandler.END
 
-        if update.message.text in ("Coinbase Pro", "Kucoin", "Binance"):
+        if update.message.text in ("Coinbase", "Coinbase Pro", "Kucoin", "Binance"):
             self.exchange = update.message.text.lower()
-            if update.message.text == "Coinbase Pro":
+            if update.message.text == "Coinbase":
+                self.exchange = "coinbase"
+            elif update.message.text == "Coinbase Pro":
                 self.exchange = "coinbasepro"
         else:
             if self.exchange == "":
@@ -353,7 +358,7 @@ class TelegramBot(TelegramBotBase):
             )
             return ConversationHandler.END
 
-        if self.exchange in ("coinbasepro", "kucoin"):
+        if self.exchange in ("coinbase", "coinbasepro", "kucoin"):
             p = re.compile(r"^[0-9A-Z]{1,20}\-[1-9A-Z]{2,5}$")
             if not p.match(update.message.text):
                 self.helper.send_telegram_message(
@@ -740,6 +745,8 @@ class TelegramBot(TelegramBotBase):
             if file.__contains__("output.json"):
                 if file.__contains__("coinbasepro"):
                     exchange = "coinbasepro"
+                elif file.__contains__("coinbase"):
+                    exchange = "coinbase"
                 if file.__contains__("binance"):
                     exchange = "binance"
                 if file.__contains__("kucoin"):

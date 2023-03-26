@@ -35,6 +35,7 @@ layout = (
                     dbc.CardBody(
                         dbc.RadioItems(
                             options=[
+                                {"label": "Coinbase", "value": "coinbase"},
                                 {"label": "Coinbase Pro", "value": "coinbasepro"},
                                 {"label": "Binance", "value": "binance"},
                                 {"label": "Kucoin", "value": "kucoin"},
@@ -925,6 +926,10 @@ def switch_granularity(gran, exchange):
         else:
             gran = Granularity.Granularity.convert_to_enum(gran)
 
+            if exchange == "coinbase":
+                tg_wrapper.helper.config[exchange]["config"].update(
+                    {"granularity": gran.to_integer}
+                )
             if exchange == "coinbasepro":
                 tg_wrapper.helper.config[exchange]["config"].update(
                     {"granularity": gran.to_integer}
