@@ -9,6 +9,7 @@ import requests
 import base64
 import sys
 import pandas as pd
+import numpy as np
 from numpy import floor
 from datetime import datetime, timedelta
 from requests.auth import AuthBase
@@ -127,6 +128,16 @@ class AuthAPI(AuthAPIBase):
         # exclude accounts with a nil balance
         df = df[df.balance != "0.0000000000000000"]
 
+        # return standard columns
+        df.drop(columns=["name", "default", "deleted_at", "created_at", "updated_at", "type", "ready"], inplace=True)
+        df.columns = ["id", "currency", "trading_enabled", "balance", "hold"]
+        df["balance"] = pd.to_numeric(df["balance"])
+        df["hold"] = pd.to_numeric(df["hold"])
+        df["available"] = df["balance"] - df["hold"]
+        df["profile_id"] = None
+        df["index"] = df.index
+        df = df[["index", "id", "currency", "balance", "hold", "available", "profile_id", "trading_enabled"]]
+
         # reset the dataframe index to start from 0
         df = df.reset_index(drop=True)
 
@@ -145,6 +156,16 @@ class AuthAPI(AuthAPIBase):
         if len(df) == 0:
             return pd.DataFrame()
 
+        # return standard columns
+        df.drop(columns=["name", "default", "deleted_at", "created_at", "updated_at", "type", "ready"], inplace=True)
+        df.columns = ["id", "currency", "trading_enabled", "balance", "hold"]
+        df["balance"] = pd.to_numeric(df["balance"])
+        df["hold"] = pd.to_numeric(df["hold"])
+        df["available"] = df["balance"] - df["hold"]
+        df["profile_id"] = None
+        df["index"] = df.index
+        df = df[["index", "id", "currency", "balance", "hold", "available", "profile_id", "trading_enabled"]]
+
         # reset the dataframe index to start from 0
         df = df.reset_index(drop=True)
 
@@ -154,7 +175,7 @@ class AuthAPI(AuthAPIBase):
     def get_products(self) -> pd.DataFrame:
         """Retrieves your list of products"""
 
-        # GET /api/v3/brokerage/product
+        # GET /api/v3/brokerage/products
         try:
             df = self.auth_api("GET", "api/v3/brokerage/products")
         except Exception:
@@ -177,6 +198,16 @@ class AuthAPI(AuthAPIBase):
 
             if len(df) == 0:
                 return pd.DataFrame()
+
+            # return standard columns
+            df.drop(columns=["pricing_tier", "usd_from", "usd_to"], inplace=True)
+            df["taker_fee_rate"] = df["taker_fee_rate"].astype(float)
+            df["maker_fee_rate"] = df["maker_fee_rate"].astype(float)
+            df["usd_volume"] = None
+            df["market"] = ""
+
+            # reset the dataframe index to start from 0
+            df = df.reset_index(drop=True)
 
             return df
 
@@ -229,176 +260,30 @@ class AuthAPI(AuthAPIBase):
         if status not in ["open", "pending", "done", "active", "all"]:
             raise ValueError("Invalid order status.")
 
+        # GET /api/v3/brokerage/orders/historical/batch
         try:
-            # GET /orders?status
-            resp = self.auth_api("GET", f"orders?status={status}")
-            if len(resp) > 0:
-                if status == "open":
-                    df = resp.copy()[
-                        [
-                            "created_at",
-                            "product_id",
-                            "side",
-                            "type",
-                            "size",
-                            "price",
-                            "status",
-                        ]
-                    ]
-                    df["value"] = float(df["price"]) * float(df["size"]) - (float(df["price"]) * MARGIN_ADJUSTMENT)
-                else:
-                    if "specified_funds" in resp:
-                        df = resp.copy()[
-                            [
-                                "created_at",
-                                "product_id",
-                                "side",
-                                "type",
-                                "filled_size",
-                                "specified_funds",
-                                "executed_value",
-                                "fill_fees",
-                                "status",
-                            ]
-                        ]
-                    else:
-                        # manual limit orders do not contain 'specified_funds'
-                        df_tmp = resp.copy()
-                        df_tmp["specified_funds"] = None
-                        df = df_tmp[
-                            [
-                                "created_at",
-                                "product_id",
-                                "side",
-                                "type",
-                                "filled_size",
-                                "specified_funds",
-                                "executed_value",
-                                "fill_fees",
-                                "status",
-                            ]
-                        ]
-            else:
-                return pd.DataFrame()
-
-            # replace null NaN values with 0
-            df.copy().fillna(0, inplace=True)
-
-            df_tmp = df.copy()
-            df_tmp["price"] = 0.0
-            df_tmp["filled_size"] = df_tmp["filled_size"].astype(float)
-            df_tmp["specified_funds"] = df_tmp["specified_funds"].astype(float)
-            df_tmp["executed_value"] = df_tmp["executed_value"].astype(float)
-            df_tmp["fill_fees"] = df_tmp["fill_fees"].astype(float)
-            df = df_tmp
-
-            # calculates the self.price at the time of purchase
-            if status != "open":
-                df["price"] = df.copy().apply(
-                    lambda row: (float(row.executed_value) * 100) / (float(row.filled_size) * 100) if float(row.filled_size) > 0 else 0,
-                    axis=1,
-                )
-                # df.loc[df['filled_size'] > 0, 'price'] = (df['executed_value'] * 100) / (df['filled_size'] * 100)
-
-            # rename the columns
-            if status == "open":
-                df.columns = [
-                    "created_at",
-                    "market",
-                    "action",
-                    "type",
-                    "size",
-                    "price",
-                    "status",
-                    "value",
-                ]
-                df = df[
-                    [
-                        "created_at",
-                        "market",
-                        "action",
-                        "type",
-                        "size",
-                        "value",
-                        "status",
-                        "price",
-                    ]
-                ]
-                df["size"] = df["size"].astype(float).round(8)
-            else:
-                df.columns = [
-                    "created_at",
-                    "market",
-                    "action",
-                    "type",
-                    "value",
-                    "size",
-                    "filled",
-                    "fees",
-                    "status",
-                    "price",
-                ]
-                df = df[
-                    [
-                        "created_at",
-                        "market",
-                        "action",
-                        "type",
-                        "size",
-                        "value",
-                        "fees",
-                        "price",
-                        "status",
-                    ]
-                ]
-                df.columns = [
-                    "created_at",
-                    "market",
-                    "action",
-                    "type",
-                    "size",
-                    "filled",
-                    "fees",
-                    "price",
-                    "status",
-                ]
-                df_tmp = df.copy()
-                df_tmp["filled"] = df_tmp["filled"].astype(float).round(8)
-                df_tmp["size"] = df_tmp["size"].astype(float).round(8)
-                df_tmp["fees"] = df_tmp["fees"].astype(float).round(8)
-                df_tmp["price"] = df_tmp["price"].astype(float).round(8)
-                df = df_tmp
-
-            # convert dataframe to a time series
-            tsidx = pd.DatetimeIndex(pd.to_datetime(df["created_at"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z"))
-            df.set_index(tsidx, inplace=True)
-            df = df.drop(columns=["created_at"])
-
-            # if marker provided
+            payload = {}
             if market != "":
-                # filter by market
-                df = df[df["market"] == market]
-
-            # if action provided
+                payload["product_id"] = market
             if action != "":
-                # filter by action
-                df = df[df["action"] == action]
-
-            # if status provided
+                payload["order_side"] = action.upper()
             if status != "all":
-                # filter by status
-                df = df[df["status"] == status]
+                if status == "done":
+                    payload["order_status"] = "FILLED"
+                else:
+                    payload["order_status"] = status.upper()
 
-            # reverse orders and reset index
-            df = df.iloc[::-1].reset_index()
-
-            # for sell orders size is filled
-            df["size"] = df["size"].fillna(df["filled"])
-
-            return df
-
+            df = self.auth_api("GET", "api/v3/brokerage/orders/historical/batch", payload)
         except Exception:
             return pd.DataFrame()
+
+        # reverse dataframe
+        df = df.iloc[::-1]
+
+        # reset the dataframe index to start from 0
+        df = df.reset_index(drop=True)
+
+        return df
 
     def get_time(self) -> datetime:
         """Retrieves the exchange time"""
@@ -454,6 +339,7 @@ class AuthAPI(AuthAPIBase):
         except Exception:
             return pd.DataFrame()
 
+    # wallet:buys:create
     def market_sell(self, market: str = "", base_quantity: float = 0) -> pd.DataFrame:
         """Executes a market sell providing a crypto amount"""
 
@@ -465,17 +351,21 @@ class AuthAPI(AuthAPIBase):
 
         try:
             order = {
+                "client_order_id": str(np.random.randint(2**63)),
                 "product_id": market,
-                "type": "market",
-                "side": "sell",
-                "size": self.market_base_Increment(market, base_quantity),
+                "side": "SELL",
+                "order_configuration": {
+                    "market_market_ioc": {
+                        "base_size": str(self.market_base_increment(market, base_quantity)),
+                    }
+                },
             }
 
             if self.app is not None and self.app.debug is True:
                 RichText.notify(str(order), self.app, "debug")
 
-            model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
-            return model.auth_api("POST", "orders", order)
+            # GET /api/v3/brokerage/accounts
+            return self.auth_api("POST", "api/v3/brokerage/orders", order)
 
         except Exception:
             return pd.DataFrame()
@@ -497,7 +387,7 @@ class AuthAPI(AuthAPIBase):
                 "product_id": market,
                 "type": "limit",
                 "side": "sell",
-                "size": self.market_base_Increment(market, base_quantity),
+                "size": self.market_base_increment(market, base_quantity),
                 "price": future_price,
             }
 
@@ -523,15 +413,16 @@ class AuthAPI(AuthAPIBase):
         except Exception:
             return pd.DataFrame()
 
-    def market_base_Increment(self, market, amount) -> float:
+    # wallet:user:read
+    def market_base_increment(self, market, amount) -> float:
         """Retrieves the market base increment"""
 
-        product = self.auth_api("GET", f"products/{market}")
+        product = self.auth_api("GET", "api/v3/brokerage/products/" + market)
 
         if "base_increment" not in product:
             return amount
 
-        base_increment = str(product["base_increment"].values[0])
+        base_increment = str(product["base_increment"])
 
         if "." in str(base_increment):
             nb_digits = len(str(base_increment).split(".")[1])
@@ -540,15 +431,16 @@ class AuthAPI(AuthAPIBase):
 
         return floor(amount * 10**nb_digits) / 10**nb_digits
 
+    # wallet:user:read
     def market_quote_increment(self, market, amount) -> float:
         """Retrieves the market quote increment"""
 
-        product = self.auth_api("GET", f"products/{market}")
+        product = self.auth_api("GET", "api/v3/brokerage/products/" + market)
 
         if "quote_increment" not in product:
             return amount
 
-        quote_increment = str(product["quote_increment"].values[0])
+        quote_increment = str(product["quote_increment"])
 
         if "." in str(quote_increment):
             nb_digits = len(str(quote_increment).split(".")[1])
@@ -846,6 +738,8 @@ class AuthAPI(AuthAPIBase):
 
                 if "error_details" in resp.json():
                     print("Error:", resp.json()["error_details"])
+                elif "error_response" in resp.json():
+                    print("Error:", resp.json()["error_response"]["message"])
 
                 trycnt += 1
                 resp.raise_for_status()
@@ -858,6 +752,9 @@ class AuthAPI(AuthAPIBase):
                         try:
                             endpoint = uri.split("/")[-1].lower()
 
+                            if endpoint == "batch":
+                                endpoint = "orders"
+
                             if "has_next" in resp.json():
                                 df = pd.DataFrame(resp.json()[endpoint])
                                 if endpoint == "accounts":
@@ -868,8 +765,39 @@ class AuthAPI(AuthAPIBase):
                                     df["hold_tmp"] = df_merge["value"]
                                     df.drop(columns=["available_balance", "hold"], inplace=True)
                                     df.rename(columns={"hold_tmp": "hold"}, errors="raise", inplace=True)
-                            else:
-                                if endpoint in resp.json():
+                                elif endpoint == "orders":
+                                    json_data = resp.json()[endpoint]
+
+                                    orders = []
+                                    for order in json_data:
+                                        if "base_size" in order["order_configuration"]["market_market_ioc"]:
+                                            size = float(order["order_configuration"]["market_market_ioc"]["base_size"])
+                                        elif "quote_size" in order["order_configuration"]["market_market_ioc"]:
+                                            size = float(order["order_configuration"]["market_market_ioc"]["quote_size"])
+                                        else:
+                                            size = 0
+
+                                        if order["status"].lower() == "filled":
+                                            order_status = "done"
+                                        else:
+                                            order_status = order["status"].lower()
+
+                                        orders.append(
+                                            [
+                                                order["created_time"],
+                                                order["product_id"],
+                                                order["side"].lower(),
+                                                order["order_type"].lower(),
+                                                size,
+                                                float(order["filled_size"]),
+                                                float(order["total_fees"]),
+                                                float(order["average_filled_price"]),
+                                                order_status,
+                                            ]
+                                        )
+
+                                    df = pd.DataFrame(orders, columns=["created_at", "market", "action", "type", "size", "filled", "fees", "price", "status"])
+                                elif endpoint in resp.json():
                                     json_data = pd.DataFrame(resp.json()[endpoint])
                                     df = pd.DataFrame(json_data)
                                 else:
@@ -887,9 +815,46 @@ class AuthAPI(AuthAPIBase):
                                         json_data = resp.json()
                                         if "fee_tier" in json_data and isinstance(json_data["fee_tier"], dict):
                                             df = pd.DataFrame(json_data["fee_tier"], index=[0])
+                                    elif endpoint == "orders":
+                                        json_data = resp.json()
+                                        if "success_response" in json_data and isinstance(json_data["success_response"], dict):
+                                            df = pd.DataFrame(json_data["success_response"], index=[0])
+                                            if "base_size" in json_data["order_configuration"]:
+                                                print("test")
+                                    else:
+                                        if "error_response" in resp.json():
+                                            df = pd.DataFrame(resp.json()["error_response"], index=[0])
+                                        else:
+                                            return resp.json()
+
+                            else:
+                                try:
+                                    # handle non-standard responses!
+                                    if uri.startswith("api/v3/brokerage/accounts"):
+                                        endpoint = "account"
+                                        json_data = resp.json()["account"]
+                                        if "available_balance" in json_data and isinstance(json_data["available_balance"], dict):
+                                            json_data["balance"] = json_data["available_balance"]["value"]
+                                        del json_data["available_balance"]
+                                        if "hold" in json_data and isinstance(json_data["hold"], dict):
+                                            tmp_value = json_data["hold"]["value"]
+                                            del json_data["hold"]
+                                            json_data["hold"] = tmp_value
+                                        df = pd.DataFrame(json_data, index=[0])
+                                    elif uri.startswith("api/v3/brokerage/transaction_summary"):
+                                        json_data = resp.json()["fee_tier"]
+                                        df = pd.DataFrame(json_data, index=[0])
+                                    else:
+                                        endpoint = uri.split("/")[-1].lower()
+                                        json_data = resp.json()[endpoint]
+                                        df = pd.DataFrame(json_data)
+                                except Exception as err:
+                                    print(err)
+                                    df = pd.DataFrame()
 
                         except Exception:
                             df = pd.DataFrame()
+
                         return df
                 else:
                     if "msg" in resp.json():
@@ -908,23 +873,23 @@ class AuthAPI(AuthAPIBase):
 
             except requests.ConnectionError as err:
                 reason, msg = ("ConnectionError", err)
-                print(str(err))
+                print(str(err), resp.text)
 
             except requests.exceptions.HTTPError as err:
                 reason, msg = ("HTTPError", err)
-                print(str(err))
+                print(str(err), resp.text)
 
             except requests.Timeout as err:
                 reason, msg = ("TimeoutError", err)
-                print(str(err))
+                print(str(err), resp.text)
 
             except json.decoder.JSONDecodeError as err:
                 reason, msg = ("JSONDecodeError", err)
-                print(str(err))
+                print(str(err), resp.text)
 
             except Exception as err:
                 reason, msg = ("GeneralException", err)
-                print(str(err))
+                print(str(err), resp.json())
 
             if trycnt >= maxretry:
                 if reason in ("ConnectionError", "HTTPError") and trycnt <= connretry:

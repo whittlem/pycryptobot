@@ -474,7 +474,7 @@ class AuthAPI(AuthAPIBase):
                 "product_id": market,
                 "type": "market",
                 "side": "sell",
-                "size": self.market_base_Increment(market, base_quantity),
+                "size": self.market_base_increment(market, base_quantity),
             }
 
             if self.app is not None and self.app.debug is True:
@@ -503,7 +503,7 @@ class AuthAPI(AuthAPIBase):
                 "product_id": market,
                 "type": "limit",
                 "side": "sell",
-                "size": self.market_base_Increment(market, base_quantity),
+                "size": self.market_base_increment(market, base_quantity),
                 "price": future_price,
             }
 
@@ -529,7 +529,7 @@ class AuthAPI(AuthAPIBase):
         except Exception:
             return pd.DataFrame()
 
-    def market_base_Increment(self, market, amount) -> float:
+    def market_base_increment(self, market, amount) -> float:
         """Retrieves the market base increment"""
 
         product = self.auth_api("GET", f"products/{market}")

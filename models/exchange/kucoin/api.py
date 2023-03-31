@@ -518,7 +518,7 @@ class AuthAPI(AuthAPIBase):
             "symbol": market,
             "type": "market",
             "side": "sell",
-            "size": self.market_base_Increment(market, base_quantity),
+            "size": self.market_base_increment(market, base_quantity),
         }
 
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
@@ -540,7 +540,7 @@ class AuthAPI(AuthAPIBase):
             "product_id": market,
             "type": "limit",
             "side": "sell",
-            "size": self.market_base_Increment(market, base_quantity),
+            "size": self.market_base_increment(market, base_quantity),
             "price": future_price,
         }
 
@@ -570,7 +570,7 @@ class AuthAPI(AuthAPIBase):
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
         return model.auth_api("DELETE", "orders")
 
-    def market_base_Increment(self, market, amount) -> float:
+    def market_base_increment(self, market, amount) -> float:
         """Retrieves the market base increment"""
         pMarket = market.split("-")[0]
         product = self.auth_api("GET", f"api/v1/symbols?{pMarket}")

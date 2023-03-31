@@ -2584,6 +2584,8 @@ class PyCryptoBot(BotConfig):
             return self.granularity.to_medium
         if self.exchange == Exchange.BINANCE:
             return self.granularity.to_short
+        if self.exchange == Exchange.COINBASE:
+            return str(self.granularity.to_integer)
         if self.exchange == Exchange.COINBASEPRO:
             return str(self.granularity.to_integer)
         if self.exchange == Exchange.DUMMY:
