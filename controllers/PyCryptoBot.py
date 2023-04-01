@@ -26,6 +26,7 @@ from models.exchange.kucoin import WebSocketClient as KWebSocketClient
 from models.exchange.binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
 from models.exchange.coinbase_pro import AuthAPI as CBAuthAPI, PublicAPI as CBPublicAPI
 from models.exchange.kucoin import AuthAPI as KAuthAPI, PublicAPI as KPublicAPI
+from models.exchange.txbit import AuthAPI as TAuthAPI, PublicAPI as TPublicAPI
 from models.helper.TelegramBotHelper import TelegramBotHelper
 from models.helper.MarginHelper import calculate_margin
 from models.TradingAccount import TradingAccount
@@ -1624,6 +1625,9 @@ class PyCryptoBot(BotConfig):
             elif self.exchange == Exchange.KUCOIN:
                 api = KAuthAPI(self.api_key, self.api_secret, self.api_passphrase, self.api_url, use_cache=self.usekucoincache, app=self)
                 return api.market_buy(market, (float(quote_currency) - (float(quote_currency) * api.get_maker_fee())))
+            elif self.exchange == Exchange.TXBIT:
+                api = TAuthAPI(self.api_key, self.api_secret, self.api_url, use_cache=self.usetxbitcache, app=self)
+                return api.market_buy(market, (float(quote_currency) - (float(quote_currency) * api.get_maker_fee())))
             elif self.exchange == Exchange.BINANCE:
                 api = BAuthAPI(self.api_key, self.api_secret, self.api_url, recv_window=self.recv_window, app=self)
                 return api.market_buy(market, quote_currency)
@@ -2576,6 +2580,8 @@ class PyCryptoBot(BotConfig):
 
     def print_granularity(self) -> str:
         if self.exchange == Exchange.KUCOIN:
+            return self.granularity.to_medium
+        if self.exchange == Exchange.TXBIT:
             return self.granularity.to_medium
         if self.exchange == Exchange.BINANCE:
             return self.granularity.to_short

@@ -314,6 +314,13 @@ class BotConfig:
                 "api_passphrase": "00000000000",
                 "market": "BTC-GBP",
             },
+            "txbit": {
+                "api_url": "https://api.txbit.io",
+                "api_key": "00000000000000000000000000000000",
+                "api_secret": "0000/0000000000/0000000000000000000000000000000000000000000000000000000000/00000000000==",
+                "api_passphrase": "00000000000",
+                "market": "BTC-USDT",
+            },
             "dummy": {
                 "api_url": "https://api.exchange.coinbase.com",
                 "api_key": "00000000000000000000000000000000",

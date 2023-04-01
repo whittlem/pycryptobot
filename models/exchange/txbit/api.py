@@ -867,21 +867,19 @@ class AuthAPI(AuthAPIBase):
 
 
 class PublicAPI(AuthAPIBase):
-    def __init__(self, api_url: str = "https://api.kucoin.com", app: object = None) -> None:
+    def __init__(self, api_url: str = "https://api.txbit.io", app: object = None) -> None:
         # options
         self.die_on_api_error = False
         self._api_url = api_url
 
         valid_urls = [
-            "https://api.kucoin.com",
-            "https://api.kucoin.com/",
-            "https://openapi-sandbox.kucoin.com",
-            "https://openapi-sandbox.kucoin.com/",
+            "https://api.txbit.io",
+            "https://api.txbit.io/",
         ]
 
         # validate Kucoin API
         if api_url not in valid_urls:
-            raise ValueError("Kucoin API URL is invalid")
+            raise ValueError("txbit PublicAPI URL is invalid")
 
         # app
         self.app = app
