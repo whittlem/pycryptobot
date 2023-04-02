@@ -6,8 +6,6 @@ import hmac
 import hashlib
 import time
 import requests
-import base64
-import sys
 import pandas as pd
 import numpy as np
 from numpy import floor
@@ -207,9 +205,7 @@ class AuthAPI(AuthAPIBase):
             df["market"] = ""
 
             # reset the dataframe index to start from 0
-            df = df.reset_index(drop=True)
-
-            return df
+            return df.reset_index(drop=True)
 
         except Exception:
             return pd.DataFrame()
@@ -281,9 +277,7 @@ class AuthAPI(AuthAPIBase):
         df = df.iloc[::-1]
 
         # reset the dataframe index to start from 0
-        df = df.reset_index(drop=True)
-
-        return df
+        return df.reset_index(drop=True)
 
     def get_time(self) -> datetime:
         """Retrieves the exchange time"""
@@ -303,38 +297,31 @@ class AuthAPI(AuthAPIBase):
             return None
 
     def market_buy(self, market: str = "", quote_quantity: float = 0) -> pd.DataFrame:
-        """Executes a market buy providing a funding amount"""
+        """Executes a market buy providing a crypto amount"""
 
-        # validates the market is syntactically correct
         if not self._is_market_valid(market):
             raise ValueError("Coinbase market is invalid.")
 
-        # validates quote_quantity is either an integer or float
         if not isinstance(quote_quantity, int) and not isinstance(quote_quantity, float):
-            if self.app:
-                RichText.notify("Please report this to Michael Whittle: " + str(quote_quantity) + " " + str(type(quote_quantity)), self.app, "critical")
-            raise TypeError("The funding amount is not numeric.")
-
-        # funding amount needs to be greater than 10
-        if quote_quantity < MINIMUM_TRADE_AMOUNT:
-            if self.app:
-                RichText.notify(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).", self.app, "warning")
-            return pd.DataFrame()
-            # raise ValueError(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).")
+            raise TypeError("The crypto amount is not numeric.")
 
         try:
             order = {
+                "client_order_id": str(np.random.randint(2**63)),
                 "product_id": market,
-                "type": "market",
-                "side": "buy",
-                "funds": self.market_quote_increment(market, quote_quantity),
+                "side": "BUY",
+                "order_configuration": {
+                    "market_market_ioc": {
+                        "quote_size": str(self.market_quote_increment(market, quote_quantity)),
+                    }
+                },
             }
 
             if self.app is not None and self.app.debug is True:
                 RichText.notify(str(order), self.app, "debug")
 
-            # place order and return result
-            return self.auth_api("POST", "orders", order)
+            # GET /api/v3/brokerage/accounts
+            return self.auth_api("POST", "api/v3/brokerage/orders", order)
 
         except Exception:
             return pd.DataFrame()
@@ -736,10 +723,9 @@ class AuthAPI(AuthAPIBase):
                 elif method == "POST":
                     resp = requests.post(self._api_url + uri, json=payload, auth=self)
 
+                # api error handling
                 if "error_details" in resp.json():
-                    print("Error:", resp.json()["error_details"])
-                elif "error_response" in resp.json():
-                    print("Error:", resp.json()["error_response"]["message"])
+                    return pd.DataFrame(resp.json()["error_response"], index=[0])
 
                 trycnt += 1
                 resp.raise_for_status()
@@ -750,6 +736,10 @@ class AuthAPI(AuthAPIBase):
                         return df
                     else:
                         try:
+                            # failure error handling
+                            if "success" in resp.json() and resp.json()["success"] is False:
+                                return pd.DataFrame(resp.json()["error_response"], index=[0])
+
                             endpoint = uri.split("/")[-1].lower()
 
                             if endpoint == "batch":

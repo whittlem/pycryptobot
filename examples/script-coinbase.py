@@ -72,14 +72,27 @@ model3 = CPublicAPI(app=app2)
 # print(df)
 
 
-# df = model1.auth_api("GET", "api/v3/brokerage/orders/historical/batch")
-# print(df)
-
+""" COINBASE"""
 # value = model1.market_base_increment("ADA-GBP", 15)
 # print(value)
-
-# value = model1.market_quote_increment("ADA-GBP", 15)
+""" COINBASE PRO"""
+# value = model2.market_base_increment("ADA-GBP", 15)
 # print(value)
 
+
+""" COINBASE"""
+# value = model1.market_quote_increment("ADA-GBP", 15)
+# print(value)
+""" COINBASE PRO"""
+# value = model2.market_quote_increment("ADA-GBP", 15)
+# print(value)
+
+
+""" COINBASE"""
 # df = model1.market_sell("ADA-GBP", 10)
 # print(df)
+
+
+""" COINBASE"""
+df = model1.market_buy("ADA-GBP", 10)
+print(df)
