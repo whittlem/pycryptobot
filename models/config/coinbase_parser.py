@@ -4,6 +4,7 @@ import os.path
 import re
 
 from .default_parser import is_currency_valid, default_config_parse, merge_config_and_args
+from models.exchange.Granularity import Granularity
 
 
 def is_market_valid(market) -> bool:
@@ -13,7 +14,7 @@ def is_market_valid(market) -> bool:
 
 def parse_market(market):
     if not is_market_valid(market):
-        raise ValueError(f"Coinbase Pro market invalid: {market}")
+        raise ValueError(f"Coinbase market invalid: {market}")
 
     base_currency, quote_currency = market.split("-", 2)
     return market, base_currency, quote_currency
@@ -47,8 +48,6 @@ def parser(app, coinbase_config, args={}):
                 fh = open("config.json", "w")
                 fh.write(json.dumps(config_json, indent=4))
                 fh.close()
-            else:
-                print("migration failed (io error)\n")
 
         app.api_key_file = "coinbase.key"
         if "api_key_file" in args and args["api_key_file"] is not None:
@@ -67,19 +66,20 @@ def parser(app, coinbase_config, args={}):
                 raise RuntimeError(f"Unable to read {app.api_key_file}")
 
         if "api_key" in coinbase_config and "api_secret" in coinbase_config and "api_url" in coinbase_config:
+
             # validates the api key is syntactically correct
             p = re.compile(r"^[A-z0-9]{16,16}$")
             if not p.match(coinbase_config["api_key"]):
                 raise TypeError("Coinbase API key is invalid")
 
-            app.api_key = coinbase_config["api_key"]  # noqa: F841
+            app.api_key = coinbase_config["api_key"]
 
             # validates the api secret is syntactically correct
             p = re.compile(r"^[A-z0-9]{32,32}$")
             if not p.match(coinbase_config["api_secret"]):
                 raise TypeError("Coinbase API secret is invalid")
 
-            app.api_secret = coinbase_config["api_secret"]  # noqa: F841
+            app.api_secret = coinbase_config["api_secret"]
 
             valid_urls = [
                 "https://api.coinbase.com/",
@@ -90,9 +90,7 @@ def parser(app, coinbase_config, args={}):
             if coinbase_config["api_url"] not in valid_urls:
                 raise ValueError("Coinbase API URL is invalid")
 
-            app.api_url = coinbase_config["api_url"]  # noqa: F841
-            app.base_currency = "BTC"
-            app.quote_currency = "GBP"
+            app.api_url = coinbase_config["api_url"]
     else:
         coinbase_config = {}
 
@@ -114,7 +112,10 @@ def parser(app, coinbase_config, args={}):
         app.market, app.base_currency, app.quote_currency = parse_market(config["market"])
 
     if app.base_currency != "" and app.quote_currency != "":
-        app.market = app.base_currency + app.quote_currency  # noqa: F841
+        app.market = app.base_currency + "-" + app.quote_currency
 
-    if "use_sell_fee" in config:
-        app.use_sell_fee = config["use_sell_fee"]  # noqa: F841
+    if "granularity" in config and config["granularity"] is not None:
+        if isinstance(config["granularity"], str) and config["granularity"].isnumeric() is True:
+            app.granularity = Granularity.convert_to_enum(int(config["granularity"]))
+        elif isinstance(config["granularity"], int):
+            app.granularity = Granularity.convert_to_enum(config["granularity"])

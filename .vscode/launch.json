@@ -5,9 +5,9 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "examples/script-coinbase.py",
+            "program": "pycryptobot.py",
             "console": "integratedTerminal",
-            "args": [],
+            "args": [ "--exchange", "coinbase", "--sim", "fast" ],
         }
     ]
 }

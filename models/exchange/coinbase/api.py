@@ -580,20 +580,36 @@ class AuthAPI(AuthAPIBase):
                     "end": int((dt_end - datetime(1970, 1, 1)).total_seconds()),
                 }
 
-                if granularity == 60:
-                    payload["granularity"] = "ONE_MINUTE"
-                elif granularity == 300:
-                    payload["granularity"] = "FIVE_MINUTE"
-                elif granularity == 900:
-                    payload["granularity"] = "FIFTEEN_MINUTE"
-                elif granularity == 3600:
-                    payload["granularity"] = "ONE_HOUR"
-                elif granularity == 21600:
-                    payload["granularity"] = "SIX_HOUR"
-                elif granularity == 86400:
-                    payload["granularity"] = "ONE_DAY"
+                if isinstance(granularity, Granularity):
+                    if granularity.to_integer == 60:
+                        payload["granularity"] = "ONE_MINUTE"
+                    elif granularity.to_integer == 300:
+                        payload["granularity"] = "FIVE_MINUTE"
+                    elif granularity.to_integer == 900:
+                        payload["granularity"] = "FIFTEEN_MINUTE"
+                    elif granularity.to_integer == 3600:
+                        payload["granularity"] = "ONE_HOUR"
+                    elif granularity.to_integer == 21600:
+                        payload["granularity"] = "SIX_HOUR"
+                    elif granularity.to_integer == 86400:
+                        payload["granularity"] = "ONE_DAY"
+                    else:
+                        return pd.DataFrame()
                 else:
-                    return pd.DataFrame()
+                    if granularity == 60:
+                        payload["granularity"] = "ONE_MINUTE"
+                    elif granularity == 300:
+                        payload["granularity"] = "FIVE_MINUTE"
+                    elif granularity == 900:
+                        payload["granularity"] = "FIFTEEN_MINUTE"
+                    elif granularity == 3600:
+                        payload["granularity"] = "ONE_HOUR"
+                    elif granularity == 21600:
+                        payload["granularity"] = "SIX_HOUR"
+                    elif granularity == 86400:
+                        payload["granularity"] = "ONE_DAY"
+                    else:
+                        return pd.DataFrame()
             except Exception:
                 return pd.DataFrame()
         elif iso8601start != "" and iso8601end == "":
@@ -885,7 +901,7 @@ class AuthAPI(AuthAPIBase):
                                             del json_data["hold"]
                                             json_data["hold"] = tmp_value
                                         df = pd.DataFrame(json_data, index=[0])
-                                    elif uri.startswith("api/v3/brokerage/products"):
+                                    elif uri.startswith("api/v3/brokerage/products") and not uri.endswith("/candles"):
                                         json_data = resp.json()
                                         df = pd.DataFrame(
                                             [
@@ -952,8 +968,7 @@ class AuthAPI(AuthAPIBase):
                                         endpoint = uri.split("/")[-1].lower()
                                         json_data = resp.json()[endpoint]
                                         df = pd.DataFrame(json_data)
-                                except Exception as err:
-                                    print(err)
+                                except Exception:
                                     df = pd.DataFrame()
 
                         except Exception:
