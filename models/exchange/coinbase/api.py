@@ -143,7 +143,7 @@ class AuthAPI(AuthAPIBase):
 
     # wallet:accounts:read
     def get_account(self, uuid: str) -> pd.DataFrame:
-        """Retrieves your list of accounts"""
+        """Retrieves an account"""
 
         # GET /api/v3/brokerage/accounts
         try:
@@ -186,6 +186,60 @@ class AuthAPI(AuthAPIBase):
         df = df.reset_index()
 
         return df
+
+    # wallet:user:read
+    def get_product(self, market: str = DEFAULT_MARKET) -> pd.DataFrame:
+        """Retrieves a product"""
+
+        # GET /api/v3/brokerage/accounts
+        try:
+            df = self.auth_api("GET", "api/v3/brokerage/products/" + market)
+        except Exception:
+            return pd.DataFrame()
+
+        if len(df) == 0:
+            return pd.DataFrame()
+
+        return df
+
+    # wallet:user:read
+    def get_ticker(self, market: str = DEFAULT_MARKET, websocket=None) -> tuple:
+        """Retrieves the market ticker"""
+
+        # validates the market is syntactically correct
+        if not self._is_market_valid(market):
+            raise TypeError("Coinbase market required.")
+
+        if websocket is not None and websocket.tickers is not None:
+            try:
+                row = websocket.tickers.loc[websocket.tickers["market"] == market]
+                ticker_date = datetime.strptime(re.sub(r".0*$", "", str(row["date"].values[0])), "%Y-%m-%dT%H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
+                ticker_price = float(row["price"].values[0])
+
+                if ticker_date is None:
+                    ticker_date = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+                return (ticker_date, ticker_price)
+
+            except Exception:
+                pass
+
+        trycnt, maxretry = (1, 5)
+        while trycnt <= maxretry:
+            try:
+                df = self.get_product(market)
+
+                return (
+                    datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+                    float(df["price"]),
+                )
+            except Exception:
+                trycnt += 1
+                if trycnt >= maxretry:
+                    if self.app:
+                        RichText.notify(f"Coinbase Ticker Error - attempted {trycnt} times.", self.app, "warning")
+                    return (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), 0.0)
+                time.sleep(15)
 
     # wallet:transactions:read
     def get_fees(self) -> pd.DataFrame:
@@ -831,6 +885,66 @@ class AuthAPI(AuthAPIBase):
                                             del json_data["hold"]
                                             json_data["hold"] = tmp_value
                                         df = pd.DataFrame(json_data, index=[0])
+                                    elif uri.startswith("api/v3/brokerage/products"):
+                                        json_data = resp.json()
+                                        df = pd.DataFrame(
+                                            [
+                                                [
+                                                    json_data["product_id"],
+                                                    json_data["price"],
+                                                    json_data["price_percentage_change_24h"],
+                                                    json_data["volume_24h"],
+                                                    json_data["volume_percentage_change_24h"],
+                                                    json_data["base_increment"],
+                                                    json_data["quote_increment"],
+                                                    json_data["quote_min_size"],
+                                                    json_data["quote_max_size"],
+                                                    json_data["base_min_size"],
+                                                    json_data["base_max_size"],
+                                                    json_data["base_name"],
+                                                    json_data["quote_name"],
+                                                    json_data["status"],
+                                                    json_data["cancel_only"],
+                                                    json_data["limit_only"],
+                                                    json_data["post_only"],
+                                                    json_data["trading_disabled"],
+                                                    json_data["auction_mode"],
+                                                    json_data["product_type"],
+                                                    json_data["quote_currency_id"],
+                                                    json_data["base_currency_id"],
+                                                    json_data["mid_market_price"],
+                                                    json_data["base_display_symbol"],
+                                                    json_data["quote_display_symbol"],
+                                                ]
+                                            ],
+                                            columns=[
+                                                "product_id",
+                                                "price",
+                                                "price_percentage_change_24h",
+                                                "volume_24h",
+                                                "volume_percentage_change_24h",
+                                                "base_increment",
+                                                "quote_increment",
+                                                "quote_min_size",
+                                                "quote_max_size",
+                                                "base_min_size",
+                                                "base_max_size",
+                                                "base_name",
+                                                "quote_name",
+                                                "status",
+                                                "cancel_only",
+                                                "limit_only",
+                                                "post_only",
+                                                "trading_disabled",
+                                                "auction_mode",
+                                                "product_type",
+                                                "quote_currency_id",
+                                                "base_currency_id",
+                                                "mid_market_price",
+                                                "base_display_symbol",
+                                                "quote_display_symbol",
+                                            ],
+                                        )
                                     elif uri.startswith("api/v3/brokerage/transaction_summary"):
                                         json_data = resp.json()["fee_tier"]
                                         df = pd.DataFrame(json_data, index=[0])
