@@ -350,6 +350,7 @@ class AuthAPI(AuthAPIBase):
                 RichText.notify(f"Error: {e}", self.app, "error")
             return None
 
+    # wallet:buys:create
     def market_buy(self, market: str = "", quote_quantity: float = 0) -> pd.DataFrame:
         """Executes a market buy providing a crypto amount"""
 

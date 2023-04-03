@@ -73,12 +73,14 @@ model3 = CPublicAPI(app=app2)
 # df = model3.get_historical_data("ADA-GBP", 3600)  # Coinbase Pro has this in the public API, Advanced Trade has this in the auth API
 # print(df)
 
+
 """ COINBASE"""
-# df = model1.get_ticker("ADA-GBP", None)  # Coinbase Pro has this in the public API, Advanced Trade has this in the auth API
+# df = model1.get_ticker("ADA-GBP", None)  # Coinbase Pro has this in the public API, Advanced Trade has this in the auth API
 # print(df)
 """ COINBASE PRO"""
 # df = model3.get_ticker("ADA-GBP", None)  # Coinbase Pro has this in the public API, Advanced Trade has this in the auth API
 # print(df)
+
 
 """ COINBASE"""
 # value = model1.market_base_increment("ADA-GBP", 15)
