@@ -1425,7 +1425,7 @@ class PyCryptoBot(BotConfig):
                 self._simulation_summary()
                 self._simulation_save_orders()
 
-        if self.state.last_buy_size <= 0 and self.state.last_buy_price <= 0 and self.price <= 0 and self.state.last_action != "BUY":
+        if self.state.last_buy_size <= 0 and self.state.last_buy_price <= 0 and self.state.last_action != "BUY":
             self.telegram_bot.add_info(
                 f'Current price: {str(self.price)}{trailing_action_logtext} | {str(round(((self.price-df["close"].max()) / df["close"].max())*100, 2))}% from DF HIGH',
                 round(self.price, 4),
