@@ -518,7 +518,7 @@ class AuthAPI(AuthAPIBase):
             "symbol": market,
             "type": "market",
             "side": "sell",
-            "size": self.market_base_Increment(market, base_quantity),
+            "size": self.market_base_increment(market, base_quantity),
         }
 
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
@@ -540,7 +540,7 @@ class AuthAPI(AuthAPIBase):
             "product_id": market,
             "type": "limit",
             "side": "sell",
-            "size": self.market_base_Increment(market, base_quantity),
+            "size": self.market_base_increment(market, base_quantity),
             "price": future_price,
         }
 
@@ -570,7 +570,7 @@ class AuthAPI(AuthAPIBase):
         model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
         return model.auth_api("DELETE", "orders")
 
-    def market_base_Increment(self, market, amount) -> float:
+    def market_base_increment(self, market, amount) -> float:
         """Retrieves the market base increment"""
         pMarket = market.split("-")[0]
         product = self.auth_api("GET", f"api/v1/symbols?{pMarket}")
@@ -957,7 +957,7 @@ class PublicAPI(AuthAPIBase):
     def get_historical_data(
         self,
         market: str = DEFAULT_MARKET,
-        granularity: Granularity = Granularity.ONE_HOUR,
+        granularity_any: Granularity = Granularity.ONE_HOUR,
         websocket=None,
         iso8601start: str = "",
         iso8601end: str = "",
@@ -969,14 +969,19 @@ class PublicAPI(AuthAPIBase):
             raise TypeError("Kucoin market required.")
 
         # validates granularity is an integer
-        if not isinstance(granularity.to_medium, str):
-            raise TypeError("Granularity string required.")
+        if isinstance(granularity_any, Granularity) and not isinstance(granularity_any.to_integer, int):
+            raise TypeError("Granularity integer required.")
 
-        # validates the granularity is supported by Kucoin
-        if isinstance(granularity, Granularity) and (granularity.to_medium not in SUPPORTED_GRANULARITY):
+        # validates the granularity is supported by Coinbase
+        if isinstance(granularity_any, Granularity) and (granularity_any.to_integer not in SUPPORTED_GRANULARITY):
             raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
-        elif isinstance(granularity, str) and (granularity not in SUPPORTED_GRANULARITY):
+        elif isinstance(granularity_any, int) and (granularity_any not in SUPPORTED_GRANULARITY):
             raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
+
+        if isinstance(granularity_any, Granularity):
+            granularity = granularity_any.to_integer
+        else:
+            granularity = granularity_any
 
         # validates the ISO 8601 start date is a string (if provided)
         if not isinstance(iso8601start, str):
