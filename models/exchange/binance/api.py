@@ -20,7 +20,6 @@ from websocket import create_connection, WebSocketConnectionClosedException
 from models.exchange.Granularity import Granularity
 from views.PyCryptoBot import RichText
 
-SUPPORTED_GRANULARITY = ["1m", "5m", "15m", "1h", "6h", "1d"]
 DEFAULT_MAKER_FEE_RATE = 0.0015  # added 0.0005 to allow for self.price movements
 DEFAULT_TAKER_FEE_RATE = 0.0015  # added 0.0005 to allow for self.price movements
 DEFAULT_TRADE_FEE_RATE = 0.0015  # added 0.0005 to allow for self.price movements
@@ -915,7 +914,7 @@ class PublicAPI(AuthAPIBase):
     def get_historical_data(
         self,
         market: str = DEFAULT_MARKET,
-        granularity_any: Granularity = Granularity.ONE_HOUR,
+        granularity: Granularity = Granularity.ONE_HOUR,
         websocket=None,
         iso8601start: str = "",
         iso8601end: str = "",
@@ -925,21 +924,6 @@ class PublicAPI(AuthAPIBase):
         # validates the market is syntactically correct
         if not self._is_market_valid(market):
             raise TypeError("Binance market required.")
-
-        # validates granularity is an integer
-        if isinstance(granularity_any, Granularity) and not isinstance(granularity_any.to_integer, int):
-            raise TypeError("Granularity integer required.")
-
-        # validates the granularity is supported by Coinbase
-        if isinstance(granularity_any, Granularity) and (granularity_any.to_integer not in SUPPORTED_GRANULARITY):
-            raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
-        elif isinstance(granularity_any, int) and (granularity_any not in SUPPORTED_GRANULARITY):
-            raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
-
-        if isinstance(granularity_any, Granularity):
-            granularity = granularity_any.to_integer
-        else:
-            granularity = granularity_any
 
         # validates the ISO 8601 end date is a string (if provided)
         if not isinstance(iso8601end, str):
