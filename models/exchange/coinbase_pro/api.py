@@ -36,17 +36,6 @@ class AuthAPIBase:
             return True
         return False
 
-    # def to_coinbasepro_granularity(self, granularity) -> str:
-    #     if isinstance(granularity, int):
-    #         if granularity in SUPPORTED_GRANULARITY:
-    #             return granularity
-    #         else:
-    #             raise ValueError(f"Invalid Binance granularity: {granularity}")
-    #     else:
-    #         return {"1min" : 60, "5min" : 300, "15min" : 900, "1hour" : 3600, "6hour" : 21600, "1day" : 86400} [
-    #             granularity
-    #         ]
-
 
 class AuthAPI(AuthAPIBase):
     def __init__(self, api_key="", api_secret="", api_passphrase="", api_url="https://api.exchange.coinbase.com", app: object = None) -> None:
@@ -485,7 +474,7 @@ class AuthAPI(AuthAPIBase):
                 "product_id": market,
                 "type": "market",
                 "side": "sell",
-                "size": self.market_base_Increment(market, base_quantity),
+                "size": self.market_base_increment(market, base_quantity),
             }
 
             if self.app is not None and self.app.debug is True:
@@ -514,7 +503,7 @@ class AuthAPI(AuthAPIBase):
                 "product_id": market,
                 "type": "limit",
                 "side": "sell",
-                "size": self.market_base_Increment(market, base_quantity),
+                "size": self.market_base_increment(market, base_quantity),
                 "price": future_price,
             }
 
@@ -540,7 +529,7 @@ class AuthAPI(AuthAPIBase):
         except Exception:
             return pd.DataFrame()
 
-    def market_base_Increment(self, market, amount) -> float:
+    def market_base_increment(self, market, amount) -> float:
         """Retrieves the market base increment"""
 
         product = self.auth_api("GET", f"products/{market}")
@@ -689,8 +678,7 @@ class PublicAPI(AuthAPIBase):
     def get_historical_data(
         self,
         market: str = DEFAULT_MARKET,
-        # granularity: int = MAX_GRANULARITY,
-        granularity: Granularity = Granularity.ONE_HOUR,
+        granularity_any: Granularity = Granularity.ONE_HOUR,
         websocket=None,
         iso8601start: str = "",
         iso8601end: str = "",
@@ -702,14 +690,19 @@ class PublicAPI(AuthAPIBase):
             raise TypeError("Coinbase Pro market required.")
 
         # validates granularity is an integer
-        if isinstance(granularity, Granularity) and not isinstance(granularity.to_integer, int):
+        if isinstance(granularity_any, Granularity) and not isinstance(granularity_any.to_integer, int):
             raise TypeError("Granularity integer required.")
 
-        # validates the granularity is supported by Coinbase Pro
-        if isinstance(granularity, Granularity) and (granularity.to_integer not in SUPPORTED_GRANULARITY):
+        # validates the granularity is supported by Coinbase
+        if isinstance(granularity_any, Granularity) and (granularity_any.to_integer not in SUPPORTED_GRANULARITY):
             raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
-        elif isinstance(granularity, int) and (granularity not in SUPPORTED_GRANULARITY):
+        elif isinstance(granularity_any, int) and (granularity_any not in SUPPORTED_GRANULARITY):
             raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
+
+        if isinstance(granularity_any, Granularity):
+            granularity = granularity_any.to_integer
+        else:
+            granularity = granularity_any
 
         # validates the ISO 8601 start date is a string (if provided)
         if not isinstance(iso8601start, str):
@@ -988,7 +981,6 @@ class WebSocket(AuthAPIBase):
     def __init__(
         self,
         markets=None,
-        # granularity=None,
         granularity: Granularity = Granularity.ONE_HOUR,
         api_url="https://api.exchange.coinbase.com",
         ws_url="wss://ws-feed.pro.coinbase.com",
@@ -1144,7 +1136,6 @@ class WebSocketClient(WebSocket):
     def __init__(
         self,
         markets: list = [DEFAULT_MARKET],
-        # granularity: str = DEFAULT_GRANULARITY,
         granularity: Granularity = Granularity.ONE_HOUR,
         api_url="https://api.exchange.coinbase.com/",
         ws_url: str = "wss://ws-feed.pro.coinbase.com",
@@ -1369,8 +1360,5 @@ class WebSocketClient(WebSocket):
 
             # keep last 300 candles per market
             self.candles = self.candles.groupby("market").tail(300)
-
-            # print (f'{msg["time"]} {msg["product_id"]} {msg["price"]}')
-            # print(json.dumps(msg, indent=4, sort_keys=True))
 
         self.message_count += 1

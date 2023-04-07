@@ -54,6 +54,8 @@ spec:
             items:
             - key: binance.key
               path: binance.key
+            - key: coinbase.key
+              path: coinbase.key
             - key: coinbasepro.key
               path: coinbasepro.key
             - key: kucoin.key

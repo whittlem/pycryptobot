@@ -134,6 +134,7 @@ dmypy.json
 # .vscode
 
 config.json
+config-coinbase.json
 config-coinbasepro.json
 config-binance.json
 scanner.json

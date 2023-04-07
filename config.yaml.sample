@@ -1,3 +1,10 @@
+coinbase:
+  api_url: https://sandbox.api.coinbase.com
+  config:
+    base_currency: ADA
+    quote_currency: GBP
+    live: 0
+  api_key_file: coinbase.key
 coinbasepro:
   api_url: https://public.sandbox.pro.coinbase.com
   config:

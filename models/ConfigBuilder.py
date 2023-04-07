@@ -23,6 +23,70 @@ class ConfigBuilder:
         config = {}
 
         choice = input(
+            "Do you want to use the Coinbase exchange (1=yes, 2=no:default)? "
+        )
+        if choice == "1":
+            self._a = 1
+            config["coinbase"] = {}
+            config["coinbase"]["api_url"] = "https://api.coinbase.com"
+
+            choice = input(
+                "Do you have API keys for the Binance exchange (1=yes, 2=no:default)? "
+            )
+            if choice == "1":
+                while "api_key" not in config["coinbase"]:
+                    api_key = input("What is your Binance API Key? ")
+                    p = re_compile(r"^[A-z0-9]{64,64}$")
+                    if p.match(api_key):
+                        config["coinbase"]["api_key"] = api_key
+
+                while "api_secret" not in config["coinbase"]:
+                    api_secret = input("What is your Binance API Secret? ")
+                    p = re_compile(r"^[A-z0-9]{64,64}$")
+                    if p.match(api_secret):
+                        config["coinbase"]["api_secret"] = api_secret
+            else:
+                config["coinbase"]["api_key"] = "<fill in>"
+                config["coinbase"]["api_secret"] = "<fill in>"
+
+            config["coinbase"]["config"] = {}
+
+            while "base_currency" not in config["coinbase"]["config"]:
+                base_currency = input(
+                    "What is your Binance base currency (what you are buying) E.g. BTC? "
+                )
+                p = re_compile(r"^[A-Z0-9]{3,7}$")
+                if p.match(base_currency):
+                    config["coinbase"]["config"]["base_currency"] = base_currency
+
+            while "quote_currency" not in config["coinbase"]["config"]:
+                quote_currency = input(
+                    "What is your Binance quote currency (what you are buying with) E.g. GBP? "
+                )
+                p = re_compile(r"^[A-Z0-9]{3,7}$")
+                if p.match(quote_currency):
+                    config["coinbase"]["config"]["quote_currency"] = quote_currency
+
+            choice = input(
+                "Do you want to smart switch between 1 hour and 15 minute intervals (1=yes:default, 2=no)? "
+            )
+            if choice == "2":
+                while "granularity" not in config["coinbase"]["config"]:
+                    choice = input(
+                        "What granularity do you want to trade? (1m, 5m, 15m, 1h, 6h, 1d)? "
+                    )
+                    if choice in ["1m", "5m", "15m", "1h", "6h", "1d"]:
+                        config["coinbase"]["config"]["granularity"] = choice
+
+            choice = input(
+                "Do you want to start live trading? (1=live, 2=test:default)? "
+            )
+            if choice == "1":
+                config["coinbase"]["config"]["live"] = 1
+            else:
+                config["coinbase"]["config"]["live"] = 0
+
+        choice = input(
             "Do you want to use the Coinbase Pro exchange (1=yes, 2=no:default)? "
         )
         if choice == "1":
@@ -226,7 +290,7 @@ class ConfigBuilder:
             else:
                 config["kucoin"]["config"]["live"] = 0
 
-        if self._b == 1 or self._c == 1 or self._k == 1:
+        if self._a == 1 or self._b == 1 or self._c == 1 or self._k == 1:
             choice = input(
                 "Do you have a Telegram Token and Client ID (1=yes, 2=no:default)? "
             )
@@ -250,6 +314,8 @@ class ConfigBuilder:
                 "Do you want to ever sell at a loss even to minimise losses (1:yes, 2=no:default)? "
             )
             if choice == "1":
+                if self._a == 1:
+                    config["coinbase"]["config"]["sellatloss"] = 1
                 if self._c == 1:
                     config["coinbasepro"]["config"]["sellatloss"] = 1
                 if self._b == 1:
@@ -261,6 +327,8 @@ class ConfigBuilder:
                 "Do you want to sell at the next resistance? (1:yes:default, 2=no)? "
             )
             if choice != "2":
+                if self._a == 1:
+                    config["coinbase"]["config"]["sellatresistance"] = 1
                 if self._c == 1:
                     config["coinbasepro"]["config"]["sellatresistance"] = 1
                 if self._b == 1:
@@ -272,6 +340,8 @@ class ConfigBuilder:
                 "Do you only want to trade in a bull market SMA50 > SMA200? (1:yes, 2=no:default)? "
             )
             if choice != "1":
+                if self._a == 1:
+                    config["coinbase"]["config"]["disablebullonly"] = 1
                 if self._c == 1:
                     config["coinbasepro"]["config"]["disablebullonly"] = 1
                 if self._b == 1:
@@ -283,6 +353,8 @@ class ConfigBuilder:
                 "Do you want to avoid buying when the self.price is too high? (1:yes:default, 2=no)? "
             )
             if choice != "2":
+                if self._a == 1:
+                    config["coinbase"]["config"]["disablebuynearhigh"] = 1
                 if self._c == 1:
                     config["coinbasepro"]["config"]["disablebuynearhigh"] = 1
                 if self._b == 1:
@@ -294,6 +366,8 @@ class ConfigBuilder:
                 "Do you want to disable the On-Balance Volume (OBV) technical indicator on buys? (1:yes:default, 2=no)? "
             )
             if choice != "2":
+                if self._a == 1:
+                    config["coinbase"]["config"]["disablebuyobv"] = 1
                 if self._c == 1:
                     config["coinbasepro"]["config"]["disablebuyobv"] = 1
                 if self._b == 1:
@@ -305,6 +379,8 @@ class ConfigBuilder:
                 "Do you want to disable the Elder-Ray Index on buys? (1:yes:default, 2=no)? "
             )
             if choice != "2":
+                if self._a == 1:
+                    config["coinbase"]["config"]["disablebuyelderray"] = 1
                 if self._c == 1:
                     config["coinbasepro"]["config"]["disablebuyelderray"] = 1
                 if self._b == 1:
@@ -316,6 +392,8 @@ class ConfigBuilder:
                 "Do you want to disable saving the CSV tracker on buy and sell events? (1:yes:default, 2=no)? "
             )
             if choice != "2":
+                if self._a == 1:
+                    config["coinbase"]["config"]["disabletracker"] = 1
                 if self._c == 1:
                     config["coinbasepro"]["config"]["disabletracker"] = 1
                 if self._b == 1:
@@ -327,6 +405,8 @@ class ConfigBuilder:
                 "Do you want to disable writing to the log file? (1:yes, 2=no:default)? "
             )
             if choice != "2":
+                if self._a == 1:
+                    config["coinbase"]["config"]["disablelog"] = 1
                 if self._c == 1:
                     config["coinbasepro"]["config"]["disablelog"] = 1
                 if self._b == 1:
@@ -338,6 +418,8 @@ class ConfigBuilder:
                 "Do you want the bot to auto restart itself on failure? (1:yes:default, 2=no)? "
             )
             if choice != "2":
+                if self._a == 1:
+                    config["coinbase"]["config"]["autorestart"] = 1
                 if self._c == 1:
                     config["coinbasepro"]["config"]["autorestart"] = 1
                 if self._b == 1:
