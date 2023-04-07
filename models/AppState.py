@@ -6,6 +6,7 @@ from numpy import array as np_array, min as np_min, ptp as np_ptp
 from models.TradingAccount import TradingAccount
 from models.exchange.ExchangesEnum import Exchange
 from models.exchange.binance import AuthAPI as BAuthAPI
+from models.exchange.coinbase import AuthAPI as CBAuthAPI
 from models.exchange.coinbase_pro import AuthAPI as CAuthAPI
 from models.exchange.kucoin import AuthAPI as KAuthAPI
 from views.PyCryptoBot import RichText
@@ -19,6 +20,13 @@ class AppState:
                 app.api_secret,
                 app.api_url,
                 recv_window=app.recv_window,
+                app=app
+            )
+        elif app.exchange == Exchange.COINBASE:
+            self.api = CBAuthAPI(
+                app.api_key,
+                app.api_secret,
+                app.api_url,
                 app=app
             )
         elif app.exchange == Exchange.COINBASEPRO:
@@ -180,6 +188,13 @@ class AppState:
                 sys.tracebacklimit = 0
                 raise Exception(f"Market not found! ({self.app.market})")
 
+        elif self.app.exchange == Exchange.COINBASE:
+            ticker = self.api.get_ticker(self.app.market, None)
+            price = float(ticker[1])
+
+            quote = float(quote)
+            base_min = self.api.market_quote_increment(self.app.market, quote)
+
         elif self.app.exchange == Exchange.COINBASEPRO:
             product = self.api.auth_api("GET", f"products/{self.app.market}")
             if len(product) == 0:
@@ -247,7 +262,7 @@ class AppState:
         except Exception:
             pass
         orders = self.account.get_orders(self.app.market, "", "done")
-        if len(orders) > 0:
+        if orders is not None and len(orders) > 0:
             last_order = orders[-1:]
 
             # if orders exist and last order is a buy

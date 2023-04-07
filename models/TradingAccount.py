@@ -10,6 +10,7 @@ import pandas as pd
 from utils.PyCryptoBot import truncate
 from models.exchange.ExchangesEnum import Exchange
 from models.exchange.binance import AuthAPI as BAuthAPI
+from models.exchange.coinbase import AuthAPI as CAuthAPI
 from models.exchange.coinbase_pro import AuthAPI as CBAuthAPI
 from models.exchange.kucoin import AuthAPI as KAuthAPI
 
@@ -163,6 +164,29 @@ class TradingAccount:
                         return self.orders[self.orders["market"] == market]
                     else:
                         return pd.DataFrame()
+
+        if self.app.exchange == Exchange.COINBASE:
+            if self.mode == "live":
+                # if config is provided and live connect to Coinbase account portfolio
+                model = CAuthAPI(
+                    self.app.api_key,
+                    self.app.api_secret,
+                    self.app.api_url,
+                    app=self.app
+                )
+                # retrieve orders from live Coinbase Pro account portfolio
+                self.orders = model.get_orders(market, action, status)
+                return self.orders
+            else:
+                # return dummy orders
+                if market == "":
+                    return self.orders
+                else:
+                    if "market" in self.orders:
+                        return self.orders[self.orders["market"] == market]
+                    else:
+                        return pd.DataFrame()
+
         if self.app.exchange == Exchange.DUMMY:
             return self.orders[
                 [
