@@ -20,13 +20,14 @@ from urllib3.exceptions import ReadTimeoutError
 from models.BotConfig import BotConfig
 from models.exchange.ExchangesEnum import Exchange
 from models.exchange.Granularity import Granularity
-from models.exchange.binance import WebSocketClient as BWebSocketClient
 from models.exchange.coinbase_pro import WebSocketClient as CWebSocketClient
-from models.exchange.kucoin import WebSocketClient as KWebSocketClient
-from models.exchange.binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
-from models.exchange.coinbase import AuthAPI as CBAuthAPI
 from models.exchange.coinbase_pro import AuthAPI as CAuthAPI, PublicAPI as CPublicAPI
 from models.exchange.kucoin import AuthAPI as KAuthAPI, PublicAPI as KPublicAPI
+from models.exchange.kucoin import WebSocketClient as KWebSocketClient
+from models.exchange.binance import AuthAPI as BAuthAPI, PublicAPI as BPublicAPI
+from models.exchange.binance import WebSocketClient as BWebSocketClient
+from models.exchange.coinbase import AuthAPI as CBAuthAPI
+from models.exchange.coinbase import WebSocketClient as CBWebSocketClient
 from models.helper.TelegramBotHelper import TelegramBotHelper
 from models.helper.MarginHelper import calculate_margin
 from models.TradingAccount import TradingAccount
@@ -168,6 +169,8 @@ class PyCryptoBot(BotConfig):
                     self.websocket_connection.close()
                     if self.exchange == Exchange.BINANCE:
                         self.websocket_connection = BWebSocketClient([self.market], self.granularity, app=self)
+                    elif self.exchange == Exchange.COINBASE:
+                        self.websocket_connection = CBWebSocketClient([self.market], self.granularity, app=self)
                     elif self.exchange == Exchange.COINBASEPRO:
                         self.websocket_connection = CWebSocketClient([self.market], self.granularity, app=self)
                     elif self.exchange == Exchange.KUCOIN:
@@ -495,8 +498,8 @@ class PyCryptoBot(BotConfig):
                 list(map(self.s.cancel, self.s.queue))
                 self.s.enter(300, 1, self.execute_job, ())
         else:
-            # verify 300 rows - subtract 5 to allow small buffer if API is acting up.
-            if len(df) < self.adjusttotalperiods - 5:  # If 300 is required, set adjusttotalperiods in config to 305.
+            # verify 300 rows - subtract 20% to allow small buffer if API is acting up.
+            if len(df) < self.adjusttotalperiods - (self.adjusttotalperiods * 0.2):  # If 300 is required, set adjusttotalperiods in config to 300 * 20%.
                 if not self.is_sim:
                     # data frame should have 300 rows or equal to adjusted total rows if set, if not retry
                     RichText.notify(
@@ -1519,7 +1522,14 @@ class PyCryptoBot(BotConfig):
     def run(self):
         try:
             message = "Starting "
-            if self.exchange == Exchange.COINBASEPRO:
+            if self.exchange == Exchange.COINBASE:
+                message += "Coinbase bot"
+                if self.websocket and not self.is_sim:
+                    RichText.notify("Opening websocket to Coinbase", self, "normal")
+                    print("")
+                    self.websocket_connection = CBWebSocketClient([self.market], self.granularity, app=self)
+                    self.websocket_connection.start()
+            elif self.exchange == Exchange.COINBASEPRO:
                 message += "Coinbase Pro bot"
                 if self.websocket and not self.is_sim:
                     RichText.notify("Opening websocket to Coinbase Pro", self, "normal")

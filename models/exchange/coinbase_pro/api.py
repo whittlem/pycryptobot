@@ -678,8 +678,7 @@ class PublicAPI(AuthAPIBase):
     def get_historical_data(
         self,
         market: str = DEFAULT_MARKET,
-        # granularity: int = MAX_GRANULARITY,
-        granularity: Granularity = Granularity.ONE_HOUR,
+        granularity_any: Granularity = Granularity.ONE_HOUR,
         websocket=None,
         iso8601start: str = "",
         iso8601end: str = "",
@@ -691,14 +690,19 @@ class PublicAPI(AuthAPIBase):
             raise TypeError("Coinbase Pro market required.")
 
         # validates granularity is an integer
-        if isinstance(granularity, Granularity) and not isinstance(granularity.to_integer, int):
+        if isinstance(granularity_any, Granularity) and not isinstance(granularity_any.to_integer, int):
             raise TypeError("Granularity integer required.")
 
-        # validates the granularity is supported by Coinbase Pro
-        if isinstance(granularity, Granularity) and (granularity.to_integer not in SUPPORTED_GRANULARITY):
+        # validates the granularity is supported by Coinbase
+        if isinstance(granularity_any, Granularity) and (granularity_any.to_integer not in SUPPORTED_GRANULARITY):
             raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
-        elif isinstance(granularity, int) and (granularity not in SUPPORTED_GRANULARITY):
+        elif isinstance(granularity_any, int) and (granularity_any not in SUPPORTED_GRANULARITY):
             raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
+
+        if isinstance(granularity_any, Granularity):
+            granularity = granularity_any.to_integer
+        else:
+            granularity = granularity_any
 
         # validates the ISO 8601 start date is a string (if provided)
         if not isinstance(iso8601start, str):
@@ -977,7 +981,6 @@ class WebSocket(AuthAPIBase):
     def __init__(
         self,
         markets=None,
-        # granularity=None,
         granularity: Granularity = Granularity.ONE_HOUR,
         api_url="https://api.exchange.coinbase.com",
         ws_url="wss://ws-feed.pro.coinbase.com",
@@ -1133,7 +1136,6 @@ class WebSocketClient(WebSocket):
     def __init__(
         self,
         markets: list = [DEFAULT_MARKET],
-        # granularity: str = DEFAULT_GRANULARITY,
         granularity: Granularity = Granularity.ONE_HOUR,
         api_url="https://api.exchange.coinbase.com/",
         ws_url: str = "wss://ws-feed.pro.coinbase.com",
@@ -1358,8 +1360,5 @@ class WebSocketClient(WebSocket):
 
             # keep last 300 candles per market
             self.candles = self.candles.groupby("market").tail(300)
-
-            # print (f'{msg["time"]} {msg["product_id"]} {msg["price"]}')
-            # print(json.dumps(msg, indent=4, sort_keys=True))
 
         self.message_count += 1

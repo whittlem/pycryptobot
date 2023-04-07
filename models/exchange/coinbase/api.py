@@ -1,6 +1,7 @@
 """Remotely control your Coinbase account via their API"""
 
 import re
+import sys
 import json
 import hmac
 import hashlib
@@ -191,7 +192,7 @@ class AuthAPI(AuthAPIBase):
     def get_product(self, market: str = DEFAULT_MARKET) -> pd.DataFrame:
         """Retrieves a product"""
 
-        # GET /api/v3/brokerage/accounts
+        # GET /api/v3/brokerage/products
         try:
             df = self.auth_api("GET", "api/v3/brokerage/products/" + market)
         except Exception:
@@ -227,7 +228,14 @@ class AuthAPI(AuthAPIBase):
         trycnt, maxretry = (1, 5)
         while trycnt <= maxretry:
             try:
-                df = self.get_product(market)
+                # GET /api/v3/brokerage/products
+                try:
+                    df = self.auth_api("GET", "api/v3/brokerage/products/" + market + "/ticker")
+                except Exception:
+                    return pd.DataFrame()
+
+                if len(df) == 0:
+                    return pd.DataFrame()
 
                 return (
                     datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
@@ -494,7 +502,7 @@ class AuthAPI(AuthAPIBase):
     def get_historical_data(
         self,
         market: str = DEFAULT_MARKET,
-        granularity: Granularity = Granularity.ONE_HOUR,
+        granularity_any: Granularity = Granularity.ONE_HOUR,
         websocket=None,
         iso8601start: str = "",
         iso8601end: str = "",
@@ -506,14 +514,19 @@ class AuthAPI(AuthAPIBase):
             raise TypeError("Coinbase market required.")
 
         # validates granularity is an integer
-        if isinstance(granularity, Granularity) and not isinstance(granularity.to_integer, int):
+        if isinstance(granularity_any, Granularity) and not isinstance(granularity_any.to_integer, int):
             raise TypeError("Granularity integer required.")
 
-        # validates the granularity is supported by Coinbase Pro
-        if isinstance(granularity, Granularity) and (granularity.to_integer not in SUPPORTED_GRANULARITY):
+        # validates the granularity is supported by Coinbase
+        if isinstance(granularity_any, Granularity) and (granularity_any.to_integer not in SUPPORTED_GRANULARITY):
             raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
-        elif isinstance(granularity, int) and (granularity not in SUPPORTED_GRANULARITY):
+        elif isinstance(granularity_any, int) and (granularity_any not in SUPPORTED_GRANULARITY):
             raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
+
+        if isinstance(granularity_any, Granularity):
+            granularity = granularity_any.to_integer
+        else:
+            granularity = granularity_any
 
         # validates the ISO 8601 start date is a string (if provided)
         if not isinstance(iso8601start, str):
@@ -581,36 +594,20 @@ class AuthAPI(AuthAPIBase):
                     "end": int((dt_end - datetime(1970, 1, 1)).total_seconds()),
                 }
 
-                if isinstance(granularity, Granularity):
-                    if granularity.to_integer == 60:
-                        payload["granularity"] = "ONE_MINUTE"
-                    elif granularity.to_integer == 300:
-                        payload["granularity"] = "FIVE_MINUTE"
-                    elif granularity.to_integer == 900:
-                        payload["granularity"] = "FIFTEEN_MINUTE"
-                    elif granularity.to_integer == 3600:
-                        payload["granularity"] = "ONE_HOUR"
-                    elif granularity.to_integer == 21600:
-                        payload["granularity"] = "SIX_HOUR"
-                    elif granularity.to_integer == 86400:
-                        payload["granularity"] = "ONE_DAY"
-                    else:
-                        return pd.DataFrame()
+                if granularity == 60:
+                    payload["granularity"] = "ONE_MINUTE"
+                elif granularity == 300:
+                    payload["granularity"] = "FIVE_MINUTE"
+                elif granularity == 900:
+                    payload["granularity"] = "FIFTEEN_MINUTE"
+                elif granularity == 3600:
+                    payload["granularity"] = "ONE_HOUR"
+                elif granularity == 21600:
+                    payload["granularity"] = "SIX_HOUR"
+                elif granularity == 86400:
+                    payload["granularity"] = "ONE_DAY"
                 else:
-                    if granularity == 60:
-                        payload["granularity"] = "ONE_MINUTE"
-                    elif granularity == 300:
-                        payload["granularity"] = "FIVE_MINUTE"
-                    elif granularity == 900:
-                        payload["granularity"] = "FIFTEEN_MINUTE"
-                    elif granularity == 3600:
-                        payload["granularity"] = "ONE_HOUR"
-                    elif granularity == 21600:
-                        payload["granularity"] = "SIX_HOUR"
-                    elif granularity == 86400:
-                        payload["granularity"] = "ONE_DAY"
-                    else:
-                        return pd.DataFrame()
+                    return pd.DataFrame()
             except Exception:
                 return pd.DataFrame()
         elif iso8601start != "" and iso8601end == "":
@@ -891,7 +888,10 @@ class AuthAPI(AuthAPIBase):
                             else:
                                 try:
                                     # handle non-standard responses!
-                                    if uri.startswith("api/v3/brokerage/accounts"):
+                                    if endpoint == "ticker":
+                                        json_data = resp.json()["trades"]
+                                        df = pd.DataFrame(json_data[0], index=[0])
+                                    elif uri.startswith("api/v3/brokerage/accounts"):
                                         endpoint = "account"
                                         json_data = resp.json()["account"]
                                         if "available_balance" in json_data and isinstance(json_data["available_balance"], dict):
@@ -1049,3 +1049,815 @@ class AuthAPI(AuthAPIBase):
                 if self.app:
                     RichText.notify(f"{reason}: {self._api_url}", self.app, "info")
                 return pd.DataFrame()
+
+
+class WebSocket(AuthAPIBase):
+    def __init__(
+        self,
+        markets=None,
+        # granularity=None,
+        granularity: Granularity = Granularity.ONE_HOUR,
+        api_url="https://api.coinbase.com",
+        ws_url="wss://ws-feed.pro.coinbase.com",
+        app: object = None,
+    ) -> None:
+        valid_urls = [
+            "https://api.coinbase.com",
+            "https://api.coinbase.com/",
+        ]
+
+        # validate Coinbase Pro API
+        if api_url not in valid_urls:
+            raise ValueError("Coinbase API URL is invalid")
+
+        if api_url[-1] != "/":
+            api_url = api_url + "/"
+
+        valid_ws_urls = [
+            "wss://ws-feed.pro.coinbase.com",
+            "wss://ws-feed.pro.coinbase.com/",
+        ]
+
+        # validate Coinbase Pro Websocket URL
+        if ws_url not in valid_ws_urls:
+            raise ValueError("Coinbase Pro WebSocket URL is invalid")
+
+        if ws_url[-1] != "/":
+            ws_url = ws_url + "/"
+
+        # app
+        self.app = app
+
+        self._ws_url = ws_url
+        self._api_url = api_url
+
+        self.markets = None
+        self.granularity = granularity
+        self.type = "subscribe"
+        self.stop = True
+        self.error = None
+        self.ws = None
+        self.thread = None
+        self.start_time = None
+        self.time_elapsed = 0
+
+    def start(self):
+        def _go():
+            self._connect()
+            self._listen()
+            self._disconnect()
+
+        self.stop = False
+        self.on_open()
+        self.thread = Thread(target=_go)
+        self.keepalive = Thread(target=self._keepalive)
+        self.thread.start()
+
+    def _connect(self):
+        if self.markets is None:
+            print("Error: no market specified!")
+            sys.exit()
+        elif not isinstance(self.markets, list):
+            self.markets = [self.markets]
+
+        self.ws = create_connection(self._ws_url)
+        self.ws.send(
+            json.dumps(
+                {
+                    "type": "subscribe",
+                    "product_ids": self.markets,
+                    "channels": ["matches"],
+                }
+            )
+        )
+
+        self.start_time = datetime.now()
+
+    def _keepalive(self, interval=30):
+        if (self.ws is not None) and (hasattr(self.ws, "connected")):
+            while self.ws.connected:
+                self.ws.ping("keepalive")
+                time.sleep(interval)
+
+    def _listen(self):
+        self.keepalive.start()
+        while not self.stop:
+            try:
+                data = self.ws.recv()
+                if data != "":
+                    msg = json.loads(data)
+                else:
+                    msg = {}
+            except ValueError as e:
+                self.on_error(e)
+            except Exception as e:
+                self.on_error(e)
+            else:
+                self.on_message(msg)
+
+    def _disconnect(self):
+        try:
+            if self.ws:
+                self.ws.close()
+        except WebSocketConnectionClosedException:
+            pass
+        finally:
+            self.keepalive.join()
+
+    def close(self):
+        self.stop = True
+        self.start_time = None
+        self.time_elapsed = 0
+        self._disconnect()
+        self.thread.join()
+
+    def on_open(self):
+        if self.app:
+            RichText.notify("-- Websocket Subscribed! --", self.app, "info")
+
+    def on_close(self):
+        if self.app:
+            RichText.notify("-- Websocket Closed --", self.app, "info")
+
+    def on_message(self, msg):
+        if self.app:
+            RichText.notify(msg, self.app, "info")
+
+    def on_error(self, e, data=None):
+        if self.app:
+            RichText.notify(e, self.app, "error")
+            RichText.notify("{} - data: {}".format(e, data), self.app, "error")
+
+        self.stop = True
+        try:
+            self.ws = None
+            self.tickers = None
+            self.candles = None
+            self.start_time = None
+            self.time_elapsed = 0
+        except Exception:
+            pass
+
+    def getStartTime(self) -> datetime:
+        return self.start_time
+
+    def get_timeElapsed(self) -> int:
+        return self.time_elapsed
+
+
+class WebSocketClient(WebSocket):
+    def __init__(
+        self,
+        markets: list = [DEFAULT_MARKET],
+        granularity: Granularity = Granularity.ONE_HOUR,
+        api_url="https://api.coinbase.com/",
+        ws_url: str = "wss://ws-feed.pro.coinbase.com",
+        app: object = None,
+    ) -> None:
+        if len(markets) == 0:
+            raise ValueError("A list of one or more markets is required.")
+
+        for market in markets:
+            # validates the market is syntactically correct
+            if not self._is_market_valid(market):
+                raise ValueError("Coinbase market is invalid.")
+
+        # validates granularity is an integer
+        if not isinstance(granularity.to_integer, int):
+            raise TypeError("Granularity integer required.")
+
+        # validates the granularity is supported by Coinbase Pro
+        if granularity.to_integer not in SUPPORTED_GRANULARITY:
+            raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
+
+        valid_urls = [
+            "https://api.coinbase.com",
+            "https://api.coinbase.com/",
+        ]
+
+        # validate Coinbase Pro API
+        if api_url not in valid_urls:
+            raise ValueError("Coinbase API URL is invalid")
+
+        if api_url[-1] != "/":
+            api_url = api_url + "/"
+
+        valid_ws_urls = [
+            "wss://ws-feed.pro.coinbase.com",
+            "wss://ws-feed.pro.coinbase.com/",
+        ]
+
+        # validate Coinbase Pro Websocket URL
+        if ws_url not in valid_ws_urls:
+            raise ValueError("Coinbase Pro WebSocket URL is invalid")
+
+        if ws_url[-1] != "/":
+            ws_url = ws_url + "/"
+
+        # app
+        self.app = app
+
+        self._ws_url = ws_url
+
+        self.markets = markets
+        self.granularity = granularity
+        self.tickers = None
+        self.candles = None
+        self.start_time = None
+        self.time_elapsed = 0
+
+    def on_open(self):
+        self.message_count = 0
+
+    def on_message(self, msg):
+        if self.start_time is not None:
+            self.time_elapsed = round((datetime.now() - self.start_time).total_seconds())
+
+        if "time" in msg and "product_id" in msg and "price" in msg:
+            # create dataframe from websocket message
+            df = pd.DataFrame(
+                columns=["date", "market", "price"],
+                data=[
+                    [
+                        datetime.strptime(msg["time"], "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%Y-%m-%d %H:%M:%S"),
+                        msg["product_id"],
+                        msg["price"],
+                    ]
+                ],
+            )
+
+            # set column types
+            df["date"] = df["date"].astype("datetime64[ns]")
+            df["price"] = df["price"].astype("float64")
+
+            # form candles
+            df["candle"] = df["date"].dt.floor(freq=self.granularity.frequency)
+
+            # candles dataframe is empty
+            if self.candles is None:
+                resp = AuthAPI(self.app.api_key, self.app.api_secret, self.app.api_url, app=self.app).get_historical_data(
+                    df["market"].values[0], self.granularity.to_integer
+                )
+
+                if len(resp) > 0:
+                    self.candles = resp
+                else:
+                    # create dataframe from websocket message
+                    self.candles = pd.DataFrame(
+                        columns=[
+                            "date",
+                            "market",
+                            "granularity",
+                            "open",
+                            "high",
+                            "close",
+                            "low",
+                            "volume",
+                        ],
+                        data=[
+                            [
+                                df["candle"].values[0],
+                                df["market"].values[0],
+                                self.granularity.to_integer,
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                msg["size"],
+                            ]
+                        ],
+                    )
+            # candles dataframe contains some data
+            else:
+                # check if the current candle exists
+                candle_exists = ((self.candles["date"] == df["candle"].values[0]) & (self.candles["market"] == df["market"].values[0])).any()
+                if not candle_exists:
+                    # populate historical data via api if it does not exist
+                    if len(self.candles[self.candles["market"] == df["market"].values[0]]) == 0:
+                        resp = AuthAPI(self.app.api_key, self.app.api_secret, self.app.api_url, app=self.app).get_historical_data(
+                            df["market"].values[0], self.granularity.to_integer
+                        )
+                        if len(resp) > 0:
+                            df_new_candle = resp
+                        else:
+                            # create dataframe from websocket message
+                            df_new_candle = pd.DataFrame(
+                                columns=[
+                                    "date",
+                                    "market",
+                                    "granularity",
+                                    "open",
+                                    "high",
+                                    "close",
+                                    "low",
+                                    "volume",
+                                ],
+                                data=[
+                                    [
+                                        df["candle"].values[0],
+                                        df["market"].values[0],
+                                        self.granularity.to_integer,
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        msg["size"],
+                                    ]
+                                ],
+                            )
+
+                    else:
+                        df_new_candle = pd.DataFrame(
+                            columns=[
+                                "date",
+                                "market",
+                                "granularity",
+                                "open",
+                                "high",
+                                "close",
+                                "low",
+                                "volume",
+                            ],
+                            data=[
+                                [
+                                    df["candle"].values[0],
+                                    df["market"].values[0],
+                                    self.granularity.to_integer,
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    msg["size"],
+                                ]
+                            ],
+                        )
+
+                    try:
+                        df_new_candle.index = df_new_candle["date"]
+                        self.candles = pd.concat([self.candles, df_new_candle])
+                        df_new_candle = None
+                    except Exception as err:
+                        print(err)
+                        pass
+                else:
+                    candle = self.candles[((self.candles["date"] == df["candle"].values[0]) & (self.candles["market"] == df["market"].values[0]))]
+
+                    # set high on high
+                    if float(df["price"].values[0]) > float(candle.high.values[0]):
+                        self.candles.at[candle.index.values[0], "high"] = df["price"].values[0]
+
+                    self.candles.at[candle.index.values[0], "close"] = df["price"].values[0]
+
+                    # set low on low
+                    if float(df["price"].values[0]) < float(candle.low.values[0]):
+                        self.candles.at[candle.index.values[0], "low"] = df["price"].values[0]
+
+                    # increment candle base volume
+                    self.candles.at[candle.index.values[0], "volume"] = float(candle["volume"].values[0]) + float(msg["size"])
+
+            # insert first entry
+            if self.tickers is None and len(df) > 0:
+                self.tickers = df
+            # append future entries without duplicates
+            elif self.tickers is not None and len(df) > 0:
+                self.tickers = pd.concat([self.tickers, df]).drop_duplicates(subset="market", keep="last").reset_index(drop=True)
+
+            # convert dataframes to a time series
+            tsidx = pd.DatetimeIndex(pd.to_datetime(self.tickers["date"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z"))
+            self.tickers.set_index(tsidx, inplace=True)
+            self.tickers.index.name = "ts"
+
+            # set correct column types
+            self.candles["open"] = self.candles["open"].astype("float64")
+            self.candles["high"] = self.candles["high"].astype("float64")
+            self.candles["close"] = self.candles["close"].astype("float64")
+            self.candles["low"] = self.candles["low"].astype("float64")
+            self.candles["volume"] = self.candles["volume"].astype("float64")
+
+            # keep last 300 candles per market
+            self.candles = self.candles.groupby("market").tail(300)
+
+        self.message_count += 1
+
+
+"""
+# Using Coinbase Pro Websocket API instead of Coinbase as it doesn't work properly!
+
+class WebSocket(AuthAPIBase):
+    def __init__(
+        self,
+        markets=None,
+        granularity: Granularity = Granularity.ONE_HOUR,
+        api_url="https://api.coinbase.com",
+        ws_url="wss://advanced-trade-ws.coinbase.com",
+        app: object = None,
+    ) -> None:
+        valid_urls = [
+            "https://api.coinbase.com",
+            "https://api.coinbase.com/",
+        ]
+
+        # validate Coinbase API
+        if api_url not in valid_urls:
+            raise ValueError("Coinbase API URL is invalid")
+
+        if api_url[-1] != "/":
+            api_url = api_url + "/"
+
+        valid_ws_urls = [
+            "wss://advanced-trade-ws.coinbase.com",
+            "wss://advanced-trade-ws.coinbase.com/",
+        ]
+
+        # validate Coinbase Websocket URL
+        if ws_url not in valid_ws_urls:
+            raise ValueError("Coinbase WebSocket URL is invalid")
+
+        if ws_url[-1] != "/":
+            ws_url = ws_url + "/"
+
+        # app
+        self.app = app
+
+        self._ws_url = ws_url
+        self._api_url = api_url
+
+        self.markets = None
+        self.granularity = granularity
+        self.type = "subscribe"
+        self.stop = True
+        self.error = None
+        self.ws = None
+        self.thread = None
+        self.start_time = None
+        self.time_elapsed = 0
+
+    def start(self):
+        def _go():
+            self._connect()
+            self._listen()
+            self._disconnect()
+
+        self.stop = False
+        self.on_open()
+        self.thread = Thread(target=_go)
+        self.keepalive = Thread(target=self._keepalive)
+        self.thread.start()
+
+    def _connect(self):
+        if self.markets is None:
+            print("Error: no market specified!")
+            sys.exit()
+        elif not isinstance(self.markets, list):
+            self.markets = [self.markets]
+
+        # sign message
+        channel = "market_trades"
+        timestamp = str(int(time.time()))
+        product_ids = self.markets
+        product_ids_str = ",".join(product_ids)
+        message = f"{timestamp}{channel}{product_ids_str}"
+        signature = hmac.new(self.app.api_secret.encode("utf-8"), message.encode("utf-8"), digestmod=hashlib.sha256).hexdigest()
+
+        self.ws = create_connection(self._ws_url)
+        self.ws.send(
+            json.dumps(
+                {
+                    "type": "subscribe",
+                    "product_ids": product_ids,
+                    "channel": channel,
+                    "api_key": self.app.api_key,
+                    "timestamp": timestamp,
+                    "signature": signature,
+                }
+            )
+        )
+
+        self.start_time = datetime.now()
+
+    def _keepalive(self, interval=30):
+        if (self.ws is not None) and (hasattr(self.ws, "connected")):
+            while self.ws.connected:
+                self.ws.ping("keepalive")
+                time.sleep(interval)
+
+    def _listen(self):
+        self.keepalive.start()
+        while not self.stop:
+            try:
+                data = self.ws.recv()
+
+                if data != "":
+                    msg = json.loads(data)
+
+                    if "type" in msg and msg["type"] == "error":
+                        self.on_error(f'{msg["message"]} - {msg["reason"]}')
+
+                else:
+                    msg = {}
+            except ValueError as e:
+                self.on_error(e)
+            except Exception as e:
+                self.on_error(e)
+            else:
+                self.on_message(msg)
+
+    def _disconnect(self):
+        try:
+            if self.ws:
+                self.ws.close()
+        except WebSocketConnectionClosedException:
+            pass
+        finally:
+            self.keepalive.join()
+
+    def close(self):
+        self.stop = True
+        self.start_time = None
+        self.time_elapsed = 0
+        self._disconnect()
+        self.thread.join()
+
+    def on_open(self):
+        if self.app:
+            RichText.notify("-- Websocket Subscribed! --", self.app, "info")
+
+    def on_close(self):
+        if self.app:
+            RichText.notify("-- Websocket Closed --", self.app, "info")
+
+    def on_message(self, msg):
+        if self.app:
+            RichText.notify(msg, self.app, "info")
+
+    def on_error(self, e, data=None):
+        if self.app:
+            RichText.notify(e, self.app, "error")
+            RichText.notify("{} - data: {}".format(e, data), self.app, "error")
+
+        self.stop = True
+        try:
+            self.ws = None
+            self.tickers = None
+            self.candles = None
+            self.start_time = None
+            self.time_elapsed = 0
+        except Exception:
+            pass
+
+    def getStartTime(self) -> datetime:
+        return self.start_time
+
+    def get_timeElapsed(self) -> int:
+        return self.time_elapsed
+
+
+class WebSocketClient(WebSocket):
+    def __init__(
+        self,
+        markets: list = [DEFAULT_MARKET],
+        granularity: Granularity = Granularity.ONE_HOUR,
+        api_url="https://api.coinbase.com/",
+        ws_url: str = "wss://advanced-trade-ws.coinbase.com",
+        app: object = None,
+    ) -> None:
+        if len(markets) == 0:
+            raise ValueError("A list of one or more markets is required.")
+
+        for market in markets:
+            # validates the market is syntactically correct
+            if not self._is_market_valid(market):
+                raise ValueError("Coinbase market is invalid.")
+
+        # validates granularity is an integer
+        if not isinstance(granularity.to_integer, int):
+            raise TypeError("Granularity integer required.")
+
+        # validates the granularity is supported by Coinbase
+        if granularity.to_integer not in SUPPORTED_GRANULARITY:
+            raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
+
+        valid_urls = [
+            "https://api.coinbase.com",
+            "https://api.coinbase.com/",
+        ]
+
+        # validate Coinbase API
+        if api_url not in valid_urls:
+            raise ValueError("Coinbase API URL is invalid")
+
+        if api_url[-1] != "/":
+            api_url = api_url + "/"
+
+        valid_ws_urls = [
+            "wss://advanced-trade-ws.coinbase.com",
+            "wss://advanced-trade-ws.coinbase.com/",
+        ]
+
+        # validate Coinbase Websocket URL
+        if ws_url not in valid_ws_urls:
+            raise ValueError("Coinbase WebSocket URL is invalid")
+
+        if ws_url[-1] != "/":
+            ws_url = ws_url + "/"
+
+        # app
+        self.app = app
+
+        self._ws_url = ws_url
+
+        self.markets = markets
+        self.granularity = granularity
+        self.tickers = None
+        self.candles = None
+        self.start_time = None
+        self.time_elapsed = 0
+
+    def on_open(self):
+        self.message_count = 0
+
+    def on_message(self, msg):
+        if self.start_time is not None:
+            self.time_elapsed = round((datetime.now() - self.start_time).total_seconds())
+
+        if (
+            "channel" in msg
+            and "timestamp" in msg
+            and msg["channel"] == "market_trades"
+            and "events" in msg
+            and len(msg["events"]) > 0
+            and "trades" in msg["events"][0]
+            and len(msg["events"][0]["trades"]) > 0
+            and "product_id" in msg["events"][0]["trades"][0]
+            and "price" in msg["events"][0]["trades"][0]
+            and "size" in msg["events"][0]["trades"][0]
+        ):
+            datetime_ns = pd.to_datetime(msg["timestamp"])
+
+            # create dataframe from websocket message
+            df = pd.DataFrame(
+                columns=["date", "market", "price"],
+                data=[
+                    [
+                        datetime_ns.strftime("%Y-%m-%d %H:%M:%S"),
+                        msg["events"][0]["trades"][0]["product_id"],
+                        msg["events"][0]["trades"][0]["price"],
+                    ]
+                ],
+            )
+
+            # set column types
+            df["date"] = df["date"].astype("datetime64[ns]")
+            df["price"] = df["price"].astype("float64")
+
+            # form candles
+            df["candle"] = df["date"].dt.floor(freq=self.granularity.frequency)
+
+            # candles dataframe is empty
+            if self.candles is None:
+                resp = AuthAPI(self.app.api_key, self.app.api_secret, self.app.api_url, app=self.app).get_historical_data(
+                    df["market"].values[0], self.granularity.to_integer
+                )
+                if len(resp) > 0:
+                    self.candles = resp
+                else:
+                    # create dataframe from websocket message
+                    self.candles = pd.DataFrame(
+                        columns=[
+                            "date",
+                            "market",
+                            "granularity",
+                            "open",
+                            "high",
+                            "close",
+                            "low",
+                            "volume",
+                        ],
+                        data=[
+                            [
+                                df["candle"].values[0],
+                                df["market"].values[0],
+                                self.granularity.to_integer,
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                df["price"].values[0],
+                                msg["events"][0]["trades"][0]["size"],
+                            ]
+                        ],
+                    )
+            # candles dataframe contains some data
+            else:
+                # check if the current candle exists
+                candle_exists = ((self.candles["date"] == df["candle"].values[0]) & (self.candles["market"] == df["market"].values[0])).any()
+                if not candle_exists:
+                    # populate historical data via api if it does not exist
+                    if len(self.candles[self.candles["market"] == df["market"].values[0]]) == 0:
+                        resp = AuthAPI(self.app.api_key, self.app.api_secret, self.app.api_url, app=self.app).get_historical_data(
+                            df["market"].values[0], self.granularity.to_integer
+                        )
+                        if len(resp) > 0:
+                            df_new_candle = resp
+                        else:
+                            # create dataframe from websocket message
+                            df_new_candle = pd.DataFrame(
+                                columns=[
+                                    "date",
+                                    "market",
+                                    "granularity",
+                                    "open",
+                                    "high",
+                                    "close",
+                                    "low",
+                                    "volume",
+                                ],
+                                data=[
+                                    [
+                                        df["candle"].values[0],
+                                        df["market"].values[0],
+                                        self.granularity.to_integer,
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        df["price"].values[0],
+                                        msg["size"],
+                                    ]
+                                ],
+                            )
+
+                    else:
+                        df_new_candle = pd.DataFrame(
+                            columns=[
+                                "date",
+                                "market",
+                                "granularity",
+                                "open",
+                                "high",
+                                "close",
+                                "low",
+                                "volume",
+                            ],
+                            data=[
+                                [
+                                    df["candle"].values[0],
+                                    df["market"].values[0],
+                                    self.granularity.to_integer,
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    df["price"].values[0],
+                                    msg["size"],
+                                ]
+                            ],
+                        )
+
+                    try:
+                        df_new_candle.index = df_new_candle["date"]
+                        self.candles = pd.concat([self.candles, df_new_candle])
+                        df_new_candle = None
+                    except Exception as err:
+                        print(err)
+                        pass
+                else:
+                    candle = self.candles[((self.candles["date"] == df["candle"].values[0]) & (self.candles["market"] == df["market"].values[0]))]
+
+                    # set high on high
+                    if float(df["price"].values[0]) > float(candle.high.values[0]):
+                        self.candles.at[candle.index.values[0], "high"] = df["price"].values[0]
+
+                    self.candles.at[candle.index.values[0], "close"] = df["price"].values[0]
+
+                    # set low on low
+                    if float(df["price"].values[0]) < float(candle.low.values[0]):
+                        self.candles.at[candle.index.values[0], "low"] = df["price"].values[0]
+
+                    # increment candle base volume
+                    self.candles.at[candle.index.values[0], "volume"] = float(candle["volume"].values[0]) + float(msg["size"])
+
+            # insert first entry
+            if self.tickers is None and len(df) > 0:
+                self.tickers = df
+            # append future entries without duplicates
+            elif self.tickers is not None and len(df) > 0:
+                self.tickers = pd.concat([self.tickers, df]).drop_duplicates(subset="market", keep="last").reset_index(drop=True)
+
+            # convert dataframes to a time series
+            tsidx = pd.DatetimeIndex(pd.to_datetime(self.tickers["date"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%Z"))
+            self.tickers.set_index(tsidx, inplace=True)
+            self.tickers.index.name = "ts"
+
+            # set correct column types
+            self.candles["open"] = self.candles["open"].astype("float64")
+            self.candles["high"] = self.candles["high"].astype("float64")
+            self.candles["close"] = self.candles["close"].astype("float64")
+            self.candles["low"] = self.candles["low"].astype("float64")
+            self.candles["volume"] = self.candles["volume"].astype("float64")
+
+            # keep last 300 candles per market
+            self.candles = self.candles.groupby("market").tail(300)
+
+            # print (f'{msg["time"]} {msg["product_id"]} {msg["price"]}')
+            # print(json.dumps(msg, indent=4, sort_keys=True))
+
+        self.message_count += 1
+"""

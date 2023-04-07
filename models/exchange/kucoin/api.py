@@ -957,7 +957,7 @@ class PublicAPI(AuthAPIBase):
     def get_historical_data(
         self,
         market: str = DEFAULT_MARKET,
-        granularity: Granularity = Granularity.ONE_HOUR,
+        granularity_any: Granularity = Granularity.ONE_HOUR,
         websocket=None,
         iso8601start: str = "",
         iso8601end: str = "",
@@ -969,14 +969,19 @@ class PublicAPI(AuthAPIBase):
             raise TypeError("Kucoin market required.")
 
         # validates granularity is an integer
-        if not isinstance(granularity.to_medium, str):
-            raise TypeError("Granularity string required.")
+        if isinstance(granularity_any, Granularity) and not isinstance(granularity_any.to_integer, int):
+            raise TypeError("Granularity integer required.")
 
-        # validates the granularity is supported by Kucoin
-        if isinstance(granularity, Granularity) and (granularity.to_medium not in SUPPORTED_GRANULARITY):
+        # validates the granularity is supported by Coinbase
+        if isinstance(granularity_any, Granularity) and (granularity_any.to_integer not in SUPPORTED_GRANULARITY):
             raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
-        elif isinstance(granularity, str) and (granularity not in SUPPORTED_GRANULARITY):
+        elif isinstance(granularity_any, int) and (granularity_any not in SUPPORTED_GRANULARITY):
             raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
+
+        if isinstance(granularity_any, Granularity):
+            granularity = granularity_any.to_integer
+        else:
+            granularity = granularity_any
 
         # validates the ISO 8601 start date is a string (if provided)
         if not isinstance(iso8601start, str):
