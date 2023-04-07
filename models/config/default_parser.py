@@ -184,7 +184,7 @@ def default_config_parse(app, config):
                 # default market for Binance
                 app.market = "BTCGBP"
         else:
-            if app.exchange != Exchange.COINBASEPRO and app.exchange != Exchange.KUCOIN:
+            if app.exchange != Exchange.COINBASE and app.exchange != Exchange.COINBASEPRO and app.exchange != Exchange.KUCOIN:
                 # default if no exchange set
                 app.exchange = Exchange.COINBASEPRO
 

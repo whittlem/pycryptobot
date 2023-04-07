@@ -73,7 +73,7 @@ def signal_handler(signum):
 
 
 class PyCryptoBot(BotConfig):
-    def __init__(self, config_file: str = None, exchange: Exchange = None):
+    def __init__(self, config_file: str = None, exchange: Exchange = Exchange.COINBASEPRO):
         self.config_file = config_file or "config.json"
         self.exchange = exchange
         super(PyCryptoBot, self).__init__(filename=self.config_file, exchange=self.exchange)

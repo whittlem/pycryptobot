@@ -8,7 +8,11 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
-## [8.0.*] - 2023-04-07
+## [8.0.*] - 2023-04
+
+- fixed exchange selection bug
+
+## [8.0.0] - 2023-04-07
 
 - added Coinbase Advanced Trade exchange
 
