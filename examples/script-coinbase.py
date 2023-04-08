@@ -59,19 +59,18 @@ model3 = CPublicAPI(app=app2)
 
 
 """ COINBASE"""
-# df = model1.get_historical_data("BTC-GBP", 60)
-# df = model1.get_historical_data("BTC-GBP", 300)
-# df = model1.get_historical_data("BTC-GBP", 900)
-# df = model1.get_historical_data("ADA-GBP", 3600)
+# df = model1.get_historical_data("ADA-GBP", Granularity.ONE_MINUTE)
+# df = model1.get_historical_data("BTC-GBP", Granularity.FIVE_MINUTES)
+# df = model1.get_historical_data("BTC-GBP", Granularity.FIFTEEN_MINUTES)
 # df = model1.get_historical_data("ADA-GBP", Granularity.ONE_HOUR)
-# df = model1.get_historical_data("ADA-GBP", 3600, iso8601start="2023-03-25T01:00:00", iso8601end="2023-03-25T05:00:00")
-# df = model1.get_historical_data("ADA-GBP", 3600, iso8601start="2023-03-25T01:00:00")
-# df = model1.get_historical_data("ADA-GBP", 3600, iso8601end="2023-03-25T01:00:00")
-# df = model1.get_historical_data("BTC-GBP", 21600)
-# df = model1.get_historical_data("BTC-GBP", 86400)
+# df = model1.get_historical_data("ADA-GBP", Granularity.ONE_HOUR, iso8601start="2023-03-25T01:00:00", iso8601end="2023-03-25T05:00:00")
+# df = model1.get_historical_data("ADA-GBP", Granularity.ONE_HOUR, iso8601start="2023-03-25T01:00:00")
+# df = model1.get_historical_data("ADA-GBP", Granularity.ONE_HOUR, iso8601end="2023-03-25T01:00:00")
+# df = model1.get_historical_data("BTC-GBP", Granularity.SIX_HOURS)
+# df = model1.get_historical_data("BTC-GBP", Granularity.ONE_DAY)
 # print(df)
 """ COINBASE PRO"""
-# df = model3.get_historical_data("ADA-GBP", 3600)  # Coinbase Pro has this in the public API, Advanced Trade has this in the auth API
+# df = model3.get_historical_data("ADA-GBP", Granularity.ONE_HOUR)  # Coinbase Pro has this in the public API, Advanced Trade has this in the auth API
 # print(df)
 
 
