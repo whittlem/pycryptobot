@@ -498,8 +498,8 @@ class PyCryptoBot(BotConfig):
                 list(map(self.s.cancel, self.s.queue))
                 self.s.enter(300, 1, self.execute_job, ())
         else:
-            # verify 300 rows - subtract 20% to allow small buffer if API is acting up.
-            if len(df) < self.adjusttotalperiods - (self.adjusttotalperiods * 0.2):  # If 300 is required, set adjusttotalperiods in config to 300 * 20%.
+            # verify 300 rows - subtract 34% to allow small buffer if API is acting up.
+            if len(df) < self.adjusttotalperiods - (self.adjusttotalperiods * 0.34):  # If 300 is required, set adjusttotalperiods in config to 300 * 34%.
                 if not self.is_sim:
                     # data frame should have 300 rows or equal to adjusted total rows if set, if not retry
                     RichText.notify(
