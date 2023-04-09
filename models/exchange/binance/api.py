@@ -925,6 +925,10 @@ class PublicAPI(AuthAPIBase):
         if not self._is_market_valid(market):
             raise TypeError("Binance market required.")
 
+        # validates granularity is an enum
+        if not isinstance(granularity, Granularity):
+            raise TypeError("Granularity Enum required.")
+
         # validates the ISO 8601 end date is a string (if provided)
         if not isinstance(iso8601end, str):
             raise TypeError("ISO8601 end integer as string required.")

@@ -678,7 +678,7 @@ class PublicAPI(AuthAPIBase):
     def get_historical_data(
         self,
         market: str = DEFAULT_MARKET,
-        granularity_any: Granularity = Granularity.ONE_HOUR,
+        granularity: Granularity = Granularity.ONE_HOUR,
         websocket=None,
         iso8601start: str = "",
         iso8601end: str = "",
@@ -689,20 +689,9 @@ class PublicAPI(AuthAPIBase):
         if not self._is_market_valid(market):
             raise TypeError("Coinbase Pro market required.")
 
-        # validates granularity is an integer
-        if isinstance(granularity_any, Granularity) and not isinstance(granularity_any.to_integer, int):
-            raise TypeError("Granularity integer required.")
-
-        # validates the granularity is supported by Coinbase
-        if isinstance(granularity_any, Granularity) and (granularity_any.to_integer not in SUPPORTED_GRANULARITY):
-            raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
-        elif isinstance(granularity_any, int) and (granularity_any not in SUPPORTED_GRANULARITY):
-            raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
-
-        if isinstance(granularity_any, Granularity):
-            granularity = granularity_any.to_integer
-        else:
-            granularity = granularity_any
+        # validates granularity is an enum
+        if not isinstance(granularity, Granularity):
+            raise TypeError("Granularity Enum required.")
 
         # validates the ISO 8601 start date is a string (if provided)
         if not isinstance(iso8601start, str):

@@ -502,7 +502,7 @@ class AuthAPI(AuthAPIBase):
     def get_historical_data(
         self,
         market: str = DEFAULT_MARKET,
-        granularity_any: Granularity = Granularity.ONE_HOUR,
+        granularity: Granularity = Granularity.ONE_HOUR,
         websocket=None,
         iso8601start: str = "",
         iso8601end: str = "",
@@ -513,20 +513,9 @@ class AuthAPI(AuthAPIBase):
         if not self._is_market_valid(market):
             raise TypeError("Coinbase market required.")
 
-        # validates granularity is an integer
-        if isinstance(granularity_any, Granularity) and not isinstance(granularity_any.to_integer, int):
-            raise TypeError("Granularity integer required.")
-
-        # validates the granularity is supported by Coinbase
-        if isinstance(granularity_any, Granularity) and (granularity_any.to_integer not in SUPPORTED_GRANULARITY):
-            raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
-        elif isinstance(granularity_any, int) and (granularity_any not in SUPPORTED_GRANULARITY):
-            raise TypeError("Granularity options: " + ", ".join(map(str, SUPPORTED_GRANULARITY)))
-
-        if isinstance(granularity_any, Granularity):
-            granularity = granularity_any.to_integer
-        else:
-            granularity = granularity_any
+        # validates granularity is an enum
+        if not isinstance(granularity, Granularity):
+            raise TypeError("Granularity Enum required.")
 
         # validates the ISO 8601 start date is a string (if provided)
         if not isinstance(iso8601start, str):
@@ -546,37 +535,37 @@ class AuthAPI(AuthAPIBase):
         payload = {}
 
         if iso8601start == "" and iso8601end == "":
-            if granularity == 60:
+            if granularity.to_integer == 60:
                 payload = {
                     "start": int(time.mktime((datetime.now() - timedelta(minutes=300)).timetuple())),
                     "end": int(time.time()),
                     "granularity": "ONE_MINUTE",
                 }
-            elif granularity == 300:
+            elif granularity.to_integer == 300:
                 payload = {
                     "start": int(time.mktime((datetime.now() - timedelta(minutes=1500)).timetuple())),
                     "end": int(time.time()),
                     "granularity": "FIVE_MINUTE",
                 }
-            elif granularity == 900:
+            elif granularity.to_integer == 900:
                 payload = {
                     "start": int(time.mktime((datetime.now() - timedelta(minutes=4500)).timetuple())),
                     "end": int(time.time()),
                     "granularity": "FIFTEEN_MINUTE",
                 }
-            elif granularity == 3600:
+            elif granularity.to_integer == 3600:
                 payload = {
                     "start": int(time.mktime((datetime.now() - timedelta(hours=300)).timetuple())),
                     "end": int(time.time()),
                     "granularity": "ONE_HOUR",
                 }
-            elif granularity == 21600:
+            elif granularity.to_integer == 21600:
                 payload = {
                     "start": int(time.mktime((datetime.now() - timedelta(hours=1800)).timetuple())),
                     "end": int(time.time()),
                     "granularity": "SIX_HOUR",
                 }
-            elif granularity == 86400:
+            elif granularity.to_integer == 86400:
                 payload = {
                     "start": int(time.mktime((datetime.now() - timedelta(days=299)).timetuple())),
                     "end": int(time.time()),
@@ -594,17 +583,17 @@ class AuthAPI(AuthAPIBase):
                     "end": int((dt_end - datetime(1970, 1, 1)).total_seconds()),
                 }
 
-                if granularity == 60:
+                if granularity.to_integer == 60:
                     payload["granularity"] = "ONE_MINUTE"
-                elif granularity == 300:
+                elif granularity.to_integer == 300:
                     payload["granularity"] = "FIVE_MINUTE"
-                elif granularity == 900:
+                elif granularity.to_integer == 900:
                     payload["granularity"] = "FIFTEEN_MINUTE"
-                elif granularity == 3600:
+                elif granularity.to_integer == 3600:
                     payload["granularity"] = "ONE_HOUR"
-                elif granularity == 21600:
+                elif granularity.to_integer == 21600:
                     payload["granularity"] = "SIX_HOUR"
-                elif granularity == 86400:
+                elif granularity.to_integer == 86400:
                     payload["granularity"] = "ONE_DAY"
                 else:
                     return pd.DataFrame()
@@ -614,37 +603,37 @@ class AuthAPI(AuthAPIBase):
             try:
                 dt_start = datetime.strptime(iso8601start, "%Y-%m-%dT%H:%M:%S")
 
-                if granularity == 60:
+                if granularity.to_integer == 60:
                     payload = {
                         "start": int(time.mktime(dt_start.timetuple())),
                         "end": int(time.mktime((dt_start + timedelta(minutes=300)).timetuple())),
                         "granularity": "ONE_MINUTE",
                     }
-                elif granularity == 300:
+                elif granularity.to_integer == 300:
                     payload = {
                         "start": int(time.mktime(dt_start.timetuple())),
                         "end": int(time.mktime((dt_start + timedelta(minutes=1500)).timetuple())),
                         "granularity": "FIVE_MINUTE",
                     }
-                elif granularity == 900:
+                elif granularity.to_integer == 900:
                     payload = {
                         "start": int(time.mktime(dt_start.timetuple())),
                         "end": int(time.mktime((dt_start + timedelta(minutes=4500)).timetuple())),
                         "granularity": "FIFTEEN_MINUTE",
                     }
-                elif granularity == 3600:
+                elif granularity.to_integer == 3600:
                     payload = {
                         "start": int(time.mktime(dt_start.timetuple())),
                         "end": int(time.mktime((dt_start + timedelta(hours=300)).timetuple())),
                         "granularity": "ONE_HOUR",
                     }
-                elif granularity == 21600:
+                elif granularity.to_integer == 21600:
                     payload = {
                         "start": int(time.mktime(dt_start.timetuple())),
                         "end": int(time.mktime((dt_start + timedelta(hours=1800)).timetuple())),
                         "granularity": "SIX_HOUR",
                     }
-                elif granularity == 86400:
+                elif granularity.to_integer == 86400:
                     payload = {
                         "start": int(time.mktime(dt_start.timetuple())),
                         "end": int(time.mktime((dt_start + timedelta(days=299)).timetuple())),
@@ -656,37 +645,37 @@ class AuthAPI(AuthAPIBase):
             try:
                 dt_end = datetime.strptime(iso8601end, "%Y-%m-%dT%H:%M:%S")
 
-                if granularity == 60:
+                if granularity.to_integer == 60:
                     payload = {
                         "start": int(time.mktime((dt_end - timedelta(minutes=300)).timetuple())),
                         "end": int(time.mktime(dt_end.timetuple())),
                         "granularity": "ONE_MINUTE",
                     }
-                elif granularity == 300:
+                elif granularity.to_integer == 300:
                     payload = {
                         "start": int(time.mktime((dt_end - timedelta(minutes=1500)).timetuple())),
                         "end": int(time.mktime(dt_end.timetuple())),
                         "granularity": "FIVE_MINUTE",
                     }
-                elif granularity == 900:
+                elif granularity.to_integer == 900:
                     payload = {
                         "start": int(time.mktime((dt_end - timedelta(minutes=4500)).timetuple())),
                         "end": int(time.mktime(dt_end.timetuple())),
                         "granularity": "FIFTEEN_MINUTE",
                     }
-                elif granularity == 3600:
+                elif granularity.to_integer == 3600:
                     payload = {
                         "start": int(time.mktime((dt_end - timedelta(hours=300)).timetuple())),
                         "end": int(time.mktime(dt_end.timetuple())),
                         "granularity": "ONE_HOUR",
                     }
-                elif granularity == 21600:
+                elif granularity.to_integer == 21600:
                     payload = {
                         "start": int(time.mktime((dt_end - timedelta(hours=1800)).timetuple())),
                         "end": int(time.mktime(dt_end.timetuple())),
                         "granularity": "SIX_HOUR",
                     }
-                elif granularity == 86400:
+                elif granularity.to_integer == 86400:
                     payload = {
                         "start": int(time.mktime((dt_end - timedelta(days=299)).timetuple())),
                         "end": int(time.mktime(dt_end.timetuple())),
@@ -706,10 +695,7 @@ class AuthAPI(AuthAPIBase):
                 df = df.iloc[::-1].reset_index()
 
             try:
-                if isinstance(granularity, Granularity):
-                    freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity.to_integer)]
-                else:
-                    freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity)]
+                freq = FREQUENCY_EQUIVALENTS[SUPPORTED_GRANULARITY.index(granularity.to_integer)]
             except Exception:
                 freq = "D"
 
@@ -732,10 +718,7 @@ class AuthAPI(AuthAPIBase):
                 df["date"] = tsidx
 
             df["market"] = market
-            if isinstance(granularity, Granularity):
-                df["granularity"] = granularity.to_integer
-            else:
-                df["granularity"] = granularity
+            df["granularity"] = granularity.to_integer
 
             # re-order columns
             df = df[

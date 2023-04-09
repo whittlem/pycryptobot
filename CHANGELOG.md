@@ -10,7 +10,7 @@ Upgrade library dependencies (if required):
 
 ## [8.0.*] - 2023-04
 
-- fixed exchange selection bug
+- bug fixes and improvements
 
 ## [8.0.0] - 2023-04-07
 
