@@ -932,15 +932,19 @@ class PyCryptoBot(BotConfig):
 
                     # if live
                     if self.is_live:
-                        ac = self.account.get_balance()
-                        self.account.base_balance_before = 0.0
-                        self.account.quote_balance_before = 0.0
-                        try:
-                            df_base = ac[ac["currency"] == self.base_currency]["available"]
-                            self.account.base_balance_before = 0.0 if len(df_base) == 0 else float(df_base.values[0])
+                        self.insufficientfunds = False
 
-                            df_quote = ac[ac["currency"] == self.quote_currency]["available"]
-                            self.account.quote_balance_before = 0.0 if len(df_quote) == 0 else float(df_quote.values[0])
+                        try:
+                            self.account.quote_balance_before = self.account.get_balance(self.quote_currency)
+                            self.state.last_buy_size = float(self.account.quote_balance_before)
+
+                            if self.buymaxsize and self.buylastsellsize and self.state.minimum_order_quote(quote=self.state.last_sell_size, balancechk=True):
+                                self.state.last_buy_size = self.state.last_sell_size
+                            elif self.buymaxsize and self.state.last_buy_size > self.buymaxsize:
+                                self.state.last_buy_size = self.buymaxsize
+
+                            if self.account.quote_balance_before <= self.state.last_buy_size:
+                                self.insufficientfunds = True
                         except Exception:
                             pass
 
@@ -949,34 +953,24 @@ class PyCryptoBot(BotConfig):
                                 if not self.is_sim or (self.is_sim and not self.simresultonly):
                                     _notify(f"*** Executing SIMULATION Buy Order at {str(self.price)} ***", "info")
                             else:
-                                _notify("*** Executing LIVE Buy Order ***")
+                                _notify("*** Executing LIVE Buy Order ***", "info")
 
                             # display balances
-                            _notify(f"{self.base_currency} balance before order: {str(self.account.base_balance_before)}")
-                            _notify(f"{self.quote_currency} balance before order: {str(self.account.quote_balance_before)}")
-
-                            # execute a live market buy
-                            self.state.last_buy_size = float(self.account.quote_balance_before)
-
-                            if self.buymaxsize and self.buylastsellsize and self.state.minimum_order_quote(quote=self.state.last_sell_size, balancechk=True):
-                                self.state.last_buy_size = self.state.last_sell_size
-                            elif self.buymaxsize and self.state.last_buy_size > self.buymaxsize:
-                                self.state.last_buy_size = self.buymaxsize
+                            _notify(f"{self.base_currency} balance before order: {str(self.account.base_balance_before)}", "debug")
+                            _notify(f"{self.quote_currency} balance before order: {str(self.account.quote_balance_before)}", "debug")
 
                             # place the buy order
+                            resp_error = 0
+
                             try:
-                                df_order = self.market_buy(
+                                self.market_buy(
                                     self.market,
                                     self.state.last_buy_size,
                                     self.get_buy_percent(),
                                 )
 
-                                if len(df_order) == 0:
-                                    resp_error = 1
-                                else:
-                                    resp_error = 0
                             except Exception as err:
-                                _notify(f"Trade Error: {err}", "warning")
+                                _notify(f"Trade Error: {err}", "error")
                                 resp_error = 1
 
                             if resp_error == 0:
@@ -1005,9 +999,6 @@ class PyCryptoBot(BotConfig):
                                     self.state.action = "DONE"
                                     self.state.trailing_buy_immediate = False
                                     self.telegram_bot.add_open_order()
-
-                                    _notify(f"{self.base_currency} balance after order: {str(self.account.base_balance_after)}")
-                                    _notify(f"{self.quote_currency} balance after order: {str(self.account.quote_balance_after)}")
 
                                     if not self.disabletelegram:
                                         self.notify_telegram(
@@ -1048,13 +1039,15 @@ class PyCryptoBot(BotConfig):
 
                                 if not self.disabletelegramerrormsgs:
                                     self.notify_telegram(f"API Error: Unable to place buy order for {self.market}")
+
                                 time.sleep(30)
 
                         else:
-                            _notify(
-                                "Unable to place order, insufficient funds or buyminsize has not been reached. Check Logs.",
-                                "warning",
-                            )
+                            if not self.is_live:
+                                if not self.is_sim or (self.is_sim and not self.simresultonly):
+                                    _notify(f"*** Skipping SIMULATION Buy Order at {str(self.price)} -- Insufficient Funds ***", "warning")
+                            else:
+                                _notify("*** Skipping LIVE Buy Order -- Insufficient Funds ***", "warning")
 
                         self.state.last_api_call_datetime -= timedelta(seconds=60)
 
@@ -1163,7 +1156,11 @@ class PyCryptoBot(BotConfig):
                 elif self.state.action == "SELL":
                     # if live
                     if self.is_live:
-                        _notify(f"{formatted_current_df_index} | {self.market} | {self.print_granularity()} | {str(self.price)} | SELL")
+                        if not self.is_live:
+                            if not self.is_sim or (self.is_sim and not self.simresultonly):
+                                _notify(f"*** Executing SIMULATION Sell Order at {str(self.price)} ***", "info")
+                        else:
+                            _notify("*** Executing LIVE Sell Order ***", "info")
 
                         # check balances before and display
                         self.account.base_balance_before = 0
@@ -1174,22 +1171,24 @@ class PyCryptoBot(BotConfig):
                         except Exception:
                             pass
 
-                        _notify(f"{self.base_currency} balance before order: {str(self.account.base_balance_before)}")
-                        _notify(f"{self.quote_currency} balance before order: {str(self.account.quote_balance_before)}")
+                        _notify(f"{self.base_currency} balance before order: {str(self.account.base_balance_before)}", "debug")
+                        _notify(f"{self.quote_currency} balance before order: {str(self.account.quote_balance_before)}", "debug")
 
                         # execute a live market sell
                         baseamounttosell = float(self.account.base_balance_before) if self.sellfullbaseamount is True else float(self.state.last_buy_filled)
 
                         self.account.base_balance_after = 0
                         self.account.quote_balance_after = 0
+
                         # place the sell order
+                        resp_error = 0
+
                         try:
                             self.market_sell(
                                 self.market,
                                 baseamounttosell,
                                 self.get_sell_percent(),
                             )
-                            resp_error = 0
                         except Exception as err:
                             _notify(f"Trade Error: {err}", "warning")
                             resp_error = 1

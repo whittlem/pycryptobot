@@ -42,8 +42,8 @@ class TradingAccount:
         else:
             self.mode = "test"
 
-        self.quotebalance = self.get_balance(app.quote_currency)
-        self.basebalance = self.get_balance(app.base_currency)
+        self.quote_balance = self.get_balance(app.quote_currency)
+        self.base_balance = self.get_balance(app.base_currency)
 
         self.base_balance_before = 0.0
         self.quote_balance_before = 0.0
