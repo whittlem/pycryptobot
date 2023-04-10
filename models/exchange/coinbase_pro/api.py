@@ -436,12 +436,7 @@ class AuthAPI(AuthAPIBase):
 
         # funding amount needs to be greater than 10
         if quote_quantity < MINIMUM_TRADE_AMOUNT:
-            if self.app:
-                if self.app.is_live:
-                    RichText.notify("*** Aborting LIVE Buy Order - Insufficient Funds ***", self.app, "warning")
-                else:
-                    RichText.notify("*** Aborting SIMULATION Buy Order - Insufficient Funds ***", self.app, "warning")
-            return pd.DataFrame()
+            raise ValueError(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).")
 
         order = {
             "product_id": market,
