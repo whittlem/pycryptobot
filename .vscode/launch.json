@@ -7,7 +7,7 @@
             "request": "launch",
             "program": "pycryptobot.py",
             "console": "integratedTerminal",
-            "args": [ "--exchange", "coinbase", "--telegram", "0" ],
+            "args": [],
         }
     ]
 }

@@ -3189,6 +3189,7 @@ class PyCryptoBot(BotConfig):
         elif self.exchange == Exchange.COINBASE:
             api = CBAuthAPI(self.api_key, self.api_secret, self.api_url, app=self)
             self.takerfee = api.get_taker_fee()
+            return self.takerfee
         elif self.exchange == Exchange.COINBASEPRO:
             api = CAuthAPI(self.api_key, self.api_secret, self.api_passphrase, self.api_url, app=self)
             self.takerfee = api.get_taker_fee()
