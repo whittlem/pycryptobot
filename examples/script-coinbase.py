@@ -40,6 +40,8 @@ model3 = CPublicAPI(app=app2)
 # print(df)
 # df = model1.get_product("ADA-GBP")
 # print(df)
+# df = model1.auth_api("GET", "api/v3/brokerage/products/ADA-GBP")
+# print(float(df[["base_min_size"]].values[0]))
 
 
 """ COINBASE"""

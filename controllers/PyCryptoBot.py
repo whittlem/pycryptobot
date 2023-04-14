@@ -695,7 +695,7 @@ class PyCryptoBot(BotConfig):
                         if self.state.last_buy_price != exchange_last_buy["price"]:
                             self.state.last_buy_price = exchange_last_buy["price"]
 
-                        if self.exchange == Exchange.COINBASEPRO or self.exchange == Exchange.KUCOIN:
+                        if self.exchange == Exchange.COINBASE or self.exchange == Exchange.COINBASEPRO or self.exchange == Exchange.KUCOIN:
                             if self.state.last_buy_fee != exchange_last_buy["fee"]:
                                 self.state.last_buy_fee = exchange_last_buy["fee"]
 
@@ -1461,7 +1461,7 @@ class PyCryptoBot(BotConfig):
             # update order tracker csv
             if self.exchange == Exchange.BINANCE:
                 self.account.save_tracker_csv(self.market)
-            elif self.exchange == Exchange.COINBASEPRO or self.exchange == Exchange.KUCOIN:
+            elif self.exchange == Exchange.COINBASE or self.exchange == Exchange.COINBASEPRO or self.exchange == Exchange.KUCOIN:
                 self.account.save_tracker_csv()
 
         if self.is_sim:
@@ -1526,7 +1526,7 @@ class PyCryptoBot(BotConfig):
                 if self.websocket and not self.is_sim:
                     RichText.notify("Opening websocket to Coinbase", self, "normal")
                     print("")
-                    self.websocket_connection = CBWebSocketClient([self.market], self.granularity, app=self)
+                    self.websocket_connection = CWebSocketClient([self.market], self.granularity, app=self)
                     self.websocket_connection.start()
             elif self.exchange == Exchange.COINBASEPRO:
                 message += "Coinbase Pro bot"
@@ -1724,7 +1724,7 @@ class PyCryptoBot(BotConfig):
 
                 else:
                     end_date = self.get_date_from_iso8601_str(str(pd.Series(datetime.now()).dt.round(freq="H")[0]))
-                    if self.exchange == Exchange.COINBASEPRO:
+                    if self.exchange == Exchange.COINBASE or self.exchange == Exchange.COINBASEPRO:
                         end_date -= timedelta(hours=random.randint(0, 8760 * 3))  # 3 years in hours
                     else:
                         end_date -= timedelta(hours=random.randint(0, 8760 * 1))
@@ -3068,7 +3068,7 @@ class PyCryptoBot(BotConfig):
 
         try:
             if self.exchange == Exchange.COINBASE:
-                api = CAuthAPI(self.api_key, self.api_secret, self.api_url, app=self)
+                api = CBAuthAPI(self.api_key, self.api_secret, self.api_url, app=self)
                 orders = api.get_orders(self.market, "", "done")
 
                 if len(orders) == 0:

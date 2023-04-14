@@ -12,6 +12,7 @@ from importlib.metadata import version
 from controllers.PyCryptoBot import PyCryptoBot
 from models.helper.TelegramBotHelper import TelegramBotHelper as TGBot
 from models.exchange.binance import PublicAPI as BPublicAPI
+from models.exchange.coinbase import AuthAPI as CBAuthAPI
 from models.exchange.coinbase_pro import PublicAPI as CPublicAPI
 from models.exchange.kucoin import PublicAPI as KPublicAPI
 from models.exchange.Granularity import Granularity
@@ -73,9 +74,9 @@ def load_configs():
                 binance_app.selection_score = exchange_config.get("selection_score", 10)
                 binance_app.tv_screener_ratings = [rating.upper() for rating in exchange_config.get("tv_screener_ratings", ["STRONG_BUY"])]
                 exchanges_loaded.append(binance_app)
-            elif ex == CryptoExchange.COINBASEPRO:
+            elif ex == CryptoExchange.COINBASE:
                 coinbase_app = PyCryptoBot(exchange=ex)
-                coinbase_app.public_api = CPublicAPI()
+                coinbase_app.public_api = CBAuthAPI(bot_config[ex.value]["api_key"], bot_config[ex.value]["api_secret"], bot_config[ex.value]["api_url"])
                 coinbase_app.scanner_quote_currencies = exchange_config.get("quote_currency", ["USDT"])
                 coinbase_app.granularity = Granularity(Granularity.convert_to_enum(int(exchange_config.get("granularity", "3600"))))
                 coinbase_app.adx_threshold = exchange_config.get("adx_threshold", 25)
@@ -87,6 +88,20 @@ def load_configs():
                 coinbase_app.selection_score = exchange_config.get("selection_score", 10)
                 coinbase_app.tv_screener_ratings = [rating.upper() for rating in exchange_config.get("tv_screener_ratings", ["STRONG_BUY"])]
                 exchanges_loaded.append(coinbase_app)
+            elif ex == CryptoExchange.COINBASEPRO:
+                coinbase_pro_app = PyCryptoBot(exchange=ex)
+                coinbase_pro_app.public_api = CPublicAPI()
+                coinbase_pro_app.scanner_quote_currencies = exchange_config.get("quote_currency", ["USDT"])
+                coinbase_pro_app.granularity = Granularity(Granularity.convert_to_enum(int(exchange_config.get("granularity", "3600"))))
+                coinbase_pro_app.adx_threshold = exchange_config.get("adx_threshold", 25)
+                coinbase_pro_app.volatility_threshold = exchange_config.get("volatility_threshold", 9)
+                coinbase_pro_app.minimum_volatility = exchange_config.get("minimum_volatility", 5)
+                coinbase_pro_app.minimum_volume = exchange_config.get("minimum_volume", 20000)
+                coinbase_pro_app.volume_threshold = exchange_config.get("volume_threshold", 20000)
+                coinbase_pro_app.minimum_quote_price = exchange_config.get("minimum_quote_price", 0.0000001)
+                coinbase_pro_app.selection_score = exchange_config.get("selection_score", 10)
+                coinbase_pro_app.tv_screener_ratings = [rating.upper() for rating in exchange_config.get("tv_screener_ratings", ["STRONG_BUY"])]
+                exchanges_loaded.append(coinbase_pro_app)
             elif ex == CryptoExchange.KUCOIN:
                 kucoin_app = PyCryptoBot(exchange=ex)
                 kucoin_app.public_api = KPublicAPI(bot_config[ex.value]["api_url"])
@@ -126,6 +141,11 @@ def get_markets(app, quote_currency):
         for row in resp:
             if row["symbol"].endswith(quote_currency):
                 markets.append(row["symbol"])
+    elif app.exchange == CryptoExchange.COINBASE:
+        for market in resp:
+            market = str(market)
+            if market.endswith(f"-{quote_currency}"):
+                markets.append(market)
     elif app.exchange == CryptoExchange.COINBASEPRO:
         for market in resp:
             market = str(market)
@@ -254,7 +274,7 @@ def process_screener_data(app, markets, quote_currency, exchange_name):
             # print(f"Symbol: {ta.symbol} Score: {score}/{self.selection_score} Rating: {rating}")
             if (score >= app.selection_score) and (rating in app.tv_screener_ratings):
                 relavent_ta = {}
-                if app.exchange == CryptoExchange.COINBASEPRO or app.exchange == CryptoExchange.KUCOIN:
+                if app.exchange == CryptoExchange.COINBASE or app.exchange == CryptoExchange.COINBASEPRO or app.exchange == CryptoExchange.KUCOIN:
                     relavent_ta["market"] = re.sub(rf"(.*){quote_currency}", rf"\1-{quote_currency}", ta.symbol)
                     # relavent_ta['market'] = re.sub(quote_currency,f"-{quote_currency}", ta.symbol)
                 else:
