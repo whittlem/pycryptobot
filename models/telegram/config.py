@@ -102,7 +102,8 @@ class ConfigEditor:
             if query.data.__contains__("edit_"):
                 exchange = query.data.replace("edit_", "")
             elif (
-                query.data.__contains__(Exchange.COINBASEPRO.value)
+                query.data.__contains__(Exchange.COINBASE.value)
+                or query.data.__contains__(Exchange.COINBASEPRO.value)
                 or query.data.__contains__(Exchange.BINANCE.value)
                 or query.data.__contains__(Exchange.KUCOIN.value)
                 or query.data.__contains__("scanner")

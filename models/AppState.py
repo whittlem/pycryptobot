@@ -114,10 +114,28 @@ class AppState:
         if self.app.exchange == Exchange.BINANCE:
             df = self.api.get_market_info_filters(self.app.market)
             if len(df) > 0:
+                sys.tracebacklimit = 0
+                raise Exception(f"Market not found! ({self.app.market})")
+
+            base = float(base)
+            try:
                 base_min = float(
                     df[df["filterType"] == "LOT_SIZE"][["minQty"]].values[0][0]
                 )
-                base = float(base)
+            except Exception:
+                base_min = 0.0
+
+        elif self.app.exchange == Exchange.COINBASE:
+            product = self.api.auth_api("GET", f"api/v3/brokerage/products/{self.app.market}")
+            if len(product) == 0:
+                sys.tracebacklimit = 0
+                raise Exception(f"Market not found! ({self.app.market})")
+
+            base = float(base)
+            try:
+                base_min = float(product[["base_min_size"]].values[0])
+            except Exception:
+                base_min = 0.0
 
         elif self.app.exchange == Exchange.COINBASEPRO:
             product = self.api.auth_api("GET", f"products/{self.app.market}")
@@ -126,8 +144,10 @@ class AppState:
                 raise Exception(f"Market not found! ({self.app.market})")
 
             base = float(base)
-            # base_min = float(product["base_min_size"])
-            base_min = float(0)
+            try:
+                base_min = float(product[["base_min_size"]].values[0])
+            except Exception:
+                base_min = 0.0
 
         elif self.app.exchange == Exchange.KUCOIN:
             resp = self.api.auth_api("GET", "api/v1/symbols")
@@ -137,7 +157,10 @@ class AppState:
                 raise Exception(f"Market not found! ({self.app.market})")
 
             base = float(base)
-            base_min = float(product["baseMinSize"])
+            try:
+                base_min = float(product["baseMinSize"])
+            except Exception:
+                base_min = 0.0
 
         # additional check for last order type
         if balancechk:
@@ -280,7 +303,8 @@ class AppState:
 
                 # binance orders do not show fees
                 if (
-                    self.app.exchange == Exchange.COINBASEPRO
+                    self.app.exchange == Exchange.COINBASE
+                    or self.app.exchange == Exchange.COINBASEPRO
                     or self.app.exchange == Exchange.KUCOIN
                 ):
                     self.last_buy_fee = float(

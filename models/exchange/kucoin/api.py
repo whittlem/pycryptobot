@@ -479,8 +479,6 @@ class AuthAPI(AuthAPIBase):
 
         # validates quote_quantity is either an integer or float
         if not isinstance(quote_quantity, int) and not isinstance(quote_quantity, float):
-            if self.app:
-                RichText.notify("Please report this to Michael Whittle: " + str(quote_quantity) + " " + str(type(quote_quantity)), self.app, "critical")
             raise TypeError("The funding amount is not numeric.")
 
         # funding amount needs to be greater than 10

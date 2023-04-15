@@ -11,6 +11,10 @@ def test_enum_value_is_correct_for_binance():
     assert Exchange.BINANCE.value == "binance"
 
 
+def test_enum_value_is_correct_for_coinbase():
+    assert Exchange.COINBASE.value == "coinbase"
+
+
 def test_enum_value_is_correct_for_coinbasepro():
     assert Exchange.COINBASEPRO.value == "coinbasepro"
 
@@ -25,6 +29,7 @@ def test_enum_value_is_correct_for_dummy():
 
 def test_converting_string_to_enum():
     assert Exchange("binance") == Exchange.BINANCE
+    assert Exchange("coinbase") == Exchange.COINBASE
     assert Exchange("coinbasepro") == Exchange.COINBASEPRO
     assert Exchange("kucoin") == Exchange.KUCOIN
 

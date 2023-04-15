@@ -42,8 +42,8 @@ class TradingAccount:
         else:
             self.mode = "test"
 
-        self.quotebalance = self.get_balance(app.quote_currency)
-        self.basebalance = self.get_balance(app.base_currency)
+        self.quote_balance = self.get_balance(app.quote_currency)
+        self.base_balance = self.get_balance(app.base_currency)
 
         self.base_balance_before = 0.0
         self.quote_balance_before = 0.0
@@ -64,7 +64,11 @@ class TradingAccount:
         market : str
             market to check
         """
-        if self.app.exchange == Exchange.COINBASEPRO and market != "":
+        if self.app.exchange == Exchange.COINBASE and market != "":
+            p = re.compile(r"^[0-9A-Z]{1,20}\-[1-9A-Z]{2,5}$")
+            if not p.match(market):
+                raise TypeError("Coinbase market is invalid.")
+        elif self.app.exchange == Exchange.COINBASEPRO and market != "":
             p = re.compile(r"^[0-9A-Z]{1,20}\-[1-9A-Z]{2,5}$")
             if not p.match(market):
                 raise TypeError("Coinbase Pro market is invalid.")
@@ -141,6 +145,28 @@ class TradingAccount:
                     return self.orders
                 else:
                     return self.orders[self.orders["market"] == market]
+
+        if self.app.exchange == Exchange.COINBASE:
+            if self.mode == "live":
+                # if config is provided and live connect to Coinbase Pro account portfolio
+                model = CAuthAPI(
+                    self.app.api_key,
+                    self.app.api_secret,
+                    self.app.api_url,
+                    app=self.app
+                )
+                # retrieve orders from live Coinbase Pro account portfolio
+                self.orders = model.get_orders(market, action, status)
+                return self.orders
+            else:
+                # return dummy orders
+                if market == "":
+                    return self.orders
+                else:
+                    if "market" in self.orders:
+                        return self.orders[self.orders["market"] == market]
+                    else:
+                        return pd.DataFrame()
 
         if self.app.exchange == Exchange.COINBASEPRO:
             if self.mode == "live":
@@ -415,6 +441,67 @@ class TradingAccount:
                                     4,
                                 )
                             )
+
+        elif self.app.exchange == Exchange.COINBASE:
+            if self.mode == "live":
+                # if config is provided and live connect to Coinbase Pro account portfolio
+                model = CAuthAPI(
+                    self.app.api_key,
+                    self.app.api_secret,
+                    self.app.api_url,
+                    app=self.app
+                )
+                trycnt, maxretry = (0, 5)
+                while trycnt <= maxretry:
+                    df = model.get_accounts()
+
+                    if len(df) > 0:
+                        # retrieve all balances, but check the resp
+                        if currency == "" and "balance" not in df:
+                            time.sleep(5)
+                            trycnt += 1
+                        # retrieve all balances and return
+                        elif currency == "":
+                            return df
+                        else:
+                            # retrieve balance of specified currency
+                            df_filtered = df[df["currency"] == currency]["available"]
+                            if len(df_filtered) == 0:
+                                # return nil balance if no positive balance was found
+                                return 0.0
+                            else:
+                                # return balance of specified currency (if positive)
+                                if currency in ["EUR", "GBP", "USD"]:
+                                    return float(
+                                        truncate(
+                                            float(
+                                                df[df["currency"] == currency][
+                                                    "available"
+                                                ].values[0]
+                                            ),
+                                            2,
+                                        )
+                                    )
+                                else:
+                                    return float(
+                                        truncate(
+                                            float(
+                                                df[df["currency"] == currency][
+                                                    "available"
+                                                ].values[0]
+                                            ),
+                                            4,
+                                        )
+                                    )
+                    else:
+                        time.sleep(5)
+                        trycnt += 1
+                        if trycnt >= maxretry:
+                            raise Exception(
+                                "TradingAccount: CoinbasePro API Error while getting balance."
+                            )
+                else:
+                    return 0.0
 
         elif self.app.exchange == Exchange.COINBASEPRO:
             if self.mode == "live":
@@ -842,7 +929,10 @@ class TradingAccount:
         self._check_market_syntax(market)
 
         if self.mode == "live":
-            if self.app.exchange == Exchange.COINBASEPRO:
+            if self.app.exchange == Exchange.COINBASE:
+                # retrieve orders from live Coinbase account portfolio
+                df = self.get_orders(market, "", "done")
+            elif self.app.exchange == Exchange.COINBASEPRO:
                 # retrieve orders from live Coinbase Pro account portfolio
                 df = self.get_orders(market, "", "done")
             elif self.app.exchange == Exchange.BINANCE:

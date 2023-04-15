@@ -432,33 +432,24 @@ class AuthAPI(AuthAPIBase):
 
         # validates quote_quantity is either an integer or float
         if not isinstance(quote_quantity, int) and not isinstance(quote_quantity, float):
-            if self.app:
-                RichText.notify("Please report this to Michael Whittle: " + str(quote_quantity) + " " + str(type(quote_quantity)), self.app, "critical")
             raise TypeError("The funding amount is not numeric.")
 
         # funding amount needs to be greater than 10
         if quote_quantity < MINIMUM_TRADE_AMOUNT:
-            if self.app:
-                RichText.notify(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).", self.app, "warning")
-            return pd.DataFrame()
-            # raise ValueError(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).")
+            raise ValueError(f"Trade amount is too small (>= {MINIMUM_TRADE_AMOUNT}).")
 
-        try:
-            order = {
-                "product_id": market,
-                "type": "market",
-                "side": "buy",
-                "funds": self.market_quote_increment(market, quote_quantity),
-            }
+        order = {
+            "product_id": market,
+            "type": "market",
+            "side": "buy",
+            "funds": self.market_quote_increment(market, quote_quantity),
+        }
 
-            if self.app is not None and self.app.debug is True:
-                RichText.notify(str(order), self.app, "debug")
+        if self.app is not None and self.app.debug is True:
+            RichText.notify(str(order), self.app, "debug")
 
-            # place order and return result
-            return self.auth_api("POST", "orders", order)
-
-        except Exception:
-            return pd.DataFrame()
+        # place order and return result
+        return self.auth_api("POST", "orders", order)
 
     def market_sell(self, market: str = "", base_quantity: float = 0) -> pd.DataFrame:
         """Executes a market sell providing a crypto amount"""
@@ -469,22 +460,18 @@ class AuthAPI(AuthAPIBase):
         if not isinstance(base_quantity, int) and not isinstance(base_quantity, float):
             raise TypeError("The crypto amount is not numeric.")
 
-        try:
-            order = {
-                "product_id": market,
-                "type": "market",
-                "side": "sell",
-                "size": self.market_base_increment(market, base_quantity),
-            }
+        order = {
+            "product_id": market,
+            "type": "market",
+            "side": "sell",
+            "size": self.market_base_increment(market, base_quantity),
+        }
 
-            if self.app is not None and self.app.debug is True:
-                RichText.notify(str(order), self.app, "debug")
+        if self.app is not None and self.app.debug is True:
+            RichText.notify(str(order), self.app, "debug")
 
-            model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
-            return model.auth_api("POST", "orders", order)
-
-        except Exception:
-            return pd.DataFrame()
+        model = AuthAPI(self._api_key, self._api_secret, self._api_passphrase, self._api_url)
+        return model.auth_api("POST", "orders", order)
 
     def limit_sell(self, market: str = "", base_quantity: float = 0, future_price: float = 0) -> pd.DataFrame:
         """Initiates a limit sell order"""

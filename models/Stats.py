@@ -31,7 +31,7 @@ class Stats:
             time = row["created_at"].to_pydatetime()
 
             if row["action"] == "buy":
-                if self.app.exchange == Exchange.COINBASEPRO:
+                if self.app.exchange == Exchange.COINBASE or self.app.exchange == Exchange.COINBASEPRO:
                     amount = row["filled"] * row["price"] + row["fees"]
                 else:
                     amount = row["size"]
@@ -47,7 +47,7 @@ class Stats:
                 else:
                     self.order_pairs[-1]["buy"]["size"] += float(amount)
             else:
-                if self.app.exchange == Exchange.COINBASEPRO:
+                if self.app.exchange == Exchange.COINBASE or self.app.exchange == Exchange.COINBASEPRO:
                     amount = (row["filled"] * row["price"]) - row["fees"]
                 else:
                     amount = (float(row["filled"]) * float(row["price"])) - row["fees"]

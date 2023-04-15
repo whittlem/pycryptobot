@@ -7,6 +7,7 @@ from models.exchange import kucoin
 from models.helper.TelegramBotHelper import TelegramBotHelper as TGBot
 from models.Trading import TechnicalAnalysis
 from models.exchange.binance import PublicAPI as BPublicAPI
+from models.exchange.coinbase import AuthAPI as CBAuthAPI
 from models.exchange.coinbase_pro import PublicAPI as CPublicAPI
 from models.exchange.kucoin import PublicAPI as KPublicAPI
 from models.exchange.Granularity import Granularity
@@ -32,6 +33,8 @@ for exchange in config:
     for quote in config[ex.value]["quote_currency"]:
         if ex == Exchange.BINANCE:
             api = BPublicAPI(bot_config[ex.value]["api_url"])
+        elif ex == Exchange.COINBASE:
+            api = CBAuthAPI(bot_config[ex.value]["api_key"], bot_config[ex.value]["api_secret"], bot_config[ex.value]["api_url"])
         elif ex == Exchange.COINBASEPRO:
             api = CPublicAPI()
         elif ex == Exchange.KUCOIN:
@@ -45,6 +48,11 @@ for exchange in config:
             for row in resp:
                 if row["symbol"].endswith(quote):
                     markets.append(row)
+        elif ex == Exchange.COINBASE:
+            for market in resp:
+                if market.endswith(f"-{quote}"):
+                    resp[market]["stats_24hour"]["market"] = market
+                    markets.append(resp[market]["stats_24hour"])
         elif ex == Exchange.COINBASEPRO:
             for market in resp:
                 if market.endswith(f"-{quote}"):
@@ -60,6 +68,8 @@ for exchange in config:
 
         if ex == Exchange.BINANCE:
             df_markets = df_markets[["symbol", "lastPrice", "quoteVolume"]]
+        elif ex == Exchange.COINBASE:
+            df_markets = df_markets[["market", "last", "volume"]]
         elif ex == Exchange.COINBASEPRO:
             df_markets = df_markets[["market", "last", "volume"]]
         elif ex == Exchange.KUCOIN:
