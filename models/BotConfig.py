@@ -169,26 +169,15 @@ class BotConfig:
             self.config_file = self.cli_args["config"]
             self.config_provided = True
 
-        self.exchange = self._set_exchange(kwargs["exchange"])
-
         self.startmethod = self.cli_args["startmethod"] if self.cli_args["startmethod"] else "standard"
         self.enable_atr72_pcnt = True
         self.enable_buy_next = True
         self.enable_volume = False
 
-        # set defaults
-        (
-            self.api_url,
-            self.api_key,
-            self.api_secret,
-            self.api_passphrase,
-            self.market,
-        ) = self._set_default_api_info(self.exchange)
-
-        self.read_config(kwargs["exchange"])
+        self.read_config()
 
     # read and set config from file
-    def read_config(self, exchange):
+    def read_config(self):
         if os.path.isfile(self.config_file):
             self.config_provided = True
             try:
@@ -219,7 +208,8 @@ class BotConfig:
                 raise
 
         # set exchange platform
-        self.exchange = self._set_exchange(exchange)  # set defaults
+        self.exchange = self._set_exchange()  # set defaults
+
         (
             self.api_url,
             self.api_key,
@@ -243,6 +233,10 @@ class BotConfig:
 
             elif self.exchange == Exchange.DUMMY and self.exchange.value in self.config:
                 dummyConfigParser(self, self.config[self.exchange.value], self.cli_args)
+
+            else:
+                sys.tracebacklimit = 0
+                raise Exception("Exchange specified using arguments but config is missing.")
 
             if not self.disabletelegram and "telegram" in self.config and "token" in self.config["telegram"] and "client_id" in self.config["telegram"]:
                 telegram = self.config["telegram"]
@@ -282,21 +276,21 @@ class BotConfig:
     def _set_exchange(self, exchange: str = None) -> Exchange:
         if self.cli_args["exchange"] is not None:
             exchange = Exchange(self.cli_args["exchange"])
-
-        if isinstance(exchange, str):
+        elif isinstance(exchange, str):
             exchange = Exchange(exchange)
+        else:
+            if not exchange:
+                if (Exchange.COINBASEPRO.value or "api_pass") in self.config:
+                    exchange = Exchange.COINBASEPRO
+                elif Exchange.COINBASE.value in self.config:
+                    exchange = Exchange.COINBASE
+                elif Exchange.BINANCE.value in self.config:
+                    exchange = Exchange.BINANCE
+                elif Exchange.KUCOIN.value in self.config:
+                    exchange = Exchange.KUCOIN
+                else:
+                    exchange = Exchange.DUMMY
 
-        if not exchange:
-            if (Exchange.COINBASEPRO.value or "api_pass") in self.config:
-                exchange = Exchange.COINBASEPRO
-            elif Exchange.COINBASE.value in self.config:
-                exchange = Exchange.COINBASE
-            elif Exchange.BINANCE.value in self.config:
-                exchange = Exchange.BINANCE
-            elif Exchange.KUCOIN.value in self.config:
-                exchange = Exchange.KUCOIN
-            else:
-                exchange = Exchange.DUMMY
         return exchange
 
     def _set_default_api_info(self, exchange: Exchange = Exchange.DUMMY) -> tuple:
