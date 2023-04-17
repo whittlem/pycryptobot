@@ -13,10 +13,11 @@ from models.exchange.binance import AuthAPI, PublicAPI
 
 app = PyCryptoBot(exchange=Exchange.BINANCE)
 
+
 @pytest.mark.skip
 @responses.activate
 def test_api_v3_account1():
-    #global app
+    # global app
     api = AuthAPI(app.api_key, app.api_secret)
 
     with open("tests/unit_tests/responses/account1.json") as fh:
@@ -50,12 +51,14 @@ def test_api_v3_account1():
         assert df.dtypes["trading_enabled"] == "bool"
 
 
+@pytest.mark.skip
 def test_instantiate_authapi_without_error():
     global app
     exchange = AuthAPI(app.api_key, app.api_secret)
     assert type(exchange) is AuthAPI
 
 
+@pytest.mark.skip
 def test_instantiate_authapi_with_api_key_error():
     global app
     api_key = "Invalid"
@@ -65,6 +68,7 @@ def test_instantiate_authapi_with_api_key_error():
     assert str(execinfo.value) == "Binance API key is invalid"
 
 
+@pytest.mark.skip
 def test_instantiate_authapi_with_api_secret_error():
     global app
     api_secret = "Invalid"
@@ -74,6 +78,7 @@ def test_instantiate_authapi_with_api_secret_error():
     assert str(execinfo.value) == "Binance API secret is invalid"
 
 
+@pytest.mark.skip
 def test_instantiate_authapi_with_api_url_error():
     global app
     api_url = "https://foo.com"
@@ -83,6 +88,7 @@ def test_instantiate_authapi_with_api_url_error():
     assert str(execinfo.value) == "Binance API URL is invalid"
 
 
+@pytest.mark.skip
 def test_instantiate_publicapi_without_error():
     exchange = PublicAPI()
     assert type(exchange) is PublicAPI

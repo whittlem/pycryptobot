@@ -174,10 +174,13 @@ class BotConfig:
         self.enable_buy_next = True
         self.enable_volume = False
 
-        self.read_config()
+        if "exchange" in kwargs and kwargs["exchange"] in ["binance", "coinbase", "coinbasepro", "kucoin"]:
+            self.read_config(kwargs["exchange"])
+        else:
+            self.read_config()
 
     # read and set config from file
-    def read_config(self):
+    def read_config(self, exchange: str = None):
         if os.path.isfile(self.config_file):
             self.config_provided = True
             try:
@@ -208,7 +211,7 @@ class BotConfig:
                 raise
 
         # set exchange platform
-        self.exchange = self._set_exchange()  # set defaults
+        self.exchange = self._set_exchange(exchange)  # set defaults
 
         (
             self.api_url,

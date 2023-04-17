@@ -75,8 +75,7 @@ def signal_handler(signum):
 class PyCryptoBot(BotConfig):
     def __init__(self, config_file: str = None, exchange: Exchange = None):
         self.config_file = config_file or "config.json"
-        self.exchange = exchange
-        super(PyCryptoBot, self).__init__(filename=self.config_file, exchange=self.exchange)
+        super(PyCryptoBot, self).__init__(filename=self.config_file, exchange=exchange)
 
         self.console_term = Console(no_color=(not self.term_color), width=self.term_width)  # logs to the screen
         self.console_log = Console(file=open(self.logfile, "w"), no_color=True, width=self.log_width)  # logs to file
