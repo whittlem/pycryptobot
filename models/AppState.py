@@ -187,9 +187,13 @@ class AppState:
             df = self.api.get_market_info_filters(self.app.market)
 
             if len(df) > 0:
-                quote_min = float(
-                    df[df["filterType"] == "MIN_NOTIONAL"][["minNotional"]].values[0][0]
-                )
+                try:
+                    quote_min = float(
+                        df[df["filterType"] == "NOTIONAL"][["minNotional"]].values[0][0]
+                    )
+                except Exception:
+                    RichText.notify(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Failure detecting minNotional! Using fallback of 10.0", self.app, "error")
+                    quote_min = 10.0
                 quote = float(quote)
 
                 if quote < quote_min:
