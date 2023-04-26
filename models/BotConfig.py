@@ -224,19 +224,14 @@ class BotConfig:
         if self.config_provided:
             if self.exchange == Exchange.COINBASE and self.exchange.value in self.config:
                 coinbaseConfigParser(self, self.config[self.exchange.value], self.cli_args)
-
-            if self.exchange == Exchange.COINBASEPRO and self.exchange.value in self.config:
+            elif self.exchange == Exchange.COINBASEPRO and self.exchange.value in self.config:
                 coinbaseProConfigParser(self, self.config[self.exchange.value], self.cli_args)
-
             elif self.exchange == Exchange.BINANCE and self.exchange.value in self.config:
                 binanceConfigParser(self, self.config[self.exchange.value], self.cli_args)
-
             elif self.exchange == Exchange.KUCOIN and self.exchange.value in self.config:
                 kucoinConfigParser(self, self.config[self.exchange.value], self.cli_args)
-
             elif self.exchange == Exchange.DUMMY and self.exchange.value in self.config:
                 dummyConfigParser(self, self.config[self.exchange.value], self.cli_args)
-
             else:
                 sys.tracebacklimit = 0
                 raise Exception("Exchange specified using arguments but config is missing.")
