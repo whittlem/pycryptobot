@@ -942,7 +942,7 @@ class PyCryptoBot(BotConfig):
                             elif self.buymaxsize and self.state.last_buy_size > self.buymaxsize:
                                 self.state.last_buy_size = self.buymaxsize
 
-                            if self.account.quote_balance_before <= self.state.last_buy_size:
+                            if self.account.quote_balance_before < self.state.last_buy_size:
                                 self.insufficientfunds = True
                         except Exception:
                             pass
