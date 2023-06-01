@@ -288,7 +288,7 @@ class Strategy:
             else:
                 # loss failsafe sell at trailing_stop_loss
                 if margin > self.state.tsl_trigger:
-                    self.state.tsl_triggered = 1
+                    self.state.tsl_triggered = True
 
             if self.app.debug:
                 debugtext = f"TSL Triggered: {self.state.tsl_triggered} TSL Pcnt: {self.state.tsl_pcnt}% TSL Trigger: {self.state.tsl_trigger}%"
