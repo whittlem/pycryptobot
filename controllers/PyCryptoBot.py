@@ -41,8 +41,7 @@ from utils.PyCryptoBot import truncate as _truncate
 from utils.PyCryptoBot import compare as _compare
 
 try:
-    # pyright: reportMissingImports=false
-    if file_exists("models/Trading_myPta.py"):
+    if file_exists("models/Trading_myPta.py"):  # pyright: ignore[reportMissingImports]
         from models.Trading_myPta import TechnicalAnalysis
 
         trading_myPta = True
@@ -1149,7 +1148,7 @@ class PyCryptoBot(BotConfig):
                             if self.is_sim:
                                 tradinggraphs.render_ema_and_macd(len(trading_dataCopy), "graphs/" + filename, True)
                             else:
-                                tradinggraphs.render_ema_and_macd(len(trading_data), "graphs/" + filename, True)
+                                tradinggraphs.render_ema_and_macd(len(self.trading_data), "graphs/" + filename, True)
 
                 # if a sell signal
                 elif self.state.action == "SELL":

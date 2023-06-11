@@ -6,8 +6,7 @@ from views.PyCryptoBot import RichText
 from os.path import exists as file_exists
 
 try:
-    # pyright: reportMissingImports=false
-    from models.Strategy_myCS import Strategy_CS as myCS
+    from models.Strategy_myCS import Strategy_CS as myCS  # pyright: ignore[reportMissingImports]
 
     strategy_myCS = True
     myCS_error = None
@@ -147,10 +146,8 @@ class Strategy:
 
         # criteria for buy signal 2 (optionally add additional buy signals)
         elif (
-            (bool(self._df_last["closegtbb20_upperco"].values[0]) is True or self.app.disablebuybbands_s2)
-            and self.state.last_action != "BUY"
-        ):  # required for all strategies
-
+            bool(self._df_last["closegtbb20_upperco"].values[0]) is True or self.app.disablebuybbands_s2
+        ) and self.state.last_action != "BUY":  # required for all strategies
             if self.app.debug:
                 RichText.notify("*** Buy Signal ***", self.app, "debug")
                 for indicator in required_indicators:

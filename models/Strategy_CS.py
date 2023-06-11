@@ -20,8 +20,7 @@ class Strategy_CS:
             )
 
         if self.state.trading_myPta is True:
-            # pyright: reportMissingImports=false
-            from models.Trading_myPta import TechnicalAnalysis
+            from models.Trading_myPta import TechnicalAnalysis  # pyright: ignore[reportMissingImports]
         else:
             from models.Trading import TechnicalAnalysis
         self.TA = TechnicalAnalysis

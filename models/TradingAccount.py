@@ -498,7 +498,7 @@ class TradingAccount:
                         trycnt += 1
                         if trycnt >= maxretry:
                             raise Exception(
-                                "TradingAccount: CoinbasePro API Error while getting balance."
+                                f"TradingAccount: '{self.app.exchange}' API Error while getting balance."
                             )
                 else:
                     return 0.0
