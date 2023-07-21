@@ -41,8 +41,7 @@ from utils.PyCryptoBot import truncate as _truncate
 from utils.PyCryptoBot import compare as _compare
 
 try:
-    # pyright: reportMissingImports=false
-    if file_exists("models/Trading_myPta.py"):
+    if file_exists("models/Trading_myPta.py"):  # pyright: ignore[reportMissingImports]
         from models.Trading_myPta import TechnicalAnalysis
 
         trading_myPta = True
@@ -549,19 +548,20 @@ class PyCryptoBot(BotConfig):
                     if not self.disabletelegram:
                         self.telegram_bot.add_open_order()
 
-                    RichText.notify(f"{self.market} ({self.print_granularity()}) - {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}", self, "warning")
-                    RichText.notify("Catching BUY that occurred previously. Updating signal information.", self, "warning")
+                    if not self.ignorepreviousbuy:
+                        RichText.notify(f"{self.market} ({self.print_granularity()}) - {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}", self, "warning")
+                        RichText.notify("Catching BUY that occurred previously. Updating signal information.", self, "warning")
 
-                    if not self.telegramtradesonly and not self.disabletelegram:
-                        self.notify_telegram(
-                            self.market
-                            + " ("
-                            + self.print_granularity()
-                            + ") - "
-                            + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-                            + "\n"
-                            + "Catching BUY that occurred previously. Updating signal information."
-                        )
+                        if not self.telegramtradesonly and not self.disabletelegram:
+                            self.notify_telegram(
+                                self.market
+                                + " ("
+                                + self.print_granularity()
+                                + ") - "
+                                + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+                                + "\n"
+                                + "Catching BUY that occurred previously. Updating signal information."
+                            )
 
                 elif self.state.action == "check_action" and self.state.last_action == "SELL":
                     self.state.prevent_loss = False
@@ -575,19 +575,20 @@ class PyCryptoBot(BotConfig):
                     self.state.action = None
                     self.telegram_bot.remove_open_order()
 
-                    RichText.notify(f"{self.market} ({self.print_granularity()}) - {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}", self, "warning")
-                    RichText.notify("Catching SELL that occurred previously. Updating signal information.", self, "warning")
+                    if not self.ignoreprevioussell:
+                        RichText.notify(f"{self.market} ({self.print_granularity()}) - {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}", self, "warning")
+                        RichText.notify("Catching SELL that occurred previously. Updating signal information.", self, "warning")
 
-                    if not self.telegramtradesonly:
-                        self.notify_telegram(
-                            self.market
-                            + " ("
-                            + self.print_granularity()
-                            + ") - "
-                            + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-                            + "\n"
-                            + "Catching SELL that occurred previously. Updating signal information."
-                        )
+                        if not self.telegramtradesonly:
+                            self.notify_telegram(
+                                self.market
+                                + " ("
+                                + self.print_granularity()
+                                + ") - "
+                                + datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+                                + "\n"
+                                + "Catching SELL that occurred previously. Updating signal information."
+                            )
 
                     self.telegram_bot.close_trade(
                         str(self.get_date_from_iso8601_str(str(datetime.now()))),
@@ -1149,7 +1150,7 @@ class PyCryptoBot(BotConfig):
                             if self.is_sim:
                                 tradinggraphs.render_ema_and_macd(len(trading_dataCopy), "graphs/" + filename, True)
                             else:
-                                tradinggraphs.render_ema_and_macd(len(trading_data), "graphs/" + filename, True)
+                                tradinggraphs.render_ema_and_macd(len(self.trading_data), "graphs/" + filename, True)
 
                 # if a sell signal
                 elif self.state.action == "SELL":
@@ -2340,10 +2341,28 @@ class PyCryptoBot(BotConfig):
             "Exit After Sell",
             "exitaftersell",
             "Exit the bot after a sell order",
-            break_below=True,
+            break_below=False,
             store_invert=False,
             default_value=False,
             arg_name="exitaftersell",
+        )
+        config_option_row_bool(
+            "Ignore Previous Buy",
+            "ignorepreviousbuy",
+            "Ignore previous buy failure",
+            break_below=False,
+            store_invert=False,
+            default_value=True,
+            arg_name="ignorepreviousbuy",
+        )
+        config_option_row_bool(
+            "Ignore Previous Sell",
+            "ignoreprevioussell",
+            "Ignore previous sell failure",
+            break_below=True,
+            store_invert=False,
+            default_value=True,
+            arg_name="ignoreprevioussell",
         )
 
         config_option_row_int(
