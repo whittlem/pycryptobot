@@ -124,6 +124,8 @@ class BotConfig:
         self.enableml = False
         self.websocket = False
         self.exitaftersell = False
+        self.ignorepreviousbuy = True
+        self.ignoreprevioussell = True
         self.use_sell_fee = True
 
         self.enableinsufficientfundslogging = False
@@ -428,6 +430,8 @@ class BotConfig:
         parser.add_argument("--lastaction", type=str, help="Manually set the last action performed by the bot (BUY, SELL)")
         parser.add_argument("--kucoincache", type=int, help="Enable the Kucoin cache")
         parser.add_argument("--exitaftersell", type=int, help="Exit the bot after a sell order")
+        parser.add_argument("--ignorepreviousbuy", type=int, help="Ignore previous buy failure")
+        parser.add_argument("--ignoreprevioussell", type=int, help="Ignore previous sell failure")
 
         parser.add_argument("--adjusttotalperiods", type=int, help="Adjust data points in historical trading data")
 
