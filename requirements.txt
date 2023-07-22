@@ -2,7 +2,7 @@ urllib3>=1.26.5
 pandas==1.5.1
 pandas-ta
 numpy
-scipy==1.10.0
+scipy==1.8.1
 statsmodels
 requests==2.31.0
 matplotlib==3.3.3
