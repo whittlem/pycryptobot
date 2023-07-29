@@ -41,8 +41,8 @@ from utils.PyCryptoBot import truncate as _truncate
 from utils.PyCryptoBot import compare as _compare
 
 try:
-    if file_exists("models/Trading_myPta.py"):  # pyright: ignore[reportMissingImports]
-        from models.Trading_myPta import TechnicalAnalysis
+    if file_exists("models/Trading_myPta.py"):
+        from models.Trading_myPta import TechnicalAnalysis  # pyright: ignore[reportMissingImports]
 
         trading_myPta = True
         pandas_ta_enabled = True
@@ -497,11 +497,12 @@ class PyCryptoBot(BotConfig):
                 self.s.enter(300, 1, self.execute_job, ())
         else:
             # verify 300 rows - subtract 34% to allow small buffer if API is acting up.
-            if len(df) < self.adjusttotalperiods - (self.adjusttotalperiods * 0.34):  # If 300 is required, set adjusttotalperiods in config to 300 * 34%.
+            adjusted_periods = self.adjusttotalperiods - (self.adjusttotalperiods * 0.30)
+            if len(df) < adjusted_periods:  # If 300 is required, set adjusttotalperiods in config to 300 * 30%.
                 if not self.is_sim:
                     # data frame should have 300 rows or equal to adjusted total rows if set, if not retry
                     RichText.notify(
-                        f"error: data frame length is < {str(self.adjusttotalperiods)} ({str(len(df))})",
+                        f"error: data frame length is < {str(int(adjusted_periods))} ({str(len(df))})",
                         self,
                         "error",
                     )

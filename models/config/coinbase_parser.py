@@ -65,8 +65,10 @@ def parser(app, coinbase_config, args={}):
             except Exception:
                 raise RuntimeError(f"Unable to read {app.api_key_file}")
 
-        if "api_key" in coinbase_config and "api_secret" in coinbase_config and "api_url" in coinbase_config:
+        if coinbase_config["config"]["api_url"] is not None:
+            coinbase_config["api_url"] = coinbase_config["config"]["api_url"]
 
+        if "api_key" in coinbase_config and "api_secret" in coinbase_config and "api_url" in coinbase_config:
             # validates the api key is syntactically correct
             p = re.compile(r"^[A-z0-9]{16,16}$")
             if not p.match(coinbase_config["api_key"]):
