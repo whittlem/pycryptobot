@@ -65,7 +65,7 @@ def parser(app, coinbase_config, args={}):
             except Exception:
                 raise RuntimeError(f"Unable to read {app.api_key_file}")
 
-        if coinbase_config["config"]["api_url"] is not None:
+        if "api_url" in coinbase_config["config"]:
             coinbase_config["api_url"] = coinbase_config["config"]["api_url"]
 
         if "api_key" in coinbase_config and "api_secret" in coinbase_config and "api_url" in coinbase_config:
