@@ -10,10 +10,11 @@ from models.exchange.Granularity import Granularity  # noqa: E402
 app1 = PyCryptoBot(exchange="coinbase")
 model1 = CBAuthAPI(app1.api_key, app1.api_secret, app1.api_url, app=app1)
 
+"""
 app2 = PyCryptoBot(exchange="coinbasepro")
 model2 = CAuthAPI(app2.api_key, app2.api_secret, app2.api_passphrase, app2.api_url, app=app2)
 model3 = CPublicAPI(app=app2)
-
+"""
 
 """ COINBASE"""
 # df = model1.get_accounts()
@@ -64,13 +65,14 @@ model3 = CPublicAPI(app=app2)
 # df = model1.get_historical_data("ADA-GBP", Granularity.ONE_MINUTE)
 # df = model1.get_historical_data("BTC-GBP", Granularity.FIVE_MINUTES)
 # df = model1.get_historical_data("BTC-GBP", Granularity.FIFTEEN_MINUTES)
-# df = model1.get_historical_data("ADA-GBP", Granularity.ONE_HOUR)
+df = model1.get_historical_data("ADA-GBP", Granularity.ONE_HOUR)
 # df = model1.get_historical_data("ADA-GBP", Granularity.ONE_HOUR, iso8601start="2023-03-25T01:00:00", iso8601end="2023-03-25T05:00:00")
 # df = model1.get_historical_data("ADA-GBP", Granularity.ONE_HOUR, iso8601start="2023-03-25T01:00:00")
 # df = model1.get_historical_data("ADA-GBP", Granularity.ONE_HOUR, iso8601end="2023-03-25T01:00:00")
 # df = model1.get_historical_data("BTC-GBP", Granularity.SIX_HOURS)
 # df = model1.get_historical_data("BTC-GBP", Granularity.ONE_DAY)
-# print(df)
+print(df)
+
 """ COINBASE PRO"""
 # df = model3.get_historical_data("ADA-GBP", Granularity.ONE_HOUR)  # Coinbase Pro has this in the public API, Advanced Trade has this in the auth API
 # print(df)

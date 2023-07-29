@@ -774,14 +774,14 @@ class AuthAPI(AuthAPIBase):
                 elif method == "POST":
                     resp = requests.post(self._api_url + uri, json=payload, auth=self)
 
-                # api error handling
-                if "error_details" in resp.json():
-                    return pd.DataFrame(resp.json()["error_response"], index=[0])
-
                 trycnt += 1
                 resp.raise_for_status()
 
                 if resp.status_code == 200:
+                    # api error handling
+                    if "error_details" in resp.json():
+                        return pd.DataFrame(resp.json()["error_response"], index=[0])
+
                     if isinstance(resp.json(), list):
                         df = pd.DataFrame.from_dict(resp.json())
                         return df
