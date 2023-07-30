@@ -1,9 +1,8 @@
-FROM python:3.9-slim-bullseye AS compile-image
+FROM python:3.11.4-slim-bullseye AS compile-image
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install --no-install-recommends -y \
-    build-essential gfortran \
-    python3-statsmodels-lib && \
+    build-essential && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -21,7 +20,7 @@ RUN python -m pip install --no-cache-dir -U pip && \
 
 COPY . /app
 
-FROM python:3.9-slim-bullseye
+FROM python:3.11.4-slim-bullseye
 
 ARG REPO=whittlem/pycryptobot
 
