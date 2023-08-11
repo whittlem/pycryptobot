@@ -48,7 +48,7 @@ def parse_market(market):
         "NGN",
         "BRL",
         "BVND",
-        # "VAI",  # causes codespell to fail in Github Actions
+        "VAI",
     ]
 
     for qc in quote_currencies:
