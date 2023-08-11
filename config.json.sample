@@ -34,7 +34,6 @@
             "trailingbuypcnt": 0.5,
             "telegramtradesonly": 0,
             "granularity": "1hour",
-            "enableml": 0,
             "use_sell_fee": 1
         }
     },
@@ -73,7 +72,6 @@
             "trailingbuypcnt": 0.5,
             "telegramtradesonly": 0,
             "granularity": "3600",
-            "enableml": 0
         }
     },
     "coinbasepro": {
@@ -111,7 +109,6 @@
             "trailingbuypcnt": 0.5,
             "telegramtradesonly": 0,
             "granularity": "3600",
-            "enableml": 0
         }
     },
     "telegram": {

@@ -480,10 +480,6 @@ layout = (
                                                             "label": "Disable Bot Logs",
                                                             "value": "disablelog",
                                                         },
-                                                        {
-                                                            "label": "Enable Machine Learning Messages",
-                                                            "value": "enableml",
-                                                        },
                                                     ],
                                                     value=[1],
                                                     id="switches-extras",
