@@ -24,8 +24,8 @@ jobs:
     - name: Find typos with codespell
       uses: codespell-project/actions-codespell@master
       with:
-        ignore-words-list = zar,hist,VAI
-        skip = "".venv,.git,*.json,./tests/unit_tests/responses"
+        ignore-words-list: zar,hist,VAI
+        skip: ".venv,.git,*.json,./tests/unit_tests/responses"
     - uses: actions/cache@v2
       with:
         path: ${{ env.pythonLocation }}
