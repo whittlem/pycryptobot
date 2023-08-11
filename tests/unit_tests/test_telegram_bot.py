@@ -1,12 +1,9 @@
 import os
 import sys
 import unittest
-# pylint: disable=import-error
-from models.telegram import (
-    Wrapper,
-)
 
 sys.path.append(".")
+from models.telegram import Wrapper
 
 wrapper = Wrapper("config.json.sample")
 wrapper.helper.datafolder = os.path.join(os.curdir, "tests", "unit_tests", "data")

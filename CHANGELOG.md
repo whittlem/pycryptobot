@@ -8,6 +8,10 @@ Upgrade version:
 Upgrade library dependencies (if required):
 - python3 -m pip install -r requirements.txt -U
 
+## [8.2.0] - 2023-04
+
+- removed statsmodels which has a dependency on scipy which is huge and causes a lot of problems
+
 ## [8.0.*] - 2023-04
 
 - bug fixes and improvements

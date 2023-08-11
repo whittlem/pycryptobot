@@ -2,7 +2,7 @@ FROM python:3.11.4-slim-bullseye AS compile-image
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install --no-install-recommends -y \
-    build-essential gfortran && \
+    build-essential && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

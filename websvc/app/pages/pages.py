@@ -450,32 +450,6 @@ class Pages:
             adx14_6h_class = "table-danger"
             adx14_6h_desc = "Weak Trend Up"
 
-        def arima_predictions(even_rows: bool = True):
-            results_ARIMA = ta.seasonal_arima_model()
-            start_date = df_1h.last_valid_index()
-            end_date = start_date + datetime.timedelta(days=3)
-            arima_pred = results_ARIMA.predict(
-                start=str(start_date), end=str(end_date), dynamic=True
-            )
-
-            if even_rows:
-                arima_pred_rows = arima_pred.iloc[::2]
-            else:
-                arima_pred_rows = arima_pred.iloc[1::2]
-
-            html = ""
-            for index, pred in arima_pred_rows.items():
-                html += f"""
-                <tbody>
-                    <tr class={'table-success' if pred >= ticker[1] else 'table-danger'}>
-                        <td>{index}</td>
-                        <td>{pred}</td>
-                    </tr>
-                </tbody>
-                """
-
-            return html
-
         return f"""
         {header()}
 
@@ -955,7 +929,6 @@ class Pages:
                             <th scope="col" style="width: 50%">Time</th>
                             <th scope="col" style="width: 50%">Prediction</th>
                         </thead>
-                        {arima_predictions(True)}
                     </table>
                 </div>
                 <div class="col-sm">
@@ -964,7 +937,6 @@ class Pages:
                             <th scope="col" style="width: 50%">Time</th>
                             <th scope="col" style="width: 50%">Prediction</th>
                         </thead>
-                        {arima_predictions(False)}
                     </table>
                 </div>
             <div>

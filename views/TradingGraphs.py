@@ -302,36 +302,6 @@ class TradingGraphs:
         if saveOnly is False:
             plt.show()
 
-    def render_seasonal_arima_model(self, saveFile="", saveOnly=False):
-        """Render the seasonal ARIMA model
-
-        Parameters
-        ----------
-        saveFile : str, optional
-            Save the figure
-        saveOnly : bool
-            Save the figure without displaying it
-        """
-
-        fittedValues = self.technical_analysis.seasonal_arima_model_fitted_values()
-
-        plt.plot(self.df["close"], label="original")
-        plt.plot(fittedValues, color="red", label="fitted")
-        plt.title("RSS: %.4f" % sum((fittedValues - self.df["close"]) ** 2))
-        plt.legend()
-        plt.ylabel("Price")
-        plt.xticks(rotation=90)
-        plt.tight_layout()
-
-        try:
-            if saveFile != "":
-                plt.savefig(saveFile)
-        except OSError:
-            raise SystemExit(f"Unable to save: {saveFile}")
-
-        if saveOnly is False:
-            plt.show()
-
     def render_sma_and_macd(self, saveFile="", saveOnly=False):
         """Render the self.price, SMA20, SMA50, and SMA200
 
@@ -365,72 +335,6 @@ class TradingGraphs:
                 plt.savefig(saveFile)
         except OSError:
             raise SystemExit(f"Unable to save: {saveFile}")
-
-        if saveOnly is False:
-            plt.show()
-
-    def render_arima_model_prediction(self, days=30, saveOnly=False):
-        """Render the seasonal ARIMA model prediction
-
-        Parameters
-        ----------
-        days     : int
-            Number of days to predict
-        saveOnly : bool
-            Save the figure without displaying it
-        """
-
-        # get dataframe from technical analysis object
-        df = self.technical_analysis.get_df()
-
-        if not isinstance(days, int):
-            raise TypeError("Prediction days is not numeric.")
-
-        if days < 1 or days > len(df):
-            raise ValueError("Predication days is out of range")
-
-        # extract market and granularity from trading dataframe
-        market = df.iloc[0].market
-        granularity = df.iloc[0].granularity
-
-        results_ARIMA = self.technical_analysis.seasonal_arima_model()
-
-        df = pd.DataFrame(self.df["close"])
-        start_date = df.last_valid_index()
-        end_date = start_date + timedelta(days=days)
-        pred = results_ARIMA.predict(start=str(start_date), end=str(end_date), dynamic=True)
-
-        fig, axes = plt.subplots(ncols=1, figsize=(12, 6))  # pylint: disable=unused-variable
-        fig.autofmt_xdate()
-        ax1 = plt.subplot(111)
-        ax1.set_title("Seasonal ARIMA Model Prediction")
-
-        date = pd.to_datetime(pred.index).to_pydatetime()
-
-        pred_length = len(pred)
-        # the evenly spaced plot indices
-        # indices = np.arange(pred_length)  # TODO: why is this here?
-
-        def format_date(x, pos=None):  # pylint: disable=unused-argument
-            thisind = np.clip(int(x + 0.5), 0, pred_length - 1)
-            return date[thisind].strftime("%Y-%m-%d %H:%M:%S")
-
-        fig, ax = plt.subplots(ncols=1, figsize=(12, 6))  # pylint: disable=unused-variable
-        fig.autofmt_xdate()
-
-        ax = plt.subplot(111)
-        ax.set_title("Seasonal ARIMA Model Prediction")
-        ax.plot(pred, label="prediction", color="black")
-        ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
-
-        plt.xticks(rotation=90)
-        plt.tight_layout()
-
-        try:
-            RichText.notify(f"creating: graphs/SAM_{market}_{str(granularity)}.png", self.app, "info")
-            plt.savefig(f"graphs/SAM_{market}_{str(granularity)}.png", dpi=300)
-        except OSError:
-            raise SystemExit(f"Unable to save: graphs/SAM_{market}_{str(granularity)}.png")
 
         if saveOnly is False:
             plt.show()

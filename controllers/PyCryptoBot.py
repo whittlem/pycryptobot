@@ -910,17 +910,6 @@ class PyCryptoBot(BotConfig):
                         self.console_log.print(self.table_console)
                     self.table_console = Table(title=None, box=None, show_header=False, show_footer=False)  # clear table
 
-                    if self.enableml:
-                        # Seasonal Autoregressive Integrated Moving Average (ARIMA) model (ML prediction for 3 intervals from now)
-                        if not self.is_sim:
-                            try:
-                                prediction = _technical_analysis.arima_model_prediction(int(self.granularity.to_integer / 60) * 3)  # 3 intervals from now
-                                _notify(
-                                    f"Seasonal ARIMA model predicts the closing self.price will be {str(round(prediction[1], 2))} at {prediction[0]} (delta: {round(prediction[1] - self.price, 2)})"
-                                )
-                            except Exception:
-                                pass
-
                     if self.state.last_action == "BUY":
                         # display support, resistance and fibonacci levels
                         if not self.is_sim:
@@ -2303,15 +2292,6 @@ class PyCryptoBot(BotConfig):
             store_invert=False,
             default_value=False,
             arg_name="manualtradesonly",
-        )
-        config_option_row_bool(
-            "AI/ML Predictions",
-            "enableml",
-            "Enable AI / Machine Learning Predictions",
-            break_below=False,
-            store_invert=False,
-            default_value=False,
-            arg_name="predictions",
         )
         config_option_row_str(
             "Start Method",
