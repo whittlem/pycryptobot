@@ -71,7 +71,7 @@
             "sellsmartswitch": 0,
             "trailingbuypcnt": 0.5,
             "telegramtradesonly": 0,
-            "granularity": "3600",
+            "granularity": "3600"
         }
     },
     "coinbasepro": {
@@ -108,7 +108,7 @@
             "sellsmartswitch": 0,
             "trailingbuypcnt": 0.5,
             "telegramtradesonly": 0,
-            "granularity": "3600",
+            "granularity": "3600"
         }
     },
     "telegram": {
