@@ -24,7 +24,7 @@ jobs:
     - name: Find typos with codespell
       uses: codespell-project/actions-codespell@master
       with:
-        ignore_words_list: zar,hist,VAI
+        ignore_words_list: zar,hist
         skip: "*.json,./tests/unit_tests/responses"
     - uses: actions/cache@v2
       with:

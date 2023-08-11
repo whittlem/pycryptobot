@@ -19,11 +19,7 @@ from numpy import (
 )
 from pandas import concat, DataFrame, Series
 from datetime import datetime, timedelta
-from statsmodels.tsa.statespace.sarimax import SARIMAX, SARIMAXResultsWrapper
-from statsmodels.tools.sm_exceptions import ConvergenceWarning
 from views.PyCryptoBot import RichText
-
-warnings.simplefilter("ignore", ConvergenceWarning)
 
 
 class TechnicalAnalysis:
@@ -771,62 +767,6 @@ class TechnicalAnalysis:
         # self.df["williamsr" + str(period)] = self.williamsr(period)
         # self.df["williamsr" + str(period)] = self.df["williamsr" + str(period)].replace(nan, -50)
         self.df["williamsr" + str(period)] = ta.willr(high=self.df["high"], close=self.df["close"], low=self.df["low"], interval=period, fillna=self.df.close)
-
-    def seasonal_arima_model(self) -> SARIMAXResultsWrapper:
-        """Returns the Seasonal ARIMA Model for price predictions"""
-
-        # hyperparameters for SARIMAX
-        if not self.df.index.freq:
-            freq = str(self.df["granularity"].iloc[-1]).replace("m", "T").replace("h", "H").replace("d", "D")
-            if freq.isdigit():
-                freq += "S"
-            self.df.index = self.df.index.to_period(freq)
-        model = SARIMAX(self.df["close"], trend="n", order=(0, 1, 0), seasonal_order=(1, 1, 1, 12))
-        return model.fit(disp=-1)
-
-    def seasonal_arima_model_fitted_values(self):  # TODO: annotate return type
-        """Returns the Seasonal ARIMA Model for price predictions"""
-
-        return self.seasonal_arima_model().fittedvalues
-
-    def seasonal_arima_model_prediction(self, minutes: int = 180) -> tuple:
-        """Returns seasonal ARIMA model prediction
-
-        Parameters
-        ----------
-        minutes     : int
-            Number of minutes to predict
-        """
-
-        if not isinstance(minutes, int):
-            raise TypeError("Prediction minutes is not numeric.")
-
-        if minutes < 1 or minutes > 4320:
-            raise ValueError("Predication minutes is out of range")
-
-        results_ARIMA = self.seasonal_arima_model()
-
-        start_ts = self.df.last_valid_index()
-        end_ts = start_ts + timedelta(minutes=minutes)
-        pred = results_ARIMA.predict(start=str(start_ts), end=str(end_ts), dynamic=True)
-
-        try:
-            if len(pred) == 0:
-                df_last = self.df["close"].tail(1)
-                return (
-                    str(df_last.index.values[0]).replace("T", " ").replace(".000000000", ""),
-                    df_last.values[0],
-                )
-            else:
-                df_last = pred.tail(1)
-                return (
-                    str(df_last.index.values[0]).replace("T", " ").replace(".000000000", ""),
-                    df_last.values[0],
-                )
-        except Exception:
-            return None
-
-        return None
 
     def simple_moving_average(self, period: int) -> float:
         """Calculates the Simple Moving Average (SMA)"""
