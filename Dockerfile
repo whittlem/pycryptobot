@@ -15,8 +15,8 @@ RUN pip config --user set global.extra-index-url https://www.piwheels.org/simple
 
 COPY requirements.txt .
 
-# RUN python -m pip install --no-cache-dir -U pip && \
-RUN python3 -m pip install --no-cache-dir -U pip==19.3.1 && \
+# RUN python3 -m pip install --no-cache-dir -U pip && \
+RUN pip3 install --upgrade --no-cache-dir pip && \
     python3 -m pip install --no-cache-dir -r requirements.txt
 
 COPY . /app
