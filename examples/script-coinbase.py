@@ -10,11 +10,9 @@ from models.exchange.Granularity import Granularity  # noqa: E402
 app1 = PyCryptoBot(exchange="coinbase")
 model1 = CBAuthAPI(app1.api_key, app1.api_secret, app1.api_url, app=app1)
 
-"""
 app2 = PyCryptoBot(exchange="coinbasepro")
 model2 = CAuthAPI(app2.api_key, app2.api_secret, app2.api_passphrase, app2.api_url, app=app2)
 model3 = CPublicAPI(app=app2)
-"""
 
 """ COINBASE"""
 # df = model1.get_accounts()
@@ -74,8 +72,8 @@ df = model1.get_historical_data("ADA-GBP", Granularity.ONE_HOUR)
 print(df)
 
 """ COINBASE PRO"""
-# df = model3.get_historical_data("ADA-GBP", Granularity.ONE_HOUR)  # Coinbase Pro has this in the public API, Advanced Trade has this in the auth API
-# print(df)
+df = model3.get_historical_data("ADA-GBP", Granularity.ONE_HOUR)  # Coinbase Pro has this in the public API, Advanced Trade has this in the auth API
+print(df)
 
 
 """ COINBASE"""

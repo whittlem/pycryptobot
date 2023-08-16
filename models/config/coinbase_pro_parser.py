@@ -2,6 +2,7 @@ import ast
 import json
 import os.path
 import re
+import sys
 
 from .default_parser import is_currency_valid, default_config_parse, merge_config_and_args
 from models.exchange.Granularity import Granularity
@@ -57,16 +58,23 @@ def parser(app, coinbase_config, args={}):
             app.api_key_file = coinbase_config["api_key_file"]
 
         if app.api_key_file is not None:
-            try:
-                with open(app.api_key_file, "r") as f:
-                    key = f.readline().strip()
-                    secret = f.readline().strip()
-                    password = f.readline().strip()
-                coinbase_config["api_key"] = key
-                coinbase_config["api_secret"] = secret
-                coinbase_config["api_passphrase"] = password
-            except Exception:
-                raise RuntimeError(f"Unable to read {app.api_key_file}")
+            if not os.path.isfile(app.api_key_file):
+                try:
+                    raise Exception(f"Unable to read {app.api_key_file}, please check the file exists and is readable. Remove \"api_key_file\" key from the config file for test mode!\n")
+                except Exception as e:
+                    print(f"{type(e).__name__}: {e}")
+                    sys.exit(1)
+            else:
+                try:
+                    with open(app.api_key_file, "r") as f:
+                        key = f.readline().strip()
+                        secret = f.readline().strip()
+                        password = f.readline().strip()
+                    coinbase_config["api_key"] = key
+                    coinbase_config["api_secret"] = secret
+                    coinbase_config["api_passphrase"] = password
+                except Exception:
+                    raise RuntimeError(f"Unable to read {app.api_key_file}")
 
         if "api_key" in coinbase_config and "api_secret" in coinbase_config and "api_passphrase" in coinbase_config and "api_url" in coinbase_config:
 

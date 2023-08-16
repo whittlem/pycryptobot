@@ -740,6 +740,22 @@ class AuthAPI(AuthAPIBase):
             df["close"] = df["close"].astype(float)
             df["volume"] = df["volume"].astype(float)
 
+            # create a full range of requested interval
+            full_range = pd.date_range(start=df.index[0], end=df.index[-1], freq=freq)
+
+            # re-index the dataframe using the full range
+            df = df.reindex(full_range)
+
+            # fill missing values and forward-fill the price columns and set volume to 0 for missing rows.
+            df["open"].fillna(method="ffill", inplace=True)
+            df["high"].fillna(method="ffill", inplace=True)
+            df["low"].fillna(method="ffill", inplace=True)
+            df["close"].fillna(method="ffill", inplace=True)
+            df["volume"].fillna(0, inplace=True)
+            df["market"] = market
+            df["granularity"] = granularity.to_integer
+            df["date"] = df.index
+
             # reset pandas dataframe index
             df.reset_index()
 
