@@ -60,16 +60,23 @@ def parser(app, kucoin_config, args={}):
             app.api_key_file = kucoin_config["api_key_file"]
 
         if app.api_key_file is not None:
-            try:
-                with open(app.api_key_file, "r") as f:
-                    key = f.readline().strip()
-                    secret = f.readline().strip()
-                    password = f.readline().strip()
-                kucoin_config["api_key"] = key
-                kucoin_config["api_secret"] = secret
-                kucoin_config["api_passphrase"] = password
-            except Exception:
-                raise RuntimeError(f"Unable to read {app.api_key_file}")
+            if not os.path.isfile(app.api_key_file):
+                try:
+                    raise Exception(f"Unable to read {app.api_key_file}, please check the file exists and is readable. Remove \"api_key_file\" key from the config file for test mode!\n")
+                except Exception as e:
+                    print(f"{type(e).__name__}: {e}")
+                    sys.exit(1)
+            else:
+                try:
+                    with open(app.api_key_file, "r") as f:
+                        key = f.readline().strip()
+                        secret = f.readline().strip()
+                        password = f.readline().strip()
+                    kucoin_config["api_key"] = key
+                    kucoin_config["api_secret"] = secret
+                    kucoin_config["api_passphrase"] = password
+                except Exception:
+                    raise RuntimeError(f"Unable to read {app.api_key_file}")
 
         if "api_key" in kucoin_config and "api_secret" in kucoin_config and "api_passphrase" in kucoin_config and "api_url" in kucoin_config:
             # validates the api key is syntactically correct

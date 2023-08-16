@@ -2,6 +2,7 @@ import ast
 import json
 import os.path
 import re
+import sys
 
 from .default_parser import is_currency_valid, default_config_parse, merge_config_and_args
 
@@ -101,14 +102,21 @@ def parser(app, binance_config, args={}):
             app.api_key_file = binance_config["api_key_file"]
 
         if app.api_key_file is not None:
-            try:
-                with open(app.api_key_file, "r") as f:
-                    key = f.readline().strip()
-                    secret = f.readline().strip()
-                binance_config["api_key"] = key
-                binance_config["api_secret"] = secret
-            except Exception:
-                raise RuntimeError(f"Unable to read {app.api_key_file}")
+            if not os.path.isfile(app.api_key_file):
+                try:
+                    raise Exception(f"Unable to read {app.api_key_file}, please check the file exists and is readable. Remove it from the config file for test mode!\n")
+                except Exception as e:
+                    print(f"{type(e).__name__}: {e}")
+                    sys.exit(1)
+            else:
+                try:
+                    with open(app.api_key_file, "r") as f:
+                        key = f.readline().strip()
+                        secret = f.readline().strip()
+                    binance_config["api_key"] = key
+                    binance_config["api_secret"] = secret
+                except Exception:
+                    raise RuntimeError(f"Unable to read {app.api_key_file}")
 
         if "api_key" in binance_config and "api_secret" in binance_config and "api_url" in binance_config:
             # validates the api key is syntactically correct
