@@ -15,7 +15,8 @@ env:
   IMAGE_NAME: pycryptobot
   DOCKER_FILE: Dockerfile
   DOCKER_BUILDKIT: 1
-  PLATFORM: linux/arm/v6,linux/arm/v7,linux/arm64,linux/amd64
+  # PLATFORM: linux/arm/v6,linux/arm/v7,linux/arm64,linux/amd64  <--  build fails with: docker build . --platform "linux/arm/v7"
+  PLATFORM: linux/arm64,linux/amd64
 
 jobs:
   # Build and push image to GitHub Packages.
