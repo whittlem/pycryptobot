@@ -33,7 +33,6 @@ def parse_market(market):
         "ETH",
         "USDT",
         "TUSD",
-        "BUSD",
         "DAX",
         "NGN",
         "RUB",
