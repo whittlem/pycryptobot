@@ -8,6 +8,7 @@ from models.helper.TelegramBotHelper import TelegramBotHelper as TGBot
 from models.Trading import TechnicalAnalysis
 from models.exchange.binance import PublicAPI as BPublicAPI
 from models.exchange.coinbase import AuthAPI as CBAuthAPI
+from models.config.coinbase_parser import parser as coinbaseParser
 from models.exchange.coinbase_pro import PublicAPI as CPublicAPI
 from models.exchange.kucoin import PublicAPI as KPublicAPI
 from models.exchange.Granularity import Granularity
@@ -34,6 +35,8 @@ for exchange in config:
         if ex == Exchange.BINANCE:
             api = BPublicAPI(bot_config[ex.value]["api_url"])
         elif ex == Exchange.COINBASE:
+            # Read config from key file
+            coinbaseParser(app, bot_config[ex.value])
             api = CBAuthAPI(bot_config[ex.value]["api_key"], bot_config[ex.value]["api_secret"], bot_config[ex.value]["api_url"])
         elif ex == Exchange.COINBASEPRO:
             api = CPublicAPI()
