@@ -38,10 +38,10 @@ Follow my Medium publication for PyCryptoBot articles
 For information about installing, using, and getting the most out of the bot... please refer to the articles on Medium!
 
 Install and Setup of PyCryptoBot 7
-https://trading-data-analysis.pro/install-and-setup-of-pycryptobot-7-f1b2c832e795
+<https://trading-data-analysis.pro/install-and-setup-of-pycryptobot-7-f1b2c832e795>
 
 PyCryptoBot 7 Live Test Results
-https://trading-data-analysis.pro/pycryptobot-7-live-test-results-b56316e0995c
+<https://trading-data-analysis.pro/pycryptobot-7-live-test-results-b56316e0995c>
 
 PyCryptoBot 7 Configuration
-https://trading-data-analysis.pro/pycryptobot-7-configuration-e314931f94
+<https://trading-data-analysis.pro/pycryptobot-7-configuration-e314931f94>

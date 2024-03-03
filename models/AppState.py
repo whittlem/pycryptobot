@@ -216,11 +216,19 @@ class AppState:
                 raise Exception(f"Market not found! ({self.app.market})")
 
         elif self.app.exchange == Exchange.COINBASE:
+            product = self.api.auth_api("GET", f"api/v3/brokerage/products/{self.app.market}")
+            if len(product) == 0:
+                sys.tracebacklimit = 0
+                raise Exception(f"Market not found! ({self.app.market})")
+            
             ticker = self.api.get_ticker(self.app.market, None)
             price = float(ticker[1])
-
             quote = float(quote)
-            base_min = self.api.market_quote_increment(self.app.market, quote)
+            
+            try:
+                base_min = float(product[["base_min_size"]].values[0])
+            except Exception:
+                base_min = 0.0
 
         elif self.app.exchange == Exchange.COINBASEPRO:
             product = self.api.auth_api("GET", f"products/{self.app.market}")
