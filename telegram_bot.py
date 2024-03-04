@@ -51,7 +51,7 @@ CHOOSING, TYPING_REPLY = range(2)
 EXCHANGE, MARKET, ANYOVERRIDES, OVERRIDES, SAVE, START = range(6)
 EXCEPT_EXCHANGE, EXCEPT_MARKET = range(2)
 
-replykeyboard = [["Coinbase Pro", "Binance", "Kucoin"]]
+replykeyboard = [["Coinbase", "Coinbase Pro", "Binance", "Kucoin"]]
 
 markup = ReplyKeyboardMarkup(replykeyboard, one_time_keyboard=True)
 
