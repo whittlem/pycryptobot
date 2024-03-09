@@ -117,7 +117,7 @@ class AuthAPI(AuthAPIBase):
 
         # GET /api/v3/brokerage/accounts
         try:
-            df = self.auth_api("GET", "api/v3/brokerage/accounts")
+            df = self.auth_api("GET", "api/v3/brokerage/accounts", "limit=250")
         except Exception:
             return pd.DataFrame()
 
