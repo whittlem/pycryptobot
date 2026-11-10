@@ -3,8 +3,9 @@ import dash_bootstrap_components as dbc
 from dash import dcc, html, Input, Output, State, MATCH, callback
 
 from models.telegram import Wrapper
+from pages import CONFIG_FILE
 
-tg_wrapper = Wrapper("config.json", "webgui")
+tg_wrapper = Wrapper(CONFIG_FILE, "webgui")
 # selected_pair = None
 
 tg_wrapper.helper.clean_data_folder()

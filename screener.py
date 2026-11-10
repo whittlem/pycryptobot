@@ -48,17 +48,23 @@ def load_configs():
         with open("screener.json", encoding="utf8") as json_file:
             config = json.load(json_file)
     except IOError as err:
-        raise (err)
+        print(f"{err}: falling back to screener.json.sample")
+        with open("screener.json.sample", encoding="utf8") as json_file:
+            config = json.load(json_file)
 
     try:
         with open("config.json", encoding="utf8") as json_file:
             bot_config = json.load(json_file)
     except IOError as err:
-        print(err)
+        print(f"{err}: falling back to config.json.sample")
+        with open("config.json.sample", encoding="utf8") as json_file:
+            bot_config = json.load(json_file)
 
     try:
         for exchange in config:
             ex = CryptoExchange(exchange)
+            if ex.value not in bot_config:
+                raise KeyError(f"'{ex.value}' is configured in screener.json but missing from config.json")
             exchange_config = config[ex.value]
             if ex == CryptoExchange.BINANCE:
                 binance_app = PyCryptoBot(exchange=ex)
@@ -75,8 +81,14 @@ def load_configs():
                 binance_app.tv_screener_ratings = [rating.upper() for rating in exchange_config.get("tv_screener_ratings", ["STRONG_BUY"])]
                 exchanges_loaded.append(binance_app)
             elif ex == CryptoExchange.COINBASE:
+                api_key = bot_config[ex.value].get("api_key")
+                api_secret = bot_config[ex.value].get("api_secret")
+                if not api_key or not api_secret:
+                    # the Coinbase brokerage API needs credentials, skip when they are not configured
+                    print(f"Coinbase API keys are not configured, skipping {ex.value}.")
+                    continue
                 coinbase_app = PyCryptoBot(exchange=ex)
-                coinbase_app.public_api = CBAuthAPI(bot_config[ex.value]["api_key"], bot_config[ex.value]["api_secret"], bot_config[ex.value]["api_url"])
+                coinbase_app.public_api = CBAuthAPI(api_key, api_secret, bot_config[ex.value]["api_url"])
                 coinbase_app.scanner_quote_currencies = exchange_config.get("quote_currency", ["USDT"])
                 coinbase_app.granularity = Granularity(Granularity.convert_to_enum(int(exchange_config.get("granularity", "3600"))))
                 coinbase_app.adx_threshold = exchange_config.get("adx_threshold", 25)

@@ -1,19 +1,26 @@
 urllib3>=1.26.5
-pandas==1.5.1
-pandas-ta
-numpy
+pandas>=2.0.0,<3
+numpy>=2.0.0,<3
+# pandas-ta only publishes releases for Python 3.12+ now; pandas-ta-classic is the
+# maintained package that keeps the pandas-ta 0.3.x API this project is written against.
+pandas-ta-classic>=0.9.0
 requests==2.31.0
-matplotlib==3.3.3
+matplotlib>=3.8.4
 mock==4.0.3
 pytest
 pytest-mock
 responses==0.13.3
-pyyaml==5.3.1
-websocket-client==0.59.0
-websockets==9.1
+pyyaml>=6.0.1
+websocket-client>=1.6.0
+websockets>=9.1
 flask
+flask-socketio
+pygtail
 python-telegram-bot==13.7
 tradingview-ta
+# APScheduler 3.6.3 (pinned by python-telegram-bot 13.7) imports pkg_resources,
+# which setuptools dropped in 81.
+setuptools<81
 bottleneck
 dash
 dash-daq

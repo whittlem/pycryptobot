@@ -784,5 +784,4 @@ clientside_callback(
 )
 
 if __name__ == "__main__":
-    app.run_server(host="0.0.0.0", port="8051")  # noqa
-    app.run_server(debug=True)  # noqa
+    app.run(host="0.0.0.0", port=8051)  # noqa

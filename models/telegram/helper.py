@@ -278,7 +278,11 @@ class TelegramHelper:
     def get_all_bot_list(self) -> List[str]:
         """Return ALL contents of telegram_data folder"""
         self.logger.debug("METHOD(get_all_bot_list)")
-        jsonfiles = sorted(os.listdir(os.path.join(self.datafolder, "telegram_data")))
+        datafolder = os.path.join(self.datafolder, "telegram_data")
+        if not os.path.isdir(datafolder):
+            # no bot has written its data yet (e.g. the dashboard started first)
+            return []
+        jsonfiles = sorted(os.listdir(datafolder))
 
         i = len(jsonfiles) - 1
         while i >= 0:

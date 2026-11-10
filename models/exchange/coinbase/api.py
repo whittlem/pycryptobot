@@ -747,10 +747,10 @@ class AuthAPI(AuthAPIBase):
             df = df.reindex(full_range)
 
             # fill missing values and forward-fill the price columns and set volume to 0 for missing rows.
-            df["open"].fillna(method="ffill", inplace=True)
-            df["high"].fillna(method="ffill", inplace=True)
-            df["low"].fillna(method="ffill", inplace=True)
-            df["close"].fillna(method="ffill", inplace=True)
+            df["open"].ffill(inplace=True)
+            df["high"].ffill(inplace=True)
+            df["low"].ffill(inplace=True)
+            df["close"].ffill(inplace=True)
             df["volume"].fillna(0, inplace=True)
             df["market"] = market
             df["granularity"] = granularity.to_integer

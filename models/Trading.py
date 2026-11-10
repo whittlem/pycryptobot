@@ -1,7 +1,12 @@
 """Technical analysis on a trading Pandas DataFrame"""
 
 import warnings
-import pandas_ta as ta
+
+try:
+    # pandas-ta-classic is the maintained package that keeps the pandas-ta 0.3.x API
+    import pandas_ta_classic as ta
+except ImportError:  # pragma: no cover - fall back for environments that still ship pandas-ta
+    import pandas_ta as ta
 
 from re import compile
 from numpy import (

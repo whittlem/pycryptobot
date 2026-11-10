@@ -175,8 +175,12 @@ class BotConfig:
         self.enable_buy_next = True
         self.enable_volume = False
 
-        if "exchange" in kwargs and kwargs["exchange"] in ["binance", "coinbase", "coinbasepro", "kucoin"]:
-            self.read_config(kwargs["exchange"])
+        exchange = kwargs.get("exchange")
+        if isinstance(exchange, Exchange):
+            exchange = exchange.value
+
+        if exchange in [e.value for e in Exchange]:
+            self.read_config(exchange)
         else:
             self.read_config()
 
