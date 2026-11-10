@@ -3,8 +3,9 @@ from dash import dcc, html, Input, Output, callback, State
 import dash_bootstrap_components as dbc
 from models.telegram import Wrapper
 from models.exchange import Granularity
+from pages import CONFIG_FILE
 
-tg_wrapper = Wrapper("config.json", "webgui")
+tg_wrapper = Wrapper(CONFIG_FILE, "webgui")
 tg_wrapper.helper.read_config()
 # selected_pair = None
 CONTENT_STYLE = {

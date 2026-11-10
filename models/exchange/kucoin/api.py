@@ -698,7 +698,7 @@ class AuthAPI(AuthAPIBase):
                 resp = self.auth_api("GET", "api/v1/orders?", use_pagination=True)
                 break_build = True
             if len(resp) > 0:
-                df = df.append(resp)
+                df = pd.concat([df, resp]) if isinstance(df, pd.DataFrame) and len(df) > 0 else resp.copy()
                 df = df.drop_duplicates("id")
                 df = df.reset_index(drop=True)
 
@@ -838,7 +838,7 @@ class AuthAPI(AuthAPIBase):
                             while exists(self._cache_lock_filepath):
                                 time.sleep(5)
                         cache_df = pd.read_json(self._cache_filepath)
-                        df = df.append(cache_df)
+                        df = pd.concat([df, cache_df])
                         df = df.drop_duplicates("id")
                     else:
                         cache_df = None
@@ -854,7 +854,7 @@ class AuthAPI(AuthAPIBase):
                                     append_df = self.auth_api(
                                         method=method, uri=orig_uri, payload=payload, getting_pages=True, page_num=page_counter, per_page=per_page
                                     )
-                                    df = df.append(append_df)
+                                    df = pd.concat([df, append_df])
                                     if page_counter == max_pages:
                                         break
 

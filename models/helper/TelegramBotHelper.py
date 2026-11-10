@@ -262,6 +262,9 @@ class TelegramBotHelper:
             self.delete_margin()
 
     def save_scanner_output(self, exchange, quote, output: DataFrame) -> None:
+        # the scanner/screener can run before any bot has created its data folder
+        os.makedirs(os.path.join(self.app.telegramdatafolder, "telegram_data"), exist_ok=True)
+
         try:
             os.remove(
                 os.path.join(  # TODO: path -> ntpath for Windows, posixpath for Linux, macpath for Mac OSX

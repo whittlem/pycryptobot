@@ -21,15 +21,20 @@ try:
         config = json.load(json_file)
 except IOError as err:
     print(err)
+    config = {}
 
 try:
     with open("config.json", encoding='utf8') as json_file:
         bot_config = json.load(json_file)
 except IOError as err:
-    print(err)
+    print(f"{err}: falling back to config.json.sample")
+    with open("config.json.sample", encoding='utf8') as json_file:
+        bot_config = json.load(json_file)
 
 for exchange in config:
     ex = Exchange(exchange)
+    if ex.value not in bot_config:
+        raise KeyError(f"'{ex.value}' is configured in scanner.json but missing from config.json")
     app = PyCryptoBot(exchange=ex)
     for quote in config[ex.value]["quote_currency"]:
         if ex == Exchange.BINANCE:
@@ -66,6 +71,11 @@ for exchange in config:
             for result in results:
                 if result["symbol"].endswith(f"-{quote}"):
                     markets.append(result)
+
+        if len(markets) == 0:
+            # e.g. the exchange API is unreachable or returned no data for this quote currency
+            print(f"No markets returned for {quote} on {ex.value}, skipping.")
+            continue
 
         df_markets = pd.DataFrame(markets)
 

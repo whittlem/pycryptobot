@@ -65,26 +65,35 @@ def test_instantiate_publicapi_without_error():
     assert type(exchange) is PublicAPI
 
 
+# syntactically valid (but fake) credentials so AuthAPI can be instantiated without a live account
+TEST_API_KEY = "0" * 32
+TEST_API_SECRET = "0" * 88 + "=="
+TEST_API_PASSPHRASE = "00000000000"
+TEST_API_URL = "https://public.sandbox.pro.coinbase.com"
+
+
+def coinbasepro_fees_response() -> dict:
+    return {"maker_fee_rate": "0.005", "taker_fee_rate": "0.005", "usd_volume": "0"}
+
+
+@responses.activate
 def test_get_taker_fee_with_market():
-    api_key = app.api_key
-    api_secret = app.api_secret
-    api_passphrase = app.api_passphrase
-    api_url = "https://public.sandbox.pro.coinbase.com"
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(TEST_API_KEY, TEST_API_SECRET, TEST_API_PASSPHRASE, TEST_API_URL)
     assert type(exchange) is AuthAPI
+
+    responses.add(responses.GET, f"{TEST_API_URL}/fees", json=coinbasepro_fees_response(), status=200)
 
     fee = exchange.get_taker_fee()
     assert type(fee) is float
     assert fee == 0.005
 
 
+@responses.activate
 def test_get_maker_fee_with_market():
-    api_key = app.api_key
-    api_secret = app.api_secret
-    api_passphrase = app.api_passphrase
-    api_url = "https://public.sandbox.pro.coinbase.com"
-    exchange = AuthAPI(api_key, api_secret, api_passphrase, api_url)
+    exchange = AuthAPI(TEST_API_KEY, TEST_API_SECRET, TEST_API_PASSPHRASE, TEST_API_URL)
     assert type(exchange) is AuthAPI
+
+    responses.add(responses.GET, f"{TEST_API_URL}/fees", json=coinbasepro_fees_response(), status=200)
 
     fee = exchange.get_maker_fee()
     assert type(fee) is float

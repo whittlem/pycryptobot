@@ -86,6 +86,7 @@ class PyCryptoBot(BotConfig):
         self.price = 0
         self.takerfee = -1.0
         self.makerfee = 0.0
+        self.extra_candles_found = False
         self.account = None
         self.state = None
         self.technical_analysis = None

@@ -1,10 +1,11 @@
 from dash import html
 import dash_bootstrap_components as dbc
 from models.telegram import Wrapper
+from pages import CONFIG_FILE
 
 # from models.exchange import Granularity
 
-tg_wrapper = Wrapper("config.json", "webgui")
+tg_wrapper = Wrapper(CONFIG_FILE, "webgui")
 tg_wrapper.helper.read_config()
 
 tg_token = tg_wrapper.helper.config["telegram"]["token"]
